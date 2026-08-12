@@ -25,7 +25,7 @@ import {
 
 const roles = [
   { value: "doctor", label: "Doctor" },
-  { value: "receptionist", label: "Receptionist" },
+  { value: "staff", label: "Staff" },
   { value: "patient", label: "Patient" },
 ];
 
@@ -70,7 +70,15 @@ export function SignupForm({
       router.push("/login");
       return;
     }
-    router.push(callbackUrl);
+    const target =
+      callbackUrl === "/dashboard" ||
+      callbackUrl === "/" ||
+      callbackUrl.startsWith("/login")
+        ? role === "patient"
+          ? "/patient"
+          : "/dashboard"
+        : callbackUrl;
+    router.push(target);
     router.refresh();
   }
 

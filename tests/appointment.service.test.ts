@@ -26,7 +26,7 @@ function seedDoctors() {
     users: [
       { _id: "dr-1", name: "Dr. Kumar", role: "doctor", department: "General" },
       { _id: "dr-2", name: "Dr. Priya", role: "doctor", department: null },
-      { _id: "u-1", name: "Reception", role: "receptionist" },
+      { _id: "u-1", name: "Reception", role: "staff" },
     ],
   };
 }

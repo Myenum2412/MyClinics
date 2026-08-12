@@ -43,7 +43,25 @@ export function LoginForm({
       setError("Invalid email or password.");
       return;
     }
-    router.push(callbackUrl);
+
+    let sessionUser: { role?: string } | null = null;
+    try {
+      const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
+      if (sessionRes.ok) {
+        sessionUser = (await sessionRes.json())?.user ?? null;
+      }
+    } catch {
+      // Ignore; fall back to the callback URL.
+    }
+
+    const home =
+      sessionUser?.role === "patient" ? "/patient" : "/dashboard";
+    const isDefaultTarget =
+      !callbackUrl ||
+      callbackUrl === "/" ||
+      callbackUrl === "/dashboard" ||
+      callbackUrl.startsWith("/login");
+    router.push(isDefaultTarget ? home : callbackUrl);
     router.refresh();
   }
 

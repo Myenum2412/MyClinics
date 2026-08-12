@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { PatientsView } from "@/components/patients-view";
 import { getDb } from "@/lib/db";
 import { startOfMonthDate, startOfWeekDate } from "@/lib/stats";
-import { auth, isStaffRole } from "@/lib/auth";
+import { auth, canAccessBilling } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +44,7 @@ export default async function PatientsPage() {
     <>
       <PatientsView
         initialPatients={patients}
-        hideBilling={isStaffRole(session?.user.role)}
+        hideBilling={!canAccessBilling(session?.user.role)}
         stats={[
           {
             name: "Total Patients",
