@@ -1,6 +1,6 @@
 "use client";
 
-import { Printer, X } from "lucide-react";
+import { Download, Printer, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -147,6 +147,18 @@ export function PatientBillDialog({
           <Button variant="outline" onClick={onClose}>
             <X className="mr-1 size-3.5" aria-hidden="true" />
             Close
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              const a = document.createElement("a");
+              a.href = `/api/bills/${bill.id}/pdf`;
+              a.download = "";
+              a.click();
+            }}
+          >
+            <Download className="mr-1 size-3.5" aria-hidden="true" />
+            Download PDF
           </Button>
           <Button onClick={() => printBill(bill)}>
             <Printer className="mr-1 size-3.5" aria-hidden="true" />

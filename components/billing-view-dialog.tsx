@@ -1,6 +1,6 @@
 "use client";
 
-import { Printer } from "lucide-react";
+import { Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -137,7 +137,20 @@ export function BillingViewDialog({
               {bill.notes && <Row label="Notes" value={bill.notes} />}
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const a = document.createElement("a");
+                  a.href = `/api/bills/${bill.id}/pdf`;
+                  a.download = "";
+                  a.click();
+                }}
+              >
+                <Download className="size-3.5" aria-hidden="true" />
+                Download PDF
+              </Button>
               <Button
                 type="button"
                 variant="outline"
