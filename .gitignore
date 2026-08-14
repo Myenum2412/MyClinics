@@ -16,9 +16,15 @@
 # next.js
 /.next/
 /out/
+/frontend/.next/
+/frontend/out/
 
 # production
 /build
+
+# env files (can opt-in for committing if needed)
+.env*
+!.env.example
 
 # misc
 .DS_Store
@@ -30,9 +36,6 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-
 # vercel
 .vercel
 
@@ -42,3 +45,7 @@ next-env.d.ts
 
 # whatsapp-web.js caches
 .wwebjs_cache/
+
+# backend
+/backend/node_modules/
+/backend/whatsapp-session/

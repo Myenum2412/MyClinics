@@ -2,7 +2,7 @@
 
 A clinic management platform with a WhatsApp AI assistant that books, reschedules and
 cancels appointments for patients, answers clinic questions, sends appointment
-reminders and turn alerts — all in one Next.js app.
+reminders and turn alerts.
 
 ## Features
 
@@ -24,7 +24,8 @@ reminders and turn alerts — all in one Next.js app.
 
 ## Tech stack
 
-- [Next.js](https://nextjs.org) 16 (App Router) + React 19
+- [Next.js](https://nextjs.org) 16 (App Router) + React 19 — `frontend/` (UI only)
+- [Fastify](https://fastify.dev) 5 — `backend/` (standalone API server)
 - [next-auth](https://next-auth.js.org) v5 (beta) with MongoDB adapter
 - [MongoDB](https://www.mongodb.com/) (Atlas) via the native driver
 - [Tailwind CSS](https://tailwindcss.com) v4 + shadcn-style UI components
@@ -35,14 +36,39 @@ reminders and turn alerts — all in one Next.js app.
 
 ## Architecture
 
-The app runs as two processes sharing the same MongoDB database:
+An npm-workspaces monorepo with two packages sharing one MongoDB database:
 
-1. **Web server** (`npm run dev` / `npm run start`) — the Next.js dashboard, patient
-   portal, auth and the internal `/api/ai/*` endpoints.
-2. **WhatsApp worker** (`npm run whatsapp`) — connects WhatsApp as a linked device and
-   processes incoming messages. It calls the AI only through the internal
-   `/api/ai/*` endpoints (authenticated with `AI_INTERNAL_TOKEN`), so the bot can never
-   touch dashboard modules directly.
+```
+myclinics/
+├── frontend/   # Next.js 16 UI (dashboard + patient portal + next-auth)
+└── backend/    # Fastify API server (all /api/* routes) + WhatsApp worker
+```
+
+1. **API server** (`backend/`, port 3100) — every `/api/*` route lives here. It
+   re-verifies the next-auth session cookie itself (jose JWE decryption), so requests
+   proxied from the frontend are authenticated without a second source of truth.
+2. **Web server** (`frontend/`, port 3456) — serves the dashboard and patient portal.
+   `/api/*` requests (except `/api/auth`) are proxied to the API server via Next.js
+   rewrites. next-auth runs in-process; server components may read MongoDB directly
+   for page data.
+3. **WhatsApp worker** (`backend/`) — connects WhatsApp as a linked device and
+   processes incoming messages. It calls the AI only through the internal `/api/ai/*`
+   endpoints (authenticated with `AI_INTERNAL_TOKEN`), so the bot can never touch
+   dashboard modules directly.
+
+### Performance & data handling
+
+- MongoDB **indexes** are created on server start (`backend/src/lib/indexes.ts`), plus
+  **connection pooling** with tuned timeouts (`backend/src/lib/db.ts`).
+- List endpoints support **server-side pagination + search**
+  (`?page=&pageSize=&q=` → `{ rows, total, page, pageSize, pageCount }`); without a
+  `page` param they return the legacy flat array (capped at 200). The dashboard tables
+  use the paginated form via `useServerPagination` (`frontend/hooks/`).
+- Responses are **gzip-compressed** and tagged with **ETags**; frequently-read data
+  (doctors, medicines, organization, soul, knowledge, AI context) is **TTL-cached**
+  and invalidated on writes.
+- Reminder/notification/queue services batch writes with **bulk operations** and
+  windowed queries instead of per-document round trips.
 
 The AI is constrained by a **knowledge boundary**: every reply must come from the
 clinic's `soul.md` and the retrieved knowledge-base documents. If the answer isn't
@@ -61,19 +87,22 @@ by the model are checked against the authorized context before being sent.
 ### Install
 
 ```bash
-npm install
+npm install          # from the repo root (installs both workspaces)
 ```
 
 ### Environment
 
-Copy the variables below into `.env.local` (the file is gitignored):
+Copy the variables below into `frontend/.env.local` (or the repo root `.env.local` —
+the API server and worker search both locations). A template lives in `.env.example`:
 
 ```bash
 # --- Core ---
 MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>/myclinic
 AUTH_SECRET=<generate a long random string>
-APP_URL=http://localhost:3456
 AI_INTERNAL_TOKEN=<64-char random string, shared by web server and worker>
+
+# Optional. Frontend proxies /api/* here (default http://localhost:3100)
+BACKEND_URL=http://localhost:3100
 
 # --- AI (NVIDIA NIM) ---
 NVIDIA_API_KEY=nvapi-...
@@ -108,7 +137,7 @@ R2_BUCKET_NAME=<bucket name>
 ### Run
 
 ```bash
-npm run dev        # web server on http://localhost:3456
+npm run dev        # API server (3100) + web server (3456) together
 npm run whatsapp   # WhatsApp worker (separate terminal)
 ```
 
@@ -123,8 +152,8 @@ WhatsApp bot:
 
 ## WhatsApp AI assistant
 
-- The bot's personality and knowledge boundary live in `souls/default.md` (editable in
-  the dashboard under **Settings**).
+- The bot's personality and knowledge boundary live in `backend/src/souls/default.md`
+  (editable in the dashboard under **Settings**).
 - Additional facts (location, fees, policies, hours) live in the **knowledge base**,
   also editable from Settings. Only these documents plus the soul are allowed into the
   prompt.
@@ -138,7 +167,7 @@ WhatsApp bot:
 
 - The worker scans for upcoming appointments every 30 seconds and queues WhatsApp
   reminders for appointments that are **20–40 minutes** away (`REMINDER_MINUTES_BEFORE`
-  in `services/reminder/reminder.service.ts`).
+  in `backend/src/services/reminder/reminder.service.ts`).
 - A cron job (e.g. cron-job.org) posts every minute to
   `POST /api/cron/reminders` with the header `x-cron-secret: <CRON_SECRET>` to trigger
   an immediate scan. The endpoint returns `{ ok, checked, queued, skipped }`.
@@ -153,14 +182,15 @@ WhatsApp bot:
 
 ## Scripts
 
-| Script            | Description                                  |
-| ----------------- | -------------------------------------------- |
-| `npm run dev`     | Start the Next.js dev server on port 3456    |
-| `npm run build`   | Production build                             |
-| `npm run start`   | Serve the production build on port 3456      |
-| `npm run lint`    | ESLint                                       |
-| `npm test`        | Run the vitest suite                         |
-| `npm run whatsapp`| Start the WhatsApp worker                    |
+| Script            | Description                                     |
+| ----------------- | ----------------------------------------------- |
+| `npm run dev`     | API server (3100) + web server (3456)           |
+| `npm run build`   | Production build (frontend)                     |
+| `npm run start`   | Serve the production build + API server         |
+| `npm run lint`    | ESLint (frontend)                               |
+| `npm test`        | vitest suite (backend)                          |
+| `npm run typecheck`| TypeScript check (backend)                     |
+| `npm run whatsapp`| Start the WhatsApp worker                       |
 
 ## Testing
 
@@ -175,15 +205,21 @@ context, with a fake in-memory MongoDB for services that need one.
 ## Project structure
 
 ```
-app/                  # Next.js routes (dashboard, patient portal, API routes)
-components/           # UI components (tables, forms, dialogs, shadcn-style ui/)
-lib/                  # shared helpers (db, auth, billing, phone, r2, stats...)
-services/
-  ai/                 # LLM client, agent, knowledge, soul, memory, appointment service
-  whatsapp/           # WhatsApp client, worker, message handler, notification queue
-  reminder/           # appointment reminder scanning
-  queue.service.ts    # per-day queue counter logic
-souls/default.md      # WhatsApp AI soul / personality + knowledge boundary
-knowledge/default.md  # seeded clinic knowledge base documents
-tests/                # vitest suites
+frontend/             # Next.js 16 UI (dashboard, patient portal, next-auth)
+  app/                #   pages + app/api/auth/[...nextauth]
+  components/         #   tables, forms, dialogs, shadcn-style ui/
+  hooks/              #   use-server-pagination (server-side table paging)
+  lib/                #   auth, db, billing, stats, utils, server-api
+backend/              # Fastify API server + WhatsApp worker
+  src/
+    routes/           #   every /api/* route (Fastify)
+    plugins/auth.ts   #   next-auth JWE verification + guards
+    services/
+      ai/             #   LLM client, agent, knowledge, soul, memory, appointment service
+      whatsapp/       #   WhatsApp client, worker, message handler, notification queue
+      reminder/       #   appointment reminder scanning
+      queue.service.ts#   per-day queue counter logic
+    souls/default.md  #   WhatsApp AI soul / personality + knowledge boundary
+    knowledge/default.md # seeded clinic knowledge base documents
+  tests/              # vitest suites (fake in-memory MongoDB)
 ```
