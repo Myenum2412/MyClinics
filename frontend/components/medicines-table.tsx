@@ -67,28 +67,36 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import {
-  AlertTriangleIcon,
-  ArrowUp,
-  ArrowDown,
-  ChevronsUpDown,
-  Columns,
-  ChevronLeft,
-  ChevronRight,
-  Ellipsis,
-  Pencil,
-  Trash,
-} from "lucide-react";
+  ExclamationTriangleIcon as AlertTriangleIcon,
+  ArrowDownIcon as ArrowDown,
+  ArrowUpIcon as ArrowUp,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  ChevronUpDownIcon as ChevronsUpDown,
+  ViewColumnsIcon as Columns,
+  EllipsisHorizontalIcon as Ellipsis,
+  PencilIcon as Pencil,
+  TrashIcon as Trash,
+} from "@heroicons/react/24/outline";
 
 export type Medicine = {
   id: string;
+  sno: number | null;
   name: string;
   category: string | null;
+  composition: string | null;
+  dosage: string | null;
+  requiresPrescription: boolean;
   notes: string | null;
 };
 
 const COLUMN_LABELS: Record<string, string> = {
+  sno: "S.No",
   name: "Medicine",
   category: "Category",
+  composition: "Composition",
+  dosage: "Dosage",
+  requiresPrescription: "Rx",
   notes: "Notes",
 };
 
@@ -124,7 +132,7 @@ export function MedicinesTable({
   };
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "name", desc: false },
+    { id: "sno", desc: false },
   ]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] =
@@ -163,6 +171,24 @@ export function MedicinesTable({
         ),
       },
       {
+        accessorKey: "sno",
+        header: ({ column }) => (
+          <button
+            type="button"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="-mx-1 inline-flex items-center gap-1 rounded-md px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase transition-colors hover:text-foreground"
+          >
+            S.No
+            <SortIcon sorted={column.getIsSorted()} />
+          </button>
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground tabular-nums">
+            {row.original.sno ?? "—"}
+          </span>
+        ),
+      },
+      {
         accessorKey: "name",
         header: ({ column }) => (
           <button
@@ -179,6 +205,8 @@ export function MedicinesTable({
           return (
             row.original.name.toLowerCase().includes(q) ||
             (row.original.category ?? "").toLowerCase().includes(q) ||
+            (row.original.composition ?? "").toLowerCase().includes(q) ||
+            (row.original.dosage ?? "").toLowerCase().includes(q) ||
             (row.original.notes ?? "").toLowerCase().includes(q)
           );
         },
@@ -197,6 +225,55 @@ export function MedicinesTable({
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground">
             {row.original.category ?? "—"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "composition",
+        enableSorting: false,
+        header: () => (
+          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Composition
+          </span>
+        ),
+        cell: ({ row }) => (
+          <span className="line-clamp-2 max-w-56 text-sm text-muted-foreground">
+            {row.original.composition ?? "—"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "dosage",
+        enableSorting: false,
+        header: () => (
+          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Dosage
+          </span>
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {row.original.dosage ?? "—"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "requiresPrescription",
+        enableSorting: false,
+        header: () => (
+          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Rx
+          </span>
+        ),
+        cell: ({ row }) => (
+          <span
+            className={cn(
+              "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+              row.original.requiresPrescription
+                ? "bg-amber-100 text-amber-700"
+                : "bg-muted text-muted-foreground"
+            )}
+          >
+            {row.original.requiresPrescription ? "Rx" : "OTC"}
           </span>
         ),
       },

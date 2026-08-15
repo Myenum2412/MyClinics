@@ -19,13 +19,17 @@ export default async function MedicinesPage() {
   const medicineDocs = await db
     .collection(DB_COLLECTIONS.medicines)
     .find({})
-    .sort({ name: 1 })
+    .sort({ sno: 1, name: 1 })
     .toArray();
 
   const medicines = medicineDocs.map((m) => ({
     id: m._id.toString(),
+    sno: typeof m.sno === "number" ? m.sno : null,
     name: m.name,
     category: m.category ?? null,
+    composition: m.composition ?? null,
+    dosage: m.dosage ?? null,
+    requiresPrescription: m.requiresPrescription === true,
     notes: m.notes ?? null,
     createdAt: m.createdAt,
   }));

@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Pencil } from "lucide-react";
+import {
+  ArrowRightIcon as ArrowRight,
+  PencilIcon as Pencil,
+} from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import { PreviewSheet } from "@/components/preview-sheet";
 import type { Medicine } from "@/components/medicines-table";
@@ -35,6 +38,12 @@ export function MedicinePreviewPanel({
           Details
         </h2>
         <div className="flex items-baseline justify-between gap-4 text-sm">
+          <span className="shrink-0 text-muted-foreground">S.No</span>
+          <span className="text-right font-medium tabular-nums">
+            {medicine.sno ?? "—"}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-4 text-sm">
           <span className="shrink-0 text-muted-foreground">Name</span>
           <span className="text-right font-medium">{medicine.name}</span>
         </div>
@@ -42,6 +51,26 @@ export function MedicinePreviewPanel({
           <span className="shrink-0 text-muted-foreground">Category</span>
           <span className="text-right font-medium">
             {medicine.category ?? "—"}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-4 text-sm">
+          <span className="shrink-0 text-muted-foreground">Composition</span>
+          <span className="text-right font-medium">
+            {medicine.composition ?? "—"}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-4 text-sm">
+          <span className="shrink-0 text-muted-foreground">Dosage</span>
+          <span className="text-right font-medium">
+            {medicine.dosage ?? "—"}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-4 text-sm">
+          <span className="shrink-0 text-muted-foreground">
+            Prescription
+          </span>
+          <span className="text-right font-medium">
+            {medicine.requiresPrescription ? "Rx only" : "OTC"}
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-4 text-sm">

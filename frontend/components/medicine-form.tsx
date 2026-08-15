@@ -9,6 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
   FieldDescription,
@@ -17,7 +18,9 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { TabletsIcon } from "lucide-react";
+import {
+  CircleStackIcon as TabletsIcon,
+} from "@heroicons/react/24/outline";
 import type { Medicine } from "@/components/medicines-table";
 
 const categories = [
@@ -42,6 +45,11 @@ export function MedicineForm({
 
   const [name, setName] = useState(initial?.name ?? "");
   const [category, setCategory] = useState(initial?.category ?? "");
+  const [composition, setComposition] = useState(initial?.composition ?? "");
+  const [dosage, setDosage] = useState(initial?.dosage ?? "");
+  const [requiresPrescription, setRequiresPrescription] = useState(
+    initial?.requiresPrescription ?? false
+  );
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [loading, setLoading] = useState(false);
 
@@ -52,6 +60,9 @@ export function MedicineForm({
     const payload = {
       name,
       category: category || null,
+      composition: composition || null,
+      dosage: dosage || null,
+      requiresPrescription,
       notes: notes || null,
     };
 
@@ -79,6 +90,9 @@ export function MedicineForm({
     if (!isEditing) {
       setName("");
       setCategory("");
+      setComposition("");
+      setDosage("");
+      setRequiresPrescription(false);
       setNotes("");
     }
 
@@ -128,6 +142,56 @@ export function MedicineForm({
                 </FieldDescription>
               </Field>
             </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="composition">Composition</FieldLabel>
+                <Input
+                  id="composition"
+                  type="text"
+                  placeholder="e.g. Paracetamol 500mg + Caffeine 65mg"
+                  value={composition}
+                  onChange={(e) => setComposition(e.target.value)}
+                />
+                <FieldDescription>
+                  Active ingredients and strengths.
+                </FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="dosage">Dosage / Frequency</FieldLabel>
+                <Input
+                  id="dosage"
+                  type="text"
+                  placeholder="e.g. 1-1-1 or Once daily"
+                  value={dosage}
+                  onChange={(e) => setDosage(e.target.value)}
+                />
+                <FieldDescription>
+                  Typical dose and frequency of administration.
+                </FieldDescription>
+              </Field>
+            </div>
+            <Field>
+              <FieldLabel htmlFor="requiresPrescription">
+                Prescription status
+              </FieldLabel>
+              <label
+                htmlFor="requiresPrescription"
+                className="flex cursor-pointer items-center gap-2 text-sm"
+              >
+                <Checkbox
+                  id="requiresPrescription"
+                  checked={requiresPrescription}
+                  onCheckedChange={(checked) =>
+                    setRequiresPrescription(checked === true)
+                  }
+                />
+                <span>Requires a prescription (Rx only)</span>
+              </label>
+              <FieldDescription>
+                Mark this medicine as prescription-only. Shown as Rx in the
+                list.
+              </FieldDescription>
+            </Field>
             <Field>
               <FieldLabel htmlFor="notes">Notes</FieldLabel>
               <Textarea

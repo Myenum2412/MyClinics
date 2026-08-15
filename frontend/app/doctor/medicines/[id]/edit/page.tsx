@@ -22,8 +22,12 @@ export default async function EditMedicinePage({
 
   const initial = {
     id: String(doc._id),
+    sno: typeof doc.sno === "number" ? doc.sno : null,
     name: String(doc.name ?? ""),
     category: doc.category ? String(doc.category) : "",
+    composition: doc.composition ? String(doc.composition) : "",
+    dosage: doc.dosage ? String(doc.dosage) : "",
+    requiresPrescription: doc.requiresPrescription === true,
     notes: doc.notes ? String(doc.notes) : "",
   };
 
