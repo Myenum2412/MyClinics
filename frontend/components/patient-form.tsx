@@ -308,7 +308,7 @@ export function PatientForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="Enter email id"
                   required
                   disabled={isEditing}
                   value={email}
