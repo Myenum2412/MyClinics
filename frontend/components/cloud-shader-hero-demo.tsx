@@ -23,9 +23,11 @@ export default function CloudShaderHeroDemo({
       {/* navbar */}
       <nav className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-8">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white/90 text-sm font-bold text-[#0D47A1] shadow-sm">
-            M
-          </div>
+          <img
+            src="/logo.png"
+            alt="My Clinics logo"
+            className="h-8 w-8 rounded-md bg-white object-contain shadow-sm"
+          />
           <span className="text-lg font-semibold tracking-tight text-white drop-shadow-sm">
             My Clinics
           </span>
