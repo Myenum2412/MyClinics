@@ -24,7 +24,7 @@ export default async function LoginPage({
         skyBottomColor="#90CAF9"
         cloudColor="#E3F2FD"
       />
-      <div className="auth-card relative z-10 w-full max-w-sm rounded-2xl border border-black/10 bg-white p-6 shadow-2xl shadow-[#0D47A1]/30 sm:p-8">
+      <div className="auth-card relative z-10 w-full max-w-sm rounded-2xl border border-white/40 bg-white/70 p-6 shadow-2xl shadow-[#0D47A1]/30 backdrop-blur-xl sm:p-8">
         <Suspense>
           <LoginForm callbackUrl={callbackUrl ?? "/doctor"} />
         </Suspense>
