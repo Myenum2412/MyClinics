@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import type { Adapter } from "next-auth/adapters";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
@@ -8,8 +9,24 @@ import type { Role } from "@/lib/roles";
 export type { Role, StaffRole } from "@/lib/roles";
 export { ROLES, STAFF_ROLES, isStaffRole, canAccessBilling } from "@/lib/roles";
 
+const baseAdapter = MongoDBAdapter(clientPromise, { databaseName: DB_NAME });
+const baseCreateUser = baseAdapter.createUser!;
+
+const adapter: Adapter = {
+  ...baseAdapter,
+  async createUser(user) {
+    const created = await baseCreateUser(user);
+    const client = await clientPromise;
+    await client
+      .db(DB_NAME)
+      .collection("users")
+      .updateOne({ email: created.email }, { $set: { role: "doctor" } });
+    return { ...created, role: "doctor" as Role };
+  },
+};
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: MongoDBAdapter(clientPromise, { databaseName: DB_NAME }),
+  adapter,
   session: {
     strategy: "jwt",
   },
@@ -51,14 +68,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id as string;
-        token.role = ((user as { role?: string }).role ?? "patient") as Role;
+        token.role = ((user as { role?: string }).role ?? "doctor") as Role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = (token.role as Role) ?? "patient";
+        session.user.role = (token.role as Role) ?? "doctor";
       }
       return session;
     },
