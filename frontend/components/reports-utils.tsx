@@ -129,7 +129,7 @@ export function fileCategoryColor(category: FileCategory) {
     case "code":
       return "bg-sky-500/10 text-sky-500";
     case "doc":
-      return "bg-blue-500/10 text-blue-500";
+      return "bg-[#2196F3]/10 text-[#2196F3]";
     default:
       return "bg-muted text-muted-foreground";
   }
