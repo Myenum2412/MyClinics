@@ -9,6 +9,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PatientAppointmentPanel, type AppointmentRecord } from "@/components/patient-appointment-panel";
 import { ReportDownloadButton } from "@/components/report-download-button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { MedicalHistoryEntry } from "@/components/patients-table";
 
 const appointmentStatusVariant: Record<
   string,
@@ -74,7 +83,7 @@ export type PatientRecord = {
   city: string | null;
   pincode: string | null;
   occupation: string | null;
-  medicalHistory: string | null;
+  medicalHistory: MedicalHistoryEntry[] | null;
   allergies: string | null;
   currentMedications: string | null;
   previousSurgeries: string | null;
@@ -292,7 +301,30 @@ export function PatientDetails({
         </Section>
 
         <Section title="Medical History">
-          <Row label="Medical History" value={patient.medicalHistory ?? "—"} />
+          {patient.medicalHistory && patient.medicalHistory.length ? (
+            <div className="overflow-hidden rounded-lg border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-32">Date</TableHead>
+                    <TableHead>Medical History</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {patient.medicalHistory.map((entry, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="whitespace-nowrap align-top text-muted-foreground">
+                        {formatDate(entry.date)}
+                      </TableCell>
+                      <TableCell>{entry.record}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <Row label="Medical History" value="—" />
+          )}
           <Row
             label="Current Medications"
             value={patient.currentMedications ?? "—"}

@@ -85,9 +85,20 @@ export default async function PatientDetailsPage({
           city: patient.city ? String(patient.city) : null,
           pincode: patient.pincode ? String(patient.pincode) : null,
           occupation: patient.occupation ? String(patient.occupation) : null,
-          medicalHistory: patient.medicalHistory
-            ? String(patient.medicalHistory)
-            : null,
+          medicalHistory: Array.isArray(patient.medicalHistory)
+            ? (patient.medicalHistory as {
+                date?: unknown;
+                record?: unknown;
+              }[])
+                .map((entry) => ({
+                  date: entry.date ? String(entry.date) : null,
+                  record: entry.record ? String(entry.record) : "",
+                }))
+                .filter((entry) => entry.record)
+            : typeof patient.medicalHistory === "string" &&
+                patient.medicalHistory.trim()
+              ? [{ date: null, record: patient.medicalHistory.trim() }]
+              : null,
           allergies: patient.allergies ? String(patient.allergies) : null,
           currentMedications: patient.currentMedications
             ? String(patient.currentMedications)

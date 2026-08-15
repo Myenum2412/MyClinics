@@ -48,7 +48,11 @@ export default async function PatientsPage() {
     city: p.city ?? null,
     pincode: p.pincode ?? null,
     occupation: p.occupation ?? null,
-    medicalHistory: p.medicalHistory ?? null,
+    medicalHistory: Array.isArray(p.medicalHistory)
+      ? p.medicalHistory
+      : p.medicalHistory
+        ? [{ date: null, record: String(p.medicalHistory) }]
+        : null,
     allergies: p.allergies ?? null,
     currentMedications: p.currentMedications ?? null,
     previousSurgeries: p.previousSurgeries ?? null,

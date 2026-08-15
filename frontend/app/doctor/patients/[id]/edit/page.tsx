@@ -49,7 +49,16 @@ export default async function EditPatientPage({
     city: doc.city ? String(doc.city) : null,
     pincode: doc.pincode ? String(doc.pincode) : null,
     occupation: doc.occupation ? String(doc.occupation) : null,
-    medicalHistory: doc.medicalHistory ? String(doc.medicalHistory) : null,
+    medicalHistory: Array.isArray(doc.medicalHistory)
+      ? (doc.medicalHistory as { date?: unknown; record?: unknown }[])
+          .map((entry) => ({
+            date: entry.date ? String(entry.date) : null,
+            record: entry.record ? String(entry.record) : "",
+          }))
+          .filter((entry) => entry.record)
+      : typeof doc.medicalHistory === "string" && doc.medicalHistory.trim()
+        ? [{ date: null, record: doc.medicalHistory.trim() }]
+        : null,
     allergies: doc.allergies ? String(doc.allergies) : null,
     currentMedications: doc.currentMedications
       ? String(doc.currentMedications)

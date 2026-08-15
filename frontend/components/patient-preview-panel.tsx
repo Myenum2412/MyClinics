@@ -343,10 +343,23 @@ function PanelContent({ patient }: { patient: Patient }) {
             </Section>
 
             <Section title="Medical History">
-              <Field
-                label="Medical History"
-                value={patient.medicalHistory ?? "—"}
-              />
+              {patient.medicalHistory && patient.medicalHistory.length ? (
+                <div className="flex flex-col gap-2">
+                  {patient.medicalHistory.map((entry, index) => (
+                    <div
+                      key={index}
+                      className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm"
+                    >
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {formatDate(entry.date)}
+                      </p>
+                      <p>{entry.record}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <Field label="Medical History" value="—" />
+              )}
               <Field
                 label="Current Medications"
                 value={patient.currentMedications ?? "—"}

@@ -11,6 +11,35 @@ import {
 import { searchParams, handleError } from "@/lib/http";
 import { requireAuth } from "@/plugins/auth";
 
+export type MedicalHistoryEntry = {
+  date: string | null;
+  record: string;
+};
+
+function mapMedicalHistory(value: unknown): MedicalHistoryEntry[] | null {
+  if (Array.isArray(value)) {
+    const entries = value
+      .filter((e) => e && typeof e === "object")
+      .map((e) => {
+        const entry = e as Record<string, unknown>;
+        return {
+          date: entry.date ? String(entry.date) : null,
+          record: entry.record ? String(entry.record).trim() : "",
+        };
+      })
+      .filter((e) => e.record);
+    return entries.length ? entries : null;
+  }
+  if (typeof value === "string" && value.trim()) {
+    return [{ date: null, record: value.trim() }];
+  }
+  return null;
+}
+
+function sanitizeMedicalHistory(value: unknown): MedicalHistoryEntry[] | null {
+  return mapMedicalHistory(value);
+}
+
 function mapPatient(p: Record<string, unknown>) {
   return {
     id: (p._id as { toString(): string }).toString(),
@@ -35,7 +64,7 @@ function mapPatient(p: Record<string, unknown>) {
     city: p.city ?? null,
     pincode: p.pincode ?? null,
     occupation: p.occupation ?? null,
-    medicalHistory: p.medicalHistory ?? null,
+    medicalHistory: mapMedicalHistory(p.medicalHistory),
     allergies: p.allergies ?? null,
     currentMedications: p.currentMedications ?? null,
     previousSurgeries: p.previousSurgeries ?? null,
@@ -180,7 +209,7 @@ export function registerPatientsRoutes(app: FastifyInstance): void {
         city: city ?? null,
         pincode: pincode ?? null,
         occupation: occupation ?? null,
-        medicalHistory: medicalHistory ?? null,
+        medicalHistory: sanitizeMedicalHistory(medicalHistory),
         allergies: allergies ?? null,
         currentMedications: currentMedications ?? null,
         previousSurgeries: previousSurgeries ?? null,
@@ -273,7 +302,7 @@ export function registerPatientsRoutes(app: FastifyInstance): void {
             city: city ?? null,
             pincode: pincode ?? null,
             occupation: occupation ?? null,
-            medicalHistory: medicalHistory ?? null,
+            medicalHistory: sanitizeMedicalHistory(medicalHistory),
             allergies: allergies ?? null,
             currentMedications: currentMedications ?? null,
             previousSurgeries: previousSurgeries ?? null,

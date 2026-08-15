@@ -27,7 +27,7 @@ import {
 import {
   UsersIcon,
 } from "@heroicons/react/24/outline";
-import type { Patient } from "@/components/patients-table";
+import type { Patient, MedicalHistoryEntry } from "@/components/patients-table";
 
 const genders = ["Male", "Female", "Other"];
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
@@ -71,8 +71,8 @@ export function PatientForm({
   const [city, setCity] = useState(initial?.city ?? "");
   const [pincode, setPincode] = useState(initial?.pincode ?? "");
   const [occupation, setOccupation] = useState(initial?.occupation ?? "");
-  const [medicalHistory, setMedicalHistory] = useState(
-    initial?.medicalHistory ?? ""
+  const [medicalHistory, setMedicalHistory] = useState<MedicalHistoryEntry[]>(
+    initial?.medicalHistory ?? []
   );
   const [allergies, setAllergies] = useState(initial?.allergies ?? "");
   const [currentMedications, setCurrentMedications] = useState(
@@ -86,6 +86,23 @@ export function PatientForm({
   );
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [loading, setLoading] = useState(false);
+
+  function updateMedicalHistory(
+    index: number,
+    patch: Partial<MedicalHistoryEntry>
+  ) {
+    setMedicalHistory((prev) =>
+      prev.map((entry, i) => (i === index ? { ...entry, ...patch } : entry))
+    );
+  }
+
+  function addMedicalHistoryEntry() {
+    setMedicalHistory((prev) => [...prev, { date: "", record: "" }]);
+  }
+
+  function removeMedicalHistoryEntry(index: number) {
+    setMedicalHistory((prev) => prev.filter((_, i) => i !== index));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -112,7 +129,15 @@ export function PatientForm({
       city: city || null,
       pincode: pincode || null,
       occupation: occupation || null,
-      medicalHistory: medicalHistory || null,
+      medicalHistory:
+        medicalHistory.length
+          ? medicalHistory
+              .map((entry) => ({
+                date: entry.date?.trim() ? entry.date.trim() : null,
+                record: entry.record.trim(),
+              }))
+              .filter((entry) => entry.record)
+          : null,
       allergies: allergies || null,
       currentMedications: currentMedications || null,
       previousSurgeries: previousSurgeries || null,
@@ -170,7 +195,7 @@ export function PatientForm({
       setCity("");
       setPincode("");
       setOccupation("");
-      setMedicalHistory("");
+      setMedicalHistory([]);
       setAllergies("");
       setCurrentMedications("");
       setPreviousSurgeries("");
@@ -505,13 +530,56 @@ export function PatientForm({
             </Field>
             <Field>
               <FieldLabel htmlFor="medicalHistory">Medical History</FieldLabel>
-              <Textarea
-                id="medicalHistory"
-                rows={3}
-                placeholder="Chronic conditions, past surgeries, ongoing treatment..."
-                value={medicalHistory}
-                onChange={(e) => setMedicalHistory(e.target.value)}
-              />
+              <FieldDescription>
+                Add dated entries for each condition, surgery or visit. The most
+                recent entry appears first on the patient page.
+              </FieldDescription>
+              <div className="flex flex-col gap-3">
+                {medicalHistory.map((entry, index) => (
+                  <div
+                    key={index}
+                    className="grid gap-3 rounded-lg border border-border bg-muted/20 p-3 sm:grid-cols-[190px_1fr_auto]"
+                  >
+                    <Input
+                      type="date"
+                      aria-label={`Medical history date ${index + 1}`}
+                      value={entry.date ?? ""}
+                      onChange={(e) =>
+                        updateMedicalHistory(index, { date: e.target.value })
+                      }
+                    />
+                    <Textarea
+                      rows={2}
+                      aria-label={`Medical history record ${index + 1}`}
+                      placeholder="e.g. Diagnosed with asthma, on inhaler"
+                      value={entry.record}
+                      onChange={(e) =>
+                        updateMedicalHistory(index, {
+                          record: e.target.value,
+                        })
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="justify-self-end text-destructive hover:text-destructive"
+                      onClick={() => removeMedicalHistoryEntry(index)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="justify-self-start"
+                  onClick={addMedicalHistoryEntry}
+                >
+                  Add Entry
+                </Button>
+              </div>
             </Field>
             <Field>
               <FieldLabel htmlFor="currentMedications">

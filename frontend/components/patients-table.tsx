@@ -80,6 +80,11 @@ import {
   TrashIcon as Trash,
 } from "@heroicons/react/24/outline";
 
+export type MedicalHistoryEntry = {
+  date: string | null;
+  record: string;
+};
+
 export type Patient = {
   id: string;
   fullName: string;
@@ -103,7 +108,7 @@ export type Patient = {
   city: string | null;
   pincode: string | null;
   occupation: string | null;
-  medicalHistory: string | null;
+  medicalHistory: MedicalHistoryEntry[] | null;
   allergies: string | null;
   currentMedications: string | null;
   previousSurgeries: string | null;
