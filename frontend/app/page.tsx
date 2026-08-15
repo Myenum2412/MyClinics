@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
-import AppointmentForm, { type DoctorOption } from "@/components/AppointmentForm";
-import HeaderBlock from "@/components/header-block";
+import CloudShaderHeroDemo from "@/components/cloud-shader-hero-demo";
+import type { DoctorOption } from "@/components/AppointmentForm";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -24,24 +24,5 @@ export default async function Home() {
     name: d.name,
   }));
 
-  return (
-    <HeaderBlock>
-      <div className="flex min-h-[calc(100svh-4rem)] flex-col items-center justify-center gap-10 text-center">
-        <section className="max-w-2xl">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            Welcome to My Clinic
-          </h1>
-          <p className="mt-4 text-lg text-muted-foreground">
-            This page is a Server Component. It renders on the server, so the
-            content below is available immediately without any JavaScript.
-          </p>
-        </section>
-        <AppointmentForm doctors={doctorOptions} />
-        <p className="max-w-md text-sm text-muted-foreground">
-          The form above is a Client Component ({`'use client'`}). It handles
-          state and interactivity in the browser.
-        </p>
-      </div>
-    </HeaderBlock>
-  );
+  return <CloudShaderHeroDemo doctors={doctorOptions} />;
 }
