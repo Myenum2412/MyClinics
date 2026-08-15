@@ -36,6 +36,7 @@ const TABLE_FEATURES = tableFeatures({
 
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -79,6 +80,12 @@ import {
   TrashIcon as Trash,
 } from "@heroicons/react/24/outline";
 
+export type DoctorScheduleDay = {
+  day: string;
+  start: string | null;
+  end: string | null;
+};
+
 export type Doctor = {
   id: string;
   name: string;
@@ -87,6 +94,15 @@ export type Doctor = {
   mobile: string | null;
   qualifications: string | null;
   city: string | null;
+  consultationFee: number | null;
+  experience: string | null;
+  gender: string | null;
+  languages: string[];
+  registrationNumber: string | null;
+  bio: string | null;
+  address: string | null;
+  schedule: DoctorScheduleDay[];
+  image: string | null;
 };
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -95,6 +111,8 @@ const COLUMN_LABELS: Record<string, string> = {
   mobile: "Mobile",
   qualifications: "Qualifications",
   city: "City",
+  consultationFee: "Fee",
+  experience: "Experience",
 };
 
 function SortIcon({ sorted }: { sorted: false | "asc" | "desc" }) {
@@ -157,14 +175,17 @@ const columns: ColumnDef<typeof TABLE_FEATURES, Doctor>[] = [
       const d = row.original;
       return (
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-muted text-xs font-semibold">
-            {d.name
-              .split(" ")
-              .map((n) => n[0])
-              .slice(0, 2)
-              .join("")
-              .toUpperCase()}
-          </div>
+          <Avatar className="size-8">
+            <AvatarImage src={d.image ?? undefined} alt={d.name} />
+            <AvatarFallback>
+              {d.name
+                .split(" ")
+                .map((n) => n[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
           <div className="min-w-0">
             <p className="truncate text-sm leading-tight font-medium">{d.name}</p>
             <p className="truncate text-xs text-muted-foreground">{d.email}</p>
@@ -226,6 +247,36 @@ const columns: ColumnDef<typeof TABLE_FEATURES, Doctor>[] = [
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
         {row.original.city ?? "—"}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "consultationFee",
+    enableSorting: false,
+    header: () => (
+      <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        Fee
+      </span>
+    ),
+    cell: ({ row }) => (
+      <span className="text-sm text-muted-foreground tabular-nums">
+        {row.original.consultationFee != null
+          ? `₹${row.original.consultationFee}`
+          : "—"}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "experience",
+    enableSorting: false,
+    header: () => (
+      <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        Experience
+      </span>
+    ),
+    cell: ({ row }) => (
+      <span className="text-sm text-muted-foreground">
+        {row.original.experience ?? "—"}
       </span>
     ),
   },
@@ -425,7 +476,7 @@ export function DoctorsTable({
                     "h-9",
                     header.column.id === "select" && "w-10 pl-4",
                     header.column.id === "name" && "pl-1",
-                    (header.column.id === "qualifications" ||
+                    (header.column.id === "experience" ||
                       header.column.id === "actions") && "pr-4"
                   )}
                 >
@@ -452,7 +503,7 @@ export function DoctorsTable({
                       "py-3",
                       cell.column.id === "select" && "pl-4",
                       cell.column.id === "name" && "pl-1",
-                      (cell.column.id === "qualifications" ||
+                      (cell.column.id === "experience" ||
                         cell.column.id === "actions") && "pr-4"
                     )}
                   >

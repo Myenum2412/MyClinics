@@ -15,6 +15,63 @@ import { requireAuth } from "@/plugins/auth";
 const DOCTORS_CACHE_KEY = "doctors:list";
 const DOCTORS_CACHE_TTL_MS = 15_000;
 
+const asString = (value: unknown) =>
+  value ? String(value).trim() : null;
+const asNumber = (value: unknown) =>
+  typeof value === "number" ? value : null;
+const asStringArray = (value: unknown) =>
+  Array.isArray(value) ? value.map(String) : [];
+
+const SCHEDULE_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+type ScheduleEntry = {
+  day: string;
+  start: string | null;
+  end: string | null;
+};
+
+function normalizeSchedule(value: unknown): ScheduleEntry[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const result: ScheduleEntry[] = [];
+  for (const item of value) {
+    const day = typeof item?.day === "string" ? item.day : "";
+    if (!SCHEDULE_DAYS.includes(day) || seen.has(day)) continue;
+    seen.add(day);
+    result.push({
+      day,
+      start: asString(item?.start),
+      end: asString(item?.end),
+    });
+  }
+  return result;
+}
+
+function mapSchedule(d: Record<string, unknown>): ScheduleEntry[] {
+  const schedule = normalizeSchedule(d.schedule);
+  if (schedule.length) return schedule;
+  return asStringArray(d.availableDays).map((day) => ({
+    day,
+    start: asString(d.availableStart),
+    end: asString(d.availableEnd),
+  }));
+}
+
+function normalizeImage(
+  value: unknown
+): { ok: true; image: string | null } | { ok: false; error: string } {
+  if (value === undefined || value === null || value === "") {
+    return { ok: true, image: null };
+  }
+  if (typeof value !== "string" || !value.startsWith("data:image/")) {
+    return { ok: false, error: "Invalid avatar image" };
+  }
+  if (value.length > 5_000_000) {
+    return { ok: false, error: "Avatar image must be under 5MB" };
+  }
+  return { ok: true, image: value };
+}
+
 function mapDoctor(d: Record<string, unknown>) {
   return {
     id: (d._id as { toString(): string }).toString(),
@@ -24,6 +81,15 @@ function mapDoctor(d: Record<string, unknown>) {
     mobile: d.mobile ?? null,
     qualifications: d.qualifications ?? null,
     city: d.city ?? null,
+    consultationFee: asNumber(d.consultationFee),
+    experience: asString(d.experience),
+    gender: asString(d.gender),
+    languages: asStringArray(d.languages),
+    registrationNumber: asString(d.registrationNumber),
+    bio: asString(d.bio),
+    address: asString(d.address),
+    schedule: mapSchedule(d),
+    image: d.image ?? null,
     createdAt: d.createdAt,
   };
 }
@@ -107,7 +173,24 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
 
     try {
       const body = (request.body ?? {}) as Record<string, unknown>;
-      const { name, email, password, specialty, mobile, qualifications, city } = body;
+      const {
+        name,
+        email,
+        password,
+        specialty,
+        mobile,
+        qualifications,
+        city,
+        consultationFee,
+        experience,
+        gender,
+        languages,
+        registrationNumber,
+        bio,
+        address,
+        schedule,
+        image,
+      } = body;
 
       if (!name || !email || !password) {
         const missing: string[] = [];
@@ -122,6 +205,11 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
       }
       if (typeof password !== "string" || password.length < 6) {
         return reply.code(400).send({ error: "Password must be at least 6 characters" });
+      }
+
+      const normalizedImage = normalizeImage(image);
+      if (!normalizedImage.ok) {
+        return reply.code(400).send({ error: normalizedImage.error });
       }
 
       const db = await getDb();
@@ -142,8 +230,16 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
         mobile: mobile ?? null,
         qualifications: qualifications ?? null,
         city: city ?? null,
+        consultationFee: asNumber(consultationFee),
+        experience: asString(experience),
+        gender: asString(gender),
+        languages: asStringArray(languages),
+        registrationNumber: asString(registrationNumber),
+        bio: asString(bio),
+        address: asString(address),
+        schedule: normalizeSchedule(schedule),
+        image: normalizedImage.image,
         role: "doctor",
-        image: null,
         createdAt: new Date(),
       });
 
@@ -159,6 +255,15 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
           mobile: mobile ?? null,
           qualifications: qualifications ?? null,
           city: city ?? null,
+          consultationFee: asNumber(consultationFee),
+          experience: asString(experience),
+          gender: asString(gender),
+          languages: asStringArray(languages),
+          registrationNumber: asString(registrationNumber),
+          bio: asString(bio),
+          address: asString(address),
+          schedule: normalizeSchedule(schedule),
+          image: normalizedImage.image,
         },
       });
     } catch (error) {
@@ -176,10 +281,30 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
       }
 
       const body = (request.body ?? {}) as Record<string, unknown>;
-      const { name, specialty, mobile, qualifications, city } = body;
+      const {
+        name,
+        specialty,
+        mobile,
+        qualifications,
+        city,
+        consultationFee,
+        experience,
+        gender,
+        languages,
+        registrationNumber,
+        bio,
+        address,
+        schedule,
+        image,
+      } = body;
 
       if (!name) {
         return reply.code(400).send({ error: "Name is required" });
+      }
+
+      const normalizedImage = normalizeImage(image);
+      if (!normalizedImage.ok) {
+        return reply.code(400).send({ error: normalizedImage.error });
       }
 
       const db = await getDb();
@@ -192,6 +317,15 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
             mobile: mobile ?? null,
             qualifications: qualifications ?? null,
             city: city ?? null,
+            consultationFee: asNumber(consultationFee),
+            experience: asString(experience),
+            gender: asString(gender),
+            languages: asStringArray(languages),
+            registrationNumber: asString(registrationNumber),
+            bio: asString(bio),
+            address: asString(address),
+            schedule: normalizeSchedule(schedule),
+            image: normalizedImage.image,
             updatedAt: new Date(),
           },
         }

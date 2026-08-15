@@ -22,6 +22,23 @@ export default async function DoctorsPage() {
     mobile: d.mobile ?? null,
     qualifications: d.qualifications ?? null,
     city: d.city ?? null,
+    consultationFee: typeof d.consultationFee === "number" ? d.consultationFee : null,
+    experience: d.experience ? String(d.experience) : null,
+    gender: d.gender ? String(d.gender) : null,
+    languages: Array.isArray(d.languages) ? d.languages.map(String) : [],
+    registrationNumber: d.registrationNumber ? String(d.registrationNumber) : null,
+    bio: d.bio ? String(d.bio) : null,
+    address: d.address ? String(d.address) : null,
+    schedule: Array.isArray(d.schedule)
+      ? d.schedule
+          .map((s) => ({
+            day: typeof s?.day === "string" ? s.day : "",
+            start: s?.start ? String(s.start) : null,
+            end: s?.end ? String(s.end) : null,
+          }))
+          .filter((s) => Boolean(s.day))
+      : [],
+    image: d.image ? String(d.image) : null,
     createdAt: d.createdAt,
   }));
 
