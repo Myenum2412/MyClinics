@@ -27,7 +27,7 @@ export type DoctorOption = {
   city?: string | null;
 };
 
-const genders = ["Male", "Female", "Other"];
+const genders = ["Male", "Female", "Transgender", "Other"];
 
 const TYPE_OPTIONS = [
   { value: "in-person", label: "In-person visit", icon: StethoscopeIcon },
