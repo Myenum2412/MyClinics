@@ -1,16 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { CloudShader } from "@/components/ui/cloud-shader";
 import AppointmentForm, {
   type DoctorOption,
 } from "@/components/AppointmentForm";
+import { DoctorFinder } from "@/components/doctor-finder";
 
 export default function CloudShaderHeroDemo({
   doctors,
 }: {
   doctors: DoctorOption[];
 }) {
+  const [selectedDoctorId, setSelectedDoctorId] = useState("");
+  const [selectedType, setSelectedType] = useState("in-person");
+
+  function handlePickDoctor(id: string) {
+    setSelectedDoctorId(id);
+    document
+      .getElementById("book")
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
   return (
     <div className="relative min-h-[50rem] w-full overflow-hidden">
       <CloudShader
@@ -31,6 +43,9 @@ export default function CloudShaderHeroDemo({
           </span>
         </Link>
         <div className="hidden items-center gap-8 text-sm font-medium text-white/90 md:flex">
+          <a href="#find" className="transition hover:text-white">
+            Find a Doctor
+          </a>
           <a href="#book" className="transition hover:text-white">
             Book Appointment
           </a>
@@ -59,37 +74,40 @@ export default function CloudShaderHeroDemo({
         <h1 className="text-4xl font-bold tracking-tight text-white drop-shadow-md md:text-6xl lg:text-7xl">
           Healthcare above <br className="hidden md:block" /> the clouds
         </h1>
-        <p className="mt-6 max-w-2xl text-base text-white/95 drop-shadow-sm md:text-lg">
+        <p className="mt-6 max-w-2xl text-base text-black md:text-lg">
           My Clinics gives your clinic one home for appointments, medicines,
           billing and medical reports. Care that works for patients while your
           team sleeps.
         </p>
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-          <a
-            href="#book"
-            className="rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-[#0D47A1] shadow-lg transition hover:-translate-y-0.5 hover:bg-white/90"
-          >
-            Book an appointment
-          </a>
-          <Link
-            href="/signup"
-            className="rounded-full border border-white/40 bg-white/10 px-6 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20"
-          >
-            Create free account
-          </Link>
-        </div>
-        <p className="mt-4 text-xs text-white/80">
-          No login required to book &middot; Free 14-day trial for clinics
-        </p>
+      </div>
+
+      {/* doctor finder */}
+      <div
+        id="find"
+        className="relative z-10 mx-auto mt-12 w-full max-w-5xl scroll-mt-24 px-4 md:mt-16"
+      >
+        <DoctorFinder
+          doctors={doctors}
+          selectedDoctorId={selectedDoctorId}
+          onPick={handlePickDoctor}
+          selectedType={selectedType}
+          onTypeChange={setSelectedType}
+        />
       </div>
 
       {/* booking card */}
       <div
         id="book"
-        className="relative z-10 mx-auto mt-12 w-full max-w-md scroll-mt-24 px-4 pb-16 md:mt-16"
+        className="relative z-10 mx-auto mt-8 w-full max-w-2xl scroll-mt-24 px-4 pb-16"
       >
         <div className="rounded-3xl border border-white/40 bg-white/95 p-2 shadow-2xl shadow-[#0D47A1]/30 backdrop-blur-md md:p-3">
-          <AppointmentForm doctors={doctors} />
+          <AppointmentForm
+            doctors={doctors}
+            doctorId={selectedDoctorId}
+            onDoctorIdChange={setSelectedDoctorId}
+            type={selectedType}
+            onTypeChange={setSelectedType}
+          />
         </div>
       </div>
     </div>
