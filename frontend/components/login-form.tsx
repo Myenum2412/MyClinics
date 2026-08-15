@@ -88,7 +88,20 @@ export function LoginForm({
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="password" className="text-black">Password</FieldLabel>
+            <div className="flex w-full items-center justify-between gap-2">
+              <label
+                htmlFor="password"
+                className="text-sm font-medium text-black"
+              >
+                Password
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-sm text-gray-500 underline underline-offset-4 hover:text-black"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <Input
               id="password"
               type="password"
@@ -106,15 +119,6 @@ export function LoginForm({
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Signing in..." : "Login"}
             </Button>
-          </Field>
-
-          <Field className="flex flex-row items-center justify-between">
-            <Link
-              href="/forgot-password"
-              className="text-sm text-gray-500 underline underline-offset-4 hover:text-black"
-            >
-              Forgot password?
-            </Link>
           </Field>
 
           <FieldSeparator>Or</FieldSeparator>
