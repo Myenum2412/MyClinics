@@ -59,6 +59,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -229,6 +230,12 @@ export function BillingTable({
   const totalCount = table.getFilteredRowModel().rows.length;
   const pageCount = table.getPageCount();
 
+  const visibleColumns = table.getVisibleLeafColumns();
+  const totalColumnIndex = visibleColumns.findIndex((c) => c.id === "total");
+  const totalSum = table
+    .getFilteredRowModel()
+    .rows.reduce((sum, row) => sum + (Number(row.original.total) || 0), 0);
+
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="flex flex-col gap-3 border-b border-border bg-muted/40 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
@@ -395,6 +402,43 @@ export function BillingTable({
             </TableRow>
           )}
         </TableBody>
+        {totalCount > 0 && (
+          <TableFooter>
+            <TableRow className="border-t border-border bg-muted/30">
+              {totalColumnIndex >= 0 ? (
+                <>
+                  <TableCell
+                    colSpan={totalColumnIndex}
+                    className="py-3 pl-4 text-right text-sm font-medium text-muted-foreground"
+                  >
+                    Total
+                  </TableCell>
+                  <TableCell className="py-3 pr-2 text-right text-sm font-semibold tabular-nums">
+                    {formatINR(totalSum)}
+                  </TableCell>
+                  {totalColumnIndex < visibleColumns.length - 1 && (
+                    <TableCell
+                      colSpan={visibleColumns.length - totalColumnIndex - 1}
+                      className="pr-4"
+                    />
+                  )}
+                </>
+              ) : (
+                <>
+                  <TableCell
+                    colSpan={visibleColumns.length - 1}
+                    className="py-3 pl-4 text-right text-sm font-medium text-muted-foreground"
+                  >
+                    Total
+                  </TableCell>
+                  <TableCell className="py-3 pr-4 text-right text-sm font-semibold tabular-nums">
+                    {formatINR(totalSum)}
+                  </TableCell>
+                </>
+              )}
+            </TableRow>
+          </TableFooter>
+        )}
       </Table>
 
       <div className="flex items-center justify-between gap-4 border-t border-border bg-muted/20 px-4 py-2.5">
