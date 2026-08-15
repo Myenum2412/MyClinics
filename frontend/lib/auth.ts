@@ -67,17 +67,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
+      console.log(`[NextAuth Callback JWT] Entered. user: ${JSON.stringify(user)}, token: ${JSON.stringify(token)}`);
       if (user) {
         token.id = user.id as string;
         token.role = ((user as { role?: string }).role ?? "doctor") as Role;
       }
+      console.log(`[NextAuth Callback JWT] Returning token: ${JSON.stringify(token)}`);
       return token;
     },
     async session({ session, token }) {
+      console.log(`[NextAuth Callback Session] Entered. session: ${JSON.stringify(session)}, token: ${JSON.stringify(token)}`);
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = (token.role as Role) ?? "doctor";
       }
+      console.log(`[NextAuth Callback Session] Returning session: ${JSON.stringify(session)}`);
       return session;
     },
   },
