@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
-import { ObjectId } from "mongodb";
+import { ObjectId, type Document } from "mongodb";
 import { getDb } from "@/lib/db";
 import {
   DEFAULT_LIMIT,
@@ -26,6 +26,43 @@ const asStringArray = (value: unknown) =>
   Array.isArray(value) ? value.map(String) : [];
 
 const SCHEDULE_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+type MedicineEntry = { name?: unknown; frequency?: unknown };
+
+function buildDoctorMedicines(
+  prescriptions: Document[]
+): { name: string; frequency: string | null; count: number }[] {
+  const medicines: { name: string; frequency: string | null; count: number }[] =
+    [];
+  const index = new Map<string, number>();
+  const sorted = [...prescriptions].sort((a, b) =>
+    String(b.visitDate ?? "").localeCompare(String(a.visitDate ?? ""))
+  );
+  for (const p of sorted) {
+    const items = Array.isArray(p.medicines)
+      ? (p.medicines as MedicineEntry[])
+      : [];
+    for (const item of items) {
+      const name = item?.name ? String(item.name).trim() : "";
+      if (!name) continue;
+      const key = name.toLowerCase();
+      const idx = index.get(key);
+      if (idx == null) {
+        index.set(key, medicines.length);
+        medicines.push({
+          name,
+          frequency: item?.frequency ? String(item.frequency) : null,
+          count: 1,
+        });
+      } else {
+        medicines[idx].count += 1;
+      }
+    }
+  }
+  return medicines.sort(
+    (a, b) => b.count - a.count || a.name.localeCompare(b.name)
+  );
+}
 
 type ScheduleEntry = {
   day: string;
@@ -416,6 +453,7 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
         appointments: appointments.map(mapAppointment),
         prescriptions: prescriptions.map(mapPrescription),
         bills: bills.map(mapBill),
+        medicines: buildDoctorMedicines(prescriptions),
       });
     } catch (error) {
       handleError(reply, error, "List doctor records");

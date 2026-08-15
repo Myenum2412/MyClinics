@@ -56,6 +56,12 @@ export type DoctorBill = {
   status: string;
 };
 
+export type DoctorMedicine = {
+  name: string;
+  frequency: string | null;
+  count: number;
+};
+
 const dateFmt = new Intl.DateTimeFormat("en-IN", {
   day: "numeric",
   month: "short",
@@ -80,16 +86,19 @@ export function DoctorRecordsView({
   appointments,
   prescriptions,
   bills,
+  medicines,
 }: {
   doctor: Doctor;
   appointments: DoctorAppointment[];
   prescriptions: DoctorPrescription[];
   bills: DoctorBill[];
+  medicines: DoctorMedicine[];
 }) {
   const counts = {
     appointments: appointments.length,
     prescriptions: prescriptions.length,
     bills: bills.length,
+    medicines: medicines.length,
   };
 
   return (
@@ -137,9 +146,15 @@ export function DoctorRecordsView({
             Prescriptions ({counts.prescriptions})
           </TabsTrigger>
           <TabsTrigger value="bills">Bills ({counts.bills})</TabsTrigger>
+          <TabsTrigger value="medicines">
+            Medicines ({counts.medicines})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="appointments">
+          <h2 className="mb-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Appointments
+          </h2>
           <div className="overflow-hidden rounded-xl border border-border bg-card">
             <Table>
               <TableHeader>
@@ -192,6 +207,9 @@ export function DoctorRecordsView({
         </TabsContent>
 
         <TabsContent value="prescriptions">
+          <h2 className="mb-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Prescriptions
+          </h2>
           <div className="overflow-hidden rounded-xl border border-border bg-card">
             <Table>
               <TableHeader>
@@ -253,6 +271,9 @@ export function DoctorRecordsView({
         </TabsContent>
 
         <TabsContent value="bills">
+          <h2 className="mb-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Bills
+          </h2>
           <div className="overflow-hidden rounded-xl border border-border bg-card">
             <Table>
               <TableHeader>
@@ -307,12 +328,54 @@ export function DoctorRecordsView({
             </Table>
           </div>
         </TabsContent>
+
+        <TabsContent value="medicines">
+          <h2 className="mb-2 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Medicines
+          </h2>
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Medicine</TableHead>
+                  <TableHead>Frequency</TableHead>
+                  <TableHead>Times Prescribed</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {medicines.length ? (
+                  medicines.map((m, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{m.name}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {m.frequency || "—"}
+                      </TableCell>
+                      <TableCell className="tabular-nums">{m.count}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={3}
+                      className="h-20 text-center text-muted-foreground"
+                    >
+                      No medicines prescribed yet.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
       </Tabs>
 
       <p className="text-xs text-muted-foreground">
         Total working records:{" "}
         <span className="font-medium text-foreground">
-          {counts.appointments + counts.prescriptions + counts.bills}
+          {counts.appointments +
+            counts.prescriptions +
+            counts.bills +
+            counts.medicines}
         </span>
       </p>
     </div>

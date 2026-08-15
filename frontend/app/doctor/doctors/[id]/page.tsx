@@ -6,6 +6,7 @@ import {
   type DoctorAppointment,
   type DoctorPrescription,
   type DoctorBill,
+  type DoctorMedicine,
 } from "@/components/doctor-records-view";
 import type { Doctor } from "@/components/doctors-table";
 import { getDb } from "@/lib/db";
@@ -137,6 +138,36 @@ export default async function DoctorRecordsPage({
     status: String(b.status ?? ""),
   }));
 
+  const medicines: DoctorMedicine[] = [];
+  const medicineIndex = new Map<string, number>();
+  const sortedPrescriptions = [...prescriptionDocs].sort((a, b) =>
+    String(b.visitDate ?? "").localeCompare(String(a.visitDate ?? ""))
+  );
+  for (const p of sortedPrescriptions) {
+    const items = Array.isArray(p.medicines)
+      ? (p.medicines as { name?: unknown; frequency?: unknown }[])
+      : [];
+    for (const item of items) {
+      const name = item?.name ? String(item.name).trim() : "";
+      if (!name) continue;
+      const key = name.toLowerCase();
+      const idx = medicineIndex.get(key);
+      if (idx == null) {
+        medicineIndex.set(key, medicines.length);
+        medicines.push({
+          name,
+          frequency: item?.frequency ? String(item.frequency) : null,
+          count: 1,
+        });
+      } else {
+        medicines[idx].count += 1;
+      }
+    }
+  }
+  medicines.sort(
+    (a, b) => b.count - a.count || a.name.localeCompare(b.name)
+  );
+
   return (
     <>
       <DoctorRecordsView
@@ -144,6 +175,7 @@ export default async function DoctorRecordsPage({
         appointments={appointments}
         prescriptions={prescriptions}
         bills={bills}
+        medicines={medicines}
       />
       <Toaster />
     </>
