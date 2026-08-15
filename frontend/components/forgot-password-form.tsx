@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
@@ -58,15 +57,21 @@ export function ForgotPasswordForm() {
             </div>
             <span className="sr-only">My Clinic</span>
           </Link>
-          <h1 className="text-xl font-bold">Forgot your password?</h1>
-          <FieldDescription>
+          <h1 className="text-xl font-bold text-black">Forgot your password?</h1>
+          <p className="text-left text-sm leading-normal font-normal text-gray-500">
             Enter your email and we&apos;ll send you a reset link. Remembered
-            it? <Link href="/login">Login</Link>
-          </FieldDescription>
+            it?{" "}
+            <Link
+              href="/login"
+              className="font-medium text-gray-700 underline underline-offset-4 hover:text-black"
+            >
+              Login
+            </Link>
+          </p>
         </div>
 
         <Field>
-          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <FieldLabel htmlFor="email" className="text-black">Email</FieldLabel>
           <Input
             id="email"
             type="email"
@@ -74,6 +79,7 @@ export function ForgotPasswordForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            className="text-black placeholder:text-gray-400 bg-white!"
           />
         </Field>
 
@@ -84,13 +90,13 @@ export function ForgotPasswordForm() {
           </p>
         )}
         {resetUrl && (
-          <div className="rounded-lg border border-border bg-muted/50 p-3">
-            <p className="text-xs font-medium text-muted-foreground">
+          <div className="rounded-lg border border-black/10 bg-gray-50 p-3">
+            <p className="text-xs font-medium text-gray-500">
               Demo link (in production this is emailed):
             </p>
             <Link
               href={resetUrl}
-              className="break-all text-sm text-primary underline underline-offset-4"
+              className="break-all text-sm text-gray-700 underline underline-offset-4 hover:text-black"
             >
               {resetUrl}
             </Link>
