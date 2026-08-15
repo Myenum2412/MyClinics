@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import {
-  AlertTriangleIcon,
-  Loader2Icon,
+  ExclamationTriangleIcon as AlertTriangleIcon,
+  ArrowPathIcon as Loader2Icon,
   PencilIcon,
   PlusIcon,
-  SaveIcon,
-  Trash2Icon,
-  XIcon,
-} from "lucide-react";
+  ArrowDownTrayIcon as SaveIcon,
+  TrashIcon as Trash2Icon,
+  XMarkIcon as XIcon,
+} from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

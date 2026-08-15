@@ -16,16 +16,16 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import {
-  LayoutDashboardIcon,
   CalendarDaysIcon,
+  DocumentTextIcon as FileTextIcon,
+  Squares2X2Icon as LayoutDashboardIcon,
+  BeakerIcon as PillIcon,
+  ReceiptPercentIcon as ReceiptTextIcon,
+  Cog6ToothIcon as Settings2Icon,
+  IdentificationIcon as StethoscopeIcon,
+  CircleStackIcon as TabletsIcon,
   UsersIcon,
-  StethoscopeIcon,
-  PillIcon,
-  TabletsIcon,
-  FileTextIcon,
-  ReceiptTextIcon,
-  Settings2Icon,
-} from "lucide-react"
+} from "@heroicons/react/24/outline";
 
 const data = {
   navMain: [

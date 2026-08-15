@@ -13,7 +13,11 @@ import { ServicesView, type Service } from "@/components/services-view";
 import type { Bill } from "@/components/billing-table";
 import type { PatientPick } from "@/components/patient-picker";
 import type { StatsItem } from "@/lib/stats";
-import { ReceiptText, PlusIcon, StethoscopeIcon } from "lucide-react";
+import {
+  PlusIcon,
+  ReceiptPercentIcon as ReceiptText,
+  IdentificationIcon as StethoscopeIcon,
+} from "@heroicons/react/24/outline";
 
 export function BillingTabs({
   initialBills,

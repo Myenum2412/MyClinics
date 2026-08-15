@@ -1,6 +1,8 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import {
+  ArrowLeftIcon as ArrowLeft,
+} from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";

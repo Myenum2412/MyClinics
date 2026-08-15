@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Printer } from "lucide-react";
+import {
+  ArrowLeftIcon as ArrowLeft,
+  PrinterIcon as Printer,
+} from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import { printPrescription } from "@/components/prescription-print";
 import type { Prescription } from "@/components/prescriptions-table";

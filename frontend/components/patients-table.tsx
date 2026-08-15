@@ -67,18 +67,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  AlertTriangleIcon,
-  ArrowUp,
-  ArrowDown,
-  ChevronsUpDown,
-  Columns,
-  ChevronLeft,
-  ChevronRight,
-  Ellipsis,
-  Eye,
-  Pencil,
-  Trash,
-} from "lucide-react";
+  ExclamationTriangleIcon as AlertTriangleIcon,
+  ArrowDownIcon as ArrowDown,
+  ArrowUpIcon as ArrowUp,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  ChevronUpDownIcon as ChevronsUpDown,
+  ViewColumnsIcon as Columns,
+  EllipsisHorizontalIcon as Ellipsis,
+  EyeIcon as Eye,
+  PencilIcon as Pencil,
+  TrashIcon as Trash,
+} from "@heroicons/react/24/outline";
 
 export type Patient = {
   id: string;

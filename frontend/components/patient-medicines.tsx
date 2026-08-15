@@ -1,6 +1,9 @@
 "use client";
 
-import { Pill, Stethoscope } from "lucide-react";
+import {
+  BeakerIcon as Pill,
+  IdentificationIcon as Stethoscope,
+} from "@heroicons/react/24/outline";
 import { Badge } from "@/components/ui/badge";
 import type { Prescription } from "@/components/prescriptions-table";
 

@@ -49,6 +49,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
+import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
@@ -76,18 +87,19 @@ import {
 import type { PatientPick } from "@/components/patient-picker";
 import { appointmentStatusClass } from "@/lib/appointment-status";
 import {
-  AlertTriangleIcon,
-  ArrowUp,
-  ArrowDown,
-  Check,
-  ChevronsUpDown,
-  Columns,
-  ChevronLeft,
-  ChevronRight,
-  Ellipsis,
-  Pencil,
-  Trash,
-} from "lucide-react";
+  ExclamationTriangleIcon as AlertTriangleIcon,
+  ArrowDownIcon as ArrowDown,
+  ArrowUpIcon as ArrowUp,
+  CalendarIcon,
+  CheckIcon as Check,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  ChevronUpDownIcon as ChevronsUpDown,
+  ViewColumnsIcon as Columns,
+  EllipsisHorizontalIcon as Ellipsis,
+  PencilIcon as Pencil,
+  TrashIcon as Trash,
+} from "@heroicons/react/24/outline";
 
 export type Appointment = {
   id: string;
@@ -131,6 +143,109 @@ const APPOINTMENT_STATUSES: Appointment["status"][] = [
   "rescheduled",
   "no_show",
 ];
+
+const CANCEL_REASONS = [
+  "Patient requested cancellation",
+  "Doctor unavailable",
+  "Duplicate booking",
+  "Clinic closed",
+  "Patient no longer needs the visit",
+  "Other",
+];
+
+const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+const toDateKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate()
+  ).padStart(2, "0")}`;
+
+function MonthCalendar({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (dateKey: string) => void;
+}) {
+  const today = new Date();
+  const todayKey = toDateKey(today);
+  const initial = value ? new Date(`${value}T12:00:00`) : today;
+  const [view, setView] = React.useState(() =>
+    Number.isNaN(initial.getTime()) ? today : initial
+  );
+
+  const year = view.getFullYear();
+  const month = view.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const cells: (string | null)[] = [
+    ...Array.from({ length: firstDay }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, i) =>
+      toDateKey(new Date(year, month, i + 1))
+    ),
+  ];
+
+  return (
+    <div className="select-none">
+      <div className="mb-2 flex items-center justify-between">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Previous month"
+          onClick={() => setView(new Date(year, month - 1, 1))}
+        >
+          <ChevronLeft className="size-4" aria-hidden="true" />
+        </Button>
+        <span className="text-sm font-semibold">
+          {view.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Next month"
+          onClick={() => setView(new Date(year, month + 1, 1))}
+        >
+          <ChevronRight className="size-4" aria-hidden="true" />
+        </Button>
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {WEEKDAYS.map((d) => (
+          <div
+            key={d}
+            className="flex h-7 items-center justify-center text-xs font-medium text-muted-foreground"
+          >
+            {d}
+          </div>
+        ))}
+        {cells.map((key, i) => {
+          if (!key) return <div key={`empty-${i}`} />;
+          const disabled = key < todayKey;
+          const selected = key === value;
+          return (
+            <button
+              key={key}
+              type="button"
+              disabled={disabled}
+              onClick={() => onChange(key)}
+              className={cn(
+                "flex h-7 items-center justify-center rounded-md text-xs font-medium tabular-nums transition-colors",
+                disabled &&
+                  "cursor-not-allowed text-muted-foreground/40 line-through",
+                !disabled && !selected && "hover:bg-accent",
+                selected && "bg-primary font-semibold text-primary-foreground"
+              )}
+            >
+              {Number(key.slice(-2))}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 const dateFmt = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -398,6 +513,13 @@ export function AppointmentsTable({
   const [editing, setEditing] = React.useState<Appointment | null>(null);
   const [deleting, setDeleting] = React.useState<Appointment | null>(null);
   const [deleteBusy, setDeleteBusy] = React.useState(false);
+  const [rescheduling, setRescheduling] = React.useState<Appointment | null>(null);
+  const [rescheduleDate, setRescheduleDate] = React.useState("");
+  const [rescheduleBusy, setRescheduleBusy] = React.useState(false);
+  const [cancelling, setCancelling] = React.useState<Appointment | null>(null);
+  const [cancelReason, setCancelReason] = React.useState(CANCEL_REASONS[0]);
+  const [cancelComment, setCancelComment] = React.useState("");
+  const [cancelBusy, setCancelBusy] = React.useState(false);
 
   const changeStatus = React.useCallback(
     async (appointment: Appointment, newStatus: Appointment["status"]) => {
@@ -418,6 +540,62 @@ export function AppointmentsTable({
     },
     [onChanged]
   );
+
+  const openReschedule = React.useCallback((appointment: Appointment) => {
+    setRescheduleDate(appointment.date ?? "");
+    setRescheduling(appointment);
+  }, []);
+
+  const openCancel = React.useCallback((appointment: Appointment) => {
+    setCancelReason(CANCEL_REASONS[0]);
+    setCancelComment("");
+    setCancelling(appointment);
+  }, []);
+
+  async function confirmReschedule() {
+    if (!rescheduling || !rescheduleDate) return;
+    setRescheduleBusy(true);
+    const res = await fetch(`/api/appointments/${rescheduling.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "rescheduled", date: rescheduleDate }),
+    });
+    const data = await res.json();
+    setRescheduleBusy(false);
+    if (!res.ok) {
+      toast.error(data.error || "Something went wrong. Please try again.");
+      return;
+    }
+    toast.success("Appointment rescheduled", {
+      description: `${rescheduling.fullName} · ${rescheduleDate}`,
+    });
+    setRescheduling(null);
+    await onChanged?.();
+  }
+
+  async function confirmCancel() {
+    if (!cancelling) return;
+    setCancelBusy(true);
+    const notes = cancelComment.trim()
+      ? `Cancelled: ${cancelReason} — ${cancelComment.trim()}`
+      : `Cancelled: ${cancelReason}`;
+    const res = await fetch(`/api/appointments/${cancelling.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "cancelled", notes }),
+    });
+    const data = await res.json();
+    setCancelBusy(false);
+    if (!res.ok) {
+      toast.error(data.error || "Something went wrong. Please try again.");
+      return;
+    }
+    toast.success("Appointment cancelled", {
+      description: `${cancelling.fullName} · ${cancelReason.toLowerCase()}`,
+    });
+    setCancelling(null);
+    await onChanged?.();
+  }
 
   const tableColumns = React.useMemo<
     ColumnDef<typeof TABLE_FEATURES, Appointment>[]
@@ -454,7 +632,15 @@ export function AppointmentsTable({
                     {APPOINTMENT_STATUSES.map((s) => (
                       <DropdownMenuItem
                         key={s}
-                        onClick={() => changeStatus(row.original, s)}
+                        onClick={() => {
+                          if (s === "rescheduled") {
+                            openReschedule(row.original);
+                          } else if (s === "cancelled") {
+                            openCancel(row.original);
+                          } else {
+                            changeStatus(row.original, s);
+                          }
+                        }}
                         className="capitalize"
                       >
                         {s.replace("_", " ")}
@@ -484,7 +670,7 @@ export function AppointmentsTable({
         ),
       },
     ];
-  }, [canManage, changeStatus]);
+  }, [canManage, changeStatus, openReschedule, openCancel]);
 
   const table = useTable({
     features: TABLE_FEATURES,
@@ -770,6 +956,106 @@ export function AppointmentsTable({
               {deleteBusy ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(rescheduling)}
+        onOpenChange={(open) => !open && setRescheduling(null)}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon className="size-4" aria-hidden="true" />
+              Reschedule Appointment
+            </DialogTitle>
+            <DialogDescription>
+              {rescheduling?.fullName} · currently{" "}
+              {formatDate(rescheduling?.date ?? "")} at {rescheduling?.time}.
+              Pick a new date below.
+            </DialogDescription>
+          </DialogHeader>
+          <MonthCalendar value={rescheduleDate} onChange={setRescheduleDate} />
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" type="button" />}>
+              Cancel
+            </DialogClose>
+            <Button
+              type="button"
+              onClick={confirmReschedule}
+              disabled={rescheduleBusy || !rescheduleDate}
+            >
+              {rescheduleBusy
+                ? "Confirming..."
+                : `Confirm ${rescheduleDate ? `· ${rescheduleDate}` : ""}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(cancelling)}
+        onOpenChange={(open) => !open && setCancelling(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancel Appointment</DialogTitle>
+            <DialogDescription>
+              {cancelling?.fullName} · {formatDate(cancelling?.date ?? "")} at{" "}
+              {cancelling?.time}. Select a reason for cancellation.
+            </DialogDescription>
+          </DialogHeader>
+          <form className="flex flex-col gap-4">
+            <FieldGroup>
+              <Field>
+                <FieldLabel>Reason *</FieldLabel>
+                <RadioGroup
+                  value={cancelReason}
+                  onValueChange={(v) => setCancelReason(v ?? CANCEL_REASONS[0])}
+                  className="gap-1.5"
+                >
+                  {CANCEL_REASONS.map((reason) => (
+                    <label
+                      key={reason}
+                      className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
+                    >
+                      <RadioGroupItem
+                        value={reason}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <span>{reason}</span>
+                    </label>
+                  ))}
+                </RadioGroup>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="cancelComment">Comment (optional)</FieldLabel>
+                <Textarea
+                  id="cancelComment"
+                  rows={3}
+                  placeholder="Additional details for the cancellation..."
+                  value={cancelComment}
+                  onChange={(e) => setCancelComment(e.target.value)}
+                />
+                <FieldDescription>
+                  Saved to the appointment notes.
+                </FieldDescription>
+              </Field>
+            </FieldGroup>
+            <DialogFooter>
+              <DialogClose render={<Button variant="outline" type="button" />}>
+                Back
+              </DialogClose>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={confirmCancel}
+                disabled={cancelBusy}
+              >
+                {cancelBusy ? "Cancelling..." : "Confirm Cancellation"}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </>

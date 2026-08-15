@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Pencil } from "lucide-react";
+import {
+  ArrowRightIcon as ArrowRight,
+  PencilIcon as Pencil,
+} from "@heroicons/react/24/outline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PreviewSheet } from "@/components/preview-sheet";

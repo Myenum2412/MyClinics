@@ -2,7 +2,12 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { CheckIcon, Loader2Icon, SaveIcon, Undo2Icon } from "lucide-react";
+import {
+  CheckIcon,
+  ArrowPathIcon as Loader2Icon,
+  ArrowDownTrayIcon as SaveIcon,
+  ArrowUturnLeftIcon as Undo2Icon,
+} from "@heroicons/react/24/outline";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

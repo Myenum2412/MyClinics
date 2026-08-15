@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Search } from "lucide-react";
+import {
+  MagnifyingGlassIcon as Search,
+} from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import Stats07 from "@/components/stats-07";
 import { AppointmentsTable, type Appointment } from "@/components/appointments-table";

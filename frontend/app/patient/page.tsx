@@ -1,12 +1,12 @@
 import Link from "next/link";
 import {
-  ArrowRight,
+  ArrowRightIcon as ArrowRight,
   CalendarDaysIcon,
-  FileText,
-  Pill,
-  ReceiptText,
-  Stethoscope,
-} from "lucide-react";
+  DocumentTextIcon as FileText,
+  BeakerIcon as Pill,
+  ReceiptPercentIcon as ReceiptText,
+  IdentificationIcon as Stethoscope,
+} from "@heroicons/react/24/outline";
 import { Toaster } from "@/components/ui/sonner";
 import Stats07 from "@/components/stats-07";
 import {

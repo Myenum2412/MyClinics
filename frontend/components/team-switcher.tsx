@@ -18,7 +18,10 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronsUpDownIcon, PlusIcon } from "lucide-react"
+import {
+  ChevronUpDownIcon as ChevronsUpDownIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
 
 export function TeamSwitcher({
   teams,

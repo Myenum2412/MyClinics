@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Download, Pencil, Printer } from "lucide-react";
+import {
+  ArrowLeftIcon as ArrowLeft,
+  ArrowDownTrayIcon as Download,
+  PencilIcon as Pencil,
+  PrinterIcon as Printer,
+} from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { printBill } from "@/components/billing-print";

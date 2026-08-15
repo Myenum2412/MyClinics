@@ -2,7 +2,13 @@
 
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
-import { PlusIcon, Printer, ReceiptText, Trash2, X } from "lucide-react";
+import {
+  PlusIcon,
+  PrinterIcon as Printer,
+  ReceiptPercentIcon as ReceiptText,
+  TrashIcon as Trash2,
+  XMarkIcon as X,
+} from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import {
   Card,

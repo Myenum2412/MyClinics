@@ -1,7 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Eye, ReceiptText, Search } from "lucide-react";
+import {
+  EyeIcon as Eye,
+  ReceiptPercentIcon as ReceiptText,
+  MagnifyingGlassIcon as Search,
+} from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

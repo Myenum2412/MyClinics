@@ -1,14 +1,14 @@
 import {
-  File,
-  FileArchive,
-  FileAudio,
-  FileCode,
-  FileImage,
-  FileSpreadsheet,
-  FileText,
-  FileVideo,
-  Presentation,
-} from "lucide-react";
+  DocumentIcon as File,
+  ArchiveBoxIcon as FileArchive,
+  MusicalNoteIcon as FileAudio,
+  CodeBracketIcon as FileCode,
+  PhotoIcon as FileImage,
+  TableCellsIcon as FileSpreadsheet,
+  DocumentTextIcon as FileText,
+  FilmIcon as FileVideo,
+  PresentationChartLineIcon as Presentation,
+} from "@heroicons/react/24/outline";
 
 export type FileCategory =
   | "pdf"

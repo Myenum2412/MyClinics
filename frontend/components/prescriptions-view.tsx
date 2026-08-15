@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { AlertTriangleIcon, PlusIcon, Search } from "lucide-react";
+import {
+  ExclamationTriangleIcon as AlertTriangleIcon,
+  PlusIcon,
+  MagnifyingGlassIcon as Search,
+} from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";

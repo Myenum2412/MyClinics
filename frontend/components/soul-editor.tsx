@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2Icon, SaveIcon } from "lucide-react";
+import {
+  ArrowPathIcon as Loader2Icon,
+  ArrowDownTrayIcon as SaveIcon,
+} from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

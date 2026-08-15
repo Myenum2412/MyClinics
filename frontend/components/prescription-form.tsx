@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { PlusIcon, Printer, Trash2, X } from "lucide-react";
+import {
+  PlusIcon,
+  PrinterIcon as Printer,
+  TrashIcon as Trash2,
+  XMarkIcon as X,
+} from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,7 +31,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { PillIcon } from "lucide-react";
+import {
+  BeakerIcon as PillIcon,
+} from "@heroicons/react/24/outline";
 import { printPrescription } from "@/components/prescription-print";
 import { prescriptionHtml } from "@/lib/print-documents";
 import { saveReportCopy } from "@/components/report-copy";

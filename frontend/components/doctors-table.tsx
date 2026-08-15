@@ -67,17 +67,17 @@ import {
 } from "@/components/ui/table";
 import { DoctorForm } from "@/components/doctor-form";
 import {
-  AlertTriangleIcon,
-  ArrowUp,
-  ArrowDown,
-  ChevronsUpDown,
-  Columns,
-  ChevronLeft,
-  ChevronRight,
-  Ellipsis,
-  Pencil,
-  Trash,
-} from "lucide-react";
+  ExclamationTriangleIcon as AlertTriangleIcon,
+  ArrowDownIcon as ArrowDown,
+  ArrowUpIcon as ArrowUp,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  ChevronUpDownIcon as ChevronsUpDown,
+  ViewColumnsIcon as Columns,
+  EllipsisHorizontalIcon as Ellipsis,
+  PencilIcon as Pencil,
+  TrashIcon as Trash,
+} from "@heroicons/react/24/outline";
 
 export type Doctor = {
   id: string;

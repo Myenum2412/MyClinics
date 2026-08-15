@@ -1,4 +1,6 @@
-import { UserRound } from "lucide-react";
+import {
+  UserCircleIcon as UserRound,
+} from "@heroicons/react/24/outline";
 
 export function PatientUnlinked() {
   return (

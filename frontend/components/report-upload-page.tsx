@@ -1,7 +1,12 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ArrowLeft, CloudUpload, FileUp, X } from "lucide-react";
+import {
+  ArrowLeftIcon as ArrowLeft,
+  CloudArrowUpIcon as CloudUpload,
+  ArrowUpTrayIcon as FileUp,
+  XMarkIcon as X,
+} from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";

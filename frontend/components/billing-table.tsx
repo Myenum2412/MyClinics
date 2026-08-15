@@ -65,18 +65,18 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import {
-  ArrowUp,
-  ArrowDown,
-  ChevronsUpDown,
-  Columns,
-  ChevronLeft,
-  ChevronRight,
-  Ellipsis,
-  Eye,
-  Pencil,
-  Printer,
-  Trash,
-} from "lucide-react";
+  ArrowDownIcon as ArrowDown,
+  ArrowUpIcon as ArrowUp,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  ChevronUpDownIcon as ChevronsUpDown,
+  ViewColumnsIcon as Columns,
+  EllipsisHorizontalIcon as Ellipsis,
+  EyeIcon as Eye,
+  PencilIcon as Pencil,
+  PrinterIcon as Printer,
+  TrashIcon as Trash,
+} from "@heroicons/react/24/outline";
 import { formatINR } from "@/lib/billing";
 
 export type BillItem = {

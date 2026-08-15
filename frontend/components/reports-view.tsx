@@ -4,21 +4,21 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  AlertTriangleIcon,
-  CheckSquare,
-  ChevronDown,
-  ChevronRight,
-  Folder,
-  FolderInput,
-  FolderOpen,
-  MoreHorizontal,
-  Pencil,
-  Search,
-  Trash2,
-  Upload,
-  UserRound,
-  X,
-} from "lucide-react";
+  ExclamationTriangleIcon as AlertTriangleIcon,
+  CheckBadgeIcon as CheckSquare,
+  ChevronDownIcon as ChevronDown,
+  ChevronRightIcon as ChevronRight,
+  FolderIcon as Folder,
+  FolderArrowDownIcon as FolderInput,
+  FolderOpenIcon as FolderOpen,
+  EllipsisHorizontalIcon as MoreHorizontal,
+  PencilIcon as Pencil,
+  MagnifyingGlassIcon as Search,
+  TrashIcon as Trash2,
+  ArrowUpTrayIcon as Upload,
+  UserCircleIcon as UserRound,
+  XMarkIcon as X,
+} from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

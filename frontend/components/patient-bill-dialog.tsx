@@ -1,6 +1,10 @@
 "use client";
 
-import { Download, Printer, X } from "lucide-react";
+import {
+  ArrowDownTrayIcon as Download,
+  PrinterIcon as Printer,
+  XMarkIcon as X,
+} from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

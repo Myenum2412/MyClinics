@@ -105,7 +105,14 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
             },
           }
         : {
-            $set: { status, updatedAt: new Date() },
+            $set: {
+              status,
+              ...(date !== undefined ? { date } : {}),
+              ...(time !== undefined ? { time } : {}),
+              ...(notes !== undefined ? { notes } : {}),
+              ...(reason !== undefined ? { reason } : {}),
+              updatedAt: new Date(),
+            },
           };
 
       await db.collection("appointments").updateOne(
@@ -114,7 +121,7 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
       );
 
       const affectedDates = new Set([oldDate]);
-      if (hasFullDetails && date && date !== oldDate) affectedDates.add(String(date));
+      if (date && date !== oldDate) affectedDates.add(String(date));
       for (const d of affectedDates) {
         if (d) await reassignCounters(db, d);
       }

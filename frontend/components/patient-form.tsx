@@ -24,7 +24,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { UsersIcon } from "lucide-react";
+import {
+  UsersIcon,
+} from "@heroicons/react/24/outline";
 import type { Patient } from "@/components/patients-table";
 
 const genders = ["Male", "Female", "Other"];

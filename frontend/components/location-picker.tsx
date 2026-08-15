@@ -2,11 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Building2Icon,
+  BuildingOfficeIcon as Building2Icon,
   ChevronDownIcon,
-  Loader2Icon,
+  ArrowPathIcon as Loader2Icon,
   MapPinIcon,
-} from "lucide-react";
+} from "@heroicons/react/24/outline";
 
 const INDIAN_STATES = [
   "Andhra Pradesh",

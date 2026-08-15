@@ -23,7 +23,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { StethoscopeIcon } from "lucide-react";
+import {
+  IdentificationIcon as StethoscopeIcon,
+} from "@heroicons/react/24/outline";
 import type { Doctor } from "@/components/doctors-table";
 
 const specialties = [

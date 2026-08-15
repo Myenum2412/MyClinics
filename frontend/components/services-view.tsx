@@ -3,14 +3,14 @@
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
-  AlertTriangleIcon,
-  Ellipsis,
-  Pencil,
+  ExclamationTriangleIcon as AlertTriangleIcon,
+  EllipsisHorizontalIcon as Ellipsis,
+  PencilIcon as Pencil,
   PlusIcon,
-  Search,
-  Trash,
-  StethoscopeIcon,
-} from "lucide-react";
+  MagnifyingGlassIcon as Search,
+  IdentificationIcon as StethoscopeIcon,
+  TrashIcon as Trash,
+} from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

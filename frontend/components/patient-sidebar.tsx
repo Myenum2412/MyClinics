@@ -17,12 +17,12 @@ import {
 } from "@/components/ui/sidebar";
 import {
   CalendarDaysIcon,
-  FileText,
+  DocumentTextIcon as FileText,
   HomeIcon,
-  Pill,
-  ReceiptText,
-  Stethoscope,
-} from "lucide-react";
+  BeakerIcon as Pill,
+  ReceiptPercentIcon as ReceiptText,
+  IdentificationIcon as Stethoscope,
+} from "@heroicons/react/24/outline";
 
 const data = {
   navMain: [

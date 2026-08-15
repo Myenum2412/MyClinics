@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarClock, ExternalLink } from "lucide-react";
+import {
+  CalendarDaysIcon as CalendarClock,
+  ArrowTopRightOnSquareIcon as ExternalLink,
+} from "@heroicons/react/24/outline";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

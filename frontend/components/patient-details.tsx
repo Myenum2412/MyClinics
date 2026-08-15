@@ -1,5 +1,9 @@
 import Link from "next/link";
-import { ArrowLeft, CalendarClock, Pencil } from "lucide-react";
+import {
+  ArrowLeftIcon as ArrowLeft,
+  CalendarDaysIcon as CalendarClock,
+  PencilIcon as Pencil,
+} from "@heroicons/react/24/outline";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

@@ -28,7 +28,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarDaysIcon } from "lucide-react";
+import {
+  CalendarDaysIcon,
+} from "@heroicons/react/24/outline";
 import { PatientPicker, type PatientPick } from "@/components/patient-picker";
 import { appointmentHtml } from "@/lib/print-documents";
 import { saveReportCopy } from "@/components/report-copy";

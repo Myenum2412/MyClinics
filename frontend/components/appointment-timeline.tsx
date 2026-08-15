@@ -1,6 +1,8 @@
 "use client";
 
-import { CalendarDays } from "lucide-react";
+import {
+  CalendarDaysIcon as CalendarDays,
+} from "@heroicons/react/24/outline";
 import { cn } from "@/lib/utils";
 import { todayDateString } from "@/lib/stats";
 

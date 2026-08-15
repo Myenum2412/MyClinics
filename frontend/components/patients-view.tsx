@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { PlusIcon, Search } from "lucide-react";
+import {
+  PlusIcon,
+  MagnifyingGlassIcon as Search,
+} from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Stats07 from "@/components/stats-07";

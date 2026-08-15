@@ -4,18 +4,18 @@ import { useMemo, useState } from "react";
 import {
   CakeIcon,
   CalendarIcon,
-  CalendarPlusIcon,
-  CheckCircle2Icon,
+  PlusIcon as CalendarPlusIcon,
+  CheckCircleIcon as CheckCircle2Icon,
   ChevronDownIcon,
   ClockIcon,
-  MailIcon,
+  EnvelopeIcon as MailIcon,
   PhoneIcon,
   ShieldCheckIcon,
-  StethoscopeIcon,
+  IdentificationIcon as StethoscopeIcon,
   UserIcon,
-  UserRoundIcon,
-  VideoIcon,
-} from "lucide-react";
+  UserCircleIcon as UserRoundIcon,
+  VideoCameraIcon as VideoIcon,
+} from "@heroicons/react/24/outline";
 import { LocationPicker } from "@/components/location-picker";
 import { cn } from "@/lib/utils";
 

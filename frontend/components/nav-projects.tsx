@@ -16,7 +16,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { MoreHorizontalIcon, FolderIcon, ArrowRightIcon, Trash2Icon } from "lucide-react"
+import {
+  ArrowRightIcon,
+  FolderIcon,
+  EllipsisHorizontalIcon as MoreHorizontalIcon,
+  TrashIcon as Trash2Icon,
+} from "@heroicons/react/24/outline";
 
 export function NavProjects({
   projects,

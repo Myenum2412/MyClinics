@@ -60,7 +60,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ArrowUp, ArrowDown, ChevronsUpDown, Ellipsis, User, Pencil, Trash, ShieldUser, Search, Columns, Plus, Download, UserCog, ChevronLeft, ChevronRight } from "lucide-react"
+import {
+  ArrowDownIcon as ArrowDown,
+  ArrowUpIcon as ArrowUp,
+  ChevronLeftIcon as ChevronLeft,
+  ChevronRightIcon as ChevronRight,
+  ChevronUpDownIcon as ChevronsUpDown,
+  ViewColumnsIcon as Columns,
+  ArrowDownTrayIcon as Download,
+  EllipsisHorizontalIcon as Ellipsis,
+  PencilIcon as Pencil,
+  PlusIcon as Plus,
+  MagnifyingGlassIcon as Search,
+  UserGroupIcon as ShieldUser,
+  TrashIcon as Trash,
+  UserIcon as User,
+  Cog6ToothIcon as UserCog,
+} from "@heroicons/react/24/outline";
 
 type Status = "Active" | "Invited" | "Inactive"
 type Role = "Admin" | "Editor" | "Viewer"

@@ -22,11 +22,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import {
-  ChevronsUpDownIcon,
-  BadgeCheckIcon,
+  CheckBadgeIcon as BadgeCheckIcon,
   BellIcon,
-  LogOutIcon,
-} from "lucide-react"
+  ChevronUpDownIcon as ChevronsUpDownIcon,
+  ArrowLeftEndOnRectangleIcon as LogOutIcon,
+} from "@heroicons/react/24/outline";
 
 export function NavUser({
   user,

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { QrCodeIcon, RefreshCwIcon, SmartphoneIcon } from "lucide-react";
+import {
+  QrCodeIcon,
+  ArrowPathIcon as RefreshCwIcon,
+  DevicePhoneMobileIcon as SmartphoneIcon,
+} from "@heroicons/react/24/outline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 

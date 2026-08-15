@@ -13,7 +13,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { ArrowRight, Menu } from "lucide-react"
+import {
+  ArrowRightIcon as ArrowRight,
+  Bars3Icon as Menu,
+} from "@heroicons/react/24/outline";
 
 const navLinks = [
   { label: "Products", href: "#" },

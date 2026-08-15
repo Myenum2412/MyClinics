@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Stethoscope } from "lucide-react";
+import {
+  MagnifyingGlassIcon as Search,
+  IdentificationIcon as Stethoscope,
+} from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import type { PatientDoctor } from "@/lib/patient";

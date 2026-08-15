@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, ExternalLink } from "lucide-react";
+import {
+  ArrowDownTrayIcon as Download,
+  ArrowTopRightOnSquareIcon as ExternalLink,
+} from "@heroicons/react/24/outline";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
