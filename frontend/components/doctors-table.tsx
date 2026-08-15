@@ -86,6 +86,7 @@ export type Doctor = {
   specialty: string | null;
   mobile: string | null;
   qualifications: string | null;
+  city: string | null;
 };
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -93,6 +94,7 @@ const COLUMN_LABELS: Record<string, string> = {
   specialty: "Specialty",
   mobile: "Mobile",
   qualifications: "Qualifications",
+  city: "City",
 };
 
 function SortIcon({ sorted }: { sorted: false | "asc" | "desc" }) {
@@ -210,6 +212,20 @@ const columns: ColumnDef<typeof TABLE_FEATURES, Doctor>[] = [
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
         {row.original.qualifications ?? "—"}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "city",
+    enableSorting: false,
+    header: () => (
+      <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+        City
+      </span>
+    ),
+    cell: ({ row }) => (
+      <span className="text-sm text-muted-foreground">
+        {row.original.city ?? "—"}
       </span>
     ),
   },

@@ -21,6 +21,7 @@ export default async function DoctorsPage() {
     specialty: d.specialty ?? null,
     mobile: d.mobile ?? null,
     qualifications: d.qualifications ?? null,
+    city: d.city ?? null,
     createdAt: d.createdAt,
   }));
 

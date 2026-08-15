@@ -1,9 +1,11 @@
-import { getDb } from "@/lib/db";
 import CloudShaderHeroDemo from "@/components/cloud-shader-hero-demo";
+import FooterBlock from "@/components/footer-block";
 import type { DoctorOption } from "@/components/AppointmentForm";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:3100";
 
 export const metadata: Metadata = {
   title: "Book an Appointment",
@@ -12,17 +14,23 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const db = await getDb();
-  const doctors = await db
-    .collection("users")
-    .find({ role: "doctor" }, { projection: { name: 1 } })
-    .sort({ name: 1 })
-    .toArray();
+  let doctorOptions: DoctorOption[] = [];
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/doctors/public`, {
+      cache: "no-store",
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { doctors?: DoctorOption[] };
+      doctorOptions = data.doctors ?? [];
+    }
+  } catch {
+    doctorOptions = [];
+  }
 
-  const doctorOptions: DoctorOption[] = doctors.map((d) => ({
-    id: d._id.toString(),
-    name: d.name,
-  }));
-
-  return <CloudShaderHeroDemo doctors={doctorOptions} />;
+  return (
+    <>
+      <CloudShaderHeroDemo doctors={doctorOptions} />
+      <FooterBlock />
+    </>
+  );
 }

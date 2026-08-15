@@ -23,11 +23,43 @@ function mapDoctor(d: Record<string, unknown>) {
     specialty: d.specialty ?? null,
     mobile: d.mobile ?? null,
     qualifications: d.qualifications ?? null,
+    city: d.city ?? null,
     createdAt: d.createdAt,
   };
 }
 
 export function registerDoctorsRoutes(app: FastifyInstance): void {
+  app.get("/api/doctors/public", async (request, reply) => {
+    try {
+      const db = await getDb();
+      const doctors = await cached(
+        `${DOCTORS_CACHE_KEY}:public`,
+        DOCTORS_CACHE_TTL_MS,
+        () =>
+          db
+            .collection("users")
+            .find(
+              { role: "doctor" },
+              { projection: { name: 1, specialty: 1, qualifications: 1, city: 1 } }
+            )
+            .sort({ name: 1 })
+            .limit(DEFAULT_LIMIT)
+            .toArray()
+      );
+      return reply.send({
+        doctors: doctors.map((d) => ({
+          id: (d._id as { toString(): string }).toString(),
+          name: d.name,
+          specialty: d.specialty ?? null,
+          qualifications: d.qualifications ?? null,
+          city: d.city ?? null,
+        })),
+      });
+    } catch (error) {
+      handleError(reply, error, "List public doctors");
+    }
+  });
+
   app.get("/api/doctors", async (request, reply) => {
     if (!(await requireAuth(request, reply))) return;
 
@@ -75,7 +107,7 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
 
     try {
       const body = (request.body ?? {}) as Record<string, unknown>;
-      const { name, email, password, specialty, mobile, qualifications } = body;
+      const { name, email, password, specialty, mobile, qualifications, city } = body;
 
       if (!name || !email || !password) {
         const missing: string[] = [];
@@ -109,6 +141,7 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
         specialty: specialty ?? null,
         mobile: mobile ?? null,
         qualifications: qualifications ?? null,
+        city: city ?? null,
         role: "doctor",
         image: null,
         createdAt: new Date(),
@@ -125,6 +158,7 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
           specialty: specialty ?? null,
           mobile: mobile ?? null,
           qualifications: qualifications ?? null,
+          city: city ?? null,
         },
       });
     } catch (error) {
@@ -142,7 +176,7 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
       }
 
       const body = (request.body ?? {}) as Record<string, unknown>;
-      const { name, specialty, mobile, qualifications } = body;
+      const { name, specialty, mobile, qualifications, city } = body;
 
       if (!name) {
         return reply.code(400).send({ error: "Name is required" });
@@ -157,6 +191,7 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
             specialty: specialty ?? null,
             mobile: mobile ?? null,
             qualifications: qualifications ?? null,
+            city: city ?? null,
             updatedAt: new Date(),
           },
         }

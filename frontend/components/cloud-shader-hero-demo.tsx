@@ -1,28 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { CloudShader } from "@/components/ui/cloud-shader";
 import AppointmentForm, {
   type DoctorOption,
 } from "@/components/AppointmentForm";
-import { DoctorFinder } from "@/components/doctor-finder";
 
 export default function CloudShaderHeroDemo({
   doctors,
 }: {
   doctors: DoctorOption[];
 }) {
-  const [selectedDoctorId, setSelectedDoctorId] = useState("");
-  const [selectedType, setSelectedType] = useState("in-person");
-
-  function handlePickDoctor(id: string) {
-    setSelectedDoctorId(id);
-    document
-      .getElementById("book")
-      ?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
   return (
     <div className="relative min-h-[50rem] w-full overflow-hidden">
       <CloudShader
@@ -43,9 +31,6 @@ export default function CloudShaderHeroDemo({
           </span>
         </Link>
         <div className="hidden items-center gap-8 text-sm font-medium text-white/90 md:flex">
-          <a href="#find" className="transition hover:text-white">
-            Find a Doctor
-          </a>
           <a href="#book" className="transition hover:text-white">
             Book Appointment
           </a>
@@ -81,34 +66,12 @@ export default function CloudShaderHeroDemo({
         </p>
       </div>
 
-      {/* doctor finder */}
-      <div
-        id="find"
-        className="relative z-10 mx-auto mt-12 w-full max-w-5xl scroll-mt-24 px-4 md:mt-16"
-      >
-        <DoctorFinder
-          doctors={doctors}
-          selectedDoctorId={selectedDoctorId}
-          onPick={handlePickDoctor}
-          selectedType={selectedType}
-          onTypeChange={setSelectedType}
-        />
-      </div>
-
-      {/* booking card */}
+      {/* booking form */}
       <div
         id="book"
-        className="relative z-10 mx-auto mt-8 w-full max-w-2xl scroll-mt-24 px-4 pb-16"
+        className="relative z-10 mx-auto mt-12 w-full max-w-2xl scroll-mt-24 px-4 pb-16"
       >
-        <div className="rounded-3xl border border-white/40 bg-white/95 p-2 shadow-2xl shadow-[#0D47A1]/30 backdrop-blur-md md:p-3">
-          <AppointmentForm
-            doctors={doctors}
-            doctorId={selectedDoctorId}
-            onDoctorIdChange={setSelectedDoctorId}
-            type={selectedType}
-            onTypeChange={setSelectedType}
-          />
-        </div>
+        <AppointmentForm doctors={doctors} />
       </div>
     </div>
   );

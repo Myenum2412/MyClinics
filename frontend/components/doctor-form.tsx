@@ -58,6 +58,7 @@ export function DoctorForm({
   const [qualifications, setQualifications] = useState(
     initial?.qualifications ?? ""
   );
+  const [city, setCity] = useState(initial?.city ?? "");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -69,6 +70,7 @@ export function DoctorForm({
       specialty: specialty || null,
       mobile: mobile || null,
       qualifications: qualifications || null,
+      city: city || null,
     };
 
     const res = await fetch(
@@ -103,6 +105,7 @@ export function DoctorForm({
       setSpecialty("");
       setMobile("");
       setQualifications("");
+      setCity("");
     }
 
     await onSaved();
@@ -210,6 +213,22 @@ export function DoctorForm({
                 onChange={(e) => setQualifications(e.target.value)}
               />
             </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="city">City</FieldLabel>
+                <Input
+                  id="city"
+                  type="text"
+                  placeholder="Kochi"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                />
+                <FieldDescription>
+                  Used on the home page to show this doctor to patients in the
+                  same city.
+                </FieldDescription>
+              </Field>
+            </div>
           </FieldGroup>
 
           <Button type="submit" disabled={loading} className="w-full sm:w-auto">
