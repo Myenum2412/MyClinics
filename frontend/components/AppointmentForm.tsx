@@ -130,6 +130,7 @@ export default function AppointmentForm({
     date: string;
     time: string;
     type: string;
+    accountCreated?: boolean;
   } | null>(null);
 
   const currentDoctorId = onDoctorIdChange
@@ -181,7 +182,7 @@ export default function AppointmentForm({
     setError("");
 
     if (!name.trim() || !mobile.trim() || !currentDoctorId || !date || !time) {
-      setError("Please fill in your name, phone, doctor, date and time.");
+      setError("Please fill in your name, WhatsApp number, doctor, date and time.");
       return;
     }
 
@@ -223,6 +224,7 @@ export default function AppointmentForm({
         date,
         time,
         type: currentType,
+        accountCreated: data.patientAccountCreated === true,
       });
     } catch {
       setLoading(false);
@@ -276,93 +278,18 @@ export default function AppointmentForm({
               </li>
             )}
           </ul>
+          {confirmed.accountCreated && (
+            <p className="mt-3 rounded-lg border border-[#2196F3]/30 bg-[#2196F3]/10 px-3 py-2 text-xs text-black/70">
+              Your patient account was created automatically — your login
+              email and password were sent to your WhatsApp number.
+            </p>
+          )}
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-8">
-          {/* Step 1 — Choose Your Doctor */}
+          {/* Step 1 — Your Location */}
           <div className="space-y-4">
-            <StepHeader number={1} label="Choose Your Doctor" />
-
-            <div className="relative">
-              <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-black/40" />
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search doctors by name or specialty..."
-                className={inputClass + " pl-9"}
-              />
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-2">
-              {TYPE_OPTIONS.map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => setSelectedType(t.value)}
-                  className={cn(
-                    "flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
-                    currentType === t.value
-                      ? "border-[#2196F3] bg-[#2196F3]/10 text-[#2196F3]"
-                      : "border-black/10 bg-white text-black/70 hover:border-[#2196F3]/50 hover:text-black"
-                  )}
-                >
-                  <t.icon className="size-4" />
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            {visibleDoctors.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-black/20 px-3 py-5 text-center text-sm text-black/50">
-                {selectedCity
-                  ? "No doctors in this city yet. Try another city."
-                  : "No doctors match your search."}
-              </p>
-            ) : (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {visibleDoctors.map((d) => {
-                  const selected = currentDoctorId === d.id;
-                  return (
-                    <button
-                      key={d.id}
-                      type="button"
-                      onClick={() => pickDoctor(d.id)}
-                      className={cn(
-                        "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
-                        selected
-                          ? "border-[#2196F3] bg-[#2196F3]/5 ring-1 ring-[#2196F3]"
-                          : "border-black/10 bg-white hover:border-[#2196F3]/50"
-                      )}
-                    >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2196F3]/10 text-sm font-semibold text-[#2196F3]">
-                        {initialsOf(d.name)}
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold text-black">
-                          {d.name}
-                        </span>
-                        <span className="block truncate text-xs text-black/50">
-                          {d.specialty ?? "General Physician"}
-                          {d.city ? ` · ${d.city}` : ""}
-                        </span>
-                      </span>
-                      {selected && (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                          <CheckCircle2Icon className="size-3.5" />
-                          Selected
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Step 2 — Your Location */}
-          <div className="space-y-4">
-            <StepHeader number={2} label="Your Location" />
+            <StepHeader number={1} label="Your Location" />
             <LocationPicker
               value={location}
               onChange={(v) => {
@@ -370,6 +297,99 @@ export default function AppointmentForm({
                 setError("");
               }}
             />
+          </div>
+
+          {/* Step 2 — Choose Your Doctor */}
+          <div className="space-y-4">
+            <StepHeader number={2} label="Choose Your Doctor" />
+
+            {!selectedCity ? (
+              <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-black/20 px-3 py-6 text-center">
+                <MapPinIcon className="size-5 text-black/40" />
+                <p className="text-sm font-medium text-black/70">
+                  Select your state and city first
+                </p>
+                <p className="text-xs text-black/50">
+                  Doctors near you will appear here.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="relative">
+                  <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-black/40" />
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search doctors by name or specialty..."
+                    className={inputClass + " pl-9"}
+                  />
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {TYPE_OPTIONS.map((t) => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => setSelectedType(t.value)}
+                      className={cn(
+                        "flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
+                        currentType === t.value
+                          ? "border-[#2196F3] bg-[#2196F3]/10 text-[#2196F3]"
+                          : "border-black/10 bg-white text-black/70 hover:border-[#2196F3]/50 hover:text-black"
+                      )}
+                    >
+                      <t.icon className="size-4" />
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {visibleDoctors.length === 0 ? (
+                  <p className="rounded-lg border border-dashed border-black/20 px-3 py-5 text-center text-sm text-black/50">
+                    No doctors in {selectedCity} yet. Try another city.
+                  </p>
+                ) : (
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {visibleDoctors.map((d) => {
+                      const selected = currentDoctorId === d.id;
+                      return (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => pickDoctor(d.id)}
+                          className={cn(
+                            "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
+                            selected
+                              ? "border-[#2196F3] bg-[#2196F3]/5 ring-1 ring-[#2196F3]"
+                              : "border-black/10 bg-white hover:border-[#2196F3]/50"
+                          )}
+                        >
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2196F3]/10 text-sm font-semibold text-[#2196F3]">
+                            {initialsOf(d.name)}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-semibold text-black">
+                              {d.name}
+                            </span>
+                            <span className="block truncate text-xs text-black/50">
+                              {d.specialty ?? "General Physician"}
+                              {d.city ? ` · ${d.city}` : ""}
+                            </span>
+                          </span>
+                          {selected && (
+                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                              <CheckCircle2Icon className="size-3.5" />
+                              Selected
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* Step 3 — Your Details */}
@@ -385,7 +405,7 @@ export default function AppointmentForm({
                   className={inputClass + " pl-9"}
                 />
               </Field>
-              <Field label="Phone Number" required icon={PhoneIcon}>
+              <Field label="WhatsApp Number" required icon={PhoneIcon}>
                 <input
                   type="tel"
                   value={mobile}

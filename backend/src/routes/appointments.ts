@@ -1,7 +1,10 @@
 import type { FastifyInstance } from "fastify";
+import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
 import { getDb } from "@/lib/db";
 import { BOOKING_SOURCES, type BookingSource } from "@/lib/ai-types";
 import { reassignCounters } from "@/services/queue.service";
+import { enqueueClinicNotification } from "@/services/whatsapp/notification.service";
 import {
   DEFAULT_LIMIT,
   parsePagination,
@@ -12,6 +15,18 @@ import { searchParams, handleError } from "@/lib/http";
 import { requireAuth } from "@/plugins/auth";
 
 const TYPES = ["in-person", "video"] as const;
+
+const PASSWORD_CHARS =
+  "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+
+function generatePassword(length = 8): string {
+  const bytes = randomBytes(length);
+  let out = "";
+  for (let i = 0; i < length; i++) {
+    out += PASSWORD_CHARS[bytes[i] % PASSWORD_CHARS.length];
+  }
+  return out;
+}
 
 function mapAppointment(a: Record<string, unknown>) {
   return {
@@ -81,8 +96,8 @@ export function registerAppointmentsRoutes(app: FastifyInstance): void {
   });
 
   app.post("/api/appointments", async (request, reply) => {
-    if (!(await requireAuth(request, reply))) return;
-
+    // Public endpoint: anonymous visitors book from the home page. The
+    // requireAuth guard only applies to listing/managing appointments.
     try {
       const body = (request.body ?? {}) as Record<string, unknown>;
       const {
@@ -152,6 +167,67 @@ export function registerAppointmentsRoutes(app: FastifyInstance): void {
 
       await reassignCounters(db, String(date));
 
+      let accountCreated = false;
+      let credentialsQueued = false;
+
+      try {
+        const patients = db.collection("patients");
+        const users = db.collection("users");
+        const existingPatient = await patients.findOne({
+          mobile: String(mobile),
+        });
+
+        if (!existingPatient) {
+          const digits = String(mobile).replace(/\D/g, "");
+          const loginEmail = email
+            ? String(email).toLowerCase()
+            : digits
+              ? `patient${digits}@myclinic.in`
+              : null;
+
+          if (loginEmail) {
+            const existingUser = await users.findOne({ email: loginEmail });
+            if (!existingUser) {
+              const password = generatePassword();
+              const hashedPassword = await bcrypt.hash(password, 10);
+              const userResult = await users.insertOne({
+                name: fullName,
+                email: loginEmail,
+                password: hashedPassword,
+                role: "patient",
+                image: null,
+                createdAt: new Date(),
+              });
+              await patients.insertOne({
+                fullName,
+                mobile,
+                age: age ?? null,
+                gender: gender ?? null,
+                email: email ? String(email).toLowerCase() : null,
+                whatsapp: whatsapp ?? mobile,
+                userId: userResult.insertedId,
+                createdAt: new Date(),
+              });
+              accountCreated = true;
+
+              const credentialsMessage =
+                `Welcome to My Clinics, ${fullName}! Your patient account has been created.\n\n` +
+                `Login Email: ${loginEmail}\nPassword: ${password}\n\n` +
+                `You can sign in at https://myclinics.vercel.app/login`;
+              const queued = await enqueueClinicNotification(
+                db,
+                String(mobile),
+                credentialsMessage,
+                "credentials"
+              );
+              credentialsQueued = queued.queued;
+            }
+          }
+        }
+      } catch {
+        // Account creation must never fail the booking itself.
+      }
+
       return reply.code(201).send({
         appointment: {
           id: result.insertedId.toString(),
@@ -163,6 +239,8 @@ export function registerAppointmentsRoutes(app: FastifyInstance): void {
           status: "pending",
           bookingSource: source,
         },
+        patientAccountCreated: accountCreated,
+        credentialsQueued: credentialsQueued,
       });
     } catch (error) {
       handleError(reply, error, "Create appointment");
