@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
@@ -91,14 +90,20 @@ export function SignupForm({
               </div>
               <span className="sr-only">My Clinic</span>
             </Link>
-            <h1 className="text-xl font-bold">Create an account</h1>
-            <FieldDescription>
-              Already have an account? <Link href="/login">Login</Link>
-            </FieldDescription>
+            <h1 className="text-xl font-bold text-black">Create an account</h1>
+            <p className="text-left text-sm leading-normal font-normal text-gray-500">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-medium text-gray-700 underline underline-offset-4 hover:text-black"
+              >
+                Login
+              </Link>
+            </p>
           </div>
 
           <Field>
-            <FieldLabel htmlFor="name">Name</FieldLabel>
+            <FieldLabel htmlFor="name" className="text-black">Name</FieldLabel>
             <Input
               id="name"
               type="text"
@@ -106,10 +111,11 @@ export function SignupForm({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="text-black placeholder:text-gray-400"
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <FieldLabel htmlFor="email" className="text-black">Email</FieldLabel>
             <Input
               id="email"
               type="email"
@@ -117,10 +123,11 @@ export function SignupForm({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="text-black placeholder:text-gray-400"
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <FieldLabel htmlFor="password" className="text-black">Password</FieldLabel>
             <Input
               id="password"
               type="password"
@@ -129,12 +136,13 @@ export function SignupForm({
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="text-black placeholder:text-gray-400"
             />
           </Field>
           <Field>
-            <FieldLabel>I am a</FieldLabel>
+            <FieldLabel className="text-black">I am a</FieldLabel>
             <Select value={role} onValueChange={(value) => setRole(value ?? "patient")}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full text-black">
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
@@ -162,7 +170,7 @@ export function SignupForm({
               variant="outline"
               type="button"
               onClick={() => signIn("google", { callbackUrl })}
-              className="w-full"
+              className="w-full text-black"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path
@@ -175,10 +183,16 @@ export function SignupForm({
           </Field>
         </FieldGroup>
       </form>
-      <FieldDescription className="px-6 text-center">
+      <p className="px-6 text-center text-xs leading-normal font-normal text-gray-400">
         By clicking continue, you agree to our{" "}
-        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
-      </FieldDescription>
+        <a href="#" className="text-gray-600 underline underline-offset-4 hover:text-black">
+          Terms of Service
+        </a>{" "}
+        and{" "}
+        <a href="#" className="text-gray-600 underline underline-offset-4 hover:text-black">
+          Privacy Policy
+        </a>.
+      </p>
     </div>
   );
 }

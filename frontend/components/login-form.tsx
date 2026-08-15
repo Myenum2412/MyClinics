@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
@@ -64,15 +63,20 @@ export function LoginForm({
               </div>
               <span className="sr-only">My Clinic</span>
             </Link>
-            <h1 className="text-xl font-bold">Welcome to My Clinic</h1>
-            <FieldDescription>
+            <h1 className="text-xl font-bold text-black">Welcome to My Clinic</h1>
+            <p className="text-left text-sm leading-normal font-normal text-gray-500">
               Don&apos;t have an account?{" "}
-              <Link href="/signup">Sign up</Link>
-            </FieldDescription>
+              <Link
+                href="/signup"
+                className="font-medium text-gray-700 underline underline-offset-4 hover:text-black"
+              >
+                Sign up
+              </Link>
+            </p>
           </div>
 
           <Field>
-            <FieldLabel htmlFor="email">Email</FieldLabel>
+            <FieldLabel htmlFor="email" className="text-black">Email</FieldLabel>
             <Input
               id="email"
               type="email"
@@ -80,10 +84,11 @@ export function LoginForm({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="text-black placeholder:text-gray-400"
             />
           </Field>
           <Field>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <FieldLabel htmlFor="password" className="text-black">Password</FieldLabel>
             <Input
               id="password"
               type="password"
@@ -91,6 +96,7 @@ export function LoginForm({
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="text-black placeholder:text-gray-400"
             />
           </Field>
 
@@ -105,7 +111,7 @@ export function LoginForm({
           <Field className="flex flex-row items-center justify-between">
             <Link
               href="/forgot-password"
-              className="text-sm text-muted-foreground underline underline-offset-4 hover:text-primary"
+              className="text-sm text-gray-500 underline underline-offset-4 hover:text-black"
             >
               Forgot password?
             </Link>
@@ -118,7 +124,7 @@ export function LoginForm({
               variant="outline"
               type="button"
               onClick={() => signIn("google", { callbackUrl })}
-              className="w-full"
+              className="w-full text-black"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <path
@@ -131,10 +137,16 @@ export function LoginForm({
           </Field>
         </FieldGroup>
       </form>
-      <FieldDescription className="px-6 text-center">
+      <p className="px-6 text-center text-xs leading-normal font-normal text-gray-400">
         By clicking continue, you agree to our{" "}
-        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
-      </FieldDescription>
+        <a href="#" className="text-gray-600 underline underline-offset-4 hover:text-black">
+          Terms of Service
+        </a>{" "}
+        and{" "}
+        <a href="#" className="text-gray-600 underline underline-offset-4 hover:text-black">
+          Privacy Policy
+        </a>.
+      </p>
     </div>
   );
 }
