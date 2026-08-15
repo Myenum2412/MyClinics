@@ -94,6 +94,7 @@ export type Doctor = {
   mobile: string | null;
   qualifications: string | null;
   city: string | null;
+  state: string | null;
   consultationFee: number | null;
   experience: string | null;
   gender: string | null;
@@ -111,7 +112,6 @@ const COLUMN_LABELS: Record<string, string> = {
   mobile: "Mobile",
   qualifications: "Qualifications",
   city: "City",
-  consultationFee: "Fee",
   experience: "Experience",
 };
 
@@ -247,22 +247,6 @@ const columns: ColumnDef<typeof TABLE_FEATURES, Doctor>[] = [
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground">
         {row.original.city ?? "—"}
-      </span>
-    ),
-  },
-  {
-    accessorKey: "consultationFee",
-    enableSorting: false,
-    header: () => (
-      <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        Fee
-      </span>
-    ),
-    cell: ({ row }) => (
-      <span className="text-sm text-muted-foreground tabular-nums">
-        {row.original.consultationFee != null
-          ? `₹${row.original.consultationFee}`
-          : "—"}
       </span>
     ),
   },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,10 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import type { Doctor } from "@/components/doctors-table";
+import {
+  INDIAN_STATES,
+  citiesForState,
+} from "@/lib/india-locations";
 import { cn } from "@/lib/utils";
 
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
@@ -220,6 +224,69 @@ type ScheduleRow = {
 const emptySchedule = (): ScheduleRow[] =>
   dayOptions.map((day) => ({ day, enabled: false, start: "", end: "" }));
 
+const TIME_OPTIONS: { value: string; label: string }[] = (() => {
+  const options: { value: string; label: string }[] = [];
+  for (let minutes = 0; minutes < 24 * 60; minutes += 15) {
+    const h24 = Math.floor(minutes / 60);
+    const mm = String(minutes % 60).padStart(2, "0");
+    const hh = String(h24).padStart(2, "0");
+    const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+    options.push({
+      value: `${hh}:${mm}`,
+      label: `${h12}:${mm} ${h24 < 12 ? "AM" : "PM"}`,
+    });
+  }
+  return options;
+})();
+
+function formatTimeLabel(value: string): string {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value ?? "");
+  if (!match) return value;
+  const h24 = Number(match[1]) % 24;
+  const mm = match[2];
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${mm} ${h24 < 12 ? "AM" : "PM"}`;
+}
+
+function TimeSelect({
+  value,
+  disabled,
+  onChange,
+  label,
+}: {
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+  label: string;
+}) {
+  const options = useMemo(() => {
+    const list = [...TIME_OPTIONS];
+    if (value && !list.some((o) => o.value === value)) {
+      list.unshift({ value, label: formatTimeLabel(value) });
+    }
+    return list;
+  }, [value]);
+
+  return (
+    <Select
+      value={value || undefined}
+      disabled={disabled}
+      onValueChange={(v) => onChange(v ?? "")}
+    >
+      <SelectTrigger className="w-32" aria-label={label}>
+        <SelectValue placeholder="Time" />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((o) => (
+          <SelectItem key={o.value} value={o.value}>
+            {o.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export function DoctorForm({
   onSaved,
   initial,
@@ -238,8 +305,10 @@ export function DoctorForm({
     initial?.qualifications ?? ""
   );
   const [city, setCity] = useState(initial?.city ?? "");
-  const [consultationFee, setConsultationFee] = useState(
-    initial?.consultationFee != null ? String(initial.consultationFee) : ""
+  const [state, setState] = useState(initial?.state ?? "");
+  const stateCities = useMemo(
+    () => (state ? citiesForState(state) : []),
+    [state]
   );
   const [experience, setExperience] = useState(initial?.experience ?? "");
   const [gender, setGender] = useState(initial?.gender ?? "");
@@ -348,6 +417,12 @@ export function DoctorForm({
     };
   }, [isEditing]);
 
+  const cityOptions = useMemo(() => {
+    const seen = new Set(stateCities);
+    if (city && !seen.has(city)) seen.add(city);
+    return Array.from(seen).sort();
+  }, [stateCities, city]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -358,7 +433,7 @@ export function DoctorForm({
       mobile: mobile || null,
       qualifications: qualifications || null,
       city: city || null,
-      consultationFee: consultationFee ? Number(consultationFee) : null,
+      state: state || null,
       experience: experience || null,
       gender: gender || null,
       languages,
@@ -408,7 +483,7 @@ export function DoctorForm({
       setMobile("");
       setQualifications("");
       setCity("");
-      setConsultationFee("");
+      setState("");
       setExperience("");
       setGender("");
       setLanguages([]);
@@ -620,71 +695,52 @@ export function DoctorForm({
                 </FieldDescription>
               </Field>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="consultationFee">
-                  Consultation Fee (₹)
-                </FieldLabel>
-                <Input
-                  id="consultationFee"
-                  type="number"
-                  min={0}
-                  step={1}
-                  placeholder="e.g. 500"
-                  value={consultationFee}
-                  onChange={(e) => setConsultationFee(e.target.value)}
-                />
-                <FieldDescription>
-                  Per-visit consultation charge shown to patients.
-                </FieldDescription>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="languages">Languages Spoken</FieldLabel>
-                <Select
-                  value=""
-                  onValueChange={(v) => addLanguage(v ?? "")}
-                >
-                  <SelectTrigger id="languages" className="w-full sm:max-w-xs">
-                    <SelectValue placeholder="Select a language..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allLanguages.map((lang) => (
-                      <SelectItem key={lang} value={lang}>
-                        {lang}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {languages.length > 0 ? (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {languages.map((lang) => (
-                      <span
-                        key={lang}
-                        className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs"
+            <Field>
+              <FieldLabel htmlFor="languages">Languages Spoken</FieldLabel>
+              <Select
+                value=""
+                onValueChange={(v) => addLanguage(v ?? "")}
+              >
+                <SelectTrigger id="languages" className="w-full sm:max-w-xs">
+                  <SelectValue placeholder="Select a language..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {allLanguages.map((lang) => (
+                    <SelectItem key={lang} value={lang}>
+                      {lang}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {languages.length > 0 ? (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {languages.map((lang) => (
+                    <span
+                      key={lang}
+                      className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs"
+                    >
+                      {lang}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setLanguages((prev) =>
+                            prev.filter((l) => l !== lang)
+                          )
+                        }
+                        aria-label={`Remove ${lang}`}
+                        className="text-muted-foreground transition-colors hover:text-foreground"
                       >
-                        {lang}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setLanguages((prev) =>
-                              prev.filter((l) => l !== lang)
-                            )
-                          }
-                          aria-label={`Remove ${lang}`}
-                          className="text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                          <XMarkIcon className="size-3" aria-hidden="true" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <FieldDescription>
-                    Pick a language from the list to add it.
-                  </FieldDescription>
-                )}
-              </Field>
-            </div>
+                        <XMarkIcon className="size-3" aria-hidden="true" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <FieldDescription>
+                  Pick a language from the list to add it.
+                </FieldDescription>
+              )}
+            </Field>
             <Field>
               <FieldLabel>Available Days & Timings</FieldLabel>
               <div className="overflow-hidden rounded-lg border border-border">
@@ -713,26 +769,20 @@ export function DoctorForm({
                       </span>
                     </label>
                     <div className="flex items-center gap-2">
-                      <Input
-                        type="time"
-                        disabled={!row.enabled}
+                      <TimeSelect
                         value={row.start}
-                        onChange={(e) =>
-                          updateScheduleDay(row.day, { start: e.target.value })
+                        disabled={!row.enabled}
+                        onChange={(v) =>
+                          updateScheduleDay(row.day, { start: v })
                         }
-                        className="w-32"
-                        aria-label={`${row.day} start time`}
+                        label={`${row.day} start time`}
                       />
                       <span className="text-sm text-muted-foreground">to</span>
-                      <Input
-                        type="time"
-                        disabled={!row.enabled}
+                      <TimeSelect
                         value={row.end}
-                        onChange={(e) =>
-                          updateScheduleDay(row.day, { end: e.target.value })
-                        }
-                        className="w-32"
-                        aria-label={`${row.day} end time`}
+                        disabled={!row.enabled}
+                        onChange={(v) => updateScheduleDay(row.day, { end: v })}
+                        label={`${row.day} end time`}
                       />
                     </div>
                   </div>
@@ -770,14 +820,46 @@ export function DoctorForm({
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
               <Field>
+                <FieldLabel htmlFor="state">State</FieldLabel>
+                <Select
+                  value={state || undefined}
+                  onValueChange={(v) => {
+                    setState(v ?? "");
+                    setCity("");
+                  }}
+                >
+                  <SelectTrigger id="state" className="w-full">
+                    <SelectValue placeholder="Select state..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INDIAN_STATES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
                 <FieldLabel htmlFor="city">City</FieldLabel>
-                <Input
-                  id="city"
-                  type="text"
-                  placeholder="Kochi"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                />
+                <Select
+                  value={city || undefined}
+                  disabled={!state}
+                  onValueChange={(v) => setCity(v ?? "")}
+                >
+                  <SelectTrigger id="city" className="w-full">
+                    <SelectValue
+                      placeholder={!state ? "Select state first" : "Select city..."}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cityOptions.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FieldDescription>
                   Used on the home page to show this doctor to patients in the
                   same city.
