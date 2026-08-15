@@ -107,7 +107,7 @@ export function ResetPasswordForm() {
             </p>
             <Link
               href="/login"
-              className="text-sm text-primary underline underline-offset-4"
+              className="text-sm text-foreground underline underline-offset-4"
             >
               Go to login
             </Link>

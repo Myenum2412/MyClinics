@@ -15,13 +15,6 @@ import {
   startOfMonthDate,
   todayDateString,
 } from "@/lib/stats";
-import {
-  CalendarPlusIcon,
-  CalendarDaysIcon,
-  UserPlusIcon,
-  UsersIcon,
-  ArrowRightIcon,
-} from "lucide-react";
 
 type AppointmentDoc = {
   _id: { toString(): string };
@@ -169,46 +162,6 @@ export default async function DashboardPage() {
           },
         ]}
       />
-
-      <div className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold tracking-tight text-muted-foreground">
-          Quick Actions
-        </h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Link
-            href="/doctor/appointments"
-            className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-sm font-medium shadow-none transition-colors hover:bg-accent"
-          >
-            <CalendarPlusIcon className="size-4 text-muted-foreground" aria-hidden="true" />
-            Book Appointment
-            <ArrowRightIcon className="ml-auto size-4 text-muted-foreground" aria-hidden="true" />
-          </Link>
-          <Link
-            href="/doctor/patients"
-            className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-sm font-medium shadow-none transition-colors hover:bg-accent"
-          >
-            <UserPlusIcon className="size-4 text-muted-foreground" aria-hidden="true" />
-            Add Patient
-            <ArrowRightIcon className="ml-auto size-4 text-muted-foreground" aria-hidden="true" />
-          </Link>
-          <Link
-            href="/doctor/appointments"
-            className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-sm font-medium shadow-none transition-colors hover:bg-accent"
-          >
-            <CalendarDaysIcon className="size-4 text-muted-foreground" aria-hidden="true" />
-            View Appointments
-            <ArrowRightIcon className="ml-auto size-4 text-muted-foreground" aria-hidden="true" />
-          </Link>
-          <Link
-            href="/doctor/patients"
-            className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-sm font-medium shadow-none transition-colors hover:bg-accent"
-          >
-            <UsersIcon className="size-4 text-muted-foreground" aria-hidden="true" />
-            View Patients
-            <ArrowRightIcon className="ml-auto size-4 text-muted-foreground" aria-hidden="true" />
-          </Link>
-        </div>
-      </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>

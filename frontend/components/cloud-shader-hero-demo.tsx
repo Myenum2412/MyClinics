@@ -49,7 +49,7 @@ export default function CloudShaderHeroDemo({
           </Link>
           <Link
             href="/signup"
-            className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-[#0D47A1] shadow-md transition hover:bg-white/90"
+            className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-black shadow-md transition hover:bg-white/90"
           >
             Get started
           </Link>

@@ -348,7 +348,7 @@ export default function AppointmentForm({
                   className={cn(
                     "flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
                     currentType === t.value
-                      ? "border-[#2196F3] bg-[#2196F3]/10 text-[#2196F3]"
+                      ? "border-[#2196F3] bg-[#2196F3]/10 text-black"
                       : "border-black/10 bg-white text-black/70 hover:border-[#2196F3]/50 hover:text-black"
                   )}
                 >

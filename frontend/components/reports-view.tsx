@@ -311,7 +311,7 @@ export function ReportsView({
               className={cn(
                 "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 activePatient === "all"
-                  ? "bg-primary/10 text-primary"
+                  ? "bg-primary/10 text-foreground"
                   : "hover:bg-muted"
               )}
             >
@@ -331,7 +331,7 @@ export function ReportsView({
                 className={cn(
                   "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   activePatient === "none"
-                    ? "bg-primary/10 text-primary"
+                    ? "bg-primary/10 text-foreground"
                     : "hover:bg-muted"
                 )}
               >
@@ -409,7 +409,7 @@ export function ReportsView({
                             className={cn(
                               "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm transition-colors",
                               active
-                                ? "bg-primary/10 text-primary"
+                                ? "bg-primary/10 text-foreground"
                                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
                             )}
                           >

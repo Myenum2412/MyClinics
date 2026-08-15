@@ -165,7 +165,7 @@ export default async function PatientDashboardPage() {
           </div>
           <Link
             href="/patient/reports"
-            className="text-sm font-medium text-primary hover:underline"
+            className="text-sm font-medium text-foreground hover:underline"
           >
             View all
           </Link>
@@ -207,7 +207,7 @@ export default async function PatientDashboardPage() {
           </div>
           <Link
             href="/patient/doctors"
-            className="text-sm font-medium text-primary hover:underline"
+            className="text-sm font-medium text-foreground hover:underline"
           >
             View all
           </Link>
