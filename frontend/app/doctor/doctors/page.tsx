@@ -39,6 +39,10 @@ export default async function DoctorsPage() {
           .filter((s) => Boolean(s.day))
       : [],
     image: d.image ? String(d.image) : null,
+    status:
+      d.status === "terminated"
+        ? ("terminated" as const)
+        : ("active" as const),
     createdAt: d.createdAt,
   }));
 
@@ -46,6 +50,9 @@ export default async function DoctorsPage() {
   const specialties = new Set(
     doctorDocs.map((d) => d.specialty).filter((s) => typeof s === "string" && s)
   ).size;
+  const terminatedCount = doctorDocs.filter(
+    (d) => d.status === "terminated"
+  ).length;
 
   return (
     <>
@@ -63,6 +70,12 @@ export default async function DoctorsPage() {
             current: specialties,
             allowed: 20,
             fill: "var(--chart-2)",
+          },
+          {
+            name: "Terminated",
+            current: terminatedCount,
+            allowed: Math.max(totalDoctors, 1),
+            fill: "var(--chart-3)",
           },
         ]}
       />

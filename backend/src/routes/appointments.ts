@@ -28,7 +28,7 @@ function generatePassword(length = 8): string {
   return out;
 }
 
-function mapAppointment(a: Record<string, unknown>) {
+export function mapAppointment(a: Record<string, unknown>) {
   return {
     id: (a._id as { toString(): string }).toString(),
     fullName: a.fullName,

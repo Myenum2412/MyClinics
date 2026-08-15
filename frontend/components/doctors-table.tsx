@@ -67,6 +67,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DoctorForm } from "@/components/doctor-form";
+import { DoctorRecordsDialog } from "@/components/doctor-records-dialog";
 import {
   ExclamationTriangleIcon as AlertTriangleIcon,
   ArrowDownIcon as ArrowDown,
@@ -77,7 +78,8 @@ import {
   ViewColumnsIcon as Columns,
   EllipsisHorizontalIcon as Ellipsis,
   PencilIcon as Pencil,
-  TrashIcon as Trash,
+  UserMinusIcon,
+  UserPlusIcon,
 } from "@heroicons/react/24/outline";
 
 export type DoctorScheduleDay = {
@@ -104,6 +106,7 @@ export type Doctor = {
   address: string | null;
   schedule: DoctorScheduleDay[];
   image: string | null;
+  status: "active" | "terminated";
 };
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -187,7 +190,14 @@ const columns: ColumnDef<typeof TABLE_FEATURES, Doctor>[] = [
             </AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="truncate text-sm leading-tight font-medium">{d.name}</p>
+            <p className="flex items-center gap-1.5 truncate text-sm leading-tight font-medium">
+              {d.name}
+              {d.status === "terminated" && (
+                <span className="inline-flex shrink-0 items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-700">
+                  Terminated
+                </span>
+              )}
+            </p>
             <p className="truncate text-xs text-muted-foreground">{d.email}</p>
           </div>
         </div>
@@ -292,8 +302,9 @@ export function DoctorsTable({
     React.useState<ColumnVisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [editing, setEditing] = React.useState<Doctor | null>(null);
-  const [deleting, setDeleting] = React.useState<Doctor | null>(null);
-  const [deleteBusy, setDeleteBusy] = React.useState(false);
+  const [recordsDoctor, setRecordsDoctor] = React.useState<Doctor | null>(null);
+  const [terminating, setTerminating] = React.useState<Doctor | null>(null);
+  const [terminateBusy, setTerminateBusy] = React.useState(false);
 
   const tableColumns = React.useMemo<
     ColumnDef<typeof TABLE_FEATURES, Doctor>[]
@@ -325,13 +336,22 @@ export function DoctorsTable({
                   Edit
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => setDeleting(row.original)}
-                >
-                  <Trash aria-hidden="true" />
-                  Delete
-                </DropdownMenuItem>
+                {row.original.status === "terminated" ? (
+                  <DropdownMenuItem
+                    onClick={() => setTerminating(row.original)}
+                  >
+                    <UserPlusIcon aria-hidden="true" />
+                    Re-activate
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => setTerminating(row.original)}
+                  >
+                    <UserMinusIcon aria-hidden="true" />
+                    Terminated
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -362,20 +382,23 @@ export function DoctorsTable({
   const totalCount = table.getFilteredRowModel().rows.length;
   const pageCount = table.getPageCount();
 
-  async function handleDelete() {
-    if (!deleting) return;
-    setDeleteBusy(true);
-    const res = await fetch(`/api/doctors/${deleting.id}`, {
-      method: "DELETE",
+  async function handleTerminate() {
+    if (!terminating) return;
+    const reactivate = terminating.status === "terminated";
+    setTerminateBusy(true);
+    const res = await fetch(`/api/doctors/${terminating.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: reactivate ? "active" : "terminated" }),
     });
     const data = await res.json();
-    setDeleteBusy(false);
+    setTerminateBusy(false);
     if (!res.ok) {
       toast.error(data.error || "Something went wrong. Please try again.");
       return;
     }
-    toast.success("Doctor deleted.");
-    setDeleting(null);
+    toast.success(reactivate ? "Doctor re-activated." : "Doctor terminated.");
+    setTerminating(null);
     await onChanged?.();
   }
 
@@ -478,11 +501,17 @@ export function DoctorsTable({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() ? "selected" : undefined}
-                className="border-b border-border transition-colors duration-100 last:border-b-0 hover:bg-muted/30"
+                onClick={() => setRecordsDoctor(row.original)}
+                className="cursor-pointer border-b border-border transition-colors duration-100 last:border-b-0 hover:bg-muted/30"
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell
                     key={cell.id}
+                    onClick={
+                      cell.column.id === "select" || cell.column.id === "actions"
+                        ? (e) => e.stopPropagation()
+                        : undefined
+                    }
                     className={cn(
                       "py-3",
                       cell.column.id === "select" && "pl-4",
@@ -592,8 +621,8 @@ export function DoctorsTable({
       </Dialog>
 
       <Dialog
-        open={Boolean(deleting)}
-        onOpenChange={(open) => !open && setDeleting(null)}
+        open={Boolean(terminating)}
+        onOpenChange={(open) => !open && setTerminating(null)}
       >
         <DialogContent className="sm:max-w-lg">
           <div className="flex items-start space-x-4">
@@ -601,29 +630,56 @@ export function DoctorsTable({
               <AlertTriangleIcon className="h-6 w-6 text-red-600" />
             </div>
             <DialogHeader>
-              <DialogTitle>Delete doctor</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete the doctor account for{" "}
-                <span className="font-medium text-foreground">
-                  {deleting?.name}
-                </span>{" "}
-                ({deleting?.email})? They will no longer be able to sign in or
-                appear in appointment bookings. This action cannot be undone.
-              </DialogDescription>
+              {terminating?.status === "terminated" ? (
+                <>
+                  <DialogTitle>Re-activate doctor</DialogTitle>
+                  <DialogDescription>
+                    Allow{" "}
+                    <span className="font-medium text-foreground">
+                      {terminating?.name}
+                    </span>{" "}
+                    ({terminating?.email}) to sign in and appear in appointment
+                    bookings again.
+                  </DialogDescription>
+                </>
+              ) : (
+                <>
+                  <DialogTitle>Terminate doctor</DialogTitle>
+                  <DialogDescription>
+                    Terminate the account for{" "}
+                    <span className="font-medium text-foreground">
+                      {terminating?.name}
+                    </span>{" "}
+                    ({terminating?.email})? They will no longer be able to sign
+                    in or appear in appointment bookings. You can re-activate
+                    them later.
+                  </DialogDescription>
+                </>
+              )}
             </DialogHeader>
           </div>
           <DialogFooter>
             <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
             <Button
               variant="destructive"
-              onClick={handleDelete}
-              disabled={deleteBusy}
+              onClick={handleTerminate}
+              disabled={terminateBusy}
             >
-              {deleteBusy ? "Deleting..." : "Delete"}
+              {terminateBusy
+                ? "Saving..."
+                : terminating?.status === "terminated"
+                  ? "Re-activate"
+                  : "Terminate"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <DoctorRecordsDialog
+        doctor={recordsDoctor}
+        open={Boolean(recordsDoctor)}
+        onOpenChange={(open) => !open && setRecordsDoctor(null)}
+      />
     </>
   );
 }

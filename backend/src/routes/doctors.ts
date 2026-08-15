@@ -11,6 +11,9 @@ import {
 import { cached, invalidateCache } from "@/lib/cache";
 import { searchParams, handleError } from "@/lib/http";
 import { requireAuth } from "@/plugins/auth";
+import { mapAppointment } from "./appointments";
+import { mapDoc as mapPrescription } from "./prescriptions";
+import { mapBill } from "./bills";
 
 const DOCTORS_CACHE_KEY = "doctors:list";
 const DOCTORS_CACHE_TTL_MS = 15_000;
@@ -91,6 +94,7 @@ function mapDoctor(d: Record<string, unknown>) {
     address: asString(d.address),
     schedule: mapSchedule(d),
     image: d.image ?? null,
+    status: d.status === "terminated" ? "terminated" : "active",
     createdAt: d.createdAt,
   };
 }
@@ -106,7 +110,7 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
           db
             .collection("users")
             .find(
-              { role: "doctor" },
+              { role: "doctor", status: "active" },
               { projection: { name: 1, specialty: 1, qualifications: 1, city: 1 } }
             )
             .sort({ name: 1 })
@@ -242,6 +246,7 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
         address: asString(address),
         schedule: normalizeSchedule(schedule),
         image: normalizedImage.image,
+        status: "active",
         role: "doctor",
         createdAt: new Date(),
       });
@@ -292,7 +297,6 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
         qualifications,
         city,
         state,
-        consultationFee,
         experience,
         gender,
         languages,
@@ -301,40 +305,57 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
         address,
         schedule,
         image,
+        status,
       } = body;
 
-      if (!name) {
-        return reply.code(400).send({ error: "Name is required" });
+      const normalizedStatus = asString(status);
+      if (
+        normalizedStatus !== null &&
+        normalizedStatus !== "active" &&
+        normalizedStatus !== "terminated"
+      ) {
+        return reply.code(400).send({ error: "Invalid status" });
       }
 
-      const normalizedImage = normalizeImage(image);
-      if (!normalizedImage.ok) {
-        return reply.code(400).send({ error: normalizedImage.error });
+      const $set: Record<string, unknown> = {};
+      if (name !== undefined) {
+        if (typeof name !== "string" || !name.trim()) {
+          return reply.code(400).send({ error: "Name is required" });
+        }
+        $set.name = name;
       }
+      if (specialty !== undefined) $set.specialty = asString(specialty);
+      if (mobile !== undefined) $set.mobile = asString(mobile);
+      if (qualifications !== undefined)
+        $set.qualifications = asString(qualifications);
+      if (city !== undefined) $set.city = asString(city);
+      if (state !== undefined) $set.state = asString(state);
+      if (experience !== undefined) $set.experience = asString(experience);
+      if (gender !== undefined) $set.gender = asString(gender);
+      if (languages !== undefined) $set.languages = asStringArray(languages);
+      if (registrationNumber !== undefined)
+        $set.registrationNumber = asString(registrationNumber);
+      if (bio !== undefined) $set.bio = asString(bio);
+      if (address !== undefined) $set.address = asString(address);
+      if (schedule !== undefined) $set.schedule = normalizeSchedule(schedule);
+      if (image !== undefined) {
+        const normalizedImage = normalizeImage(image);
+        if (!normalizedImage.ok) {
+          return reply.code(400).send({ error: normalizedImage.error });
+        }
+        $set.image = normalizedImage.image;
+      }
+      if (normalizedStatus !== null) $set.status = normalizedStatus;
+
+      if (Object.keys($set).length === 0) {
+        return reply.code(400).send({ error: "Nothing to update" });
+      }
+      $set.updatedAt = new Date();
 
       const db = await getDb();
       const result = await db.collection("users").updateOne(
         { _id: new ObjectId(id), role: "doctor" },
-        {
-          $set: {
-            name,
-            specialty: specialty ?? null,
-            mobile: mobile ?? null,
-            qualifications: qualifications ?? null,
-            city: city ?? null,
-            state: asString(state),
-            consultationFee: asNumber(consultationFee),
-            experience: asString(experience),
-            gender: asString(gender),
-            languages: asStringArray(languages),
-            registrationNumber: asString(registrationNumber),
-            bio: asString(bio),
-            address: asString(address),
-            schedule: normalizeSchedule(schedule),
-            image: normalizedImage.image,
-            updatedAt: new Date(),
-          },
-        }
+        { $set }
       );
 
       if (result.matchedCount === 0) {
@@ -347,6 +368,57 @@ export function registerDoctorsRoutes(app: FastifyInstance): void {
       return reply.send({ doctor: { id } });
     } catch (error) {
       handleError(reply, error, "Update doctor");
+    }
+  });
+
+  app.get("/api/doctors/:id/records", async (request, reply) => {
+    if (!(await requireAuth(request, reply))) return;
+
+    try {
+      const { id } = request.params as { id: string };
+      if (!ObjectId.isValid(id)) {
+        return reply.code(400).send({ error: "Invalid doctor id" });
+      }
+
+      const db = await getDb();
+      const doctor = await db
+        .collection("users")
+        .findOne({ _id: new ObjectId(id), role: "doctor" });
+
+      if (!doctor) {
+        return reply.code(404).send({ error: "Doctor not found" });
+      }
+
+      const RECORDS_LIMIT = 300;
+      const [appointments, prescriptions, bills] = await Promise.all([
+        db
+          .collection("appointments")
+          .find({ doctorId: id })
+          .sort({ createdAt: -1 })
+          .limit(RECORDS_LIMIT)
+          .toArray(),
+        db
+          .collection("prescriptions")
+          .find({ doctorName: doctor.name })
+          .sort({ createdAt: -1 })
+          .limit(RECORDS_LIMIT)
+          .toArray(),
+        db
+          .collection("bills")
+          .find({ $or: [{ doctorId: id }, { doctorName: doctor.name }] })
+          .sort({ createdAt: -1 })
+          .limit(RECORDS_LIMIT)
+          .toArray(),
+      ]);
+
+      return reply.send({
+        doctor: mapDoctor(doctor),
+        appointments: appointments.map(mapAppointment),
+        prescriptions: prescriptions.map(mapPrescription),
+        bills: bills.map(mapBill),
+      });
+    } catch (error) {
+      handleError(reply, error, "List doctor records");
     }
   });
 
