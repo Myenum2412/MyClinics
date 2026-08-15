@@ -393,7 +393,7 @@ export default function AppointmentForm({
           <button
             type="submit"
             disabled={loading}
-            className="rounded-xl bg-black px-3 py-3 text-sm font-semibold text-white transition-colors hover:bg-black/85 disabled:opacity-50"
+            className="rounded-xl bg-[#2196F3] px-3 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1976D2] disabled:opacity-50"
           >
             {loading ? "Submitting…" : "Book Appointment"}
           </button>
