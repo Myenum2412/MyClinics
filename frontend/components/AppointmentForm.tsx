@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import {
-  Building2Icon,
   CakeIcon,
   CalendarIcon,
   CalendarPlusIcon,
@@ -10,9 +9,7 @@ import {
   ChevronDownIcon,
   ClockIcon,
   MailIcon,
-  MapPinIcon,
   PhoneIcon,
-  SearchIcon,
   ShieldCheckIcon,
   StethoscopeIcon,
   UserIcon,
@@ -88,15 +85,6 @@ function StepHeader({ number, label }: { number: number; label: string }) {
   );
 }
 
-function initialsOf(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? "")
-    .join("");
-}
-
 export default function AppointmentForm({
   doctors,
   doctorId: controlledDoctorId,
@@ -121,7 +109,6 @@ export default function AppointmentForm({
   const [location, setLocation] = useState("");
   const [type, setType] = useState("in-person");
   const [reason, setReason] = useState("");
-  const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirmed, setConfirmed] = useState<{
@@ -138,27 +125,17 @@ export default function AppointmentForm({
     : doctorId;
   const currentType = onTypeChange ? (controlledType ?? "in-person") : type;
 
-  const [selectedCity, selectedState] = location
+  const [selectedCity] = location
     ? location.split(",").map((s) => s.trim())
-    : ["", ""];
+    : [""];
 
   const visibleDoctors = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    if (!selectedCity) return doctors;
     const city = selectedCity.toLowerCase();
-    return doctors.filter((d) => {
-      if (selectedCity && !(d.city ?? "").toLowerCase().includes(city)) {
-        return false;
-      }
-      if (
-        q &&
-        !d.name.toLowerCase().includes(q) &&
-        !(d.specialty ?? "").toLowerCase().includes(q)
-      ) {
-        return false;
-      }
-      return true;
-    });
-  }, [doctors, query, selectedCity]);
+    return doctors.filter((d) =>
+      (d.city ?? "").toLowerCase().includes(city)
+    );
+  }, [doctors, selectedCity]);
 
   function pickDoctor(id: string) {
     if (onDoctorIdChange) {
@@ -182,7 +159,9 @@ export default function AppointmentForm({
     setError("");
 
     if (!name.trim() || !mobile.trim() || !currentDoctorId || !date || !time) {
-      setError("Please fill in your name, WhatsApp number, doctor, date and time.");
+      setError(
+        "Please fill in your name, WhatsApp number, doctor, date and time."
+      );
       return;
     }
 
@@ -231,8 +210,6 @@ export default function AppointmentForm({
       setError("Could not reach the server. Please try again.");
     }
   }
-
-  const selectedDoctor = doctors.find((d) => d.id === currentDoctorId);
 
   return (
     <div className="w-full rounded-2xl border border-black/10 bg-white p-6 text-black shadow-lg shadow-[#0D47A1]/10 md:p-8">
@@ -287,114 +264,9 @@ export default function AppointmentForm({
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-8">
-          {/* Step 1 — Your Location */}
+          {/* Step 1 — Your Details */}
           <div className="space-y-4">
-            <StepHeader number={1} label="Your Location" />
-            <LocationPicker
-              value={location}
-              onChange={(v) => {
-                setLocation(v);
-                setError("");
-              }}
-            />
-          </div>
-
-          {/* Step 2 — Choose Your Doctor */}
-          <div className="space-y-4">
-            <StepHeader number={2} label="Choose Your Doctor" />
-
-            {!selectedCity ? (
-              <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-black/20 px-3 py-6 text-center">
-                <MapPinIcon className="size-5 text-black/40" />
-                <p className="text-sm font-medium text-black/70">
-                  Select your state and city first
-                </p>
-                <p className="text-xs text-black/50">
-                  Doctors near you will appear here.
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="relative">
-                  <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-black/40" />
-                  <input
-                    type="search"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search doctors by name or specialty..."
-                    className={inputClass + " pl-9"}
-                  />
-                </div>
-
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {TYPE_OPTIONS.map((t) => (
-                    <button
-                      key={t.value}
-                      type="button"
-                      onClick={() => setSelectedType(t.value)}
-                      className={cn(
-                        "flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
-                        currentType === t.value
-                          ? "border-[#2196F3] bg-[#2196F3]/10 text-[#2196F3]"
-                          : "border-black/10 bg-white text-black/70 hover:border-[#2196F3]/50 hover:text-black"
-                      )}
-                    >
-                      <t.icon className="size-4" />
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-
-                {visibleDoctors.length === 0 ? (
-                  <p className="rounded-lg border border-dashed border-black/20 px-3 py-5 text-center text-sm text-black/50">
-                    No doctors in {selectedCity} yet. Try another city.
-                  </p>
-                ) : (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {visibleDoctors.map((d) => {
-                      const selected = currentDoctorId === d.id;
-                      return (
-                        <button
-                          key={d.id}
-                          type="button"
-                          onClick={() => pickDoctor(d.id)}
-                          className={cn(
-                            "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
-                            selected
-                              ? "border-[#2196F3] bg-[#2196F3]/5 ring-1 ring-[#2196F3]"
-                              : "border-black/10 bg-white hover:border-[#2196F3]/50"
-                          )}
-                        >
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2196F3]/10 text-sm font-semibold text-[#2196F3]">
-                            {initialsOf(d.name)}
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-semibold text-black">
-                              {d.name}
-                            </span>
-                            <span className="block truncate text-xs text-black/50">
-                              {d.specialty ?? "General Physician"}
-                              {d.city ? ` · ${d.city}` : ""}
-                            </span>
-                          </span>
-                          {selected && (
-                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                              <CheckCircle2Icon className="size-3.5" />
-                              Selected
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Step 3 — Your Details */}
-          <div className="space-y-4">
-            <StepHeader number={3} label="Your Details" />
+            <StepHeader number={1} label="Your Details" />
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Full Name" required icon={UserIcon}>
                 <input
@@ -456,9 +328,66 @@ export default function AppointmentForm({
             </div>
           </div>
 
-          {/* Step 4 — Date & Time */}
+          {/* Step 2 — Your Location & Doctor */}
           <div className="space-y-4">
-            <StepHeader number={4} label="Date & Time" />
+            <StepHeader number={2} label="Your Location & Doctor" />
+            <LocationPicker
+              value={location}
+              onChange={(v) => {
+                setLocation(v);
+                setError("");
+              }}
+            />
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              {TYPE_OPTIONS.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setSelectedType(t.value)}
+                  className={cn(
+                    "flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
+                    currentType === t.value
+                      ? "border-[#2196F3] bg-[#2196F3]/10 text-[#2196F3]"
+                      : "border-black/10 bg-white text-black/70 hover:border-[#2196F3]/50 hover:text-black"
+                  )}
+                >
+                  <t.icon className="size-4" />
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative">
+              <StethoscopeIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-black/40" />
+              <select
+                value={currentDoctorId}
+                onChange={(e) => pickDoctor(e.target.value)}
+                disabled={!selectedCity || visibleDoctors.length === 0}
+                className={inputClass + " appearance-none pl-9 pr-8 disabled:cursor-not-allowed disabled:opacity-60"}
+              >
+                <option value="">
+                  {!selectedCity
+                    ? "Select a doctor *"
+                    : visibleDoctors.length === 0
+                      ? `No doctors in ${selectedCity}`
+                      : "Select a doctor *"}
+                </option>
+                {visibleDoctors.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                    {d.specialty ? ` — ${d.specialty}` : ""}
+                    {d.city ? ` · ${d.city}` : ""}
+                  </option>
+                ))}
+              </select>
+              <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-black/40" />
+            </div>
+          </div>
+
+          {/* Step 3 — Date & Time */}
+          <div className="space-y-4">
+            <StepHeader number={3} label="Date & Time" />
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Preferred Date" required icon={CalendarIcon}>
                 <input
@@ -466,11 +395,7 @@ export default function AppointmentForm({
                   value={date}
                   min={today}
                   onChange={(e) => setDate(e.target.value)}
-                  className={cn(
-                    inputClass,
-                    "pl-9",
-                    !date && "text-transparent"
-                  )}
+                  className={cn(inputClass, "pl-9", !date && "text-transparent")}
                 />
                 {!date && (
                   <span className="pointer-events-none absolute top-1/2 left-9 -translate-y-1/2 text-sm text-black/40">
@@ -483,11 +408,7 @@ export default function AppointmentForm({
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className={cn(
-                    inputClass,
-                    "pl-9",
-                    !time && "text-transparent"
-                  )}
+                  className={cn(inputClass, "pl-9", !time && "text-transparent")}
                 />
                 {!time && (
                   <span className="pointer-events-none absolute top-1/2 left-9 -translate-y-1/2 text-sm text-black/40">
