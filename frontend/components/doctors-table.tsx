@@ -35,6 +35,7 @@ const TABLE_FEATURES = tableFeatures({
 });
 
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DoctorForm } from "@/components/doctor-form";
-import { DoctorRecordsDialog } from "@/components/doctor-records-dialog";
 import {
   ExclamationTriangleIcon as AlertTriangleIcon,
   ArrowDownIcon as ArrowDown,
@@ -302,9 +302,9 @@ export function DoctorsTable({
     React.useState<ColumnVisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [editing, setEditing] = React.useState<Doctor | null>(null);
-  const [recordsDoctor, setRecordsDoctor] = React.useState<Doctor | null>(null);
   const [terminating, setTerminating] = React.useState<Doctor | null>(null);
   const [terminateBusy, setTerminateBusy] = React.useState(false);
+  const router = useRouter();
 
   const tableColumns = React.useMemo<
     ColumnDef<typeof TABLE_FEATURES, Doctor>[]
@@ -501,7 +501,7 @@ export function DoctorsTable({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() ? "selected" : undefined}
-                onClick={() => setRecordsDoctor(row.original)}
+                onClick={() => router.push(`/doctor/doctors/${row.original.id}`)}
                 className="cursor-pointer border-b border-border transition-colors duration-100 last:border-b-0 hover:bg-muted/30"
               >
                 {row.getVisibleCells().map((cell) => (
@@ -674,12 +674,6 @@ export function DoctorsTable({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <DoctorRecordsDialog
-        doctor={recordsDoctor}
-        open={Boolean(recordsDoctor)}
-        onOpenChange={(open) => !open && setRecordsDoctor(null)}
-      />
     </>
   );
 }
