@@ -24,7 +24,6 @@ import {
 
 const roles = [
   { value: "doctor", label: "Doctor" },
-  { value: "receptionist", label: "Receptionist" },
   { value: "patient", label: "Patient" },
 ];
 
