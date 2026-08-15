@@ -137,11 +137,11 @@ R2_BUCKET_NAME=<bucket name>
 ### Run
 
 ```bash
-npm run dev        # API server (3100) + web server (3456) together
+npm run dev        # API server (3100) + web server (3000) together
 npm run whatsapp   # WhatsApp worker (separate terminal)
 ```
 
-Open http://localhost:3456, sign up, and create a doctor account. Then link the
+Open http://localhost:3000, sign up, and create a doctor account. Then link the
 WhatsApp bot:
 
 1. Start the worker — it prints a QR code.

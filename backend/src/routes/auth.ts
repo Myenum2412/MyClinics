@@ -87,7 +87,7 @@ export function registerAuthRoutes(app: FastifyInstance): void {
 
       const origin =
         request.headers.origin ??
-        `${request.protocol}://${request.headers.host ?? "localhost:3456"}`;
+        `${request.protocol}://${request.headers.host ?? "localhost:3000"}`;
       const resetUrl = `${origin}/reset-password?token=${token}`;
 
       // NOTE: In production, email this link to the user instead.

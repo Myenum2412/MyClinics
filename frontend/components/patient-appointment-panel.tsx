@@ -66,24 +66,65 @@ export function PatientAppointmentPanel({
       />
 
       <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
-        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-          Appointments ({appointments.length})
-        </h2>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Appointments ({appointments.length})
+          </h2>
+          {selectedDate && (
+            <p className="text-sm font-medium text-foreground">
+              {formatDate(selectedDate)}
+            </p>
+          )}
+        </div>
         {visible.length ? (
           <div className="flex flex-col gap-2">
             {visible.map((a) => (
               <div
                 key={a.id}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm"
+                className="flex flex-wrap items-start justify-between gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2.5 text-sm"
               >
-                <div className="min-w-0">
-                  <p className="font-medium">
-                    {formatDate(a.date)} · {a.time}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {a.doctorName ?? "—"} ·{" "}
-                    {a.type === "video" ? "Video" : "In-person"}
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{a.doctorName ?? "—"}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {a.time}
+                    </span>
+                    {selectedDate === null && (
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {formatDate(a.date)}
+                      </span>
+                    )}
+                    <Badge
+                      variant={a.type === "video" ? "outline" : "secondary"}
+                      className="text-xs"
+                    >
+                      {a.type === "video" ? "Video" : "In-person"}
+                    </Badge>
+                  </div>
+                  {a.department && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {a.department}
+                      {a.counter != null
+                        ? ` · Counter #${a.counter}`
+                        : ""}
+                    </p>
+                  )}
+                  {a.reason && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground/80">
+                        Reason:
+                      </span>{" "}
+                      {a.reason}
+                    </p>
+                  )}
+                  {a.notes && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground/80">
+                        Notes:
+                      </span>{" "}
+                      {a.notes}
+                    </p>
+                  )}
                 </div>
                 <Badge
                   variant={appointmentStatusVariant[a.status] ?? "secondary"}

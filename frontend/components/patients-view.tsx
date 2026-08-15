@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   PlusIcon,
   MagnifyingGlassIcon as Search,
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Stats07 from "@/components/stats-07";
 import { PatientsTable, type Patient } from "@/components/patients-table";
-import { PatientPreviewPanel } from "@/components/patient-preview-panel";
 import type { StatsItem } from "@/lib/stats";
 import { useServerPagination } from "@/hooks/use-server-pagination";
 
@@ -21,6 +20,7 @@ export function PatientsView({
   initialPatients: Patient[];
   stats?: StatsItem[];
 }) {
+  const router = useRouter();
   const {
     rows: patients,
     total,
@@ -35,7 +35,6 @@ export function PatientsView({
     dataKey: "patients",
     initialData: initialPatients,
   });
-  const [previewPatient, setPreviewPatient] = useState<Patient | null>(null);
 
   function handleCreated() {
     return refresh();
@@ -43,12 +42,6 @@ export function PatientsView({
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      {previewPatient && (
-        <PatientPreviewPanel
-          patient={previewPatient}
-          onClose={() => setPreviewPatient(null)}
-        />
-      )}
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center">
           <div className="md:w-1/3">
@@ -95,7 +88,9 @@ export function PatientsView({
           data={patients}
           search={search}
           onChanged={handleCreated}
-          onPreview={setPreviewPatient}
+          onPreview={(patient) =>
+            router.push(`/doctor/patients/${patient.id}`)
+          }
           serverPagination={{
             pageIndex,
             pageCount,

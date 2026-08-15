@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   PlusIcon,
   MagnifyingGlassIcon as Search,
@@ -10,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import Stats07 from "@/components/stats-07";
 import { AppointmentForm, type DoctorOption } from "@/components/appointment-form";
 import { AppointmentsTable, type Appointment } from "@/components/appointments-table";
-import { AppointmentPreviewPanel } from "@/components/appointment-preview-panel";
 import type { PatientPick } from "@/components/patient-picker";
 import type { StatsItem } from "@/lib/stats";
 import { useServerPagination } from "@/hooks/use-server-pagination";
@@ -26,6 +26,7 @@ export function AppointmentsView({
   initialAppointments: Appointment[];
   stats?: StatsItem[];
 }) {
+  const router = useRouter();
   const {
     rows: appointments,
     total,
@@ -41,7 +42,6 @@ export function AppointmentsView({
     initialData: initialAppointments,
   });
   const [showForm, setShowForm] = useState(false);
-  const [previewAppointment, setPreviewAppointment] = useState<Appointment | null>(null);
 
   function handleBooked() {
     return refresh();
@@ -49,12 +49,6 @@ export function AppointmentsView({
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-      {previewAppointment && (
-        <AppointmentPreviewPanel
-          appointment={previewAppointment}
-          onClose={() => setPreviewAppointment(null)}
-        />
-      )}
       <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center">
           <div className="md:w-1/3">
@@ -106,6 +100,9 @@ export function AppointmentsView({
           doctors={doctors}
           patients={patients}
           onChanged={handleBooked}
+          onPreview={(appointment) =>
+            router.push(`/doctor/appointments/${appointment.id}`)
+          }
           serverPagination={{
             pageIndex,
             pageCount,
