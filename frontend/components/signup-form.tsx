@@ -14,18 +14,6 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-const roles = [
-  { value: "doctor", label: "Doctor" },
-  { value: "patient", label: "Patient" },
-];
 
 export function SignupForm({
   className,
@@ -36,7 +24,6 @@ export function SignupForm({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("patient");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -48,7 +35,7 @@ export function SignupForm({
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ name, email, password, role: "doctor" }),
     });
     const data = await res.json();
 
@@ -137,21 +124,6 @@ export function SignupForm({
               onChange={(e) => setPassword(e.target.value)}
               className="text-black placeholder:text-gray-400 bg-white!"
             />
-          </Field>
-          <Field>
-            <FieldLabel className="text-black">I am a</FieldLabel>
-            <Select value={role} onValueChange={(value) => setRole(value ?? "patient")}>
-              <SelectTrigger className="w-full text-black">
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((r) => (
-                  <SelectItem key={r.value} value={r.value}>
-                    {r.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </Field>
 
           {error && <p className="text-sm font-normal text-destructive">{error}</p>}
