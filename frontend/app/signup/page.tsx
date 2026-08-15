@@ -1,6 +1,13 @@
 import { Suspense } from "react";
 import { SignupForm } from "@/components/signup-form";
 import { AuthBackground } from "@/components/auth-background";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Create Account",
+  description:
+    "Create your My Clinics account — patients can book appointments and track records; staff can manage the clinic.",
+};
 
 export default function SignupPage() {
   return (

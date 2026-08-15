@@ -5,6 +5,13 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { loadPatientData } from "@/lib/patient";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'My Billing & Payments',
+  description: 'Track your bills, payments and outstanding amounts at My Clinics.',
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function PatientBillingPage() {

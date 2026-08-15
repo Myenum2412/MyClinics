@@ -8,6 +8,13 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { loadPatientData } from "@/lib/patient";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'My Medicines',
+  description: 'View your prescribed medicines and dosage instructions from My Clinics.',
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function PatientMedicinesPage() {

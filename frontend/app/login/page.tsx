@@ -1,6 +1,13 @@
 import { Suspense } from "react";
 import { LoginForm } from "@/components/login-form";
 import { AuthBackground } from "@/components/auth-background";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Login",
+  description:
+    "Sign in to My Clinics to manage appointments, view prescriptions, track billing and access your medical reports.",
+};
 
 export default async function LoginPage({
   searchParams,

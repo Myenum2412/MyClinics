@@ -4,6 +4,13 @@ import { getDb } from "@/lib/db";
 import { DB_COLLECTIONS } from "@/lib/constants";
 import { startOfMonthDate } from "@/lib/stats";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Medicines',
+  description: 'Manage the medicine catalog at My Clinics — add, edit and organise medicines for prescriptions.',
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function MedicinesPage() {

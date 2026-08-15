@@ -1,8 +1,15 @@
 import { getDb } from "@/lib/db";
 import AppointmentForm, { type DoctorOption } from "@/components/AppointmentForm";
 import HeaderBlock from "@/components/header-block";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Book an Appointment",
+  description:
+    "Book an appointment with a doctor at My Clinics — choose your preferred doctor, department, date and time in under a minute.",
+};
 
 export default async function Home() {
   const db = await getDb();

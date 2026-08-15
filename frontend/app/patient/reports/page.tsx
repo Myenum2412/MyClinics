@@ -5,6 +5,13 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { loadPatientData } from "@/lib/patient";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'My Medical Reports',
+  description: 'View, download and share your medical reports securely stored at My Clinics.',
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function PatientReportsPage() {

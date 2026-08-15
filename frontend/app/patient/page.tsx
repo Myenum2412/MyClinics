@@ -23,6 +23,13 @@ import { getDb } from "@/lib/db";
 import { loadPatientData } from "@/lib/patient";
 import { categoryLabel } from "@/lib/report-folders";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Patient Dashboard',
+  description: 'Your health overview at My Clinics — appointments, medicines, billing and medical reports in one place.',
+};
+
 export const dynamic = "force-dynamic";
 
 const dateFmt = new Intl.DateTimeFormat("en-US", {

@@ -6,6 +6,13 @@ import { getDb } from "@/lib/db";
 import { loadPatientData } from "@/lib/patient";
 import { todayDateString } from "@/lib/stats";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'My Appointments',
+  description: 'View and manage your appointments with doctors at My Clinics — book, reschedule and track visit history.',
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function PatientAppointmentsPage() {
