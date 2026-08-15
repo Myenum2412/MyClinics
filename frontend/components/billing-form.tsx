@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { PlusIcon, Printer, ReceiptText, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ import { saveReportCopy } from "@/components/report-copy";
 import { BILL_STATUSES, PAYMENT_METHODS, formatINR, round2 } from "@/lib/billing";
 import { PatientPicker, type PatientPick } from "@/components/patient-picker";
 import type { Bill, BillItem } from "@/components/billing-table";
+import type { Service } from "@/components/services-view";
 
 type BillItemInput = {
   name: string;
@@ -57,11 +58,13 @@ export function BillingForm({
   onSaved,
   onCancel,
   patients,
+  services,
 }: {
   initial?: Bill | null;
   onSaved: () => Promise<void>;
   onCancel: () => void;
   patients?: PatientPick[];
+  services?: Service[];
 }) {
   const isEdit = Boolean(initial);
 
@@ -75,7 +78,20 @@ export function BillingForm({
   const [status, setStatus] = useState(initial?.status ?? "paid");
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [quickService, setQuickService] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const activeServices = useMemo(
+    () => (services ?? []).filter((s) => s.isActive),
+    [services]
+  );
+
+  function addService(service: Service) {
+    setItems((prev) => [
+      ...prev,
+      { name: service.name, qty: "1", price: String(service.price) },
+    ]);
+  }
 
   function handlePickPatient(patient: PatientPick) {
     setSelectedPatientId(patient.id);
@@ -321,6 +337,36 @@ export function BillingForm({
               Bill Items
             </legend>
             <FieldGroup>
+              {activeServices.length > 0 && (
+                <div className="flex flex-col gap-2 rounded-lg border border-border bg-muted/30 p-4">
+                  <p className="text-sm font-medium">Quick add from services</p>
+                  <Select
+                    value={quickService}
+                    onValueChange={(v) => {
+                      if (v) {
+                        const service = activeServices.find((s) => s.id === v);
+                        if (service) addService(service);
+                        setQuickService("");
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-full sm:max-w-sm">
+                      <SelectValue placeholder="Pick a service to add..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activeServices.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
+                          <span className="text-muted-foreground">
+                            {" "}
+                            · {formatINR(s.price)}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="flex flex-col gap-4">
                 {items.map((item, i) => (
                   <div

@@ -9,5 +9,5 @@ export function isStaffRole(role?: string | null): boolean {
 }
 
 export function canAccessBilling(role?: string | null): boolean {
-  return !isStaffRole(role) && role !== "patient";
+  return !!role && role !== "patient";
 }

@@ -7,13 +7,16 @@ import { Button } from "@/components/ui/button";
 import { BillingForm } from "@/components/billing-form";
 import type { Bill } from "@/components/billing-table";
 import type { PatientPick } from "@/components/patient-picker";
+import type { Service } from "@/components/services-view";
 
 export function BillFormPage({
   initial,
   patients,
+  services,
 }: {
   initial?: Bill | null;
   patients?: PatientPick[];
+  services?: Service[];
 }) {
   const router = useRouter();
 
@@ -49,6 +52,7 @@ export function BillFormPage({
             key={initial?.id ?? "new"}
             initial={initial}
             patients={patients}
+            services={services}
             onSaved={async () => {
               router.push("/doctor/billing");
               router.refresh();

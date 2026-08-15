@@ -16,6 +16,7 @@ import { registerBillRoutes } from "@/routes/bills-id";
 import { registerBillPdfRoutes } from "@/routes/bills-id-pdf";
 import { registerDoctorsRoutes } from "@/routes/doctors";
 import { registerMedicinesRoutes } from "@/routes/medicines";
+import { registerServicesRoutes } from "@/routes/services";
 import { registerPatientsRoutes } from "@/routes/patients";
 import { registerPrescriptionsRoutes } from "@/routes/prescriptions";
 import { registerReportsRoutes } from "@/routes/reports";
@@ -64,6 +65,7 @@ export function buildServer() {
   void app.register(registerBillPdfRoutes);
   void app.register(registerDoctorsRoutes);
   void app.register(registerMedicinesRoutes);
+  void app.register(registerServicesRoutes);
   void app.register(registerPatientsRoutes);
   void app.register(registerPrescriptionsRoutes);
   void app.register(registerReportsRoutes);

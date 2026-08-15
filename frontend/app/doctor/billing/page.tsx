@@ -1,5 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
-import { BillingView } from "@/components/billing-view";
+import { BillingTabs } from "@/components/billing-tabs";
 import { getDb } from "@/lib/db";
 import { DB_COLLECTIONS } from "@/lib/constants";
 import { round2 } from "@/lib/billing";
@@ -43,6 +43,50 @@ export default async function BillingPage() {
     createdAt: d.createdAt,
   }));
 
+  const patientDocs = await db
+    .collection(DB_COLLECTIONS.patients)
+    .find(
+      {},
+      {
+        projection: {
+          fullName: 1,
+          mobile: 1,
+          secondaryMobile: 1,
+          age: 1,
+          gender: 1,
+          email: 1,
+          whatsapp: 1,
+        },
+      }
+    )
+    .toArray();
+
+  const patients = patientDocs.map((p) => ({
+    id: p._id.toString(),
+    fullName: p.fullName,
+    mobile: p.mobile,
+    secondaryMobile: p.secondaryMobile ?? null,
+    age: p.age ?? null,
+    gender: p.gender ?? null,
+    email: p.email ?? null,
+    whatsapp: p.whatsapp ?? null,
+  }));
+
+  const serviceDocs = await db
+    .collection(DB_COLLECTIONS.services)
+    .find({})
+    .sort({ name: 1 })
+    .toArray();
+
+  const services = serviceDocs.map((s) => ({
+    id: s._id.toString(),
+    name: String(s.name ?? ""),
+    category: s.category ? String(s.category) : null,
+    price: Number(s.price) || 0,
+    isActive: s.isActive !== false,
+    createdAt: s.createdAt ? String(s.createdAt) : "",
+  }));
+
   const monthStart = startOfMonthDate();
   const totalCount = docs.length;
   const monthCount = docs.filter(
@@ -64,7 +108,7 @@ export default async function BillingPage() {
 
   return (
     <>
-      <BillingView
+      <BillingTabs
         initialBills={bills}
         stats={[
           {
@@ -92,6 +136,8 @@ export default async function BillingPage() {
             fill: "var(--chart-4)",
           },
         ]}
+        patients={patients}
+        services={services}
       />
       <Toaster />
     </>

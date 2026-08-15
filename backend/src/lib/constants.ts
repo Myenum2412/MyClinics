@@ -21,6 +21,8 @@ export const DB_COLLECTIONS = {
   waMemories: "wa_memories",
   users: "users",
   appointments: "appointments",
+  patients: "patients",
   bills: "bills",
   medicines: "medicines",
+  services: "services",
 } as const;

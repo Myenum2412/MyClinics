@@ -5,7 +5,6 @@ import Image from "next/image"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
-import { isStaffRole } from "@/lib/roles"
 import {
   Sidebar,
   SidebarContent,
@@ -74,13 +73,6 @@ const data = {
   ],
 }
 
-function navItemsForRole(role?: string) {
-  if (isStaffRole(role)) {
-    return data.navMain.filter((item) => item.title !== "Billing")
-  }
-  return data.navMain
-}
-
 export function AppSidebar({
   user,
   ...props
@@ -122,7 +114,7 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain label="Staff" items={navItemsForRole(user.role)} />
+        <NavMain label="Staff" items={data.navMain} />
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>

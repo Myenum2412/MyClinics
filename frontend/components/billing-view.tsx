@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { AlertTriangleIcon, PlusIcon, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,11 @@ import type { StatsItem } from "@/lib/stats";
 export function BillingView({
   initialBills,
   stats,
+  onReady,
 }: {
   initialBills: Bill[];
   stats?: StatsItem[];
+  onReady?: (refetch: () => Promise<void>) => void;
 }) {
   const [bills, setBills] = useState(initialBills);
   const [previewBill, setPreviewBill] = useState<Bill | null>(null);
@@ -43,6 +45,10 @@ export function BillingView({
       setBills(data.bills);
     }
   }
+
+  useEffect(() => {
+    onReady?.(refetch);
+  }, [onReady]);
 
   async function confirmDelete() {
     if (!deleting) return;
