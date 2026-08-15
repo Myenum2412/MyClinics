@@ -1,7 +1,24 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { SearchIcon, StethoscopeIcon, VideoIcon } from "lucide-react";
+import {
+  Building2Icon,
+  CakeIcon,
+  CalendarIcon,
+  CalendarPlusIcon,
+  CheckCircle2Icon,
+  ChevronDownIcon,
+  ClockIcon,
+  MailIcon,
+  MapPinIcon,
+  PhoneIcon,
+  SearchIcon,
+  ShieldCheckIcon,
+  StethoscopeIcon,
+  UserIcon,
+  UserRoundIcon,
+  VideoIcon,
+} from "lucide-react";
 import { LocationPicker } from "@/components/location-picker";
 import { cn } from "@/lib/utils";
 
@@ -20,18 +37,65 @@ const TYPE_OPTIONS = [
   { value: "video", label: "Video consultation", icon: VideoIcon },
 ];
 
+const BLUE = "#2196F3";
+
 const today = new Date().toISOString().split("T")[0];
 
 const inputClass =
-  "w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/20";
+  "w-full rounded-lg border border-black/10 bg-white px-3 py-2.5 text-sm text-black outline-none transition-colors placeholder:text-black/40 focus:border-[#2196F3] focus:ring-2 focus:ring-[#2196F3]/20";
 
-const chipClass = (active: boolean) =>
-  cn(
-    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-    active
-      ? "border-black bg-black text-white"
-      : "border-black/40 bg-white text-black hover:border-black hover:bg-black/5"
+function RequiredMark() {
+  return <span className="text-[#2196F3]">*</span>;
+}
+
+function Field({
+  label,
+  required,
+  optional,
+  icon: Icon,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  optional?: boolean;
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs font-medium text-black/70">
+        {label} {required && <RequiredMark />}
+        {optional && (
+          <span className="font-normal text-black/40"> (optional)</span>
+        )}
+      </label>
+      <div className="relative">
+        <Icon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-black/40" />
+        {children}
+      </div>
+    </div>
   );
+}
+
+function StepHeader({ number, label }: { number: number; label: string }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#2196F3] text-sm font-semibold text-white">
+        {number}
+      </span>
+      <p className="text-sm font-semibold text-black">{label}</p>
+    </div>
+  );
+}
+
+function initialsOf(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 export default function AppointmentForm({
   doctors,
@@ -58,7 +122,6 @@ export default function AppointmentForm({
   const [type, setType] = useState("in-person");
   const [reason, setReason] = useState("");
   const [query, setQuery] = useState("");
-  const [specialty, setSpecialty] = useState("All");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [confirmed, setConfirmed] = useState<{
@@ -78,14 +141,6 @@ export default function AppointmentForm({
     ? location.split(",").map((s) => s.trim())
     : ["", ""];
 
-  const specialties = useMemo(() => {
-    const set = new Set<string>();
-    for (const d of doctors) {
-      if (d.specialty) set.add(d.specialty);
-    }
-    return ["All", ...Array.from(set)];
-  }, [doctors]);
-
   const visibleDoctors = useMemo(() => {
     const q = query.trim().toLowerCase();
     const city = selectedCity.toLowerCase();
@@ -93,7 +148,6 @@ export default function AppointmentForm({
       if (selectedCity && !(d.city ?? "").toLowerCase().includes(city)) {
         return false;
       }
-      if (specialty !== "All" && d.specialty !== specialty) return false;
       if (
         q &&
         !d.name.toLowerCase().includes(q) &&
@@ -103,7 +157,7 @@ export default function AppointmentForm({
       }
       return true;
     });
-  }, [doctors, query, specialty, selectedCity]);
+  }, [doctors, query, selectedCity]);
 
   function pickDoctor(id: string) {
     if (onDoctorIdChange) {
@@ -176,132 +230,139 @@ export default function AppointmentForm({
     }
   }
 
-  const sectionLabel =
-    "text-xs font-semibold uppercase tracking-widest text-black/60";
+  const selectedDoctor = doctors.find((d) => d.id === currentDoctorId);
 
   return (
-    <div className="w-full rounded-3xl border-2 border-black bg-white p-6 text-black shadow-2xl shadow-black/30 md:p-8">
-      <h2 className="text-2xl font-bold text-black">Book an Appointment</h2>
-      <p className="mt-1 text-sm text-black/60">
-        Fill in your details and pick a doctor — we&apos;ll confirm shortly.
-      </p>
+    <div className="w-full rounded-2xl border border-black/10 bg-white p-6 text-black shadow-lg shadow-[#0D47A1]/10 md:p-8">
+      {/* header */}
+      <div className="flex items-start gap-3.5">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#2196F3]/10 text-[#2196F3]">
+          <CalendarPlusIcon className="size-5" />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold text-black md:text-2xl">
+            Book an Appointment
+          </h2>
+          <p className="mt-0.5 text-sm text-black/60">
+            Fill in your details and pick a doctor — we&apos;ll confirm shortly.
+          </p>
+        </div>
+      </div>
 
       {confirmed ? (
-        <div className="mt-6 rounded-xl border border-black/30 bg-black/5 p-4 text-sm text-black">
-          <p className="font-semibold text-black">
+        <div className="mt-8 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-black">
+          <p className="flex items-center gap-1.5 font-medium text-emerald-700">
+            <CheckCircle2Icon className="size-4" />
             Thanks, {confirmed.name}! Your appointment request has been
             submitted.
           </p>
-          <ul className="mt-3 space-y-1">
+          <ul className="mt-3 space-y-1 text-black/70">
             <li>
-              <span className="font-medium">Doctor:</span> {confirmed.doctor}
+              <span className="font-medium text-black">Doctor:</span>{" "}
+              {confirmed.doctor}
             </li>
             <li>
-              <span className="font-medium">Date:</span> {confirmed.date} at{" "}
-              {confirmed.time}
+              <span className="font-medium text-black">Date:</span>{" "}
+              {confirmed.date} at {confirmed.time}
             </li>
             <li>
-              <span className="font-medium">Type:</span>{" "}
+              <span className="font-medium text-black">Type:</span>{" "}
               {confirmed.type === "video" ? "Video Consultation" : "In-person"}
             </li>
             {location && (
               <li>
-                <span className="font-medium">Location:</span> {location}
+                <span className="font-medium text-black">Location:</span>{" "}
+                {location}
               </li>
             )}
           </ul>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-6">
-          {/* 1 · Choose your doctor */}
-          <div className="space-y-3">
-            <p className={sectionLabel}>1 · Choose your doctor</p>
+        <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-8">
+          {/* Step 1 — Choose Your Doctor */}
+          <div className="space-y-4">
+            <StepHeader number={1} label="Choose Your Doctor" />
 
             <div className="relative">
-              <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-black/50" />
+              <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-black/40" />
               <input
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search doctors by name or specialty…"
+                placeholder="Search doctors by name or specialty..."
                 className={inputClass + " pl-9"}
               />
             </div>
 
-            {specialties.length > 1 && (
-              <div className="flex flex-wrap items-center gap-2">
-                {specialties.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setSpecialty(s)}
-                    className={chipClass(specialty === s)}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid gap-2 sm:grid-cols-2">
               {TYPE_OPTIONS.map((t) => (
                 <button
                   key={t.value}
                   type="button"
                   onClick={() => setSelectedType(t.value)}
                   className={cn(
-                    chipClass(currentType === t.value),
-                    "flex items-center gap-1.5"
+                    "flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors",
+                    currentType === t.value
+                      ? "border-[#2196F3] bg-[#2196F3]/10 text-[#2196F3]"
+                      : "border-black/10 bg-white text-black/70 hover:border-[#2196F3]/50 hover:text-black"
                   )}
                 >
-                  <t.icon className="size-3.5" />
+                  <t.icon className="size-4" />
                   {t.label}
                 </button>
               ))}
             </div>
 
             {visibleDoctors.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-black/40 px-3 py-4 text-center text-sm text-black/60">
+              <p className="rounded-lg border border-dashed border-black/20 px-3 py-5 text-center text-sm text-black/50">
                 {selectedCity
                   ? "No doctors in this city yet. Try another city."
                   : "No doctors match your search."}
               </p>
             ) : (
               <div className="grid gap-2 sm:grid-cols-2">
-                {visibleDoctors.map((d) => (
-                  <button
-                    key={d.id}
-                    type="button"
-                    onClick={() => pickDoctor(d.id)}
-                    className={cn(
-                      "flex flex-col items-start gap-0.5 rounded-xl border p-3 text-left transition-colors",
-                      currentDoctorId === d.id
-                        ? "border-black bg-black text-white"
-                        : "border-black/40 bg-white text-black hover:border-black hover:bg-black/5"
-                    )}
-                  >
-                    <span className="text-sm font-semibold">{d.name}</span>
-                    <span
+                {visibleDoctors.map((d) => {
+                  const selected = currentDoctorId === d.id;
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => pickDoctor(d.id)}
                       className={cn(
-                        "text-xs",
-                        currentDoctorId === d.id
-                          ? "text-white/70"
-                          : "text-black/60"
+                        "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
+                        selected
+                          ? "border-[#2196F3] bg-[#2196F3]/5 ring-1 ring-[#2196F3]"
+                          : "border-black/10 bg-white hover:border-[#2196F3]/50"
                       )}
                     >
-                      {[d.specialty, d.qualifications, d.city]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </button>
-                ))}
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2196F3]/10 text-sm font-semibold text-[#2196F3]">
+                        {initialsOf(d.name)}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold text-black">
+                          {d.name}
+                        </span>
+                        <span className="block truncate text-xs text-black/50">
+                          {d.specialty ?? "General Physician"}
+                          {d.city ? ` · ${d.city}` : ""}
+                        </span>
+                      </span>
+                      {selected && (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                          <CheckCircle2Icon className="size-3.5" />
+                          Selected
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
 
-          {/* 2 · Your location */}
-          <div className="space-y-3">
-            <p className={sectionLabel}>2 · Your location</p>
+          {/* Step 2 — Your Location */}
+          <div className="space-y-4">
+            <StepHeader number={2} label="Your Location" />
             <LocationPicker
               value={location}
               onChange={(v) => {
@@ -311,92 +372,145 @@ export default function AppointmentForm({
             />
           </div>
 
-          {/* 3 · Your details */}
-          <div className="space-y-3">
-            <p className={sectionLabel}>3 · Your details</p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Your full name *"
-                className={inputClass}
-              />
-              <input
-                type="tel"
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
-                placeholder="Phone number *"
-                className={inputClass}
-              />
+          {/* Step 3 — Your Details */}
+          <div className="space-y-4">
+            <StepHeader number={3} label="Your Details" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Full Name" required icon={UserIcon}>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Ravi Kumar"
+                  className={inputClass + " pl-9"}
+                />
+              </Field>
+              <Field label="Phone Number" required icon={PhoneIcon}>
+                <input
+                  type="tel"
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value)}
+                  placeholder="+91 98765 43210"
+                  className={inputClass + " pl-9"}
+                />
+              </Field>
             </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <input
-                type="number"
-                min={0}
-                max={120}
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                placeholder="Age"
-                className={inputClass}
-              />
-              <select
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className={inputClass}
-              >
-                <option value="">Gender</option>
-                {genders.map((g) => (
-                  <option key={g} value={g}>
-                    {g}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email (optional)"
-                className={inputClass}
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field label="Age" icon={CakeIcon}>
+                <input
+                  type="number"
+                  min={0}
+                  max={120}
+                  value={age}
+                  onChange={(e) => setAge(e.target.value)}
+                  placeholder="25"
+                  className={inputClass + " pl-9"}
+                />
+              </Field>
+              <Field label="Gender" icon={UserRoundIcon}>
+                <div className="relative">
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    className={inputClass + " appearance-none pl-9 pr-8"}
+                  >
+                    <option value="">Select gender</option>
+                    {genders.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-black/40" />
+                </div>
+              </Field>
+              <Field label="Email" optional icon={MailIcon}>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className={inputClass + " pl-9"}
+                />
+              </Field>
+            </div>
+          </div>
+
+          {/* Step 4 — Date & Time */}
+          <div className="space-y-4">
+            <StepHeader number={4} label="Date & Time" />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Preferred Date" required icon={CalendarIcon}>
+                <input
+                  type="date"
+                  value={date}
+                  min={today}
+                  onChange={(e) => setDate(e.target.value)}
+                  className={cn(
+                    inputClass,
+                    "pl-9",
+                    !date && "text-transparent"
+                  )}
+                />
+                {!date && (
+                  <span className="pointer-events-none absolute top-1/2 left-9 -translate-y-1/2 text-sm text-black/40">
+                    dd/mm/yyyy
+                  </span>
+                )}
+              </Field>
+              <Field label="Preferred Time" required icon={ClockIcon}>
+                <input
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className={cn(
+                    inputClass,
+                    "pl-9",
+                    !time && "text-transparent"
+                  )}
+                />
+                {!time && (
+                  <span className="pointer-events-none absolute top-1/2 left-9 -translate-y-1/2 text-sm text-black/40">
+                    Select time
+                  </span>
+                )}
+              </Field>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-black/70">
+                Symptoms or reason for visit
+                <span className="font-normal text-black/40"> (optional)</span>
+              </label>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Please describe your symptoms or reason for visit"
+                rows={4}
+                className={inputClass + " resize-none"}
               />
             </div>
           </div>
 
-          {/* 4 · Date & time */}
-          <div className="space-y-3">
-            <p className={sectionLabel}>4 · Date &amp; time</p>
-            <div className="flex gap-3">
-              <input
-                type="date"
-                value={date}
-                min={today}
-                onChange={(e) => setDate(e.target.value)}
-                className={inputClass + " flex-1"}
-              />
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className={inputClass + " flex-1"}
-              />
-            </div>
-            <textarea
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Symptoms or reason for visit (optional)"
-              rows={3}
-              className={inputClass}
-            />
-          </div>
+          {error && (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+              {error}
+            </p>
+          )}
 
-          {error && <p className="text-sm text-red-600">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="rounded-xl bg-[#2196F3] px-3 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1976D2] disabled:opacity-50"
+            style={{ backgroundColor: BLUE }}
+            className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#1976D2] disabled:opacity-60"
           >
-            {loading ? "Submitting…" : "Book Appointment"}
+            <CalendarPlusIcon className="size-4" />
+            {loading ? "Booking…" : "Book Appointment"}
           </button>
+
+          <p className="flex items-center justify-center gap-1.5 text-xs text-black/50">
+            <ShieldCheckIcon className="size-3.5 text-emerald-600" />
+            Your information is secure and confidential.
+          </p>
         </form>
       )}
     </div>

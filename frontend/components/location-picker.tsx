@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2Icon } from "lucide-react";
+import {
+  Building2Icon,
+  ChevronDownIcon,
+  Loader2Icon,
+  MapPinIcon,
+} from "lucide-react";
 
 const INDIAN_STATES = [
   "Andhra Pradesh",
@@ -42,27 +47,70 @@ const INDIAN_STATES = [
   "Puducherry",
 ];
 
-type NominatimAddress = {
-  city?: string;
-  town?: string;
-  village?: string;
-  municipality?: string;
-  state_district?: string;
-};
-
 type NominatimResult = {
-  address?: NominatimAddress;
+  osm_type?: string;
+  osm_id?: number;
 };
 
-function cityNameFromAddress(address: NominatimAddress): string | null {
-  const city =
-    address.city ??
-    address.town ??
-    address.village ??
-    address.municipality ??
-    address.state_district ??
-    null;
-  return typeof city === "string" && city.trim() ? city.trim() : null;
+type OverpassElement = {
+  tags?: { name?: string };
+};
+
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+];
+
+async function fetchJson(url: string): Promise<unknown> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function loadCitiesForState(state: string): Promise<string[]> {
+  const boundary = (await fetchJson(
+    `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&country=India&state=${encodeURIComponent(state)}`
+  )) as NominatimResult[];
+
+  if (!boundary.length || !boundary[0].osm_id) return [];
+
+  const { osm_type, osm_id } = boundary[0];
+  if (osm_type !== "relation" && osm_type !== "way") return [];
+  const areaId = (osm_type === "relation" ? 3600000000 : 2400000000) + osm_id;
+
+  const query = `
+[out:json][timeout:30];
+area(${areaId})->.a;
+(node["place"~"^(city|town|village)$"](area.a););
+out tags 400;
+`;
+
+  let elements: OverpassElement[] = [];
+  let lastError: unknown = null;
+  for (const endpoint of OVERPASS_ENDPOINTS) {
+    try {
+      const data = (await fetchJson(
+        `${endpoint}?data=${encodeURIComponent(query)}`
+      )) as { elements?: OverpassElement[] };
+      elements = data.elements ?? [];
+      break;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  if (!elements.length && lastError) throw lastError;
+
+  const seen = new Set<string>();
+  const list: string[] = [];
+  for (const e of elements) {
+    const name = e.tags?.name;
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    list.push(name);
+  }
+  return list.sort();
 }
 
 export function LocationPicker({
@@ -78,28 +126,19 @@ export function LocationPicker({
   const [cities, setCities] = useState<string[]>([]);
   const [city, setCity] = useState(initialParts[0] ?? "");
   const [loadingCities, setLoadingCities] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     if (!state) return;
     let cancelled = false;
-    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=50&country=India&state=${encodeURIComponent(state)}`;
-    fetch(url)
-      .then((r) => r.json())
-      .then((results: NominatimResult[]) => {
+    loadCitiesForState(state)
+      .then((list) => {
         if (cancelled) return;
-        const seen = new Set<string>();
-        const list: string[] = [];
-        for (const r of results) {
-          const name = cityNameFromAddress(r.address ?? {});
-          if (!name) continue;
-          const key = name.toLowerCase();
-          if (seen.has(key)) continue;
-          seen.add(key);
-          list.push(name);
-        }
-        setCities(list.sort());
+        setCities(list);
       })
-      .catch(() => setCities([]))
+      .catch(() => {
+        if (!cancelled) setLoadError("Could not load cities. Try again.");
+      })
       .finally(() => {
         if (!cancelled) setLoadingCities(false);
       });
@@ -114,59 +153,70 @@ export function LocationPicker({
   );
 
   const selectClass =
-    "w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/20";
+    "w-full rounded-lg border border-black/10 bg-white px-3 py-2.5 text-sm text-black outline-none transition-colors focus:border-[#2196F3] focus:ring-2 focus:ring-[#2196F3]/20 disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
     <div className="flex flex-col gap-2">
       <div className="grid gap-2 sm:grid-cols-2">
-        <select
-          value={state}
-          onChange={(e) => {
-            setState(e.target.value);
-            setCity("");
-            setCities([]);
-            if (e.target.value) setLoadingCities(true);
-            onChange("");
-          }}
-          className={selectClass}
-        >
-          <option value="">Select state *</option>
-          {INDIAN_STATES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <Building2Icon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-black/40" />
+          <select
+            value={state}
+            onChange={(e) => {
+              setState(e.target.value);
+              setCity("");
+              setCities([]);
+              setLoadError("");
+              if (e.target.value) setLoadingCities(true);
+              onChange("");
+            }}
+            className={selectClass + " appearance-none pl-9 pr-8"}
+          >
+            <option value="">Select state *</option>
+            {INDIAN_STATES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-black/40" />
+        </div>
 
-        <select
-          value={city}
-          onChange={(e) => {
-            setCity(e.target.value);
-            onChange(e.target.value ? `${e.target.value}, ${state}` : "");
-          }}
-          disabled={!state || loadingCities}
-          className={selectClass + " disabled:cursor-not-allowed disabled:opacity-60"}
-        >
-          <option value="">
-            {loadingCities ? "Loading cities…" : "Select city *"}
-          </option>
-          {cities.map((c) => (
-            <option key={c} value={c}>
-              {c}
+        <div className="relative">
+          <MapPinIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-black/40" />
+          <select
+            value={city}
+            onChange={(e) => {
+              setCity(e.target.value);
+              onChange(e.target.value ? `${e.target.value}, ${state}` : "");
+            }}
+            disabled={!state || loadingCities}
+            className={selectClass + " appearance-none pl-9 pr-8"}
+          >
+            <option value="">
+              {loadingCities ? "Loading cities…" : "Select city *"}
             </option>
-          ))}
-        </select>
+            {cities.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <ChevronDownIcon className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-black/40" />
+        </div>
       </div>
 
       {loadingCities && (
-        <p className="flex items-center gap-1.5 text-xs text-black/60">
+        <p className="flex items-center gap-1.5 text-xs text-black/50">
           <Loader2Icon className="size-3.5 animate-spin" />
-          Fetching cities from OpenStreetMap…
+          Loading cities…
         </p>
       )}
 
+      {loadError && <p className="text-xs text-red-600">{loadError}</p>}
+
       {selectedLabel && (
-        <p className="text-xs text-black/60">
+        <p className="text-xs text-black/50">
           Selected location:{" "}
           <span className="font-medium text-black">{selectedLabel}</span>
         </p>
