@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import {
@@ -11,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Stats07 from "@/components/stats-07";
+import { statusBadgeClass } from "@/lib/appointment-status";
 import {
   startOfMonthDate,
   todayDateString,
@@ -34,15 +36,6 @@ type PatientDoc = {
   age: number | null;
   gender: string | null;
   createdAt?: Date;
-};
-
-const statusVariant: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-  pending: "secondary",
-  confirmed: "default",
-  completed: "outline",
-  cancelled: "destructive",
-  rescheduled: "outline",
-  no_show: "destructive",
 };
 
 function formatTime(time: string): string {
@@ -211,8 +204,7 @@ export default async function DashboardPage() {
                       </Badge>
                     )}
                     <Badge
-                      variant={statusVariant[appt.status] ?? "secondary"}
-                      className="shrink-0 capitalize"
+                      className={cn("border-transparent text-white shrink-0 capitalize", statusBadgeClass(appt.status))}
                     >
                       {appt.status}
                     </Badge>

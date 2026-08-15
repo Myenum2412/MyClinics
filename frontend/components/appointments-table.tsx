@@ -74,6 +74,7 @@ import {
   type DoctorOption,
 } from "@/components/appointment-form";
 import type { PatientPick } from "@/components/patient-picker";
+import { appointmentStatusClass } from "@/lib/appointment-status";
 import {
   AlertTriangleIcon,
   ArrowUp,
@@ -110,20 +111,8 @@ export type Appointment = {
   counter: number | null;
 };
 
-const statusVariant: Record<
-  Appointment["status"],
-  "default" | "secondary" | "outline" | "destructive"
-> = {
-  pending: "secondary",
-  confirmed: "default",
-  completed: "outline",
-  cancelled: "destructive",
-  rescheduled: "outline",
-  no_show: "destructive",
-};
-
 const COLUMN_LABELS: Record<string, string> = {
-  counter: "Counter",
+  counter: "Counter #",
   fullName: "Patient",
   doctorName: "Doctor",
   department: "Department",
@@ -200,13 +189,13 @@ const columns: ColumnDef<typeof TABLE_FEATURES, Appointment>[] = [
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         className="-mx-1 inline-flex items-center gap-1 rounded-md px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase transition-colors hover:text-foreground"
       >
-        #
+        Counter #
         <SortIcon sorted={column.getIsSorted()} />
       </button>
     ),
     cell: ({ row }) => (
       <span className="inline-flex min-w-7 items-center justify-center rounded-full border border-border bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums">
-        {row.original.counter ?? "—"}
+        {row.original.counter != null ? `#${row.original.counter}` : "—"}
       </span>
     ),
   },
@@ -349,7 +338,7 @@ const columns: ColumnDef<typeof TABLE_FEATURES, Appointment>[] = [
       </span>
     ),
     cell: ({ row }) => (
-      <Badge variant={statusVariant[row.original.status]} className="text-xs capitalize">
+      <Badge className={cn("border-transparent text-white text-xs capitalize", appointmentStatusClass[row.original.status])}>
         {row.original.status}
       </Badge>
     ),

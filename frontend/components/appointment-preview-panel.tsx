@@ -3,6 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { PreviewSheet } from "@/components/preview-sheet";
 import type { Appointment } from "@/components/appointments-table";
+import { cn } from "@/lib/utils";
+import { statusBadgeClass } from "@/lib/appointment-status";
 
 const dateFmt = new Intl.DateTimeFormat("en-US", {
   weekday: "short",
@@ -10,18 +12,6 @@ const dateFmt = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   year: "numeric",
 });
-
-const statusVariant: Record<
-  string,
-  "default" | "secondary" | "outline" | "destructive"
-> = {
-  pending: "secondary",
-  confirmed: "default",
-  completed: "outline",
-  cancelled: "destructive",
-  rescheduled: "outline",
-  no_show: "destructive",
-};
 
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -50,8 +40,7 @@ export function AppointmentPreviewPanel({
         <div className="flex flex-wrap items-center gap-2">
           <span className="truncate">{appointment.fullName}</span>
           <Badge
-            variant={statusVariant[appointment.status] ?? "secondary"}
-            className="text-xs capitalize"
+            className={cn("border-transparent text-white text-xs capitalize", statusBadgeClass(appointment.status))}
           >
             {appointment.status.replace("_", " ")}
           </Badge>
