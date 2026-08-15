@@ -69,7 +69,7 @@ export default function CloudShaderHeroDemo({
       {/* booking form */}
       <div
         id="book"
-        className="relative z-10 mx-auto mt-12 w-full max-w-3xl scroll-mt-24 px-4 pb-16"
+        className="relative z-10 mx-auto mt-12 w-full max-w-4xl scroll-mt-24 px-4 pb-16"
       >
         <AppointmentForm doctors={doctors} />
       </div>
