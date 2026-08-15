@@ -84,7 +84,7 @@ export function LoginForm({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="text-black placeholder:text-gray-400"
+              className="text-black placeholder:text-gray-400 bg-white!"
             />
           </Field>
           <Field>
@@ -109,7 +109,7 @@ export function LoginForm({
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="text-black placeholder:text-gray-400"
+              className="text-black placeholder:text-gray-400 bg-white!"
             />
           </Field>
 
