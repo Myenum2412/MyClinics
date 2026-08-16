@@ -101,7 +101,8 @@ MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>/myclinic
 AUTH_SECRET=<generate a long random string>
 AI_INTERNAL_TOKEN=<64-char random string, shared by web server and worker>
 
-# Optional. Frontend proxies /api/* here (default http://localhost:3100)
+# Optional. Frontend proxies /api/* here (default http://localhost:3100 locally,
+# https://api.myclinic.myenum.in in production builds)
 BACKEND_URL=http://localhost:3100
 
 # --- AI (NVIDIA NIM) ---
