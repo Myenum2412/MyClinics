@@ -1,17 +1,52 @@
 'use client';
 
-import { PolarAngleAxis, RadialBar, RadialBarChart } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
-import { type ChartConfig, ChartContainer } from '@/components/ui/chart';
 import { cn } from '@/lib/utils';
 import { type StatsItem, capacityOf } from '@/lib/stats';
 
-const chartConfig = {
-  capacity: {
-    label: 'Capacity',
-    color: 'hsl(var(--primary))',
-  },
-} satisfies ChartConfig;
+function Ring({ capacity }: { capacity: number }) {
+  const size = 80;
+  const strokeWidth = 6;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const arc = circumference * 0.75;
+  const trackGap = circumference - arc;
+  const value = (arc * Math.min(Math.max(capacity, 0), 100)) / 100;
+  const center = size / 2;
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="-rotate-90"
+      aria-hidden="true"
+    >
+      <circle
+        cx={center}
+        cy={center}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeDasharray={`${arc} ${trackGap}`}
+        strokeLinecap="round"
+        className="text-muted"
+      />
+      <circle
+        cx={center}
+        cy={center}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        strokeDasharray={`${value} ${circumference - value}`}
+        strokeLinecap="round"
+        className="text-primary"
+      />
+    </svg>
+  );
+}
 
 export default function Stats07({
   items,
@@ -47,31 +82,7 @@ export default function Stats07({
           <Card className="p-4 shadow-none" key={item.name}>
             <CardContent className="flex items-center space-x-4 p-0">
               <div className="relative flex items-center justify-center">
-                <ChartContainer className="h-[80px] w-[80px]" config={chartConfig}>
-                  <RadialBarChart
-                    barSize={6}
-                    data={[item]}
-                    endAngle={-270}
-                    innerRadius={30}
-                    outerRadius={60}
-                    startAngle={90}
-                  >
-                    <PolarAngleAxis
-                      angleAxisId={0}
-                      axisLine={false}
-                      domain={[0, 100]}
-                      tick={false}
-                      type="number"
-                    />
-                    <RadialBar
-                      angleAxisId={0}
-                      background
-                      cornerRadius={10}
-                      dataKey="capacity"
-                      fill="var(--primary)"
-                    />
-                  </RadialBarChart>
-                </ChartContainer>
+                <Ring capacity={item.capacity} />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="font-medium text-base text-foreground">
                     {item.capacity}%
