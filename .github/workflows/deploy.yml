@@ -1,0 +1,54 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  deploy:
+    name: Deploy backend
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H 51.21.222.25 >> ~/.ssh/known_hosts
+
+      - name: Sync backend code
+        run: |
+          rsync -az --delete \
+            --exclude node_modules \
+            --exclude .env \
+            --exclude .env.local \
+            --exclude whatsapp-session \
+            --exclude .git \
+            ./backend/ ubuntu@51.21.222.25:~/myclinics-backend/
+
+      - name: Install deps and restart services
+        run: |
+          ssh ubuntu@51.21.222.25 '
+            set -e
+            cd ~/myclinics-backend
+            npm install --no-audit --no-fund
+            pm2 restart myclinic-backend myclinic-whatsapp --update-env
+          '
+
+      - name: Health check
+        run: |
+          sleep 5
+          ssh ubuntu@51.21.222.25 '
+            set -e
+            pm2 status myclinic-backend myclinic-whatsapp
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 http://127.0.0.1:3100/api/doctors)
+            test "$code" = "401" && echo "health check: backend OK (401 = auth gate up)" || { echo "health check failed: HTTP $code"; exit 1; }
+          '
