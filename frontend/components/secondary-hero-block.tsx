@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { CloudShader } from "@/components/ui/cloud-shader"
@@ -29,7 +30,7 @@ export default function SecondaryHeroBlock() {
           and a reminder arrives before every visit.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Button render={<a href="/#book" />} nativeButton={false} className="mt-2">
+          <Button render={<Link href="/#book" />} nativeButton={false} className="mt-2">
             Book an appointment
             <CalendarCheck data-icon="inline-end" aria-hidden="true" />
           </Button>

@@ -48,3 +48,6 @@ next-env.d.ts
 # backend
 /backend/node_modules/
 /backend/whatsapp-session/
+
+# scratch
+/frontend/scratch/
