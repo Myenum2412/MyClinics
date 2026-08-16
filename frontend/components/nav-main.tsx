@@ -43,6 +43,7 @@ export function NavMain({
     if (item.match === "exact") return pathname === item.url
     return pathname === item.url || pathname.startsWith(`${item.url}/`)
   }
+  const isSubItemActive = (itemUrl: string) => pathname === itemUrl
 
   return (
     <SidebarGroup>
@@ -57,7 +58,12 @@ export function NavMain({
               render={<SidebarMenuItem />}
             >
               <CollapsibleTrigger
-                render={<SidebarMenuButton tooltip={item.title} />}
+                render={
+                  <SidebarMenuButton
+                    tooltip={item.title}
+                    isActive={isItemActive(item)}
+                  />
+                }
               >
                 {item.icon}
                 <span>{item.title}</span>
@@ -67,7 +73,10 @@ export function NavMain({
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.title}>
-                      <SidebarMenuSubButton render={<a href={subItem.url} />}>
+                      <SidebarMenuSubButton
+                        render={<a href={subItem.url} />}
+                        isActive={isSubItemActive(subItem.url)}
+                      >
                         <span>{subItem.title}</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>

@@ -34,6 +34,10 @@ const data: {
     url: string
     icon?: React.ReactNode
     match?: "exact" | "prefix"
+    items?: {
+      title: string
+      url: string
+    }[]
   }[]
 } = {
   navMain: [
@@ -52,6 +56,10 @@ const data: {
       title: "Patients",
       url: "/doctor/patients",
       icon: <UsersIcon />,
+      items: [
+        { title: "All Patients", url: "/doctor/patients" },
+        { title: "Add Patient", url: "/doctor/patients/new" },
+      ],
     },
     {
       title: "Doctors",
@@ -62,21 +70,37 @@ const data: {
       title: "Prescriptions",
       url: "/doctor/prescriptions",
       icon: <PillIcon />,
+      items: [
+        { title: "All Prescriptions", url: "/doctor/prescriptions" },
+        { title: "Add Prescription", url: "/doctor/prescriptions/new" },
+      ],
     },
     {
       title: "Medicines",
       url: "/doctor/medicines",
       icon: <TabletsIcon />,
+      items: [
+        { title: "All Medicines", url: "/doctor/medicines" },
+        { title: "Add Medicine", url: "/doctor/medicines/new" },
+      ],
     },
     {
       title: "Medical Reports",
       url: "/doctor/reports",
       icon: <FileTextIcon />,
+      items: [
+        { title: "All Reports", url: "/doctor/reports" },
+        { title: "Add Report", url: "/doctor/reports/new" },
+      ],
     },
     {
       title: "Billing",
       url: "/doctor/billing",
       icon: <ReceiptTextIcon />,
+      items: [
+        { title: "All Bills", url: "/doctor/billing" },
+        { title: "Add Bill", url: "/doctor/billing/new" },
+      ],
     },
   ],
 }
