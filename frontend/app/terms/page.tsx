@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CloudShader } from "@/components/ui/cloud-shader";
 import type { Metadata } from "next";
@@ -37,13 +38,24 @@ export default function TermsPage() {
         cloudColor="#E3F2FD"
       />
       <div className="relative z-10 w-full max-w-3xl rounded-2xl border border-white/40 bg-white/85 p-6 shadow-2xl shadow-[#0D47A1]/30 backdrop-blur-xl sm:p-10">
-        <div className="flex flex-col gap-1 border-b border-gray-200 pb-5">
-          <h1 className="text-2xl font-bold tracking-tight text-black">
-            Terms of Service
-          </h1>
-          <p className="text-sm text-gray-500">
-            Last updated: 16 August 2026
-          </p>
+        <div className="flex items-start gap-4 border-b border-gray-200 pb-5">
+          <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary/5">
+            <Image
+              src="/logo.png"
+              alt="My Clinics logo"
+              width={500}
+              height={500}
+              className="size-full object-contain"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-bold tracking-tight text-black">
+              Terms of Service
+            </h1>
+            <p className="text-sm text-gray-500">
+              Last updated: 16 August 2026
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-col gap-8 py-6">
