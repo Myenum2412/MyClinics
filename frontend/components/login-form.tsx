@@ -155,11 +155,11 @@ export function LoginForm({
       </form>
       <p className="px-6 text-center text-xs leading-normal font-normal text-gray-400">
         By clicking continue, you agree to our{" "}
-        <a href="#" className="text-gray-600 underline underline-offset-4 hover:text-black">
+        <a href="/terms" className="text-gray-600 underline underline-offset-4 hover:text-black">
           Terms of Service
         </a>{" "}
         and{" "}
-        <a href="#" className="text-gray-600 underline underline-offset-4 hover:text-black">
+        <a href="/privacy" className="text-gray-600 underline underline-offset-4 hover:text-black">
           Privacy Policy
         </a>.
       </p>

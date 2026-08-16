@@ -6,8 +6,8 @@ const NAV_LINKS = [
   { label: "Book Appointment", href: "/#book" },
   { label: "Login", href: "/login" },
   { label: "Create Account", href: "/signup" },
-  { label: "Privacy", href: "#" },
-  { label: "Terms", href: "#" },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
 ];
 
 export default function FooterBlock() {
