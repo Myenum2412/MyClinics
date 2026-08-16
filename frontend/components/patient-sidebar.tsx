@@ -24,12 +24,20 @@ import {
   IdentificationIcon as Stethoscope,
 } from "@heroicons/react/24/outline";
 
-const data = {
+const data: {
+  navMain: {
+    title: string
+    url: string
+    icon?: React.ReactNode
+    match?: "exact" | "prefix"
+  }[]
+} = {
   navMain: [
     {
       title: "Dashboard",
       url: "/patient",
       icon: <HomeIcon />,
+      match: "exact",
     },
     {
       title: "My Appointments",

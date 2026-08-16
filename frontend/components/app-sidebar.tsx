@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -27,12 +28,20 @@ import {
   UsersIcon,
 } from "@heroicons/react/24/outline";
 
-const data = {
+const data: {
+  navMain: {
+    title: string
+    url: string
+    icon?: React.ReactNode
+    match?: "exact" | "prefix"
+  }[]
+} = {
   navMain: [
     {
       title: "Dashboard",
       url: "/doctor",
       icon: <LayoutDashboardIcon />,
+      match: "exact",
     },
     {
       title: "Appointments",
@@ -83,6 +92,7 @@ export function AppSidebar({
     role?: string
   }
 }) {
+  const pathname = usePathname()
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -118,7 +128,10 @@ export function AppSidebar({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton render={<a href="/doctor/settings" />}>
+            <SidebarMenuButton
+              render={<a href="/doctor/settings" />}
+              isActive={pathname === "/doctor/settings"}
+            >
               <Settings2Icon />
               <span>Settings</span>
             </SidebarMenuButton>

@@ -29,6 +29,7 @@ export function NavMain({
     url: string
     icon?: React.ReactNode
     isActive?: boolean
+    match?: "exact" | "prefix"
     items?: {
       title: string
       url: string
@@ -37,8 +38,11 @@ export function NavMain({
   label?: string
 }) {
   const pathname = usePathname()
-  const isItemActive = (item: { url: string; isActive?: boolean }) =>
-    item.isActive ?? pathname === item.url
+  const isItemActive = (item: { url: string; isActive?: boolean; match?: "exact" | "prefix" }) => {
+    if (item.isActive !== undefined) return item.isActive
+    if (item.match === "exact") return pathname === item.url
+    return pathname === item.url || pathname.startsWith(`${item.url}/`)
+  }
 
   return (
     <SidebarGroup>
