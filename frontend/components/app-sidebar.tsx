@@ -33,7 +33,6 @@ const data = {
       title: "Dashboard",
       url: "/doctor",
       icon: <LayoutDashboardIcon />,
-      isActive: true,
     },
     {
       title: "Appointments",

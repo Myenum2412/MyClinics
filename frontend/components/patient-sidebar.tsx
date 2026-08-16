@@ -30,7 +30,6 @@ const data = {
       title: "Dashboard",
       url: "/patient",
       icon: <HomeIcon />,
-      isActive: true,
     },
     {
       title: "My Appointments",

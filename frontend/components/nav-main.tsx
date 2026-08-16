@@ -18,6 +18,7 @@ import {
 import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import { usePathname } from "next/navigation";
 
 export function NavMain({
   items,
@@ -35,6 +36,10 @@ export function NavMain({
   }[]
   label?: string
 }) {
+  const pathname = usePathname()
+  const isItemActive = (item: { url: string; isActive?: boolean }) =>
+    item.isActive ?? pathname === item.url
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{label}</SidebarGroupLabel>
@@ -43,7 +48,7 @@ export function NavMain({
           item.items?.length ? (
             <Collapsible
               key={item.title}
-              defaultOpen={item.isActive}
+              defaultOpen={isItemActive(item)}
               className="group/collapsible"
               render={<SidebarMenuItem />}
             >
@@ -70,7 +75,7 @@ export function NavMain({
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton
                 tooltip={item.title}
-                isActive={item.isActive}
+                isActive={isItemActive(item)}
                 render={<a href={item.url} />}
               >
                 {item.icon}
