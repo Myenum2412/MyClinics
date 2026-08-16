@@ -120,12 +120,16 @@ type ReportRecord = {
 function Section({
   title,
   children,
+  className,
 }: {
   title: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
+    <div
+      className={`flex flex-col gap-3 rounded-xl border border-border bg-card p-4 ${className ?? ""}`}
+    >
       <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
         {title}
       </h2>
@@ -300,7 +304,7 @@ export function PatientDetails({
           <Row label="Allergies" value={patient.allergies ?? "—"} />
         </Section>
 
-        <Section title="Medical History">
+        <Section title="Medical History" className="lg:col-span-2">
           {patient.medicalHistory && patient.medicalHistory.length ? (
             <div className="overflow-hidden rounded-lg border border-border">
               <Table>
@@ -325,16 +329,6 @@ export function PatientDetails({
           ) : (
             <Row label="Medical History" value="—" />
           )}
-          <Row
-            label="Current Medications"
-            value={patient.currentMedications ?? "—"}
-          />
-          <Row
-            label="Previous Surgeries"
-            value={patient.previousSurgeries ?? "—"}
-          />
-          <Row label="Family History" value={patient.familyHistory ?? "—"} />
-          <Row label="Notes" value={patient.notes ?? "—"} />
         </Section>
       </div>
 

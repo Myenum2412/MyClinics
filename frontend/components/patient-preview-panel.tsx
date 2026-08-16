@@ -360,16 +360,6 @@ function PanelContent({ patient }: { patient: Patient }) {
               ) : (
                 <Field label="Medical History" value="—" />
               )}
-              <Field
-                label="Current Medications"
-                value={patient.currentMedications ?? "—"}
-              />
-              <Field
-                label="Previous Surgeries"
-                value={patient.previousSurgeries ?? "—"}
-              />
-              <Field label="Family History" value={patient.familyHistory ?? "—"} />
-              <Field label="Notes" value={patient.notes ?? "—"} />
             </Section>
 
             <Section title={`Appointments (${appointments.length})`}>

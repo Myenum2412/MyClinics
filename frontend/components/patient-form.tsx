@@ -75,16 +75,6 @@ export function PatientForm({
     initial?.medicalHistory ?? []
   );
   const [allergies, setAllergies] = useState(initial?.allergies ?? "");
-  const [currentMedications, setCurrentMedications] = useState(
-    initial?.currentMedications ?? ""
-  );
-  const [previousSurgeries, setPreviousSurgeries] = useState(
-    initial?.previousSurgeries ?? ""
-  );
-  const [familyHistory, setFamilyHistory] = useState(
-    initial?.familyHistory ?? ""
-  );
-  const [notes, setNotes] = useState(initial?.notes ?? "");
   const [loading, setLoading] = useState(false);
 
   function updateMedicalHistory(
@@ -139,10 +129,6 @@ export function PatientForm({
               .filter((entry) => entry.record)
           : null,
       allergies: allergies || null,
-      currentMedications: currentMedications || null,
-      previousSurgeries: previousSurgeries || null,
-      familyHistory: familyHistory || null,
-      notes: notes || null,
     };
 
     const res = await fetch(
@@ -197,10 +183,6 @@ export function PatientForm({
       setOccupation("");
       setMedicalHistory([]);
       setAllergies("");
-      setCurrentMedications("");
-      setPreviousSurgeries("");
-      setFamilyHistory("");
-      setNotes("");
     }
 
     await onCreated();
@@ -580,48 +562,6 @@ export function PatientForm({
                   Add Entry
                 </Button>
               </div>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="currentMedications">
-                Current Medications
-              </FieldLabel>
-              <Textarea
-                id="currentMedications"
-                rows={3}
-                placeholder="Medicines the patient is currently taking..."
-                value={currentMedications}
-                onChange={(e) => setCurrentMedications(e.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="previousSurgeries">Previous Surgeries</FieldLabel>
-              <Textarea
-                id="previousSurgeries"
-                rows={2}
-                placeholder="Surgical history, if any..."
-                value={previousSurgeries}
-                onChange={(e) => setPreviousSurgeries(e.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="familyHistory">Family History</FieldLabel>
-              <Textarea
-                id="familyHistory"
-                rows={2}
-                placeholder="Diseases common in the family..."
-                value={familyHistory}
-                onChange={(e) => setFamilyHistory(e.target.value)}
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="notes">Notes</FieldLabel>
-              <Textarea
-                id="notes"
-                rows={3}
-                placeholder="Any additional notes about the patient"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
             </Field>
           </FieldGroup>
 

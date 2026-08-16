@@ -145,10 +145,6 @@ export function registerPatientsRoutes(app: FastifyInstance): void {
         occupation,
         medicalHistory,
         allergies,
-        currentMedications,
-        previousSurgeries,
-        familyHistory,
-        notes,
       } = body;
 
       if (!fullName || !mobile) {
@@ -211,10 +207,6 @@ export function registerPatientsRoutes(app: FastifyInstance): void {
         occupation: occupation ?? null,
         medicalHistory: sanitizeMedicalHistory(medicalHistory),
         allergies: allergies ?? null,
-        currentMedications: currentMedications ?? null,
-        previousSurgeries: previousSurgeries ?? null,
-        familyHistory: familyHistory ?? null,
-        notes: notes ?? null,
         userId: userResult.insertedId,
         createdAt: new Date(),
       });
@@ -265,10 +257,6 @@ export function registerPatientsRoutes(app: FastifyInstance): void {
         occupation,
         medicalHistory,
         allergies,
-        currentMedications,
-        previousSurgeries,
-        familyHistory,
-        notes,
       } = body;
 
       if (!fullName || !mobile) {
@@ -304,10 +292,6 @@ export function registerPatientsRoutes(app: FastifyInstance): void {
             occupation: occupation ?? null,
             medicalHistory: sanitizeMedicalHistory(medicalHistory),
             allergies: allergies ?? null,
-            currentMedications: currentMedications ?? null,
-            previousSurgeries: previousSurgeries ?? null,
-            familyHistory: familyHistory ?? null,
-            notes: notes ?? null,
             updatedAt: new Date(),
           },
         }
