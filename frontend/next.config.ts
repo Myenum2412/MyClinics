@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 // All /api/* traffic (except /api/auth, handled by next-auth in-process) is
 // proxied to the standalone API server. The auth plugin in the backend
 // re-verifies the same next-auth JWE session cookie.
-const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:3100";
+const BACKEND_URL = process.env.BACKEND_URL?.trim() || "http://localhost:3100";
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,

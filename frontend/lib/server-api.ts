@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 // Server components call the standalone API server directly (server-to-server)
 // and forward the next-auth session cookie, so the backend's auth plugin
 // verifies the same JWE the browser holds.
-export const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:3100";
+export const BACKEND_URL =
+  process.env.BACKEND_URL?.trim() || "http://localhost:3100";
 
 interface ApiResult<T> {
   status: number;
