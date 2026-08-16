@@ -1,9 +1,21 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -13,7 +25,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeftIcon as ArrowLeft } from "@heroicons/react/24/outline";
+import {
+  ArrowLeftIcon as ArrowLeft,
+  ExclamationTriangleIcon as AlertTriangleIcon,
+  UserMinusIcon,
+  UserPlusIcon,
+} from "@heroicons/react/24/outline";
 import type { Doctor } from "@/components/doctors-table";
 
 export type DoctorAppointment = {
@@ -94,12 +111,36 @@ export function DoctorRecordsView({
   bills: DoctorBill[];
   medicines: DoctorMedicine[];
 }) {
+  const router = useRouter();
+  const [confirming, setConfirming] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+
   const counts = {
     appointments: appointments.length,
     prescriptions: prescriptions.length,
     bills: bills.length,
     medicines: medicines.length,
   };
+
+  const reactivate = doctor.status === "terminated";
+
+  async function handleToggleStatus() {
+    setBusy(true);
+    const res = await fetch(`/api/doctors/${doctor.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: reactivate ? "active" : "terminated" }),
+    });
+    const data = await res.json();
+    setBusy(false);
+    if (!res.ok) {
+      toast.error(data.error || "Something went wrong. Please try again.");
+      return;
+    }
+    toast.success(reactivate ? "Doctor re-activated." : "Doctor terminated.");
+    setConfirming(false);
+    router.refresh();
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -134,6 +175,25 @@ export function DoctorRecordsView({
               {doctor.city ? ` · ${doctor.city}` : ""}
             </p>
           </div>
+          {reactivate ? (
+            <Button
+              variant="outline"
+              onClick={() => setConfirming(true)}
+              disabled={busy}
+            >
+              <UserPlusIcon className="mr-1 size-4" aria-hidden="true" />
+              Re-activate
+            </Button>
+          ) : (
+            <Button
+              variant="destructive"
+              onClick={() => setConfirming(true)}
+              disabled={busy}
+            >
+              <UserMinusIcon className="mr-1 size-4" aria-hidden="true" />
+              Terminate
+            </Button>
+          )}
         </div>
       </div>
 
@@ -378,6 +438,54 @@ export function DoctorRecordsView({
             counts.medicines}
         </span>
       </p>
+
+      <Dialog open={confirming} onOpenChange={(open) => !open && setConfirming(false)}>
+        <DialogContent className="sm:max-w-lg">
+          <div className="flex items-start space-x-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+              <AlertTriangleIcon className="h-6 w-6 text-red-600" />
+            </div>
+            <DialogHeader>
+              {reactivate ? (
+                <>
+                  <DialogTitle>Re-activate doctor</DialogTitle>
+                  <DialogDescription>
+                    Allow{" "}
+                    <span className="font-medium text-foreground">
+                      {doctor.name}
+                    </span>{" "}
+                    ({doctor.email}) to sign in and appear in appointment
+                    bookings again.
+                  </DialogDescription>
+                </>
+              ) : (
+                <>
+                  <DialogTitle>Terminate doctor</DialogTitle>
+                  <DialogDescription>
+                    Terminate the account for{" "}
+                    <span className="font-medium text-foreground">
+                      {doctor.name}
+                    </span>{" "}
+                    ({doctor.email})? They will no longer be able to sign in or
+                    appear in appointment bookings. You can re-activate them
+                    later.
+                  </DialogDescription>
+                </>
+              )}
+            </DialogHeader>
+          </div>
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+            <Button
+              variant="destructive"
+              onClick={handleToggleStatus}
+              disabled={busy}
+            >
+              {busy ? "Saving..." : reactivate ? "Re-activate" : "Terminate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

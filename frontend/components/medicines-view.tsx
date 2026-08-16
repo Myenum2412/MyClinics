@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   PlusIcon,
   MagnifyingGlassIcon as Search,
@@ -12,7 +13,6 @@ import Stats07 from "@/components/stats-07";
 import { MedicinesTable, type Medicine } from "@/components/medicines-table";
 import { MedicinePreviewPanel } from "@/components/medicine-preview-panel";
 import type { StatsItem } from "@/lib/stats";
-import { useServerPagination } from "@/hooks/use-server-pagination";
 
 export function MedicinesView({
   initialMedicines,
@@ -21,26 +21,13 @@ export function MedicinesView({
   initialMedicines: Medicine[];
   stats?: StatsItem[];
 }) {
-  const {
-    rows: medicines,
-    total,
-    pageIndex,
-    pageCount,
-    search,
-    setSearch,
-    setPageIndex,
-    refresh,
-  } = useServerPagination<Medicine>({
-    path: "/api/medicines",
-    dataKey: "medicines",
-    initialData: initialMedicines,
-  });
-
-  function handleChanged() {
-    return refresh();
-  }
-
+  const router = useRouter();
+  const [search, setSearch] = useState("");
   const [previewMedicine, setPreviewMedicine] = useState<Medicine | null>(null);
+
+  async function handleChanged() {
+    router.refresh();
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -93,16 +80,10 @@ export function MedicinesView({
 
       <div className="flex flex-col gap-10">
         <MedicinesTable
-          data={medicines}
+          data={initialMedicines}
           search={search}
           onChanged={handleChanged}
           onPreview={setPreviewMedicine}
-          serverPagination={{
-            pageIndex,
-            pageCount,
-            totalCount: total,
-            onPageChange: setPageIndex,
-          }}
         />
       </div>
     </div>

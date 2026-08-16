@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   PlusIcon,
   MagnifyingGlassIcon as Search,
@@ -11,7 +12,6 @@ import Stats07 from "@/components/stats-07";
 import { DoctorForm } from "@/components/doctor-form";
 import { DoctorsTable, type Doctor } from "@/components/doctors-table";
 import type { StatsItem } from "@/lib/stats";
-import { useServerPagination } from "@/hooks/use-server-pagination";
 
 export function DoctorsView({
   initialDoctors,
@@ -20,24 +20,12 @@ export function DoctorsView({
   initialDoctors: Doctor[];
   stats?: StatsItem[];
 }) {
-  const {
-    rows: doctors,
-    total,
-    pageIndex,
-    pageCount,
-    search,
-    setSearch,
-    setPageIndex,
-    refresh,
-  } = useServerPagination<Doctor>({
-    path: "/api/doctors",
-    dataKey: "doctors",
-    initialData: initialDoctors,
-  });
+  const router = useRouter();
+  const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
 
-  function handleChanged() {
-    return refresh();
+  async function handleChanged() {
+    router.refresh();
   }
 
   return (
@@ -82,15 +70,9 @@ export function DoctorsView({
       <div className="flex flex-col gap-10">
         {showForm && <DoctorForm onSaved={handleChanged} />}
         <DoctorsTable
-          data={doctors}
+          data={initialDoctors}
           search={search}
           onChanged={handleChanged}
-          serverPagination={{
-            pageIndex,
-            pageCount,
-            totalCount: total,
-            onPageChange: setPageIndex,
-          }}
         />
       </div>
     </div>

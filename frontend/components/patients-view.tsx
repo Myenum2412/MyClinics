@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   PlusIcon,
@@ -11,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import Stats07 from "@/components/stats-07";
 import { PatientsTable, type Patient } from "@/components/patients-table";
 import type { StatsItem } from "@/lib/stats";
-import { useServerPagination } from "@/hooks/use-server-pagination";
 
 export function PatientsView({
   initialPatients,
@@ -21,23 +21,10 @@ export function PatientsView({
   stats?: StatsItem[];
 }) {
   const router = useRouter();
-  const {
-    rows: patients,
-    total,
-    pageIndex,
-    pageCount,
-    search,
-    setSearch,
-    setPageIndex,
-    refresh,
-  } = useServerPagination<Patient>({
-    path: "/api/patients",
-    dataKey: "patients",
-    initialData: initialPatients,
-  });
+  const [search, setSearch] = useState("");
 
-  function handleCreated() {
-    return refresh();
+  async function handleChanged() {
+    router.refresh();
   }
 
   return (
@@ -85,18 +72,12 @@ export function PatientsView({
 
       <div className="flex flex-col gap-10">
         <PatientsTable
-          data={patients}
+          data={initialPatients}
           search={search}
-          onChanged={handleCreated}
+          onChanged={handleChanged}
           onPreview={(patient) =>
             router.push(`/doctor/patients/${patient.id}`)
           }
-          serverPagination={{
-            pageIndex,
-            pageCount,
-            totalCount: total,
-            onPageChange: setPageIndex,
-          }}
         />
       </div>
     </div>

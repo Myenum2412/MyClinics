@@ -349,7 +349,7 @@ export function DoctorsTable({
                     onClick={() => setTerminating(row.original)}
                   >
                     <UserMinusIcon aria-hidden="true" />
-                    Terminated
+                    Terminate
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>

@@ -815,6 +815,11 @@ export function AppointmentsTable({
                 {row.getVisibleCells().map((cell) => (
                   <TableCell
                     key={cell.id}
+                    onClick={
+                      cell.column.id === "select" || cell.column.id === "actions"
+                        ? (e) => e.stopPropagation()
+                        : undefined
+                    }
                     className={cn(
                       "py-3",
                       cell.column.id === "select" && "pl-4",

@@ -13,7 +13,6 @@ import { AppointmentForm, type DoctorOption } from "@/components/appointment-for
 import { AppointmentsTable, type Appointment } from "@/components/appointments-table";
 import type { PatientPick } from "@/components/patient-picker";
 import type { StatsItem } from "@/lib/stats";
-import { useServerPagination } from "@/hooks/use-server-pagination";
 
 export function AppointmentsView({
   doctors,
@@ -27,24 +26,11 @@ export function AppointmentsView({
   stats?: StatsItem[];
 }) {
   const router = useRouter();
-  const {
-    rows: appointments,
-    total,
-    pageIndex,
-    pageCount,
-    search,
-    setSearch,
-    setPageIndex,
-    refresh,
-  } = useServerPagination<Appointment>({
-    path: "/api/appointments",
-    dataKey: "appointments",
-    initialData: initialAppointments,
-  });
+  const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
 
-  function handleBooked() {
-    return refresh();
+  async function handleBooked() {
+    router.refresh();
   }
 
   return (
@@ -95,7 +81,7 @@ export function AppointmentsView({
           />
         )}
         <AppointmentsTable
-          data={appointments}
+          data={initialAppointments}
           search={search}
           doctors={doctors}
           patients={patients}
@@ -103,12 +89,6 @@ export function AppointmentsView({
           onPreview={(appointment) =>
             router.push(`/doctor/appointments/${appointment.id}`)
           }
-          serverPagination={{
-            pageIndex,
-            pageCount,
-            totalCount: total,
-            onPageChange: setPageIndex,
-          }}
         />
       </div>
     </div>
