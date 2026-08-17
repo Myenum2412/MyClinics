@@ -166,8 +166,8 @@ WhatsApp bot:
 ## Appointment reminders
 
 - The worker scans for upcoming appointments every 30 seconds and queues WhatsApp
-  reminders for appointments that are **20–40 minutes** away (`REMINDER_MINUTES_BEFORE`
-  in `backend/src/services/reminder/reminder.service.ts`).
+  reminders for appointments that are **about 60 minutes** away (50–70 minute window,
+  `REMINDER_MINUTES_BEFORE` in `backend/src/services/reminder/reminder.service.ts`).
 - A cron job (e.g. cron-job.org) posts every minute to
   `POST /api/cron/reminders` with the header `x-cron-secret: <CRON_SECRET>` to trigger
   an immediate scan. The endpoint returns `{ ok, checked, queued, skipped }`.

@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { TimePicker } from "@/components/ui/time-picker";
 import {
   CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
@@ -407,13 +408,7 @@ export function AppointmentForm({
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="time">Preferred Time *</FieldLabel>
-                  <Input
-                    id="time"
-                    type="time"
-                    required
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                  />
+                  <TimePicker value={time} onChange={setTime} />
                 </Field>
               </div>
               <Field>

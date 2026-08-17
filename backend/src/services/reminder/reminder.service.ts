@@ -8,10 +8,10 @@ import { sendWithTimeout } from "@/services/whatsapp/send.utils";
 export { toWhatsAppRemoteId } from "@/lib/phone";
 
 export const REMINDERS_COLLECTION = "reminders";
-export const REMINDER_MINUTES_BEFORE = 30;
+export const REMINDER_MINUTES_BEFORE = 60;
 /** Reminder fires on the first poll inside this window (minutes until the slot). */
-export const REMINDER_WINDOW_MIN = 20;
-export const REMINDER_WINDOW_MAX = 40;
+export const REMINDER_WINDOW_MIN = 50;
+export const REMINDER_WINDOW_MAX = 70;
 const MAX_ATTEMPTS = 3;
 
 export type ReminderStatus = "queued" | "sent" | "failed";

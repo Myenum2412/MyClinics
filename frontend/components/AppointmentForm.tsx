@@ -17,6 +17,7 @@ import {
   VideoCameraIcon as VideoIcon,
 } from "@heroicons/react/24/outline";
 import { LocationPicker } from "@/components/location-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { cn } from "@/lib/utils";
 
 export type DoctorOption = {
@@ -404,17 +405,7 @@ export default function AppointmentForm({
                 )}
               </Field>
               <Field label="Preferred Time" required icon={ClockIcon}>
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  className={cn(inputClass, "pl-9", !time && "text-transparent")}
-                />
-                {!time && (
-                  <span className="pointer-events-none absolute top-1/2 left-9 -translate-y-1/2 text-sm text-black/40">
-                    Select time
-                  </span>
-                )}
+                <TimePicker value={time} onChange={setTime} />
               </Field>
             </div>
             <div className="flex flex-col gap-1.5">

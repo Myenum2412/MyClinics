@@ -169,6 +169,7 @@ export function registerAppointmentsRoutes(app: FastifyInstance): void {
 
       let accountCreated = false;
       let credentialsQueued = false;
+      let confirmationQueued = false;
 
       try {
         const patients = db.collection("patients");
@@ -228,6 +229,25 @@ export function registerAppointmentsRoutes(app: FastifyInstance): void {
         // Account creation must never fail the booking itself.
       }
 
+      try {
+        const confirmationPhone = whatsapp || mobile;
+        const firstName = String(fullName).split(" ")[0] || "there";
+        const doctor = doctorName ? ` with ${doctorName}` : "";
+        const confirmationMessage =
+          `Hi ${firstName}, your appointment at ${String(time)}${doctor} on ${String(date)} is confirmed. ` +
+          `We will send you a reminder about an hour before your appointment. ` +
+          `Reply here if you need to reschedule or cancel.`;
+        const queued = await enqueueClinicNotification(
+          db,
+          String(confirmationPhone),
+          confirmationMessage,
+          "appointment_confirmation"
+        );
+        confirmationQueued = queued.queued;
+      } catch {
+        // Confirmation notification must never fail the booking itself.
+      }
+
       return reply.code(201).send({
         appointment: {
           id: result.insertedId.toString(),
@@ -241,6 +261,7 @@ export function registerAppointmentsRoutes(app: FastifyInstance): void {
         },
         patientAccountCreated: accountCreated,
         credentialsQueued: credentialsQueued,
+        confirmationQueued,
       });
     } catch (error) {
       handleError(reply, error, "Create appointment");
