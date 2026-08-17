@@ -14,6 +14,8 @@ import { processDueNotifications } from "@/services/whatsapp/notification.servic
 
 const MAX_RECONNECT_ATTEMPTS = 10;
 const REMINDER_POLL_MS = 30_000;
+/** If the client authenticates but never becomes ready, exit so pm2 restarts it. */
+const STUCK_AFTER_AUTH_MS = 90_000;
 const sessionDir = process.env.WHATSAPP_SESSION_PATH ?? "./whatsapp-session";
 
 let client: Client | null = null;
@@ -77,6 +79,15 @@ function scheduleReconnect(): void {
   }, delay);
 }
 
+let readyWatchdog: ReturnType<typeof setTimeout> | null = null;
+
+function clearReadyWatchdog(): void {
+  if (readyWatchdog) {
+    clearTimeout(readyWatchdog);
+    readyWatchdog = null;
+  }
+}
+
 function wireEvents(waClient: Client): void {
   waClient.on("qr", (qr) => {
     setSessionStage("qr");
@@ -86,9 +97,17 @@ function wireEvents(waClient: Client): void {
   waClient.on("authenticated", () => {
     setSessionStage("authenticated");
     logger.info("whatsapp authenticated");
+    clearReadyWatchdog();
+    readyWatchdog = setTimeout(() => {
+      logger.error(
+        "whatsapp stuck after authentication; exiting so pm2 restarts it"
+      );
+      process.exit(1);
+    }, STUCK_AFTER_AUTH_MS);
   });
 
   waClient.on("ready", () => {
+    clearReadyWatchdog();
     setSessionStage("ready");
     reconnectAttempts = 0;
     logger.info("whatsapp connected");
@@ -101,6 +120,7 @@ function wireEvents(waClient: Client): void {
   });
 
   waClient.on("disconnected", (reason) => {
+    clearReadyWatchdog();
     setSessionStage("disconnected");
     logger.warn("whatsapp disconnected", { reason: String(reason) });
     scheduleReconnect();
