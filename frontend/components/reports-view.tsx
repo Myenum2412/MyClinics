@@ -16,7 +16,6 @@ import {
   ExclamationTriangleIcon as AlertTriangleIcon,
   FolderIcon as Folder,
   FolderArrowDownIcon as FolderInput,
-  FolderOpenIcon as FolderOpen,
   MagnifyingGlassIcon as Search,
   PencilIcon as Pencil,
   TrashIcon as Trash2,
@@ -293,8 +292,7 @@ export function ReportsView({
   }
 
   function selectPatient(patientId: string) {
-    if (patientId === "all") navigateTo([]);
-    else if (patientId === "none") navigateTo([{ kind: "none" }]);
+    if (patientId === "none") navigateTo([{ kind: "none" }]);
     else {
       const p = initialPatients.find((x) => x.id === patientId);
       navigateTo([{ kind: "patient", id: patientId, name: p?.fullName ?? "Patient" }]);
@@ -450,25 +448,6 @@ export function ReportsView({
       <div className="flex flex-1 flex-col gap-4 lg:flex-row">
         <aside className="lg:w-60 lg:shrink-0">
           <div className="flex flex-col gap-1 rounded-xl border border-border bg-card p-2">
-            <button
-              type="button"
-              onClick={() => selectPatient("all")}
-              className={cn(
-                "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                activePatientId === "all" && !currentCategory
-                  ? "bg-primary/10 text-foreground"
-                  : "hover:bg-muted"
-              )}
-            >
-              {activePatientId === "all" && !currentCategory ? (
-                <FolderOpen className="size-4" aria-hidden="true" />
-              ) : (
-                <Folder className="size-4" aria-hidden="true" />
-              )}
-              <span className="flex-1 text-left">My Drive</span>
-              <span className="text-xs text-muted-foreground">{files.length}</span>
-            </button>
-
             {hasUnfiled && (
               <button
                 type="button"
@@ -488,7 +467,9 @@ export function ReportsView({
               </button>
             )}
 
-            <div className="my-1 h-px bg-border" />
+            {hasUnfiled && sidebarPatients.length > 0 && (
+              <div className="my-1 h-px bg-border" />
+            )}
 
             {sidebarPatients.map((patient) => {
               const isOpen = expanded.has(patient.id);
