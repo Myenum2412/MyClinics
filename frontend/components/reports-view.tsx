@@ -4,18 +4,22 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ExclamationTriangleIcon as AlertTriangleIcon,
+  ArrowLeftIcon as ArrowLeft,
+  ArrowUpTrayIcon as Upload,
+  BanknotesIcon as Banknotes,
+  CalendarDaysIcon as CalendarDays,
   CheckBadgeIcon as CheckSquare,
   ChevronDownIcon as ChevronDown,
   ChevronRightIcon as ChevronRight,
+  DocumentTextIcon as DocumentText,
+  EllipsisHorizontalIcon as MoreHorizontal,
+  ExclamationTriangleIcon as AlertTriangleIcon,
   FolderIcon as Folder,
   FolderArrowDownIcon as FolderInput,
   FolderOpenIcon as FolderOpen,
-  EllipsisHorizontalIcon as MoreHorizontal,
-  PencilIcon as Pencil,
   MagnifyingGlassIcon as Search,
+  PencilIcon as Pencil,
   TrashIcon as Trash2,
-  ArrowUpTrayIcon as Upload,
   UserCircleIcon as UserRound,
   XMarkIcon as X,
 } from "@heroicons/react/24/outline";
@@ -58,6 +62,7 @@ import {
 import {
   categoryLabel,
   FILE_CATEGORIES,
+  type FileCategoryValue,
   type PatientOption,
   type ReportFile,
 } from "@/lib/report-folders";
@@ -65,6 +70,43 @@ import {
 function categoryOf(file: ReportFile) {
   return file.category ?? "upload";
 }
+
+function initialsOf(name: string) {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+const CATEGORY_ICON = {
+  appointment: CalendarDays,
+  billing: Banknotes,
+  prescription: DocumentText,
+  upload: Upload,
+} as const;
+
+const CATEGORY_COLOR = {
+  appointment: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  billing: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  prescription: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  upload: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+} as const;
+
+type Segment =
+  | { kind: "patient"; id: string; name: string }
+  | { kind: "none" }
+  | { kind: "category"; value: string; label: string };
+
+type FolderItem = {
+  key: string;
+  segment: Segment;
+  name: string;
+  count: number;
+  avatar: string | null;
+  categoryIcon: FileCategoryValue | null;
+};
 
 export function ReportsView({
   initialFiles,
@@ -76,8 +118,7 @@ export function ReportsView({
   configError?: string | null;
 }) {
   const [files, setFiles] = useState(initialFiles);
-  const [activePatient, setActivePatient] = useState<string>("all");
-  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [path, setPath] = useState<Segment[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -110,6 +151,14 @@ export function ReportsView({
     return counts;
   }, [files]);
 
+  const rootCategoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const f of files) {
+      counts.set(categoryOf(f), (counts.get(categoryOf(f)) ?? 0) + 1);
+    }
+    return counts;
+  }, [files]);
+
   const sidebarPatients = useMemo(
     () =>
       [...initialPatients].sort((a, b) => a.fullName.localeCompare(b.fullName)),
@@ -117,24 +166,82 @@ export function ReportsView({
   );
   const hasUnfiled = (patientCounts.get("none") ?? 0) > 0;
 
+  const currentPatient = path.find((s) => s.kind === "patient");
+  const currentCategory = path.find((s) => s.kind === "category");
+  const currentNone = path.some((s) => s.kind === "none");
+
+  const activePatientId = currentPatient?.id ?? (currentNone ? "none" : "all");
+  const activeCategory =
+    currentPatient && currentCategory ? currentCategory.value : "all";
+
+  const folders = useMemo<FolderItem[]>(() => {
+    if (path.length === 0) {
+      const categoryFolders: FolderItem[] = FILE_CATEGORIES.map((c) => ({
+        key: `category:${c.value}`,
+        segment: { kind: "category", value: c.value, label: c.label },
+        name: c.label,
+        count: rootCategoryCounts.get(c.value) ?? 0,
+        avatar: null,
+        categoryIcon: c.value,
+      }));
+      const patientFolders: FolderItem[] = sidebarPatients.map((p) => ({
+        key: `patient:${p.id}`,
+        segment: { kind: "patient", id: p.id, name: p.fullName },
+        name: p.fullName,
+        count: patientCounts.get(p.id) ?? 0,
+        avatar: initialsOf(p.fullName),
+        categoryIcon: null,
+      }));
+      const unfiledFolders: FolderItem[] = hasUnfiled
+        ? [
+            {
+              key: "patient:none",
+              segment: { kind: "none" },
+              name: "No Patient",
+              count: patientCounts.get("none") ?? 0,
+              avatar: null,
+              categoryIcon: null,
+            },
+          ]
+        : [];
+      return [...categoryFolders, ...patientFolders, ...unfiledFolders];
+    }
+    if (path.length === 1 && path[0].kind === "patient") {
+      const patientId = path[0].id;
+      return FILE_CATEGORIES.map((c) => ({
+        key: `subcategory:${c.value}`,
+        segment: { kind: "category", value: c.value, label: c.label },
+        name: c.label,
+        count: categoryCounts.get(`${patientId}:${c.value}`) ?? 0,
+        avatar: null,
+        categoryIcon: c.value,
+      }));
+    }
+    return [];
+  }, [path, sidebarPatients, patientCounts, categoryCounts, rootCategoryCounts, hasUnfiled]);
+
   const visibleFiles = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return files
-      .filter((f) => {
-        if (activePatient === "all") return true;
-        if (activePatient === "none") return f.patientId == null;
-        return f.patientId === activePatient;
-      })
-      .filter((f) =>
-        activeCategory === "all" ? true : categoryOf(f) === activeCategory
-      )
-      .filter((f) =>
-        q
-          ? f.name.toLowerCase().includes(q) ||
-            (f.patientName ?? "").toLowerCase().includes(q)
-          : true
-      );
-  }, [files, activePatient, activeCategory, search]);
+    return files.filter((f) => {
+      if (q) {
+        return (
+          f.name.toLowerCase().includes(q) ||
+          (f.patientName ?? "").toLowerCase().includes(q)
+        );
+      }
+      if (currentPatient) {
+        if (f.patientId !== currentPatient.id) return false;
+      } else if (currentNone) {
+        if (f.patientId != null) return false;
+      } else if (!currentCategory) {
+        return false;
+      }
+      if (currentCategory && categoryOf(f) !== currentCategory.value) return false;
+      return true;
+    });
+  }, [files, currentPatient, currentCategory, currentNone, search]);
+
+  const showFolders = folders.length > 0;
 
   function syncFiles(updated: ReportFile[]) {
     setFiles((prev) => {
@@ -164,16 +271,42 @@ export function ReportsView({
     });
   }
 
-  function selectPatient(patientId: string) {
-    setActivePatient(patientId);
-    setActiveCategory("all");
+  function navigateTo(pathSegments: Segment[]) {
+    setPath(pathSegments);
     setSelected(new Set());
   }
 
+  function openFolder(item: FolderItem) {
+    if (
+      path.length === 1 &&
+      path[0].kind === "patient" &&
+      item.segment.kind === "category"
+    ) {
+      navigateTo([...path, item.segment]);
+    } else {
+      navigateTo([item.segment]);
+    }
+  }
+
+  function goBack() {
+    navigateTo(path.slice(0, -1));
+  }
+
+  function selectPatient(patientId: string) {
+    if (patientId === "all") navigateTo([]);
+    else if (patientId === "none") navigateTo([{ kind: "none" }]);
+    else {
+      const p = initialPatients.find((x) => x.id === patientId);
+      navigateTo([{ kind: "patient", id: patientId, name: p?.fullName ?? "Patient" }]);
+    }
+  }
+
   function selectCategory(patientId: string, category: string) {
-    setActivePatient(patientId);
-    setActiveCategory(category);
-    setSelected(new Set());
+    const p = initialPatients.find((x) => x.id === patientId);
+    navigateTo([
+      { kind: "patient", id: patientId, name: p?.fullName ?? "Patient" },
+      { kind: "category", value: category, label: categoryLabel(category) },
+    ]);
   }
 
   function toggleExpanded(patientId: string) {
@@ -291,6 +424,18 @@ export function ReportsView({
 
   const selectedFiles = files.filter((f) => selected.has(f.id));
 
+  const countLabel = showFolders
+    ? `${folders.length} folder${folders.length !== 1 ? "s" : ""}`
+    : `${visibleFiles.length} file${visibleFiles.length !== 1 ? "s" : ""}`;
+
+  const contextLabel = showFolders
+    ? null
+    : currentNone
+      ? "No patient"
+      : currentPatient
+        ? currentPatient.name
+        : null;
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       {configError && (
@@ -310,17 +455,17 @@ export function ReportsView({
               onClick={() => selectPatient("all")}
               className={cn(
                 "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                activePatient === "all"
+                activePatientId === "all" && !currentCategory
                   ? "bg-primary/10 text-foreground"
                   : "hover:bg-muted"
               )}
             >
-              {activePatient === "all" && activeCategory === "all" ? (
+              {activePatientId === "all" && !currentCategory ? (
                 <FolderOpen className="size-4" aria-hidden="true" />
               ) : (
                 <Folder className="size-4" aria-hidden="true" />
               )}
-              <span className="flex-1 text-left">All Files</span>
+              <span className="flex-1 text-left">My Drive</span>
               <span className="text-xs text-muted-foreground">{files.length}</span>
             </button>
 
@@ -330,7 +475,7 @@ export function ReportsView({
                 onClick={() => selectPatient("none")}
                 className={cn(
                   "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  activePatient === "none"
+                  activePatientId === "none"
                     ? "bg-primary/10 text-foreground"
                     : "hover:bg-muted"
                 )}
@@ -347,7 +492,7 @@ export function ReportsView({
 
             {sidebarPatients.map((patient) => {
               const isOpen = expanded.has(patient.id);
-              const patientActive = activePatient === patient.id;
+              const patientActive = activePatientId === patient.id;
               return (
                 <div key={patient.id} className="flex flex-col">
                   <div
@@ -378,12 +523,7 @@ export function ReportsView({
                       className="flex min-w-0 flex-1 items-center gap-2 rounded-lg py-2 pr-2 text-sm font-medium"
                     >
                       <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-semibold">
-                        {patient.fullName
-                          .split(" ")
-                          .map((n) => n[0])
-                          .slice(0, 2)
-                          .join("")
-                          .toUpperCase()}
+                        {initialsOf(patient.fullName)}
                       </span>
                       <span className="flex-1 truncate text-left">
                         {patient.fullName}
@@ -436,7 +576,57 @@ export function ReportsView({
 
         <main className="flex min-w-0 flex-1 flex-col gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative w-full max-w-xs">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="px-2"
+              onClick={goBack}
+              disabled={path.length === 0}
+              aria-label="Go back"
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+            </Button>
+
+            <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1 text-sm">
+              <button
+                type="button"
+                onClick={() => navigateTo([])}
+                className={cn(
+                  "rounded-md px-1.5 py-1 font-medium transition-colors",
+                  path.length === 0
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                My Drive
+              </button>
+              {path.map((seg, i) => (
+                <span key={i} className="flex min-w-0 items-center gap-1">
+                  <ChevronRight
+                    className="size-3.5 shrink-0 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => navigateTo(path.slice(0, i + 1))}
+                    className={cn(
+                      "max-w-44 truncate rounded-md px-1.5 py-1 transition-colors",
+                      i === path.length - 1
+                        ? "font-medium text-foreground"
+                        : "text-muted-foreground hover:bg-muted"
+                    )}
+                  >
+                    {seg.kind === "none"
+                      ? "No Patient"
+                      : seg.kind === "patient"
+                        ? seg.name
+                        : seg.label}
+                  </button>
+                </span>
+              ))}
+            </nav>
+
+            <div className="relative w-full max-w-xs sm:ml-auto">
               <Search
                 className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground"
                 aria-hidden="true"
@@ -450,18 +640,14 @@ export function ReportsView({
                 aria-label="Search reports"
               />
             </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm text-muted-foreground">
-              {visibleFiles.length} file{visibleFiles.length !== 1 ? "s" : ""}
-              {activePatient !== "all" && (
-                <span className="text-foreground">
-                  {" "}
-                  ·{" "}
-                  {activePatient === "none"
-                    ? "No patient"
-                    : initialPatients.find((p) => p.id === activePatient)
-                        ?.fullName ?? "Patient"}
-                  {activeCategory !== "all" && ` · ${categoryLabel(activeCategory)}`}
-                </span>
+              {countLabel}
+              {contextLabel && <span className="text-foreground"> · {contextLabel}</span>}
+              {currentCategory && (
+                <span className="text-foreground"> · {currentCategory.label}</span>
               )}
             </p>
 
@@ -505,17 +691,29 @@ export function ReportsView({
             </div>
           </div>
 
-          {visibleFiles.length === 0 ? (
+          {showFolders ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {folders.map((item) => (
+                <FolderTile key={item.key} item={item} onOpen={openFolder} />
+              ))}
+            </div>
+          ) : visibleFiles.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border p-12 text-center">
               <Upload className="size-8 text-muted-foreground" aria-hidden="true" />
               <div>
                 <p className="text-sm font-medium">
-                  {files.length === 0 ? "No files yet" : "No matching files"}
+                  {files.length === 0
+                    ? "No files yet"
+                    : search
+                      ? "No matching files"
+                      : "This folder is empty"}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {files.length === 0
                     ? "Upload a patient report to get started."
-                    : "Try a different search or folder."}
+                    : search
+                      ? "Try a different search or folder."
+                      : "Upload a report or move files into this folder."}
                 </p>
               </div>
               {files.length === 0 && (
@@ -670,6 +868,47 @@ export function ReportsView({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function FolderTile({
+  item,
+  onOpen,
+}: {
+  item: FolderItem;
+  onOpen: (item: FolderItem) => void;
+}) {
+  const Icon = item.categoryIcon ? CATEGORY_ICON[item.categoryIcon] : Folder;
+  const color = item.categoryIcon
+    ? CATEGORY_COLOR[item.categoryIcon]
+    : "bg-muted text-muted-foreground";
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen(item)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen(item);
+      }}
+      className="group flex cursor-pointer items-center gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/50 focus-visible:border-primary focus-visible:outline-none"
+    >
+      {item.avatar ? (
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-sm font-semibold">
+          {item.avatar}
+        </span>
+      ) : (
+        <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-lg", color)}>
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+      )}
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium">{item.name}</p>
+        <p className="text-xs text-muted-foreground">
+          {item.count} file{item.count !== 1 ? "s" : ""}
+        </p>
+      </div>
     </div>
   );
 }
