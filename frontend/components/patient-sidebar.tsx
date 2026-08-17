@@ -22,6 +22,7 @@ import {
   BeakerIcon as Pill,
   ReceiptPercentIcon as ReceiptText,
   IdentificationIcon as Stethoscope,
+  UserCircleIcon as UserCircle,
 } from "@heroicons/react/24/outline";
 
 const data: {
@@ -63,6 +64,11 @@ const data: {
       title: "My Doctors",
       url: "/patient/doctors",
       icon: <Stethoscope />,
+    },
+    {
+      title: "My Profile",
+      url: "/patient/profile",
+      icon: <UserCircle />,
     },
   ],
 };

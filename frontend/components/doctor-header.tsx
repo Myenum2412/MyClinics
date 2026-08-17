@@ -34,6 +34,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/patient/billing": "My Bills",
   "/patient/medicines": "Medicines",
   "/patient/doctors": "My Doctors",
+  "/patient/profile": "My Profile",
 }
 
 function pageTitleFor(pathname: string): string {

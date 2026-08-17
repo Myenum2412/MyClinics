@@ -117,35 +117,33 @@ export function PatientBilling({
         </div>
       </div>
 
-      {visibleBills.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border p-12 text-center">
-          <div>
-            <p className="text-sm font-medium">
-              {bills.length === 0 ? "No bills yet" : "No matching bills"}
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {bills.length === 0
-                ? "Your invoices will appear here after your visits."
-                : "Try a different search."}
-            </p>
-          </div>
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
-                <TableHead className="h-9">Invoice</TableHead>
-                <TableHead className="h-9">Date</TableHead>
-                <TableHead className="h-9">Doctor</TableHead>
-                <TableHead className="h-9">Payment</TableHead>
-                <TableHead className="h-9">Status</TableHead>
-                <TableHead className="h-9 text-right">Total</TableHead>
-                <TableHead className="h-9 pr-4 text-right">Details</TableHead>
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+              <TableHead className="h-9">Invoice</TableHead>
+              <TableHead className="h-9">Date</TableHead>
+              <TableHead className="h-9">Doctor</TableHead>
+              <TableHead className="h-9">Payment</TableHead>
+              <TableHead className="h-9">Status</TableHead>
+              <TableHead className="h-9 text-right">Total</TableHead>
+              <TableHead className="h-9 pr-4 text-right">Details</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visibleBills.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell
+                  colSpan={7}
+                  className="h-24 text-center text-sm text-muted-foreground"
+                >
+                  {bills.length === 0
+                    ? "No bills yet. Your invoices will appear here after your visits."
+                    : "No bills match your search. Try a different search."}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleBills.map((bill) => (
+            ) : (
+              visibleBills.map((bill) => (
                 <TableRow
                   key={bill.id}
                   onClick={() => setViewing(bill)}
@@ -189,11 +187,11 @@ export function PatientBilling({
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <AppointmentsTableCard

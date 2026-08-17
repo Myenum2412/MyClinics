@@ -15,6 +15,22 @@ export type PatientProfile = {
   gender: string | null;
   email: string | null;
   whatsapp: string | null;
+  bloodGroup: string | null;
+  dateOfBirth: string | null;
+  weight: number | null;
+  height: number | null;
+  maritalStatus: string | null;
+  occupation: string | null;
+  guardianName: string | null;
+  address: string | null;
+  city: string | null;
+  pincode: string | null;
+  emergencyContactName: string | null;
+  emergencyContactPhone: string | null;
+  smoking: string | null;
+  alcohol: string | null;
+  allergies: string | null;
+  medicalHistory: { date: string; record: string }[];
 };
 
 export type PatientDoctor = {
@@ -279,6 +295,31 @@ export async function loadPatientData(
     gender: doc.gender ? String(doc.gender) : null,
     email: doc.email ? String(doc.email) : null,
     whatsapp: doc.whatsapp ? String(doc.whatsapp) : null,
+    bloodGroup: doc.bloodGroup ? String(doc.bloodGroup) : null,
+    dateOfBirth: doc.dateOfBirth ? String(doc.dateOfBirth) : null,
+    weight: doc.weight ?? null,
+    height: doc.height ?? null,
+    maritalStatus: doc.maritalStatus ? String(doc.maritalStatus) : null,
+    occupation: doc.occupation ? String(doc.occupation) : null,
+    guardianName: doc.guardianName ? String(doc.guardianName) : null,
+    address: doc.address ? String(doc.address) : null,
+    city: doc.city ? String(doc.city) : null,
+    pincode: doc.pincode ? String(doc.pincode) : null,
+    emergencyContactName: doc.emergencyContactName
+      ? String(doc.emergencyContactName)
+      : null,
+    emergencyContactPhone: doc.emergencyContactPhone
+      ? String(doc.emergencyContactPhone)
+      : null,
+    smoking: doc.smoking ? String(doc.smoking) : null,
+    alcohol: doc.alcohol ? String(doc.alcohol) : null,
+    allergies: doc.allergies ? String(doc.allergies) : null,
+    medicalHistory: Array.isArray(doc.medicalHistory)
+      ? doc.medicalHistory.map((entry: Document) => ({
+          date: String(entry.date ?? ""),
+          record: String(entry.record ?? ""),
+        }))
+      : [],
   };
 
   // Names can carry stray whitespace (e.g. "Arjun V " vs "Arjun V" on bills),

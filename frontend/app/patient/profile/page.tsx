@@ -1,5 +1,5 @@
 import { Toaster } from "@/components/ui/sonner";
-import { PatientReports } from "@/components/patient-reports";
+import { PatientProfileView } from "@/components/patient-profile";
 import { PatientUnlinked } from "@/components/patient-unlinked";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -8,13 +8,13 @@ import { loadPatientData } from "@/lib/patient";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'My Medical Reports',
-  description: 'View, download and share your medical reports securely stored at My Clinics.',
+  title: 'My Profile',
+  description: 'Your personal details, emergency contact and medical history at My Clinics.',
 };
 
 export const dynamic = "force-dynamic";
 
-export default async function PatientReportsPage() {
+export default async function PatientProfilePage() {
   const session = await auth();
   const db = await getDb();
   const data = await loadPatientData(db, session);
@@ -22,7 +22,13 @@ export default async function PatientReportsPage() {
 
   return (
     <>
-      <PatientReports files={data.reports} />
+      <PatientProfileView
+        patient={data.patient}
+        appointments={data.appointments.length}
+        prescriptions={data.prescriptions.length}
+        bills={data.bills.length}
+        reports={data.reports.length}
+      />
       <Toaster />
     </>
   );
