@@ -43,7 +43,6 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -68,11 +67,11 @@ import Link from "next/link";
 import {
   ArrowDownIcon as ArrowDown,
   ArrowUpIcon as ArrowUp,
+  ArrowDownTrayIcon as Download,
   ChevronLeftIcon as ChevronLeft,
   ChevronRightIcon as ChevronRight,
   ChevronUpDownIcon as ChevronsUpDown,
   ViewColumnsIcon as Columns,
-  EllipsisHorizontalIcon as Ellipsis,
   EyeIcon as Eye,
   PencilIcon as Pencil,
   PrinterIcon as Printer,
@@ -208,6 +207,7 @@ export function BillingTable({
   onStatusFilterChange,
   onPaymentFilterChange,
   onPrint,
+  onDownload,
   onDelete,
   onPreview,
   pageSize = 6,
@@ -220,6 +220,7 @@ export function BillingTable({
   onStatusFilterChange: (v: string) => void;
   onPaymentFilterChange: (v: string) => void;
   onPrint: (b: Bill) => void;
+  onDownload?: (b: Bill) => void;
   onDelete: (b: Bill) => void;
   onPreview?: (bill: Bill) => void;
   pageSize?: number;
@@ -239,8 +240,8 @@ export function BillingTable({
   const [rowSelection, setRowSelection] = React.useState({});
 
   const columns = React.useMemo<ColumnDef<typeof TABLE_FEATURES, Bill>[]>(
-    () => createColumns({ onPrint, onDelete }),
-    [onPrint, onDelete]
+    () => createColumns({ onPrint, onDownload, onDelete }),
+    [onPrint, onDownload, onDelete]
   );
 
   const table = useTable({
@@ -563,9 +564,11 @@ export function BillingTable({
 
 function createColumns({
   onPrint,
+  onDownload,
   onDelete,
 }: {
   onPrint: (b: Bill) => void;
+  onDownload?: (b: Bill) => void;
   onDelete: (b: Bill) => void;
 }): ColumnDef<typeof TABLE_FEATURES, Bill>[] {
   return [
@@ -755,46 +758,58 @@ function createColumns({
       cell: ({ row }) => {
         const b = row.original;
         return (
-          <div className="flex justify-end">
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                onClick={(e) => e.stopPropagation()}
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`Actions for ${b.billNumber}`}
-                  >
-                    <Ellipsis className="size-4" aria-hidden="true" />
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem
-                  render={<Link href={`/doctor/billing/${b.id}`} />}
-                  nativeButton={false}
-                >
-                  <Eye aria-hidden="true" />
-                  View
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  render={<Link href={`/doctor/billing/${b.id}/edit`} />}
-                  nativeButton={false}
-                >
-                  <Pencil aria-hidden="true" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => onPrint(b)}>
-                  <Printer aria-hidden="true" />
-                  Print
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive" onClick={() => onDelete(b)}>
-                  <Trash aria-hidden="true" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+          <div
+            className="flex items-center justify-end gap-0.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              title="View"
+              aria-label={`View ${b.billNumber}`}
+              render={<Link href={`/doctor/billing/${b.id}`} />}
+              nativeButton={false}
+            >
+              <Eye className="size-4" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              title="Download PDF"
+              aria-label={`Download PDF for ${b.billNumber}`}
+              onClick={() => onDownload?.(b)}
+            >
+              <Download className="size-4" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              title="Print"
+              aria-label={`Print ${b.billNumber}`}
+              onClick={() => onPrint(b)}
+            >
+              <Printer className="size-4" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              title="Edit"
+              aria-label={`Edit ${b.billNumber}`}
+              render={<Link href={`/doctor/billing/${b.id}/edit`} />}
+              nativeButton={false}
+            >
+              <Pencil className="size-4" aria-hidden="true" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              title="Delete"
+              aria-label={`Delete ${b.billNumber}`}
+              className="text-muted-foreground hover:text-destructive"
+              onClick={() => onDelete(b)}
+            >
+              <Trash className="size-4" aria-hidden="true" />
+            </Button>
           </div>
         );
       },

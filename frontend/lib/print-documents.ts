@@ -171,9 +171,10 @@ function billingStyles() {
       padding: 10mm 12mm 12mm;
       border: 2px solid #111;
     }
-    .clinic-header { text-align: center; padding-bottom: 10px; border-bottom: 2px solid #111; margin-bottom: 14px; }
-    .clinic-name { font-size: 22px; font-weight: bold; letter-spacing: 0.5px; }
-    .clinic-line { font-size: 12px; color: #444; margin-top: 3px; }
+    .clinic-header { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 2px solid #111; margin-bottom: 14px; }
+    .clinic-logo { width: 52px; height: 52px; object-fit: contain; flex-shrink: 0; }
+    .clinic-name { font-size: 20px; font-weight: bold; letter-spacing: 0.5px; }
+    .clinic-line { font-size: 12px; color: #444; margin-top: 2px; }
     .doc-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .invoice { text-align: right; font-size: 24px; font-weight: bold; }
     .invoice small { display: block; font-size: 12px; font-weight: normal; color: #555; margin-top: 4px; }
@@ -202,7 +203,8 @@ function statusBadge(status: string) {
 
 function clinicHeaderHtml(
   clinicName: string,
-  visit?: BillVisit | null
+  visit?: BillVisit | null,
+  logoUrl?: string
 ) {
   const clinic = visit?.clinic;
   const name = escapeHtml(clinic?.name?.trim() || clinicName);
@@ -215,8 +217,11 @@ function clinicHeaderHtml(
   if (contacts.length) lines.push(contacts.join(" · "));
   return `
     <div class="clinic-header">
-      <div class="clinic-name">${name}</div>
-      ${lines.map((l) => `<div class="clinic-line">${l}</div>`).join("")}
+      ${logoUrl ? `<img class="clinic-logo" src="${escapeHtml(logoUrl)}" alt="" />` : ""}
+      <div>
+        <div class="clinic-name">${name}</div>
+        ${lines.map((l) => `<div class="clinic-line">${l}</div>`).join("")}
+      </div>
     </div>`;
 }
 
@@ -307,7 +312,7 @@ export function billingHtml(
   b: Bill,
   clinicName: string = DEFAULT_CLINIC_NAME,
   visit?: BillVisit | null,
-  opts: { autoPrint?: boolean } = {}
+  opts: { autoPrint?: boolean; logoUrl?: string } = {}
 ) {
   const rows = b.items.length
     ? b.items
@@ -335,7 +340,7 @@ export function billingHtml(
 </head>
 <body>
   <div class="sheet">
-    ${clinicHeaderHtml(clinicName, visit)}
+    ${clinicHeaderHtml(clinicName, visit, opts.logoUrl)}
 
     <div class="doc-header">
       <div>

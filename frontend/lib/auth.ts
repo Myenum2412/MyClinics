@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { MongoDBAdapter } from "@auth/mongodb-adapter";
 import bcrypt from "bcryptjs";
+import { ObjectId } from "mongodb";
 import clientPromise, { DB_NAME } from "@/lib/db";
 import type { Role } from "@/lib/roles";
 export type { Role, StaffRole } from "@/lib/roles";
@@ -67,21 +68,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
-      console.log(`[NextAuth Callback JWT] Entered. user: ${JSON.stringify(user)}, token: ${JSON.stringify(token)}`);
       if (user) {
         token.id = user.id as string;
         token.role = ((user as { role?: string }).role ?? "doctor") as Role;
       }
-      console.log(`[NextAuth Callback JWT] Returning token: ${JSON.stringify(token)}`);
+      // Keep the token (sidebar avatar, header) in sync with the latest
+      // profile data stored in the database.
+      if (token.id) {
+        try {
+          const client = await clientPromise;
+          const doc = await client
+            .db(DB_NAME)
+            .collection("users")
+            .findOne(
+              { _id: new ObjectId(token.id as string) },
+              { projection: { name: 1, image: 1, role: 1 } }
+            );
+          if (doc) {
+            token.name = doc.name ?? token.name;
+            token.image = doc.image ?? null;
+            if (doc.role) token.role = doc.role as Role;
+          }
+        } catch {
+          // Keep existing token values if the refresh fails.
+        }
+      }
       return token;
     },
     async session({ session, token }) {
-      console.log(`[NextAuth Callback Session] Entered. session: ${JSON.stringify(session)}, token: ${JSON.stringify(token)}`);
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = (token.role as Role) ?? "doctor";
+        session.user.image = (token.image as string | null) ?? null;
+        if (token.name) session.user.name = token.name as string;
       }
-      console.log(`[NextAuth Callback Session] Returning session: ${JSON.stringify(session)}`);
       return session;
     },
   },

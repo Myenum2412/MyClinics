@@ -230,7 +230,9 @@ export function BillingForm({
         (pt) => pt.fullName.toLowerCase() === name.toLowerCase()
       );
       await saveReportCopy({
-        html: billingHtml(bill, await fetchClinicName()),
+        html: billingHtml(bill, await fetchClinicName(), undefined, {
+          logoUrl: new URL("/logo.png", window.location.origin).href,
+        }),
         fileName: `${bill.billNumber.replace(/\s+/g, "-")}-${name.replace(/\s+/g, "-")}.html`,
         category: "billing",
         patientId: selectedPatientId || matched?.id || null,

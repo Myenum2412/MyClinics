@@ -1,5 +1,23 @@
 import PDFDocument from "pdfkit";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import type { OrganizationRecord } from "@/services/customer/customer-context.service";
+
+const LOGO_CANDIDATES = [
+  fileURLToPath(new URL("../assets/logo.png", import.meta.url)),
+  fileURLToPath(new URL("./assets/logo.png", import.meta.url)),
+];
+
+function loadLogo(): Buffer | null {
+  for (const candidate of LOGO_CANDIDATES) {
+    try {
+      return readFileSync(candidate);
+    } catch {
+      // try next candidate
+    }
+  }
+  return null;
+}
 
 interface BillItem {
   name?: string;
@@ -158,11 +176,24 @@ export async function generateBillPdf(
     .strokeColor("#0f172a")
     .stroke();
 
-  // Clinic details header (centered)
-  let y = 40;
-  const headerX = MARGIN;
+  // Logo (top-left corner) + clinic details header
+  const logo = loadLogo();
+  const logoSize = 52;
+  const logoRight = logo ? MARGIN + logoSize + 12 : MARGIN;
+  const headerTextWidth = pageWidth - logoRight - MARGIN - 170;
+
+  let y = 36;
+  if (logo) {
+    try {
+      doc.image(logo, MARGIN, y, { width: logoSize, height: logoSize });
+    } catch {
+      // Ignore broken logo bytes and fall back to text-only header.
+    }
+  }
+
+  const headerX = logoRight;
   doc.font("Helvetica-Bold").fontSize(17).fillColor("#0f172a");
-  doc.text(companyName, headerX, y, { width: contentWidth, align: "center" });
+  doc.text(companyName, headerX, y, { width: headerTextWidth });
   y += 20;
   const clinicLines: string[] = [];
   if (company.address) clinicLines.push(company.address);
@@ -173,11 +204,11 @@ export async function generateBillPdf(
   if (clinicLines.length || contactBits.length) {
     doc.font("Helvetica").fontSize(8.5).fillColor("#475569");
     for (const line of clinicLines) {
-      doc.text(line, headerX, y, { width: contentWidth, align: "center" });
+      doc.text(line, headerX, y, { width: headerTextWidth });
       y += 12;
     }
     if (contactBits.length) {
-      doc.text(contactBits.join(" · "), headerX, y, { width: contentWidth, align: "center" });
+      doc.text(contactBits.join(" · "), headerX, y, { width: headerTextWidth });
       y += 14;
     }
   }
@@ -187,18 +218,18 @@ export async function generateBillPdf(
   const title = "INVOICE";
   doc.font("Helvetica-Bold").fontSize(20);
   const titleW = doc.widthOfString(title);
-  doc.fillColor("#0f172a").text(title, pageWidth - MARGIN - titleW, 40);
+  doc.fillColor("#0f172a").text(title, pageWidth - MARGIN - titleW, 30);
 
   const billNo = bill.billNumber || "—";
   doc.font("Helvetica").fontSize(10.5);
   const bnW = doc.widthOfString(billNo);
-  doc.fillColor("#475569").text(billNo, pageWidth - MARGIN - bnW, 64);
+  doc.fillColor("#475569").text(billNo, pageWidth - MARGIN - bnW, 54);
 
   const status = bill.status ? bill.status.charAt(0).toUpperCase() + bill.status.slice(1) : "";
   const statusColor = bill.status === "paid" ? "#16a34a" : bill.status === "pending" ? "#d97706" : "#dc2626";
   doc.font("Helvetica-Bold").fontSize(10);
   const stW = doc.widthOfString(status);
-  doc.fillColor(statusColor).text(status, pageWidth - MARGIN - stW, 80);
+  doc.fillColor(statusColor).text(status, pageWidth - MARGIN - stW, 70);
 
   // Divider under header
   const dividerY = y + 8;

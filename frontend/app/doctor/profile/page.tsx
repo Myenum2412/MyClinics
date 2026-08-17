@@ -21,13 +21,15 @@ export default async function ProfilePage() {
         .findOne({ _id: new ObjectId(session.user.id) })
     : null;
 
+  const sessionImage = session?.user?.image ?? null;
+
   const user: ProfileUser = doc
     ? {
         id: doc._id.toString(),
         name: doc.name ?? "Doctor",
         email: doc.email ?? "",
         role: doc.role ?? "doctor",
-        image: doc.image ?? null,
+        image: doc.image ?? sessionImage,
         phone: doc.phone ?? null,
         specialization: doc.specialization ?? null,
         qualifications: doc.qualifications ?? null,
@@ -50,7 +52,7 @@ export default async function ProfilePage() {
         name: session?.user?.name ?? "Doctor",
         email: session?.user?.email ?? "",
         role: session?.user?.role ?? "doctor",
-        image: null,
+        image: sessionImage,
         phone: null,
         specialization: null,
         qualifications: null,

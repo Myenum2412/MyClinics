@@ -38,7 +38,9 @@ export async function printBill(
   const resolvedName =
     visit?.clinic?.name?.trim() || (clinicName === DEFAULT_CLINIC_NAME ? await fetchClinicName() : clinicName);
 
-  const html = billingHtml(bill, resolvedName, visit, { autoPrint: true });
+  const logoUrl = new URL("/logo.png", window.location.origin).href;
+
+  const html = billingHtml(bill, resolvedName, visit, { autoPrint: true, logoUrl });
 
   const w = window.open("", "_blank", "width=800,height=900");
   if (!w) return;

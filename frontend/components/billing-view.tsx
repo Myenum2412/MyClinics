@@ -69,6 +69,13 @@ export function BillingView({
     }
   }
 
+  function downloadPdf(bill: Bill) {
+    const a = document.createElement("a");
+    a.href = `/api/bills/${bill.id}/pdf`;
+    a.download = "";
+    a.click();
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       {previewBill && (
@@ -127,6 +134,7 @@ export function BillingView({
           onStatusFilterChange={setStatusFilter}
           onPaymentFilterChange={setPaymentFilter}
           onPrint={printBill}
+          onDownload={downloadPdf}
           onDelete={setDeleting}
           onPreview={setPreviewBill}
         />
