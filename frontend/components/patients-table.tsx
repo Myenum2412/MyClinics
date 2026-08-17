@@ -78,6 +78,7 @@ import {
   EyeIcon as Eye,
   PencilIcon as Pencil,
   TrashIcon as Trash,
+  PaperAirplaneIcon as Send,
 } from "@heroicons/react/24/outline";
 
 export type MedicalHistoryEntry = {
@@ -315,11 +316,36 @@ export function PatientsTable({
   const [rowSelection, setRowSelection] = React.useState({});
   const [deleting, setDeleting] = React.useState<Patient | null>(null);
   const [deleteBusy, setDeleteBusy] = React.useState(false);
+  const [sendingCreds, setSendingCreds] = React.useState<string | null>(null);
 
   const tableColumns = React.useMemo<
     ColumnDef<typeof TABLE_FEATURES, Patient>[]
   >(() => {
     if (!canManage) return columns;
+
+    async function handleSendCredentials(patient: Patient) {
+      setSendingCreds(patient.id);
+      try {
+        const res = await fetch(`/api/patients/${patient.id}/send-credentials`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({}),
+        });
+        const data = await res.json();
+        if (res.ok && data.queued) {
+          toast.success("Credentials queued", {
+            description: `Login details will be sent to ${patient.fullName} via WhatsApp.`,
+          });
+        } else {
+          toast.error(data.error || "Failed to send credentials.");
+        }
+      } catch {
+        toast.error("Network error. Please try again.");
+      } finally {
+        setSendingCreds(null);
+      }
+    }
+
     return [
       ...columns,
       {
@@ -342,7 +368,7 @@ export function PatientsTable({
                   </Button>
                 }
               />
-              <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
                   render={<Link href={`/doctor/patients/${row.original.id}`} />}
                   nativeButton={false}
@@ -360,6 +386,17 @@ export function PatientsTable({
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void handleSendCredentials(row.original);
+                  }}
+                  disabled={sendingCreds === row.original.id}
+                >
+                  <Send aria-hidden="true" />
+                  {sendingCreds === row.original.id ? "Sending..." : "Send Credentials"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
                   variant="destructive"
                   onClick={() => setDeleting(row.original)}
                 >
@@ -372,7 +409,7 @@ export function PatientsTable({
         ),
       },
     ];
-  }, [canManage]);
+  }, [canManage, sendingCreds]);
 
   const table = useTable({
     features: TABLE_FEATURES,

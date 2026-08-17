@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
-import { ObjectId } from "mongodb";
+import { ObjectId, type Db } from "mongodb";
 import { getDb } from "@/lib/db";
 import {
   DEFAULT_LIMIT,
@@ -10,6 +10,190 @@ import {
 } from "@/lib/pagination";
 import { searchParams, handleError } from "@/lib/http";
 import { requireAuth } from "@/plugins/auth";
+import { enqueueClinicNotification } from "@/services/whatsapp/notification.service";
+import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
+
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+function fmtDate(val: unknown): string {
+  if (!val) return "—";
+  const s = String(val);
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) return s;
+  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+/**
+ * Builds a comprehensive WhatsApp summary for a patient.
+ * Fetches related appointments, bills and prescriptions from the DB.
+ */
+async function buildPatientMessage(
+  db: Db,
+  patient: Record<string, unknown>,
+  opts: { plainPassword?: string | null; appUrl: string; orgName: string }
+): Promise<string> {
+  const { plainPassword, appUrl, orgName } = opts;
+  const firstName = String(patient.fullName).split(" ")[0] || "there";
+  const nameLower = String(patient.fullName).toLowerCase();
+  const mobile = String(patient.mobile ?? "");
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Fetch related data in parallel
+  const [appointments, prescriptions, bills] = await Promise.all([
+    db
+      .collection("appointments")
+      .find({
+        $or: [
+          { mobile },
+          { fullName: { $regex: new RegExp(`^${nameLower}$`, "i") } },
+        ],
+      })
+      .sort({ date: -1 })
+      .limit(5)
+      .toArray(),
+    db
+      .collection("prescriptions")
+      .find({ patientName: { $regex: new RegExp(`^${nameLower}$`, "i") } })
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .toArray(),
+    db
+      .collection("bills")
+      .find({
+        $or: [
+          { patientPhone: mobile },
+          { patientName: { $regex: new RegExp(`^${nameLower}$`, "i") } },
+        ],
+      })
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .toArray(),
+  ]);
+
+  const lines: string[] = [];
+
+  // ── Header ──────────────────────────────────────────────────────────────
+  lines.push(`🏥 *${orgName} — Patient Summary*`);
+  lines.push(`Hello ${firstName}! Here is your complete patient information.`);
+  lines.push("");
+
+  // ── Patient Profile ─────────────────────────────────────────────────────
+  lines.push("*👤 Patient Profile*");
+  lines.push(`• Name      : ${patient.fullName}`);
+  if (patient.age)        lines.push(`• Age       : ${patient.age} yrs`);
+  if (patient.gender)     lines.push(`• Gender    : ${patient.gender}`);
+  if (patient.dateOfBirth) lines.push(`• DOB       : ${fmtDate(patient.dateOfBirth)}`);
+  if (patient.bloodGroup) lines.push(`• Blood Grp : ${patient.bloodGroup}`);
+  lines.push(`• Mobile    : ${patient.mobile}`);
+  if (patient.whatsapp && patient.whatsapp !== patient.mobile)
+    lines.push(`• WhatsApp  : ${patient.whatsapp}`);
+  if (patient.email)      lines.push(`• Email     : ${patient.email}`);
+  if (patient.address || patient.city) {
+    const addr = [patient.address, patient.city, patient.pincode].filter(Boolean).join(", ");
+    lines.push(`• Address   : ${addr}`);
+  }
+  if (patient.occupation)    lines.push(`• Occupation: ${patient.occupation}`);
+  if (patient.maritalStatus) lines.push(`• Marital   : ${patient.maritalStatus}`);
+  if (patient.guardianName)  lines.push(`• Guardian  : ${patient.guardianName}`);
+  if (patient.emergencyContactName || patient.emergencyContactPhone) {
+    lines.push(`• Emergency : ${patient.emergencyContactName ?? ""} ${patient.emergencyContactPhone ?? ""}`.trimEnd());
+  }
+  if (patient.allergies)         lines.push(`• Allergies : ${patient.allergies}`);
+  if (patient.currentMedications) lines.push(`• Curr. Meds: ${patient.currentMedications}`);
+  if (patient.smoking || patient.alcohol) {
+    const habits = [patient.smoking === "Yes" ? "Smoker" : null, patient.alcohol === "Yes" ? "Alcohol" : null].filter(Boolean).join(", ");
+    if (habits) lines.push(`• Habits    : ${habits}`);
+  }
+  lines.push("");
+
+  // ── Medical History ─────────────────────────────────────────────────────
+  if (Array.isArray(patient.medicalHistory) && patient.medicalHistory.length) {
+    lines.push("*📋 Medical History*");
+    const hist = patient.medicalHistory as { date?: string | null; record?: string }[];
+    for (const entry of hist.slice(0, 5)) {
+      const dateStr = entry.date ? fmtDate(entry.date) : "";
+      lines.push(`• ${dateStr ? `[${dateStr}] ` : ""}${entry.record ?? ""}`);
+    }
+    lines.push("");
+  }
+
+  // ── Appointments ────────────────────────────────────────────────────────
+  if (appointments.length) {
+    const upcoming = appointments.filter((a) => String(a.date ?? "") >= today);
+    const past     = appointments.filter((a) => String(a.date ?? "") < today);
+
+    if (upcoming.length) {
+      lines.push("*📅 Upcoming Appointments*");
+      for (const a of upcoming.slice(0, 3)) {
+        const status = String(a.status ?? "").replace(/_/g, " ");
+        lines.push(`• ${fmtDate(a.date)} at ${a.time}`);
+        if (a.doctorName) lines.push(`  Doctor : ${a.doctorName}`);
+        if (a.department) lines.push(`  Dept   : ${a.department}`);
+        if (a.reason)     lines.push(`  Reason : ${a.reason}`);
+        lines.push(`  Status : ${status}`);
+      }
+      lines.push("");
+    }
+
+    if (past.length) {
+      lines.push("*🕐 Recent Appointments*");
+      for (const a of past.slice(0, 3)) {
+        const status = String(a.status ?? "").replace(/_/g, " ");
+        lines.push(`• ${fmtDate(a.date)} at ${a.time} — ${status}`);
+        if (a.doctorName) lines.push(`  Doctor : ${a.doctorName}`);
+        if (a.reason)     lines.push(`  Reason : ${a.reason ?? "—"}`);
+      }
+      lines.push("");
+    }
+  }
+
+  // ── Prescriptions ───────────────────────────────────────────────────────
+  if (prescriptions.length) {
+    lines.push("*💊 Recent Prescriptions*");
+    for (const rx of prescriptions.slice(0, 2)) {
+      lines.push(`• ${fmtDate(rx.visitDate)} — ${rx.diagnosis}`);
+      if (rx.doctorName) lines.push(`  Doctor  : ${rx.doctorName}`);
+      const meds = Array.isArray(rx.medicines) ? rx.medicines.map((m: { name?: string }) => m?.name).filter(Boolean) : [];
+      if (meds.length) lines.push(`  Medicines: ${meds.join(", ")}`);
+      if (rx.followUpDate) lines.push(`  Follow-up: ${fmtDate(rx.followUpDate)}`);
+      if (rx.testsRecommended) lines.push(`  Tests    : ${rx.testsRecommended}`);
+    }
+    lines.push("");
+  }
+
+  // ── Bills ───────────────────────────────────────────────────────────────
+  if (bills.length) {
+    lines.push("*🧾 Recent Bills*");
+    for (const b of bills.slice(0, 3)) {
+      const total = Number(b.total ?? 0).toLocaleString("en-IN");
+      const status = String(b.status ?? "pending");
+      lines.push(`• ${b.billNumber} | ₹${total} | ${status.toUpperCase()}`);
+      lines.push(`  Date    : ${fmtDate(b.date)}`);
+      if (b.doctorName) lines.push(`  Doctor  : ${b.doctorName}`);
+      const items = Array.isArray(b.items) ? b.items.map((i: { name?: string }) => i?.name).filter(Boolean) : [];
+      if (items.length) lines.push(`  Items   : ${items.join(", ")}`);
+    }
+    lines.push("");
+  }
+
+  // ── Login Credentials ───────────────────────────────────────────────────
+  if (patient.email) {
+    lines.push("*🔐 Your Patient Portal Login*");
+    lines.push(`• Email    : ${patient.email}`);
+    if (plainPassword) {
+      lines.push(`• Password : ${plainPassword}`);
+    } else {
+      lines.push(`• Password : (the one set during registration)`);
+      lines.push(`  Forgot it? Reset at: ${appUrl}/forgot-password`);
+    }
+    lines.push(`• Login at : ${appUrl}/login`);
+    lines.push("");
+  }
+
+  lines.push("Thank you for choosing *" + orgName + "*! 🙏");
+
+  return lines.join("\n");
+}
 
 export type MedicalHistoryEntry = {
   date: string | null;
@@ -211,6 +395,33 @@ export function registerPatientsRoutes(app: FastifyInstance): void {
         createdAt: new Date(),
       });
 
+      // Auto-send full patient summary + credentials via WhatsApp
+      const notifyPhone = (whatsapp ?? mobile) as string | null | undefined;
+      if (notifyPhone) {
+        try {
+          const appUrl = process.env.APP_URL?.trim() || "https://myclinic.myenum.in";
+          const org = await ensureDefaultOrganization(db);
+          // Build a minimal patient-shaped object from the just-inserted data
+          const patientObj: Record<string, unknown> = {
+            fullName, mobile, email: String(email).toLowerCase(),
+            whatsapp: whatsapp ?? null, age: age ?? null, gender: gender ?? null,
+            dateOfBirth: dateOfBirth ?? null, bloodGroup: bloodGroup ?? null,
+            address: address ?? null, city: city ?? null, pincode: pincode ?? null,
+            occupation: occupation ?? null, maritalStatus: maritalStatus ?? null,
+            guardianName: guardianName ?? null, allergies: allergies ?? null,
+            medicalHistory: sanitizeMedicalHistory(medicalHistory),
+          };
+          const message = await buildPatientMessage(db, patientObj, {
+            plainPassword: typeof body.password === "string" ? body.password : null,
+            appUrl,
+            orgName: org.name,
+          });
+          await enqueueClinicNotification(db, String(notifyPhone), message, "patient_credentials");
+        } catch {
+          // Non-critical — don't fail patient creation if WhatsApp notification fails
+        }
+      }
+
       return reply.code(201).send({
         patient: {
           id: patientResult.insertedId.toString(),
@@ -218,9 +429,70 @@ export function registerPatientsRoutes(app: FastifyInstance): void {
           fullName,
           mobile,
         },
+        credentialsSent: Boolean(notifyPhone),
       });
     } catch (error) {
       handleError(reply, error, "Create patient");
+    }
+  });
+
+  // Send login credentials to a patient via WhatsApp
+  app.post("/api/patients/:id/send-credentials", async (request, reply) => {
+    if (!(await requireAuth(request, reply))) return;
+
+    try {
+      const { id } = request.params as { id: string };
+      if (!ObjectId.isValid(id)) {
+        return reply.code(400).send({ error: "Invalid patient id" });
+      }
+
+      const db = await getDb();
+      const patient = await db
+        .collection("patients")
+        .findOne({ _id: new ObjectId(id) });
+
+      if (!patient) {
+        return reply.code(404).send({ error: "Patient not found" });
+      }
+
+      const phone = (patient.whatsapp ?? patient.mobile) as string | null | undefined;
+      if (!phone) {
+        return reply
+          .code(400)
+          .send({ error: "Patient has no WhatsApp or mobile number to send credentials to." });
+      }
+
+      if (!patient.email) {
+        return reply
+          .code(400)
+          .send({ error: "Patient has no email address on record." });
+      }
+
+      const appUrl = process.env.APP_URL?.trim() || "https://myclinic.myenum.in";
+      const org = await ensureDefaultOrganization(db);
+
+      // Optional: caller can supply a plain-text password in the body
+      const body = (request.body ?? {}) as Record<string, unknown>;
+      const plainPassword = typeof body.password === "string" && body.password ? body.password : null;
+
+      // Build comprehensive patient summary with all related data
+      const message = await buildPatientMessage(db, patient as Record<string, unknown>, {
+        plainPassword,
+        appUrl,
+        orgName: org.name,
+      });
+
+      const result = await enqueueClinicNotification(db, String(phone), message, "patient_credentials");
+
+      if (!result.queued) {
+        return reply
+          .code(400)
+          .send({ error: "Could not prepare the phone number for WhatsApp." });
+      }
+
+      return reply.send({ queued: true, remoteId: result.remoteId });
+    } catch (error) {
+      handleError(reply, error, "Send patient credentials");
     }
   });
 
