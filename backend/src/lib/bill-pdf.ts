@@ -99,24 +99,18 @@ export interface BillVisit {
   patient?: BillPatient | null;
 }
 
-const MARGIN = 28;
+const MARGIN = 24;
+const BORDER_INSET = 10;
 
-// Premium print palette — slate ink with soft surfaces and restrained status tints
+// Monochrome palette — black, white and shades of gray only
 const C = {
-  ink: "#0F172A",
-  muted: "#475569",
-  faint: "#64748B",
-  ghost: "#94A3B8",
-  band: "#F8FAFC",
-  hairline: "#E2E8F0",
-  grid: "#CBD5E1",
-  white: "#FFFFFF",
-};
-
-const STATUS_STYLES: Record<string, { fill: string; text: string }> = {
-  paid: { fill: "#DCFCE7", text: "#166534" },
-  pending: { fill: "#FEF3C7", text: "#92400E" },
-  cancelled: { fill: "#FEE2E2", text: "#991B1B" },
+  ink: "#000000",
+  muted: "#444444",
+  faint: "#666666",
+  grid: "#b0b0b0",
+  hairline: "#d4d4d4",
+  band: "#f2f2f2",
+  white: "#ffffff",
 };
 
 function inr(value: number) {
@@ -187,31 +181,27 @@ function amountInWords(value: number): string {
   return (words || "Zero") + " Only";
 }
 
-/** Muted micro-label above a value (e.g. DATE / DOCTOR / PAYMENT). */
-function metaLabel(doc: PDFKit.PDFDocument, label: string, x: number, y: number) {
-  doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.ghost).text(label.toUpperCase(), x, y, {
-    characterSpacing: 1,
-  });
-}
-
-/** Muted section label with a hairline rule running to the content edge. */
+/** Bold black section label with a gray underline. */
 function sectionHeading(doc: PDFKit.PDFDocument, text: string, x: number, y: number, lineTo: number) {
-  doc.font("Helvetica-Bold").fontSize(7.5).fillColor(C.faint).text(text.toUpperCase(), x, y, {
-    characterSpacing: 1.5,
-  });
-  const labelEnd = x + doc.widthOfString(text.toUpperCase(), { characterSpacing: 1.5 });
-  doc.moveTo(labelEnd + 10, y + 9)
-    .lineTo(lineTo, y + 9)
-    .lineWidth(0.75)
-    .strokeColor(C.hairline)
+  doc.font("Helvetica-Bold").fontSize(9).fillColor(C.ink).text(text.toUpperCase(), x, y);
+  const labelEnd = x + doc.widthOfString(text.toUpperCase());
+  doc.moveTo(labelEnd + 12, y + 10)
+    .lineTo(lineTo, y + 10)
+    .lineWidth(1)
+    .strokeColor(C.grid)
     .stroke();
-  return y + 24;
+  return y + 22;
 }
 
-function drawMetaRows(doc: PDFKit.PDFDocument, rows: [string, string][], startX: number, y: number, gap = 24) {
+/** Uppercase micro-label above a value (e.g. DATE / DOCTOR / PAYMENT). */
+function metaLabel(doc: PDFKit.PDFDocument, label: string, x: number, y: number) {
+  doc.font("Helvetica-Bold").fontSize(7).fillColor(C.ink).text(label.toUpperCase(), x, y);
+}
+
+function drawMetaRows(doc: PDFKit.PDFDocument, rows: [string, string][], startX: number, y: number, gap = 19) {
   for (const [l, v] of rows) {
     metaLabel(doc, l, startX, y);
-    doc.font("Helvetica").fontSize(10).fillColor(C.ink).text(v, startX, y + 11, { width: 200 });
+    doc.font("Helvetica").fontSize(10).fillColor(C.ink).text(v, startX, y + 11, { width: 230 });
     y += gap;
   }
   return y;
@@ -236,9 +226,8 @@ function cellLines(doc: PDFKit.PDFDocument, text: string, width: number): number
 }
 
 /**
- * Table with a soft gray header and hairline horizontal rules — no vertical
- * grid, no zebra stripes. Row heights grow with the tallest wrapped cell so
- * content never overflows the row or the page.
+ * Table with a light gray header and thin gray grid. Row heights grow with the
+ * tallest wrapped cell so content never overflows the row or the page.
  */
 function drawSimpleTable(
   doc: PDFKit.PDFDocument,
@@ -251,19 +240,15 @@ function drawSimpleTable(
   rightAlignCols: number[] = []
 ): number {
   const totalW = colWidths.reduce((s, w) => s + w, 0);
-  const headerH = lineHeight + 12;
+  const headerBottom = startY + lineHeight + 8;
 
-  // Header — soft gray fill, muted uppercase micro-labels
-  doc.rect(startX, startY, totalW, headerH).fill(C.band);
-  doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.faint);
+  // Header — light gray fill, black bold text
+  doc.rect(startX, startY, totalW, lineHeight + 8).fill(C.band);
+  doc.font("Helvetica-Bold").fontSize(7.5).fillColor(C.ink);
   let x = startX;
   headers.forEach((h, i) => {
     const align = rightAlignCols.includes(i) ? "right" : "left";
-    doc.text(h.toUpperCase(), x + 9, startY + 5.5, {
-      width: colWidths[i] - 18,
-      align,
-      characterSpacing: 0.8,
-    });
+    doc.text(h, x + 8, startY + 5, { width: colWidths[i] - 14, align });
     x += colWidths[i];
   });
 
@@ -272,43 +257,55 @@ function drawSimpleTable(
     doc.font("Helvetica").fontSize(8.5);
     const maxLines = Math.max(
       1,
-      ...row.map((cell, i) => cellLines(doc, cell, colWidths[i] - 18))
+      ...row.map((cell, i) => cellLines(doc, cell, colWidths[i] - 14))
     );
     return maxLines * lineHeight;
   });
 
-  // Rows — ink text, hairline rules between rows only
-  let y = startY + headerH;
+  // Rows — black text, gray grid
+  let y = headerBottom;
   rows.forEach((row, ri) => {
     const h = rowHeights[ri];
+    if (ri % 2 === 1) {
+      doc.rect(startX, y, totalW, h).fill(C.band);
+    }
     doc.font("Helvetica").fontSize(8.5).fillColor(C.ink);
     x = startX;
     row.forEach((cell, i) => {
       const align = rightAlignCols.includes(i) ? "right" : "left";
-      doc.text(cell, x + 9, y + 3.5, { width: colWidths[i] - 18, align, lineBreak: true });
+      doc.text(cell, x + 8, y + 3.5, { width: colWidths[i] - 14, align, lineBreak: true });
       x += colWidths[i];
     });
     y += h;
-    doc.moveTo(startX, y).lineTo(startX + totalW, y).lineWidth(0.5).strokeColor(C.hairline).stroke();
   });
 
-  doc.moveTo(startX, startY).lineTo(startX + totalW, startY).lineWidth(0.5).strokeColor(C.grid).stroke();
-  doc.moveTo(startX, startY + headerH).lineTo(startX + totalW, startY + headerH).lineWidth(0.75).strokeColor(C.grid).stroke();
+  doc.lineWidth(0.5).strokeColor(C.grid);
+  doc.moveTo(startX, startY).lineTo(startX + totalW, startY).stroke();
+  doc.moveTo(startX, headerBottom).lineTo(startX + totalW, headerBottom).stroke();
+  doc.moveTo(startX, y).lineTo(startX + totalW, y).stroke();
+  let yy = headerBottom;
+  rowHeights.forEach((h) => {
+    yy += h;
+    doc.moveTo(startX, yy).lineTo(startX + totalW, yy).stroke();
+  });
+  let vx = startX;
+  for (const w of colWidths) {
+    vx += w;
+    doc.moveTo(vx, startY).lineTo(vx, y).stroke();
+  }
   return y;
 }
 
-/** Tinted status pill — soft fill, colored text, no border. */
-function drawStatusPill(doc: PDFKit.PDFDocument, status: string, rightX: number, y: number) {
+/** Status pill — white fill, black border and text. */
+function drawStatusPill(doc: PDFKit.PDFDocument, status: string, x: number, y: number) {
   const text = status.charAt(0).toUpperCase() + status.slice(1);
-  const style = STATUS_STYLES[status] ?? { fill: C.band, text: C.muted };
-  doc.font("Helvetica-Bold").fontSize(8);
-  const w = doc.widthOfString(text) + 26;
-  const h = 20;
-  doc.roundedRect(rightX - w, y, w, h, h / 2).fill(style.fill);
-  doc.fillColor(style.text).text(text, rightX - w, y + 6.5, { width: w, align: "center" });
+  doc.font("Helvetica-Bold").fontSize(8.5);
+  const w = doc.widthOfString(text) + 20;
+  doc.roundedRect(x - w, y, w, 18, 9).fill(C.white).lineWidth(1).strokeColor(C.ink).stroke();
+  doc.fillColor(C.ink).text(text, x - w + 10, y + 5, { width: w - 20, align: "center" });
 }
 
-/** Refined header. Repeats in compact form on every page. */
+/** Border + header. Border repeats on every page. */
 function decoratePage(
   doc: PDFKit.PDFDocument,
   pageWidth: number,
@@ -317,38 +314,46 @@ function decoratePage(
   company: OrganizationRecord,
   bill: Bill
 ) {
-  const contentRight = pageWidth - MARGIN;
+  // Full A4 sheet border
+  doc.rect(BORDER_INSET, BORDER_INSET, pageWidth - BORDER_INSET * 2, pageHeight - BORDER_INSET * 2)
+    .lineWidth(1.5)
+    .strokeColor(C.ink)
+    .stroke();
 
   if (pageNumber > 1) {
     // Continuation header — compact, keeps the document branded
     const tag = `INVOICE · ${bill.billNumber || "—"}`;
-    doc.font("Helvetica-Bold").fontSize(7.5).fillColor(C.muted);
+    doc.font("Helvetica-Bold").fontSize(8).fillColor(C.ink);
     const tagW = doc.widthOfString(tag);
-    doc.roundedRect(contentRight - tagW - 24, 20, tagW + 28, 18, 9).fill(C.band);
-    doc.text(tag, contentRight - tagW - 12, 25.5);
-    doc.moveTo(MARGIN, 52).lineTo(contentRight, 52).lineWidth(0.75).strokeColor(C.hairline).stroke();
+    doc.roundedRect(pageWidth - MARGIN - tagW - 12, 22, tagW + 24, 16, 8).fill(C.band);
+    doc.text(tag, pageWidth - MARGIN - tagW - 6, 26);
+    doc.moveTo(MARGIN, 46).lineTo(pageWidth - MARGIN, 46).lineWidth(0.75).strokeColor(C.grid).stroke();
     return;
   }
 
-  const bandY = 24;
+  const bandX = BORDER_INSET;
+  const bandY = 14;
+  const bandW = pageWidth - BORDER_INSET * 2;
+  const bandH = 58;
 
-  // Logo (top-left)
+  // Logo (top-left corner of the band)
   const logo = loadLogo();
-  const logoSize = 40;
-  const headerX = logo ? MARGIN + logoSize + 14 : MARGIN;
+  const logoSize = 36;
+  const logoRight = logo ? bandX + 16 + logoSize + 12 : bandX + 20;
   if (logo) {
     try {
-      doc.image(logo, MARGIN, bandY, { width: logoSize, height: logoSize });
+      doc.image(logo, bandX + 16, bandY + 10, { width: logoSize, height: logoSize });
     } catch {
       // Ignore broken logo bytes and fall back to text-only header.
     }
   }
 
-  const headerTextWidth = contentRight - 190 - headerX;
+  const headerX = logoRight;
+  const headerTextWidth = pageWidth - headerX - 170;
 
   const companyName = company.name || "My Clinic";
-  doc.font("Helvetica-Bold").fontSize(15).fillColor(C.ink);
-  doc.text(companyName, headerX, bandY - 2, { width: headerTextWidth });
+  doc.font("Helvetica-Bold").fontSize(14).fillColor(C.ink);
+  doc.text(companyName, headerX, bandY + 6, { width: headerTextWidth });
 
   const clinicLines: string[] = [];
   if (company.address) clinicLines.push(company.address);
@@ -357,34 +362,34 @@ function decoratePage(
   if (company.email) contactBits.push(company.email);
   if (company.website) contactBits.push(company.website);
 
-  let cy = bandY + 17;
-  doc.font("Helvetica").fontSize(8).fillColor(C.muted);
+  let cy = bandY + 20;
+  doc.font("Helvetica").fontSize(7.5).fillColor(C.muted);
   for (const line of clinicLines) {
     doc.text(line, headerX, cy, { width: headerTextWidth });
-    cy += 10;
+    cy += 8.5;
   }
   if (contactBits.length) {
     doc.text(contactBits.join("  ·  "), headerX, cy, { width: headerTextWidth });
   }
 
-  // Invoice title (right)
+  // Invoice title (right of band)
   const title = "INVOICE";
-  doc.font("Helvetica-Bold").fontSize(21).fillColor(C.ink);
-  const titleW = doc.widthOfString(title, { characterSpacing: 2 });
-  doc.text(title, contentRight - titleW, bandY - 4, { characterSpacing: 2 });
+  doc.font("Helvetica-Bold").fontSize(19).fillColor(C.ink);
+  const titleW = doc.widthOfString(title);
+  doc.text(title, pageWidth - MARGIN - titleW, bandY + 5);
 
   const billNo = bill.billNumber || "—";
-  doc.font("Helvetica").fontSize(9.5).fillColor(C.muted);
+  doc.font("Helvetica").fontSize(10).fillColor(C.muted);
   const bnW = doc.widthOfString(billNo);
-  doc.text(billNo, contentRight - bnW, bandY + 22);
+  doc.text(billNo, pageWidth - MARGIN - bnW, bandY + 26);
 
   if (bill.status) {
-    drawStatusPill(doc, bill.status, contentRight, bandY + 40);
+    drawStatusPill(doc, bill.status, pageWidth - MARGIN, bandY + 39);
   }
 
   // Bottom rule under the header band
-  doc.moveTo(MARGIN, bandY + 66).lineTo(contentRight, bandY + 66)
-    .lineWidth(0.75)
+  doc.moveTo(bandX, bandY + bandH).lineTo(bandX + bandW, bandY + bandH)
+    .lineWidth(2)
     .strokeColor(C.ink)
     .stroke();
 }
@@ -404,7 +409,6 @@ export async function generateBillPdf(
   const pageWidth = doc.page.width;
   const pageHeight = doc.page.height;
   const contentWidth = pageWidth - MARGIN * 2;
-  const contentRight = pageWidth - MARGIN;
   const companyName = company.name || "My Clinic";
 
   let pageNo = 1;
@@ -412,16 +416,16 @@ export async function generateBillPdf(
 
   // Adds a decorated continuation page when the remaining space is too small.
   function ensureSpace(needed: number) {
-    if (y + needed <= pageHeight - 78) return;
+    if (y + needed <= pageHeight - 84) return;
     doc.addPage();
     pageNo += 1;
     decoratePage(doc, pageWidth, pageHeight, pageNo, company, bill);
-    y = 54;
+    y = 52;
   }
 
   decoratePage(doc, pageWidth, pageHeight, 1, company, bill);
 
-  y = 24 + 66 + 14;
+  y = 14 + 58 + 11;
 
   // Billed To (left) — patient details
   const patient = visit.patient;
@@ -433,34 +437,34 @@ export async function generateBillPdf(
     .join(" / ");
 
   metaLabel(doc, "BILLED TO", MARGIN, y);
-  y += 13;
-  doc.font("Helvetica-Bold").fontSize(12).fillColor(C.ink);
+  y += 12;
+  doc.font("Helvetica-Bold").fontSize(11.5).fillColor(C.ink);
   doc.text(bill.patientName || "—", MARGIN, y);
-  y += 15;
+  y += 14;
   const billedToLines: string[] = [];
   if (bill.patientPhone) billedToLines.push(bill.patientPhone);
   if (patientAgeGender) billedToLines.push(patientAgeGender);
   if (patient?.email) billedToLines.push(String(patient.email));
   for (const line of billedToLines) {
     doc.font("Helvetica").fontSize(9.5).fillColor(C.muted).text(line, MARGIN, y);
-    y += 13;
+    y += 12;
   }
   y -= 1;
 
   // Meta (right) — DATE / DOCTOR / PAYMENT
-  const metaRightX = contentRight - 190;
+  const metaRightX = pageWidth - MARGIN - 170;
   const metaEnd = drawMetaRows(doc, [
     ["DATE", formatDate(bill.date)],
     ["DOCTOR", bill.doctorName || "—"],
     ["PAYMENT", bill.paymentMethod || "—"],
-  ], metaRightX, 24 + 66 + 14 - 13, 24);
+  ], metaRightX, 14 + 58 + 11 - 12, 19);
 
-  y = Math.max(y, metaEnd) + 6;
+  y = Math.max(y, metaEnd) + 5;
 
   const appointment = visit.appointment;
   if (appointment) {
-    ensureSpace(18 + 12 * 10);
-    y = sectionHeading(doc, "Appointment Details", MARGIN, y, contentRight);
+    ensureSpace(18 + 11 * 10);
+    y = sectionHeading(doc, "Appointment Details", MARGIN, y, pageWidth - MARGIN);
     const apptRows: [string, string][] = [
       ["Appointment ID", appointment.id ? String(appointment.id).slice(-6).toUpperCase() : "—"],
       ["Doctor", appointment.doctorName || "—"],
@@ -475,12 +479,9 @@ export async function generateBillPdf(
     if (appointment.notes) apptRows.push(["Notes", String(appointment.notes)]);
     let apptY = y;
     for (const [l, v] of apptRows) {
-      doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.ghost).text(l.toUpperCase(), MARGIN, apptY, {
-        width: 110,
-        characterSpacing: 0.8,
-      });
+      doc.font("Helvetica-Bold").fontSize(7.5).fillColor(C.ink).text(l.toUpperCase(), MARGIN, apptY, { width: 110 });
       doc.font("Helvetica").fontSize(9).fillColor(C.ink).text(v, MARGIN + 118, apptY, { width: 320 });
-      apptY += 14;
+      apptY += 13;
     }
     y = apptY + 3;
   }
@@ -488,7 +489,7 @@ export async function generateBillPdf(
   const prescriptions = Array.isArray(visit.prescriptions) ? visit.prescriptions : [];
   if (prescriptions.length) {
     ensureSpace(80);
-    y = sectionHeading(doc, "Prescription & Medicines", MARGIN, y, contentRight);
+    y = sectionHeading(doc, "Prescription & Medicines", MARGIN, y, pageWidth - MARGIN);
     for (const p of prescriptions) {
       ensureSpace(70);
       doc.font("Helvetica-Bold").fontSize(9.5).fillColor(C.ink).text(
@@ -505,21 +506,21 @@ export async function generateBillPdf(
         y += 11;
       }
       if (p.symptoms) {
-        doc.font("Helvetica-Bold").fontSize(8).fillColor(C.faint).text("Symptoms / Notes:", MARGIN, y, { width: 110 });
-        doc.font("Helvetica").fontSize(9).fillColor(C.ink).text(String(p.symptoms), MARGIN + 115, y, { width: contentWidth - 115 });
+        doc.font("Helvetica-Bold").fontSize(8).fillColor(C.ink).text("Symptoms / Notes:", MARGIN, y, { width: 110 });
+        doc.font("Helvetica").fontSize(9).fillColor(C.muted).text(String(p.symptoms), MARGIN + 115, y, { width: contentWidth - 115 });
         y += 13;
       }
       if (p.testsRecommended) {
-        doc.font("Helvetica-Bold").fontSize(8).fillColor(C.faint).text("Tests Recommended:", MARGIN, y, { width: 110 });
-        doc.font("Helvetica").fontSize(9).fillColor(C.ink).text(String(p.testsRecommended), MARGIN + 115, y, { width: contentWidth - 115 });
+        doc.font("Helvetica-Bold").fontSize(8).fillColor(C.ink).text("Tests Recommended:", MARGIN, y, { width: 110 });
+        doc.font("Helvetica").fontSize(9).fillColor(C.muted).text(String(p.testsRecommended), MARGIN + 115, y, { width: contentWidth - 115 });
         y += 13;
       }
 
       const medicines = Array.isArray(p.medicines) ? p.medicines.filter((m) => m?.name) : [];
       if (medicines.length) {
-        // Columns sum to the content width so the table never crosses the border
+        // Columns must sum to the content width so the table never crosses the border
         const headers = ["Medicine", "Frequency", "Duration", "Before / After Food", "Instructions"];
-        const colWidths = [164, 88, 76, 110, 101];
+        const colWidths = [150, 80, 70, 100, 94];
         const rows = medicines.map((m) => [
           String(m.name ?? "—"),
           String(m.frequency ?? "—"),
@@ -540,12 +541,12 @@ export async function generateBillPdf(
   const doctors = Array.isArray(visit.doctors) ? visit.doctors.filter((d) => d?.name) : [];
   if (doctors.length) {
     ensureSpace(19 + 15 + 15 * doctors.length);
-    y = sectionHeading(doc, "Doctors", MARGIN, y, contentRight);
+    y = sectionHeading(doc, "Doctors", MARGIN, y, pageWidth - MARGIN);
     y = drawSimpleTable(
       doc,
       ["#", "Doctor"],
       doctors.map((d, i) => [String(i + 1), String(d.name ?? "—")]),
-      [44, contentWidth - 44],
+      [40, 400],
       MARGIN,
       y,
       14,
@@ -557,8 +558,8 @@ export async function generateBillPdf(
   // Items table — widths sum to contentWidth
   const items = Array.isArray(bill.items) ? bill.items : [];
   ensureSpace(18 + 19 + items.length * 14 + 8);
-  y = sectionHeading(doc, "Bill Items", MARGIN, y, contentRight);
-  const itemCols = [30, contentWidth - 30 - 48 - 72 - 80, 48, 72, 80];
+  y = sectionHeading(doc, "Bill Items", MARGIN, y, pageWidth - MARGIN);
+  const itemCols = [28, contentWidth - 28 - 44 - 66 - 70, 44, 66, 70];
   const itemRows = items.map((item, i) => [
     String(i + 1),
     item.name || "—",
@@ -582,8 +583,8 @@ export async function generateBillPdf(
 
   // Totals — keep the whole block (rows + grand total + words + notes) with
   // the footer: if it can't fit above the footer line, flow it to the next page.
-  const totalsX = contentRight - 240;
-  const totalsW = 240;
+  const totalsX = pageWidth - MARGIN - 260;
+  const totalsW = 260;
   let tY = y + 2;
   const totalRows: [string, string][] = [
     ["Subtotal", inr(bill.subtotal ?? 0)],
@@ -593,63 +594,63 @@ export async function generateBillPdf(
   if ((bill.tax ?? 0) > 0)
     totalRows.push([`Tax (${bill.taxRate ?? 0}%)`, inr(bill.tax ?? 0)]);
 
-  const totalsBlockH = 16 * totalRows.length + 30 + 26 + 6;
+  const totalsBlockH = 15 * totalRows.length + 26 + 5 + 22 + 2 + 18 + 12 + 6;
   y = tY;
   ensureSpace(totalsBlockH);
   tY = y;
   for (const [l, v] of totalRows) {
     doc.font("Helvetica").fontSize(9.5).fillColor(C.muted).text(l, totalsX, tY, { width: totalsW - 100 });
     doc.font("Helvetica-Bold").fontSize(9.5).fillColor(C.ink).text(v, totalsX + totalsW - 100, tY, { width: 96, align: "right" });
-    tY += 16;
+    tY += 15;
   }
 
-  // Grand total — emphasized on a strong separator rule
-  doc.moveTo(totalsX - 8, tY).lineTo(totalsX + totalsW + 8, tY)
-    .lineWidth(1.25)
+  // Grand total — plain text on a separator rule (no background fill)
+  const grandH = 26;
+  doc.moveTo(totalsX - 12, tY).lineTo(totalsX + totalsW + 12, tY)
+    .lineWidth(1)
     .strokeColor(C.ink)
     .stroke();
-  doc.font("Helvetica-Bold").fontSize(9.5).fillColor(C.ink);
-  doc.text("GRAND TOTAL", totalsX, tY + 9, { width: totalsW - 100 });
-  doc.font("Helvetica-Bold").fontSize(14).fillColor(C.ink);
-  doc.text(inr(bill.total ?? 0), totalsX + totalsW - 100, tY + 6, { width: 96, align: "right" });
-  tY += 32;
+  doc.font("Helvetica-Bold").fontSize(11).fillColor(C.ink);
+  doc.text("GRAND TOTAL", totalsX, tY + 8, { width: totalsW - 100 });
+  doc.text(inr(bill.total ?? 0), totalsX + totalsW - 100, tY + 8, { width: 96, align: "right" });
+  tY += grandH + 5;
 
-  // Amount in words — soft rounded band
-  doc.roundedRect(MARGIN, tY, contentWidth, 26, 6).fill(C.band);
-  metaLabel(doc, "AMOUNT IN WORDS", MARGIN + 14, tY + 3);
+  // Amount in words — light gray band
+  doc.roundedRect(MARGIN, tY, contentWidth, 24, 5).fill(C.band).lineWidth(0.75).strokeColor(C.grid).stroke();
+  metaLabel(doc, "AMOUNT IN WORDS", MARGIN + 14, tY + 2.5);
   doc.font("Helvetica").fontSize(9).fillColor(C.ink).text(
     amountInWords(bill.total ?? 0),
     MARGIN + 14,
     tY + 13,
     { width: contentWidth - 28 }
   );
-  tY += 26;
+  tY += 24;
 
-  y = tY + 6;
+  y = tY + 2;
 
   // Notes
   if (bill.notes) {
     ensureSpace(18 + 13 + 16);
-    y = sectionHeading(doc, "Notes", MARGIN, y, contentRight);
+    y = sectionHeading(doc, "Notes", MARGIN, y, pageWidth - MARGIN);
     doc.font("Helvetica").fontSize(9.5).fillColor(C.muted).text(bill.notes, MARGIN, y, { width: contentWidth });
     y += 18;
   } else {
     y += 14;
   }
 
-  // Footer (inside margin)
+  // Footer (inside border)
   const footer = `Thank you for visiting ${companyName} · Generated on ${formatDate(new Date().toISOString())}`;
-  if (y > pageHeight - 82) {
-    ensureSpace(60);
+  if (y > pageHeight - 90) {
+    ensureSpace(80);
   }
-  doc.moveTo(MARGIN, pageHeight - 62).lineTo(contentRight, pageHeight - 62)
+  doc.moveTo(MARGIN, pageHeight - 68).lineTo(pageWidth - MARGIN, pageHeight - 68)
     .lineWidth(0.5)
-    .strokeColor(C.hairline)
+    .strokeColor(C.grid)
     .stroke();
   doc.font("Helvetica").fontSize(8).fillColor(C.muted).text(
     footer,
     MARGIN,
-    pageHeight - 52,
+    pageHeight - 58,
     { width: contentWidth, align: "center" }
   );
 
