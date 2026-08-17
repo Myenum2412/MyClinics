@@ -1,27 +1,16 @@
-import Link from "next/link";
-import {
-  ArrowRightIcon as ArrowRight,
-  CalendarDaysIcon,
-  DocumentTextIcon as FileText,
-  BeakerIcon as Pill,
-  ReceiptPercentIcon as ReceiptText,
-  IdentificationIcon as Stethoscope,
-} from "@heroicons/react/24/outline";
 import { Toaster } from "@/components/ui/sonner";
 import Stats07 from "@/components/stats-07";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+  AppointmentsTableCard,
+  BillsTableCard,
+  DoctorsTableCard,
+  MedicinesTableCard,
+  ReportsTableCard,
+} from "@/components/patient-tables";
 import { PatientUnlinked } from "@/components/patient-unlinked";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { loadPatientData } from "@/lib/patient";
-import { categoryLabel } from "@/lib/report-folders";
 
 import type { Metadata } from "next";
 
@@ -32,49 +21,8 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-const dateFmt = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "2-digit",
-  year: "numeric",
-});
-
-function formatDate(value: string) {
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? value : dateFmt.format(parsed);
-}
-
-const SECTIONS = [
-  {
-    title: "Medical Reports",
-    description: "View your appointments, bills, prescriptions and documents.",
-    href: "/patient/reports",
-    icon: FileText,
-  },
-  {
-    title: "Billing",
-    description: "Check your invoices and payment status.",
-    href: "/patient/billing",
-    icon: ReceiptText,
-  },
-  {
-    title: "Medicines",
-    description: "See medicines prescribed to you.",
-    href: "/patient/medicines",
-    icon: Pill,
-  },
-  {
-    title: "Appointments",
-    description: "Your upcoming and past appointments.",
-    href: "/patient/appointments",
-    icon: CalendarDaysIcon,
-  },
-  {
-    title: "My Doctors",
-    description: "Doctors who have treated you at the clinic.",
-    href: "/patient/doctors",
-    icon: Stethoscope,
-  },
-];
+// Dashboard tables are capped at this many rows.
+const MAX_ROWS = 3;
 
 export default async function PatientDashboardPage() {
   const session = await auth();
@@ -132,119 +80,43 @@ export default async function PatientDashboardPage() {
         ]}
       />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {SECTIONS.map((section) => (
-          <Link
-            key={section.href}
-            href={section.href}
-            className="group rounded-xl border border-border bg-card p-4 transition-colors hover:border-primary/50"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <section.icon
-                className="size-5 text-primary"
-                aria-hidden="true"
-              />
-              <ArrowRight
-                className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-                aria-hidden="true"
-              />
-            </div>
-            <p className="mt-3 text-sm font-medium">{section.title}</p>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {section.description}
-            </p>
-          </Link>
-        ))}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <AppointmentsTableCard
+          appointments={appointments}
+          maxRows={MAX_ROWS}
+          title="Recent Appointments"
+          description="Your latest bookings"
+          href="/patient/appointments"
+        />
+        <BillsTableCard
+          bills={bills}
+          maxRows={MAX_ROWS}
+          title="Recent Invoices"
+          description="Your latest bills"
+          href="/patient/billing"
+        />
+        <MedicinesTableCard
+          prescriptions={prescriptions}
+          maxRows={MAX_ROWS}
+          title="Current Medicines"
+          description="Your latest prescriptions"
+          href="/patient/medicines"
+        />
+        <ReportsTableCard
+          reports={reports}
+          maxRows={MAX_ROWS}
+          title="Recent Reports"
+          description="Your latest documents"
+          href="/patient/reports"
+        />
+        <DoctorsTableCard
+          doctors={doctors}
+          maxRows={MAX_ROWS}
+          title="Your Doctors"
+          description="Doctors who have treated you"
+          href="/patient/doctors"
+        />
       </div>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Recent Reports</CardTitle>
-            <CardDescription>Your latest documents</CardDescription>
-          </div>
-          <Link
-            href="/patient/reports"
-            className="text-sm font-medium text-foreground hover:underline"
-          >
-            View all
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {reports.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No reports yet. They will appear here once the clinic uploads them.
-            </p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-border">
-              {reports.slice(0, 5).map((file) => (
-                <li
-                  key={file.id}
-                  className="flex flex-wrap items-center gap-2 py-2.5"
-                >
-                  <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                    {file.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDate(file.createdAt)}
-                  </span>
-                  <Badge variant="outline" className="text-xs">
-                    {categoryLabel(file.category)}
-                  </Badge>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Your Doctors</CardTitle>
-            <CardDescription>Doctors who have treated you</CardDescription>
-          </div>
-          <Link
-            href="/patient/doctors"
-            className="text-sm font-medium text-foreground hover:underline"
-          >
-            View all
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {doctors.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No doctors assigned yet. They will appear here once you have
-              visits at the clinic.
-            </p>
-          ) : (
-            <ul className="flex flex-col divide-y divide-border">
-              {doctors.slice(0, 4).map((doctor) => (
-                <li
-                  key={doctor.id ?? doctor.name}
-                  className="flex flex-wrap items-center gap-2 py-2.5"
-                >
-                  <Stethoscope
-                    className="size-4 shrink-0 text-muted-foreground"
-                    aria-hidden="true"
-                  />
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                    {doctor.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {doctor.specialty ?? "Doctor"} · {doctor.visits} visit
-                    {doctor.visits === 1 ? "" : "s"}
-                    {doctor.lastVisit
-                      ? ` · last ${formatDate(doctor.lastVisit)}`
-                      : ""}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
 
       <Toaster />
     </div>

@@ -22,7 +22,11 @@ export default async function PatientBillingPage() {
 
   return (
     <>
-      <PatientBilling bills={data.bills} />
+      <PatientBilling
+        bills={data.bills}
+        appointments={data.appointments}
+        prescriptions={data.prescriptions}
+      />
       <Toaster />
     </>
   );

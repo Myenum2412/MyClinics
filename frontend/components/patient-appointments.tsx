@@ -7,13 +7,23 @@ import {
 import { Input } from "@/components/ui/input";
 import Stats07 from "@/components/stats-07";
 import { AppointmentsTable, type Appointment } from "@/components/appointments-table";
+import {
+  DoctorsTableCard,
+  PrescriptionsTableCard,
+} from "@/components/patient-tables";
+import type { Prescription } from "@/components/prescriptions-table";
+import type { PatientDoctor } from "@/lib/patient";
 import type { StatsItem } from "@/lib/stats";
 
 export function PatientAppointments({
   appointments,
+  prescriptions,
+  doctors,
   stats,
 }: {
   appointments: Appointment[];
+  prescriptions: Prescription[];
+  doctors: PatientDoctor[];
   stats?: StatsItem[];
 }) {
   const [search, setSearch] = useState("");
@@ -52,6 +62,21 @@ export function PatientAppointments({
       </div>
 
       <AppointmentsTable data={appointments} search={search} canManage={false} />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <DoctorsTableCard
+          doctors={doctors}
+          title="Your Doctors"
+          description="Doctors who have treated you"
+          href="/patient/doctors"
+        />
+        <PrescriptionsTableCard
+          prescriptions={prescriptions}
+          title="Your Prescriptions"
+          description="Prescriptions from your visits"
+          href="/patient/medicines"
+        />
+      </div>
     </div>
   );
 }

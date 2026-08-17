@@ -3,11 +3,19 @@
 import { useMemo, useState } from "react";
 import {
   MagnifyingGlassIcon as Search,
-  IdentificationIcon as Stethoscope,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { AppointmentsTableCard } from "@/components/patient-tables";
 import type { PatientDoctor } from "@/lib/patient";
+import type { Appointment } from "@/components/appointments-table";
 
 const dateFmt = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -21,7 +29,13 @@ function formatDate(value: string | null) {
   return Number.isNaN(parsed.getTime()) ? value : dateFmt.format(parsed);
 }
 
-export function PatientDoctors({ doctors }: { doctors: PatientDoctor[] }) {
+export function PatientDoctors({
+  doctors,
+  appointments,
+}: {
+  doctors: PatientDoctor[];
+  appointments: Appointment[];
+}) {
   const [search, setSearch] = useState("");
 
   const visibleDoctors = useMemo(() => {
@@ -60,7 +74,6 @@ export function PatientDoctors({ doctors }: { doctors: PatientDoctor[] }) {
 
       {visibleDoctors.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border p-12 text-center">
-          <Stethoscope className="size-8 text-muted-foreground" aria-hidden="true" />
           <div>
             <p className="text-sm font-medium">No doctors yet</p>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -71,62 +84,58 @@ export function PatientDoctors({ doctors }: { doctors: PatientDoctor[] }) {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {visibleDoctors.map((doctor) => (
-            <div
-              key={doctor.id ?? doctor.name}
-              className="rounded-xl border border-border bg-card p-4"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Stethoscope className="size-5" aria-hidden="true" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{doctor.name}</p>
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                <TableHead className="h-9">Doctor</TableHead>
+                <TableHead className="h-9">Visits</TableHead>
+                <TableHead className="h-9">Prescriptions</TableHead>
+                <TableHead className="h-9">Bills</TableHead>
+                <TableHead className="h-9 pr-4">Last Visit</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visibleDoctors.map((doctor) => (
+                <TableRow
+                  key={doctor.id ?? doctor.name}
+                  className="border-b border-border last:border-b-0"
+                >
+                  <TableCell className="py-3">
+                    <p className="text-sm font-medium">{doctor.name}</p>
                     <p className="truncate text-xs text-muted-foreground">
                       {doctor.specialty ?? "Doctor"}
+                      {doctor.qualifications
+                        ? ` · ${doctor.qualifications}`
+                        : ""}
+                      {doctor.mobile ? ` · ${doctor.mobile}` : ""}
                     </p>
-                  </div>
-                </div>
-                {doctor.lastVisit && (
-                  <Badge variant="outline" className="shrink-0 text-xs">
-                    Last visit {formatDate(doctor.lastVisit)}
-                  </Badge>
-                )}
-              </div>
-
-              {(doctor.qualifications || doctor.mobile) && (
-                <div className="mt-3 flex flex-col gap-0.5 text-xs text-muted-foreground">
-                  {doctor.qualifications && <p>{doctor.qualifications}</p>}
-                  {doctor.mobile && <p>{doctor.mobile}</p>}
-                </div>
-              )}
-
-              <div className="mt-3 grid grid-cols-3 gap-2 border-t border-border pt-3 text-center">
-                <div>
-                  <p className="text-lg font-semibold tabular-nums">
+                  </TableCell>
+                  <TableCell className="py-3 text-sm font-medium tabular-nums">
                     {doctor.visits}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Visits</p>
-                </div>
-                <div>
-                  <p className="text-lg font-semibold tabular-nums">
+                  </TableCell>
+                  <TableCell className="py-3 text-sm tabular-nums">
                     {doctor.prescriptions}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Rx</p>
-                </div>
-                <div>
-                  <p className="text-lg font-semibold tabular-nums">
+                  </TableCell>
+                  <TableCell className="py-3 text-sm tabular-nums">
                     {doctor.bills}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Bills</p>
-                </div>
-              </div>
-            </div>
-          ))}
+                  </TableCell>
+                  <TableCell className="py-3 pr-4 text-sm text-muted-foreground tabular-nums">
+                    {formatDate(doctor.lastVisit)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
+
+      <AppointmentsTableCard
+        appointments={appointments}
+        title="Your Appointments"
+        description="Your bookings at the clinic"
+        href="/patient/appointments"
+      />
     </div>
   );
 }

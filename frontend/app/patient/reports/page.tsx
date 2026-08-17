@@ -22,7 +22,12 @@ export default async function PatientReportsPage() {
 
   return (
     <>
-      <PatientReports files={data.reports} />
+      <PatientReports
+        files={data.reports}
+        appointments={data.appointments}
+        prescriptions={data.prescriptions}
+        bills={data.bills}
+      />
       <Toaster />
     </>
   );

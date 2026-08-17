@@ -22,7 +22,10 @@ export default async function PatientDoctorsPage() {
 
   return (
     <>
-      <PatientDoctors doctors={data.doctors} />
+      <PatientDoctors
+        doctors={data.doctors}
+        appointments={data.appointments}
+      />
       <Toaster />
     </>
   );

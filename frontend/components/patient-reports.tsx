@@ -2,15 +2,26 @@
 
 import { useMemo, useState } from "react";
 import {
-  ArrowDownTrayIcon as Download,
-  DocumentTextIcon as FileText,
+  EyeIcon as Eye,
   MagnifyingGlassIcon as Search,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { PatientFileDialog } from "@/components/patient-file-dialog";
+import {
+  AppointmentsTableCard,
+  BillsTableCard,
+  PrescriptionsTableCard,
+} from "@/components/patient-tables";
 import {
   fileCategory,
   fileCategoryColor,
@@ -23,12 +34,25 @@ import {
   FILE_CATEGORIES,
   type ReportFile,
 } from "@/lib/report-folders";
+import type { Appointment } from "@/components/appointments-table";
+import type { Bill } from "@/components/billing-table";
+import type { Prescription } from "@/components/prescriptions-table";
 
 function categoryOf(file: ReportFile) {
   return file.category ?? "upload";
 }
 
-export function PatientReports({ files }: { files: ReportFile[] }) {
+export function PatientReports({
+  files,
+  appointments,
+  prescriptions,
+  bills,
+}: {
+  files: ReportFile[];
+  appointments: Appointment[];
+  prescriptions: Prescription[];
+  bills: Bill[];
+}) {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [viewing, setViewing] = useState<ReportFile | null>(null);
@@ -91,7 +115,6 @@ export function PatientReports({ files }: { files: ReportFile[] }) {
 
       {visibleFiles.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border p-12 text-center">
-          <FileText className="size-8 text-muted-foreground" aria-hidden="true" />
           <div>
             <p className="text-sm font-medium">
               {files.length === 0 ? "No reports yet" : "No matching reports"}
@@ -104,44 +127,90 @@ export function PatientReports({ files }: { files: ReportFile[] }) {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-          {visibleFiles.map((file) => {
-            const category = fileCategory(file.type, file.extension);
-            return (
-              <button
-                key={file.id}
-                type="button"
-                onClick={() => setViewing(file)}
-                className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/50 focus-visible:border-primary focus-visible:outline-none"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div
-                    className={cn(
-                      "flex size-11 items-center justify-center rounded-lg",
-                      fileCategoryColor(category)
-                    )}
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                <TableHead className="h-9">Name</TableHead>
+                <TableHead className="h-9">Category</TableHead>
+                <TableHead className="h-9">Size</TableHead>
+                <TableHead className="h-9">Date</TableHead>
+                <TableHead className="h-9 pr-4 text-right">Preview</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visibleFiles.map((file) => {
+                const category = fileCategory(file.type, file.extension);
+                return (
+                  <TableRow
+                    key={file.id}
+                    onClick={() => setViewing(file)}
+                    className="cursor-pointer border-b border-border transition-colors duration-100 last:border-b-0 hover:bg-muted/30"
                   >
-                    <FileTypeIcon category={category} className="size-5" />
-                  </div>
-                  <Badge variant="outline" className="max-w-full truncate">
-                    {categoryLabel(categoryOf(file))}
-                  </Badge>
-                </div>
-                <p className="line-clamp-2 w-full break-words text-sm font-medium leading-snug">
-                  {file.name}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {formatBytes(file.size)} · {formatDate(file.createdAt)}
-                </p>
-              </button>
-            );
-          })}
+                    <TableCell className="py-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <div
+                          className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${fileCategoryColor(category)}`}
+                        >
+                          <FileTypeIcon category={category} className="size-4" />
+                        </div>
+                        <span className="min-w-0 truncate text-sm font-medium">
+                          {file.name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <Badge variant="outline" className="text-xs">
+                        {categoryLabel(categoryOf(file))}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
+                      {formatBytes(file.size)}
+                    </TableCell>
+                    <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
+                      {formatDate(file.createdAt)}
+                    </TableCell>
+                    <TableCell className="py-3 pr-4 text-right">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setViewing(file);
+                        }}
+                        aria-label={`Preview ${file.name}`}
+                      >
+                        <Eye className="mr-1 size-3.5" aria-hidden="true" />
+                        Preview
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
       )}
 
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        <Download className="size-3.5" aria-hidden="true" />
-        Click any report to preview or download it.
+      <div className="grid gap-4 lg:grid-cols-2">
+        <AppointmentsTableCard
+          appointments={appointments}
+          title="Appointments"
+          description="Your visits at the clinic"
+          href="/patient/appointments"
+        />
+        <PrescriptionsTableCard
+          prescriptions={prescriptions}
+          title="Prescriptions"
+          description="Prescriptions from your visits"
+          href="/patient/medicines"
+        />
+        <BillsTableCard
+          bills={bills}
+          title="Bills"
+          description="Invoices from your visits"
+          href="/patient/billing"
+        />
       </div>
 
       <PatientFileDialog file={viewing} onClose={() => setViewing(null)} />

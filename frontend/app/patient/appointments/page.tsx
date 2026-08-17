@@ -32,6 +32,8 @@ export default async function PatientAppointmentsPage() {
     <>
       <PatientAppointments
         appointments={data.appointments}
+        prescriptions={data.prescriptions}
+        doctors={data.doctors}
         stats={[
           {
             name: "Appointments",

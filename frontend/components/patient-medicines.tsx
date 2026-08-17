@@ -5,6 +5,15 @@ import {
   IdentificationIcon as Stethoscope,
 } from "@heroicons/react/24/outline";
 import { Badge } from "@/components/ui/badge";
+import { MedicinesTableCard } from "@/components/patient-tables";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { Prescription } from "@/components/prescriptions-table";
 
 export type MedicineCatalogItem = {
@@ -46,10 +55,17 @@ export function PatientMedicines({
         </p>
       </div>
 
+      <MedicinesTableCard
+        prescriptions={prescriptions}
+        title="Current Medicines"
+        description="Medicines prescribed to you"
+        href="/patient/medicines"
+      />
+
       <section className="flex flex-col gap-3">
         <h2 className="flex items-center gap-2 text-base font-semibold">
           <Pill className="size-4 text-primary" aria-hidden="true" />
-          Prescribed Medicines
+          Prescription Details
         </h2>
 
         {sorted.length === 0 ? (
@@ -163,27 +179,40 @@ export function PatientMedicines({
             The clinic medicine list is empty.
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {catalog.map((medicine) => (
-              <div
-                key={medicine.id}
-                className="rounded-xl border border-border bg-card p-3"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-medium">{medicine.name}</p>
-                  {medicine.category && (
-                    <Badge variant="secondary" className="shrink-0 text-xs">
-                      {medicine.category}
-                    </Badge>
-                  )}
-                </div>
-                {medicine.notes && (
-                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                    {medicine.notes}
-                  </p>
-                )}
-              </div>
-            ))}
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="h-9">Medicine</TableHead>
+                  <TableHead className="h-9">Category</TableHead>
+                  <TableHead className="h-9 w-full">Notes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {catalog.map((medicine) => (
+                  <TableRow
+                    key={medicine.id}
+                    className="border-b border-border last:border-b-0"
+                  >
+                    <TableCell className="py-2.5 text-sm font-medium">
+                      {medicine.name}
+                    </TableCell>
+                    <TableCell className="py-2.5">
+                      {medicine.category ? (
+                        <Badge variant="secondary" className="text-xs">
+                          {medicine.category}
+                        </Badge>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-2.5 text-sm text-muted-foreground">
+                      {medicine.notes || "—"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
       </section>

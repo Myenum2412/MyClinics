@@ -281,10 +281,20 @@ export async function loadPatientData(
     whatsapp: doc.whatsapp ? String(doc.whatsapp) : null,
   };
 
-  const nameMatch = { patientName: patient.fullName };
+  // Names can carry stray whitespace (e.g. "Arjun V " vs "Arjun V" on bills),
+  // so match the raw name plus its trimmed variant.
+  const nameVariants = [patient.fullName, patient.fullName.trim()].filter(
+    (name) => name.length > 0
+  );
+  const nameMatch =
+    nameVariants.length > 1
+      ? { patientName: { $in: nameVariants } }
+      : { patientName: patient.fullName };
   const appointmentOr: Record<string, unknown>[] = [];
   if (email) appointmentOr.push({ email });
-  if (patient.fullName) appointmentOr.push({ fullName: patient.fullName });
+  for (const name of nameVariants) {
+    appointmentOr.push({ fullName: name });
+  }
   if (patient.mobile) appointmentOr.push({ mobile: patient.mobile });
   const billOr: Record<string, unknown>[] = [nameMatch];
   if (patient.mobile) billOr.push({ patientPhone: patient.mobile });

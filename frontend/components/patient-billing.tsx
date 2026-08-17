@@ -3,15 +3,28 @@
 import { useMemo, useState } from "react";
 import {
   EyeIcon as Eye,
-  ReceiptPercentIcon as ReceiptText,
   MagnifyingGlassIcon as Search,
 } from "@heroicons/react/24/outline";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { PatientBillDialog } from "@/components/patient-bill-dialog";
+import {
+  AppointmentsTableCard,
+  PrescriptionsTableCard,
+} from "@/components/patient-tables";
 import { formatINR } from "@/lib/billing";
 import type { Bill } from "@/components/billing-table";
+import type { Appointment } from "@/components/appointments-table";
+import type { Prescription } from "@/components/prescriptions-table";
 
 const statusVariant: Record<
   Bill["status"],
@@ -33,7 +46,15 @@ function formatDate(value: string) {
   return Number.isNaN(parsed.getTime()) ? value : dateFmt.format(parsed);
 }
 
-export function PatientBilling({ bills }: { bills: Bill[] }) {
+export function PatientBilling({
+  bills,
+  appointments,
+  prescriptions,
+}: {
+  bills: Bill[];
+  appointments: Appointment[];
+  prescriptions: Prescription[];
+}) {
   const [search, setSearch] = useState("");
   const [viewing, setViewing] = useState<Bill | null>(null);
 
@@ -98,7 +119,6 @@ export function PatientBilling({ bills }: { bills: Bill[] }) {
 
       {visibleBills.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border p-12 text-center">
-          <ReceiptText className="size-8 text-muted-foreground" aria-hidden="true" />
           <div>
             <p className="text-sm font-medium">
               {bills.length === 0 ? "No bills yet" : "No matching bills"}
@@ -111,44 +131,84 @@ export function PatientBilling({ bills }: { bills: Bill[] }) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
-          {visibleBills.map((bill) => (
-            <div
-              key={bill.id}
-              className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-4"
-            >
-              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <p className="text-sm font-medium">
-                  {bill.billNumber}
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+        <div className="overflow-hidden rounded-xl border border-border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                <TableHead className="h-9">Invoice</TableHead>
+                <TableHead className="h-9">Date</TableHead>
+                <TableHead className="h-9">Doctor</TableHead>
+                <TableHead className="h-9">Payment</TableHead>
+                <TableHead className="h-9">Status</TableHead>
+                <TableHead className="h-9 text-right">Total</TableHead>
+                <TableHead className="h-9 pr-4 text-right">Details</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visibleBills.map((bill) => (
+                <TableRow
+                  key={bill.id}
+                  onClick={() => setViewing(bill)}
+                  className="cursor-pointer border-b border-border transition-colors duration-100 last:border-b-0 hover:bg-muted/30"
+                >
+                  <TableCell className="py-3 text-sm font-medium tabular-nums">
+                    {bill.billNumber}
+                  </TableCell>
+                  <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
                     {formatDate(bill.date)}
-                  </span>
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {bill.doctorName ? `${bill.doctorName} · ` : ""}
-                  {bill.paymentMethod} · {bill.items.length} item
-                  {bill.items.length === 1 ? "" : "s"}
-                </p>
-              </div>
-              <Badge variant={statusVariant[bill.status]} className="text-xs capitalize">
-                {bill.status}
-              </Badge>
-              <p className="text-base font-semibold tabular-nums">
-                {formatINR(bill.total)}
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setViewing(bill)}
-                aria-label={`View invoice ${bill.billNumber}`}
-              >
-                <Eye className="mr-1 size-3.5" aria-hidden="true" />
-                View
-              </Button>
-            </div>
-          ))}
+                  </TableCell>
+                  <TableCell className="py-3 text-sm">
+                    {bill.doctorName ?? "—"}
+                  </TableCell>
+                  <TableCell className="py-3 text-sm text-muted-foreground">
+                    {bill.paymentMethod}
+                  </TableCell>
+                  <TableCell className="py-3">
+                    <Badge
+                      variant={statusVariant[bill.status]}
+                      className="text-xs capitalize"
+                    >
+                      {bill.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="py-3 text-right text-sm font-semibold tabular-nums">
+                    {formatINR(bill.total)}
+                  </TableCell>
+                  <TableCell className="py-3 pr-4 text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setViewing(bill);
+                      }}
+                      aria-label={`View invoice ${bill.billNumber}`}
+                    >
+                      <Eye className="mr-1 size-3.5" aria-hidden="true" />
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <AppointmentsTableCard
+          appointments={appointments}
+          title="Appointments"
+          description="Your visits at the clinic"
+          href="/patient/appointments"
+        />
+        <PrescriptionsTableCard
+          prescriptions={prescriptions}
+          title="Prescriptions"
+          description="Prescriptions from your visits"
+          href="/patient/medicines"
+        />
+      </div>
 
       <PatientBillDialog bill={viewing} onClose={() => setViewing(null)} />
     </div>
