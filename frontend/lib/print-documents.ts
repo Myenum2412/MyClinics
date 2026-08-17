@@ -75,10 +75,10 @@ function formatDate(value: string | null | undefined) {
 }
 
 function money(value: number) {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-  }).format(value ?? 0);
+  return "Rs. " + (value ?? 0).toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 function pageStyles() {
@@ -213,38 +213,53 @@ function billingStyles() {
     @page { size: A4; margin: 0; }
     html, body { margin: 0; padding: 0; background: #fff; }
     * { box-sizing: border-box; }
-    body { font-family: Arial, Helvetica, sans-serif; color: #111; font-size: 13px; line-height: 1.55; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #101828; font-size: 13px; line-height: 1.55; }
     .sheet {
       width: 210mm;
       min-height: 297mm;
       margin: 0 auto;
       padding: 10mm 12mm;
-      border: 2px solid #111;
+      border: 2px solid #0B2447;
       display: flex;
       flex-direction: column;
     }
-    .clinic-header { display: flex; align-items: center; gap: 14px; padding-bottom: 12px; border-bottom: 2px solid #111; margin-bottom: 18px; }
+    .clinic-header { display: flex; align-items: center; gap: 14px; padding-bottom: 12px; border-bottom: 2px solid #0B2447; margin-bottom: 16px; }
     .clinic-logo { width: 56px; height: 56px; object-fit: contain; flex-shrink: 0; }
-    .clinic-name { font-size: 20px; font-weight: bold; letter-spacing: 0.5px; line-height: 1.3; }
-    .clinic-line { font-size: 12px; color: #444; margin-top: 3px; line-height: 1.5; }
-    .doc-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 10px; }
-    .invoice { text-align: right; font-size: 26px; font-weight: bold; line-height: 1.2; }
+    .clinic-name { font-size: 20px; font-weight: bold; color: #0B2447; letter-spacing: 0.5px; line-height: 1.3; }
+    .clinic-line { font-size: 12px; color: #4B5563; margin-top: 3px; line-height: 1.5; }
+    .doc-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 6px; }
+    .invoice { text-align: right; font-size: 26px; font-weight: bold; color: #0B2447; line-height: 1.2; white-space: nowrap; }
+    .invoice .inv-no { display: block; font-size: 13px; font-weight: bold; color: #1D4ED8; margin-top: 2px; }
     .invoice small { display: block; font-size: 12px; font-weight: normal; color: #555; margin-top: 6px; }
-    .row { display: grid; grid-template-columns: 150px 1fr; column-gap: 12px; align-items: baseline; margin-bottom: 7px; font-size: 13px; line-height: 1.5; }
-    .row b { font-weight: 600; }
-    h3 { margin: 24px 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 5px; }
+    .panels { flex: 1; display: flex; gap: 14px; min-width: 0; }
+    .panel { flex: 1; background: #EEF3FA; border: 1px solid #DFE6F0; border-radius: 6px; padding: 11px 14px 12px; }
+    .panel-title { display: inline-block; font-size: 11px; font-weight: bold; color: #0B2447; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #1D4ED8; padding-bottom: 3px; margin-bottom: 8px; }
+    .patient-name { font-size: 14px; font-weight: bold; color: #101828; margin-bottom: 4px; }
+    .patient-line { font-size: 12px; color: #4B5563; margin: 2px 0; line-height: 1.5; }
+    .prow { display: flex; justify-content: space-between; gap: 12px; padding: 3px 0; }
+    .prow span:first-child { color: #1D4ED8; font-weight: bold; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; padding-top: 1px; }
+    .prow span:last-child { color: #101828; font-weight: 600; text-align: right; }
+    h3 { display: flex; align-items: center; gap: 10px; margin: 22px 0 10px; font-size: 13px; color: #0B2447; text-transform: uppercase; letter-spacing: 0.5px; }
+    h3 .accent { width: 26px; height: 2px; background: #1D4ED8; flex-shrink: 0; }
+    h3::after { content: ""; flex: 1; height: 1px; background: #C9D4E4; }
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th { background: #f1f5f9; text-align: left; padding: 8px 10px; border: 1px solid #ccc; font-size: 11px; letter-spacing: 0.3px; }
-    td { padding: 8px 10px; border: 1px solid #ccc; vertical-align: top; line-height: 1.45; }
-    .totals { width: 270px; margin-left: auto; margin-top: 22px; font-size: 14px; line-height: 1.5; }
-    .totals div { display: flex; justify-content: space-between; padding: 5px 0; column-gap: 16px; }
-    .totals .grand { border-top: 2px solid #111; margin-top: 6px; padding-top: 10px; font-size: 16px; font-weight: bold; }
-    .footer { margin-top: auto; padding-top: 24px; font-size: 12px; color: #555; text-align: center; border-top: 1px solid #cbd5e1; }
-    .paid { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #16a34a; }
-    .pending { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #d97706; }
-    .cancelled { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #dc2626; }
+    th { background: #0B2447; color: #fff; text-align: left; padding: 8px 10px; border: 1px solid #0B2447; font-size: 11px; letter-spacing: 0.3px; }
+    td { padding: 8px 10px; border: 1px solid #C9D4E4; vertical-align: top; line-height: 1.45; }
+    tbody tr:nth-child(even) td { background: #EEF3FA; }
+    .totals { width: 280px; margin-left: auto; margin-top: 18px; background: #EEF3FA; border: 1px solid #DFE6F0; border-radius: 6px; padding: 12px 14px 0; font-size: 14px; line-height: 1.5; }
+    .totals div { display: flex; justify-content: space-between; padding: 4px 0; column-gap: 16px; }
+    .totals .grand { margin: 8px -14px 0; padding: 11px 14px; background: #0B2447; color: #fff; border-radius: 0 0 6px 6px; font-size: 15px; font-weight: bold; }
+    .words { margin-top: 14px; border: 1px solid #1D4ED8; border-radius: 5px; padding: 8px 14px; font-size: 13px; line-height: 1.6; }
+    .words b { display: block; color: #1D4ED8; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .footer { margin-top: auto; padding-top: 18px; }
+    .footer .bar { background: #0B2447; color: #fff; border-radius: 4px; padding: 12px 16px; text-align: center; }
+    .footer .bar b { display: block; font-size: 13px; margin-bottom: 2px; }
+    .footer .bar span { font-size: 11px; color: #C7D2E0; }
+    .paid { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #16A34A; }
+    .pending { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #F59E0B; }
+    .cancelled { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #EF4444; }
     .kv { display: grid; grid-template-columns: 150px 1fr; gap: 7px 12px; font-size: 13px; margin-top: 10px; line-height: 1.5; }
-    .kv b { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .kv b { color: #1D4ED8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; }
   `;
 }
 
@@ -292,7 +307,7 @@ function appointmentSectionHtml(appointment?: BillVisit["appointment"] | null) {
   if (appointment.reason) rows.push(["Reason", escapeHtml(appointment.reason)]);
   if (appointment.notes) rows.push(["Notes", escapeHtml(appointment.notes)]);
   return `
-    <h3>Appointment Details</h3>
+    <h3>Appointment Details<span class="accent"></span></h3>
     <div class="kv">
       ${rows.map(([l, v]) => `<div><b>${escapeHtml(l)}</b></div><div>${v}</div>`).join("")}
     </div>`;
@@ -302,7 +317,7 @@ function prescriptionsSectionHtml(prescriptions?: BillVisit["prescriptions"]) {
   const list = Array.isArray(prescriptions) ? prescriptions.filter((p) => p) : [];
   if (!list.length) return "";
   return `
-    <h3>Prescriptions &amp; Medicines</h3>
+    <h3>Prescriptions &amp; Medicines<span class="accent"></span></h3>
     ${list
       .map((p) => {
         const medicines = Array.isArray(p.medicines)
@@ -350,7 +365,7 @@ function doctorsSectionHtml(doctors?: BillVisit["doctors"]) {
   const list = Array.isArray(doctors) ? doctors.filter((d) => d?.name) : [];
   if (!list.length) return "";
   return `
-    <h3>Doctors</h3>
+    <h3>Doctors<span class="accent"></span></h3>
     <table>
       <thead>
         <tr><th style="width:40px;">#</th><th>Doctor</th></tr>
@@ -386,6 +401,11 @@ export function billingHtml(
         .join("")
     : `<tr><td colspan="5" style="text-align:center;">No items</td></tr>`;
 
+  const patient = visit?.patient;
+  const ageGender = [patient?.age ? `${patient.age} yrs` : "", patient?.gender ? escapeHtml(String(patient.gender)) : ""]
+    .filter(Boolean)
+    .join(" / ");
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -400,29 +420,25 @@ export function billingHtml(
     ${clinicHeaderHtml(clinicName, visit, opts.logoUrl)}
 
     <div class="doc-header">
-      <div>
-        <div class="row"><b>Invoice No.</b> ${escapeHtml(b.billNumber)}</div>
-        <div class="row"><b>Billed To</b> ${escapeHtml(b.patientName)}</div>
-        <div class="row"><b>Phone</b> ${escapeHtml(b.patientPhone || "—")}</div>
-        ${(() => {
-          const patient = visit?.patient;
-          const ageGender = [
-            patient?.age ? `${patient.age} yrs` : "",
-            patient?.gender ? escapeHtml(String(patient.gender)) : "",
-          ]
-            .filter(Boolean)
-            .join(" / ");
-          return ageGender
-            ? `<div class="row"><b>Age / Gender</b> ${escapeHtml(ageGender)}</div>`
-            : "";
-        })()}
-        ${visit?.patient?.email ? `<div class="row"><b>Email</b> ${escapeHtml(visit.patient.email)}</div>` : ""}
-        <div class="row"><b>Date</b> ${formatDate(b.date)}</div>
-        <div class="row"><b>Payment</b> ${escapeHtml(b.paymentMethod || "—")}</div>
-        ${b.doctorName ? `<div class="row"><b>Doctor</b> ${escapeHtml(b.doctorName)}</div>` : ""}
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-title">Billed To</div>
+          <div class="patient-name">${escapeHtml(b.patientName)}</div>
+          ${b.patientPhone ? `<div class="patient-line">${escapeHtml(b.patientPhone)}</div>` : ""}
+          ${ageGender ? `<div class="patient-line">${escapeHtml(ageGender)}</div>` : ""}
+          ${visit?.patient?.email ? `<div class="patient-line">${escapeHtml(visit.patient.email)}</div>` : ""}
+        </div>
+        <div class="panel">
+          <div class="panel-title">Invoice &amp; Payment</div>
+          <div class="prow"><span>Date</span><span>${formatDate(b.date)}</span></div>
+          <div class="prow"><span>Invoice No.</span><span>${escapeHtml(b.billNumber)}</span></div>
+          <div class="prow"><span>Doctor</span><span>${escapeHtml(b.doctorName || "—")}</span></div>
+          <div class="prow"><span>Payment</span><span>${escapeHtml(b.paymentMethod || "—")}</span></div>
+        </div>
       </div>
       <div class="invoice">
         Invoice
+        <span class="inv-no">${escapeHtml(b.billNumber)}</span>
         <small>${statusBadge(b.status)}</small>
       </div>
     </div>
@@ -431,7 +447,7 @@ export function billingHtml(
     ${prescriptionsSectionHtml(visit?.prescriptions)}
     ${doctorsSectionHtml(visit?.doctors)}
 
-    <h3>Bill Items</h3>
+    <h3>Bill Items<span class="accent"></span></h3>
     <table>
       <thead>
         <tr>
@@ -449,16 +465,19 @@ export function billingHtml(
       <div><span>Subtotal</span><span>${money(b.subtotal)}</span></div>
       ${b.discount ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ""}
       ${b.tax ? `<div><span>Tax (${b.taxRate}%)</span><span>${money(b.tax)}</span></div>` : ""}
-      <div class="grand"><span>Total</span><span>${money(b.total)}</span></div>
+      <div class="grand"><span>GRAND TOTAL</span><span>${money(b.total)}</span></div>
     </div>
 
-    <p style="margin-top:16px;margin-bottom:0;font-size:13px;line-height:1.6;">
-      <strong>Amount in Words:</strong> ${escapeHtml(amountInWords(b.total))}
-    </p>
+    <div class="words"><b>Amount in Words</b>${escapeHtml(amountInWords(b.total))}</div>
 
-    ${b.notes ? `<h3>Notes</h3><div style="font-size:13px;">${escapeHtml(b.notes)}</div>` : ""}
+    ${b.notes ? `<h3>Notes<span class="accent"></span></h3><div style="font-size:13px;">${escapeHtml(b.notes)}</div>` : ""}
 
-    <div class="footer">Generated by ${escapeHtml(clinicName)} · ${formatDate(new Date().toISOString())}</div>
+    <div class="footer">
+      <div class="bar">
+        <b>Thank you for visiting ${escapeHtml(clinicName)}</b>
+        <span>${escapeHtml(clinicName)} · Generated on ${formatDate(new Date().toISOString())}</span>
+      </div>
+    </div>
   </div>
   ${opts.autoPrint ? `<script>window.onload = function () { window.print(); };</script>` : ""}
 </body>
