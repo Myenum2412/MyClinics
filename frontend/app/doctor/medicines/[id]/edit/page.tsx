@@ -27,6 +27,10 @@ export default async function EditMedicinePage({
     category: doc.category ? String(doc.category) : "",
     composition: doc.composition ? String(doc.composition) : "",
     dosage: doc.dosage ? String(doc.dosage) : "",
+    frequency: doc.frequency ? String(doc.frequency) : "",
+    duration: doc.duration ? String(doc.duration) : "",
+    beforeAfterFood: doc.beforeAfterFood ? String(doc.beforeAfterFood) : "",
+    instructions: doc.instructions ? String(doc.instructions) : "",
     requiresPrescription: doc.requiresPrescription === true,
     notes: doc.notes ? String(doc.notes) : "",
   };

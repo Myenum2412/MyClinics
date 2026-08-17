@@ -21,6 +21,13 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   CircleStackIcon as TabletsIcon,
 } from "@heroicons/react/24/outline";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Medicine } from "@/components/medicines-table";
 
 const categories = [
@@ -34,6 +41,35 @@ const categories = [
   "Other",
 ];
 
+const frequencyOptions = [
+  "Morning",
+  "Afternoon",
+  "Evening",
+  "Morning + Afternoon",
+  "Morning + Evening",
+  "Afternoon + Evening",
+  "Morning + Afternoon + Evening",
+  "Once daily",
+  "1-1-1",
+  "As directed",
+];
+
+const durationOptions = [
+  "1 day",
+  "2 days",
+  "3 days",
+  "5 days",
+  "7 days",
+  "10 days",
+  "2 weeks",
+  "1 month",
+  "2 months",
+  "3 months",
+  "As directed",
+];
+
+const foodOptions = ["Before Food", "After Food", "With Food", "Empty Stomach", "Any Time"];
+
 export function MedicineForm({
   onSaved,
   initial,
@@ -46,7 +82,12 @@ export function MedicineForm({
   const [name, setName] = useState(initial?.name ?? "");
   const [category, setCategory] = useState(initial?.category ?? "");
   const [composition, setComposition] = useState(initial?.composition ?? "");
-  const [dosage, setDosage] = useState(initial?.dosage ?? "");
+  const [frequency, setFrequency] = useState(initial?.frequency ?? "");
+  const [duration, setDuration] = useState(initial?.duration ?? "");
+  const [beforeAfterFood, setBeforeAfterFood] = useState(
+    initial?.beforeAfterFood ?? ""
+  );
+  const [instructions, setInstructions] = useState(initial?.instructions ?? "");
   const [requiresPrescription, setRequiresPrescription] = useState(
     initial?.requiresPrescription ?? false
   );
@@ -61,7 +102,11 @@ export function MedicineForm({
       name,
       category: category || null,
       composition: composition || null,
-      dosage: dosage || null,
+      dosage: initial?.dosage ?? null,
+      frequency: frequency || null,
+      duration: duration || null,
+      beforeAfterFood: beforeAfterFood || null,
+      instructions: instructions || null,
       requiresPrescription,
       notes: notes || null,
     };
@@ -91,7 +136,10 @@ export function MedicineForm({
       setName("");
       setCategory("");
       setComposition("");
-      setDosage("");
+      setFrequency("");
+      setDuration("");
+      setBeforeAfterFood("");
+      setInstructions("");
       setRequiresPrescription(false);
       setNotes("");
     }
@@ -157,19 +205,86 @@ export function MedicineForm({
                 </FieldDescription>
               </Field>
               <Field>
-                <FieldLabel htmlFor="dosage">Dosage / Frequency</FieldLabel>
-                <Input
-                  id="dosage"
-                  type="text"
-                  placeholder="e.g. 1-1-1 or Once daily"
-                  value={dosage}
-                  onChange={(e) => setDosage(e.target.value)}
-                />
+                <FieldLabel htmlFor="frequency">Frequency *</FieldLabel>
+                <Select
+                  value={frequency}
+                  onValueChange={(v) => setFrequency(v ?? "")}
+                >
+                  <SelectTrigger id="frequency" className="w-full">
+                    <SelectValue placeholder="Select frequency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {frequencyOptions.map((f) => (
+                      <SelectItem key={f} value={f}>
+                        {f}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <FieldDescription>
-                  Typical dose and frequency of administration.
+                  When the medicine should be taken — e.g. Morning, Evening.
                 </FieldDescription>
               </Field>
             </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="duration">Duration *</FieldLabel>
+                <Select
+                  value={duration}
+                  onValueChange={(v) => setDuration(v ?? "")}
+                >
+                  <SelectTrigger id="duration" className="w-full">
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {durationOptions.map((d) => (
+                      <SelectItem key={d} value={d}>
+                        {d}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldDescription>
+                  How long the medicine should be taken.
+                </FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="beforeAfterFood">
+                  Before / After Food
+                </FieldLabel>
+                <Select
+                  value={beforeAfterFood}
+                  onValueChange={(v) => setBeforeAfterFood(v ?? "")}
+                >
+                  <SelectTrigger id="beforeAfterFood" className="w-full">
+                    <SelectValue placeholder="Select timing" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {foodOptions.map((f) => (
+                      <SelectItem key={f} value={f}>
+                        {f}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FieldDescription>
+                  When to take it relative to meals.
+                </FieldDescription>
+              </Field>
+            </div>
+            <Field>
+              <FieldLabel htmlFor="instructions">Instructions</FieldLabel>
+              <Input
+                id="instructions"
+                type="text"
+                placeholder="e.g. Take with plenty of water"
+                value={instructions}
+                onChange={(e) => setInstructions(e.target.value)}
+              />
+              <FieldDescription>
+                Usage instructions shown on prescriptions and invoices.
+              </FieldDescription>
+            </Field>
             <Field>
               <FieldLabel htmlFor="requiresPrescription">
                 Prescription status

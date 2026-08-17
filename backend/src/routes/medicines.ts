@@ -26,6 +26,10 @@ function mapMedicine(m: Record<string, unknown>) {
     category: m.category ?? null,
     composition: m.composition ?? null,
     dosage: m.dosage ?? null,
+    frequency: m.frequency ?? null,
+    duration: m.duration ?? null,
+    beforeAfterFood: m.beforeAfterFood ?? null,
+    instructions: m.instructions ?? null,
     requiresPrescription:
       typeof m.requiresPrescription === "boolean"
         ? m.requiresPrescription
@@ -111,8 +115,18 @@ export function registerMedicinesRoutes(app: FastifyInstance): void {
 
     try {
       const body = (request.body ?? {}) as Record<string, unknown>;
-      const { name, category, composition, dosage, requiresPrescription, notes } =
-        body;
+      const {
+        name,
+        category,
+        composition,
+        dosage,
+        frequency,
+        duration,
+        beforeAfterFood,
+        instructions,
+        requiresPrescription,
+        notes,
+      } = body;
 
       if (!name || !String(name).trim()) {
         return reply.code(400).send({ error: "Medicine name is required" });
@@ -146,6 +160,10 @@ export function registerMedicinesRoutes(app: FastifyInstance): void {
         category: category ? String(category).trim() : null,
         composition: composition ? String(composition).trim() : null,
         dosage: dosage ? String(dosage).trim() : null,
+        frequency: frequency ? String(frequency).trim() : null,
+        duration: duration ? String(duration).trim() : null,
+        beforeAfterFood: beforeAfterFood ? String(beforeAfterFood).trim() : null,
+        instructions: instructions ? String(instructions).trim() : null,
         requiresPrescription: requiresPrescription === true,
         notes: notes ? String(notes).trim() : null,
         createdAt: new Date(),
@@ -161,6 +179,10 @@ export function registerMedicinesRoutes(app: FastifyInstance): void {
           category: category ? String(category).trim() : null,
           composition: composition ? String(composition).trim() : null,
           dosage: dosage ? String(dosage).trim() : null,
+          frequency: frequency ? String(frequency).trim() : null,
+          duration: duration ? String(duration).trim() : null,
+          beforeAfterFood: beforeAfterFood ? String(beforeAfterFood).trim() : null,
+          instructions: instructions ? String(instructions).trim() : null,
           requiresPrescription: requiresPrescription === true,
           notes: notes ? String(notes).trim() : null,
         },
@@ -180,8 +202,18 @@ export function registerMedicinesRoutes(app: FastifyInstance): void {
       }
 
       const body = (request.body ?? {}) as Record<string, unknown>;
-      const { name, category, composition, dosage, requiresPrescription, notes } =
-        body;
+      const {
+        name,
+        category,
+        composition,
+        dosage,
+        frequency,
+        duration,
+        beforeAfterFood,
+        instructions,
+        requiresPrescription,
+        notes,
+      } = body;
 
       if (!name || !String(name).trim()) {
         return reply.code(400).send({ error: "Medicine name is required" });
@@ -211,6 +243,10 @@ export function registerMedicinesRoutes(app: FastifyInstance): void {
             category: category ? String(category).trim() : null,
             composition: composition ? String(composition).trim() : null,
             dosage: dosage ? String(dosage).trim() : null,
+            frequency: frequency ? String(frequency).trim() : null,
+            duration: duration ? String(duration).trim() : null,
+            beforeAfterFood: beforeAfterFood ? String(beforeAfterFood).trim() : null,
+            instructions: instructions ? String(instructions).trim() : null,
             requiresPrescription: requiresPrescription === true,
             notes: notes ? String(notes).trim() : null,
             updatedAt: new Date(),

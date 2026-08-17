@@ -213,7 +213,7 @@ export function registerAppointmentsRoutes(app: FastifyInstance): void {
               const credentialsMessage =
                 `Welcome to My Clinics, ${fullName}! Your patient account has been created.\n\n` +
                 `Login Email: ${loginEmail}\nPassword: ${password}\n\n` +
-                `You can sign in at https://myclinics.vercel.app/login`;
+                `You can sign in at https://myclinic.myenum.in/login`;
               const queued = await enqueueClinicNotification(
                 db,
                 String(mobile),

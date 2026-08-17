@@ -102,6 +102,26 @@ export interface BillVisit {
 const MARGIN = 48;
 const BORDER_INSET = 10;
 
+// Modern medical palette — teal accent on soft white
+const C = {
+  teal: "#0d9488",
+  tealDark: "#134e4a",
+  tealSoft: "#ccfbf1",
+  band: "#f0fdfa",
+  ink: "#0f172a",
+  muted: "#475569",
+  faint: "#94a3b8",
+  grid: "#dbeae6",
+  hairline: "#e2e8f0",
+  zebra: "#f8fafc",
+  paid: "#15803d",
+  paidBg: "#dcfce7",
+  pending: "#b45309",
+  pendingBg: "#fef3c7",
+  danger: "#b91c1c",
+  dangerBg: "#fee2e2",
+};
+
 function inr(value: number) {
   const n = Number.isFinite(value) ? value : 0;
   return "Rs. " + n.toLocaleString("en-IN", {
@@ -170,20 +190,31 @@ function amountInWords(value: number): string {
   return (words || "Zero") + " Only";
 }
 
-function drawMetaRows(doc: PDFKit.PDFDocument, rows: [string, string][], startX: number, y: number, gap = 20) {
+/** Uppercase small label with a teal chip — used for sections and fields. */
+function sectionHeading(doc: PDFKit.PDFDocument, text: string, x: number, y: number, lineTo: number) {
+  doc.rect(x, y + 3, 4, 12).fill(C.teal);
+  doc.font("Helvetica-Bold").fontSize(9).fillColor(C.tealDark).text(text.toUpperCase(), x + 12, y);
+  const labelEnd = x + 12 + doc.widthOfString(text.toUpperCase());
+  doc.moveTo(labelEnd + 10, y + 9)
+    .lineTo(lineTo, y + 9)
+    .lineWidth(0.75)
+    .strokeColor(C.grid)
+    .stroke();
+  return y + 20;
+}
+
+/** Uppercase micro-label above a value (e.g. DATE / DOCTOR / PAYMENT). */
+function metaLabel(doc: PDFKit.PDFDocument, label: string, x: number, y: number) {
+  doc.font("Helvetica-Bold").fontSize(7).fillColor(C.faint).text(label.toUpperCase(), x, y);
+}
+
+function drawMetaRows(doc: PDFKit.PDFDocument, rows: [string, string][], startX: number, y: number, gap = 19) {
   for (const [l, v] of rows) {
-    doc.font("Helvetica-Bold").fontSize(8).fillColor("#64748b").text(l, startX, y);
-    doc.font("Helvetica").fontSize(10).fillColor("#0f172a").text(v, startX, y + 11, { width: 240 });
+    metaLabel(doc, l, startX, y);
+    doc.font("Helvetica").fontSize(10).fillColor(C.ink).text(v, startX, y + 10, { width: 240 });
     y += gap;
   }
   return y;
-}
-
-function sectionHeading(doc: PDFKit.PDFDocument, text: string, x: number, y: number) {
-  doc.font("Helvetica-Bold").fontSize(9).fillColor("#0f172a").text(text, x, y);
-  const w = doc.widthOfString(text);
-  doc.moveTo(x, y + 12).lineTo(x + Math.max(w, 120), y + 12).lineWidth(1).strokeColor("#cbd5e1").stroke();
-  return y + 22;
 }
 
 function drawSimpleTable(
@@ -200,30 +231,30 @@ function drawSimpleTable(
   const headerBottom = startY + rowHeight;
 
   // Header
-  doc.rect(startX, startY, totalW, rowHeight).fill("#f1f5f9");
-  doc.font("Helvetica-Bold").fontSize(7.5).fillColor("#475569");
+  doc.rect(startX, startY, totalW, rowHeight).fill(C.tealSoft);
+  doc.font("Helvetica-Bold").fontSize(7.5).fillColor(C.tealDark);
   let x = startX;
   headers.forEach((h, i) => {
     const align = rightAlignCols.includes(i) ? "right" : "left";
-    doc.text(h, x + 6, startY + 6, { width: colWidths[i] - 10, align });
+    doc.text(h, x + 6, startY + 5, { width: colWidths[i] - 10, align });
     x += colWidths[i];
   });
 
   // Rows
   let y = headerBottom;
   for (const row of rows) {
-    doc.font("Helvetica").fontSize(8.5).fillColor("#0f172a");
+    doc.font("Helvetica").fontSize(8.5).fillColor(C.ink);
     x = startX;
     row.forEach((cell, i) => {
       const align = rightAlignCols.includes(i) ? "right" : "left";
-      doc.text(cell, x + 6, y + 5, { width: colWidths[i] - 10, align });
+      doc.text(cell, x + 6, y + 4, { width: colWidths[i] - 10, align });
       x += colWidths[i];
     });
     y += rowHeight;
   }
 
   // Grid: outer box, row separators and column separators
-  doc.lineWidth(0.5).strokeColor("#cbd5e1");
+  doc.lineWidth(0.5).strokeColor(C.grid);
   doc.moveTo(startX, startY).lineTo(startX + totalW, startY).stroke();
   doc.moveTo(startX, headerBottom).lineTo(startX + totalW, headerBottom).stroke();
   doc.moveTo(startX, y).lineTo(startX + totalW, y).stroke();
@@ -233,6 +264,114 @@ function drawSimpleTable(
     doc.moveTo(vx, startY).lineTo(vx, y).stroke();
   }
   return y;
+}
+
+/** Status pill with tinted background and matching text color. */
+function drawStatusPill(doc: PDFKit.PDFDocument, status: string, x: number, y: number) {
+  const cfg =
+    status === "paid"
+      ? { bg: C.paidBg, fg: C.paid }
+      : status === "pending"
+        ? { bg: C.pendingBg, fg: C.pending }
+        : { bg: C.dangerBg, fg: C.danger };
+  const text = status.charAt(0).toUpperCase() + status.slice(1);
+  doc.font("Helvetica-Bold").fontSize(8.5);
+  const w = doc.widthOfString(text) + 20;
+  doc.roundedRect(x - w, y, w, 18, 9).fill(cfg.bg);
+  doc.fillColor(cfg.fg).text(text, x - w + 10, y + 5, { width: w - 20, align: "center" });
+}
+
+/** Border + header band decoration. Border repeats on every page. */
+function decoratePage(
+  doc: PDFKit.PDFDocument,
+  pageWidth: number,
+  pageHeight: number,
+  pageNumber: number,
+  company: OrganizationRecord,
+  bill: Bill
+) {
+  // Full A4 sheet border
+  doc.rect(BORDER_INSET, BORDER_INSET, pageWidth - BORDER_INSET * 2, pageHeight - BORDER_INSET * 2)
+    .lineWidth(1.5)
+    .strokeColor("#e2e8f0")
+    .stroke();
+
+  // Teal accent bar on the left edge of the border
+  doc.rect(BORDER_INSET, BORDER_INSET, 4, pageHeight - BORDER_INSET * 2).fill(C.teal);
+
+  if (pageNumber > 1) {
+    // Continuation header — compact, keeps the document branded
+    const tag = `INVOICE · ${bill.billNumber || "—"}`;
+    doc.font("Helvetica-Bold").fontSize(8).fillColor(C.tealDark);
+    const tagW = doc.widthOfString(tag);
+    doc.roundedRect(pageWidth - MARGIN - tagW - 12, 22, tagW + 24, 16, 8).fill(C.tealSoft);
+    doc.text(tag, pageWidth - MARGIN - tagW - 6, 26);
+    doc.moveTo(MARGIN, 46).lineTo(pageWidth - MARGIN, 46).lineWidth(0.75).strokeColor(C.grid).stroke();
+    return;
+  }
+
+  const bandX = BORDER_INSET;
+  const bandY = 14;
+  const bandW = pageWidth - BORDER_INSET * 2;
+  const bandH = 76;
+
+  // Header band card
+  doc.roundedRect(bandX, bandY, bandW, bandH, 10).fill(C.band);
+  doc.moveTo(bandX, bandY + bandH).lineTo(bandX + bandW, bandY + bandH)
+    .lineWidth(2)
+    .strokeColor(C.teal)
+    .stroke();
+
+  // Logo (top-left corner of the band)
+  const logo = loadLogo();
+  const logoSize = 40;
+  const logoRight = logo ? bandX + 20 + logoSize + 12 : bandX + 20;
+  if (logo) {
+    try {
+      doc.image(logo, bandX + 20, bandY + 16, { width: logoSize, height: logoSize });
+    } catch {
+      // Ignore broken logo bytes and fall back to text-only header.
+    }
+  }
+
+  const headerX = logoRight;
+  const headerTextWidth = pageWidth - headerX - 190;
+
+  const companyName = company.name || "My Clinic";
+  doc.font("Helvetica-Bold").fontSize(15).fillColor(C.tealDark);
+  doc.text(companyName, headerX, bandY + 10, { width: headerTextWidth });
+
+  const clinicLines: string[] = [];
+  if (company.address) clinicLines.push(company.address);
+  const contactBits: string[] = [];
+  if (company.phone) contactBits.push(`Ph: ${company.phone}`);
+  if (company.email) contactBits.push(company.email);
+  if (company.website) contactBits.push(company.website);
+
+  let cy = bandY + 27;
+  doc.font("Helvetica").fontSize(8).fillColor(C.muted);
+  for (const line of clinicLines) {
+    doc.text(line, headerX, cy, { width: headerTextWidth });
+    cy += 10;
+  }
+  if (contactBits.length) {
+    doc.text(contactBits.join("  ·  "), headerX, cy, { width: headerTextWidth });
+  }
+
+  // Invoice title (right of band)
+  const title = "INVOICE";
+  doc.font("Helvetica-Bold").fontSize(21).fillColor(C.teal);
+  const titleW = doc.widthOfString(title);
+  doc.text(title, pageWidth - MARGIN - titleW, bandY + 8);
+
+  const billNo = bill.billNumber || "—";
+  doc.font("Helvetica").fontSize(10.5).fillColor(C.muted);
+  const bnW = doc.widthOfString(billNo);
+  doc.text(billNo, pageWidth - MARGIN - bnW, bandY + 33);
+
+  if (bill.status) {
+    drawStatusPill(doc, bill.status, pageWidth - MARGIN, bandY + 50);
+  }
 }
 
 export async function generateBillPdf(
@@ -252,73 +391,21 @@ export async function generateBillPdf(
   const contentWidth = pageWidth - MARGIN * 2;
   const companyName = company.name || "My Clinic";
 
-  // Full A4 sheet border
-  doc.rect(BORDER_INSET, BORDER_INSET, pageWidth - BORDER_INSET * 2, pageHeight - BORDER_INSET * 2)
-    .lineWidth(1.5)
-    .strokeColor("#0f172a")
-    .stroke();
+  let pageNo = 1;
+  let y = 0;
 
-  // Logo (top-left corner) + clinic details header
-  const logo = loadLogo();
-  const logoSize = 52;
-  const logoRight = logo ? MARGIN + logoSize + 12 : MARGIN;
-  const headerTextWidth = pageWidth - logoRight - MARGIN - 170;
-
-  let y = 36;
-  if (logo) {
-    try {
-      doc.image(logo, MARGIN, y, { width: logoSize, height: logoSize });
-    } catch {
-      // Ignore broken logo bytes and fall back to text-only header.
-    }
+  // Adds a decorated continuation page when the remaining space is too small.
+  function ensureSpace(needed: number) {
+    if (y + needed <= pageHeight - 80) return;
+    doc.addPage();
+    pageNo += 1;
+    decoratePage(doc, pageWidth, pageHeight, pageNo, company, bill);
+    y = 54;
   }
 
-  const headerX = logoRight;
-  doc.font("Helvetica-Bold").fontSize(17).fillColor("#0f172a");
-  doc.text(companyName, headerX, y, { width: headerTextWidth });
-  y += 20;
-  const clinicLines: string[] = [];
-  if (company.address) clinicLines.push(company.address);
-  const contactBits: string[] = [];
-  if (company.phone) contactBits.push(`Ph: ${company.phone}`);
-  if (company.email) contactBits.push(company.email);
-  if (company.website) contactBits.push(company.website);
-  if (clinicLines.length || contactBits.length) {
-    doc.font("Helvetica").fontSize(8.5).fillColor("#475569");
-    for (const line of clinicLines) {
-      doc.text(line, headerX, y, { width: headerTextWidth });
-      y += 12;
-    }
-    if (contactBits.length) {
-      doc.text(contactBits.join(" · "), headerX, y, { width: headerTextWidth });
-      y += 14;
-    }
-  }
-  y += 6;
+  decoratePage(doc, pageWidth, pageHeight, 1, company, bill);
 
-  // Invoice title (right) + bill number + status
-  const title = "INVOICE";
-  doc.font("Helvetica-Bold").fontSize(20);
-  const titleW = doc.widthOfString(title);
-  doc.fillColor("#0f172a").text(title, pageWidth - MARGIN - titleW, 30);
-
-  const billNo = bill.billNumber || "—";
-  doc.font("Helvetica").fontSize(10.5);
-  const bnW = doc.widthOfString(billNo);
-  doc.fillColor("#475569").text(billNo, pageWidth - MARGIN - bnW, 54);
-
-  const status = bill.status ? bill.status.charAt(0).toUpperCase() + bill.status.slice(1) : "";
-  const statusColor = bill.status === "paid" ? "#16a34a" : bill.status === "pending" ? "#d97706" : "#dc2626";
-  doc.font("Helvetica-Bold").fontSize(10);
-  const stW = doc.widthOfString(status);
-  doc.fillColor(statusColor).text(status, pageWidth - MARGIN - stW, 70);
-
-  // Divider under header (bold order line)
-  const dividerY = y + 10;
-  doc.moveTo(MARGIN, dividerY - 2).lineTo(pageWidth - MARGIN, dividerY - 2).lineWidth(2).strokeColor("#0f172a").stroke();
-  doc.moveTo(MARGIN, dividerY + 1).lineTo(pageWidth - MARGIN, dividerY + 1).lineWidth(0.5).strokeColor("#cbd5e1").stroke();
-
-  let rowY = dividerY + 22;
+  y = 14 + 76 + 16;
 
   // Billed To (left) — patient details
   const patient = visit.patient;
@@ -329,83 +416,89 @@ export async function generateBillPdf(
     .filter(Boolean)
     .join(" / ");
 
-  doc.font("Helvetica-Bold").fontSize(8).fillColor("#64748b").text("BILLED TO", MARGIN, rowY);
-  rowY += 14;
-  doc.font("Helvetica").fontSize(11).fillColor("#0f172a").text(bill.patientName || "—", MARGIN, rowY);
-  rowY += 15;
+  metaLabel(doc, "BILLED TO", MARGIN, y);
+  y += 12;
+  doc.font("Helvetica-Bold").fontSize(12).fillColor(C.ink);
+  doc.text(bill.patientName || "—", MARGIN, y);
+  y += 14;
   const billedToLines: string[] = [];
   if (bill.patientPhone) billedToLines.push(bill.patientPhone);
   if (patientAgeGender) billedToLines.push(patientAgeGender);
   if (patient?.email) billedToLines.push(String(patient.email));
   for (const line of billedToLines) {
-    doc.font("Helvetica").fontSize(9.5).fillColor("#475569").text(line, MARGIN, rowY);
-    rowY += 14;
+    doc.font("Helvetica").fontSize(9.5).fillColor(C.muted).text(line, MARGIN, y);
+    y += 12;
   }
+  y -= 2;
 
-  // Meta (right)
+  // Meta (right) — DATE / DOCTOR / PAYMENT
   const metaRightX = pageWidth - MARGIN - 170;
   const metaEnd = drawMetaRows(doc, [
     ["DATE", formatDate(bill.date)],
     ["DOCTOR", bill.doctorName || "—"],
     ["PAYMENT", bill.paymentMethod || "—"],
-  ], metaRightX, dividerY + 22, 22);
+  ], metaRightX, 14 + 76 + 16 - 12, 19);
 
-  rowY = Math.max(rowY, metaEnd) + 6;
+  y = Math.max(y, metaEnd) + 7;
 
   const appointment = visit.appointment;
   if (appointment) {
-    rowY = sectionHeading(doc, "APPOINTMENT DETAILS", MARGIN, rowY);
+    ensureSpace(21 + 13 * 10);
+    y = sectionHeading(doc, "Appointment Details", MARGIN, y, pageWidth - MARGIN);
     const apptRows: [string, string][] = [
       ["Appointment ID", appointment.id ? String(appointment.id).slice(-6).toUpperCase() : "—"],
       ["Doctor", appointment.doctorName || "—"],
       ["Department", appointment.department || "—"],
       ["Date / Time", `${formatDate(appointment.date)}${appointment.time ? " · " + appointment.time : ""}`],
       ["Type", appointment.type === "video" ? "Video Consultation" : "In-person"],
-      ["Status", appointment.status ? String(appointment.status).replace("_", " ") : "—"],
+      ["Status", appointment.status ? String(appointment.status).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "—"],
       ["Booking Source", appointment.bookingSource === "whatsapp_ai" ? "WhatsApp AI" : "Manual"],
     ];
     if (appointment.counter != null) apptRows.push(["Counter #", String(appointment.counter)]);
     if (appointment.reason) apptRows.push(["Reason", String(appointment.reason)]);
     if (appointment.notes) apptRows.push(["Notes", String(appointment.notes)]);
-    let apptY = rowY;
+    let apptY = y;
     for (const [l, v] of apptRows) {
-      doc.font("Helvetica-Bold").fontSize(7.5).fillColor("#64748b").text(l, MARGIN, apptY, { width: 100 });
-      doc.font("Helvetica").fontSize(9).fillColor("#0f172a").text(v, MARGIN + 105, apptY, { width: 320 });
-      apptY += 15;
+      doc.font("Helvetica-Bold").fontSize(7.5).fillColor(C.muted).text(l.toUpperCase(), MARGIN, apptY, { width: 110 });
+      doc.font("Helvetica").fontSize(9).fillColor(C.ink).text(v, MARGIN + 118, apptY, { width: 320 });
+      apptY += 13;
     }
-    rowY = apptY + 4;
+    y = apptY + 4;
   }
 
   const prescriptions = Array.isArray(visit.prescriptions) ? visit.prescriptions : [];
   if (prescriptions.length) {
-    rowY = sectionHeading(doc, "PRESCRIPTION & MEDICINES", MARGIN, rowY);
+    ensureSpace(100);
+    y = sectionHeading(doc, "Prescription & Medicines", MARGIN, y, pageWidth - MARGIN);
     for (const p of prescriptions) {
-      doc.font("Helvetica-Bold").fontSize(9).fillColor("#0f172a").text(
+      ensureSpace(80);
+      doc.font("Helvetica-Bold").fontSize(9.5).fillColor(C.tealDark).text(
         p.diagnosis ? `Diagnosis: ${p.diagnosis}` : "Prescription",
-        MARGIN, rowY
+        MARGIN, y
       );
-      rowY += 13;
+      y += 12;
       const metaBits: string[] = [];
       if (p.visitDate) metaBits.push(`Visit: ${formatDate(String(p.visitDate))}`);
       if (p.doctorName) metaBits.push(`Doctor: ${p.doctorName}`);
       if (p.followUpDate) metaBits.push(`Follow-up: ${formatDate(String(p.followUpDate))}`);
       if (metaBits.length) {
-        doc.font("Helvetica").fontSize(8).fillColor("#64748b").text(metaBits.join("  ·  "), MARGIN, rowY, { width: contentWidth });
-        rowY += 13;
+        doc.font("Helvetica").fontSize(8).fillColor(C.muted).text(metaBits.join("  ·  "), MARGIN, y, { width: contentWidth });
+        y += 11;
       }
       if (p.symptoms) {
-        doc.font("Helvetica-Bold").fontSize(8).fillColor("#475569").text("Symptoms / Notes:", MARGIN, rowY, { width: 110 });
-        doc.font("Helvetica").fontSize(9).fillColor("#0f172a").text(String(p.symptoms), MARGIN + 115, rowY, { width: contentWidth - 115 });
-        rowY += 15;
+        doc.font("Helvetica-Bold").fontSize(8).fillColor(C.muted).text("Symptoms / Notes:", MARGIN, y, { width: 110 });
+        doc.font("Helvetica").fontSize(9).fillColor(C.ink).text(String(p.symptoms), MARGIN + 115, y, { width: contentWidth - 115 });
+        y += 13;
       }
       if (p.testsRecommended) {
-        doc.font("Helvetica-Bold").fontSize(8).fillColor("#475569").text("Tests Recommended:", MARGIN, rowY, { width: 110 });
-        doc.font("Helvetica").fontSize(9).fillColor("#0f172a").text(String(p.testsRecommended), MARGIN + 115, rowY, { width: contentWidth - 115 });
-        rowY += 15;
+        doc.font("Helvetica-Bold").fontSize(8).fillColor(C.muted).text("Tests Recommended:", MARGIN, y, { width: 110 });
+        doc.font("Helvetica").fontSize(9).fillColor(C.ink).text(String(p.testsRecommended), MARGIN + 115, y, { width: contentWidth - 115 });
+        y += 13;
       }
 
       const medicines = Array.isArray(p.medicines) ? p.medicines.filter((m) => m?.name) : [];
       if (medicines.length) {
+        ensureSpace(34 + medicines.length * 16);
         const headers = ["Medicine", "Frequency", "Duration", "Before / After Food", "Instructions"];
         const colWidths = [160, 90, 80, 110, 190];
         const rows = medicines.map((m) => [
@@ -415,33 +508,37 @@ export async function generateBillPdf(
           String(m.beforeAfterFood ?? "—"),
           String(m.specialInstructions ?? "—"),
         ]);
-        rowY = drawSimpleTable(doc, headers, rows, colWidths, MARGIN, rowY, 18, []);
-        rowY += 10;
+        y = drawSimpleTable(doc, headers, rows, colWidths, MARGIN, y, 16, []);
+        y += 6;
       } else {
-        doc.font("Helvetica").fontSize(9).fillColor("#475569").text("No medicines listed.", MARGIN, rowY, { width: contentWidth });
-        rowY += 18;
+        doc.font("Helvetica").fontSize(9).fillColor(C.muted).text("No medicines listed.", MARGIN, y, { width: contentWidth });
+        y += 15;
       }
     }
   }
 
   const doctors = Array.isArray(visit.doctors) ? visit.doctors.filter((d) => d?.name) : [];
   if (doctors.length) {
-    rowY = sectionHeading(doc, "DOCTORS", MARGIN, rowY);
-    rowY = drawSimpleTable(
+    ensureSpace(21 + 16 + 16 * doctors.length);
+    y = sectionHeading(doc, "Doctors", MARGIN, y, pageWidth - MARGIN);
+    y = drawSimpleTable(
       doc,
       ["#", "Doctor"],
       doctors.map((d, i) => [String(i + 1), String(d.name ?? "—")]),
       [40, 400],
       MARGIN,
-      rowY,
-      18,
+      y,
+      16,
       []
     );
-    rowY += 10;
+    y += 6;
   }
 
   // Items table
-  rowY = sectionHeading(doc, "BILL ITEMS", MARGIN, rowY);
+  const items = Array.isArray(bill.items) ? bill.items : [];
+  const itemsRowHeight = 17;
+  ensureSpace(21 + 20 + itemsRowHeight * Math.max(items.length, 1) + 10);
+  y = sectionHeading(doc, "Bill Items", MARGIN, y, pageWidth - MARGIN);
   const cols = {
     idx: { x: MARGIN, w: 30 },
     item: { x: MARGIN + 30, w: contentWidth * 0.42 },
@@ -450,51 +547,49 @@ export async function generateBillPdf(
     amount: { x: pageWidth - MARGIN - 75, w: 75 },
   };
 
-  const headerFill = "#f1f5f9";
-  doc.rect(MARGIN, rowY, contentWidth, 22).fill(headerFill);
-  doc.font("Helvetica-Bold").fontSize(8).fillColor("#475569");
-  doc.text("#", cols.idx.x + 8, rowY + 7);
-  doc.text("ITEM / SERVICE", cols.item.x + 8, rowY + 7, { width: cols.item.w - 8 });
-  doc.text("QTY", cols.qty.x + 8, rowY + 7, { width: cols.qty.w - 8, align: "center" });
-  doc.text("PRICE", cols.price.x + 8, rowY + 7, { width: cols.price.w - 8, align: "right" });
-  doc.text("AMOUNT", cols.amount.x + 8, rowY + 7, { width: cols.amount.w - 8, align: "right" });
+  doc.rect(MARGIN, y, contentWidth, 20).fill(C.tealSoft);
+  doc.font("Helvetica-Bold").fontSize(8).fillColor(C.tealDark);
+  doc.text("#", cols.idx.x + 8, y + 6);
+  doc.text("ITEM / SERVICE", cols.item.x + 8, y + 6, { width: cols.item.w - 8 });
+  doc.text("QTY", cols.qty.x + 8, y + 6, { width: cols.qty.w - 8, align: "center" });
+  doc.text("PRICE", cols.price.x + 8, y + 6, { width: cols.price.w - 8, align: "right" });
+  doc.text("AMOUNT", cols.amount.x + 8, y + 6, { width: cols.amount.w - 8, align: "right" });
 
-  let itemRowY = rowY + 22;
-  const items = Array.isArray(bill.items) ? bill.items : [];
-  const itemTableBottom = itemRowY + items.length * 20;
+  let itemRowY = y + 20;
+  const itemTableBottom = itemRowY + items.length * itemsRowHeight;
 
   if (!items.length) {
-    doc.font("Helvetica").fontSize(9).fillColor("#475569").text("No items", MARGIN + 8, itemRowY + 7);
-    itemRowY += 22;
+    doc.font("Helvetica").fontSize(9).fillColor(C.muted).text("No items", MARGIN + 8, itemRowY + 6);
+    itemRowY += 20;
   } else {
     items.forEach((item, i) => {
-      const rowBottom = itemRowY + 20;
+      const rowBottom = itemRowY + itemsRowHeight;
       if (i % 2 === 1) {
-        doc.rect(MARGIN, itemRowY, contentWidth, 20).fill("#f8fafc");
+        doc.rect(MARGIN, itemRowY, contentWidth, itemsRowHeight).fill(C.zebra);
       }
-      doc.font("Helvetica").fontSize(9).fillColor("#0f172a");
-      doc.text(String(i + 1), cols.idx.x + 8, itemRowY + 6, { width: cols.idx.w - 8, align: "center" });
-      doc.text(item.name || "—", cols.item.x + 8, itemRowY + 6, { width: cols.item.w - 8 });
-      doc.text(String(item.qty ?? 0), cols.qty.x + 8, itemRowY + 6, { width: cols.qty.w - 8, align: "center" });
-      doc.text(inr(item.price ?? 0), cols.price.x + 8, itemRowY + 6, { width: cols.price.w - 8, align: "right" });
-      doc.font("Helvetica-Bold").text(inr(item.amount ?? 0), cols.amount.x + 8, itemRowY + 6, { width: cols.amount.w - 8, align: "right" });
+      doc.font("Helvetica").fontSize(9).fillColor(C.ink);
+      doc.text(String(i + 1), cols.idx.x + 8, itemRowY + 5, { width: cols.idx.w - 8, align: "center" });
+      doc.text(item.name || "—", cols.item.x + 8, itemRowY + 5, { width: cols.item.w - 8 });
+      doc.text(String(item.qty ?? 0), cols.qty.x + 8, itemRowY + 5, { width: cols.qty.w - 8, align: "center" });
+      doc.text(inr(item.price ?? 0), cols.price.x + 8, itemRowY + 5, { width: cols.price.w - 8, align: "right" });
+      doc.font("Helvetica-Bold").text(inr(item.amount ?? 0), cols.amount.x + 8, itemRowY + 5, { width: cols.amount.w - 8, align: "right" });
       itemRowY = rowBottom;
     });
   }
 
   // Items table grid: outer box, row separators and column separators
-  doc.lineWidth(0.5).strokeColor("#cbd5e1");
-  doc.moveTo(MARGIN, rowY).lineTo(MARGIN + contentWidth, rowY).stroke();
-  doc.moveTo(MARGIN, rowY + 22).lineTo(MARGIN + contentWidth, rowY + 22).stroke();
+  doc.lineWidth(0.5).strokeColor(C.grid);
+  doc.moveTo(MARGIN, y).lineTo(MARGIN + contentWidth, y).stroke();
+  doc.moveTo(MARGIN, y + 20).lineTo(MARGIN + contentWidth, y + 20).stroke();
   doc.moveTo(MARGIN, itemTableBottom).lineTo(MARGIN + contentWidth, itemTableBottom).stroke();
   for (const col of [cols.idx, cols.item, cols.qty, cols.price]) {
-    doc.moveTo(col.x + col.w, rowY).lineTo(col.x + col.w, itemTableBottom).stroke();
+    doc.moveTo(col.x + col.w, y).lineTo(col.x + col.w, itemTableBottom).stroke();
   }
 
   // Totals
-  const totalsX = pageWidth - MARGIN - 220;
-  const totalsW = 220;
-  let tY = itemRowY + 16;
+  const totalsX = pageWidth - MARGIN - 240;
+  const totalsW = 240;
+  let tY = itemRowY + 10;
   const totalRows: [string, string][] = [
     ["Subtotal", inr(bill.subtotal ?? 0)],
   ];
@@ -502,51 +597,55 @@ export async function generateBillPdf(
     totalRows.push(["Discount", `− ${inr(bill.discount ?? 0)}`]);
   if ((bill.tax ?? 0) > 0)
     totalRows.push([`Tax (${bill.taxRate ?? 0}%)`, inr(bill.tax ?? 0)]);
-  totalRows.push(["Grand Total", inr(bill.total ?? 0)]);
 
+  ensureSpace(14 * totalRows.length + 28 + 8 + 26 + 24);
   for (const [l, v] of totalRows) {
-    const isGrand = l === "Grand Total";
-    const lineY = tY + (isGrand ? 4 : 0);
-    if (isGrand) {
-      doc.moveTo(totalsX, tY).lineTo(totalsX + totalsW, tY).lineWidth(1).strokeColor("#0f172a").stroke();
-    }
-    doc.font(isGrand ? "Helvetica-Bold" : "Helvetica").fontSize(10).fillColor("#0f172a");
-    doc.text(l, totalsX + (isGrand ? 0 : 6), lineY, { width: totalsW - 90 });
-    doc.font(isGrand ? "Helvetica-Bold" : "Helvetica").fontSize(10).fillColor("#0f172a");
-    doc.text(v, totalsX + totalsW - 90, lineY, { width: 86, align: "right" });
-    tY = lineY + (isGrand ? 26 : 18);
+    doc.font("Helvetica").fontSize(9.5).fillColor(C.muted).text(l, totalsX, tY, { width: totalsW - 90 });
+    doc.font("Helvetica").fontSize(9.5).fillColor(C.ink).text(v, totalsX + totalsW - 90, tY, { width: 86, align: "right" });
+    tY += 14;
   }
 
-  // Amount in words
-  doc.font("Helvetica-Bold").fontSize(8.5).fillColor("#0f172a");
-  doc.text("Amount in Words:", MARGIN, tY - 2, { width: 110 });
-  doc.font("Helvetica").fontSize(9).fillColor("#334155");
-  doc.text(amountInWords(bill.total ?? 0), MARGIN + 110, tY - 2, { width: contentWidth - 110 - 240 });
-  tY += 16;
+  // Grand total — teal filled rounded box
+  const grandH = 28;
+  doc.roundedRect(totalsX - 10, tY, totalsW + 20, grandH, 6).fill(C.teal);
+  doc.font("Helvetica-Bold").fontSize(10).fillColor("#ffffff");
+  doc.text("GRAND TOTAL", totalsX - 10 + 16, tY + 8, { width: totalsW - 60 });
+  doc.text(inr(bill.total ?? 0), totalsX + 10 + 14, tY + 8, { width: totalsW - 40, align: "right" });
+  tY += grandH + 8;
 
-  y = tY + 8;
+  // Amount in words — tinted band across the width
+  doc.roundedRect(MARGIN, tY, contentWidth, 26, 6).fill(C.band).lineWidth(0.75).strokeColor(C.grid).stroke();
+  metaLabel(doc, "AMOUNT IN WORDS", MARGIN + 14, tY + 3);
+  doc.font("Helvetica").fontSize(9).fillColor(C.tealDark).text(
+    amountInWords(bill.total ?? 0),
+    MARGIN + 14,
+    tY + 14,
+    { width: contentWidth - 28 }
+  );
+  tY += 26;
+
+  y = tY + 3;
 
   // Notes
   if (bill.notes) {
-    doc.font("Helvetica-Bold").fontSize(8).fillColor("#475569").text("NOTES", MARGIN, y);
-    y += 14;
-    doc.font("Helvetica").fontSize(9.5).fillColor("#334155").text(bill.notes, MARGIN, y, { width: contentWidth });
-    y += 40;
-  } else {
+    ensureSpace(20 + 14 + 18);
+    y = sectionHeading(doc, "Notes", MARGIN, y, pageWidth - MARGIN);
+    doc.font("Helvetica").fontSize(9.5).fillColor(C.muted).text(bill.notes, MARGIN, y, { width: contentWidth });
     y += 20;
+  } else {
+    y += 16;
   }
 
   // Footer (inside border)
-  const footer = `Generated by ${companyName} · ${formatDate(new Date().toISOString())}`;
+  const footer = `Thank you for visiting ${companyName} · Generated on ${formatDate(new Date().toISOString())}`;
   if (y > pageHeight - 90) {
-    doc.addPage();
-    doc.rect(BORDER_INSET, BORDER_INSET, pageWidth - BORDER_INSET * 2, pageHeight - BORDER_INSET * 2)
-      .lineWidth(1.5)
-      .strokeColor("#0f172a")
-      .stroke();
-    y = MARGIN;
+    ensureSpace(80);
   }
-  doc.font("Helvetica").fontSize(8).fillColor("#94a3b8").text(
+  doc.moveTo(MARGIN, pageHeight - 70).lineTo(pageWidth - MARGIN, pageHeight - 70)
+    .lineWidth(0.5)
+    .strokeColor(C.hairline)
+    .stroke();
+  doc.font("Helvetica").fontSize(8).fillColor(C.faint).text(
     footer,
     MARGIN,
     pageHeight - 60,

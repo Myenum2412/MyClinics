@@ -86,6 +86,10 @@ export type Medicine = {
   category: string | null;
   composition: string | null;
   dosage: string | null;
+  frequency: string | null;
+  duration: string | null;
+  beforeAfterFood: string | null;
+  instructions: string | null;
   requiresPrescription: boolean;
   notes: string | null;
 };
@@ -96,6 +100,9 @@ const COLUMN_LABELS: Record<string, string> = {
   category: "Category",
   composition: "Composition",
   dosage: "Dosage",
+  frequency: "Frequency",
+  duration: "Duration",
+  beforeAfterFood: "Before / After Food",
   requiresPrescription: "Rx",
   notes: "Notes",
 };
@@ -207,6 +214,8 @@ export function MedicinesTable({
             (row.original.category ?? "").toLowerCase().includes(q) ||
             (row.original.composition ?? "").toLowerCase().includes(q) ||
             (row.original.dosage ?? "").toLowerCase().includes(q) ||
+            (row.original.frequency ?? "").toLowerCase().includes(q) ||
+            (row.original.duration ?? "").toLowerCase().includes(q) ||
             (row.original.notes ?? "").toLowerCase().includes(q)
           );
         },
@@ -243,16 +252,44 @@ export function MedicinesTable({
         ),
       },
       {
-        accessorKey: "dosage",
+        accessorKey: "frequency",
         enableSorting: false,
         header: () => (
           <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Dosage
+            Frequency
           </span>
         ),
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground">
-            {row.original.dosage ?? "—"}
+            {row.original.frequency ?? "—"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "duration",
+        enableSorting: false,
+        header: () => (
+          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Duration
+          </span>
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {row.original.duration ?? "—"}
+          </span>
+        ),
+      },
+      {
+        accessorKey: "beforeAfterFood",
+        enableSorting: false,
+        header: () => (
+          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Food
+          </span>
+        ),
+        cell: ({ row }) => (
+          <span className="text-sm text-muted-foreground">
+            {row.original.beforeAfterFood ?? "—"}
           </span>
         ),
       },

@@ -60,9 +60,31 @@ export function MedicinePreviewPanel({
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-4 text-sm">
-          <span className="shrink-0 text-muted-foreground">Dosage</span>
+          <span className="shrink-0 text-muted-foreground">Frequency</span>
           <span className="text-right font-medium">
-            {medicine.dosage ?? "—"}
+            {medicine.frequency ?? "—"}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-4 text-sm">
+          <span className="shrink-0 text-muted-foreground">Duration</span>
+          <span className="text-right font-medium">
+            {medicine.duration ?? "—"}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-4 text-sm">
+          <span className="shrink-0 text-muted-foreground">
+            Before / After Food
+          </span>
+          <span className="text-right font-medium">
+            {medicine.beforeAfterFood ?? "—"}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-4 text-sm">
+          <span className="shrink-0 text-muted-foreground">
+            Instructions
+          </span>
+          <span className="text-right font-medium">
+            {medicine.instructions ?? "—"}
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-4 text-sm">
