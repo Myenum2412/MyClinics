@@ -184,7 +184,7 @@ export function ProfileView({
   const [clinicDescription, setClinicDescription] = React.useState(
     draft?.company?.description ?? initialCompany.description ?? ""
   );
-  const [editing, setEditing] = React.useState(Boolean(draft));
+  const [editing, setEditing] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
 
   const dirty =
@@ -730,7 +730,33 @@ export function ProfileView({
         </div>
       ) : (
         /* ── View mode ─────────────────────────────────────────────── */
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="flex flex-col gap-4">
+          {dirty && restoredFromDraft && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+              <div className="flex items-center gap-2.5 text-sm text-amber-800">
+                <span className="size-2 shrink-0 rounded-full bg-amber-500" />
+                <span>
+                  You have unsaved edits restored from this device. Review or
+                  discard them.
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => setEditing(true)}
+                  className="bg-amber-600 text-white hover:bg-amber-700"
+                >
+                  <PencilIcon aria-hidden="true" />
+                  Review edits
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleRevert}>
+                  <Undo2Icon aria-hidden="true" />
+                  Discard
+                </Button>
+              </div>
+            </div>
+          )}
+          <div className="grid gap-4 lg:grid-cols-3">
           <div className="flex flex-col gap-4 lg:col-span-2">
             <Card>
               <CardHeader>
@@ -915,6 +941,7 @@ export function ProfileView({
                 </dl>
               </CardContent>
             </Card>
+          </div>
           </div>
         </div>
       )}
