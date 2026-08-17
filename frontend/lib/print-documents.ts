@@ -2,6 +2,7 @@ import type { Prescription } from "@/components/prescriptions-table";
 import type { Appointment } from "@/components/appointments-table";
 import type { Bill, BillVisit } from "@/components/billing-table";
 import { DEFAULT_CLINIC_NAME } from "@/lib/clinic-name-client";
+import { formatTime } from "@/lib/format-time";
 
 function escapeHtml(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return "";
@@ -196,7 +197,7 @@ export function appointmentHtml(
   <div class="row"><b>Age / Gender</b> ${a.age ?? "—"} / ${a.gender ?? "—"}</div>
   <div class="row"><b>Department</b> ${a.department || "—"}</div>
   <div class="row"><b>Date</b> ${formatDate(a.date)}</div>
-  <div class="row"><b>Time</b> ${a.time || "—"}</div>
+  <div class="row"><b>Time</b> ${formatTime(a.time)}</div>
   <div class="row"><b>Type</b> ${a.type === "video" ? "Video Consultation" : "In-person"}</div>
   <div class="row"><b>Status</b> ${a.status.replace("_", " ")}</div>
   ${a.reason ? `<div class="row"><b>Reason</b> ${a.reason}</div>` : ""}
@@ -280,7 +281,7 @@ function appointmentSectionHtml(appointment?: BillVisit["appointment"] | null) {
     ["Appointment ID", appointment.id ? escapeHtml(appointment.id.slice(-6).toUpperCase()) : "—"],
     ["Doctor", appointment.doctorName || "—"],
     ["Department", appointment.department || "—"],
-    ["Date / Time", `${formatDate(appointment.date)}${appointment.time ? " · " + escapeHtml(appointment.time) : ""}`],
+    ["Date / Time", `${formatDate(appointment.date)}${appointment.time ? " · " + formatTime(appointment.time) : ""}`],
     ["Type", appointment.type === "video" ? "Video Consultation" : "In-person"],
     ["Status", appointment.status ? escapeHtml(appointment.status.replace("_", " ")) : "—"],
     ["Booking Source", appointment.bookingSource === "whatsapp_ai" ? "WhatsApp AI" : "Manual"],

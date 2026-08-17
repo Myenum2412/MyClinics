@@ -11,6 +11,7 @@ import type { ReportFile } from "@/lib/report-folders";
 import type { PatientDoctor } from "@/lib/patient";
 import { statusBadgeClass } from "@/lib/appointment-status";
 import { formatINR } from "@/lib/billing";
+import { formatTime } from "@/lib/format-time";
 import { categoryLabel } from "@/lib/report-folders";
 
 const dateFmt = new Intl.DateTimeFormat("en-US", {
@@ -72,7 +73,7 @@ export function AppointmentsTableCard({
           {appointment.doctorName ?? "—"}
         </span>,
         <span key="time" className="text-muted-foreground tabular-nums">
-          {appointment.time}
+          {formatTime(appointment.time)}
         </span>,
         <Badge
           key="status"

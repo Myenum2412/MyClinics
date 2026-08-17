@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { ArrowLeftIcon as ArrowLeft } from "@heroicons/react/24/outline";
 import { statusBadgeClass } from "@/lib/appointment-status";
+import { formatTime } from "@/lib/format-time";
 import { cn } from "@/lib/utils";
 
 export type HistoryAppointment = {
@@ -160,7 +161,7 @@ export function AppointmentHistoryView({
                       {formatDate(a.date)}
                     </TableCell>
                     <TableCell className="whitespace-nowrap tabular-nums">
-                      {a.time}
+                      {formatTime(a.time)}
                     </TableCell>
                     <TableCell className="font-medium">
                       {a.doctorName ?? "—"}

@@ -5,6 +5,7 @@ import { PreviewSheet } from "@/components/preview-sheet";
 import type { Appointment } from "@/components/appointments-table";
 import { cn } from "@/lib/utils";
 import { statusBadgeClass } from "@/lib/appointment-status";
+import { formatTime } from "@/lib/format-time";
 
 const dateFmt = new Intl.DateTimeFormat("en-US", {
   weekday: "short",
@@ -46,7 +47,7 @@ export function AppointmentPreviewPanel({
           </Badge>
         </div>
       }
-      subtitle={`${dateLabel} · ${appointment.time} · ${
+      subtitle={`${dateLabel} · ${formatTime(appointment.time)} · ${
         appointment.type === "video" ? "Video" : "In-person"
       }`}
       onClose={onClose}

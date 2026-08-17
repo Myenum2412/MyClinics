@@ -86,6 +86,7 @@ import {
 } from "@/components/appointment-form";
 import type { PatientPick } from "@/components/patient-picker";
 import { appointmentStatusClass } from "@/lib/appointment-status";
+import { formatTime } from "@/lib/format-time";
 import {
   ExclamationTriangleIcon as AlertTriangleIcon,
   ArrowDownIcon as ArrowDown,
@@ -423,7 +424,7 @@ const columns: ColumnDef<typeof TABLE_FEATURES, Appointment>[] = [
     ),
     cell: ({ row }) => (
       <span className="text-sm text-muted-foreground tabular-nums">
-        {row.original.time}
+        {formatTime(row.original.time)}
       </span>
     ),
   },
@@ -946,7 +947,7 @@ export function AppointmentsTable({
                 <span className="font-medium text-foreground">
                   {deleting?.fullName}
                 </span>{" "}
-                on {formatDate(deleting?.date ?? "")} at {deleting?.time}? This
+                on {formatDate(deleting?.date ?? "")} at {formatTime(deleting?.time)}? This
                 action cannot be undone.
               </DialogDescription>
             </DialogHeader>
@@ -976,7 +977,7 @@ export function AppointmentsTable({
             </DialogTitle>
             <DialogDescription>
               {rescheduling?.fullName} · currently{" "}
-              {formatDate(rescheduling?.date ?? "")} at {rescheduling?.time}.
+              {formatDate(rescheduling?.date ?? "")} at {formatTime(rescheduling?.time)}.
               Pick a new date below.
             </DialogDescription>
           </DialogHeader>
@@ -1007,7 +1008,7 @@ export function AppointmentsTable({
             <DialogTitle>Cancel Appointment</DialogTitle>
             <DialogDescription>
               {cancelling?.fullName} · {formatDate(cancelling?.date ?? "")} at{" "}
-              {cancelling?.time}. Select a reason for cancellation.
+              {formatTime(cancelling?.time)}. Select a reason for cancellation.
             </DialogDescription>
           </DialogHeader>
           <form className="flex flex-col gap-4">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatTime } from "@/lib/format-time";
 import { cn } from "@/lib/utils";
 import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -50,14 +51,6 @@ type PatientDoc = {
   gender: string | null;
   createdAt?: Date;
 };
-
-function formatTime(time: string): string {
-  const [h, m] = time.split(":").map(Number);
-  if (Number.isNaN(h) || Number.isNaN(m)) return time;
-  const suffix = h >= 12 ? "PM" : "AM";
-  const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${hour}:${String(m).padStart(2, "0")} ${suffix}`;
-}
 
 function formatDate(iso: string): string {
   const d = new Date(iso);

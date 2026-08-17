@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PatientAppointmentPanel, type AppointmentRecord } from "@/components/patient-appointment-panel";
 import { ReportDownloadButton } from "@/components/report-download-button";
+import { formatTime } from "@/lib/format-time";
 import {
   Table,
   TableBody,
@@ -235,7 +236,7 @@ export function PatientDetails({
           </div>
           <div className="mt-3 grid gap-x-8 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
             <p className="font-medium">
-              {formatDate(lastAppointment.date)} · {lastAppointment.time}
+              {formatDate(lastAppointment.date)} · {formatTime(lastAppointment.time)}
             </p>
             <p>
               <span className="text-muted-foreground">Doctor: </span>

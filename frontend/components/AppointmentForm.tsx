@@ -18,6 +18,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { LocationPicker } from "@/components/location-picker";
 import { TimePicker } from "@/components/ui/time-picker";
+import { formatTime } from "@/lib/format-time";
 import { cn } from "@/lib/utils";
 
 export type DoctorOption = {
@@ -243,7 +244,7 @@ export default function AppointmentForm({
             </li>
             <li>
               <span className="font-medium text-black">Date:</span>{" "}
-              {confirmed.date} at {confirmed.time}
+              {confirmed.date} at {formatTime(confirmed.time)}
             </li>
             <li>
               <span className="font-medium text-black">Type:</span>{" "}

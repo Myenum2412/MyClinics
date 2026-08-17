@@ -32,6 +32,7 @@ import {
   UserPlusIcon,
 } from "@heroicons/react/24/outline";
 import type { Doctor } from "@/components/doctors-table";
+import { formatTime } from "@/lib/format-time";
 
 export type DoctorAppointment = {
   id: string;
@@ -235,7 +236,7 @@ export function DoctorRecordsView({
                       <TableCell className="whitespace-nowrap text-muted-foreground">
                         {formatDate(a.date)}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">{a.time}</TableCell>
+                      <TableCell className="whitespace-nowrap">{formatTime(a.time)}</TableCell>
                       <TableCell className="font-medium">{a.fullName}</TableCell>
                       <TableCell className="whitespace-nowrap text-muted-foreground">
                         {a.mobile}

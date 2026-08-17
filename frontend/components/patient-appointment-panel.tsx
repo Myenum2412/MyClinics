@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { AppointmentTimeline } from "@/components/appointment-timeline";
 import { todayDateString } from "@/lib/stats";
+import { formatTime } from "@/lib/format-time";
 
 const dateFmt = new Intl.DateTimeFormat("en-US", {
   month: "short",
@@ -87,7 +88,7 @@ export function PatientAppointmentPanel({
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-medium">{a.doctorName ?? "—"}</span>
                     <span className="text-xs text-muted-foreground tabular-nums">
-                      {a.time}
+                      {formatTime(a.time)}
                     </span>
                     {selectedDate === null && (
                       <span className="text-xs text-muted-foreground tabular-nums">

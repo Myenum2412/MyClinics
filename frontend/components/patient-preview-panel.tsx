@@ -18,6 +18,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ReportDownloadButton } from "@/components/report-download-button";
+import { formatTime } from "@/lib/format-time";
 import type { Patient } from "@/components/patients-table";
 
 const dateFmt = new Intl.DateTimeFormat("en-US", {
@@ -288,7 +289,7 @@ function PanelContent({ patient }: { patient: Patient }) {
             </div>
             <div className="mt-3 flex flex-col gap-1.5 text-sm">
               <p className="font-medium">
-                {formatDate(lastAppointment.date)} · {lastAppointment.time}
+                {formatDate(lastAppointment.date)} · {formatTime(lastAppointment.time)}
               </p>
               <p>
                 <span className="text-muted-foreground">Doctor: </span>
@@ -372,7 +373,7 @@ function PanelContent({ patient }: { patient: Patient }) {
                     >
                       <div className="min-w-0">
                         <p className="font-medium">
-                          {formatDate(a.date)} · {a.time}
+                          {formatDate(a.date)} · {formatTime(a.time)}
                         </p>
                         <p className="truncate text-xs text-muted-foreground">
                           {a.doctorName ?? "—"} ·{" "}
