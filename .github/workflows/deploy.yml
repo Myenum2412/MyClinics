@@ -48,10 +48,11 @@ jobs:
             set -e
             cd ~/myclinics-backend
             npm install --no-audit --no-fund
-            pm2 restart myclinic-backend --update-env
+            pm2 startOrRestart ecosystem.config.cjs --only myclinic-backend
             if [ "${{ steps.changed.outputs.backend }}" = "true" ]; then
-              pm2 restart myclinic-whatsapp --update-env
+              pm2 startOrRestart ecosystem.config.cjs --only myclinic-whatsapp
             fi
+            pm2 save
           '
 
       - name: Health check
