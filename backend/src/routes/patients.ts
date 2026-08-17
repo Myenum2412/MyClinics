@@ -473,7 +473,22 @@ export function registerPatientsRoutes(app: FastifyInstance): void {
 
       // Optional: caller can supply a plain-text password in the body
       const body = (request.body ?? {}) as Record<string, unknown>;
-      const plainPassword = typeof body.password === "string" && body.password ? body.password : null;
+      const plainPassword =
+        typeof body.password === "string" && body.password.length >= 6
+          ? body.password
+          : null;
+
+      if (plainPassword && !body.skipPasswordUpdate) {
+        // If a new password is provided, update the patient's login account so
+        // the password they receive via WhatsApp is actually valid.
+        if (patient.userId) {
+          const hashedPassword = await bcrypt.hash(plainPassword, 10);
+          await db.collection("users").updateOne(
+            { _id: patient.userId },
+            { $set: { password: hashedPassword, updatedAt: new Date() } }
+          );
+        }
+      }
 
       // Build comprehensive patient summary with all related data
       const message = await buildPatientMessage(db, patient as Record<string, unknown>, {

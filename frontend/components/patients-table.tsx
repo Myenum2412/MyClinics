@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogClose,
@@ -79,6 +80,7 @@ import {
   PencilIcon as Pencil,
   TrashIcon as Trash,
   PaperAirplaneIcon as Send,
+  KeyIcon as Key,
 } from "@heroicons/react/24/outline";
 
 export type MedicalHistoryEntry = {
@@ -316,35 +318,14 @@ export function PatientsTable({
   const [rowSelection, setRowSelection] = React.useState({});
   const [deleting, setDeleting] = React.useState<Patient | null>(null);
   const [deleteBusy, setDeleteBusy] = React.useState(false);
-  const [sendingCreds, setSendingCreds] = React.useState<string | null>(null);
+  const [sendingCreds, setSendingCreds] = React.useState<Patient | null>(null);
+  const [sendPassword, setSendPassword] = React.useState("");
+  const [sendBusy, setSendBusy] = React.useState(false);
 
   const tableColumns = React.useMemo<
     ColumnDef<typeof TABLE_FEATURES, Patient>[]
   >(() => {
     if (!canManage) return columns;
-
-    async function handleSendCredentials(patient: Patient) {
-      setSendingCreds(patient.id);
-      try {
-        const res = await fetch(`/api/patients/${patient.id}/send-credentials`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({}),
-        });
-        const data = await res.json();
-        if (res.ok && data.queued) {
-          toast.success("Credentials queued", {
-            description: `Login details will be sent to ${patient.fullName} via WhatsApp.`,
-          });
-        } else {
-          toast.error(data.error || "Failed to send credentials.");
-        }
-      } catch {
-        toast.error("Network error. Please try again.");
-      } finally {
-        setSendingCreds(null);
-      }
-    }
 
     return [
       ...columns,
@@ -388,12 +369,12 @@ export function PatientsTable({
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
-                    void handleSendCredentials(row.original);
+                    setSendPassword("");
+                    setSendingCreds(row.original);
                   }}
-                  disabled={sendingCreds === row.original.id}
                 >
                   <Send aria-hidden="true" />
-                  {sendingCreds === row.original.id ? "Sending..." : "Send Credentials"}
+                  Send Credentials
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -409,7 +390,7 @@ export function PatientsTable({
         ),
       },
     ];
-  }, [canManage, sendingCreds]);
+  }, [canManage]);
 
   const table = useTable({
     features: TABLE_FEATURES,
@@ -678,6 +659,111 @@ export function PatientsTable({
               disabled={deleteBusy}
             >
               {deleteBusy ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send Credentials Dialog */}
+      <Dialog
+        open={Boolean(sendingCreds)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSendingCreds(null);
+            setSendPassword("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <div className="flex items-start space-x-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100">
+              <Key className="h-5 w-5 text-blue-600" />
+            </div>
+            <DialogHeader>
+              <DialogTitle>Send Login Credentials</DialogTitle>
+              <DialogDescription>
+                Enter a password for{" "}
+                <span className="font-medium text-foreground">
+                  {sendingCreds?.fullName}
+                </span>
+                . The password will be updated in their account and sent via
+                WhatsApp along with their full patient summary.
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="flex flex-col gap-3 px-1">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium" htmlFor="cred-email">
+                Email (login)
+              </label>
+              <Input
+                id="cred-email"
+                type="text"
+                value={sendingCreds?.email ?? "—"}
+                readOnly
+                className="bg-muted text-muted-foreground"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium" htmlFor="cred-password">
+                New Password *
+              </label>
+              <Input
+                id="cred-password"
+                type="text"
+                placeholder="Min. 6 characters"
+                value={sendPassword}
+                onChange={(e) => setSendPassword(e.target.value)}
+                autoFocus
+              />
+              <p className="text-xs text-muted-foreground">
+                This password will be set on the patient&apos;s account and
+                included in the WhatsApp message.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+            <Button
+              onClick={async () => {
+                if (!sendingCreds) return;
+                if (sendPassword.length < 6) {
+                  toast.error("Password must be at least 6 characters.");
+                  return;
+                }
+                setSendBusy(true);
+                try {
+                  const res = await fetch(
+                    `/api/patients/${sendingCreds.id}/send-credentials`,
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ password: sendPassword }),
+                    }
+                  );
+                  const data = await res.json();
+                  if (res.ok && data.queued) {
+                    toast.success("Credentials sent!", {
+                      description: `WhatsApp with full summary + password sent to ${
+                        sendingCreds.fullName
+                      }.`,
+                    });
+                    setSendingCreds(null);
+                    setSendPassword("");
+                  } else {
+                    toast.error(data.error || "Failed to send credentials.");
+                  }
+                } catch {
+                  toast.error("Network error. Please try again.");
+                } finally {
+                  setSendBusy(false);
+                }
+              }}
+              disabled={sendBusy || sendPassword.length < 6}
+            >
+              {sendBusy ? "Sending..." : "Send via WhatsApp"}
             </Button>
           </DialogFooter>
         </DialogContent>
