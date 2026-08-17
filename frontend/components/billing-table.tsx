@@ -87,6 +87,56 @@ export type BillItem = {
   amount: number;
 };
 
+export type BillClinic = {
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  website: string | null;
+};
+
+export type BillAppointment = {
+  fullName?: string | null;
+  mobile?: string | null;
+  doctorName?: string | null;
+  department?: string | null;
+  date?: string | null;
+  time?: string | null;
+  type?: string | null;
+  status?: string | null;
+  reason?: string | null;
+  notes?: string | null;
+};
+
+export type BillMedicine = {
+  name?: string | null;
+  frequency?: string | null;
+  duration?: string | null;
+  beforeAfterFood?: string | null;
+  specialInstructions?: string | null;
+};
+
+export type BillPrescription = {
+  patientName?: string | null;
+  doctorName?: string | null;
+  visitDate?: string | null;
+  diagnosis?: string | null;
+  medicines?: BillMedicine[];
+  followUpDate?: string | null;
+};
+
+export type BillDoctor = {
+  id?: string | null;
+  name?: string | null;
+};
+
+export type BillVisit = {
+  clinic?: BillClinic | null;
+  appointment?: BillAppointment | null;
+  prescriptions?: BillPrescription[];
+  doctors?: BillDoctor[];
+};
+
 export type Bill = {
   id: string;
   billNumber: string;
@@ -105,6 +155,7 @@ export type Bill = {
   status: "paid" | "pending" | "cancelled";
   notes: string | null;
   createdAt: string;
+  visit?: BillVisit | null;
 };
 
 const COLUMN_LABELS: Record<string, string> = {

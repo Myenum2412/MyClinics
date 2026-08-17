@@ -6,6 +6,7 @@ import { DB_COLLECTIONS } from "@/lib/constants";
 import { mapBill } from "@/routes/bills";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { generateBillPdf } from "@/lib/bill-pdf";
+import { findBillVisitData } from "@/lib/bill-visit";
 import { canAccessBilling } from "@/lib/roles";
 
 export function registerBillPdfRoutes(app: FastifyInstance): void {
@@ -47,7 +48,8 @@ export function registerBillPdfRoutes(app: FastifyInstance): void {
       }
 
       const company = await ensureDefaultOrganization(db);
-      const pdf = await generateBillPdf(bill, company);
+      const visit = await findBillVisitData(db, bill);
+      const pdf = await generateBillPdf(bill, company, visit);
 
       const safeName = (bill.billNumber || "invoice").replace(
         /[^a-zA-Z0-9-_]+/g,

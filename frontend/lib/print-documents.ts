@@ -1,7 +1,17 @@
 import type { Prescription } from "@/components/prescriptions-table";
 import type { Appointment } from "@/components/appointments-table";
-import type { Bill } from "@/components/billing-table";
+import type { Bill, BillVisit } from "@/components/billing-table";
 import { DEFAULT_CLINIC_NAME } from "@/lib/clinic-name-client";
+
+function escapeHtml(value: string | number | null | undefined): string {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 function formatDate(value: string | null | undefined) {
   if (!value) return "—";
@@ -148,68 +158,230 @@ export function appointmentHtml(
 </html>`;
 }
 
-export function billingHtml(b: Bill, clinicName: string = DEFAULT_CLINIC_NAME) {
+function billingStyles() {
+  return `
+    @page { size: A4; margin: 6mm; }
+    html, body { margin: 0; padding: 0; background: #fff; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, Helvetica, sans-serif; color: #111; }
+    .sheet {
+      width: 198mm;
+      min-height: 285mm;
+      margin: 0 auto;
+      padding: 10mm 12mm 12mm;
+      border: 2px solid #111;
+    }
+    .clinic-header { text-align: center; padding-bottom: 10px; border-bottom: 2px solid #111; margin-bottom: 14px; }
+    .clinic-name { font-size: 22px; font-weight: bold; letter-spacing: 0.5px; }
+    .clinic-line { font-size: 12px; color: #444; margin-top: 3px; }
+    .doc-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .invoice { text-align: right; font-size: 24px; font-weight: bold; }
+    .invoice small { display: block; font-size: 12px; font-weight: normal; color: #555; margin-top: 4px; }
+    .row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 6px; font-size: 14px; }
+    .row b { display: inline-block; min-width: 110px; }
+    h3 { margin: 18px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { background: #f1f5f9; text-align: left; padding: 7px 8px; border: 1px solid #ccc; font-size: 11px; }
+    td { padding: 7px 8px; border: 1px solid #ccc; vertical-align: top; }
+    .totals { width: 260px; margin-left: auto; margin-top: 16px; font-size: 14px; }
+    .totals div { display: flex; justify-content: space-between; padding: 4px 0; }
+    .totals .grand { border-top: 2px solid #111; margin-top: 4px; padding-top: 8px; font-size: 16px; font-weight: bold; }
+    .footer { margin-top: 24px; font-size: 12px; color: #555; text-align: center; border-top: 1px solid #cbd5e1; padding-top: 8px; }
+    .paid { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #16a34a; }
+    .pending { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #d97706; }
+    .cancelled { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #dc2626; }
+    .kv { display: grid; grid-template-columns: 130px 1fr; gap: 3px 8px; font-size: 13px; margin-top: 8px; }
+    .kv b { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; }
+  `;
+}
+
+function statusBadge(status: string) {
+  const label = status.charAt(0).toUpperCase() + status.slice(1);
+  return `<span class="${escapeHtml(status)}">${escapeHtml(label)}</span>`;
+}
+
+function clinicHeaderHtml(
+  clinicName: string,
+  visit?: BillVisit | null
+) {
+  const clinic = visit?.clinic;
+  const name = escapeHtml(clinic?.name?.trim() || clinicName);
+  const lines: string[] = [];
+  if (clinic?.address) lines.push(escapeHtml(clinic.address));
+  const contacts: string[] = [];
+  if (clinic?.phone) contacts.push(`Ph: ${escapeHtml(clinic.phone)}`);
+  if (clinic?.email) contacts.push(escapeHtml(clinic.email));
+  if (clinic?.website) contacts.push(escapeHtml(clinic.website));
+  if (contacts.length) lines.push(contacts.join(" · "));
+  return `
+    <div class="clinic-header">
+      <div class="clinic-name">${name}</div>
+      ${lines.map((l) => `<div class="clinic-line">${l}</div>`).join("")}
+    </div>`;
+}
+
+function appointmentSectionHtml(appointment?: BillVisit["appointment"] | null) {
+  if (!appointment) return "";
+  const rows: [string, string][] = [
+    ["Doctor", appointment.doctorName || "—"],
+    ["Department", appointment.department || "—"],
+    ["Date / Time", `${formatDate(appointment.date)}${appointment.time ? " · " + escapeHtml(appointment.time) : ""}`],
+    ["Type", appointment.type === "video" ? "Video Consultation" : "In-person"],
+    ["Status", appointment.status ? escapeHtml(appointment.status.replace("_", " ")) : "—"],
+  ];
+  if (appointment.reason) rows.push(["Reason", escapeHtml(appointment.reason)]);
+  if (appointment.notes) rows.push(["Notes", escapeHtml(appointment.notes)]);
+  return `
+    <h3>Appointment Details</h3>
+    <div class="kv">
+      ${rows.map(([l, v]) => `<div><b>${escapeHtml(l)}</b></div><div>${v}</div>`).join("")}
+    </div>`;
+}
+
+function prescriptionsSectionHtml(prescriptions?: BillVisit["prescriptions"]) {
+  const list = Array.isArray(prescriptions) ? prescriptions.filter((p) => p) : [];
+  if (!list.length) return "";
+  return `
+    <h3>Prescriptions &amp; Medicines</h3>
+    ${list
+      .map((p) => {
+        const medicines = Array.isArray(p.medicines)
+          ? p.medicines.filter((m) => m?.name)
+          : [];
+        const meta: string[] = [];
+        if (p.visitDate) meta.push(`Visit: ${formatDate(p.visitDate)}`);
+        if (p.doctorName) meta.push(`Doctor: ${escapeHtml(p.doctorName)}`);
+        if (p.followUpDate) meta.push(`Follow-up: ${formatDate(p.followUpDate)}`);
+        const rows = medicines.length
+          ? medicines
+              .map(
+                (m) => `
+                  <tr>
+                    <td><strong>${escapeHtml(m.name)}</strong></td>
+                    <td>${escapeHtml(m.frequency)}</td>
+                    <td>${escapeHtml(m.duration)}</td>
+                    <td>${escapeHtml(m.beforeAfterFood)}</td>
+                    <td>${escapeHtml(m.specialInstructions)}</td>
+                  </tr>`
+              )
+              .join("")
+          : `<tr><td colspan="5" style="text-align:center;">No medicines listed</td></tr>`;
+        return `
+          <p style="margin:6px 0;font-size:13px;"><strong>Diagnosis:</strong> ${escapeHtml(p.diagnosis || "—")}${meta.length ? ` <span style="color:#64748b;">· ${meta.join(" · ")}</span>` : ""}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Medicine</th>
+                <th>Frequency</th>
+                <th>Duration</th>
+                <th>Before / After Food</th>
+                <th>Special Instructions</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>`;
+      })
+      .join("")}`;
+}
+
+function doctorsSectionHtml(doctors?: BillVisit["doctors"]) {
+  const list = Array.isArray(doctors) ? doctors.filter((d) => d?.name) : [];
+  if (!list.length) return "";
+  return `
+    <h3>Doctors</h3>
+    <table>
+      <thead>
+        <tr><th style="width:40px;">#</th><th>Doctor</th></tr>
+      </thead>
+      <tbody>
+        ${list
+          .map(
+            (d, i) => `<tr><td>${i + 1}</td><td><strong>${escapeHtml(d.name)}</strong></td></tr>`
+          )
+          .join("")}
+      </tbody>
+    </table>`;
+}
+
+export function billingHtml(
+  b: Bill,
+  clinicName: string = DEFAULT_CLINIC_NAME,
+  visit?: BillVisit | null,
+  opts: { autoPrint?: boolean } = {}
+) {
   const rows = b.items.length
     ? b.items
         .map(
           (item, i) => `
             <tr>
-              <td style="padding:8px;border:1px solid #ccc;">${i + 1}</td>
-              <td style="padding:8px;border:1px solid #ccc;"><strong>${item.name || "—"}</strong></td>
-              <td style="padding:8px;border:1px solid #ccc;">${item.qty}</td>
-              <td style="padding:8px;border:1px solid #ccc;">${money(item.price)}</td>
-              <td style="padding:8px;border:1px solid #ccc;">${money(item.amount)}</td>
+              <td style="text-align:center;">${i + 1}</td>
+              <td><strong>${escapeHtml(item.name || "—")}</strong></td>
+              <td style="text-align:center;">${item.qty}</td>
+              <td style="text-align:right;">${money(item.price)}</td>
+              <td style="text-align:right;">${money(item.amount)}</td>
             </tr>`
         )
         .join("")
-    : `<tr><td colspan="5" style="padding:8px;border:1px solid #ccc;text-align:center;">No items</td></tr>`;
+    : `<tr><td colspan="5" style="text-align:center;">No items</td></tr>`;
 
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Invoice ${b.billNumber}</title>
+  <title>Invoice ${escapeHtml(b.billNumber)}</title>
   <style>
-    ${pageStyles()}
+    ${billingStyles()}
   </style>
 </head>
 <body>
-  <div class="header">
-    <div>
-      <div class="clinic">${clinicName}</div>
-      <div style="font-size:12px;color:#555;">Doctor: ${b.doctorName || "—"}</div>
+  <div class="sheet">
+    ${clinicHeaderHtml(clinicName, visit)}
+
+    <div class="doc-header">
+      <div>
+        <div class="row"><b>Invoice No.</b> ${escapeHtml(b.billNumber)}</div>
+        <div class="row"><b>Billed To</b> ${escapeHtml(b.patientName)}</div>
+        <div class="row"><b>Phone</b> ${escapeHtml(b.patientPhone || "—")}</div>
+        <div class="row"><b>Date</b> ${formatDate(b.date)}</div>
+        <div class="row"><b>Payment</b> ${escapeHtml(b.paymentMethod || "—")}</div>
+        ${b.doctorName ? `<div class="row"><b>Doctor</b> ${escapeHtml(b.doctorName)}</div>` : ""}
+      </div>
+      <div class="invoice">
+        Invoice
+        <small>${statusBadge(b.status)}</small>
+      </div>
     </div>
-    <div class="doc">Invoice</div>
+
+    ${appointmentSectionHtml(visit?.appointment ?? null)}
+    ${prescriptionsSectionHtml(visit?.prescriptions)}
+    ${doctorsSectionHtml(visit?.doctors)}
+
+    <h3>Bill Items</h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:36px;">#</th>
+          <th>Item / Service</th>
+          <th style="width:52px;">Qty</th>
+          <th style="width:100px;">Price</th>
+          <th style="width:110px;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    <div class="totals">
+      <div><span>Subtotal</span><span>${money(b.subtotal)}</span></div>
+      ${b.discount ? `<div><span>Discount</span><span>−${money(b.discount)}</span></div>` : ""}
+      ${b.tax ? `<div><span>Tax (${b.taxRate}%)</span><span>${money(b.tax)}</span></div>` : ""}
+      <div class="grand"><span>Total</span><span>${money(b.total)}</span></div>
+    </div>
+
+    ${b.notes ? `<h3>Notes</h3><div style="font-size:13px;">${escapeHtml(b.notes)}</div>` : ""}
+
+    <div class="footer">Generated by ${escapeHtml(clinicName)} · ${formatDate(new Date().toISOString())}</div>
   </div>
-
-  <div class="row"><b>Invoice No.</b> ${b.billNumber}</div>
-  <div class="row"><b>Patient</b> ${b.patientName}</div>
-  <div class="row"><b>Phone</b> ${b.patientPhone || "—"}</div>
-  <div class="row"><b>Date</b> ${formatDate(b.date)}</div>
-  <div class="row"><b>Payment</b> ${b.paymentMethod || "—"}</div>
-  <div class="row"><b>Status</b> ${b.status}</div>
-
-  <h3>Bill Items</h3>
-  <table>
-    <thead>
-      <tr>
-        <th style="padding:8px;border:1px solid #ccc;">#</th>
-        <th style="padding:8px;border:1px solid #ccc;">Item</th>
-        <th style="padding:8px;border:1px solid #ccc;">Qty</th>
-        <th style="padding:8px;border:1px solid #ccc;">Price</th>
-        <th style="padding:8px;border:1px solid #ccc;">Amount</th>
-      </tr>
-    </thead>
-    <tbody>${rows}</tbody>
-  </table>
-
-  <div class="row" style="margin-top:16px;"><b>Subtotal</b> ${money(b.subtotal)}</div>
-  ${b.discount ? `<div class="row"><b>Discount</b> -${money(b.discount)}</div>` : ""}
-  ${b.tax ? `<div class="row"><b>Tax (${b.taxRate}%)</b> ${money(b.tax)}</div>` : ""}
-  <div class="row"><b style="min-width:110px;font-size:16px;">Total</b><strong style="font-size:16px;">${money(b.total)}</strong></div>
-  ${b.notes ? `<div class="row"><b>Notes</b> ${b.notes}</div>` : ""}
-
-  ${footer()}
+  ${opts.autoPrint ? `<script>window.onload = function () { window.print(); };</script>` : ""}
 </body>
 </html>`;
 }

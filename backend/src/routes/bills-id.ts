@@ -1,13 +1,73 @@
 import type { FastifyInstance } from "fastify";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/db";
-import { requireBilling } from "@/plugins/auth";
+import { requireAuth, requireBilling } from "@/plugins/auth";
 import { DB_COLLECTIONS } from "@/lib/constants";
 import { BILL_STATUSES, PAYMENT_METHODS, round2 } from "@/lib/billing";
-import { computeBillTotals } from "@/routes/bills";
+import { computeBillTotals, mapBill } from "@/routes/bills";
+import { canAccessBilling } from "@/lib/roles";
+import { findBillVisitData } from "@/lib/bill-visit";
+import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
+import { mapCompany } from "@/routes/organization";
 import { handleError } from "@/lib/http";
 
 export function registerBillRoutes(app: FastifyInstance): void {
+  app.get("/api/bills/:id/print-data", async (request, reply) => {
+    try {
+      const { id } = request.params as { id: string };
+      if (!ObjectId.isValid(id)) {
+        return reply.code(400).send({ error: "Invalid bill id" });
+      }
+
+      if (!(await requireAuth(request, reply))) return;
+
+      const db = await getDb();
+      const doc = await db
+        .collection(DB_COLLECTIONS.bills)
+        .findOne({ _id: new ObjectId(id) });
+      if (!doc) {
+        return reply.code(404).send({ error: "Bill not found" });
+      }
+
+      const bill = mapBill(doc);
+
+      const staffAccess = canAccessBilling(request.user?.role);
+      if (!staffAccess) {
+        const email = request.user?.email?.toLowerCase();
+        const patientDoc = email
+          ? await db.collection("patients").findOne({ email })
+          : null;
+        const patientName = patientDoc?.fullName
+          ? String(patientDoc.fullName)
+          : null;
+        const patientPhone = patientDoc?.mobile
+          ? String(patientDoc.mobile)
+          : null;
+        const ownsBill =
+          (patientName && bill.patientName === patientName) ||
+          (patientPhone && bill.patientPhone === patientPhone);
+        if (!ownsBill) {
+          return reply.code(403).send({ error: "Forbidden" });
+        }
+      }
+
+      const [company, visit] = await Promise.all([
+        ensureDefaultOrganization(db),
+        findBillVisitData(db, bill),
+      ]);
+
+      return reply.send({
+        bill,
+        clinic: mapCompany(company),
+        appointment: visit.appointment ?? null,
+        prescriptions: visit.prescriptions,
+        doctors: visit.doctors,
+      });
+    } catch (error) {
+      handleError(reply, error, "Get bill print data");
+    }
+  });
+
   app.put("/api/bills/:id", async (request, reply) => {
     try {
       const { id } = request.params as { id: string };

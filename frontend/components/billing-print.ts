@@ -1,112 +1,46 @@
-import type { Bill } from "@/components/billing-table";
-import { formatINR } from "@/lib/billing";
+import type { Bill, BillVisit } from "@/components/billing-table";
+import { billingHtml } from "@/lib/print-documents";
 import { DEFAULT_CLINIC_NAME, fetchClinicName } from "@/lib/clinic-name-client";
 
-function formatDate(value: string | null) {
-  if (!value) return "—";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "2-digit",
-    year: "numeric",
-  }).format(parsed);
+async function fetchVisitData(id: string): Promise<BillVisit | null> {
+  try {
+    const res = await fetch(`/api/bills/${id}/print-data`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      clinic?: BillVisit["clinic"];
+      appointment?: BillVisit["appointment"];
+      prescriptions?: BillVisit["prescriptions"];
+      doctors?: BillVisit["doctors"];
+    };
+    return {
+      clinic: data.clinic ?? null,
+      appointment: data.appointment ?? null,
+      prescriptions: data.prescriptions ?? [],
+      doctors: data.doctors ?? [],
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function printBill(
   bill: Bill,
   clinicName: string = DEFAULT_CLINIC_NAME
 ) {
-  const name = clinicName === DEFAULT_CLINIC_NAME ? await fetchClinicName() : clinicName;
+  let visit = bill.visit ?? null;
 
-  const rows = bill.items.length
-    ? bill.items
-        .map(
-          (item, i) => `
-            <tr>
-              <td style="padding:8px;border:1px solid #ccc;">${i + 1}</td>
-              <td style="padding:8px;border:1px solid #ccc;">${item.name || "—"}</td>
-              <td style="padding:8px;border:1px solid #ccc;text-align:center;">${item.qty}</td>
-              <td style="padding:8px;border:1px solid #ccc;text-align:right;">${formatINR(item.price)}</td>
-              <td style="padding:8px;border:1px solid #ccc;text-align:right;">${formatINR(item.amount)}</td>
-            </tr>`
-        )
-        .join("")
-    : `<tr><td colspan="5" style="padding:8px;border:1px solid #ccc;text-align:center;">No items</td></tr>`;
+  if (bill.id && !visit) {
+    visit = await fetchVisitData(bill.id);
+  }
 
-  const statusLabel = bill.status.charAt(0).toUpperCase() + bill.status.slice(1);
+  const resolvedName =
+    visit?.clinic?.name?.trim() || (clinicName === DEFAULT_CLINIC_NAME ? await fetchClinicName() : clinicName);
 
-  const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Invoice ${bill.billNumber}</title>
-  <style>
-    body { font-family: Arial, sans-serif; color: #111; margin: 32px; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 16px; }
-    .clinic { font-size: 20px; font-weight: bold; }
-    .invoice { text-align: right; font-size: 24px; font-weight: bold; }
-    .invoice small { display: block; font-size: 12px; font-weight: normal; color: #555; }
-    .row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 6px; font-size: 14px; }
-    .row b { display: inline-block; min-width: 110px; }
-    h3 { margin: 18px 0 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { background: #f1f5f9; text-align: left; }
-    .totals { width: 260px; margin-left: auto; margin-top: 16px; font-size: 14px; }
-    .totals div { display: flex; justify-content: space-between; padding: 4px 0; }
-    .totals .grand { border-top: 2px solid #111; margin-top: 4px; padding-top: 8px; font-size: 16px; font-weight: bold; }
-    .footer { margin-top: 32px; font-size: 13px; color: #555; }
-    .paid { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #16a34a; }
-    .pending { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #d97706; }
-    .cancelled { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #dc2626; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <div class="clinic">${name}</div>
-      <div style="font-size:12px;color:#555;">Doctor: ${bill.doctorName || "—"}</div>
-    </div>
-    <div class="invoice">
-      Invoice ${bill.billNumber}
-      <small class="${bill.status}">${statusLabel}</small>
-    </div>
-  </div>
+  const html = billingHtml(bill, resolvedName, visit, { autoPrint: true });
 
-  <div class="row"><b>Billed To</b> ${bill.patientName}</div>
-  <div class="row"><b>Phone</b> ${bill.patientPhone || "—"}</div>
-  <div class="row"><b>Date</b> ${formatDate(bill.date)}</div>
-  <div class="row"><b>Payment</b> ${bill.paymentMethod}</div>
-
-  <h3>Items</h3>
-  <table>
-    <thead>
-      <tr>
-        <th style="padding:8px;border:1px solid #ccc;">#</th>
-        <th style="padding:8px;border:1px solid #ccc;">Item / Service</th>
-        <th style="padding:8px;border:1px solid #ccc;text-align:center;">Qty</th>
-        <th style="padding:8px;border:1px solid #ccc;text-align:right;">Price</th>
-        <th style="padding:8px;border:1px solid #ccc;text-align:right;">Amount</th>
-      </tr>
-    </thead>
-    <tbody>${rows}</tbody>
-  </table>
-
-  <div class="totals">
-    <div><span>Subtotal</span><span>${formatINR(bill.subtotal)}</span></div>
-    ${bill.discount ? `<div><span>Discount</span><span>−${formatINR(bill.discount)}</span></div>` : ""}
-    ${bill.tax ? `<div><span>Tax (${bill.taxRate}%)</span><span>${formatINR(bill.tax)}</span></div>` : ""}
-    <div class="grand"><span>Total</span><span>${formatINR(bill.total)}</span></div>
-  </div>
-
-  ${bill.notes ? `<h3>Notes</h3><div style="font-size:14px;">${bill.notes}</div>` : ""}
-
-  <div class="footer">Generated by ${name} · ${formatDate(new Date().toISOString())}</div>
-  <script>window.onload = function () { window.print(); };</script>
-</body>
-</html>`;
-
-  const w = window.open("", "_blank", "width=720,height=900");
+  const w = window.open("", "_blank", "width=800,height=900");
   if (!w) return;
   w.document.open();
   w.document.write(html);
