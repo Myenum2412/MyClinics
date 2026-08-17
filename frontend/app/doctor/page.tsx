@@ -25,11 +25,10 @@ import { statusBadgeClass } from "@/lib/appointment-status";
 import {
   startOfMonthDate,
   todayDateString,
+  dateString,
 } from "@/lib/stats";
-import {
-  AppointmentsTable,
-  type Appointment,
-} from "@/components/appointments-table";
+
+export const dynamic = "force-dynamic";
 
 type AppointmentDoc = {
   _id: { toString(): string };
@@ -80,6 +79,8 @@ export default async function DashboardPage() {
   const isDoctor = role === "doctor";
 
   const today = todayDateString();
+  // Next 7 calendar days (tomorrow … +7)
+  const next7 = dateString(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
   const doctorFilter =
     isDoctor && userId ? { doctorId: userId } : {};
 
@@ -90,6 +91,7 @@ export default async function DashboardPage() {
     thisMonthRx,
     totalReports,
     todayAppointments,
+    upcomingAppointments,
     recentPatients,
   ] = await Promise.all([
     db.collection("appointments").countDocuments({ date: today }),
@@ -101,11 +103,19 @@ export default async function DashboardPage() {
       .collection("prescriptions")
       .countDocuments({ createdAt: { $gte: startOfMonthDate() } }),
     db.collection("reports").countDocuments(),
+    // Today's appointments
     db
       .collection("appointments")
       .find({ date: today, ...doctorFilter })
       .sort({ time: 1 })
       .limit(50)
+      .toArray(),
+    // Upcoming appointments (tomorrow → +7 days)
+    db
+      .collection("appointments")
+      .find({ date: { $gt: today, $lte: next7 }, ...doctorFilter })
+      .sort({ date: 1, time: 1 })
+      .limit(20)
       .toArray(),
     db
       .collection("patients")
@@ -116,29 +126,8 @@ export default async function DashboardPage() {
   ]);
 
   const schedule = todayAppointments as unknown as AppointmentDoc[];
+  const upcoming = upcomingAppointments as unknown as AppointmentDoc[];
   const recent = recentPatients as unknown as PatientDoc[];
-
-  const appointmentRows: Appointment[] = schedule.map((a) => ({
-    id: a._id.toString(),
-    fullName: a.fullName,
-    mobile: a.mobile ?? "",
-    secondaryMobile: null,
-    age: null,
-    gender: null,
-    email: null,
-    whatsapp: null,
-    doctorId: a.doctorId?.toString() ?? null,
-    doctorName: a.doctorName ?? null,
-    department: null,
-    date: a.date,
-    time: a.time,
-    type: (a.type === "video" ? "video" : "in-person") as Appointment["type"],
-    reason: null,
-    status: (a.status as Appointment["status"]) ?? "pending",
-    bookingSource: "manual",
-    notes: null,
-    counter: null,
-  }));
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
@@ -265,6 +254,82 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Upcoming Schedule */}
+        <Card>
+          <CardHeader className="flex flex-row items-start justify-between gap-4">
+            <div>
+              <CardTitle>Upcoming Schedule</CardTitle>
+              <CardDescription>
+                {isDoctor ? "Your appointments" : "Appointments"} in the next 7 days
+              </CardDescription>
+            </div>
+            <Link
+              href="/doctor/appointments"
+              className="text-xs font-medium text-muted-foreground underline-offset-4 hover:underline"
+            >
+              View all
+            </Link>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="h-9">Date</TableHead>
+                  <TableHead className="h-9">Time</TableHead>
+                  <TableHead className="h-9">Patient</TableHead>
+                  {!isDoctor && <TableHead className="h-9">Doctor</TableHead>}
+                  <TableHead className="h-9 pr-4">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {upcoming.length === 0 ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
+                      colSpan={isDoctor ? 4 : 5}
+                      className="h-20 text-center text-sm text-muted-foreground"
+                    >
+                      {isDoctor
+                        ? "No upcoming appointments in the next 7 days."
+                        : "No upcoming appointments in the next 7 days."}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  upcoming.map((appt) => (
+                    <TableRow key={appt._id.toString()}>
+                      <TableCell className="py-2.5 text-sm tabular-nums">
+                        {formatDate(appt.date)}
+                      </TableCell>
+                      <TableCell className="py-2.5 text-sm font-medium tabular-nums">
+                        {formatTime(appt.time)}
+                      </TableCell>
+                      <TableCell className="py-2.5">
+                        <span className="truncate text-sm font-medium">
+                          {appt.fullName}
+                        </span>
+                      </TableCell>
+                      {!isDoctor && (
+                        <TableCell className="py-2.5 text-sm text-muted-foreground">
+                          {appt.doctorName ?? "—"}
+                        </TableCell>
+                      )}
+                      <TableCell className="py-2.5 pr-4">
+                        <Badge
+                          className={cn(
+                            "border-transparent text-white shrink-0 capitalize",
+                            statusBadgeClass(appt.status)
+                          )}
+                        >
+                          {appt.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-start justify-between gap-4">
             <div>
@@ -335,31 +400,6 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold tracking-tight">
-              Appointments
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {isDoctor ? "Your appointments for " : "Appointments for "}
-              {today}
-            </p>
-          </div>
-          <Link
-            href="/doctor/appointments"
-            className="text-xs font-medium text-muted-foreground underline-offset-4 hover:underline"
-          >
-            View all
-          </Link>
-        </div>
-        <AppointmentsTable
-          data={appointmentRows}
-          search=""
-          canManage={false}
-          pageSize={10}
-        />
-      </div>
     </div>
   );
 }

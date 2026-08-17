@@ -191,8 +191,12 @@ export function registerReportsRoutes(app: FastifyInstance): void {
         _id: result.insertedId,
       });
 
+      // Billing copies are auto-saved from the bill flow, which already sends
+      // its own WhatsApp notification; don't send a second one here.
+      const notify = category !== "billing";
+
       let patientPhone: string | null = null;
-      if (patientId) {
+      if (notify && patientId) {
         const patient = await db
           .collection("patients")
           .findOne({ _id: new ObjectId(patientId) });
