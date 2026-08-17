@@ -8,6 +8,7 @@ import { toWhatsAppRemoteId } from "@/lib/phone";
 import { todayDateString } from "@/lib/stats";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { getNextQueuedAppointment } from "@/services/queue.service";
+import { sendWithTimeout } from "@/services/whatsapp/send.utils";
 
 export const NOTIFICATIONS_COLLECTION = "wa_notifications";
 const MAX_ATTEMPTS = 3;
@@ -146,11 +147,15 @@ export async function processDueNotifications(
           notification.mediaData,
           notification.mediaFilename ?? "document"
         );
-        await client.sendMessage(notification.remoteId, media, {
-          caption: notification.message,
-        });
+        await sendWithTimeout(
+          client,
+          notification.remoteId,
+          media,
+          { caption: notification.message },
+          30_000
+        );
       } else {
-        await client.sendMessage(notification.remoteId, notification.message);
+        await sendWithTimeout(client, notification.remoteId, notification.message);
       }
       updates.push({
         filter: { _id: notification._id },

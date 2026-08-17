@@ -4,6 +4,7 @@ import { logger } from "@/lib/logger";
 import { todayDateString } from "@/lib/stats";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { toWhatsAppRemoteId } from "@/lib/phone";
+import { sendWithTimeout } from "@/services/whatsapp/send.utils";
 export { toWhatsAppRemoteId } from "@/lib/phone";
 
 export const REMINDERS_COLLECTION = "reminders";
@@ -240,7 +241,7 @@ export async function processDueReminders(
       continue;
     }
     try {
-      await client.sendMessage(reminder.remoteId, reminder.message);
+      await sendWithTimeout(client, reminder.remoteId, reminder.message);
       updates.push({
         filter: { _id: reminder._id },
         update: { $set: { status: "sent", sentAt: new Date(), lastError: null } },

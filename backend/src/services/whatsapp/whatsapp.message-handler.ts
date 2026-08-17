@@ -22,6 +22,7 @@ import {
 } from "@/services/customer/customer-context.service";
 import { runAgent, AgentParseError } from "@/services/ai/agent.service";
 import { retrieveKnowledge, contentRelevance } from "@/services/ai/knowledge.service";
+import { sendWithTimeout } from "@/services/whatsapp/send.utils";
 import { makeFallbackReply, isCurrencyGrounded } from "@/services/ai/grounding";
 import {
   hasAppointmentIntent,
@@ -242,7 +243,7 @@ export async function handleIncomingMessage(client: Client, message: Message): P
   if (message.fromMe || !message.body || isGroupMessage(message)) return;
   if (!dedupe(messageId)) return;
   if (!limiter.check(remote)) {
-    await client.sendMessage(remote, RATE_LIMIT_REPLY);
+    await sendWithTimeout(client, remote, RATE_LIMIT_REPLY);
     return;
   }
 
@@ -369,7 +370,14 @@ export async function handleIncomingMessage(client: Client, message: Message): P
     }
 
     if (!message.id?.fromMe) {
-      await client.sendMessage(remote, sentText);
+      const sent = await sendWithTimeout(client, remote, sentText);
+      logger.info("whatsapp reply sent", {
+        organizationId: org.id,
+        customerId: customer.id,
+        sent,
+        intent: reply.intent,
+        length: sentText.length,
+      });
     }
 
     await extractAndStoreFacts(db, org.id, customer.id, message.body);
@@ -398,7 +406,7 @@ export async function handleIncomingMessage(client: Client, message: Message): P
     }
     try {
       if (!message.id?.fromMe) {
-        await client.sendMessage(remote, FALLBACK_REPLY);
+        await sendWithTimeout(client, remote, FALLBACK_REPLY);
       }
     } catch {
       // connection issue; nothing more to do

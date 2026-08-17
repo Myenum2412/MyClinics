@@ -88,6 +88,7 @@ async function requestOnce(
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${config.apiKey}`,
+      Connection: "close",
     },
     body: JSON.stringify({
       model: config.model,
@@ -182,6 +183,15 @@ export async function complete(
 const DEFAULT_EMBED_URL = "https://integrate.api.nvidia.com/v1/embeddings";
 const DEFAULT_EMBED_MODEL = "snowflake/arctic-embed-l";
 
+// Circuit breaker: when the embeddings endpoint keeps failing (e.g. the model
+// does not exist for this key), stop calling it for EMBED_BREAKER_COOLDOWN_MS
+// after EMBED_BREAKER_THRESHOLD consecutive failures. Retrieval already
+// degrades to keyword matching when embeddings return null.
+const EMBED_BREAKER_THRESHOLD = 3;
+const EMBED_BREAKER_COOLDOWN_MS = 10 * 60_000;
+let embedFailures = 0;
+let embedCooldownUntil = 0;
+
 /**
  * Embeds a text with the NVIDIA embeddings API.
  * Returns null when the API key is missing or the request fails, so callers
@@ -190,6 +200,8 @@ const DEFAULT_EMBED_MODEL = "snowflake/arctic-embed-l";
 export async function embedText(text: string): Promise<number[] | null> {
   const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey) return null;
+
+  if (embedCooldownUntil > Date.now()) return null;
 
   const url = process.env.NVIDIA_EMBED_URL ?? DEFAULT_EMBED_URL;
   const model = process.env.NVIDIA_EMBED_MODEL ?? DEFAULT_EMBED_MODEL;
@@ -201,14 +213,20 @@ export async function embedText(text: string): Promise<number[] | null> {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
+        Connection: "close",
       },
       body: JSON.stringify({ model, input: text }),
       signal,
     });
     if (!res.ok) {
-      logger.warn("nvidia embed failed", { status: res.status });
+      embedFailures += 1;
+      if (embedFailures >= EMBED_BREAKER_THRESHOLD) {
+        embedCooldownUntil = Date.now() + EMBED_BREAKER_COOLDOWN_MS;
+        logger.warn("nvidia embed circuit opened", { status: res.status });
+      }
       return null;
     }
+    embedFailures = 0;
     const data = (await res.json()) as {
       data?: { embedding?: unknown }[];
     };
@@ -216,6 +234,11 @@ export async function embedText(text: string): Promise<number[] | null> {
     if (!Array.isArray(embedding) || embedding.length === 0) return null;
     return embedding as number[];
   } catch {
+    embedFailures += 1;
+    if (embedFailures >= EMBED_BREAKER_THRESHOLD) {
+      embedCooldownUntil = Date.now() + EMBED_BREAKER_COOLDOWN_MS;
+      logger.warn("nvidia embed circuit opened (network)");
+    }
     return null;
   }
 }
