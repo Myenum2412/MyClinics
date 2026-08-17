@@ -58,21 +58,28 @@ export function DashboardTableCard({
         </Link>
       </CardHeader>
       <CardContent>
-        {rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
-        ) : (
-          <Table>
-            <TableHeader>
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+              {columns.map((column) => (
+                <TableHead key={column.label} className={column.className}>
+                  {column.label}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.length === 0 ? (
               <TableRow className="hover:bg-transparent">
-                {columns.map((column) => (
-                  <TableHead key={column.label} className={column.className}>
-                    {column.label}
-                  </TableHead>
-                ))}
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-20 text-center text-sm text-muted-foreground"
+                >
+                  {emptyMessage}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((cells, rowIndex) => (
+            ) : (
+              rows.map((cells, rowIndex) => (
                 <TableRow key={rowIndex}>
                   {cells.map((cell, cellIndex) => (
                     <TableCell
@@ -83,10 +90,10 @@ export function DashboardTableCard({
                     </TableCell>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+              ))
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );
