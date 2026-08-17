@@ -99,7 +99,7 @@ export interface BillVisit {
   patient?: BillPatient | null;
 }
 
-const MARGIN = 48;
+const MARGIN = 24;
 const BORDER_INSET = 10;
 
 // Monochrome palette — black, white and shades of gray only
@@ -185,12 +185,12 @@ function amountInWords(value: number): string {
 function sectionHeading(doc: PDFKit.PDFDocument, text: string, x: number, y: number, lineTo: number) {
   doc.font("Helvetica-Bold").fontSize(9).fillColor(C.ink).text(text.toUpperCase(), x, y);
   const labelEnd = x + doc.widthOfString(text.toUpperCase());
-  doc.moveTo(labelEnd + 10, y + 9)
-    .lineTo(lineTo, y + 9)
+  doc.moveTo(labelEnd + 12, y + 10)
+    .lineTo(lineTo, y + 10)
     .lineWidth(1)
     .strokeColor(C.grid)
     .stroke();
-  return y + 19;
+  return y + 22;
 }
 
 /** Uppercase micro-label above a value (e.g. DATE / DOCTOR / PAYMENT). */
@@ -198,10 +198,10 @@ function metaLabel(doc: PDFKit.PDFDocument, label: string, x: number, y: number)
   doc.font("Helvetica-Bold").fontSize(7).fillColor(C.ink).text(label.toUpperCase(), x, y);
 }
 
-function drawMetaRows(doc: PDFKit.PDFDocument, rows: [string, string][], startX: number, y: number, gap = 17) {
+function drawMetaRows(doc: PDFKit.PDFDocument, rows: [string, string][], startX: number, y: number, gap = 19) {
   for (const [l, v] of rows) {
     metaLabel(doc, l, startX, y);
-    doc.font("Helvetica").fontSize(10).fillColor(C.ink).text(v, startX, y + 10, { width: 230 });
+    doc.font("Helvetica").fontSize(10).fillColor(C.ink).text(v, startX, y + 11, { width: 230 });
     y += gap;
   }
   return y;
@@ -240,15 +240,15 @@ function drawSimpleTable(
   rightAlignCols: number[] = []
 ): number {
   const totalW = colWidths.reduce((s, w) => s + w, 0);
-  const headerBottom = startY + lineHeight + 6;
+  const headerBottom = startY + lineHeight + 8;
 
   // Header — light gray fill, black bold text
-  doc.rect(startX, startY, totalW, lineHeight + 6).fill(C.band);
+  doc.rect(startX, startY, totalW, lineHeight + 8).fill(C.band);
   doc.font("Helvetica-Bold").fontSize(7.5).fillColor(C.ink);
   let x = startX;
   headers.forEach((h, i) => {
     const align = rightAlignCols.includes(i) ? "right" : "left";
-    doc.text(h, x + 6, startY + 4, { width: colWidths[i] - 10, align });
+    doc.text(h, x + 8, startY + 5, { width: colWidths[i] - 14, align });
     x += colWidths[i];
   });
 
@@ -257,7 +257,7 @@ function drawSimpleTable(
     doc.font("Helvetica").fontSize(8.5);
     const maxLines = Math.max(
       1,
-      ...row.map((cell, i) => cellLines(doc, cell, colWidths[i] - 10))
+      ...row.map((cell, i) => cellLines(doc, cell, colWidths[i] - 14))
     );
     return maxLines * lineHeight;
   });
@@ -273,7 +273,7 @@ function drawSimpleTable(
     x = startX;
     row.forEach((cell, i) => {
       const align = rightAlignCols.includes(i) ? "right" : "left";
-      doc.text(cell, x + 6, y + 2.5, { width: colWidths[i] - 10, align, lineBreak: true });
+      doc.text(cell, x + 8, y + 3.5, { width: colWidths[i] - 14, align, lineBreak: true });
       x += colWidths[i];
     });
     y += h;
@@ -437,17 +437,17 @@ export async function generateBillPdf(
     .join(" / ");
 
   metaLabel(doc, "BILLED TO", MARGIN, y);
-  y += 11;
+  y += 12;
   doc.font("Helvetica-Bold").fontSize(11.5).fillColor(C.ink);
   doc.text(bill.patientName || "—", MARGIN, y);
-  y += 13;
+  y += 14;
   const billedToLines: string[] = [];
   if (bill.patientPhone) billedToLines.push(bill.patientPhone);
   if (patientAgeGender) billedToLines.push(patientAgeGender);
   if (patient?.email) billedToLines.push(String(patient.email));
   for (const line of billedToLines) {
     doc.font("Helvetica").fontSize(9.5).fillColor(C.muted).text(line, MARGIN, y);
-    y += 11;
+    y += 12;
   }
   y -= 1;
 
@@ -457,7 +457,7 @@ export async function generateBillPdf(
     ["DATE", formatDate(bill.date)],
     ["DOCTOR", bill.doctorName || "—"],
     ["PAYMENT", bill.paymentMethod || "—"],
-  ], metaRightX, 14 + 58 + 11 - 11, 17);
+  ], metaRightX, 14 + 58 + 11 - 12, 19);
 
   y = Math.max(y, metaEnd) + 5;
 
@@ -481,7 +481,7 @@ export async function generateBillPdf(
     for (const [l, v] of apptRows) {
       doc.font("Helvetica-Bold").fontSize(7.5).fillColor(C.ink).text(l.toUpperCase(), MARGIN, apptY, { width: 110 });
       doc.font("Helvetica").fontSize(9).fillColor(C.ink).text(v, MARGIN + 118, apptY, { width: 320 });
-      apptY += 11;
+      apptY += 13;
     }
     y = apptY + 3;
   }
@@ -496,24 +496,24 @@ export async function generateBillPdf(
         p.diagnosis ? `Diagnosis: ${p.diagnosis}` : "Prescription",
         MARGIN, y
       );
-      y += 11;
+      y += 12;
       const metaBits: string[] = [];
       if (p.visitDate) metaBits.push(`Visit: ${formatDate(String(p.visitDate))}`);
       if (p.doctorName) metaBits.push(`Doctor: ${p.doctorName}`);
       if (p.followUpDate) metaBits.push(`Follow-up: ${formatDate(String(p.followUpDate))}`);
       if (metaBits.length) {
         doc.font("Helvetica").fontSize(8).fillColor(C.muted).text(metaBits.join("  ·  "), MARGIN, y, { width: contentWidth });
-        y += 10;
+        y += 11;
       }
       if (p.symptoms) {
         doc.font("Helvetica-Bold").fontSize(8).fillColor(C.ink).text("Symptoms / Notes:", MARGIN, y, { width: 110 });
         doc.font("Helvetica").fontSize(9).fillColor(C.muted).text(String(p.symptoms), MARGIN + 115, y, { width: contentWidth - 115 });
-        y += 12;
+        y += 13;
       }
       if (p.testsRecommended) {
         doc.font("Helvetica-Bold").fontSize(8).fillColor(C.ink).text("Tests Recommended:", MARGIN, y, { width: 110 });
         doc.font("Helvetica").fontSize(9).fillColor(C.muted).text(String(p.testsRecommended), MARGIN + 115, y, { width: contentWidth - 115 });
-        y += 12;
+        y += 13;
       }
 
       const medicines = Array.isArray(p.medicines) ? p.medicines.filter((m) => m?.name) : [];
@@ -528,12 +528,12 @@ export async function generateBillPdf(
           String(m.beforeAfterFood ?? "—"),
           String(m.specialInstructions ?? "—"),
         ]);
-        ensureSpace(28 + rows.length * 12);
-        y = drawSimpleTable(doc, headers, rows, colWidths, MARGIN, y, 12, []);
+        ensureSpace(28 + rows.length * 14);
+        y = drawSimpleTable(doc, headers, rows, colWidths, MARGIN, y, 14, []);
         y += 4;
       } else {
         doc.font("Helvetica").fontSize(9).fillColor(C.muted).text("No medicines listed.", MARGIN, y, { width: contentWidth });
-        y += 14;
+        y += 16;
       }
     }
   }
@@ -549,7 +549,7 @@ export async function generateBillPdf(
       [40, 400],
       MARGIN,
       y,
-      12,
+      14,
       []
     );
     y += 4;
@@ -557,7 +557,7 @@ export async function generateBillPdf(
 
   // Items table — widths sum to contentWidth
   const items = Array.isArray(bill.items) ? bill.items : [];
-  ensureSpace(18 + 17 + items.length * 12 + 8);
+  ensureSpace(18 + 19 + items.length * 14 + 8);
   y = sectionHeading(doc, "Bill Items", MARGIN, y, pageWidth - MARGIN);
   const itemCols = [28, contentWidth - 28 - 44 - 66 - 70, 44, 66, 70];
   const itemRows = items.map((item, i) => [
@@ -576,15 +576,15 @@ export async function generateBillPdf(
     itemCols,
     MARGIN,
     y,
-    12,
+    14,
     [2, 3, 4]
   );
   y += 5;
 
   // Totals — keep the whole block (rows + grand total + words + notes) with
   // the footer: if it can't fit above the footer line, flow it to the next page.
-  const totalsX = pageWidth - MARGIN - 230;
-  const totalsW = 230;
+  const totalsX = pageWidth - MARGIN - 260;
+  const totalsW = 260;
   let tY = y + 2;
   const totalRows: [string, string][] = [
     ["Subtotal", inr(bill.subtotal ?? 0)],
@@ -594,34 +594,37 @@ export async function generateBillPdf(
   if ((bill.tax ?? 0) > 0)
     totalRows.push([`Tax (${bill.taxRate ?? 0}%)`, inr(bill.tax ?? 0)]);
 
-  const totalsBlockH = 13 * totalRows.length + 24 + 5 + 22 + 2 + 16 + 12 + 6;
+  const totalsBlockH = 15 * totalRows.length + 26 + 5 + 22 + 2 + 18 + 12 + 6;
   y = tY;
   ensureSpace(totalsBlockH);
   tY = y;
   for (const [l, v] of totalRows) {
-    doc.font("Helvetica").fontSize(9.5).fillColor(C.muted).text(l, totalsX, tY, { width: totalsW - 90 });
-    doc.font("Helvetica-Bold").fontSize(9.5).fillColor(C.ink).text(v, totalsX + totalsW - 90, tY, { width: 86, align: "right" });
-    tY += 13;
+    doc.font("Helvetica").fontSize(9.5).fillColor(C.muted).text(l, totalsX, tY, { width: totalsW - 100 });
+    doc.font("Helvetica-Bold").fontSize(9.5).fillColor(C.ink).text(v, totalsX + totalsW - 100, tY, { width: 96, align: "right" });
+    tY += 15;
   }
 
-  // Grand total — black filled box, white text
-  const grandH = 24;
-  doc.roundedRect(totalsX - 10, tY, totalsW + 20, grandH, 5).fill(C.ink);
-  doc.font("Helvetica-Bold").fontSize(10).fillColor(C.white);
-  doc.text("GRAND TOTAL", totalsX - 10 + 16, tY + 6.5, { width: totalsW - 60 });
-  doc.text(inr(bill.total ?? 0), totalsX + 10 + 14, tY + 6.5, { width: totalsW - 40, align: "right" });
+  // Grand total — plain text on a separator rule (no background fill)
+  const grandH = 26;
+  doc.moveTo(totalsX - 12, tY).lineTo(totalsX + totalsW + 12, tY)
+    .lineWidth(1)
+    .strokeColor(C.ink)
+    .stroke();
+  doc.font("Helvetica-Bold").fontSize(11).fillColor(C.ink);
+  doc.text("GRAND TOTAL", totalsX, tY + 8, { width: totalsW - 100 });
+  doc.text(inr(bill.total ?? 0), totalsX + totalsW - 100, tY + 8, { width: 96, align: "right" });
   tY += grandH + 5;
 
   // Amount in words — light gray band
-  doc.roundedRect(MARGIN, tY, contentWidth, 22, 5).fill(C.band).lineWidth(0.75).strokeColor(C.grid).stroke();
-  metaLabel(doc, "AMOUNT IN WORDS", MARGIN + 14, tY + 2);
+  doc.roundedRect(MARGIN, tY, contentWidth, 24, 5).fill(C.band).lineWidth(0.75).strokeColor(C.grid).stroke();
+  metaLabel(doc, "AMOUNT IN WORDS", MARGIN + 14, tY + 2.5);
   doc.font("Helvetica").fontSize(9).fillColor(C.ink).text(
     amountInWords(bill.total ?? 0),
     MARGIN + 14,
-    tY + 12,
+    tY + 13,
     { width: contentWidth - 28 }
   );
-  tY += 22;
+  tY += 24;
 
   y = tY + 2;
 
@@ -630,9 +633,9 @@ export async function generateBillPdf(
     ensureSpace(18 + 13 + 16);
     y = sectionHeading(doc, "Notes", MARGIN, y, pageWidth - MARGIN);
     doc.font("Helvetica").fontSize(9.5).fillColor(C.muted).text(bill.notes, MARGIN, y, { width: contentWidth });
-    y += 16;
+    y += 18;
   } else {
-    y += 12;
+    y += 14;
   }
 
   // Footer (inside border)

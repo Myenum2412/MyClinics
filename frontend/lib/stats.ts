@@ -10,11 +10,21 @@ export function capacityOf(current: number, allowed: number) {
   return Math.min(100, Math.max(0, Math.round((current / allowed) * 100)));
 }
 
-export function dateString(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+export const CLINIC_TIMEZONE = "Asia/Kolkata";
+
+function zonedParts(d: Date, tz: string) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
+}
+
+export function dateString(d: Date, tz = CLINIC_TIMEZONE) {
+  const parts = zonedParts(d, tz);
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
 }
 
 export function todayDateString() {
@@ -22,21 +32,18 @@ export function todayDateString() {
 }
 
 export function mondayDateString() {
-  const d = new Date();
+  const [y, m, day] = todayDateString().split("-").map(Number);
+  const d = new Date(y, m - 1, day);
   const monday = (d.getDay() + 6) % 7;
   d.setDate(d.getDate() - monday);
   return dateString(d);
 }
 
 export function startOfMonthDate() {
-  const d = new Date();
-  return new Date(d.getFullYear(), d.getMonth(), 1);
+  const [y, m] = todayDateString().split("-").map(Number);
+  return new Date(`${y}-${String(m).padStart(2, "0")}-01T00:00:00+05:30`);
 }
 
 export function startOfWeekDate() {
-  const d = new Date();
-  const monday = (d.getDay() + 6) % 7;
-  d.setDate(d.getDate() - monday);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return new Date(`${mondayDateString()}T00:00:00+05:30`);
 }
