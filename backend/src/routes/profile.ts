@@ -23,6 +23,17 @@ export function mapUser(d: { _id: { toString(): string }; [k: string]: unknown }
     qualifications: d.qualifications ?? null,
     bio: d.bio ?? null,
     createdAt: d.createdAt ?? null,
+    department: d.department ?? null,
+    company: d.company ?? null,
+    addressStreet: d.addressStreet ?? null,
+    addressCity: d.addressCity ?? null,
+    addressState: d.addressState ?? null,
+    addressCountry: d.addressCountry ?? null,
+    addressZip: d.addressZip ?? null,
+    socialLinkedIn: d.socialLinkedIn ?? null,
+    socialGitHub: d.socialGitHub ?? null,
+    socialTwitter: d.socialTwitter ?? null,
+    socialWebsite: d.socialWebsite ?? null,
   };
 }
 
@@ -84,6 +95,51 @@ export function registerProfileRoutes(app: FastifyInstance): void {
           ? body.bio.trim().slice(0, BIO_MAX)
           : null;
 
+      const department =
+        typeof body?.department === "string" && body.department.trim()
+          ? body.department.trim().slice(0, 200)
+          : null;
+      const company =
+        typeof body?.company === "string" && body.company.trim()
+          ? body.company.trim().slice(0, 200)
+          : null;
+      const addressStreet =
+        typeof body?.addressStreet === "string" && body.addressStreet.trim()
+          ? body.addressStreet.trim().slice(0, 200)
+          : null;
+      const addressCity =
+        typeof body?.addressCity === "string" && body.addressCity.trim()
+          ? body.addressCity.trim().slice(0, 200)
+          : null;
+      const addressState =
+        typeof body?.addressState === "string" && body.addressState.trim()
+          ? body.addressState.trim().slice(0, 200)
+          : null;
+      const addressCountry =
+        typeof body?.addressCountry === "string" && body.addressCountry.trim()
+          ? body.addressCountry.trim().slice(0, 200)
+          : null;
+      const addressZip =
+        typeof body?.addressZip === "string" && body.addressZip.trim()
+          ? body.addressZip.trim().slice(0, 200)
+          : null;
+      const socialLinkedIn =
+        typeof body?.socialLinkedIn === "string" && body.socialLinkedIn.trim()
+          ? body.socialLinkedIn.trim().slice(0, 200)
+          : null;
+      const socialGitHub =
+        typeof body?.socialGitHub === "string" && body.socialGitHub.trim()
+          ? body.socialGitHub.trim().slice(0, 200)
+          : null;
+      const socialTwitter =
+        typeof body?.socialTwitter === "string" && body.socialTwitter.trim()
+          ? body.socialTwitter.trim().slice(0, 200)
+          : null;
+      const socialWebsite =
+        typeof body?.socialWebsite === "string" && body.socialWebsite.trim()
+          ? body.socialWebsite.trim().slice(0, 200)
+          : null;
+
       const db = await getDb();
       const result = await db.collection(DB_COLLECTIONS.users).updateOne(
         { _id: new ObjectId(request.user.id) },
@@ -94,6 +150,17 @@ export function registerProfileRoutes(app: FastifyInstance): void {
             specialization,
             qualifications,
             bio,
+            department,
+            company,
+            addressStreet,
+            addressCity,
+            addressState,
+            addressCountry,
+            addressZip,
+            socialLinkedIn,
+            socialGitHub,
+            socialTwitter,
+            socialWebsite,
             updatedAt: new Date(),
           },
         }

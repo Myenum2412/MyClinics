@@ -9,9 +9,7 @@ import {
   AcademicCapIcon,
   BuildingOffice2Icon as BuildingOfficeIcon,
   CalendarDaysIcon,
-  ChatBubbleOvalLeftIcon as ChatBubbleIcon,
   CheckCircleIcon,
-  CheckIcon,
   EnvelopeIcon,
   GlobeAltIcon,
   MapPinIcon,
@@ -19,23 +17,16 @@ import {
   PhoneIcon,
   SparklesIcon,
   UserCircleIcon,
+  UserIcon,
+  DocumentTextIcon,
+  LinkIcon,
+  CameraIcon,
+  UsersIcon,
+  BriefcaseIcon,
 } from "@heroicons/react/24/outline";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -51,6 +42,17 @@ export type ProfileUser = {
   qualifications: string | null;
   bio: string | null;
   createdAt: string | null;
+  department: string | null;
+  company: string | null;
+  addressStreet: string | null;
+  addressCity: string | null;
+  addressState: string | null;
+  addressCountry: string | null;
+  addressZip: string | null;
+  socialLinkedIn: string | null;
+  socialGitHub: string | null;
+  socialTwitter: string | null;
+  socialWebsite: string | null;
 };
 
 export type CompanyDetails = {
@@ -71,6 +73,17 @@ type Draft = {
     specialization: string;
     qualifications: string;
     bio: string;
+    department: string;
+    company: string;
+    addressStreet: string;
+    addressCity: string;
+    addressState: string;
+    addressCountry: string;
+    addressZip: string;
+    socialLinkedIn: string;
+    socialGitHub: string;
+    socialTwitter: string;
+    socialWebsite: string;
   };
   company: {
     name: string;
@@ -120,27 +133,6 @@ function formatDate(iso: string | null): string {
   });
 }
 
-function Counter({ value, max }: { value: string; max: number }) {
-  const over = value.length > max;
-  return (
-    <span
-      className={cn(
-        "text-right text-xs tabular-nums",
-        over ? "font-medium text-destructive" : "text-muted-foreground"
-      )}
-    >
-      {value.length.toLocaleString()} / {max.toLocaleString()}
-    </span>
-  );
-}
-
-const roleIcon: Record<string, typeof UserCircleIcon> = {
-  doctor: AcademicCapIcon,
-  admin: UserCircleIcon,
-  staff: BuildingOfficeIcon,
-  patient: UserCircleIcon,
-};
-
 export function ProfileView({
   initialUser,
   initialCompany,
@@ -166,6 +158,40 @@ export function ProfileView({
   );
   const [bio, setBio] = React.useState(draft?.user?.bio ?? initialUser.bio ?? "");
 
+  const [department, setDepartment] = React.useState(
+    draft?.user?.department ?? initialUser.department ?? ""
+  );
+  const [companyName, setCompanyName] = React.useState(
+    draft?.user?.company ?? initialUser.company ?? ""
+  );
+  const [addressStreet, setAddressStreet] = React.useState(
+    draft?.user?.addressStreet ?? initialUser.addressStreet ?? ""
+  );
+  const [addressCity, setAddressCity] = React.useState(
+    draft?.user?.addressCity ?? initialUser.addressCity ?? ""
+  );
+  const [addressState, setAddressState] = React.useState(
+    draft?.user?.addressState ?? initialUser.addressState ?? ""
+  );
+  const [addressCountry, setAddressCountry] = React.useState(
+    draft?.user?.addressCountry ?? initialUser.addressCountry ?? ""
+  );
+  const [addressZip, setAddressZip] = React.useState(
+    draft?.user?.addressZip ?? initialUser.addressZip ?? ""
+  );
+  const [socialLinkedIn, setSocialLinkedIn] = React.useState(
+    draft?.user?.socialLinkedIn ?? initialUser.socialLinkedIn ?? ""
+  );
+  const [socialGitHub, setSocialGitHub] = React.useState(
+    draft?.user?.socialGitHub ?? initialUser.socialGitHub ?? ""
+  );
+  const [socialTwitter, setSocialTwitter] = React.useState(
+    draft?.user?.socialTwitter ?? initialUser.socialTwitter ?? ""
+  );
+  const [socialWebsite, setSocialWebsite] = React.useState(
+    draft?.user?.socialWebsite ?? initialUser.socialWebsite ?? ""
+  );
+
   const [clinicName, setClinicName] = React.useState(
     draft?.company?.name ?? initialCompany.name
   );
@@ -184,8 +210,10 @@ export function ProfileView({
   const [clinicDescription, setClinicDescription] = React.useState(
     draft?.company?.description ?? initialCompany.description ?? ""
   );
+
   const [editing, setEditing] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<"profile" | "company" | "terms">("profile");
 
   const dirty =
     name !== user.name ||
@@ -193,6 +221,17 @@ export function ProfileView({
     specialization !== (user.specialization ?? "") ||
     qualifications !== (user.qualifications ?? "") ||
     bio !== (user.bio ?? "") ||
+    department !== (user.department ?? "") ||
+    companyName !== (user.company ?? "") ||
+    addressStreet !== (user.addressStreet ?? "") ||
+    addressCity !== (user.addressCity ?? "") ||
+    addressState !== (user.addressState ?? "") ||
+    addressCountry !== (user.addressCountry ?? "") ||
+    addressZip !== (user.addressZip ?? "") ||
+    socialLinkedIn !== (user.socialLinkedIn ?? "") ||
+    socialGitHub !== (user.socialGitHub ?? "") ||
+    socialTwitter !== (user.socialTwitter ?? "") ||
+    socialWebsite !== (user.socialWebsite ?? "") ||
     clinicName !== company.name ||
     clinicPhone !== (company.phone ?? "") ||
     clinicEmail !== (company.email ?? "") ||
@@ -207,7 +246,24 @@ export function ProfileView({
         window.localStorage.setItem(
           DRAFT_KEY,
           JSON.stringify({
-            user: { name, phone, specialization, qualifications, bio },
+            user: {
+              name,
+              phone,
+              specialization,
+              qualifications,
+              bio,
+              department,
+              company: companyName,
+              addressStreet,
+              addressCity,
+              addressState,
+              addressCountry,
+              addressZip,
+              socialLinkedIn,
+              socialGitHub,
+              socialTwitter,
+              socialWebsite,
+            },
             company: {
               name: clinicName,
               phone: clinicPhone,
@@ -230,6 +286,17 @@ export function ProfileView({
     specialization,
     qualifications,
     bio,
+    department,
+    companyName,
+    addressStreet,
+    addressCity,
+    addressState,
+    addressCountry,
+    addressZip,
+    socialLinkedIn,
+    socialGitHub,
+    socialTwitter,
+    socialWebsite,
     clinicName,
     clinicPhone,
     clinicEmail,
@@ -246,7 +313,24 @@ export function ProfileView({
         fetch("/api/profile", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, phone, specialization, qualifications, bio }),
+          body: JSON.stringify({
+            name,
+            phone,
+            specialization,
+            qualifications,
+            bio,
+            department,
+            company: companyName,
+            addressStreet,
+            addressCity,
+            addressState,
+            addressCountry,
+            addressZip,
+            socialLinkedIn,
+            socialGitHub,
+            socialTwitter,
+            socialWebsite,
+          }),
         }),
         fetch("/api/organization", {
           method: "PUT",
@@ -273,6 +357,32 @@ export function ProfileView({
 
       setUser(userData.user);
       setCompany(companyData.company);
+
+      // Sync form states with saved backend data
+      setName(userData.user.name ?? "");
+      setPhone(userData.user.phone ?? "");
+      setSpecialization(userData.user.specialization ?? "");
+      setQualifications(userData.user.qualifications ?? "");
+      setBio(userData.user.bio ?? "");
+      setDepartment(userData.user.department ?? "");
+      setCompanyName(userData.user.company ?? "");
+      setAddressStreet(userData.user.addressStreet ?? "");
+      setAddressCity(userData.user.addressCity ?? "");
+      setAddressState(userData.user.addressState ?? "");
+      setAddressCountry(userData.user.addressCountry ?? "");
+      setAddressZip(userData.user.addressZip ?? "");
+      setSocialLinkedIn(userData.user.socialLinkedIn ?? "");
+      setSocialGitHub(userData.user.socialGitHub ?? "");
+      setSocialTwitter(userData.user.socialTwitter ?? "");
+      setSocialWebsite(userData.user.socialWebsite ?? "");
+
+      setClinicName(companyData.company.name ?? "");
+      setClinicPhone(companyData.company.phone ?? "");
+      setClinicEmail(companyData.company.email ?? "");
+      setClinicAddress(companyData.company.address ?? "");
+      setClinicWebsite(companyData.company.website ?? "");
+      setClinicDescription(companyData.company.description ?? "");
+
       clearDraft();
       setEditing(false);
       toast.success("Profile saved.");
@@ -289,662 +399,690 @@ export function ProfileView({
     setSpecialization(initialUser.specialization ?? "");
     setQualifications(initialUser.qualifications ?? "");
     setBio(initialUser.bio ?? "");
+    setDepartment(initialUser.department ?? "");
+    setCompanyName(initialUser.company ?? "");
+    setAddressStreet(initialUser.addressStreet ?? "");
+    setAddressCity(initialUser.addressCity ?? "");
+    setAddressState(initialUser.addressState ?? "");
+    setAddressCountry(initialUser.addressCountry ?? "");
+    setAddressZip(initialUser.addressZip ?? "");
+    setSocialLinkedIn(initialUser.socialLinkedIn ?? "");
+    setSocialGitHub(initialUser.socialGitHub ?? "");
+    setSocialTwitter(initialUser.socialTwitter ?? "");
+    setSocialWebsite(initialUser.socialWebsite ?? "");
+
     setClinicName(initialCompany.name);
     setClinicPhone(initialCompany.phone ?? "");
     setClinicEmail(initialCompany.email ?? "");
     setClinicAddress(initialCompany.address ?? "");
     setClinicWebsite(initialCompany.website ?? "");
     setClinicDescription(initialCompany.description ?? "");
+
     clearDraft();
     toast.success("Discarded unsaved changes.");
   }
 
-  const RoleIcon = roleIcon[user.role] ?? UserCircleIcon;
-  const roleLabel =
-    user.role === "doctor" ? "Doctor" : user.role === "admin" ? "Clinic Admin" : user.role;
+  const tabs = [
+    { id: "profile", label: "Profile", icon: UserIcon },
+    { id: "company", label: "Company", icon: BuildingOfficeIcon },
+    { id: "terms", label: "Terms", icon: DocumentTextIcon },
+  ] as const;
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* ── Hero banner ─────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0d47a1] via-[#1565c0] to-[#42a5f5] text-white shadow-lg shadow-blue-900/20">
-        <div
-          aria-hidden
-          className="absolute -top-24 -right-16 size-64 rounded-full bg-white/10 blur-2xl"
-        />
-        <div
-          aria-hidden
-          className="absolute -bottom-28 -left-10 size-72 rounded-full bg-sky-300/20 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="absolute top-1/2 right-1/4 hidden size-40 rounded-full bg-white/5 blur-xl md:block"
-        />
+    <div className="flex flex-col gap-6 min-h-screen bg-[#f3f8fc] -mx-4 -mt-4 p-4 md:p-8">
+      {/* ── Top Header Section ─────────────────────────────────────────── */}
+      <div className="relative bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-xs">
+        {/* Banner with gradient */}
+        <div className="h-44 md:h-52 bg-gradient-to-b from-indigo-400/90 via-sky-300/40 to-sky-50/20 relative" />
 
-        <div className="relative flex flex-col gap-5 p-5 sm:p-7">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex items-center gap-4">
-              <Avatar className="size-20 shrink-0 rounded-2xl shadow-xl ring-4 ring-white/90 sm:size-24">
-                <AvatarImage src={user.image ?? undefined} alt={name} />
-                <AvatarFallback className="bg-white/20 text-white">
-                  {initials(name || "User")}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
-                    {name || "Your profile"}
-                  </h1>
-                  <Badge className="border-white/25 bg-white/15 capitalize text-white hover:bg-white/20">
-                    <RoleIcon className="mr-1 size-3" aria-hidden="true" />
-                    {roleLabel}
-                  </Badge>
-                </div>
-                <p className="mt-0.5 flex items-center gap-1.5 truncate text-sm text-blue-100">
-                  <EnvelopeIcon className="size-3.5 shrink-0" aria-hidden="true" />
-                  {user.email}
-                </p>
-                <p className="mt-1 flex items-center gap-1.5 text-xs text-blue-200/90">
-                  <CalendarDaysIcon className="size-3.5" aria-hidden="true" />
-                  Member since {formatDate(user.createdAt)}
-                </p>
-              </div>
+        {/* Profile Info Overlay */}
+        <div className="relative px-6 pb-6 flex flex-col items-center -mt-16 md:-mt-20">
+          {/* Avatar Container */}
+          <div className="relative">
+            <Avatar className="size-28 md:size-32 rounded-full border-4 border-white shadow-md bg-white">
+              <AvatarImage src={user.image ?? undefined} alt={name} className="object-cover" />
+              <AvatarFallback className="bg-indigo-50 text-indigo-600 text-2xl font-bold">
+                {initials(name || "User")}
+              </AvatarFallback>
+            </Avatar>
+            {/* Camera badge overlap */}
+            <div className="absolute bottom-1 right-1 p-2 bg-[#6366f1] rounded-full border border-white text-white shadow-xs cursor-pointer hover:bg-[#4f46e5] transition-colors">
+              <CameraIcon className="size-4" />
             </div>
+          </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <span
+          {/* Name & Email */}
+          <h1 className="mt-4 text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">
+            {name || "Your profile"}
+          </h1>
+          <p className="mt-1 text-sm text-gray-500 font-medium">
+            {user.email}
+          </p>
+
+          {/* Badges / Pill row */}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+            <Badge className="bg-[#e0e7ff] text-[#4338ca] hover:bg-[#e0e7ff] border-none px-3 py-1 flex items-center gap-1.5 text-xs font-semibold rounded-full">
+              <UsersIcon className="size-3.5" />
+              Members
+            </Badge>
+            <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+              <BuildingOfficeIcon className="size-4 text-gray-400" />
+              {company.name || "Organization Name"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Tabs & Action Buttons row ──────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-gray-200 pb-3">
+        {/* Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto py-1">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  if (tab.id === "terms") {
+                    setEditing(false); // Terms is read-only
+                  }
+                }}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium backdrop-blur",
-                  dirty
-                    ? "border-amber-300/40 bg-amber-400/20 text-amber-100"
-                    : "border-white/25 bg-white/10 text-blue-100"
+                  "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors border",
+                  isActive
+                    ? "bg-[#e5f1ff] text-[#0066cc] border-[#CDE3FF] shadow-xs"
+                    : "bg-transparent text-gray-500 border-transparent hover:text-gray-900 hover:bg-gray-50"
                 )}
               >
-                {dirty ? (
+                <Icon className={cn("size-4", isActive ? "text-[#0066cc]" : "text-gray-400")} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Edit / Action Buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          {editing ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (dirty) {
+                    if (!window.confirm("Discard your unsaved changes and leave editing?")) return;
+                    handleRevert();
+                  }
+                  setEditing(false);
+                }}
+                disabled={saving}
+                className="border-gray-200 hover:bg-gray-50 text-gray-700 h-9"
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => void handleSave()}
+                disabled={!dirty || saving}
+                className="bg-[#0066cc] text-white hover:bg-[#0052a3] h-9"
+              >
+                {saving ? (
                   <>
-                    <span className="size-1.5 rounded-full bg-amber-300" />
-                    {restoredFromDraft
-                      ? "Restored unsaved edits"
-                      : "Unsaved changes"}
+                    <Loader2Icon className="animate-spin size-4 mr-1.5" />
+                    Saving...
                   </>
                 ) : (
                   <>
-                    <CheckCircleIcon className="size-3.5 text-emerald-300" aria-hidden="true" />
-                    All changes saved
+                    <SaveIcon className="size-4 mr-1.5" />
+                    Save Changes
                   </>
                 )}
-              </span>
-              {dirty && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRevert}
-                  disabled={saving}
-                  className="border border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
-                >
-                  <Undo2Icon className="size-3.5" aria-hidden="true" />
-                  Revert
-                </Button>
-              )}
-              {editing ? (
-                <>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      if (dirty) {
-                        if (
-                          !window.confirm(
-                            "Discard your unsaved changes and leave editing?"
-                          )
-                        )
-                          return;
-                        handleRevert();
-                      }
-                      setEditing(false);
-                    }}
-                    className="border-white/25 bg-white/15 text-white hover:bg-white/25 hover:text-white"
-                  >
-                    View profile
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => void handleSave()}
-                    disabled={!dirty || saving}
-                    className="bg-white text-blue-700 shadow-lg shadow-blue-950/30 hover:bg-blue-50"
-                  >
-                    {saving ? (
-                      <Loader2Icon className="animate-spin" aria-hidden="true" />
-                    ) : (
-                      <SaveIcon aria-hidden="true" />
-                    )}
-                    {saving ? "Saving…" : "Save changes"}
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={() => setEditing(true)}
-                  className="bg-white text-blue-700 shadow-lg shadow-blue-950/30 hover:bg-blue-50"
-                >
-                  <PencilIcon aria-hidden="true" />
-                  Edit Profile
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Info chips */}
-          <div className="flex flex-wrap gap-2">
-            {specialization && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur">
-                <SparklesIcon className="size-3.5 text-sky-200" aria-hidden="true" />
-                {specialization}
-              </span>
-            )}
-            {qualifications && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur">
-                <AcademicCapIcon className="size-3.5 text-sky-200" aria-hidden="true" />
-                {qualifications}
-              </span>
-            )}
-            {phone && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur">
-                <PhoneIcon className="size-3.5 text-sky-200" aria-hidden="true" />
-                {phone}
-              </span>
-            )}
-            {clinicName && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium backdrop-blur">
-                <BuildingOfficeIcon className="size-3.5 text-sky-200" aria-hidden="true" />
-                {clinicName}
-              </span>
-            )}
-          </div>
+              </Button>
+            </>
+          ) : (
+            activeTab !== "terms" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditing(true)}
+                className="flex items-center gap-1.5 border border-gray-250 bg-white hover:bg-gray-50 text-gray-700 h-9 rounded-lg"
+              >
+                <PencilIcon className="size-4 text-gray-500" />
+                Edit Profile
+              </Button>
+            )
+          )}
         </div>
-      </section>
+      </div>
 
-      {editing ? (
-        /* ── Edit mode ─────────────────────────────────────────────── */
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="flex flex-col gap-4 lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <UserCircleIcon className="size-5" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <CardTitle>Personal information</CardTitle>
-                    <CardDescription>
-                      Shown to your patients and used by the WhatsApp AI.
-                    </CardDescription>
+      {/* ── Main Tab Content ───────────────────────────────────────────── */}
+      <div className="mt-2">
+        {activeTab === "profile" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {/* Column 1: Personal Information */}
+            <div className="bg-white border border-gray-150 rounded-2xl p-6 md:p-8 shadow-xs flex flex-col gap-6">
+              <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                  <UserIcon className="size-5" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Personal Information</h2>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {/* Email (Readonly) */}
+                <div className="flex items-start gap-3.5 pb-3.5 border-b border-gray-50">
+                  <EnvelopeIcon className="size-5 text-gray-400 mt-1 shrink-0" />
+                  <div className="flex-1">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Email</span>
+                    <p className="text-sm font-medium text-gray-900 mt-1">{user.email}</p>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <FieldGroup>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field>
-                      <FieldLabel htmlFor="profile-name">Full name</FieldLabel>
+
+                {/* Full Name */}
+                <div className="flex items-start gap-3.5 pb-3.5 border-b border-gray-50">
+                  <UserIcon className="size-5 text-gray-400 mt-1 shrink-0" />
+                  <div className="flex-1">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Full Name</span>
+                    {editing ? (
                       <Input
-                        id="profile-name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
                         maxLength={100}
-                        placeholder="Dr. John Doe"
+                        placeholder="Myenum Am"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="profile-phone">Phone</FieldLabel>
-                      <Input
-                        id="profile-phone"
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        maxLength={30}
-                        placeholder="+91 98765 43210"
-                      />
-                    </Field>
-                  </div>
-                  <Field>
-                    <FieldLabel htmlFor="profile-email">Email</FieldLabel>
-                    <Input
-                      id="profile-email"
-                      type="email"
-                      value={user.email}
-                      readOnly
-                      disabled
-                    />
-                    <FieldDescription>
-                      Email is your login and cannot be changed.
-                    </FieldDescription>
-                  </Field>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field>
-                      <FieldLabel htmlFor="profile-specialization">
-                        Specialization
-                      </FieldLabel>
-                      <Input
-                        id="profile-specialization"
-                        value={specialization}
-                        onChange={(e) => setSpecialization(e.target.value)}
-                        maxLength={100}
-                        placeholder="e.g. General Medicine, Cardiology"
-                      />
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="profile-qualifications">
-                        Qualifications
-                      </FieldLabel>
-                      <Input
-                        id="profile-qualifications"
-                        value={qualifications}
-                        onChange={(e) => setQualifications(e.target.value)}
-                        maxLength={200}
-                        placeholder="e.g. MBBS, MD (General Medicine)"
-                      />
-                    </Field>
-                  </div>
-                  <Field>
-                    <FieldLabel htmlFor="profile-bio">Bio</FieldLabel>
-                    <Textarea
-                      id="profile-bio"
-                      value={bio}
-                      onChange={(e) => setBio(e.target.value)}
-                      maxLength={1000}
-                      rows={4}
-                      placeholder="Short introduction shown to patients."
-                    />
-                    <div className="flex items-center justify-between">
-                      <FieldDescription>
-                        A short introduction shown to patients.
-                      </FieldDescription>
-                      <Counter value={bio} max={1000} />
-                    </div>
-                  </Field>
-                </FieldGroup>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <BuildingOfficeIcon className="size-5" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <CardTitle>Clinic details</CardTitle>
-                    <CardDescription>
-                      Your clinic&apos;s company information, used by patients and
-                      the WhatsApp AI.
-                    </CardDescription>
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">{name || "—"}</p>
+                    )}
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="clinic-name">Clinic name</FieldLabel>
-                    <Input
-                      id="clinic-name"
-                      value={clinicName}
-                      onChange={(e) => setClinicName(e.target.value)}
-                      maxLength={120}
-                      placeholder="Sunrise Multispeciality Clinic"
-                    />
-                  </Field>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field>
-                      <FieldLabel htmlFor="clinic-phone">Clinic phone</FieldLabel>
+
+                {/* Phone */}
+                <div className="flex items-start gap-3.5 pb-3.5 border-b border-gray-50">
+                  <PhoneIcon className="size-5 text-gray-400 mt-1 shrink-0" />
+                  <div className="flex-1">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Phone</span>
+                    {editing ? (
                       <Input
-                        id="clinic-phone"
-                        type="tel"
-                        value={clinicPhone}
-                        onChange={(e) => setClinicPhone(e.target.value)}
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
                         maxLength={30}
                         placeholder="+91 98765 43210"
                       />
-                    </Field>
-                    <Field>
-                      <FieldLabel htmlFor="clinic-email">Clinic email</FieldLabel>
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">{phone || "—"}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Department */}
+                <div className="flex items-start gap-3.5 pb-3.5 border-b border-gray-50">
+                  <BriefcaseIcon className="size-5 text-gray-400 mt-1 shrink-0" />
+                  <div className="flex-1">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Department</span>
+                    {editing ? (
                       <Input
-                        id="clinic-email"
-                        type="email"
+                        value={department}
+                        onChange={(e) => setDepartment(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
+                        maxLength={200}
+                        placeholder="e.g. Cardiology"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">{department || "—"}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Company */}
+                <div className="flex items-start gap-3.5">
+                  <BuildingOfficeIcon className="size-5 text-gray-400 mt-1 shrink-0" />
+                  <div className="flex-1">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Company</span>
+                    {editing ? (
+                      <Input
+                        value={companyName}
+                        onChange={(e) => setCompanyName(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
+                        maxLength={200}
+                        placeholder="e.g. Myenum Am's Organization"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">{companyName || "—"}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Column 2: Address & Social */}
+            <div className="bg-white border border-gray-150 rounded-2xl p-6 md:p-8 shadow-xs flex flex-col gap-6">
+              <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                  <MapPinIcon className="size-5" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Address & Social</h2>
+              </div>
+
+              {/* Address Sub-Section */}
+              <div className="flex flex-col gap-4">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider pb-1 border-b border-gray-100">
+                  Address
+                </div>
+
+                {/* Street */}
+                <div>
+                  <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Street</span>
+                  {editing ? (
+                    <Input
+                      value={addressStreet}
+                      onChange={(e) => setAddressStreet(e.target.value)}
+                      className="mt-1.5 h-9 bg-gray-50/50"
+                      maxLength={200}
+                      placeholder="Street Address"
+                    />
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900 mt-1">{addressStreet || "—"}</p>
+                  )}
+                </div>
+
+                {/* City & State */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">City</span>
+                    {editing ? (
+                      <Input
+                        value={addressCity}
+                        onChange={(e) => setAddressCity(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
+                        maxLength={200}
+                        placeholder="City"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">{addressCity || "—"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">State</span>
+                    {editing ? (
+                      <Input
+                        value={addressState}
+                        onChange={(e) => setAddressState(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
+                        maxLength={200}
+                        placeholder="State"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">{addressState || "—"}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Country & Zip Code */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Country</span>
+                    {editing ? (
+                      <Input
+                        value={addressCountry}
+                        onChange={(e) => setAddressCountry(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
+                        maxLength={200}
+                        placeholder="Country"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">{addressCountry || "—"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Zip Code</span>
+                    {editing ? (
+                      <Input
+                        value={addressZip}
+                        onChange={(e) => setAddressZip(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
+                        maxLength={200}
+                        placeholder="Zip Code"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">{addressZip || "—"}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Links Sub-Section */}
+              <div className="flex flex-col gap-4 mt-2">
+                <div className="text-xs font-bold text-gray-400 uppercase tracking-wider pb-1 border-b border-gray-100">
+                  Social Links
+                </div>
+
+                {/* LinkedIn & GitHub */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-start gap-2.5">
+                    <LinkIcon className="size-4.5 text-gray-400 mt-1 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">LinkedIn</span>
+                      {editing ? (
+                        <Input
+                          value={socialLinkedIn}
+                          onChange={(e) => setSocialLinkedIn(e.target.value)}
+                          className="mt-1.5 h-9 bg-gray-50/50"
+                          maxLength={200}
+                          placeholder="LinkedIn URL"
+                        />
+                      ) : socialLinkedIn ? (
+                        <a href={socialLinkedIn} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:underline truncate block mt-1">
+                          {socialLinkedIn}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 mt-1">—</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <LinkIcon className="size-4.5 text-gray-400 mt-1 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">GitHub</span>
+                      {editing ? (
+                        <Input
+                          value={socialGitHub}
+                          onChange={(e) => setSocialGitHub(e.target.value)}
+                          className="mt-1.5 h-9 bg-gray-50/50"
+                          maxLength={200}
+                          placeholder="GitHub URL"
+                        />
+                      ) : socialGitHub ? (
+                        <a href={socialGitHub} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:underline truncate block mt-1">
+                          {socialGitHub}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 mt-1">—</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Twitter & Website */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-start gap-2.5">
+                    <LinkIcon className="size-4.5 text-gray-400 mt-1 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Twitter</span>
+                      {editing ? (
+                        <Input
+                          value={socialTwitter}
+                          onChange={(e) => setSocialTwitter(e.target.value)}
+                          className="mt-1.5 h-9 bg-gray-50/50"
+                          maxLength={200}
+                          placeholder="Twitter URL"
+                        />
+                      ) : socialTwitter ? (
+                        <a href={socialTwitter} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:underline truncate block mt-1">
+                          {socialTwitter}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 mt-1">—</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-2.5">
+                    <LinkIcon className="size-4.5 text-gray-400 mt-1 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Website</span>
+                      {editing ? (
+                        <Input
+                          value={socialWebsite}
+                          onChange={(e) => setSocialWebsite(e.target.value)}
+                          className="mt-1.5 h-9 bg-gray-50/50"
+                          maxLength={200}
+                          placeholder="Website URL"
+                        />
+                      ) : socialWebsite ? (
+                        <a href={socialWebsite} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:underline truncate block mt-1">
+                          {socialWebsite}
+                        </a>
+                      ) : (
+                        <p className="text-sm font-medium text-gray-900 mt-1">—</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "company" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {/* Clinic / Company Information */}
+            <div className="bg-white border border-gray-150 rounded-2xl p-6 md:p-8 shadow-xs flex flex-col gap-6">
+              <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                  <BuildingOfficeIcon className="size-5" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Clinic Details</h2>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {/* Clinic Name */}
+                <div className="flex items-start gap-3.5 pb-3.5 border-b border-gray-50">
+                  <BuildingOfficeIcon className="size-5 text-gray-400 mt-1 shrink-0" />
+                  <div className="flex-1">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Clinic Name</span>
+                    {editing ? (
+                      <Input
+                        value={clinicName}
+                        onChange={(e) => setClinicName(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
+                        maxLength={120}
+                        placeholder="Sunrise Clinic"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">{clinicName || "—"}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Clinic Phone */}
+                <div className="flex items-start gap-3.5 pb-3.5 border-b border-gray-50">
+                  <PhoneIcon className="size-5 text-gray-400 mt-1 shrink-0" />
+                  <div className="flex-1">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Clinic Phone</span>
+                    {editing ? (
+                      <Input
+                        value={clinicPhone}
+                        onChange={(e) => setClinicPhone(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
+                        maxLength={30}
+                        placeholder="+91 98765 43210"
+                      />
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">{clinicPhone || "—"}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Clinic Email */}
+                <div className="flex items-start gap-3.5 pb-3.5 border-b border-gray-50">
+                  <EnvelopeIcon className="size-5 text-gray-400 mt-1 shrink-0" />
+                  <div className="flex-1">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Clinic Email</span>
+                    {editing ? (
+                      <Input
                         value={clinicEmail}
                         onChange={(e) => setClinicEmail(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
                         maxLength={120}
                         placeholder="care@clinic.com"
                       />
-                    </Field>
-                  </div>
-                  <Field>
-                    <FieldLabel htmlFor="clinic-website">Website</FieldLabel>
-                    <Input
-                      id="clinic-website"
-                      type="url"
-                      value={clinicWebsite}
-                      onChange={(e) => setClinicWebsite(e.target.value)}
-                      maxLength={120}
-                      placeholder="https://www.clinic.com"
-                    />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="clinic-address">Address</FieldLabel>
-                    <Textarea
-                      id="clinic-address"
-                      value={clinicAddress}
-                      onChange={(e) => setClinicAddress(e.target.value)}
-                      maxLength={300}
-                      rows={2}
-                      placeholder="Street, area, city, PIN code"
-                    />
-                    <div className="flex items-center justify-between">
-                      <FieldDescription>
-                        Patients use this to find the clinic.
-                      </FieldDescription>
-                      <Counter value={clinicAddress} max={300} />
-                    </div>
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="clinic-description">
-                      About the clinic
-                    </FieldLabel>
-                    <Textarea
-                      id="clinic-description"
-                      value={clinicDescription}
-                      onChange={(e) => setClinicDescription(e.target.value)}
-                      maxLength={500}
-                      rows={3}
-                      placeholder="Short description of your clinic and services."
-                    />
-                    <div className="flex items-center justify-between">
-                      <FieldDescription>
-                        Used by the WhatsApp AI to describe your clinic.
-                      </FieldDescription>
-                      <Counter value={clinicDescription} max={500} />
-                    </div>
-                  </Field>
-                </FieldGroup>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div>
-            <Card className="lg:sticky lg:top-4">
-              <CardHeader>
-                <CardTitle>Save your changes</CardTitle>
-                <CardDescription>
-                  Updates apply to both your personal profile and the clinic.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div
-                  className={cn(
-                    "flex items-center gap-2 rounded-lg border p-3 text-sm",
-                    dirty
-                      ? "border-amber-200 bg-amber-50 text-amber-800"
-                      : "border-emerald-200 bg-emerald-50 text-emerald-800"
-                  )}
-                >
-                  {dirty ? (
-                    <>
-                      <span className="size-2 shrink-0 rounded-full bg-amber-500" />
-                      {restoredFromDraft
-                        ? "Restored unsaved edits from this device."
-                        : "You have unsaved changes."}
-                    </>
-                  ) : (
-                    <>
-                      <CheckIcon className="size-4 shrink-0" aria-hidden="true" />
-                      Everything is up to date.
-                    </>
-                  )}
-                </div>
-                <Button
-                  onClick={() => void handleSave()}
-                  disabled={!dirty || saving}
-                  className="w-full"
-                >
-                  {saving ? (
-                    <Loader2Icon className="animate-spin" aria-hidden="true" />
-                  ) : (
-                    <SaveIcon aria-hidden="true" />
-                  )}
-                  {saving ? "Saving…" : "Save changes"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleRevert}
-                  disabled={saving || !dirty}
-                >
-                  <Undo2Icon aria-hidden="true" />
-                  Discard changes
-                </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  Tip: unsaved edits are kept on this device in case you
-                  navigate away.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      ) : (
-        /* ── View mode ─────────────────────────────────────────────── */
-        <div className="flex flex-col gap-4">
-          {dirty && restoredFromDraft && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-              <div className="flex items-center gap-2.5 text-sm text-amber-800">
-                <span className="size-2 shrink-0 rounded-full bg-amber-500" />
-                <span>
-                  You have unsaved edits restored from this device. Review or
-                  discard them.
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  onClick={() => setEditing(true)}
-                  className="bg-amber-600 text-white hover:bg-amber-700"
-                >
-                  <PencilIcon aria-hidden="true" />
-                  Review edits
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleRevert}>
-                  <Undo2Icon aria-hidden="true" />
-                  Discard
-                </Button>
-              </div>
-            </div>
-          )}
-          <div className="grid gap-4 lg:grid-cols-3">
-          <div className="flex flex-col gap-4 lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <ChatBubbleIcon className="size-5" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <CardTitle>About</CardTitle>
-                    <CardDescription>
-                      How patients and the WhatsApp AI see you.
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                {bio ? (
-                  <p className="text-sm leading-relaxed text-muted-foreground">
-                    {bio}
-                  </p>
-                ) : (
-                  <p className="text-sm italic text-muted-foreground">
-                    No bio yet.{" "}
-                    <button
-                      type="button"
-                      onClick={() => setEditing(true)}
-                      className="font-medium text-primary underline-offset-4 not-italic hover:underline"
-                    >
-                      Add one
-                    </button>
-                  </p>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  {specialization && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium">
-                      <SparklesIcon className="size-3.5 text-primary" aria-hidden="true" />
-                      {specialization}
-                    </span>
-                  )}
-                  {qualifications && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium">
-                      <AcademicCapIcon className="size-3.5 text-primary" aria-hidden="true" />
-                      {qualifications}
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <BuildingOfficeIcon className="size-5" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <CardTitle>Clinic</CardTitle>
-                    <CardDescription>
-                      Your clinic&apos;s public information.
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-base font-semibold">
-                      {clinicName || "—"}
-                    </p>
-                    {clinicDescription && (
-                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                        {clinicDescription}
-                      </p>
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">{clinicEmail || "—"}</p>
                     )}
                   </div>
                 </div>
-                <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-                  {clinicPhone && (
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                        <PhoneIcon className="size-3.5" aria-hidden="true" />
-                      </span>
-                      <dd className="min-w-0 truncate">{clinicPhone}</dd>
-                    </div>
-                  )}
-                  {clinicEmail && (
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                        <EnvelopeIcon className="size-3.5" aria-hidden="true" />
-                      </span>
-                      <dd className="min-w-0 truncate">{clinicEmail}</dd>
-                    </div>
-                  )}
-                  {clinicAddress && (
-                    <div className="flex items-center gap-2.5 sm:col-span-2">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                        <MapPinIcon className="size-3.5" aria-hidden="true" />
-                      </span>
-                      <dd className="min-w-0">{clinicAddress}</dd>
-                    </div>
-                  )}
-                  {clinicWebsite && (
-                    <div className="flex items-center gap-2.5 sm:col-span-2">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                        <GlobeAltIcon className="size-3.5" aria-hidden="true" />
-                      </span>
-                      <dd className="min-w-0 truncate">
-                        <a
-                          href={clinicWebsite}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-primary underline-offset-4 hover:underline"
-                        >
-                          {clinicWebsite}
-                        </a>
-                      </dd>
-                    </div>
-                  )}
-                  {!clinicPhone && !clinicEmail && !clinicAddress && !clinicWebsite && (
-                    <p className="text-sm italic text-muted-foreground">
-                      No clinic contact details yet.{" "}
-                      <button
-                        type="button"
-                        onClick={() => setEditing(true)}
-                        className="font-medium text-primary underline-offset-4 not-italic hover:underline"
-                      >
-                        Add them
-                      </button>
-                    </p>
-                  )}
-                </dl>
-              </CardContent>
-            </Card>
-          </div>
 
-          <div className="flex flex-col gap-4">
-            <Card className="lg:sticky lg:top-4">
-              <CardHeader>
-                <CardTitle>Details</CardTitle>
-                <CardDescription>Contact and account info.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <dl className="grid gap-3 text-sm">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                      <EnvelopeIcon className="size-3.5" aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0">
-                      <dt className="text-xs text-muted-foreground">Email</dt>
-                      <dd className="truncate font-medium">{user.email}</dd>
-                    </div>
+                {/* Clinic Website */}
+                <div className="flex items-start gap-3.5">
+                  <GlobeAltIcon className="size-5 text-gray-400 mt-1 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider block">Website</span>
+                    {editing ? (
+                      <Input
+                        value={clinicWebsite}
+                        onChange={(e) => setClinicWebsite(e.target.value)}
+                        className="mt-1.5 h-9 bg-gray-50/50"
+                        maxLength={120}
+                        placeholder="https://www.clinic.com"
+                      />
+                    ) : clinicWebsite ? (
+                      <a href={clinicWebsite} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-600 hover:underline truncate block mt-1">
+                        {clinicWebsite}
+                      </a>
+                    ) : (
+                      <p className="text-sm font-medium text-gray-900 mt-1">—</p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                      <PhoneIcon className="size-3.5" aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0">
-                      <dt className="text-xs text-muted-foreground">Phone</dt>
-                      <dd className="truncate font-medium">{phone || "—"}</dd>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                      <CalendarDaysIcon className="size-3.5" aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0">
-                      <dt className="text-xs text-muted-foreground">Member since</dt>
-                      <dd className="truncate font-medium">
-                        {formatDate(user.createdAt)}
-                      </dd>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                      <RoleIcon className="size-3.5" aria-hidden="true" />
-                    </span>
-                    <div className="min-w-0">
-                      <dt className="text-xs text-muted-foreground">Role</dt>
-                      <dd className="truncate font-medium capitalize">{roleLabel}</dd>
-                    </div>
-                  </div>
-                </dl>
-              </CardContent>
-            </Card>
+                </div>
+              </div>
+            </div>
+
+            {/* Clinic Address & Description */}
+            <div className="bg-white border border-gray-150 rounded-2xl p-6 md:p-8 shadow-xs flex flex-col gap-6">
+              <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                  <MapPinIcon className="size-5" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Clinic Info & Address</h2>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                {/* Clinic Address */}
+                <div>
+                  <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">Address</span>
+                  {editing ? (
+                    <Textarea
+                      value={clinicAddress}
+                      onChange={(e) => setClinicAddress(e.target.value)}
+                      className="mt-1.5 bg-gray-50/50"
+                      maxLength={300}
+                      rows={3}
+                      placeholder="Street, area, city, PIN code"
+                    />
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900 mt-1 leading-relaxed">{clinicAddress || "—"}</p>
+                  )}
+                </div>
+
+                {/* About Clinic */}
+                <div>
+                  <span className="text-xs text-gray-400 font-semibold uppercase tracking-wider block">About the Clinic</span>
+                  {editing ? (
+                    <Textarea
+                      value={clinicDescription}
+                      onChange={(e) => setClinicDescription(e.target.value)}
+                      className="mt-1.5 bg-gray-50/50"
+                      maxLength={500}
+                      rows={4}
+                      placeholder="Short description of services and details."
+                    />
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900 mt-1 leading-relaxed">{clinicDescription || "—"}</p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
+        )}
+
+        {activeTab === "terms" && (
+          <div className="bg-white border border-gray-150 rounded-2xl p-6 md:p-8 shadow-xs flex flex-col gap-6 max-w-4xl mx-auto">
+            <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+              <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+                <DocumentTextIcon className="size-5" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900">Terms of Service</h2>
+            </div>
+            
+            <div className="max-h-[500px] overflow-y-auto pr-2 flex flex-col gap-6 text-sm text-gray-600 leading-relaxed scrollbar-thin">
+              <section className="flex flex-col gap-1.5">
+                <h3 className="font-semibold text-gray-900">1. Acceptance of Terms</h3>
+                <p>
+                  By creating an account, booking an appointment, messaging the clinic through WhatsApp or using My Clinics (the &quot;Service&quot;), you agree to these Terms of Service and our Privacy Policy. If you do not agree, please do not use the Service.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1.5">
+                <h3 className="font-semibold text-gray-900">2. The Service</h3>
+                <p>
+                  My Clinics is a clinic management platform that helps clinics and healthcare providers manage appointments, patient records, medical history, prescriptions, medicines, billing and reports. Patients may use the Service to book and manage appointments, chat with the clinic&apos;s assistant, receive reminders and access their own records.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1.5">
+                <h3 className="font-semibold text-gray-900">3. Accounts & Registration</h3>
+                <p>
+                  You are responsible for safeguarding your account credentials and for all activity that occurs under your account. You must provide accurate information when creating an account and keep it up to date.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1.5">
+                <h3 className="font-semibold text-gray-900">4. Medical Disclaimer</h3>
+                <p>
+                  The Service stores and organises health information but is not a medical service. Content on the Service — including prescriptions, diagnoses and reports — is provided by licensed healthcare professionals and is not a substitute for professional medical advice, diagnosis or treatment.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1.5">
+                <h3 className="font-semibold text-gray-900">5. Appointments, Rescheduling & Cancellation</h3>
+                <p>
+                  Appointment availability, timings and doctors are subject to change at the clinic&apos;s discretion. You agree to attend booked appointments on time and to cancel or reschedule with reasonable notice.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1.5">
+                <h3 className="font-semibold text-gray-900">6. Payments & Billing</h3>
+                <p>
+                  Bills generated through the Service reflect the clinic&apos;s charges for consultations, procedures and services. Bills are issued as PDFs through the portal and reflect the clinic&apos;s pricing.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1.5">
+                <h3 className="font-semibold text-gray-900">7. Messaging & Notifications</h3>
+                <p>
+                  By providing your phone number or messaging the clinic&apos;s WhatsApp assistant, you consent to receive appointment confirmations and reminders via WhatsApp. Reminders are sent for booked appointments only.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1.5">
+                <h3 className="font-semibold text-gray-900">8. AI Chat Assistant</h3>
+                <p>
+                  The clinic may offer an AI chat assistant that helps you find doctors, check availability and book, reschedule or cancel appointments. The assistant is not a medical professional and does not provide medical advice.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1.5">
+                <h3 className="font-semibold text-gray-900">9. Reports & File Uploads</h3>
+                <p>
+                  You may upload medical reports and files through the portal. You are responsible for the content you upload and confirm that you have the right to share it.
+                </p>
+              </section>
+
+              <section className="flex flex-col gap-1.5">
+                <h3 className="font-semibold text-gray-900">10. Prescriptions & Medicines</h3>
+                <p>
+                  Prescriptions and medicine information displayed in the Service are provided by the clinic&apos;s doctors for your treatment. Follow your doctor&apos;s instructions for any medication.
+                </p>
+              </section>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

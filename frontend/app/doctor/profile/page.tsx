@@ -33,6 +33,17 @@ export default async function ProfilePage() {
         qualifications: doc.qualifications ?? null,
         bio: doc.bio ?? null,
         createdAt: doc.createdAt ?? null,
+        department: doc.department ?? null,
+        company: doc.company ?? null,
+        addressStreet: doc.addressStreet ?? null,
+        addressCity: doc.addressCity ?? null,
+        addressState: doc.addressState ?? null,
+        addressCountry: doc.addressCountry ?? null,
+        addressZip: doc.addressZip ?? null,
+        socialLinkedIn: doc.socialLinkedIn ?? null,
+        socialGitHub: doc.socialGitHub ?? null,
+        socialTwitter: doc.socialTwitter ?? null,
+        socialWebsite: doc.socialWebsite ?? null,
       }
     : {
         id: session?.user?.id ?? "",
@@ -45,6 +56,17 @@ export default async function ProfilePage() {
         qualifications: null,
         bio: null,
         createdAt: null,
+        department: null,
+        company: null,
+        addressStreet: null,
+        addressCity: null,
+        addressState: null,
+        addressCountry: null,
+        addressZip: null,
+        socialLinkedIn: null,
+        socialGitHub: null,
+        socialTwitter: null,
+        socialWebsite: null,
       };
 
   const org = await apiFetch<CompanyResponse>("/api/organization");
