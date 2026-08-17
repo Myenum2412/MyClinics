@@ -76,6 +76,30 @@ export function BillingView({
     a.click();
   }
 
+  const [sending, setSending] = useState<Bill | null>(null);
+
+  async function sendWhatsApp(bill: Bill) {
+    if (sending) return;
+    setSending(bill);
+    try {
+      const res = await fetch(`/api/bills/${bill.id}/send-whatsapp`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Bill sent on WhatsApp", {
+          description: `${bill.billNumber} · sent to ${bill.patientPhone || "patient"}`,
+        });
+      } else {
+        toast.error(data.error || "Could not send the bill on WhatsApp.");
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setSending(null);
+    }
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
       {previewBill && (
@@ -135,6 +159,7 @@ export function BillingView({
           onPaymentFilterChange={setPaymentFilter}
           onPrint={printBill}
           onDownload={downloadPdf}
+          onSend={sendWhatsApp}
           onDelete={setDeleting}
           onPreview={setPreviewBill}
         />

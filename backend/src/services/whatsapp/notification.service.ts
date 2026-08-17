@@ -1,4 +1,5 @@
 import type { Client } from "whatsapp-web.js";
+import { MessageMedia } from "whatsapp-web.js";
 import type { Db, ObjectId } from "mongodb";
 import { logger } from "@/lib/logger";
 import { toWhatsAppRemoteId } from "@/lib/phone";
@@ -11,6 +12,12 @@ const MAX_ATTEMPTS = 3;
 
 export type NotificationStatus = "queued" | "sent" | "failed";
 
+export interface NotificationMedia {
+  filename: string;
+  mimetype: string;
+  data: string;
+}
+
 export interface NotificationDoc {
   type: string;
   organizationId: string;
@@ -21,15 +28,19 @@ export interface NotificationDoc {
   lastError: string | null;
   createdAt: Date;
   sentAt: Date | null;
+  mediaFilename?: string;
+  mediaMimetype?: string;
+  mediaData?: string;
 }
 
-/** Queues a WhatsApp message that the worker sends as soon as it is ready. */
+/** Queues a WhatsApp message (optionally with a media attachment) that the worker sends as soon as it is ready. */
 export async function enqueueNotification(
   db: Db,
   organizationId: string,
   phone: string,
   message: string,
-  type: string
+  type: string,
+  media?: NotificationMedia
 ): Promise<{ queued: boolean; remoteId: string | null }> {
   const remoteId = toWhatsAppRemoteId(phone);
   if (!remoteId) return { queued: false, remoteId: null };
@@ -44,6 +55,9 @@ export async function enqueueNotification(
     lastError: null,
     createdAt: new Date(),
     sentAt: null,
+    mediaFilename: media?.filename,
+    mediaMimetype: media?.mimetype,
+    mediaData: media?.data,
   } satisfies NotificationDoc);
 
   return { queued: true, remoteId };
@@ -84,10 +98,11 @@ export async function enqueueClinicNotification(
   db: Db,
   phone: string,
   message: string,
-  type: string
+  type: string,
+  media?: NotificationMedia
 ): Promise<{ queued: boolean; remoteId: string | null }> {
   const org = await ensureDefaultOrganization(db);
-  return enqueueNotification(db, org.id, phone, message, type);
+  return enqueueNotification(db, org.id, phone, message, type, media);
 }
 
 /** Sends queued notifications through the connected WhatsApp client. */
@@ -123,7 +138,18 @@ export async function processDueNotifications(
       continue;
     }
     try {
-      await client.sendMessage(notification.remoteId, notification.message);
+      if (notification.mediaData && notification.mediaMimetype) {
+        const media = new MessageMedia(
+          notification.mediaMimetype,
+          notification.mediaData,
+          notification.mediaFilename ?? "document"
+        );
+        await client.sendMessage(notification.remoteId, media, {
+          caption: notification.message,
+        });
+      } else {
+        await client.sendMessage(notification.remoteId, notification.message);
+      }
       updates.push({
         filter: { _id: notification._id },
         update: {

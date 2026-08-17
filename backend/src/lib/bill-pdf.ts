@@ -197,6 +197,9 @@ function drawSimpleTable(
   rightAlignCols: number[] = []
 ): number {
   const totalW = colWidths.reduce((s, w) => s + w, 0);
+  const headerBottom = startY + rowHeight;
+
+  // Header
   doc.rect(startX, startY, totalW, rowHeight).fill("#f1f5f9");
   doc.font("Helvetica-Bold").fontSize(7.5).fillColor("#475569");
   let x = startX;
@@ -206,9 +209,9 @@ function drawSimpleTable(
     x += colWidths[i];
   });
 
-  let y = startY + rowHeight;
+  // Rows
+  let y = headerBottom;
   for (const row of rows) {
-    doc.rect(startX, y, totalW, rowHeight).lineWidth(0.4).strokeColor("#e2e8f0").stroke();
     doc.font("Helvetica").fontSize(8.5).fillColor("#0f172a");
     x = startX;
     row.forEach((cell, i) => {
@@ -217,6 +220,17 @@ function drawSimpleTable(
       x += colWidths[i];
     });
     y += rowHeight;
+  }
+
+  // Grid: outer box, row separators and column separators
+  doc.lineWidth(0.5).strokeColor("#cbd5e1");
+  doc.moveTo(startX, startY).lineTo(startX + totalW, startY).stroke();
+  doc.moveTo(startX, headerBottom).lineTo(startX + totalW, headerBottom).stroke();
+  doc.moveTo(startX, y).lineTo(startX + totalW, y).stroke();
+  let vx = startX;
+  for (const w of colWidths) {
+    vx += w;
+    doc.moveTo(vx, startY).lineTo(vx, y).stroke();
   }
   return y;
 }
@@ -447,6 +461,7 @@ export async function generateBillPdf(
 
   let itemRowY = rowY + 22;
   const items = Array.isArray(bill.items) ? bill.items : [];
+  const itemTableBottom = itemRowY + items.length * 20;
 
   if (!items.length) {
     doc.font("Helvetica").fontSize(9).fillColor("#475569").text("No items", MARGIN + 8, itemRowY + 7);
@@ -457,7 +472,6 @@ export async function generateBillPdf(
       if (i % 2 === 1) {
         doc.rect(MARGIN, itemRowY, contentWidth, 20).fill("#f8fafc");
       }
-      doc.rect(MARGIN, itemRowY, contentWidth, 20).lineWidth(0.5).strokeColor("#e2e8f0").stroke();
       doc.font("Helvetica").fontSize(9).fillColor("#0f172a");
       doc.text(String(i + 1), cols.idx.x + 8, itemRowY + 6, { width: cols.idx.w - 8, align: "center" });
       doc.text(item.name || "—", cols.item.x + 8, itemRowY + 6, { width: cols.item.w - 8 });
@@ -466,6 +480,15 @@ export async function generateBillPdf(
       doc.font("Helvetica-Bold").text(inr(item.amount ?? 0), cols.amount.x + 8, itemRowY + 6, { width: cols.amount.w - 8, align: "right" });
       itemRowY = rowBottom;
     });
+  }
+
+  // Items table grid: outer box, row separators and column separators
+  doc.lineWidth(0.5).strokeColor("#cbd5e1");
+  doc.moveTo(MARGIN, rowY).lineTo(MARGIN + contentWidth, rowY).stroke();
+  doc.moveTo(MARGIN, rowY + 22).lineTo(MARGIN + contentWidth, rowY + 22).stroke();
+  doc.moveTo(MARGIN, itemTableBottom).lineTo(MARGIN + contentWidth, itemTableBottom).stroke();
+  for (const col of [cols.idx, cols.item, cols.qty, cols.price]) {
+    doc.moveTo(col.x + col.w, rowY).lineTo(col.x + col.w, itemTableBottom).stroke();
   }
 
   // Totals

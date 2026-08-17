@@ -97,25 +97,25 @@ async function getCachedContext(organizationId: string) {
 
 function successCreateText(appointment: { doctorName: string | null; date: string; time: string }): string {
   return [
-    "Your appointment has been confirmed successfully. ✅",
+    "All booked! ✅ Your appointment is confirmed.",
     "",
     `Doctor: ${appointment.doctorName ?? "Clinic"}`,
     `Date: ${formatISODate(appointment.date)}`,
     `Time: ${formatTime12h(appointment.time)}`,
     "",
-    "We'll see you then!",
+    "See you then! 😊",
   ].join("\n");
 }
 
 function successRescheduleText(appointment: { doctorName: string | null; date: string; time: string }): string {
   return [
-    "Your appointment has been rescheduled. ✅",
+    "Done! ✅ Your appointment has been rescheduled.",
     "",
     `Doctor: ${appointment.doctorName ?? "Clinic"}`,
     `Date: ${formatISODate(appointment.date)}`,
     `Time: ${formatTime12h(appointment.time)}`,
     "",
-    "We'll see you then!",
+    "See you then! 😊",
   ].join("\n");
 }
 

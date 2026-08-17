@@ -72,7 +72,7 @@ import {
   ChevronRightIcon as ChevronRight,
   ChevronUpDownIcon as ChevronsUpDown,
   ViewColumnsIcon as Columns,
-  EyeIcon as Eye,
+  PaperAirplaneIcon as Send,
   PencilIcon as Pencil,
   PrinterIcon as Printer,
   TrashIcon as Trash,
@@ -227,6 +227,7 @@ export function BillingTable({
   onPaymentFilterChange,
   onPrint,
   onDownload,
+  onSend,
   onDelete,
   onPreview,
   pageSize = 6,
@@ -240,6 +241,7 @@ export function BillingTable({
   onPaymentFilterChange: (v: string) => void;
   onPrint: (b: Bill) => void;
   onDownload?: (b: Bill) => void;
+  onSend?: (b: Bill) => void;
   onDelete: (b: Bill) => void;
   onPreview?: (bill: Bill) => void;
   pageSize?: number;
@@ -259,8 +261,8 @@ export function BillingTable({
   const [rowSelection, setRowSelection] = React.useState({});
 
   const columns = React.useMemo<ColumnDef<typeof TABLE_FEATURES, Bill>[]>(
-    () => createColumns({ onPrint, onDownload, onDelete }),
-    [onPrint, onDownload, onDelete]
+    () => createColumns({ onPrint, onDownload, onSend, onDelete }),
+    [onPrint, onDownload, onSend, onDelete]
   );
 
   const table = useTable({
@@ -584,10 +586,12 @@ export function BillingTable({
 function createColumns({
   onPrint,
   onDownload,
+  onSend,
   onDelete,
 }: {
   onPrint: (b: Bill) => void;
   onDownload?: (b: Bill) => void;
+  onSend?: (b: Bill) => void;
   onDelete: (b: Bill) => void;
 }): ColumnDef<typeof TABLE_FEATURES, Bill>[] {
   return [
@@ -784,12 +788,12 @@ function createColumns({
             <Button
               variant="ghost"
               size="icon-sm"
-              title="View"
-              aria-label={`View ${b.billNumber}`}
-              render={<Link href={`/doctor/billing/${b.id}`} />}
-              nativeButton={false}
+              title="Send on WhatsApp"
+              aria-label={`Send ${b.billNumber} on WhatsApp`}
+              className="text-muted-foreground hover:text-green-600"
+              onClick={() => onSend?.(b)}
             >
-              <Eye className="size-4" aria-hidden="true" />
+              <Send className="size-4" aria-hidden="true" />
             </Button>
             <Button
               variant="ghost"

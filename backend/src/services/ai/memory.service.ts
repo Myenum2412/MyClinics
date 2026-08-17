@@ -70,6 +70,8 @@ const NAME_PATTERN = /(?:i'?m|i am|my name is|this is|call me)\s+([A-Z][a-zA-Z]{
 const TIME_OF_DAY = /\b(morning|afternoon|evening|night)\b/i;
 const PREFERENCE_HINT = /\b(prefer|prefers|usually|normally|always|like)\b/i;
 const DOCTOR_PATTERN = /\bdr\.?\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)/i;
+const ALLERGY_PATTERN = /\b(?:allergic to|allergy to|allergies? to)\s+([a-zA-Z][a-zA-Z ]{1,30})/i;
+const DAY_PATTERN = /\b(weekend|weekdays|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i;
 
 interface ExtractedFacts {
   key: string;
@@ -96,6 +98,16 @@ export function extractFactsFromMessage(message: string): ExtractedFacts[] {
   const doctorMatch = message.match(DOCTOR_PATTERN);
   if (doctorMatch?.[1] && PREFERENCE_HINT.test(message)) {
     facts.push({ key: "preferred_doctor", value: doctorMatch[1] });
+  }
+
+  const allergyMatch = message.match(ALLERGY_PATTERN);
+  if (allergyMatch?.[1]) {
+    facts.push({ key: "allergy", value: allergyMatch[1].trim() });
+  }
+
+  const dayMatch = message.match(DAY_PATTERN);
+  if (dayMatch?.[1] && PREFERENCE_HINT.test(message)) {
+    facts.push({ key: "preferred_day", value: dayMatch[1] });
   }
 
   return facts;
