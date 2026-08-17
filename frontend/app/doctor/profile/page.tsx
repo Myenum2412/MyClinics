@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { DB_COLLECTIONS } from "@/lib/constants";
 import { apiFetch } from "@/lib/server-api";
+import { DEFAULT_CLINIC_NAME } from "@/lib/clinic-name-client";
 import { ProfileView, type ProfileUser, type CompanyDetails } from "@/components/profile-view";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +52,7 @@ export default async function ProfilePage() {
     org.status === 200 && org.data.company
       ? org.data.company
       : {
-          name: "My Clinic",
+          name: DEFAULT_CLINIC_NAME,
           phone: null,
           email: null,
           address: null,

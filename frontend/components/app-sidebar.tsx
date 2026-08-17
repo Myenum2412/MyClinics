@@ -107,6 +107,7 @@ const data: {
 
 export function AppSidebar({
   user,
+  clinicName,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user: {
@@ -115,6 +116,7 @@ export function AppSidebar({
     image?: string | null
     role?: string
   }
+  clinicName: string
 }) {
   const pathname = usePathname()
   return (
@@ -137,7 +139,7 @@ export function AppSidebar({
                 />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">My Clinic</span>
+                <span className="truncate font-medium">{clinicName}</span>
                 <span className="truncate text-xs capitalize">
                   {user.role ?? "Doctor"}
                 </span>

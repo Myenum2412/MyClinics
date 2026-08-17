@@ -33,6 +33,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { PatientPicker, type PatientPick } from "@/components/patient-picker";
 import { appointmentHtml } from "@/lib/print-documents";
+import { fetchClinicName } from "@/lib/clinic-name-client";
 import { saveReportCopy } from "@/components/report-copy";
 import type { Appointment } from "@/components/appointments-table";
 
@@ -212,7 +213,7 @@ export function AppointmentForm({
         (pt) => pt.fullName.toLowerCase() === name.toLowerCase()
       );
       await saveReportCopy({
-        html: appointmentHtml(a),
+        html: appointmentHtml(a, await fetchClinicName()),
         fileName: `Appointment-${name.replace(/\s+/g, "-")}-${(date || new Date().toISOString().slice(0, 10)).replace(/-/g, "")}.html`,
         category: "appointment",
         patientId: selectedPatientId || matched?.id || null,

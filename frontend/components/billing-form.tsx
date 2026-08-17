@@ -34,6 +34,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { printBill } from "@/components/billing-print";
 import { billingHtml } from "@/lib/print-documents";
+import { fetchClinicName } from "@/lib/clinic-name-client";
 import { saveReportCopy } from "@/components/report-copy";
 import { BILL_STATUSES, PAYMENT_METHODS, formatINR, round2 } from "@/lib/billing";
 import { PatientPicker, type PatientPick } from "@/components/patient-picker";
@@ -45,6 +46,8 @@ type BillItemInput = {
   qty: string;
   price: string;
 };
+
+const CUSTOM_ITEM_KEY = "__custom__";
 
 function emptyItem(): BillItemInput {
   return { name: "", qty: "1", price: "" };
@@ -113,6 +116,32 @@ export function BillingForm({
 
   function removeItem(i: number) {
     setItems((prev) => (prev.length === 1 ? prev : prev.filter((_, idx) => idx !== i)));
+  }
+
+  function serviceValueFor(item: BillItemInput): string {
+    if (!item.name) return "";
+    const match = activeServices.find(
+      (s) => s.name.toLowerCase() === item.name.toLowerCase()
+    );
+    return match ? match.id : CUSTOM_ITEM_KEY;
+  }
+
+  function isCustomItem(item: BillItemInput): boolean {
+    return serviceValueFor(item) === CUSTOM_ITEM_KEY;
+  }
+
+  function handleServicePick(i: number, value: string | null) {
+    if (!value) return;
+    if (value === CUSTOM_ITEM_KEY) {
+      updateItem(i, { name: "" });
+      return;
+    }
+    const service = activeServices.find((s) => s.id === value);
+    if (!service) return;
+    updateItem(i, {
+      name: service.name,
+      price: items[i].price || String(service.price),
+    });
   }
 
   const parsedItems: BillItem[] = items.map((i) => {
@@ -201,7 +230,7 @@ export function BillingForm({
         (pt) => pt.fullName.toLowerCase() === name.toLowerCase()
       );
       await saveReportCopy({
-        html: billingHtml(bill),
+        html: billingHtml(bill, await fetchClinicName()),
         fileName: `${bill.billNumber.replace(/\s+/g, "-")}-${name.replace(/\s+/g, "-")}.html`,
         category: "billing",
         patientId: selectedPatientId || matched?.id || null,
@@ -215,8 +244,7 @@ export function BillingForm({
   }
 
   function handlePrint() {
-    const bill: Bill = {
-      id: initial?.id ?? "",
+    const bill: Bill = {      id: initial?.id ?? "",
       billNumber: initial?.billNumber ?? "New Invoice",
       patientName,
       patientPhone: patientPhone || null,
@@ -401,13 +429,42 @@ export function BillingForm({
                         <FieldLabel htmlFor={`item-name-${i}`}>
                           Item / Service
                         </FieldLabel>
-                        <Input
-                          id={`item-name-${i}`}
-                          type="text"
-                          placeholder="Consultation fee"
-                          value={item.name}
-                          onChange={(e) => updateItem(i, { name: e.target.value })}
-                        />
+                        {activeServices.length === 0 || isCustomItem(item) ? (
+                          <Input
+                            id={`item-name-${i}`}
+                            type="text"
+                            placeholder="Consultation fee"
+                            value={item.name}
+                            onChange={(e) =>
+                              updateItem(i, { name: e.target.value })
+                            }
+                          />
+                        ) : (
+                          <Select
+                            value={serviceValueFor(item)}
+                            onValueChange={(v) => handleServicePick(i, v)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Pick a service..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {activeServices.map((s) => (
+                                <SelectItem key={s.id} value={s.id}>
+                                  {s.name}
+                                  <span className="text-muted-foreground">
+                                    {" "}
+                                    · {formatINR(s.price)}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                              <SelectItem value={CUSTOM_ITEM_KEY}>
+                                <span className="text-muted-foreground">
+                                  Custom item…
+                                </span>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </Field>
                       <Field>
                         <FieldLabel htmlFor={`item-qty-${i}`}>Qty</FieldLabel>

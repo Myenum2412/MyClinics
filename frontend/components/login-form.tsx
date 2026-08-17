@@ -18,8 +18,12 @@ import { Input } from "@/components/ui/input";
 export function LoginForm({
   className,
   callbackUrl = "/doctor",
+  clinicName = "My Clinic",
   ...props
-}: React.ComponentProps<"div"> & { callbackUrl?: string }) {
+}: React.ComponentProps<"div"> & {
+  callbackUrl?: string;
+  clinicName?: string;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,7 +67,9 @@ export function LoginForm({
               </div>
               <span className="sr-only">My Clinic</span>
             </Link>
-            <h1 className="text-xl font-bold text-black">Welcome to My Clinic</h1>
+            <h1 className="text-xl font-bold text-black">
+              Welcome to {clinicName}
+            </h1>
             <p className="text-left text-sm leading-normal font-normal text-gray-500">
               Don&apos;t have an account?{" "}
               <Link

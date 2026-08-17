@@ -69,6 +69,7 @@ const data: {
 
 export function PatientSidebar({
   user,
+  clinicName,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user: {
@@ -77,6 +78,7 @@ export function PatientSidebar({
     image?: string | null;
     role?: string;
   };
+  clinicName: string;
 }) {
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -98,7 +100,7 @@ export function PatientSidebar({
                 />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">My Clinic</span>
+                <span className="truncate font-medium">{clinicName}</span>
                 <span className="truncate text-xs capitalize">
                   {user.role ?? "Patient"}
                 </span>

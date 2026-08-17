@@ -36,6 +36,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { printPrescription } from "@/components/prescription-print";
 import { prescriptionHtml } from "@/lib/print-documents";
+import { fetchClinicName } from "@/lib/clinic-name-client";
 import { saveReportCopy } from "@/components/report-copy";
 import { PatientPicker, type PatientPick } from "@/components/patient-picker";
 import type { Prescription } from "@/components/prescriptions-table";
@@ -199,7 +200,7 @@ export function PrescriptionForm({
         (pt) => pt.fullName.toLowerCase() === name.toLowerCase()
       );
       await saveReportCopy({
-        html: prescriptionHtml(p),
+        html: prescriptionHtml(p, await fetchClinicName()),
         fileName: `Prescription-${name.replace(/\s+/g, "-")}-${new Date()
           .toISOString()
           .slice(0, 10)}.html`,

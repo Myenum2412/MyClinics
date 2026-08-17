@@ -38,13 +38,10 @@ const ORG_CACHE_KEY = "organization:default";
 const ORG_CACHE_TTL_MS = 60_000;
 
 export function registerOrganizationRoutes(app: FastifyInstance): void {
+  // Public: clinic name/details are non-sensitive and shown to unauthenticated
+  // visitors on the login/signup screens. The PUT route below stays protected.
   app.get("/api/organization", async (request, reply) => {
     try {
-      if (!(await requireAuth(request, reply))) return;
-      if (!request.user?.id) {
-        return reply.code(401).send({ error: "Unauthorized" });
-      }
-
       const db = await getDb();
       const org = await cached(ORG_CACHE_KEY, ORG_CACHE_TTL_MS, () =>
         ensureDefaultOrganization(db)
