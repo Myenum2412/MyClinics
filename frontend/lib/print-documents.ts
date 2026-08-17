@@ -210,45 +210,50 @@ export function appointmentHtml(
 
 function billingStyles() {
   return `
-    @page { size: A4; margin: 6mm; }
+    @page { size: A4; margin: 0; }
     html, body { margin: 0; padding: 0; background: #fff; }
     * { box-sizing: border-box; }
-    body { font-family: Arial, Helvetica, sans-serif; color: #111; }
-    .sheet {
-      width: 198mm;
-      min-height: 285mm;
-      margin: 0 auto;
-      padding: 10mm 12mm 12mm;
-      border: 2px solid #111;
-    }
-    .clinic-header { display: flex; align-items: center; gap: 12px; padding-bottom: 10px; border-bottom: 2px solid #111; margin-bottom: 14px; }
-    .clinic-logo { width: 52px; height: 52px; object-fit: contain; flex-shrink: 0; }
-    .clinic-name { font-size: 20px; font-weight: bold; letter-spacing: 0.5px; }
-    .clinic-line { font-size: 12px; color: #444; margin-top: 2px; }
-    .doc-header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .invoice { text-align: right; font-size: 24px; font-weight: bold; }
-    .invoice small { display: block; font-size: 12px; font-weight: normal; color: #555; margin-top: 4px; }
-    .row { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 6px; font-size: 14px; }
-    .row b { display: inline-block; min-width: 110px; }
-    h3 { margin: 18px 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #0f172a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .sheet { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 12mm 16mm 14mm; }
+    .doc-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 18px; }
+    .clinic-block { display: flex; align-items: center; gap: 12px; }
+    .clinic-logo { width: 44px; height: 44px; object-fit: contain; flex-shrink: 0; }
+    .clinic-name { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+    .clinic-line { font-size: 10.5px; color: #64748b; margin-top: 1px; }
+    .invoice { text-align: right; }
+    .invoice-title { font-size: 22px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    .invoice-meta { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 6px; font-size: 12px; color: #475569; }
+    .parties { display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 6px; }
+    .billed-to { flex: 1; min-width: 220px; }
+    .billed-name { font-size: 14px; font-weight: 600; margin: 5px 0 3px; }
+    .billed-line { font-size: 11.5px; color: #475569; line-height: 1.5; }
+    .meta { min-width: 240px; }
+    .kv-label { font-size: 9.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; }
+    .kv { display: grid; grid-template-columns: 130px 1fr; gap: 6px 10px; font-size: 12px; margin-top: 8px; }
+    .meta .kv { grid-template-columns: 100px 1fr; margin-top: 6px; }
+    .kv b { color: #94a3b8; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; padding-top: 2px; }
+    h3 { margin: 20px 0 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; font-weight: 700; }
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th { background: #f1f5f9; text-align: left; padding: 7px 8px; border: 1px solid #ccc; font-size: 11px; }
-    td { padding: 7px 8px; border: 1px solid #ccc; vertical-align: top; }
-    .totals { width: 260px; margin-left: auto; margin-top: 16px; font-size: 14px; }
-    .totals div { display: flex; justify-content: space-between; padding: 4px 0; }
-    .totals .grand { border-top: 2px solid #111; margin-top: 4px; padding-top: 8px; font-size: 16px; font-weight: bold; }
-    .footer { margin-top: 24px; font-size: 12px; color: #555; text-align: center; border-top: 1px solid #cbd5e1; padding-top: 8px; }
-    .paid { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #16a34a; }
-    .pending { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #d97706; }
-    .cancelled { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; background: #dc2626; }
-    .kv { display: grid; grid-template-columns: 130px 1fr; gap: 3px 8px; font-size: 13px; margin-top: 8px; }
-    .kv b { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; }
+    th { background: #f8fafc; text-align: left; padding: 8px 10px; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.07em; color: #64748b; border-bottom: 1px solid #cbd5e1; }
+    td { padding: 9px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+    .totals { width: 250px; margin-left: auto; margin-top: 14px; font-size: 13px; }
+    .totals div { display: flex; justify-content: space-between; padding: 4px 0; color: #475569; }
+    .totals div span:last-child { font-weight: 600; color: #0f172a; }
+    .totals .grand { border-top: 1.5px solid #0f172a; margin-top: 6px; padding-top: 10px; font-size: 15px; }
+    .totals .grand span { font-weight: 700; }
+    .amount-words { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 9px 14px; margin-top: 14px; font-size: 12px; }
+    .amount-words b { display: block; font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; }
+    .footer { margin-top: 22px; font-size: 10.5px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 9px; }
+    .status { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 600; background: #f1f5f9; color: #334155; }
+    .status.paid { background: #dcfce7; color: #166534; }
+    .status.pending { background: #fef3c7; color: #92400e; }
+    .status.cancelled { background: #fee2e2; color: #991b1b; }
   `;
 }
 
 function statusBadge(status: string) {
   const label = status.charAt(0).toUpperCase() + status.slice(1);
-  return `<span class="${escapeHtml(status)}">${escapeHtml(label)}</span>`;
+  return `<span class="status ${escapeHtml(status)}">${escapeHtml(label)}</span>`;
 }
 
 function clinicHeaderHtml(
@@ -266,7 +271,7 @@ function clinicHeaderHtml(
   if (clinic?.website) contacts.push(escapeHtml(clinic.website));
   if (contacts.length) lines.push(contacts.join(" · "));
   return `
-    <div class="clinic-header">
+    <div class="clinic-block">
       ${logoUrl ? `<img class="clinic-logo" src="${escapeHtml(logoUrl)}" alt="" />` : ""}
       <div>
         <div class="clinic-name">${name}</div>
@@ -395,13 +400,22 @@ export function billingHtml(
 </head>
 <body>
   <div class="sheet">
-    ${clinicHeaderHtml(clinicName, visit, opts.logoUrl)}
-
     <div class="doc-header">
-      <div>
-        <div class="row"><b>Invoice No.</b> ${escapeHtml(b.billNumber)}</div>
-        <div class="row"><b>Billed To</b> ${escapeHtml(b.patientName)}</div>
-        <div class="row"><b>Phone</b> ${escapeHtml(b.patientPhone || "—")}</div>
+      ${clinicHeaderHtml(clinicName, visit, opts.logoUrl)}
+      <div class="invoice">
+        <div class="invoice-title">Invoice</div>
+        <div class="invoice-meta">
+          <span>${escapeHtml(b.billNumber || "—")}</span>
+          ${statusBadge(b.status)}
+        </div>
+      </div>
+    </div>
+
+    <div class="parties">
+      <div class="billed-to">
+        <div class="kv-label">Billed To</div>
+        <div class="billed-name">${escapeHtml(b.patientName || "—")}</div>
+        ${b.patientPhone ? `<div class="billed-line">${escapeHtml(b.patientPhone)}</div>` : ""}
         ${(() => {
           const patient = visit?.patient;
           const ageGender = [
@@ -411,17 +425,19 @@ export function billingHtml(
             .filter(Boolean)
             .join(" / ");
           return ageGender
-            ? `<div class="row"><b>Age / Gender</b> ${escapeHtml(ageGender)}</div>`
+            ? `<div class="billed-line">${escapeHtml(ageGender)}</div>`
             : "";
         })()}
-        ${visit?.patient?.email ? `<div class="row"><b>Email</b> ${escapeHtml(visit.patient.email)}</div>` : ""}
-        <div class="row"><b>Date</b> ${formatDate(b.date)}</div>
-        <div class="row"><b>Payment</b> ${escapeHtml(b.paymentMethod || "—")}</div>
-        ${b.doctorName ? `<div class="row"><b>Doctor</b> ${escapeHtml(b.doctorName)}</div>` : ""}
+        ${visit?.patient?.email ? `<div class="billed-line">${escapeHtml(visit.patient.email)}</div>` : ""}
       </div>
-      <div class="invoice">
-        Invoice
-        <small>${statusBadge(b.status)}</small>
+      <div class="meta">
+        <div class="kv-label">Details</div>
+        <div class="kv">
+          <b>Invoice No.</b><span>${escapeHtml(b.billNumber || "—")}</span>
+          <b>Date</b><span>${formatDate(b.date)}</span>
+          <b>Payment</b><span>${escapeHtml(b.paymentMethod || "—")}</span>
+          ${b.doctorName ? `<b>Doctor</b><span>${escapeHtml(b.doctorName)}</span>` : ""}
+        </div>
       </div>
     </div>
 
@@ -450,9 +466,7 @@ export function billingHtml(
       <div class="grand"><span>Total</span><span>${money(b.total)}</span></div>
     </div>
 
-    <p style="margin-top:10px;font-size:13px;">
-      <strong>Amount in Words:</strong> ${escapeHtml(amountInWords(b.total))}
-    </p>
+    <div class="amount-words"><b>Amount in Words</b>${escapeHtml(amountInWords(b.total))}</div>
 
     ${b.notes ? `<h3>Notes</h3><div style="font-size:13px;">${escapeHtml(b.notes)}</div>` : ""}
 
