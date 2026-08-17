@@ -56,12 +56,59 @@ export function registerBillRoutes(app: FastifyInstance): void {
         findBillVisitData(db, bill),
       ]);
 
+      const appointment = visit.appointment
+        ? {
+            id: visit.appointment._id
+              ? String(visit.appointment._id)
+              : null,
+            fullName: visit.appointment.fullName ?? null,
+            mobile: visit.appointment.mobile ?? null,
+            age: visit.appointment.age ?? null,
+            gender: visit.appointment.gender ?? null,
+            email: visit.appointment.email ?? null,
+            doctorName: visit.appointment.doctorName ?? null,
+            department: visit.appointment.department ?? null,
+            date: visit.appointment.date ?? null,
+            time: visit.appointment.time ?? null,
+            type: visit.appointment.type ?? null,
+            status: visit.appointment.status ?? null,
+            reason: visit.appointment.reason ?? null,
+            notes: visit.appointment.notes ?? null,
+            counter: visit.appointment.counter ?? null,
+            bookingSource: visit.appointment.bookingSource ?? null,
+          }
+        : null;
+
+      const prescriptions = visit.prescriptions.map((p) => ({
+        id: p._id ? String(p._id) : null,
+        patientName: p.patientName ?? null,
+        doctorName: p.doctorName ?? null,
+        visitDate: p.visitDate ?? null,
+        diagnosis: p.diagnosis ?? null,
+        medicines: Array.isArray(p.medicines) ? p.medicines : [],
+        symptoms: p.symptoms ?? null,
+        testsRecommended: p.testsRecommended ?? null,
+        followUpDate: p.followUpDate ?? null,
+      }));
+
+      const patient = visit.patient
+        ? {
+            id: String(visit.patient._id),
+            fullName: visit.patient.fullName ?? null,
+            age: visit.patient.age ?? null,
+            gender: visit.patient.gender ?? null,
+            email: visit.patient.email ?? null,
+            mobile: visit.patient.mobile ?? null,
+          }
+        : null;
+
       return reply.send({
         bill,
         clinic: mapCompany(company),
-        appointment: visit.appointment ?? null,
-        prescriptions: visit.prescriptions,
+        appointment,
+        prescriptions,
         doctors: visit.doctors,
+        patient,
       });
     } catch (error) {
       handleError(reply, error, "Get bill print data");

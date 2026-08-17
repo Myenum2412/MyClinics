@@ -13,6 +13,55 @@ function escapeHtml(value: string | number | null | undefined): string {
     .replace(/'/g, "&#39;");
 }
 
+const ONES = [
+  "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+  "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+  "Seventeen", "Eighteen", "Nineteen",
+];
+const TENS = [
+  "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy",
+  "Eighty", "Ninety",
+];
+
+function numberToWords(num: number): string {
+  if (num === 0) return "";
+  if (num < 20) return ONES[num];
+  if (num < 100)
+    return TENS[Math.floor(num / 10)] + (num % 10 ? " " + ONES[num % 10] : "");
+  if (num < 1000)
+    return (
+      ONES[Math.floor(num / 100)] +
+      " Hundred" +
+      (num % 100 ? " " + numberToWords(num % 100) : "")
+    );
+  if (num < 100000)
+    return (
+      numberToWords(Math.floor(num / 1000)) +
+      " Thousand" +
+      (num % 1000 ? " " + numberToWords(num % 1000) : "")
+    );
+  if (num < 10000000)
+    return (
+      numberToWords(Math.floor(num / 100000)) +
+      " Lakh" +
+      (num % 100000 ? " " + numberToWords(num % 100000) : "")
+    );
+  return (
+    numberToWords(Math.floor(num / 10000000)) +
+    " Crore" +
+    (num % 10000000 ? " " + numberToWords(num % 10000000) : "")
+  );
+}
+
+function amountInWords(value: number): string {
+  const n = Math.round((Number.isFinite(value) ? value : 0) * 100);
+  const rupees = Math.floor(n / 100);
+  const paise = n % 100;
+  let words = rupees ? numberToWords(rupees) + " Rupees" : "";
+  if (paise) words += (words ? " and " : "") + numberToWords(paise) + " Paise";
+  return (words || "Zero") + " Only";
+}
+
 function formatDate(value: string | null | undefined) {
   if (!value) return "—";
   const parsed = new Date(value);
@@ -228,12 +277,15 @@ function clinicHeaderHtml(
 function appointmentSectionHtml(appointment?: BillVisit["appointment"] | null) {
   if (!appointment) return "";
   const rows: [string, string][] = [
+    ["Appointment ID", appointment.id ? escapeHtml(appointment.id.slice(-6).toUpperCase()) : "—"],
     ["Doctor", appointment.doctorName || "—"],
     ["Department", appointment.department || "—"],
     ["Date / Time", `${formatDate(appointment.date)}${appointment.time ? " · " + escapeHtml(appointment.time) : ""}`],
     ["Type", appointment.type === "video" ? "Video Consultation" : "In-person"],
     ["Status", appointment.status ? escapeHtml(appointment.status.replace("_", " ")) : "—"],
+    ["Booking Source", appointment.bookingSource === "whatsapp_ai" ? "WhatsApp AI" : "Manual"],
   ];
+  if (appointment.counter != null) rows.push(["Counter #", escapeHtml(String(appointment.counter))]);
   if (appointment.reason) rows.push(["Reason", escapeHtml(appointment.reason)]);
   if (appointment.notes) rows.push(["Notes", escapeHtml(appointment.notes)]);
   return `
@@ -273,6 +325,8 @@ function prescriptionsSectionHtml(prescriptions?: BillVisit["prescriptions"]) {
           : `<tr><td colspan="5" style="text-align:center;">No medicines listed</td></tr>`;
         return `
           <p style="margin:6px 0;font-size:13px;"><strong>Diagnosis:</strong> ${escapeHtml(p.diagnosis || "—")}${meta.length ? ` <span style="color:#64748b;">· ${meta.join(" · ")}</span>` : ""}</p>
+          ${p.symptoms ? `<p style="margin:4px 0;font-size:13px;"><strong>Symptoms / Notes:</strong> ${escapeHtml(p.symptoms)}</p>` : ""}
+          ${p.testsRecommended ? `<p style="margin:4px 0 6px;font-size:13px;"><strong>Tests Recommended:</strong> ${escapeHtml(p.testsRecommended)}</p>` : ""}
           <table>
             <thead>
               <tr>
@@ -347,6 +401,19 @@ export function billingHtml(
         <div class="row"><b>Invoice No.</b> ${escapeHtml(b.billNumber)}</div>
         <div class="row"><b>Billed To</b> ${escapeHtml(b.patientName)}</div>
         <div class="row"><b>Phone</b> ${escapeHtml(b.patientPhone || "—")}</div>
+        ${(() => {
+          const patient = visit?.patient;
+          const ageGender = [
+            patient?.age ? `${patient.age} yrs` : "",
+            patient?.gender ? escapeHtml(String(patient.gender)) : "",
+          ]
+            .filter(Boolean)
+            .join(" / ");
+          return ageGender
+            ? `<div class="row"><b>Age / Gender</b> ${escapeHtml(ageGender)}</div>`
+            : "";
+        })()}
+        ${visit?.patient?.email ? `<div class="row"><b>Email</b> ${escapeHtml(visit.patient.email)}</div>` : ""}
         <div class="row"><b>Date</b> ${formatDate(b.date)}</div>
         <div class="row"><b>Payment</b> ${escapeHtml(b.paymentMethod || "—")}</div>
         ${b.doctorName ? `<div class="row"><b>Doctor</b> ${escapeHtml(b.doctorName)}</div>` : ""}
@@ -381,6 +448,10 @@ export function billingHtml(
       ${b.tax ? `<div><span>Tax (${b.taxRate}%)</span><span>${money(b.tax)}</span></div>` : ""}
       <div class="grand"><span>Total</span><span>${money(b.total)}</span></div>
     </div>
+
+    <p style="margin-top:10px;font-size:13px;">
+      <strong>Amount in Words:</strong> ${escapeHtml(amountInWords(b.total))}
+    </p>
 
     ${b.notes ? `<h3>Notes</h3><div style="font-size:13px;">${escapeHtml(b.notes)}</div>` : ""}
 

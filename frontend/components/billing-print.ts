@@ -13,12 +13,14 @@ async function fetchVisitData(id: string): Promise<BillVisit | null> {
       appointment?: BillVisit["appointment"];
       prescriptions?: BillVisit["prescriptions"];
       doctors?: BillVisit["doctors"];
+      patient?: BillVisit["patient"];
     };
     return {
       clinic: data.clinic ?? null,
       appointment: data.appointment ?? null,
       prescriptions: data.prescriptions ?? [],
       doctors: data.doctors ?? [],
+      patient: data.patient ?? null,
     };
   } catch {
     return null;

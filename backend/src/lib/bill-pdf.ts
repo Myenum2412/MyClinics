@@ -45,8 +45,12 @@ export interface Bill {
 }
 
 export interface BillAppointment {
+  id?: string | null;
   fullName?: string | null;
   mobile?: string | null;
+  age?: number | null;
+  gender?: string | null;
+  email?: string | null;
   doctorName?: string | null;
   department?: string | null;
   date?: string | null;
@@ -55,6 +59,8 @@ export interface BillAppointment {
   status?: string | null;
   reason?: string | null;
   notes?: string | null;
+  counter?: number | null;
+  bookingSource?: string | null;
 }
 
 export interface BillMedicine {
@@ -66,18 +72,31 @@ export interface BillMedicine {
 }
 
 export interface BillPrescription {
+  id?: string | null;
   patientName?: string | null;
   doctorName?: string | null;
   visitDate?: string | null;
   diagnosis?: string | null;
   medicines?: BillMedicine[];
+  symptoms?: string | null;
+  testsRecommended?: string | null;
   followUpDate?: string | null;
+}
+
+export interface BillPatient {
+  id?: string | null;
+  fullName?: string | null;
+  age?: number | null;
+  gender?: string | null;
+  email?: string | null;
+  mobile?: string | null;
 }
 
 export interface BillVisit {
   appointment?: BillAppointment | null;
   prescriptions?: BillPrescription[];
   doctors?: { id?: string | null; name?: string | null }[];
+  patient?: BillPatient | null;
 }
 
 const MARGIN = 48;
@@ -100,6 +119,55 @@ function formatDate(value: string | null | undefined) {
     month: "short",
     year: "numeric",
   }).format(parsed);
+}
+
+const ONES = [
+  "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
+  "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen",
+  "Seventeen", "Eighteen", "Nineteen",
+];
+const TENS = [
+  "", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy",
+  "Eighty", "Ninety",
+];
+
+function numberToWords(num: number): string {
+  if (num === 0) return "";
+  if (num < 20) return ONES[num];
+  if (num < 100)
+    return TENS[Math.floor(num / 10)] + (num % 10 ? " " + ONES[num % 10] : "");
+  if (num < 1000)
+    return (
+      ONES[Math.floor(num / 100)] +
+      " Hundred" +
+      (num % 100 ? " " + numberToWords(num % 100) : "")
+    );
+  if (num < 100000)
+    return (
+      numberToWords(Math.floor(num / 1000)) +
+      " Thousand" +
+      (num % 1000 ? " " + numberToWords(num % 1000) : "")
+    );
+  if (num < 10000000)
+    return (
+      numberToWords(Math.floor(num / 100000)) +
+      " Lakh" +
+      (num % 100000 ? " " + numberToWords(num % 100000) : "")
+    );
+  return (
+    numberToWords(Math.floor(num / 10000000)) +
+    " Crore" +
+    (num % 10000000 ? " " + numberToWords(num % 10000000) : "")
+  );
+}
+
+function amountInWords(value: number): string {
+  const n = Math.round((Number.isFinite(value) ? value : 0) * 100);
+  const rupees = Math.floor(n / 100);
+  const paise = n % 100;
+  let words = rupees ? numberToWords(rupees) + " Rupees" : "";
+  if (paise) words += (words ? " and " : "") + numberToWords(paise) + " Paise";
+  return (words || "Zero") + " Only";
 }
 
 function drawMetaRows(doc: PDFKit.PDFDocument, rows: [string, string][], startX: number, y: number, gap = 20) {
@@ -231,19 +299,32 @@ export async function generateBillPdf(
   const stW = doc.widthOfString(status);
   doc.fillColor(statusColor).text(status, pageWidth - MARGIN - stW, 70);
 
-  // Divider under header
-  const dividerY = y + 8;
-  doc.moveTo(MARGIN, dividerY).lineTo(pageWidth - MARGIN, dividerY).lineWidth(1).strokeColor("#cbd5e1").stroke();
+  // Divider under header (bold order line)
+  const dividerY = y + 10;
+  doc.moveTo(MARGIN, dividerY - 2).lineTo(pageWidth - MARGIN, dividerY - 2).lineWidth(2).strokeColor("#0f172a").stroke();
+  doc.moveTo(MARGIN, dividerY + 1).lineTo(pageWidth - MARGIN, dividerY + 1).lineWidth(0.5).strokeColor("#cbd5e1").stroke();
 
   let rowY = dividerY + 22;
 
-  // Billed To (left)
+  // Billed To (left) — patient details
+  const patient = visit.patient;
+  const patientAgeGender = [
+    patient?.age ? `${patient.age} yrs` : "",
+    patient?.gender ? String(patient.gender) : "",
+  ]
+    .filter(Boolean)
+    .join(" / ");
+
   doc.font("Helvetica-Bold").fontSize(8).fillColor("#64748b").text("BILLED TO", MARGIN, rowY);
   rowY += 14;
   doc.font("Helvetica").fontSize(11).fillColor("#0f172a").text(bill.patientName || "—", MARGIN, rowY);
   rowY += 15;
-  if (bill.patientPhone) {
-    doc.font("Helvetica").fontSize(9.5).fillColor("#475569").text(bill.patientPhone, MARGIN, rowY);
+  const billedToLines: string[] = [];
+  if (bill.patientPhone) billedToLines.push(bill.patientPhone);
+  if (patientAgeGender) billedToLines.push(patientAgeGender);
+  if (patient?.email) billedToLines.push(String(patient.email));
+  for (const line of billedToLines) {
+    doc.font("Helvetica").fontSize(9.5).fillColor("#475569").text(line, MARGIN, rowY);
     rowY += 14;
   }
 
@@ -261,19 +342,22 @@ export async function generateBillPdf(
   if (appointment) {
     rowY = sectionHeading(doc, "APPOINTMENT DETAILS", MARGIN, rowY);
     const apptRows: [string, string][] = [
+      ["Appointment ID", appointment.id ? String(appointment.id).slice(-6).toUpperCase() : "—"],
       ["Doctor", appointment.doctorName || "—"],
       ["Department", appointment.department || "—"],
       ["Date / Time", `${formatDate(appointment.date)}${appointment.time ? " · " + appointment.time : ""}`],
       ["Type", appointment.type === "video" ? "Video Consultation" : "In-person"],
       ["Status", appointment.status ? String(appointment.status).replace("_", " ") : "—"],
+      ["Booking Source", appointment.bookingSource === "whatsapp_ai" ? "WhatsApp AI" : "Manual"],
     ];
+    if (appointment.counter != null) apptRows.push(["Counter #", String(appointment.counter)]);
     if (appointment.reason) apptRows.push(["Reason", String(appointment.reason)]);
     if (appointment.notes) apptRows.push(["Notes", String(appointment.notes)]);
     let apptY = rowY;
     for (const [l, v] of apptRows) {
-      doc.font("Helvetica-Bold").fontSize(7.5).fillColor("#64748b").text(l, MARGIN, apptY, { width: 90 });
-      doc.font("Helvetica").fontSize(9).fillColor("#0f172a").text(v, MARGIN + 95, apptY, { width: 330 });
-      apptY += 16;
+      doc.font("Helvetica-Bold").fontSize(7.5).fillColor("#64748b").text(l, MARGIN, apptY, { width: 100 });
+      doc.font("Helvetica").fontSize(9).fillColor("#0f172a").text(v, MARGIN + 105, apptY, { width: 320 });
+      apptY += 15;
     }
     rowY = apptY + 4;
   }
@@ -294,6 +378,16 @@ export async function generateBillPdf(
       if (metaBits.length) {
         doc.font("Helvetica").fontSize(8).fillColor("#64748b").text(metaBits.join("  ·  "), MARGIN, rowY, { width: contentWidth });
         rowY += 13;
+      }
+      if (p.symptoms) {
+        doc.font("Helvetica-Bold").fontSize(8).fillColor("#475569").text("Symptoms / Notes:", MARGIN, rowY, { width: 110 });
+        doc.font("Helvetica").fontSize(9).fillColor("#0f172a").text(String(p.symptoms), MARGIN + 115, rowY, { width: contentWidth - 115 });
+        rowY += 15;
+      }
+      if (p.testsRecommended) {
+        doc.font("Helvetica-Bold").fontSize(8).fillColor("#475569").text("Tests Recommended:", MARGIN, rowY, { width: 110 });
+        doc.font("Helvetica").fontSize(9).fillColor("#0f172a").text(String(p.testsRecommended), MARGIN + 115, rowY, { width: contentWidth - 115 });
+        rowY += 15;
       }
 
       const medicines = Array.isArray(p.medicines) ? p.medicines.filter((m) => m?.name) : [];
@@ -399,6 +493,13 @@ export async function generateBillPdf(
     doc.text(v, totalsX + totalsW - 90, lineY, { width: 86, align: "right" });
     tY = lineY + (isGrand ? 26 : 18);
   }
+
+  // Amount in words
+  doc.font("Helvetica-Bold").fontSize(8.5).fillColor("#0f172a");
+  doc.text("Amount in Words:", MARGIN, tY - 2, { width: 110 });
+  doc.font("Helvetica").fontSize(9).fillColor("#334155");
+  doc.text(amountInWords(bill.total ?? 0), MARGIN + 110, tY - 2, { width: contentWidth - 110 - 240 });
+  tY += 16;
 
   y = tY + 8;
 

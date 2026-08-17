@@ -13,12 +13,14 @@ export interface BillVisitData {
   appointment: Document | null;
   prescriptions: Document[];
   doctors: { id: string | null; name: string }[];
+  patient: Document | null;
 }
 
 /**
- * Finds the most recent appointment and prescriptions for the patient a bill
- * belongs to, along with every doctor involved (bill doctor + visit doctors).
- * Patients are matched by phone first, then by exact name.
+ * Finds the most recent appointment, prescriptions and the patient record
+ * for the patient a bill belongs to, along with every doctor involved (bill
+ * doctor + visit doctors). Patients are matched by phone first, then by
+ * exact name.
  */
 export async function findBillVisitData(
   db: Db,
@@ -48,11 +50,19 @@ export async function findBillVisitData(
     prescriptionConditions.push({ patientName: exactRegex(name) });
   }
 
-  if (!appointmentConditions.length && !prescriptionConditions.length) {
-    return { appointment: null, prescriptions: [], doctors: [] };
+  const patientConditions: Record<string, unknown>[] = [];
+  if (phone) {
+    patientConditions.push({ mobile: phone }, { whatsapp: phone });
+  }
+  if (name) {
+    patientConditions.push({ fullName: exactRegex(name) });
   }
 
-  const [appointmentDoc, prescriptionDocs] = await Promise.all([
+  if (!appointmentConditions.length && !prescriptionConditions.length && !patientConditions.length) {
+    return { appointment: null, prescriptions: [], doctors: [], patient: null };
+  }
+
+  const [appointmentDoc, prescriptionDocs, patientDoc] = await Promise.all([
     appointmentConditions.length
       ? db
           .collection("appointments")
@@ -69,6 +79,14 @@ export async function findBillVisitData(
           .limit(3)
           .toArray()
       : Promise.resolve([]),
+    patientConditions.length
+      ? db
+          .collection("patients")
+          .find({ $or: patientConditions })
+          .sort({ createdAt: -1 })
+          .limit(1)
+          .next()
+      : Promise.resolve(null),
   ]);
 
   const doctorMap = new Map<string, { id: string | null; name: string }>();
@@ -105,5 +123,6 @@ export async function findBillVisitData(
     appointment: appointmentDoc ?? null,
     prescriptions: prescriptionDocs,
     doctors: [...doctorMap.values()],
+    patient: patientDoc ?? null,
   };
 }

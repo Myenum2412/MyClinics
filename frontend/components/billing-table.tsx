@@ -95,8 +95,12 @@ export type BillClinic = {
 };
 
 export type BillAppointment = {
+  id?: string | null;
   fullName?: string | null;
   mobile?: string | null;
+  age?: number | null;
+  gender?: string | null;
+  email?: string | null;
   doctorName?: string | null;
   department?: string | null;
   date?: string | null;
@@ -105,6 +109,8 @@ export type BillAppointment = {
   status?: string | null;
   reason?: string | null;
   notes?: string | null;
+  counter?: number | null;
+  bookingSource?: string | null;
 };
 
 export type BillMedicine = {
@@ -116,11 +122,14 @@ export type BillMedicine = {
 };
 
 export type BillPrescription = {
+  id?: string | null;
   patientName?: string | null;
   doctorName?: string | null;
   visitDate?: string | null;
   diagnosis?: string | null;
   medicines?: BillMedicine[];
+  symptoms?: string | null;
+  testsRecommended?: string | null;
   followUpDate?: string | null;
 };
 
@@ -129,11 +138,21 @@ export type BillDoctor = {
   name?: string | null;
 };
 
+export type BillPatient = {
+  id?: string | null;
+  fullName?: string | null;
+  age?: number | null;
+  gender?: string | null;
+  email?: string | null;
+  mobile?: string | null;
+};
+
 export type BillVisit = {
   clinic?: BillClinic | null;
   appointment?: BillAppointment | null;
   prescriptions?: BillPrescription[];
   doctors?: BillDoctor[];
+  patient?: BillPatient | null;
 };
 
 export type Bill = {
