@@ -12,6 +12,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import Stats07 from "@/components/stats-07";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { statusBadgeClass } from "@/lib/appointment-status";
 import {
   startOfMonthDate,
@@ -201,44 +209,66 @@ export default async function DashboardPage() {
             </Link>
           </CardHeader>
           <CardContent>
-            {schedule.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                {isDoctor
-                  ? "You have no appointments scheduled today."
-                  : "No appointments scheduled today."}
-              </p>
-            ) : (
-              <ul className="space-y-3">
-                {schedule.map((appt) => (
-                  <li
-                    key={appt._id.toString()}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2"
-                  >
-                    <div className="w-16 shrink-0 text-sm font-medium tabular-nums">
-                      {formatTime(appt.time)}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{appt.fullName}</p>
-                      {!isDoctor && appt.doctorName && (
-                        <p className="truncate text-xs text-muted-foreground">
-                          {appt.doctorName}
-                        </p>
-                      )}
-                    </div>
-                    {appt.type === "video" && (
-                      <Badge variant="outline" className="shrink-0">
-                        Video
-                      </Badge>
-                    )}
-                    <Badge
-                      className={cn("border-transparent text-white shrink-0 capitalize", statusBadgeClass(appt.status))}
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="h-9">Time</TableHead>
+                  <TableHead className="h-9">Patient</TableHead>
+                  {!isDoctor && <TableHead className="h-9">Doctor</TableHead>}
+                  <TableHead className="h-9">Type</TableHead>
+                  <TableHead className="h-9 pr-4">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {schedule.length === 0 ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
+                      colSpan={isDoctor ? 4 : 5}
+                      className="h-20 text-center text-sm text-muted-foreground"
                     >
-                      {appt.status}
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
-            )}
+                      {isDoctor
+                        ? "You have no appointments scheduled today."
+                        : "No appointments scheduled today."}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  schedule.map((appt) => (
+                    <TableRow key={appt._id.toString()}>
+                      <TableCell className="py-2.5 text-sm font-medium tabular-nums">
+                        {formatTime(appt.time)}
+                      </TableCell>
+                      <TableCell className="py-2.5">
+                        <span className="truncate text-sm font-medium">
+                          {appt.fullName}
+                        </span>
+                      </TableCell>
+                      {!isDoctor && (
+                        <TableCell className="py-2.5 text-sm text-muted-foreground">
+                          {appt.doctorName ?? "—"}
+                        </TableCell>
+                      )}
+                      <TableCell className="py-2.5">
+                        {appt.type === "video" ? (
+                          <Badge variant="outline">Video</Badge>
+                        ) : (
+                          <Badge variant="secondary">In-person</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="py-2.5 pr-4">
+                        <Badge
+                          className={cn(
+                            "border-transparent text-white shrink-0 capitalize",
+                            statusBadgeClass(appt.status)
+                          )}
+                        >
+                          {appt.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
 
@@ -256,38 +286,58 @@ export default async function DashboardPage() {
             </Link>
           </CardHeader>
           <CardContent>
-            {recent.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No patients added yet. Add your first patient to get started.
-              </p>
-            ) : (
-              <ul className="space-y-3">
-                {recent.map((patient) => (
-                  <li
-                    key={patient._id.toString()}
-                    className="flex items-center gap-3"
-                  >
-                    <Avatar className="size-9 shrink-0">
-                      <AvatarFallback>{initials(patient.fullName)}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{patient.fullName}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {[patient.gender, patient.age ? `${patient.age} yrs` : null]
-                          .filter(Boolean)
-                          .join(", ") || "Patient"}
-                        {patient.mobile ? ` · ${patient.mobile}` : ""}
-                      </p>
-                    </div>
-                    {patient.createdAt && (
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {formatDate(patient.createdAt.toISOString())}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="h-9">Patient</TableHead>
+                  <TableHead className="h-9">Details</TableHead>
+                  <TableHead className="h-9 pr-4 text-right">Added</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recent.length === 0 ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell
+                      colSpan={3}
+                      className="h-20 text-center text-sm text-muted-foreground"
+                    >
+                      No patients added yet. Add your first patient to get
+                      started.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  recent.map((patient) => (
+                    <TableRow key={patient._id.toString()}>
+                      <TableCell className="py-2.5">
+                        <div className="flex min-w-0 items-center gap-2.5">
+                          <Avatar className="size-8 shrink-0">
+                            <AvatarFallback>
+                              {initials(patient.fullName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="truncate text-sm font-medium">
+                            {patient.fullName}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-2.5 text-sm text-muted-foreground">
+                        <span className="truncate">
+                          {[patient.gender, patient.age ? `${patient.age} yrs` : null]
+                            .filter(Boolean)
+                            .join(", ") || "Patient"}
+                          {patient.mobile ? ` · ${patient.mobile}` : ""}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-2.5 pr-4 text-right text-sm text-muted-foreground tabular-nums">
+                        {patient.createdAt
+                          ? formatDate(patient.createdAt.toISOString())
+                          : "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>
