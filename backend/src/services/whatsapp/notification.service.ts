@@ -1,5 +1,7 @@
+import wpp from "whatsapp-web.js";
 import type { Client } from "whatsapp-web.js";
-import { MessageMedia } from "whatsapp-web.js";
+
+const { MessageMedia } = wpp;
 import type { Db, ObjectId } from "mongodb";
 import { logger } from "@/lib/logger";
 import { toWhatsAppRemoteId } from "@/lib/phone";
