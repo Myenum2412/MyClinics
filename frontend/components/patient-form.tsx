@@ -152,22 +152,23 @@ export function PatientForm({
       return;
     }
 
-    // After successful creation, auto-send login credentials via WhatsApp
+    // After successful creation, auto-send full patient summary + credentials via WhatsApp
     if (!isEditing && data.patient?.id) {
       try {
         const sendRes = await fetch(`/api/patients/${data.patient.id}/send-credentials`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password }),
+          // skipPasswordUpdate=true: password was just set during creation — no need to re-hash
+          body: JSON.stringify({ password, skipPasswordUpdate: true }),
         });
         const sendData = await sendRes.json();
         if (sendRes.ok && sendData.queued) {
           toast.success("Patient added!", {
-            description: `${fullName} can now sign in. Login credentials sent via WhatsApp.`,
+            description: `${fullName} can now sign in. Login credentials + summary sent via WhatsApp ✅`,
           });
         } else {
           toast.success("Patient added!", {
-            description: `${fullName} can now sign in. Note: ${sendData.error || "Could not send WhatsApp credentials (no phone number)."}`,
+            description: `${fullName} can now sign in. WhatsApp: ${sendData.error || "No phone number provided."}`,
           });
         }
       } catch {

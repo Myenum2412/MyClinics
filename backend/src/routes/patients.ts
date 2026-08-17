@@ -395,33 +395,6 @@ export function registerPatientsRoutes(app: FastifyInstance): void {
         createdAt: new Date(),
       });
 
-      // Auto-send full patient summary + credentials via WhatsApp
-      const notifyPhone = (whatsapp ?? mobile) as string | null | undefined;
-      if (notifyPhone) {
-        try {
-          const appUrl = process.env.APP_URL?.trim() || "https://myclinic.myenum.in";
-          const org = await ensureDefaultOrganization(db);
-          // Build a minimal patient-shaped object from the just-inserted data
-          const patientObj: Record<string, unknown> = {
-            fullName, mobile, email: String(email).toLowerCase(),
-            whatsapp: whatsapp ?? null, age: age ?? null, gender: gender ?? null,
-            dateOfBirth: dateOfBirth ?? null, bloodGroup: bloodGroup ?? null,
-            address: address ?? null, city: city ?? null, pincode: pincode ?? null,
-            occupation: occupation ?? null, maritalStatus: maritalStatus ?? null,
-            guardianName: guardianName ?? null, allergies: allergies ?? null,
-            medicalHistory: sanitizeMedicalHistory(medicalHistory),
-          };
-          const message = await buildPatientMessage(db, patientObj, {
-            plainPassword: typeof body.password === "string" ? body.password : null,
-            appUrl,
-            orgName: org.name,
-          });
-          await enqueueClinicNotification(db, String(notifyPhone), message, "patient_credentials");
-        } catch {
-          // Non-critical — don't fail patient creation if WhatsApp notification fails
-        }
-      }
-
       return reply.code(201).send({
         patient: {
           id: patientResult.insertedId.toString(),
@@ -429,7 +402,6 @@ export function registerPatientsRoutes(app: FastifyInstance): void {
           fullName,
           mobile,
         },
-        credentialsSent: Boolean(notifyPhone),
       });
     } catch (error) {
       handleError(reply, error, "Create patient");
