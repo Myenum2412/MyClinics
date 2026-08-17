@@ -3,6 +3,7 @@ import { buildServer } from "@/app";
 import { getDb } from "@/lib/db";
 import { ensureIndexes } from "@/lib/indexes";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
+import { syncCronJobs } from "@/services/cronjob/cronjob.service";
 
 const PORT = Number(process.env.BACKEND_PORT ?? 3100);
 const HOST = process.env.BACKEND_HOST ?? "0.0.0.0";
@@ -24,6 +25,17 @@ async function main() {
 
   await app.listen({ port: PORT, host: HOST });
   console.log(`[server] API server listening on http://${HOST}:${PORT}`);
+
+  void syncCronJobs()
+    .then((result) =>
+      console.log(
+        `[cron-job.org] scheduler job ${result.action}`,
+        result.jobId ?? "n/a"
+      )
+    )
+    .catch((error) =>
+      console.error("[cron-job.org] scheduler sync failed", error)
+    );
 }
 
 main().catch((error) => {

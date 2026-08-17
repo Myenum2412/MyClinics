@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { getDb } from "@/lib/db";
 import { scanAndQueueReminders } from "@/services/reminder/reminder.service";
+import { syncCronJobs } from "@/services/cronjob/cronjob.service";
 import { requireCronSecret } from "@/plugins/auth";
 
 /**
@@ -18,6 +19,20 @@ export function registerCronRoutes(app: FastifyInstance): void {
       return reply.send({ ok: true, ...result });
     } catch (error) {
       console.error("Cron reminders error", error);
+      return reply.code(500).send({
+        error: "Something went wrong. Please try again.",
+      });
+    }
+  });
+
+  app.post("/api/cron/sync", async (request, reply) => {
+    if (!requireCronSecret(request, reply)) return;
+
+    try {
+      const result = await syncCronJobs();
+      return reply.send({ ok: true, ...result });
+    } catch (error) {
+      console.error("Cron-job.org sync error", error);
       return reply.code(500).send({
         error: "Something went wrong. Please try again.",
       });
