@@ -94,7 +94,17 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem render={<a href="/doctor/profile" />}>
+              <DropdownMenuItem
+                render={
+                  <a
+                    href={
+                      user.role === "patient"
+                        ? "/patient/profile"
+                        : "/doctor/profile"
+                    }
+                  />
+                }
+              >
                 <BadgeCheckIcon />
                 Account
               </DropdownMenuItem>
