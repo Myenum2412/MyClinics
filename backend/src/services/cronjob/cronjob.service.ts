@@ -21,6 +21,7 @@ interface CronJobPayload {
   schedule: CronJobSchedule;
   extendedData: {
     headers: Record<string, string>;
+    body: string;
   };
   notification: {
     onFailure: boolean;
@@ -62,7 +63,10 @@ function buildJobPayload(): CronJobPayload {
     saveResponses: true,
     requestMethod: 1,
     schedule: everyMinuteSchedule(process.env.CRONJOB_TIMEZONE ?? "Asia/Kolkata"),
-    extendedData: { headers: { "x-cron-secret": secret } },
+    extendedData: {
+      headers: { "x-cron-secret": secret, "Content-Type": "application/json" },
+      body: "{}",
+    },
     notification: { onFailure: true },
   };
 }
