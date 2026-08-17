@@ -74,19 +74,13 @@ export default async function DashboardPage() {
   const session = await auth();
   const db = await getDb();
 
-  const userId = session?.user?.id as string | undefined;
-  const role = session?.user?.role;
-  const isDoctor = role === "doctor";
-
   const today = todayDateString();
   // Next 7 calendar days (tomorrow … +7)
-  const next7 = dateString(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
-  const doctorFilter =
-    isDoctor && userId ? { doctorId: userId } : {};
+  const [y, m, d] = today.split("-").map(Number);
+  const next7 = dateString(new Date(Date.UTC(y, m - 1, d + 7)));
 
   const [
-    appointmentsTodayAll,
-    myAppointmentsToday,
+    todayAppointmentsCount,
     totalPatients,
     thisMonthRx,
     totalReports,
@@ -95,9 +89,6 @@ export default async function DashboardPage() {
     recentPatients,
   ] = await Promise.all([
     db.collection("appointments").countDocuments({ date: today }),
-    isDoctor && userId
-      ? db.collection("appointments").countDocuments({ date: today, doctorId: userId })
-      : Promise.resolve(0),
     db.collection("patients").countDocuments(),
     db
       .collection("prescriptions")
@@ -106,14 +97,14 @@ export default async function DashboardPage() {
     // Today's appointments
     db
       .collection("appointments")
-      .find({ date: today, ...doctorFilter })
+      .find({ date: today })
       .sort({ time: 1 })
       .limit(50)
       .toArray(),
     // Upcoming appointments (tomorrow → +7 days)
     db
       .collection("appointments")
-      .find({ date: { $gt: today, $lte: next7 }, ...doctorFilter })
+      .find({ date: { $gt: today, $lte: next7 } })
       .sort({ date: 1, time: 1 })
       .limit(20)
       .toArray(),
@@ -136,9 +127,7 @@ export default async function DashboardPage() {
           Welcome back, {session?.user.name}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {isDoctor
-            ? `You have ${myAppointmentsToday} appointment${myAppointmentsToday === 1 ? "" : "s"} today. Here's your schedule.`
-            : "Here's what's happening at your clinic today."}
+          {`You have ${todayAppointmentsCount} appointment${todayAppointmentsCount === 1 ? "" : "s"} today. Here's the clinic schedule.`}
         </p>
       </div>
 
@@ -147,8 +136,8 @@ export default async function DashboardPage() {
         description="A snapshot of activity at your clinic."
         items={[
           {
-            name: isDoctor ? "My Appointments Today" : "Today's Appointments",
-            current: isDoctor ? myAppointmentsToday : appointmentsTodayAll,
+            name: "Today's Appointments",
+            current: todayAppointmentsCount,
             allowed: 20,
             fill: "var(--chart-1)",
           },
@@ -179,8 +168,7 @@ export default async function DashboardPage() {
             <div>
               <CardTitle>Today&apos;s Schedule</CardTitle>
               <CardDescription>
-                {isDoctor ? "Your appointments for " : "Appointments for "}
-                {today}
+                Appointments for {today}
               </CardDescription>
             </div>
             <Link
@@ -196,7 +184,7 @@ export default async function DashboardPage() {
                 <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                   <TableHead className="h-9">Time</TableHead>
                   <TableHead className="h-9">Patient</TableHead>
-                  {!isDoctor && <TableHead className="h-9">Doctor</TableHead>}
+                  <TableHead className="h-9">Doctor</TableHead>
                   <TableHead className="h-9">Type</TableHead>
                   <TableHead className="h-9 pr-4">Status</TableHead>
                 </TableRow>
@@ -205,12 +193,10 @@ export default async function DashboardPage() {
                 {schedule.length === 0 ? (
                   <TableRow className="hover:bg-transparent">
                     <TableCell
-                      colSpan={isDoctor ? 4 : 5}
+                      colSpan={5}
                       className="h-20 text-center text-sm text-muted-foreground"
                     >
-                      {isDoctor
-                        ? "You have no appointments scheduled today."
-                        : "No appointments scheduled today."}
+                      No appointments scheduled today.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -224,11 +210,9 @@ export default async function DashboardPage() {
                           {appt.fullName}
                         </span>
                       </TableCell>
-                      {!isDoctor && (
-                        <TableCell className="py-2.5 text-sm text-muted-foreground">
-                          {appt.doctorName ?? "—"}
-                        </TableCell>
-                      )}
+                      <TableCell className="py-2.5 text-sm text-muted-foreground">
+                        {appt.doctorName ?? "—"}
+                      </TableCell>
                       <TableCell className="py-2.5">
                         {appt.type === "video" ? (
                           <Badge variant="outline">Video</Badge>
@@ -260,7 +244,7 @@ export default async function DashboardPage() {
             <div>
               <CardTitle>Upcoming Schedule</CardTitle>
               <CardDescription>
-                {isDoctor ? "Your appointments" : "Appointments"} in the next 7 days
+                Appointments in the next 7 days
               </CardDescription>
             </div>
             <Link
@@ -277,7 +261,7 @@ export default async function DashboardPage() {
                   <TableHead className="h-9">Date</TableHead>
                   <TableHead className="h-9">Time</TableHead>
                   <TableHead className="h-9">Patient</TableHead>
-                  {!isDoctor && <TableHead className="h-9">Doctor</TableHead>}
+                  <TableHead className="h-9">Doctor</TableHead>
                   <TableHead className="h-9 pr-4">Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -285,12 +269,10 @@ export default async function DashboardPage() {
                 {upcoming.length === 0 ? (
                   <TableRow className="hover:bg-transparent">
                     <TableCell
-                      colSpan={isDoctor ? 4 : 5}
+                      colSpan={5}
                       className="h-20 text-center text-sm text-muted-foreground"
                     >
-                      {isDoctor
-                        ? "No upcoming appointments in the next 7 days."
-                        : "No upcoming appointments in the next 7 days."}
+                      No upcoming appointments in the next 7 days.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -307,11 +289,9 @@ export default async function DashboardPage() {
                           {appt.fullName}
                         </span>
                       </TableCell>
-                      {!isDoctor && (
-                        <TableCell className="py-2.5 text-sm text-muted-foreground">
-                          {appt.doctorName ?? "—"}
-                        </TableCell>
-                      )}
+                      <TableCell className="py-2.5 text-sm text-muted-foreground">
+                        {appt.doctorName ?? "—"}
+                      </TableCell>
                       <TableCell className="py-2.5 pr-4">
                         <Badge
                           className={cn(
