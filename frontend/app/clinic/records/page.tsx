@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
@@ -9,12 +9,16 @@ import {
   deleteRecord,
   listRecords,
   updateRecord,
+  listPatients,
 } from "@/lib/clinic-api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Search, Download } from "lucide-react";
+import StatsGeneric from "@/components/stats-generic";
 import {
   Dialog,
   DialogContent,
@@ -78,11 +82,36 @@ export default function RecordsPage() {
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Patient names lookup map
+  const [patientLookup, setPatientLookup] = useState<Record<string, string>>({});
+
+  // Search, pagination & selection states
+  const [q, setQ] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const load = useCallback(() => {
     if (!clinicId) return;
     setLoading(true);
-    listRecords(clinicId, { limit: 100 })
-      .then((res) => setItems(res.items))
+
+    // Fetch patients for lookup map
+    listPatients(clinicId, { limit: 500 })
+      .then((res) => {
+        const map: Record<string, string> = {};
+        res.items.forEach((p) => {
+          map[p.patientId] = p.fullName;
+        });
+        setPatientLookup(map);
+      })
+      .catch(() => {});
+
+    listRecords(clinicId, { limit: 200 })
+      .then((res) => {
+        setItems(res.items);
+        setCurrentPage(1);
+        setSelectedIds(new Set());
+      })
       .catch(() => toast.error("Failed to load medical records"))
       .finally(() => setLoading(false));
   }, [clinicId]);
@@ -90,6 +119,12 @@ export default function RecordsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Reset pagination/selection on search
+  useEffect(() => {
+    setCurrentPage(1);
+    setSelectedIds(new Set());
+  }, [q]);
 
   async function handleSave(form: RecordFormState) {
     setSaving(true);
@@ -121,7 +156,8 @@ export default function RecordsPage() {
   }
 
   async function handleDelete(record: MedicalRecord) {
-    if (!confirm(`Delete medical record for patient ${record.patientId}?`)) return;
+    const patientName = patientLookup[record.patientId] || record.patientId;
+    if (!confirm(`Delete medical record for patient ${patientName}?`)) return;
     try {
       await deleteRecord(clinicId, record.recordId);
       toast.success("Record deleted");
@@ -133,97 +169,344 @@ export default function RecordsPage() {
 
   const canManage = sessionCan(session, "clinic_admin");
 
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-end">
-        <Dialog open={creating} onOpenChange={setCreating}>
-          <DialogTrigger render={<Button>New record</Button>} />
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>New medical record</DialogTitle>
-              <DialogDescription>
-                Record a diagnosis, symptoms and treatment for a visit.
-              </DialogDescription>
-            </DialogHeader>
-            <RecordForm
-              clinicId={clinicId}
-              doctorId={session?.doctorId ?? ""}
-              initial={EMPTY_FORM}
-              saving={saving}
-              onSave={handleSave}
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
+  // Filtering of items locally
+  const filteredItems = useMemo(() => {
+    if (!q) return items;
+    const lower = q.toLowerCase();
+    return items.filter((r) => {
+      const pName = (patientLookup[r.patientId] || "").toLowerCase();
+      return (
+        pName.includes(lower) ||
+        r.patientId.toLowerCase().includes(lower) ||
+        r.diagnosis.toLowerCase().includes(lower) ||
+        (r.symptoms && r.symptoms.toLowerCase().includes(lower)) ||
+        (r.treatment && r.treatment.toLowerCase().includes(lower))
+      );
+    });
+  }, [items, q, patientLookup]);
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Medical records</CardTitle>
+  // Stats calculations
+  const totalCount = items.length;
+  const uniquePatients = new Set(items.map((i) => i.patientId)).size;
+  const thisMonthRecords = items.filter((i) => {
+    const recordDate = new Date(i.visitDate);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return recordDate >= thirtyDaysAgo;
+  }).length;
+  const withTreatmentCount = items.filter((i) => i.treatment).length;
+
+  const recordsStats = useMemo(() => [
+    {
+      name: "Total Records",
+      percentage: Math.min(100, Math.round((totalCount / 500) * 100)),
+      current: totalCount,
+      allowed: 500,
+      allowedLabel: "target limit",
+      fill: "var(--chart-1)",
+    },
+    {
+      name: "Unique Patients Visited",
+      percentage: totalCount ? Math.round((uniquePatients / totalCount) * 100) : 0,
+      current: uniquePatients,
+      allowed: totalCount,
+      allowedLabel: "total patients",
+      fill: "var(--chart-2)",
+    },
+    {
+      name: "Recent Visits (30d)",
+      percentage: totalCount ? Math.round((thisMonthRecords / totalCount) * 100) : 0,
+      current: thisMonthRecords,
+      allowed: totalCount,
+      allowedLabel: "total records",
+      fill: "var(--chart-3)",
+    },
+    {
+      name: "Treatment Coverage",
+      percentage: totalCount ? Math.round((withTreatmentCount / totalCount) * 100) : 0,
+      current: withTreatmentCount,
+      allowed: totalCount,
+      allowedLabel: "documented",
+      fill: "var(--chart-4)",
+    },
+  ], [totalCount, uniquePatients, thisMonthRecords, withTreatmentCount]);
+
+  // Bulk actions helper
+  const handleBulkExport = () => {
+    const selected = items.filter((r) => selectedIds.has(r.recordId));
+    const mappedSelected = selected.map((r) => ({
+      ...r,
+      patientName: patientLookup[r.patientId] || "Unknown",
+    }));
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(mappedSelected, null, 2));
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `medical_records_export_${Date.now()}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    toast.success(`Exported ${selected.length} medical records to JSON.`);
+  };
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredItems.length / pageSize);
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredItems.slice(startIndex, startIndex + pageSize);
+  }, [filteredItems, currentPage, pageSize]);
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paginatedItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedItems.map((r) => r.recordId)));
+    }
+  };
+
+  const toggleSelectRow = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-6 py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Stats Section with action slot */}
+      {!loading && (
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <StatsGeneric
+            title="Medical Records"
+            description="Real-time insights on diagnoses, symptom records, and treatment coverages."
+            items={recordsStats}
+            action={
+              <Dialog open={creating} onOpenChange={setCreating}>
+                <DialogTrigger render={
+                  <Button className="flex items-center gap-1.5 shadow-sm">
+                    <Plus className="size-4" />
+                    New Record
+                  </Button>
+                } />
+                <DialogContent className="max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>New medical record</DialogTitle>
+                    <DialogDescription>
+                      Record a diagnosis, symptoms and treatment for a visit.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <RecordForm
+                    clinicId={clinicId}
+                    doctorId={session?.doctorId ?? ""}
+                    initial={EMPTY_FORM}
+                    saving={saving}
+                    onSave={handleSave}
+                  />
+                </DialogContent>
+              </Dialog>
+            }
+          />
+        </div>
+      )}
+
+      {/* Bulk actions bar if selected */}
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 shadow-sm transition-all animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-primary tabular-nums">
+              {selectedIds.size} selected
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-muted-foreground hover:text-foreground text-xs"
+              onClick={() => setSelectedIds(new Set())}
+            >
+              Clear selection
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBulkExport}
+              className="h-8 gap-1.5 shadow-sm"
+            >
+              <Download className="size-3.5 text-muted-foreground" />
+              Export Selected
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Main card containing listing */}
+      <Card className="border-border shadow-sm">
+        <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle className="text-xl font-semibold text-foreground">
+              Medical Records Listing
+            </CardTitle>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+              <Input
+                placeholder="Search records..."
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
-            <div className="space-y-2">
+            <div className="p-6 space-y-3">
+              <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
             </div>
-          ) : items.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No medical records yet.
-            </p>
+          ) : filteredItems.length === 0 ? (
+            <div className="py-12 text-center text-sm text-muted-foreground">
+              No medical records found.
+            </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Visit date</TableHead>
-                  <TableHead>Patient</TableHead>
-                  <TableHead>Diagnosis</TableHead>
-                  <TableHead>Symptoms</TableHead>
-                  <TableHead>Treatment</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {items.map((r) => (
-                  <TableRow key={r.recordId}>
-                    <TableCell>{formatDate(r.visitDate)}</TableCell>
-                    <TableCell>{r.patientId}</TableCell>
-                    <TableCell className="max-w-48 truncate font-medium">{r.diagnosis}</TableCell>
-                    <TableCell className="max-w-40 truncate">{r.symptoms ?? "—"}</TableCell>
-                    <TableCell className="max-w-40 truncate">{r.treatment ?? "—"}</TableCell>
-                    <TableCell className="text-right">
-                      <Dialog>
-                        <DialogTrigger render={<Button variant="ghost" size="sm">Edit</Button>} />
-                        <DialogContent className="max-h-[90vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>Edit record</DialogTitle>
-                          </DialogHeader>
-                          <RecordForm
-                            clinicId={clinicId}
-                            doctorId={session?.doctorId ?? ""}
-                            initial={{
-                              patientId: r.patientId,
-                              doctorId: r.doctorId,
-                              diagnosis: r.diagnosis,
-                              symptoms: r.symptoms ?? "",
-                              treatment: r.treatment ?? "",
-                              notes: r.notes ?? "",
-                              visitDate: r.visitDate,
-                            }}
-                            saving={saving}
-                            onSave={handleSave}
-                          />
-                        </DialogContent>
-                      </Dialog>
-                      {canManage && (
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(r)}>
-                          Delete
-                        </Button>
-                      )}
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                    <TableHead className="w-12 pl-6">
+                      <Checkbox
+                        checked={selectedIds.size === paginatedItems.length && paginatedItems.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
+                    <TableHead className="font-semibold text-foreground">Visit date</TableHead>
+                    <TableHead className="font-semibold text-foreground">Patient</TableHead>
+                    <TableHead className="font-semibold text-foreground">Diagnosis</TableHead>
+                    <TableHead className="font-semibold text-foreground">Symptoms</TableHead>
+                    <TableHead className="font-semibold text-foreground">Treatment</TableHead>
+                    <TableHead className="text-right pr-6 font-semibold text-foreground">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedItems.map((r) => (
+                    <TableRow
+                      key={r.recordId}
+                      className="hover:bg-muted/30 border-b border-border last:border-0"
+                    >
+                      <TableCell className="pl-6">
+                        <Checkbox
+                          checked={selectedIds.has(r.recordId)}
+                          onCheckedChange={() => toggleSelectRow(r.recordId)}
+                          aria-label={`Select record for ${patientLookup[r.patientId] || r.patientId}`}
+                        />
+                      </TableCell>
+                      <TableCell>{formatDate(r.visitDate)}</TableCell>
+                      <TableCell className="font-medium text-foreground">
+                        {patientLookup[r.patientId] || r.patientId}
+                      </TableCell>
+                      <TableCell className="max-w-48 truncate font-medium text-foreground">{r.diagnosis}</TableCell>
+                      <TableCell className="max-w-40 truncate">{r.symptoms ?? "—"}</TableCell>
+                      <TableCell className="max-w-40 truncate">{r.treatment ?? "—"}</TableCell>
+                      <TableCell className="text-right pr-6">
+                        <div className="flex justify-end gap-2">
+                          <Dialog>
+                            <DialogTrigger render={<Button variant="ghost" size="sm">Edit</Button>} />
+                            <DialogContent className="max-h-[90vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle>Edit Medical Record</DialogTitle>
+                              </DialogHeader>
+                              <RecordForm
+                                clinicId={clinicId}
+                                doctorId={session?.doctorId ?? ""}
+                                initial={{
+                                  patientId: r.patientId,
+                                  doctorId: r.doctorId,
+                                  diagnosis: r.diagnosis,
+                                  symptoms: r.symptoms ?? "",
+                                  treatment: r.treatment ?? "",
+                                  notes: r.notes ?? "",
+                                  visitDate: r.visitDate,
+                                }}
+                                saving={saving}
+                                onSave={handleSave}
+                              />
+                            </DialogContent>
+                          </Dialog>
+                          {canManage && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDelete(r)}
+                            >
+                              Delete
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/10">
+                  <div className="flex flex-1 justify-between sm:hidden">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                  <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">
+                        Showing <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to{" "}
+                        <span className="font-medium">
+                          {Math.min(currentPage * pageSize, filteredItems.length)}
+                        </span>{" "}
+                        of <span className="font-medium">{filteredItems.length}</span> results
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

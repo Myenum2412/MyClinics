@@ -423,55 +423,50 @@ export default function AppointmentsPage() {
 
   return (
     <div className="flex flex-col gap-6 py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Top Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <CalendarCheck className="size-8 text-primary" />
-            Appointments Management
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Book appointments, schedule visits, and monitor patient and doctor WhatsApp reminders.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            disabled={loading}
-            className="h-9 gap-1.5"
-          >
-            <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
-            Sync
-          </Button>
+      {/* Stats Section with action slot */}
+      {!loading && (
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <StatsAppointments
+            appointments={appointments}
+            action={
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadData}
+                  disabled={loading}
+                  className="h-9 gap-1.5"
+                >
+                  <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
+                  Sync
+                </Button>
 
-          <Dialog open={creating} onOpenChange={setCreating}>
-            <DialogTrigger render={
-              <Button className="flex items-center gap-1.5 shadow-sm h-9">
-                <Plus className="size-4" />
-                New Appointment
-              </Button>
-            } />
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>New Appointment</DialogTitle>
-                <DialogDescription>
-                  Schedule a patient visit. Automated WhatsApp alerts will be instantly queued for both patient and doctor.
-                </DialogDescription>
-              </DialogHeader>
-              <NewAppointmentForm
-                clinicId={clinicId}
-                onSave={handleCreate}
-                saving={saving}
-              />
-            </DialogContent>
-          </Dialog>
+                <Dialog open={creating} onOpenChange={setCreating}>
+                  <DialogTrigger render={
+                    <Button className="flex items-center gap-1.5 shadow-sm h-9">
+                      <Plus className="size-4" />
+                      New Appointment
+                    </Button>
+                  } />
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>New Appointment</DialogTitle>
+                      <DialogDescription>
+                        Schedule a patient visit. Automated WhatsApp alerts will be instantly queued for both patient and doctor.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <NewAppointmentForm
+                      clinicId={clinicId}
+                      onSave={handleCreate}
+                      saving={saving}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            }
+          />
         </div>
-      </div>
-
-      {/* Stats Section */}
-      {!loading && <StatsAppointments appointments={appointments} />}
+      )}
 
       {/* Bulk actions bar if selected */}
       {selectedIds.size > 0 && (
