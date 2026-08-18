@@ -17,6 +17,10 @@ import { requireAuth } from "@/plugins/auth";
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 export type ReportFileDoc = {
   id: string;
   name: string;
@@ -165,7 +169,11 @@ export function registerReportsRoutes(app: FastifyInstance): void {
         : "";
 
       const safeName = name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const key = `reports/${randomUUID()}-${safeName}`;
+      const key = patientIdStored
+        ? `reports/patients/${String(patientIdStored)}/${
+            category ? capitalize(category) : "Uploads"
+          }/${randomUUID()}-${safeName}`
+        : `reports/${randomUUID()}-${safeName}`;
 
       await uploadToR2(key, bytes, type);
 

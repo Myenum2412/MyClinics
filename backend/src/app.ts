@@ -23,6 +23,7 @@ import { registerPrescriptionsRoutes } from "@/routes/prescriptions";
 import { registerReportsRoutes } from "@/routes/reports";
 import { registerReportRoutes } from "@/routes/reports-id";
 import { registerReportUrlRoutes } from "@/routes/reports-id-url";
+import { registerPatientFoldersRoutes } from "@/routes/patient-folders";
 import { registerProfileRoutes } from "@/routes/profile";
 import { registerOrganizationRoutes } from "@/routes/organization";
 import { registerSoulRoutes } from "@/routes/soul";
@@ -75,6 +76,7 @@ export function buildServer() {
   void app.register(registerReportsRoutes);
   void app.register(registerReportRoutes);
   void app.register(registerReportUrlRoutes);
+  void app.register(registerPatientFoldersRoutes);
   void app.register(registerProfileRoutes);
   void app.register(registerOrganizationRoutes);
   void app.register(registerSoulRoutes);
