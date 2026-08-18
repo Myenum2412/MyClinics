@@ -128,17 +128,8 @@ export function WorkspaceSidebar({
   const items = NAV_ITEMS.filter((item) => can(role, item.minRole ?? "patient"))
 
   return (
-    <Sidebar
-      collapsible="icon"
-      style={
-        {
-          "--sidebar-width": "18rem",
-          "--sidebar-width-icon": "4.5rem",
-        } as React.CSSProperties
-      }
-      {...props}
-    >
-      <SidebarHeader className="pb-1">
+    <Sidebar collapsible="icon" {...props}>
+      <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -146,25 +137,25 @@ export function WorkspaceSidebar({
               render={<a href="/clinic" />}
               className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
             >
-              <div className="flex aspect-square size-10 items-center justify-center overflow-hidden rounded-xl border border-sidebar-border bg-white shadow-sm">
+              <div className="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg">
                 <Image
                   src="/logo.png"
                   alt="My Clinic"
-                  width={40}
-                  height={40}
-                  className="size-full object-contain p-0.5"
+                  width={32}
+                  height={32}
+                  className="size-full object-contain"
                 />
               </div>
-              <div className="grid flex-1 text-left text-base leading-tight">
-                <span className="truncate font-semibold">{clinicName}</span>
-                <span className="truncate text-xs capitalize text-sidebar-foreground/70">{role}</span>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{clinicName}</span>
+                <span className="truncate text-xs capitalize">{role}</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu className="gap-1.5">
+        <SidebarMenu>
           {items.map((item) => {
             const active =
               item.match === "exact"
@@ -175,7 +166,6 @@ export function WorkspaceSidebar({
                 <SidebarMenuButton
                   render={<a href={item.url} />}
                   isActive={active}
-                  className="h-11 gap-3 rounded-lg px-3 py-2.5 text-[15px] [&_svg]:size-5"
                 >
                   {item.icon}
                   <span>{item.title}</span>

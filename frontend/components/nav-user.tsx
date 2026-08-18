@@ -25,6 +25,7 @@ import {
 import {
   ArrowLeftEndOnRectangleIcon as LogOutIcon,
   ChevronUpDownIcon as ChevronsUpDownIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { logout } from "@/lib/clinic-api";
 
@@ -98,6 +99,10 @@ export function NavUser({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push("/clinic/account")}>
+              <UserCircleIcon />
+              Account
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout}>
               <LogOutIcon />
               Log out
