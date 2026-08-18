@@ -11,6 +11,8 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -44,69 +46,68 @@ const NAV_ITEMS: NavItem[] = [
   {
     title: "Dashboard",
     url: "/clinic",
-    icon: <LayoutDashboardIcon />,
+    icon: <LayoutDashboardIcon className="size-6" />,
     match: "exact",
     minRole: "patient",
   },
   {
     title: "Appointments",
     url: "/clinic/appointments",
-    icon: <CalendarDaysIcon />,
+    icon: <CalendarDaysIcon className="size-6" />,
     minRole: "doctor",
   },
   {
     title: "Patients",
     url: "/clinic/patients",
-    icon: <UsersIcon />,
+    icon: <UsersIcon className="size-6" />,
     minRole: "doctor",
   },
   {
     title: "Doctors",
     url: "/clinic/doctors",
-    icon: <StethoscopeIcon />,
+    icon: <StethoscopeIcon className="size-6" />,
     minRole: "doctor",
   },
-
   {
     title: "Medicine",
     url: "/clinic/records",
-    icon: <RecordsIcon />,
+    icon: <RecordsIcon className="size-6" />,
     minRole: "doctor",
   },
   {
     title: "Prescriptions",
     url: "/clinic/prescriptions",
-    icon: <PillIcon />,
+    icon: <PillIcon className="size-6" />,
     minRole: "doctor",
   },
   {
     title: "Billing",
     url: "/clinic/billing",
-    icon: <ReceiptTextIcon />,
+    icon: <ReceiptTextIcon className="size-6" />,
     minRole: "staff",
   },
   {
     title: "Reports",
     url: "/clinic/reports",
-    icon: <FileTextIcon />,
+    icon: <FileTextIcon className="size-6" />,
     minRole: "staff",
   },
   {
     title: "Audit Logs",
     url: "/clinic/audit-logs",
-    icon: <ClipboardListIcon />,
+    icon: <ClipboardListIcon className="size-6" />,
     minRole: "clinic_admin",
   },
   {
     title: "Notifications",
     url: "/clinic/notifications",
-    icon: <BellIcon />,
+    icon: <BellIcon className="size-6" />,
     minRole: "patient",
   },
   {
     title: "Settings",
     url: "/clinic/settings",
-    icon: <Settings2Icon />,
+    icon: <Settings2Icon className="size-6" />,
     minRole: "staff",
   },
 ]
@@ -129,52 +130,55 @@ export function WorkspaceSidebar({
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              render={<a href="/clinic" />}
-              className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
-            >
-              <div className="flex aspect-square size-10 items-center justify-center overflow-hidden rounded-lg">
-                <Image
-                  src="/logo.png"
-                  alt="My Clinic"
-                  width={40}
-                  height={40}
-                  className="size-full object-contain"
-                />
-              </div>
-              <div className="grid flex-1 text-left text-base leading-tight">
-                <span className="truncate font-medium">{clinicName}</span>
-                <span className="truncate text-sm capitalize">{role}</span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+      <SidebarHeader className="h-20 shrink-0 justify-center border-b bg-sidebar/40">
+        <div className="flex items-center gap-2.5 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+          <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-xl ring-1 ring-border shadow-sm">
+            <Image
+              src="/logo.png"
+              alt="My Clinic Logo"
+              width={36}
+              height={36}
+              className="size-9 object-contain"
+            />
+          </div>
+          <div className="grid min-w-0 group-data-[collapsible=icon]:hidden">
+            <span className="truncate text-[15px] font-semibold leading-tight tracking-tight text-sidebar-foreground">
+              {clinicName}
+            </span>
+            <span className="truncate text-xs font-medium leading-tight text-muted-foreground capitalize">
+              {role}
+            </span>
+          </div>
+        </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarMenu>
-          {items.map((item) => {
-            const active =
-              item.match === "exact"
-                ? pathname === item.url
-                : pathname.startsWith(`${item.url}/`) || pathname === item.url
-            return (
-              <SidebarMenuItem key={item.url}>
-                <SidebarMenuButton
-                  render={<a href={item.url} />}
-                  isActive={active}
-                  className="h-10! text-base! [&_svg]:size-5! group-data-[collapsible=icon]:h-8!"
-                >
-                  {item.icon}
-                  <span>{item.title}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )
-          })}
-        </SidebarMenu>
+        <SidebarGroup>
+          <SidebarGroupLabel className="mb-0.5 px-3 text-[11px] font-semibold uppercase tracking-wider">
+            Navigation
+          </SidebarGroupLabel>
+          <SidebarMenu>
+            {items.map((item) => {
+              const active =
+                item.match === "exact"
+                  ? pathname === item.url
+                  : pathname.startsWith(`${item.url}/`) || pathname === item.url
+              return (
+                <SidebarMenuItem key={item.url}>
+                  <SidebarMenuButton
+                    size="lg"
+                    tooltip={item.title}
+                    render={<a href={item.url} />}
+                    data-active={active}
+                    className="h-11 rounded-lg text-[13.5px] font-medium"
+                  >
+                    {item.icon}
+                    <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
