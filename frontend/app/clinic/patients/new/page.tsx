@@ -24,7 +24,6 @@ import Link from "next/link";
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const GENDERS = ["Male", "Female", "Other"];
 const MARITAL_STATUS = ["Single", "Married", "Divorced", "Widowed"];
-const ID_PROOF_TYPES = ["Aadhar", "Passport", "Driving License", "Pan Card", "Voter ID"];
 const HOW_DID_YOU_HEAR = [
   "Family/Friends Referral",
   "Google Search",
@@ -64,22 +63,12 @@ interface PatientFormState {
   previousSurgeries: string;
   currentMedications: string;
 
-  // Identification
-  idProofType: string;
-  idNumber: string;
-
   // Account & Portal Access
   doctorId: string | null;
   password: string;
   confirmPassword: string;
   portalAccess: "enable" | "disable";
   loginNotification: "whatsapp" | "email" | "none";
-
-  // Insurance
-  insuranceProvider: string;
-  policyNumber: string;
-  policyHolderName: string;
-  validTill: string;
 
   // Additional Information
   referredBy: string;
@@ -109,17 +98,11 @@ const EMPTY_FORM: PatientFormState = {
   medicalConditions: "",
   previousSurgeries: "",
   currentMedications: "",
-  idProofType: "",
-  idNumber: "",
   doctorId: null,
   password: "",
   confirmPassword: "",
   portalAccess: "enable",
   loginNotification: "none",
-  insuranceProvider: "",
-  policyNumber: "",
-  policyHolderName: "",
-  validTill: "",
   referredBy: "",
   howDidYouHear: "",
   notes: "",
@@ -402,7 +385,7 @@ export default function NewPatientPage() {
       </div>
 
       {/* Main Form */}
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="px-4 py-8 sm:px-6 lg:px-8">
         <div className="space-y-6">
           {/* 1. Patient Information */}
           <SectionCard title="1. Patient Information">
@@ -666,43 +649,9 @@ export default function NewPatientPage() {
             </FormField>
           </SectionCard>
 
-          {/* 5. Identification */}
+          {/* 5. Account & Portal Access */}
           <SectionCard
-            title="5. Identification"
-            description="Optional - not mandatory for patient registration"
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <FormField
-                label="ID Proof Type"
-                name="idProofType"
-                error={errors.idProofType}
-              >
-                <Select value={form.idProofType} onValueChange={(v) => handleChange("idProofType", v)}>
-                  <SelectTrigger className="border-blue-200">
-                    <SelectValue placeholder="Select ID type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ID_PROOF_TYPES.map((type) => (
-                      <SelectItem key={type} value={type.toLowerCase()}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FormField>
-              <FormField
-                label="ID Number"
-                name="idNumber"
-                value={form.idNumber}
-                onChange={(v) => handleChange("idNumber", v)}
-                placeholder="1234-5678-9012"
-              />
-            </div>
-          </SectionCard>
-
-          {/* 6. Account & Portal Access */}
-          <SectionCard
-            title="6. Account & Portal Access"
+            title="5. Account & Portal Access"
             description="Create patient portal credentials"
           >
             <div className="grid gap-4 md:grid-cols-2">
@@ -809,45 +758,8 @@ export default function NewPatientPage() {
             </div>
           </SectionCard>
 
-          {/* 7. Insurance */}
-          <SectionCard
-            title="7. Insurance"
-            description="Optional - for billing and claim purposes"
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              <FormField
-                label="Insurance Provider"
-                name="insuranceProvider"
-                value={form.insuranceProvider}
-                onChange={(v) => handleChange("insuranceProvider", v)}
-                placeholder="HDFC Health Insurance"
-              />
-              <FormField
-                label="Policy Number"
-                name="policyNumber"
-                value={form.policyNumber}
-                onChange={(v) => handleChange("policyNumber", v)}
-                placeholder="POL-12345678"
-              />
-              <FormField
-                label="Policy Holder Name"
-                name="policyHolderName"
-                value={form.policyHolderName}
-                onChange={(v) => handleChange("policyHolderName", v)}
-                placeholder="John Doe"
-              />
-              <FormField
-                label="Valid Till"
-                name="validTill"
-                type="date"
-                value={form.validTill}
-                onChange={(v) => handleChange("validTill", v)}
-              />
-            </div>
-          </SectionCard>
-
-          {/* 8. Additional Information */}
-          <SectionCard title="8. Additional Information">
+          {/* 6. Additional Information */}
+          <SectionCard title="6. Additional Information">
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 label="Referred By"
@@ -898,9 +810,9 @@ export default function NewPatientPage() {
             </FormField>
           </SectionCard>
 
-          {/* 9. Attachments - Placeholder for future implementation */}
+          {/* 7. Attachments - Placeholder for future implementation */}
           <SectionCard
-            title="9. Attachments"
+            title="7. Attachments"
             description="Optional - upload patient documents"
           >
             <div className="rounded-lg border-2 border-dashed border-blue-200 bg-blue-50 p-6 text-center">
