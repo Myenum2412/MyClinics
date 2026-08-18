@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { GoogleSignInButton } from "@/components/google-signin-button";
-import { signupClinic, type SignupResponse } from "@/lib/clinic-api";
+import { signupClinic, signupClinicGoogle, type SignupResponse } from "@/lib/clinic-api";
 
 /**
  * Clinic signup — creates a brand-new clinic tenant.
@@ -22,6 +22,11 @@ import { signupClinic, type SignupResponse } from "@/lib/clinic-api";
  * clinic + admin user, and returns a JWT embedding clinicId + role. The
  * Clinic ID is shown to the admin and must be kept — it is the tenant
  * identifier used across the platform.
+ *
+ * Google mode: after a Google sign-in with no matching account, the OAuth
+ * callback redirects back here with `email`, `name` and a one-time `gticket`
+ * (minted server-side for the verified email). In that mode the form drops
+ * the password fields and creates the account without a password.
  */
 export function ClinicSignupForm({
   className,
@@ -29,6 +34,7 @@ export function ClinicSignupForm({
 }: React.ComponentProps<"div">) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const gticket = searchParams.get("gticket");
   const [clinicName, setClinicName] = useState("");
   const [adminName, setAdminName] = useState("");
   const [email, setEmail] = useState("");
@@ -40,14 +46,10 @@ export function ClinicSignupForm({
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const googleError = searchParams.get("error");
     const googleEmail = searchParams.get("email");
-    if (googleError === "google_no_account") {
-      setError(
-        "No clinic account matches this Google email. Create your clinic below."
-      );
-    }
+    const googleName = searchParams.get("name");
     if (googleEmail) setEmail(googleEmail);
+    if (googleName) setAdminName(googleName);
   }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -59,12 +61,9 @@ export function ClinicSignupForm({
     }
     setLoading(true);
     try {
-      const result = await signupClinic({
-        clinicName,
-        adminName,
-        email,
-        password,
-      });
+      const result = gticket
+        ? await signupClinicGoogle({ clinicName, adminName, gticket })
+        : await signupClinic({ clinicName, adminName, email, password });
       setCreated(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -136,10 +135,13 @@ export function ClinicSignupForm({
       <form onSubmit={handleSubmit}>
         <FieldGroup>
           <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-xl font-bold text-black">Create your clinic</h1>
+            <h1 className="text-xl font-bold text-black">
+              {gticket ? "Create your clinic with Google" : "Create your clinic"}
+            </h1>
             <p className="text-left text-sm leading-normal font-normal text-gray-500">
-              One clinic = one secure tenant. Your Clinic ID is generated
-              automatically at signup.
+              {gticket
+                ? "Your Google account is verified. Pick a clinic name and you're done — no password needed."
+                : "One clinic = one secure tenant. Your Clinic ID is generated automatically at signup."}
             </p>
           </div>
 
@@ -180,51 +182,61 @@ export function ClinicSignupForm({
               type="email"
               placeholder="admin@clinic.com"
               required
+              readOnly={Boolean(gticket)}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="bg-white! text-black placeholder:text-gray-400"
             />
           </Field>
-          <Field>
-            <FieldLabel htmlFor="password" className="text-black">Password</FieldLabel>
-            <Input
-              id="password"
-              type="password"
-              placeholder="8+ chars, upper, lower, number"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-white! text-black placeholder:text-gray-400"
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="confirmPassword" className="text-black">
-              Confirm password
-            </FieldLabel>
-            <Input
-              id="confirmPassword"
-              type="password"
-              placeholder="Repeat your password"
-              required
-              minLength={8}
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="bg-white! text-black placeholder:text-gray-400"
-            />
-          </Field>
+
+          {!gticket && (
+            <>
+              <Field>
+                <FieldLabel htmlFor="password" className="text-black">Password</FieldLabel>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="8+ chars, upper, lower, number"
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-white! text-black placeholder:text-gray-400"
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="confirmPassword" className="text-black">
+                  Confirm password
+                </FieldLabel>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Repeat your password"
+                  required
+                  minLength={8}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="bg-white! text-black placeholder:text-gray-400"
+                />
+              </Field>
+            </>
+          )}
 
           {error && <p className="text-sm font-normal text-destructive">{error}</p>}
 
           <Field>
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? "Creating your clinic..." : "Create clinic"}
+              {loading
+                ? "Creating your clinic..."
+                : gticket
+                  ? "Create clinic with Google"
+                  : "Create clinic"}
             </Button>
           </Field>
         </FieldGroup>
       </form>
 
-      <GoogleSignInButton from="signup" />
+      {!gticket && <GoogleSignInButton from="signup" />}
 
       <p className="px-6 text-center text-xs leading-normal font-normal text-gray-400">
         Already have a clinic?{" "}

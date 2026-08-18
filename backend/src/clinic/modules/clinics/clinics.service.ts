@@ -82,6 +82,7 @@ export class ClinicService {
       name: input.adminName,
       email,
       passwordHash,
+      authProvider: "password",
       role: "clinic_admin",
       doctorId: null,
       staffId: null,

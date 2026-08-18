@@ -69,6 +69,7 @@ export class AuthService {
       name: input.adminName,
       email,
       passwordHash,
+      authProvider: "password",
       role: "clinic_admin",
       doctorId: null,
       staffId: null,
@@ -119,10 +120,104 @@ export class AuthService {
     };
   }
 
+  /**
+   * Google-native signup — creates the clinic + first clinic_admin WITHOUT
+   * a password. Only reachable with a ticket minted by the Google OAuth
+   * callback for a verified email, so the email is trusted.
+   */
+  async signupWithGoogle(input: {
+    clinicName: string;
+    adminName: string;
+    email: string;
+  }) {
+    const email = normalizeEmail(input.email);
+    const existing = await this.repo.findUserByEmail(email);
+    if (existing) {
+      throw new ConflictError("An account with this email already exists");
+    }
+
+    const clinicId = generateClinicId();
+    const userId = generateUserId();
+
+    const clinic = await this.repo.createClinic({
+      clinicId,
+      slug: slugify(input.clinicName),
+      name: input.clinicName,
+      phone: null,
+      email: null,
+      address: null,
+      website: null,
+      description: null,
+      status: "active",
+      settings: {
+        workingHours: { open: "09:00", close: "18:00" },
+        slotMinutes: 30,
+        currency: "INR",
+        timezone: "Asia/Kolkata",
+      },
+    });
+
+    const userDoc: UserDoc = {
+      clinicId,
+      userId,
+      name: input.adminName,
+      email,
+      passwordHash: null,
+      authProvider: "google",
+      role: "clinic_admin",
+      doctorId: null,
+      staffId: null,
+      patientId: null,
+      phone: null,
+      status: "active",
+      lastLoginAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    await this.repo.createUser(userDoc);
+
+    const token = await this.issueToken({
+      userId,
+      clinicId,
+      role: "clinic_admin",
+      name: input.adminName,
+      email,
+      doctorId: null,
+      patientId: null,
+    });
+
+    await writeAudit(this.db, null, {
+      action: "signup",
+      entity: "clinic",
+      entityId: clinicId,
+      metadata: { clinicName: clinic.name, email, actorUserId: userId, provider: "google" },
+    });
+    await writeAudit(
+      this.db,
+      { userId, clinicId, role: "clinic_admin", name: input.adminName, email, doctorId: null, patientId: null, tokenId: "", ip: null, userAgent: null },
+      {
+        action: "create",
+        entity: "clinic",
+        entityId: clinicId,
+        metadata: { name: clinic.name, provider: "google" },
+      }
+    );
+
+    return {
+      clinicId,
+      clinicName: clinic.name,
+      slug: clinic.slug,
+      userId,
+      role: "clinic_admin" as const,
+      token,
+      tokenExpiresInSeconds: accessTokenTtlSeconds(),
+    };
+  }
+
   async login(input: LoginInput, meta: { ip: string | null; userAgent: string | null }) {
     const email = normalizeEmail(input.email);
     const user = await this.repo.findUserByEmail(email);
-    if (!user || typeof user.passwordHash !== "string") {
+    if (!user) {
       await writeAudit(this.db, null, {
         action: "login_failed",
         entity: "user",
@@ -132,6 +227,19 @@ export class AuthService {
         userAgent: meta.userAgent,
       });
       throw new UnauthorizedError("Invalid email or password");
+    }
+    if (user.authProvider === "google" || typeof user.passwordHash !== "string") {
+      await writeAudit(this.db, userToCtx(user), {
+        action: "login_failed",
+        entity: "user",
+        entityId: user.userId,
+        metadata: { email: user.email, reason: "google_only_account" },
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+      });
+      throw new UnauthorizedError(
+        "This account uses Google sign-in — click Continue with Google"
+      );
     }
 
     const valid = await bcrypt.compare(input.password, user.passwordHash);

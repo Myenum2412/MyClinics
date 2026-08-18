@@ -35,7 +35,9 @@ export interface UserDoc extends ClinicDocument {
   userId: string;
   name: string;
   email: string;
-  passwordHash: string;
+  passwordHash: string | null;
+  /** "password" (default) or "google" — null hash only when "google". */
+  authProvider?: "password" | "google";
   role: ClinicRole;
   doctorId: string | null;
   staffId: string | null;

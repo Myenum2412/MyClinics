@@ -27,6 +27,14 @@ export const signupSchema = z.object({
 
 export type SignupInput = z.infer<typeof signupSchema>;
 
+export const googleSignupSchema = z.object({
+  clinicName: z.string().trim().min(2, "Clinic name is required").max(NAME_MAX),
+  adminName: z.string().trim().min(2, "Admin name is required").max(NAME_MAX),
+  gticket: z.string().min(1, "Google sign-in session is required"),
+});
+
+export type GoogleSignupInput = z.infer<typeof googleSignupSchema>;
+
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "Password is required").max(200),

@@ -61,6 +61,7 @@ export class UsersService {
       name: input.name,
       email,
       passwordHash,
+      authProvider: "password",
       role: input.role,
       doctorId: input.role === "doctor" ? input.doctorId ?? null : null,
       staffId: input.role === "staff" ? input.staffId ?? null : null,

@@ -79,6 +79,28 @@ export function consumeStateToken(state: string): "login" | "signup" | null {
   return entry.exp >= Date.now() ? entry.from : null;
 }
 
+// ── One-time Google signup tickets ─────────────────────────────────────────
+// A passwordless clinic can only be created for an email Google actually
+// verified. The OAuth callback (which sees the verified email) mints a
+// short-lived, single-use ticket; the client submits it back with the
+// signup request and the backend maps it to the email.
+
+const signupTickets = new Map<string, { exp: number; email: string }>();
+
+export function issueGoogleSignupTicket(email: string): string {
+  const ticket = randomBytes(24).toString("hex");
+  signupTickets.set(ticket, { exp: Date.now() + STATE_TTL_MS, email });
+  return ticket;
+}
+
+/** Returns the verified email the ticket was minted for, or null. */
+export function consumeGoogleSignupTicket(ticket: string): string | null {
+  const entry = signupTickets.get(ticket);
+  if (!entry) return null;
+  signupTickets.delete(ticket);
+  return entry.exp >= Date.now() ? entry.email : null;
+}
+
 // ── Google calls ───────────────────────────────────────────────────────────
 
 export function buildAuthorizationUrl(

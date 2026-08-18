@@ -6,15 +6,22 @@ import {
   UnauthorizedError,
 } from "@/clinic/core/errors";
 import { requestMeta } from "@/clinic/core/context";
-import { loginSchema, refreshSchema, signupSchema } from "@/clinic/modules/auth/auth.dto";
+import {
+  googleSignupSchema,
+  loginSchema,
+  refreshSchema,
+  signupSchema,
+} from "@/clinic/modules/auth/auth.dto";
 import { AuthService } from "@/clinic/modules/auth/auth.service";
 import {
   buildAuthorizationUrl,
+  consumeGoogleSignupTicket,
   consumeStateToken,
   exchangeCodeForTokens,
   fetchGoogleUserInfo,
   frontendBaseUrl,
   googleConfig,
+  issueGoogleSignupTicket,
   issueStateToken,
 } from "@/clinic/modules/auth/google-oauth";
 
@@ -28,6 +35,31 @@ export class AuthController {
     }
     const db = await getDb();
     const result = await new AuthService(db).signup(parsed.data);
+    return reply.code(201).send(result);
+  }
+
+  /**
+   * Google-native signup: creates a passwordless clinic admin. The body
+   * carries a one-time ticket minted by the OAuth callback for the user's
+   * verified Google email — no ticket, no account.
+   */
+  async googleSignup(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const parsed = googleSignupSchema.safeParse(request.body);
+    if (!parsed.success) {
+      throw new BadRequestError(parsed.error.issues[0]?.message ?? "Invalid signup data");
+    }
+    const email = consumeGoogleSignupTicket(parsed.data.gticket);
+    if (!email) {
+      throw new BadRequestError(
+        "Your Google sign-in session expired — please click Continue with Google again"
+      );
+    }
+    const db = await getDb();
+    const result = await new AuthService(db).signupWithGoogle({
+      clinicName: parsed.data.clinicName,
+      adminName: parsed.data.adminName,
+      email,
+    });
     return reply.code(201).send(result);
   }
 
@@ -96,6 +128,7 @@ export class AuthController {
 
     const redirectUri = `${base}${GOOGLE_CALLBACK_PATH}`;
     let email: string;
+    let googleName: string | undefined;
     try {
       const tokens = await exchangeCodeForTokens(
         config.clientId,
@@ -108,6 +141,7 @@ export class AuthController {
         return fail("google_email_unverified");
       }
       email = info.email;
+      googleName = info.name;
     } catch {
       return fail("google_exchange");
     }
@@ -123,8 +157,10 @@ export class AuthController {
     } catch (error) {
       if (error instanceof UnauthorizedError) {
         if (from === "signup") {
+          const ticket = issueGoogleSignupTicket(email);
           return reply.redirect(
-            `${base}/signup/clinic?error=google_no_account&email=${encodeURIComponent(email)}`
+            `${base}/signup/clinic?error=google_no_account&email=${encodeURIComponent(email)}` +
+              `&name=${encodeURIComponent(googleName ?? "")}&gticket=${ticket}`
           );
         }
         return fail("google_no_account");

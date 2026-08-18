@@ -85,6 +85,7 @@ export class PatientService {
           name: input.fullName,
           email: input.email,
           passwordHash,
+          authProvider: "password",
           role: "patient",
           doctorId: null,
           staffId: null,

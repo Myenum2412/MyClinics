@@ -207,6 +207,60 @@ describe("Clinic API over HTTP", () => {
     expect(res.statusCode).toBe(401);
   });
 
+  it("signup-google rejects a forged ticket (no verified Google email)", async () => {
+    const app = buildServer();
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/clinics/auth/signup-google",
+      payload: { clinicName: "Spoof Clinic", adminName: "Spoofer", gticket: "forged" },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ code: "BAD_REQUEST" });
+  });
+
+  it("signup-google creates a passwordless clinic admin from a valid ticket", async () => {
+    const { issueGoogleSignupTicket } = await import("@/clinic/modules/auth/google-oauth");
+    const ticket = issueGoogleSignupTicket("google-new@test.com");
+
+    const app = buildServer();
+    const res = await app.inject({
+      method: "POST",
+      url: "/api/clinics/auth/signup-google",
+      payload: { clinicName: "Google Clinic", adminName: "Gigi", gticket: ticket },
+    });
+    expect(res.statusCode).toBe(201);
+    const body = res.json() as { clinicId: string; token: string };
+    expect(body.clinicId).toMatch(/^clc_/);
+
+    const user = await mockDbHolder.db!
+      .collection("clc_users")
+      .findOne({ email: "google-new@test.com" });
+    expect(user).toMatchObject({ authProvider: "google", role: "clinic_admin" });
+    expect(user!.passwordHash).toBeNull();
+
+    const me = await app.inject({
+      method: "GET",
+      url: "/api/clinics/auth/me",
+      headers: { authorization: `Bearer ${body.token}` },
+    });
+    expect(me.statusCode).toBe(200);
+
+    const passLogin = await app.inject({
+      method: "POST",
+      url: "/api/clinics/auth/login",
+      payload: { email: "google-new@test.com", password: "whatever123" },
+    });
+    expect(passLogin.statusCode).toBe(401);
+    expect(passLogin.json()).toMatchObject({ code: "UNAUTHORIZED" });
+
+    const reuse = await app.inject({
+      method: "POST",
+      url: "/api/clinics/auth/signup-google",
+      payload: { clinicName: "Google Clinic 2", adminName: "Gigi", gticket: ticket },
+    });
+    expect(reuse.statusCode).toBe(400);
+  });
+
   it("deactivated clinic returns 401 at the boundary", async () => {
     const app = buildServer();
     const token = await login(app, "api-admin-a@test.com", "admin-secret");

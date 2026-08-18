@@ -437,6 +437,19 @@ export async function signupClinic(input: {
   return result;
 }
 
+export async function signupClinicGoogle(input: {
+  clinicName: string;
+  adminName: string;
+  gticket: string;
+}): Promise<SignupResponse> {
+  const result = await request<SignupResponse>("/api/clinics/auth/signup-google", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  setToken(result.token, result.tokenExpiresInSeconds);
+  return result;
+}
+
 export async function login(input: {
   email: string;
   password: string;

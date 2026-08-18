@@ -23,6 +23,12 @@ export function registerPublicAuthRoutes(app: FastifyInstance): void {
   );
 
   app.post(
+    "/api/clinics/auth/signup-google",
+    { preHandler: limitAuth },
+    async (request, reply) => controller.googleSignup(request, reply)
+  );
+
+  app.post(
     "/api/clinics/auth/login",
     { preHandler: limitAuth },
     async (request, reply) => controller.login(request, reply)
