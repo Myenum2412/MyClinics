@@ -375,38 +375,48 @@ export default function PrescriptionsPage() {
 
   if (creating) {
     return (
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCreating(false)}
-            className="h-9 gap-1.5"
-          >
-            <ChevronLeft className="size-4" />
-            Back to Prescriptions
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Create Prescription</h1>
-            <p className="text-sm text-muted-foreground">Write diagnosis and prescribe medication. Respective patients will receive secure automated WhatsApp alerts.</p>
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setCreating(false)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Create Prescription</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Write diagnosis and prescribe medication. Respective patients will receive secure automated WhatsApp alerts.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-        <Card className="border-border shadow-sm max-w-2xl">
-          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-            <CardTitle className="text-lg font-semibold">Prescription Details</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <PrescriptionForm
-              clinicId={clinicId}
-              doctorId={session?.doctorId ?? ""}
-              saving={saving}
-              onSave={async (form) => {
-                await handleSave(form);
-                setCreating(false);
-              }}
-            />
-          </CardContent>
-        </Card>
+
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold text-gray-800">
+                  Prescription Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <PrescriptionForm
+                  clinicId={clinicId}
+                  doctorId={session?.doctorId ?? ""}
+                  saving={saving}
+                  onSave={async (form) => {
+                    await handleSave(form);
+                    setCreating(false);
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1024,65 +1034,100 @@ function PrescriptionForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4 mt-2">
-      <div className="grid gap-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="grid gap-2">
-            <Label className="text-xs font-semibold">Patient</Label>
-            <PatientSelect clinicId={clinicId} value={form.patientId} onChange={(v) => set("patientId", v)} required />
+    <form onSubmit={submit} className="space-y-6">
+      {/* 1. PATIENT & DIAGNOSIS */}
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            1. Patient &amp; Diagnosis
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Patient <span className="ml-1 text-red-500">*</span>
+              </Label>
+              <PatientSelect clinicId={clinicId} value={form.patientId} onChange={(v) => set("patientId", v)} required />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Visit date <span className="ml-1 text-red-500">*</span>
+              </Label>
+              <Input type="date" value={form.visitDate} onChange={(e) => set("visitDate", e.target.value)} required className="border border-blue-200 focus:ring-blue-400" />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label className="text-xs font-semibold">Visit date</Label>
-            <Input type="date" value={form.visitDate} onChange={(e) => set("visitDate", e.target.value)} required />
+          <div className="space-y-2">
+            <Label className="text-sm font-medium text-gray-700">Diagnosis</Label>
+            <Input value={form.diagnosis} onChange={(e) => set("diagnosis", e.target.value)} placeholder="Diagnosis details..." className="border border-blue-200 focus:ring-blue-400" />
           </div>
-        </div>
-        <div className="grid gap-2">
-          <Label className="text-xs font-semibold">Diagnosis</Label>
-          <Input value={form.diagnosis} onChange={(e) => set("diagnosis", e.target.value)} placeholder="Diagnosis details..." />
-        </div>
-        <div className="grid gap-2">
-          <Label className="text-xs font-semibold">Medicines List</Label>
-          <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+        </CardContent>
+      </Card>
+
+      {/* 2. MEDICINES */}
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-base font-semibold text-gray-800">
+              2. Medicines List
+            </CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={addMedicine} className="h-8 border-blue-300 text-blue-600 hover:bg-blue-50">
+              <Plus className="size-3.5" />
+              Add Medicine Entry
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-3">
             {form.medicines.map((m, i) => (
-              <div key={i} className="space-y-2 rounded-lg border bg-card p-3 shadow-sm relative">
+              <div key={i} className="space-y-2 rounded-lg border border-blue-100 bg-white p-3">
                 <div className="grid grid-cols-[1fr_auto] gap-2 items-center">
                   <Input
                     placeholder="Medicine name"
                     value={m.name}
                     onChange={(e) => setMedicine(i, { name: e.target.value })}
                     required
-                    className="h-8 text-xs font-medium"
+                    className="border border-blue-200 focus:ring-blue-400"
                   />
                   {form.medicines.length > 1 && (
-                    <Button type="button" variant="ghost" size="sm" onClick={() => removeMedicine(i)} className="h-8 text-xs text-muted-foreground hover:text-destructive">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeMedicine(i)} className="h-8 text-xs text-red-600 hover:bg-red-50 hover:text-red-700">
                       Remove
                     </Button>
                   )}
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <Input placeholder="Dosage" value={m.dosage ?? ""} onChange={(e) => setMedicine(i, { dosage: e.target.value })} className="h-8 text-xs" />
-                  <Input placeholder="Frequency" value={m.frequency ?? ""} onChange={(e) => setMedicine(i, { frequency: e.target.value })} className="h-8 text-xs" />
-                  <Input placeholder="Duration" value={m.duration ?? ""} onChange={(e) => setMedicine(i, { duration: e.target.value })} className="h-8 text-xs" />
+                  <Input placeholder="Dosage" value={m.dosage ?? ""} onChange={(e) => setMedicine(i, { dosage: e.target.value })} className="border border-blue-200 focus:ring-blue-400" />
+                  <Input placeholder="Frequency" value={m.frequency ?? ""} onChange={(e) => setMedicine(i, { frequency: e.target.value })} className="border border-blue-200 focus:ring-blue-400" />
+                  <Input placeholder="Duration" value={m.duration ?? ""} onChange={(e) => setMedicine(i, { duration: e.target.value })} className="border border-blue-200 focus:ring-blue-400" />
                 </div>
-                <Input placeholder="Instructions (e.g. before food)" value={m.instructions ?? ""} onChange={(e) => setMedicine(i, { instructions: e.target.value })} className="h-8 text-xs" />
+                <Input placeholder="Instructions (e.g. before food)" value={m.instructions ?? ""} onChange={(e) => setMedicine(i, { instructions: e.target.value })} className="border border-blue-200 focus:ring-blue-400" />
               </div>
             ))}
           </div>
-          <Button type="button" variant="outline" size="sm" onClick={addMedicine} className="w-full text-xs h-8 border-dashed">
-            <Plus className="mr-1 size-3.5" />
-            Add Medicine Entry
-          </Button>
-        </div>
-        <div className="grid gap-2">
-          <Label className="text-xs font-semibold">Notes / Instructions</Label>
-          <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} placeholder="Add doctor instructions..." className="text-xs" />
-        </div>
-      </div>
-      <DialogFooter className="pt-2">
-        <Button type="submit" disabled={saving} className="w-full">
+        </CardContent>
+      </Card>
+
+      {/* 3. NOTES */}
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            3. Notes / Instructions
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} placeholder="Add doctor instructions..." className="border border-blue-200 focus:ring-blue-400" />
+        </CardContent>
+      </Card>
+
+      <div className="flex gap-3 border-t border-blue-200 pt-8">
+        <Button type="button" variant="outline" onClick={() => setForm({ patientId: "", doctorId, visitDate: today(), diagnosis: "", medicines: [{ ...EMPTY_MEDICINE }], notes: "" })} className="border-blue-300 text-blue-600 hover:bg-blue-50">
+          Reset
+        </Button>
+        <div className="flex-1" />
+        <Button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700" size="lg">
           {saving ? "Saving Prescription..." : "Save & Queue WhatsApp Alert"}
         </Button>
-      </DialogFooter>
+      </div>
     </form>
   );
 }

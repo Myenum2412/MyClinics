@@ -36,9 +36,7 @@ import {
   ChevronDown,
   Trash2,
   X,
-  Loader2,
   Paperclip,
-  FileText,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -334,25 +332,25 @@ function SearchableSelect({
         disabled={disabled}
         onClick={toggleOpen}
         aria-expanded={open}
-        className={`flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-sky-200 bg-white px-3 text-left text-sm outline-none transition-colors focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-200 disabled:cursor-not-allowed disabled:opacity-60 ${
-          displayLabel ? "text-slate-900" : "text-slate-400"
+        className={`flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-blue-200 bg-white px-3 text-left text-sm outline-none transition-colors focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60 ${
+          displayLabel ? "text-gray-900" : "text-gray-400"
         }`}
       >
         <span className="truncate">{displayLabel || placeholder || "Select..."}</span>
-        <ChevronDown className={`size-4 shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`size-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-sky-200 bg-white shadow-lg">
-          <div className="border-b border-sky-100 p-2">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-blue-200 bg-white shadow-lg">
+          <div className="border-b border-blue-100 p-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
               <Input
                 ref={searchRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={searchPlaceholder || "Search..."}
-                className="h-9 rounded-lg border-sky-200 bg-sky-50/40 pl-8 text-sm"
+                className="h-9 rounded-lg border-blue-200 bg-blue-50/40 pl-8 text-sm"
               />
             </div>
           </div>
@@ -364,13 +362,13 @@ function SearchableSelect({
                   onChange(null);
                   setOpen(false);
                 }}
-                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-slate-500 hover:bg-sky-50"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-gray-500 hover:bg-blue-50"
               >
                 {emptyLabel || "None"}
               </button>
             )}
             {filtered.length === 0 && (
-              <div className="px-2.5 py-4 text-center text-sm text-slate-400">
+              <div className="px-2.5 py-4 text-center text-sm text-gray-400">
                 No matches found
               </div>
             )}
@@ -382,8 +380,8 @@ function SearchableSelect({
                   onChange(o.value);
                   setOpen(false);
                 }}
-                className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-sky-50 ${
-                  o.value === value ? "bg-sky-50 font-medium text-sky-800" : "text-slate-700"
+                className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-blue-50 ${
+                  o.value === value ? "bg-blue-50 font-medium text-gray-800" : "text-gray-700"
                 }`}
               >
                 <span className="truncate">{o.label}</span>
@@ -440,10 +438,10 @@ function MedicineNameInput({
         }}
         onFocus={() => setOpen(true)}
         placeholder={placeholder || "Search medicine..."}
-        className="h-10 rounded-xl border-sky-200 bg-white"
+        className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
       />
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-sky-200 bg-white shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-blue-200 bg-white shadow-lg">
           {suggestions.length > 0 && (
             <div className="max-h-56 overflow-y-auto p-1">
               {suggestions.map((m) => (
@@ -455,10 +453,10 @@ function MedicineNameInput({
                     onChange(m);
                     setOpen(false);
                   }}
-                  className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-sky-50 ${
+                  className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-blue-50 ${
                     m.toLowerCase() === value.trim().toLowerCase()
-                      ? "bg-sky-50 font-medium text-sky-800"
-                      : "text-slate-700"
+                      ? "bg-blue-50 font-medium text-gray-800"
+                      : "text-gray-700"
                   }`}
                 >
                   <span className="truncate">{m}</span>
@@ -467,7 +465,7 @@ function MedicineNameInput({
             </div>
           )}
           {!exactMatch && value.trim() && (
-            <div className="border-t border-sky-100 px-2.5 py-2 text-xs text-slate-400">
+            <div className="border-t border-blue-100 px-2.5 py-2 text-xs text-gray-400">
               {`"${value.trim()}" will be saved as a new medicine name.`}
             </div>
           )}
@@ -780,29 +778,28 @@ export default function RecordsPage() {
 
   if (creating) {
     return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCreating(false)}
-              className="h-9 gap-1.5 border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
-            >
-              <ChevronLeft className="size-4" />
-              Back to Records
-            </Button>
-          </div>
-          <div className="text-right">
-            <h1 className="text-2xl font-bold text-slate-900">New Medical Record</h1>
-            <p className="text-sm text-slate-500">
-              Record a patient visit with diagnosis and medicines in one place.
-            </p>
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setCreating(false)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">New Medical Record</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Record a patient visit with diagnosis and medicines in one place
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-sky-200 bg-sky-50/80 p-4 shadow-sm">
-          <div className="rounded-[24px] border border-sky-100 bg-white p-5 sm:p-6">
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
             <RecordForm
               clinicId={clinicId}
               doctorId={session?.doctorId ?? ""}
@@ -821,29 +818,28 @@ export default function RecordsPage() {
 
   if (editing) {
     return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditing(null)}
-              className="h-9 gap-1.5 border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
-            >
-              <ChevronLeft className="size-4" />
-              Back to Records
-            </Button>
-          </div>
-          <div className="text-right">
-            <h1 className="text-2xl font-bold text-slate-900">Medical Record</h1>
-            <p className="text-sm text-slate-500">
-              Saved record details — review or update the visit information.
-            </p>
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setEditing(null)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Medical Record</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Saved record details — review or update the visit information
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-sky-200 bg-sky-50/80 p-4 shadow-sm">
-          <div className="rounded-[24px] border border-sky-100 bg-white p-5 sm:p-6">
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
             <RecordForm
               clinicId={clinicId}
               doctorId={session?.doctorId ?? ""}
@@ -1335,22 +1331,18 @@ function RecordForm({
 
   return (
     <form onSubmit={submit} className="space-y-6">
-      <div className="flex items-center justify-between gap-3 border-b border-sky-100 pb-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-600">Medical Visit</p>
-          <h2 className="mt-1 text-xl font-semibold text-slate-900">Patient record</h2>
-        </div>
-      </div>
 
       {/* 1. VISIT INFORMATION */}
-      <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
-        <div className="mb-4 flex items-center gap-2">
-          <span className="inline-flex size-2 rounded-full bg-sky-500" />
-          <h3 className="text-sm font-semibold text-sky-800">Visit information</h3>
-        </div>
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            1. Visit Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2 md:col-span-2">
-            <Label className="text-sm font-medium text-slate-700">Patient *</Label>
+            <Label className="text-sm font-medium text-gray-700">Patient *</Label>
             <SearchableSelect
               value={form.patientId || null}
               onChange={(v) => set("patientId", v)}
@@ -1364,25 +1356,25 @@ function RecordForm({
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Visit date *</Label>
+            <Label className="text-sm font-medium text-gray-700">Visit date *</Label>
             <Input
               type="date"
               value={form.visitDate}
               onChange={(e) => set("visitDate", e.target.value)}
-              className="h-11 rounded-xl border-sky-200 bg-white"
+              className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Visit time</Label>
+            <Label className="text-sm font-medium text-gray-700">Visit time</Label>
             <Input
               type="time"
               value={form.visitTime}
               onChange={(e) => set("visitTime", e.target.value)}
-              className="h-11 rounded-xl border-sky-200 bg-white"
+              className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
             />
           </div>
           <div className="grid gap-2 md:col-span-2">
-            <Label className="text-sm font-medium text-slate-700">Doctor *</Label>
+            <Label className="text-sm font-medium text-gray-700">Doctor *</Label>
             <SearchableSelect
               value={form.doctorId || null}
               onChange={(v) => set("doctorId", v)}
@@ -1396,7 +1388,7 @@ function RecordForm({
             />
           </div>
           <div className="grid gap-2 md:col-span-2">
-            <Label className="text-sm font-medium text-slate-700">Appointment</Label>
+            <Label className="text-sm font-medium text-gray-700">Appointment</Label>
             <SearchableSelect
               value={form.appointmentId}
               onChange={(v) => {
@@ -1415,9 +1407,9 @@ function RecordForm({
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Visit type *</Label>
+            <Label className="text-sm font-medium text-gray-700">Visit type *</Label>
             <Select value={form.visitType} onValueChange={(v) => set("visitType", v as "new" | "followup")}>
-              <SelectTrigger className="h-11 rounded-xl border-sky-200 bg-white">
+              <SelectTrigger className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1427,89 +1419,93 @@ function RecordForm({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Follow-up date</Label>
+            <Label className="text-sm font-medium text-gray-700">Follow-up date</Label>
             <Input
               type="date"
               value={form.followUpDate}
               onChange={(e) => set("followUpDate", e.target.value)}
-              className="h-11 rounded-xl border-sky-200 bg-white"
+              className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
             />
           </div>
         </div>
-      </section>
+      </CardContent>
+      </Card>
 
       {/* 2. CLINICAL INFORMATION */}
-      <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
-        <div className="mb-4 flex items-center gap-2">
-          <span className="inline-flex size-2 rounded-full bg-violet-500" />
-          <h3 className="text-sm font-semibold text-violet-800">Clinical information</h3>
-        </div>
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            2. Clinical Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
         <div className="space-y-3">
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Chief complaint / Reason for visit *</Label>
+            <Label className="text-sm font-medium text-gray-700">Chief complaint / Reason for visit *</Label>
             <Textarea
               value={form.chiefComplaint}
               onChange={(e) => set("chiefComplaint", e.target.value)}
-              className="min-h-20 rounded-xl border-sky-200 bg-white"
+              className="min-h-20 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
               placeholder="Describe the chief complaint..."
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Symptoms</Label>
+            <Label className="text-sm font-medium text-gray-700">Symptoms</Label>
             <Textarea
               value={form.symptoms}
               onChange={(e) => set("symptoms", e.target.value)}
-              className="min-h-20 rounded-xl border-sky-200 bg-white"
+              className="min-h-20 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
               placeholder="Document observed symptoms..."
             />
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             <div className="grid gap-2">
-              <Label className="text-sm font-medium text-slate-700">Diagnosis *</Label>
+              <Label className="text-sm font-medium text-gray-700">Diagnosis *</Label>
               <Input
                 value={form.diagnosis}
                 onChange={(e) => set("diagnosis", e.target.value)}
-                className="h-11 rounded-xl border-sky-200 bg-white"
+                className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
                 placeholder="Primary diagnosis"
               />
             </div>
             <div className="grid gap-2">
-              <Label className="text-sm font-medium text-slate-700">ICD Code</Label>
+              <Label className="text-sm font-medium text-gray-700">ICD Code</Label>
               <Input
                 value={form.icdCode}
                 onChange={(e) => set("icdCode", e.target.value)}
-                className="h-11 rounded-xl border-sky-200 bg-white"
+                className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
                 placeholder="e.g., I10"
               />
             </div>
           </div>
         </div>
-      </section>
+      </CardContent>
+      </Card>
 
       {/* 3. MEDICINES */}
-      <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
-        <div className="mb-4 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex size-2 rounded-full bg-emerald-500" />
-            <h3 className="text-sm font-semibold text-emerald-800">Medicines *</h3>
-          </div>
-          {form.medicines.length > 0 && (
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-base font-semibold text-gray-800">
+              3. Medicines *
+            </CardTitle>
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={addMedicine}
-              className="h-8 rounded-lg border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50"
+              className="h-8 border-blue-300 text-blue-600 hover:bg-blue-50"
             >
               <Plus className="size-3.5" />
               Add Another Medicine
             </Button>
-          )}
-        </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
         <div className="space-y-3">
           {form.medicines.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-sky-200 px-4 py-6 text-center">
-              <p className="text-sm text-slate-600">
+            <div className="rounded-xl border border-dashed border-blue-200 px-4 py-6 text-center">
+              <p className="text-sm text-gray-600">
                 No medicines added yet. At least one medicine is required.
               </p>
               <Button
@@ -1517,7 +1513,7 @@ function RecordForm({
                 variant="outline"
                 size="sm"
                 onClick={addMedicine}
-                className="mt-3 h-9 rounded-lg border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50"
+                className="mt-3 h-9 rounded-lg border-blue-300 text-blue-600 hover:bg-blue-50"
               >
                 <Plus className="size-4" />
                 Add Medicine
@@ -1525,10 +1521,10 @@ function RecordForm({
             </div>
           ) : (
             form.medicines.map((medicine, i) => (
-              <div key={i} className="space-y-2 rounded-xl border border-sky-100 bg-white p-3">
+              <div key={i} className="space-y-2 rounded-lg border border-blue-100 bg-white p-3">
                 <div className="grid gap-3 md:grid-cols-3">
                   <div className="grid gap-2 md:col-span-3">
-                    <Label className="text-xs uppercase tracking-wide text-slate-500">
+                    <Label className="text-xs uppercase tracking-wide text-gray-500">
                       Medicine name *
                     </Label>
                     <MedicineNameInput
@@ -1538,39 +1534,39 @@ function RecordForm({
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label className="text-xs uppercase tracking-wide text-slate-500">Dosage *</Label>
+                    <Label className="text-xs uppercase tracking-wide text-gray-500">Dosage *</Label>
                     <Input
                       value={medicine.dosage}
                       onChange={(e) => setMedicine(i, { dosage: e.target.value })}
-                      className="h-10 rounded-xl border-sky-200 bg-white"
+                      className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
                       placeholder="e.g., 500mg"
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label className="text-xs uppercase tracking-wide text-slate-500">Frequency *</Label>
+                    <Label className="text-xs uppercase tracking-wide text-gray-500">Frequency *</Label>
                     <Input
                       value={medicine.frequency}
                       onChange={(e) => setMedicine(i, { frequency: e.target.value })}
-                      className="h-10 rounded-xl border-sky-200 bg-white"
+                      className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
                       placeholder="e.g., Twice daily"
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label className="text-xs uppercase tracking-wide text-slate-500">Duration *</Label>
+                    <Label className="text-xs uppercase tracking-wide text-gray-500">Duration *</Label>
                     <Input
                       value={medicine.duration}
                       onChange={(e) => setMedicine(i, { duration: e.target.value })}
-                      className="h-10 rounded-xl border-sky-200 bg-white"
+                      className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
                       placeholder="e.g., 7 days"
                     />
                   </div>
                   <div className="grid gap-2 md:col-span-2">
-                    <Label className="text-xs uppercase tracking-wide text-slate-500">Instructions</Label>
+                    <Label className="text-xs uppercase tracking-wide text-gray-500">Instructions</Label>
                     <Input
                       value={medicine.instructions}
                       onChange={(e) => setMedicine(i, { instructions: e.target.value })}
                       list="medicine-instruction-suggestions"
-                      className="h-10 rounded-xl border-sky-200 bg-white"
+                      className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
                       placeholder="e.g., Before food"
                     />
                     <datalist id="medicine-instruction-suggestions">
@@ -1596,116 +1592,120 @@ function RecordForm({
             ))
           )}
         </div>
-      </section>
+      </CardContent>
+      </Card>
 
       {/* 4. TREATMENT & ADVICE */}
-      <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
-        <div className="mb-4 flex items-center gap-2">
-          <span className="inline-flex size-2 rounded-full bg-amber-500" />
-          <h3 className="text-sm font-semibold text-amber-800">Treatment & advice</h3>
-        </div>
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            4. Treatment & Advice
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
         <div className="space-y-3">
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Treatment / Procedures</Label>
+            <Label className="text-sm font-medium text-gray-700">Treatment / Procedures</Label>
             <Textarea
               value={form.treatment}
               onChange={(e) => set("treatment", e.target.value)}
-              className="min-h-20 rounded-xl border-sky-200 bg-white"
+              className="min-h-20 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
               placeholder="Describe treatment procedures..."
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Advice to patient</Label>
+            <Label className="text-sm font-medium text-gray-700">Advice to patient</Label>
             <Textarea
               value={form.advice}
               onChange={(e) => set("advice", e.target.value)}
-              className="min-h-20 rounded-xl border-sky-200 bg-white"
+              className="min-h-20 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
               placeholder="Lifestyle advice, precautions, etc."
             />
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="grid gap-2">
-              <Label className="text-sm font-medium text-slate-700">Next review date</Label>
+              <Label className="text-sm font-medium text-gray-700">Next review date</Label>
               <Input
                 type="date"
                 value={form.nextReviewDate}
                 onChange={(e) => set("nextReviewDate", e.target.value)}
-                className="h-11 rounded-xl border-sky-200 bg-white"
+                className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
               />
             </div>
             <div className="grid gap-2">
-              <Label className="text-sm font-medium text-slate-700">Referral</Label>
+              <Label className="text-sm font-medium text-gray-700">Referral</Label>
               <Input
                 value={form.referral}
                 onChange={(e) => set("referral", e.target.value)}
-                className="h-11 rounded-xl border-sky-200 bg-white"
+                className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
                 placeholder="Referred to specialist..."
               />
             </div>
           </div>
         </div>
-      </section>
+      </CardContent>
+      </Card>
 
       {/* 5. ADDITIONAL INFORMATION */}
-      <details className="group rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
-        <summary className="mb-4 cursor-pointer font-semibold text-slate-700 group-open:mb-4">
-          <span className="mr-2 inline-flex size-2 rounded-full bg-rose-500 align-middle" />
-          <span>Additional information</span>
-          <span className="ml-2 text-xs font-normal text-slate-400">(optional)</span>
-        </summary>
-        <div className="space-y-3 border-t border-sky-100 pt-3">
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            5. Additional Information (Optional)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <div>
-            <Label className="mb-2 block text-sm font-medium text-slate-700">Vitals</Label>
+            <Label className="mb-2 block text-sm font-medium text-gray-700">Vitals</Label>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="grid gap-2">
-                <Label className="text-xs text-slate-600">BP (mmHg)</Label>
+                <Label className="text-xs text-gray-600">BP (mmHg)</Label>
                 <Input
                   value={form.vitals.bp}
                   onChange={(e) => setVital("bp", e.target.value)}
-                  className="h-10 rounded-xl border-sky-200 bg-white"
+                  className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
                   placeholder="120/80"
                 />
               </div>
               <div className="grid gap-2">
-                <Label className="text-xs text-slate-600">Temperature (°C)</Label>
+                <Label className="text-xs text-gray-600">Temperature (°C)</Label>
                 <Input
                   value={form.vitals.temperature}
                   onChange={(e) => setVital("temperature", e.target.value)}
-                  className="h-10 rounded-xl border-sky-200 bg-white"
+                  className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
                   placeholder="98.6"
                 />
               </div>
               <div className="grid gap-2">
-                <Label className="text-xs text-slate-600">Pulse (bpm)</Label>
+                <Label className="text-xs text-gray-600">Pulse (bpm)</Label>
                 <Input
                   value={form.vitals.pulse}
                   onChange={(e) => setVital("pulse", e.target.value)}
-                  className="h-10 rounded-xl border-sky-200 bg-white"
+                  className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
                   placeholder="72"
                 />
               </div>
             </div>
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Allergies</Label>
+            <Label className="text-sm font-medium text-gray-700">Allergies</Label>
             <Textarea
               value={form.allergies}
               onChange={(e) => set("allergies", e.target.value)}
-              className="min-h-16 rounded-xl border-sky-200 bg-white"
+              className="min-h-16 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
               placeholder="Known allergies..."
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Lab tests</Label>
+            <Label className="text-sm font-medium text-gray-700">Lab tests</Label>
             <Textarea
               value={form.labTests}
               onChange={(e) => set("labTests", e.target.value)}
-              className="min-h-16 rounded-xl border-sky-200 bg-white"
+              className="min-h-16 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
               placeholder="Blood tests, X-rays, etc."
             />
           </div>
           <div className="grid gap-2">
-            <Label className="mb-1 flex items-center gap-2 text-sm font-medium text-slate-700">
+            <Label className="mb-1 flex items-center gap-2 text-sm font-medium text-gray-700">
               Internal notes
               <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
                 Visible only to authorized clinic staff
@@ -1718,29 +1718,29 @@ function RecordForm({
               placeholder="Internal observations..."
             />
           </div>
-        </div>
-      </details>
+      </CardContent>
+      </Card>
 
       {/* 6. ATTACHMENTS */}
-      <details className="group rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
-        <summary className="mb-4 cursor-pointer font-semibold text-slate-700 group-open:mb-4">
-          <span className="mr-2 inline-flex size-2 rounded-full bg-teal-500 align-middle" />
-          <span>Attachments</span>
-          <span className="ml-2 text-xs font-normal text-slate-400">(optional)</span>
-        </summary>
-        <div className="space-y-3 border-t border-sky-100 pt-3">
-          <p className="text-xs text-slate-500">
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            6. Attachments (Optional)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-gray-500">
             Upload medical reports, lab reports, images, or PDF documents.
           </p>
           {form.attachments.map((attachment, i) => (
-            <div key={i} className="space-y-2 rounded-xl border border-sky-100 bg-white p-3">
+            <div key={i} className="space-y-2 rounded-lg border border-blue-100 bg-white p-3">
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => document.getElementById(`attachment-file-${i}`)?.click()}
-                  className="h-9 gap-1.5 rounded-lg border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+                  className="h-9 gap-1.5 rounded-lg border-blue-200 bg-white text-blue-700 hover:bg-blue-50"
                 >
                   <Paperclip className="size-3.5" />
                   {attachment.file ? attachment.file.name : "Choose file"}
@@ -1756,7 +1756,7 @@ function RecordForm({
                   }}
                 />
                 {attachment.file && (
-                  <span className="truncate text-xs text-slate-500">
+                  <span className="truncate text-xs text-gray-500">
                     {((attachment.file.size || 0) / 1024).toFixed(0)} KB
                   </span>
                 )}
@@ -1772,12 +1772,12 @@ function RecordForm({
               </div>
               <div className="grid gap-2 md:grid-cols-2">
                 <div className="grid gap-2">
-                  <Label className="text-xs uppercase tracking-wide text-slate-500">Document type</Label>
+                  <Label className="text-xs uppercase tracking-wide text-gray-500">Document type</Label>
                   <Select
                     value={attachment.documentType}
                     onValueChange={(v) => setAttachment(i, { documentType: v ?? "" })}
                   >
-                    <SelectTrigger className="h-10 rounded-xl border-sky-200 bg-white">
+                    <SelectTrigger className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400">
                       <SelectValue placeholder="Select type..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -1790,11 +1790,11 @@ function RecordForm({
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label className="text-xs uppercase tracking-wide text-slate-500">Description</Label>
+                  <Label className="text-xs uppercase tracking-wide text-gray-500">Description</Label>
                   <Input
                     value={attachment.description}
                     onChange={(e) => setAttachment(i, { description: e.target.value })}
-                    className="h-10 rounded-xl border-sky-200 bg-white"
+                    className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
                     placeholder="e.g., CBC report from Aug 2026"
                   />
                 </div>
@@ -1806,77 +1806,76 @@ function RecordForm({
             variant="outline"
             size="sm"
             onClick={addAttachment}
-            className="h-9 gap-1.5 rounded-lg border-teal-200 bg-white text-teal-700 hover:bg-teal-50"
+            className="h-9 gap-1.5 rounded-lg border-blue-300 text-blue-600 hover:bg-blue-50"
           >
             <Plus className="size-3.5" />
             Add Attachment
           </Button>
-        </div>
-      </details>
+      </CardContent>
+      </Card>
 
       {/* SUMMARY */}
-      <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
-        <div className="mb-3 flex items-center gap-2">
-          <FileText className="size-4 text-sky-600" />
-          <h3 className="text-sm font-semibold text-sky-800">Summary</h3>
-        </div>
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            7. Summary
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
         <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
           <div>
-            <p className="text-xs text-slate-500">Patient</p>
-            <p className="mt-0.5 truncate font-medium text-slate-900">
+            <p className="text-xs text-gray-500">Patient</p>
+            <p className="mt-0.5 truncate font-medium text-gray-900">
               {selectedPatient?.fullName || "—"}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-500">Doctor</p>
-            <p className="mt-0.5 truncate font-medium text-slate-900">
+            <p className="text-xs text-gray-500">Doctor</p>
+            <p className="mt-0.5 truncate font-medium text-gray-900">
               {selectedDoctor?.name || "—"}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-500">Visit date</p>
-            <p className="mt-0.5 font-medium text-slate-900">
+            <p className="text-xs text-gray-500">Visit date</p>
+            <p className="mt-0.5 font-medium text-gray-900">
               {form.visitDate ? formatDate(form.visitDate) : "—"}
               {form.visitTime ? `, ${formatTime(form.visitTime)}` : ""}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-500">Visit type</p>
-            <p className="mt-0.5 font-medium capitalize text-slate-900">
+            <p className="text-xs text-gray-500">Visit type</p>
+            <p className="mt-0.5 font-medium capitalize text-gray-900">
               {form.visitType === "new" ? "New Visit" : "Follow-up"}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-500">Total medicines</p>
-            <p className="mt-0.5 font-semibold text-slate-900">{form.medicines.length}</p>
+            <p className="text-xs text-gray-500">Total medicines</p>
+            <p className="mt-0.5 font-semibold text-gray-900">{form.medicines.length}</p>
           </div>
         </div>
-      </section>
+      </CardContent>
+      </Card>
 
       {/* ACTIONS */}
-      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-sky-100 pt-4">
+      <div className="flex gap-3 border-t border-blue-200 pt-8">
         <Button
           type="button"
           variant="outline"
           onClick={resetForm}
           disabled={saving}
-          className="h-10 rounded-xl border-sky-200 bg-white text-slate-700 hover:bg-sky-50"
+          className="border-blue-300 text-blue-600 hover:bg-blue-50"
         >
           Reset
         </Button>
+        <div className="flex-1" />
         <Button
           type="submit"
+          onClick={submit}
           disabled={saving}
-          className="h-10 min-w-36 rounded-xl bg-sky-600 text-white shadow-sm hover:bg-sky-700"
+          className="bg-blue-600 text-white hover:bg-blue-700"
+          size="lg"
         >
-          {saving ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            "Save Record"
-          )}
+          {saving ? "Saving..." : "Save Record"}
         </Button>
       </div>
     </form>

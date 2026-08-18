@@ -446,40 +446,50 @@ export default function AppointmentsPage() {
 
   if (creating) {
     return (
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCreating(false)}
-            className="h-9 gap-1.5"
-          >
-            <ChevronLeft className="size-4" />
-            Back to Appointments
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">New Appointment</h1>
-            <p className="text-sm text-muted-foreground">Schedule a patient visit. Automated WhatsApp alerts will be instantly queued for both patient and doctor.</p>
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setCreating(false)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">New Appointment</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Schedule a patient visit. Automated WhatsApp alerts will be instantly queued for both patient and doctor.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-        <Card className="border-border shadow-sm max-w-2xl">
-          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-            <CardTitle className="text-lg font-semibold">Appointment Details</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <NewAppointmentForm
-              clinicId={clinicId}
-              appointments={appointments}
-              patients={patients}
-              doctors={doctors}
-              onSave={async (form) => {
-                await handleCreate(form);
-                setCreating(false);
-              }}
-              saving={saving}
-            />
-          </CardContent>
-        </Card>
+
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold text-gray-800">
+                  Appointment Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <NewAppointmentForm
+                  clinicId={clinicId}
+                  appointments={appointments}
+                  patients={patients}
+                  doctors={doctors}
+                  onSave={async (form) => {
+                    await handleCreate(form);
+                    setCreating(false);
+                  }}
+                  saving={saving}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1234,290 +1244,352 @@ function NewAppointmentForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-5">
-      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
-        <div className="grid gap-2 md:col-span-2">
-          <Label className="text-xs font-medium text-foreground">Patient</Label>
-          <div className="relative">
-            <Input
-              value={selectedPatient ? selectedPatient.fullName : patientQuery}
-              onChange={(e) => {
-                setPatientId("");
-                setPatientQuery(e.target.value);
-              }}
-              onFocus={() => setPatientQuery(selectedPatient?.fullName ?? patientQuery)}
-              placeholder="Search patient"
-              className="h-10 border-blue-200 bg-white text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-blue-500"
-            />
-            {!selectedPatient && filteredPatients.length > 0 && patientQuery.trim() && (
-              <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
-                {filteredPatients.slice(0, 8).map((p) => (
-                  <button
-                    key={p.patientId}
-                    type="button"
-                    onClick={() => {
-                      setPatientId(p.patientId);
-                      setPatientQuery(p.fullName);
-                    }}
-                    className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
-                  >
-                    <span className="font-medium text-foreground">{p.fullName}</span>
-                    <span className="text-muted-foreground">{p.mobile}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="grid gap-2 md:col-span-2">
-          <Label className="text-xs font-medium text-foreground">Doctor</Label>
-          <div className="relative">
-            <Input
-              value={selectedDoctor ? selectedDoctor.name : doctorQuery}
-              onChange={(e) => {
-                setDoctorId("");
-                setDoctorQuery(e.target.value);
-              }}
-              onFocus={() => setDoctorQuery(selectedDoctor?.name ?? doctorQuery)}
-              placeholder="Search doctor"
-              className="h-10 border-blue-200 bg-white text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-blue-500"
-            />
-            {!selectedDoctor && filteredDoctors.length > 0 && doctorQuery.trim() && (
-              <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
-                {filteredDoctors.slice(0, 8).map((d) => (
-                  <button
-                    key={d.doctorId}
-                    type="button"
-                    onClick={() => {
-                      setDoctorId(d.doctorId);
-                      setDoctorQuery(d.name);
-                    }}
-                    className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
-                  >
-                    <span className="font-medium text-foreground">{d.name}</span>
-                    <span className="text-muted-foreground">{d.specialization || "General"}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="grid gap-2">
-          <Label className="text-xs font-medium text-foreground">Department</Label>
-          <Input
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            placeholder="Optional"
-            className="h-10 border-blue-200 bg-white text-sm shadow-sm"
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label className="text-xs font-medium text-foreground">Visit Type</Label>
-          <Select value={visitType} onValueChange={(value) => setVisitType(value ?? "New Visit")}>
-            <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="New Visit">New Visit</SelectItem>
-              <SelectItem value="Follow-up">Follow-up</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid gap-2">
-          <Label className="text-xs font-medium text-foreground">Date</Label>
-          <Input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            required
-            className="h-10 border-blue-200 bg-white text-sm shadow-sm"
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label className="text-xs font-medium text-foreground">Time</Label>
-          <Input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            required
-            className="h-10 border-blue-200 bg-white text-sm shadow-sm"
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label className="text-xs font-medium text-foreground">Duration</Label>
-          <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))}>
-            <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[15, 30, 45, 60].map((mins) => (
-                <SelectItem key={mins} value={String(mins)}>{mins} minutes</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid gap-2">
-          <Label className="text-xs font-medium text-foreground">Reason for Visit</Label>
-          <Input
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-            placeholder="Fever, checkup, follow-up..."
-            required
-            className="h-10 border-blue-200 bg-white text-sm shadow-sm"
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <Label className="text-xs font-medium text-foreground">Priority</Label>
-          <Select value={priority} onValueChange={(value) => setPriority(value ?? "Normal")}>
-            <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Normal">Normal</SelectItem>
-              <SelectItem value="High">High</SelectItem>
-              <SelectItem value="Urgent">Urgent</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid gap-2 md:col-span-2 xl:col-span-3">
-          <div className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50/50 px-3 py-2 text-xs text-blue-900">
-            <span className="font-medium">End Time</span>
-            <span className="font-semibold">{endTime}</span>
-          </div>
-        </div>
-      </div>
-
-      {doctorId && date && (
-        <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-xs font-semibold text-foreground">Doctor schedule</p>
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Available / occupied</span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"].map((slot) => {
-              const busy = occupiedSlots.includes(slot);
-              const selected = slot === time;
-              return (
-                <button
-                  type="button"
-                  key={slot}
-                  onClick={() => setTime(slot)}
-                  className={`rounded-full border px-2 py-1 text-[10px] font-medium transition ${
-                    selected
-                      ? "border-blue-600 bg-blue-600 text-white"
-                      : busy
-                        ? "border-red-200 bg-red-50 text-red-600"
-                        : "border-blue-200 bg-white text-blue-700 hover:bg-blue-100"
+    <form onSubmit={submit} className="space-y-6">
+      {/* 1. PATIENT & DOCTOR */}
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            1. Patient &amp; Doctor
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Patient <span className="ml-1 text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  value={selectedPatient ? selectedPatient.fullName : patientQuery}
+                  onChange={(e) => {
+                    setPatientId("");
+                    setPatientQuery(e.target.value);
+                  }}
+                  onFocus={() => setPatientQuery(selectedPatient?.fullName ?? patientQuery)}
+                  placeholder="Search patient"
+                  className={`border ${
+                    error && !patientId ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
                   }`}
-                >
-                  {slot}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      <div className="rounded-xl border border-border bg-muted/20 p-3">
-        <button
-          type="button"
-          onClick={() => setShowOptionalInfo((v) => !v)}
-          className="flex w-full items-center justify-between text-left text-xs font-semibold text-foreground"
-        >
-          Additional Information
-          <span className="rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[10px] text-blue-700">
-            {showOptionalInfo ? "Hide" : "Show"}
-          </span>
-        </button>
-
-        {showOptionalInfo && (
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
-            <div className="grid gap-2 md:col-span-2">
-              <Label className="text-xs font-medium text-foreground">Symptoms</Label>
-              <Textarea value={symptoms} onChange={(e) => setSymptoms(e.target.value)} rows={2} className="border-blue-200 bg-white text-xs shadow-sm" placeholder="Brief symptoms or complaints" />
+                />
+                {!selectedPatient && filteredPatients.length > 0 && patientQuery.trim() && (
+                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
+                    {filteredPatients.slice(0, 8).map((p) => (
+                      <button
+                        key={p.patientId}
+                        type="button"
+                        onClick={() => {
+                          setPatientId(p.patientId);
+                          setPatientQuery(p.fullName);
+                        }}
+                        className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
+                      >
+                        <span className="font-medium text-gray-700">{p.fullName}</span>
+                        <span className="text-gray-500">{p.mobile}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label className="text-xs font-medium text-foreground">Previous Visit</Label>
-              <Input value={previousVisit} onChange={(e) => setPreviousVisit(e.target.value)} placeholder="Optional" className="h-10 border-blue-200 bg-white text-sm shadow-sm" />
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Doctor <span className="ml-1 text-red-500">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  value={selectedDoctor ? selectedDoctor.name : doctorQuery}
+                  onChange={(e) => {
+                    setDoctorId("");
+                    setDoctorQuery(e.target.value);
+                  }}
+                  onFocus={() => setDoctorQuery(selectedDoctor?.name ?? doctorQuery)}
+                  placeholder="Search doctor"
+                  className={`border ${
+                    error && !doctorId ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
+                  }`}
+                />
+                {!selectedDoctor && filteredDoctors.length > 0 && doctorQuery.trim() && (
+                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
+                    {filteredDoctors.slice(0, 8).map((d) => (
+                      <button
+                        key={d.doctorId}
+                        type="button"
+                        onClick={() => {
+                          setDoctorId(d.doctorId);
+                          setDoctorQuery(d.name);
+                        }}
+                        className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
+                      >
+                        <span className="font-medium text-gray-700">{d.name}</span>
+                        <span className="text-gray-500">{d.specialization || "General"}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="grid gap-2">
-              <Label className="text-xs font-medium text-foreground">Internal Notes</Label>
-              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Staff notes" className="h-10 border-blue-200 bg-white text-sm shadow-sm" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 2. VISIT DETAILS */}
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            2. Visit Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Department</Label>
+              <Input
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                placeholder="Optional"
+                className="border border-blue-200 focus:ring-blue-400"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Visit Type</Label>
+              <Select value={visitType} onValueChange={(value) => setVisitType(value ?? "New Visit")}>
+                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="New Visit">New Visit</SelectItem>
+                  <SelectItem value="Follow-up">Follow-up</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Date <span className="ml-1 text-red-500">*</span>
+              </Label>
+              <Input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+                className={`border ${
+                  error && !date ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
+                }`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Time <span className="ml-1 text-red-500">*</span>
+              </Label>
+              <Input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                required
+                className={`border ${
+                  error && !time ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
+                }`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Duration</Label>
+              <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))}>
+                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[15, 30, 45, 60].map((mins) => (
+                    <SelectItem key={mins} value={String(mins)}>{mins} minutes</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">
+                Reason for Visit <span className="ml-1 text-red-500">*</span>
+              </Label>
+              <Input
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Fever, checkup, follow-up..."
+                required
+                className={`border ${
+                  error && !reason.trim() ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
+                }`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Priority</Label>
+              <Select value={priority} onValueChange={(value) => setPriority(value ?? "Normal")}>
+                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Normal">Normal</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">End Time</Label>
+              <div className="rounded-lg border border-blue-200 bg-blue-50/40 px-3 py-2.5 text-sm text-blue-700">
+                {endTime}
+              </div>
             </div>
           </div>
-        )}
-      </div>
 
-      <div className="rounded-xl border border-blue-200 bg-white p-3">
-        <div className="grid gap-3 md:grid-cols-3">
-          <div className="grid gap-2">
-            <Label className="text-xs font-medium text-foreground">Patient Reminder</Label>
-            <Select value={reminder} onValueChange={(value) => setReminder(value ?? "Same Day")}>
-              <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="None">None</SelectItem>
-                <SelectItem value="Same Day">Same Day</SelectItem>
-                <SelectItem value="1 Day Before">1 Day Before</SelectItem>
-              </SelectContent>
-            </Select>
+          {doctorId && date && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-xs font-semibold text-gray-700">Doctor schedule</p>
+                <span className="text-[10px] uppercase tracking-wide text-gray-500">Available / occupied</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"].map((slot) => {
+                  const busy = occupiedSlots.includes(slot);
+                  const selected = slot === time;
+                  return (
+                    <button
+                      type="button"
+                      key={slot}
+                      onClick={() => setTime(slot)}
+                      className={`rounded-full border px-2 py-1 text-[10px] font-medium transition ${
+                        selected
+                          ? "border-blue-600 bg-blue-600 text-white"
+                          : busy
+                            ? "border-red-200 bg-red-50 text-red-600"
+                            : "border-blue-200 bg-white text-blue-700 hover:bg-blue-100"
+                      }`}
+                    >
+                      {slot}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 3. ADDITIONAL INFORMATION */}
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-base font-semibold text-gray-800">
+              3. Additional Information (Optional)
+            </CardTitle>
+            <span className="rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[10px] text-blue-700">
+              {showOptionalInfo ? "Hide" : "Show"}
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <button
+            type="button"
+            onClick={() => setShowOptionalInfo((v) => !v)}
+            className="w-full rounded-lg border border-blue-200 bg-blue-50/40 px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-blue-100"
+          >
+            {showOptionalInfo ? "Hide optional fields" : "Show optional fields"}
+          </button>
+
+          {showOptionalInfo && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label className="text-sm font-medium text-gray-700">Symptoms</Label>
+                <Textarea value={symptoms} onChange={(e) => setSymptoms(e.target.value)} rows={2} className="border border-blue-200 focus:ring-blue-400" placeholder="Brief symptoms or complaints" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Previous Visit</Label>
+                <Input value={previousVisit} onChange={(e) => setPreviousVisit(e.target.value)} placeholder="Optional" className="border border-blue-200 focus:ring-blue-400" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">Internal Notes</Label>
+                <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Staff notes" className="border border-blue-200 focus:ring-blue-400" />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 4. NOTIFICATIONS */}
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            4. Notifications
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Patient Reminder</Label>
+              <Select value={reminder} onValueChange={(value) => setReminder(value ?? "Same Day")}>
+                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="None">None</SelectItem>
+                  <SelectItem value="Same Day">Same Day</SelectItem>
+                  <SelectItem value="1 Day Before">1 Day Before</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">WhatsApp Alert</Label>
+              <Select value={whatsappAlert ? "Yes" : "No"} onValueChange={(v) => setWhatsappAlert(v === "Yes")}>
+                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Yes">Yes</SelectItem>
+                  <SelectItem value="No">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-gray-700">Doctor Notification</Label>
+              <Select value={doctorNotification ? "Yes" : "No"} onValueChange={(v) => setDoctorNotification(v === "Yes")}>
+                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Yes">Yes</SelectItem>
+                  <SelectItem value="No">No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="grid gap-2">
-            <Label className="text-xs font-medium text-foreground">WhatsApp Alert</Label>
-            <Select value={whatsappAlert ? "Yes" : "No"} onValueChange={(v) => setWhatsappAlert(v === "Yes")}>
-              <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Yes">Yes</SelectItem>
-                <SelectItem value="No">No</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label className="text-xs font-medium text-foreground">Doctor Notification</Label>
-            <Select value={doctorNotification ? "Yes" : "No"} onValueChange={(v) => setDoctorNotification(v === "Yes")}>
-              <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Yes">Yes</SelectItem>
-                <SelectItem value="No">No</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <p className="mt-3 text-[11px] text-muted-foreground">
-          {whatsappAlert || doctorNotification
-            ? "Patient and staff notifications will be sent based on the selected reminder and alert preferences."
-            : "No notifications will be sent for this appointment."}
-        </p>
-      </div>
+          <p className="text-xs text-gray-500">
+            {whatsappAlert || doctorNotification
+              ? "Patient and staff notifications will be sent based on the selected reminder and alert preferences."
+              : "No notifications will be sent for this appointment."}
+          </p>
+        </CardContent>
+      </Card>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+          <AlertCircle size={16} />
           {error}
         </div>
       )}
 
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={resetForm} className="h-10 border-blue-200 bg-white text-sm">
+      <div className="flex gap-3 border-t border-blue-200 pt-8">
+        <Button type="button" variant="outline" onClick={resetForm} className="border-blue-300 text-blue-600 hover:bg-blue-50">
           Reset
         </Button>
-        <Button type="submit" disabled={saving} className="h-10 bg-blue-600 text-sm text-white hover:bg-blue-700">
+        <div className="flex-1" />
+        <Button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700" size="lg">
           {saving ? "Creating..." : "Create Appointment"}
         </Button>
       </div>

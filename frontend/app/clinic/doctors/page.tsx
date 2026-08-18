@@ -24,17 +24,11 @@ import {
   Columns,
   ChevronLeft,
   ChevronRight,
-  User,
-  Briefcase,
-  ShieldCheck,
-  CalendarDays,
-  FileText,
   Eye,
   EyeOff,
-  Clock,
   Trash2,
   Upload,
-  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -239,7 +233,12 @@ function doctorToForm(doctor: Doctor): DoctorFormState {
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="text-xs font-medium text-red-500">{message}</p>;
+  return (
+    <div className="flex items-center gap-1.5 text-sm text-red-600">
+      <AlertCircle size={16} />
+      {message}
+    </div>
+  );
 }
 
 function RequiredStar() {
@@ -474,38 +473,40 @@ export default function DoctorsPage() {
     });
   };
 
-  const formContainerClass =
-    "rounded-xl border border-slate-200 bg-white";
-
   if (creating) {
     return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCreating(false)}
-            className="h-9 gap-1.5 border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
-          >
-            <ChevronLeft className="size-4" />
-            Back to Doctors
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Add Doctor</h1>
-            <p className="text-sm text-slate-500">Register a new doctor at this clinic.</p>
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setCreating(false)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Add Doctor</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Register a new doctor at this clinic
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className={formContainerClass}>
-          <DoctorForm
-            initial={EMPTY_FORM}
-            isEdit={false}
-            saving={saving}
-            onSave={async (form) => {
-              await handleSave(form);
-              setCreating(false);
-            }}
-          />
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <DoctorForm
+              initial={EMPTY_FORM}
+              isEdit={false}
+              saving={saving}
+              onSave={async (form) => {
+                await handleSave(form);
+                setCreating(false);
+              }}
+            />
+          </div>
         </div>
       </div>
     );
@@ -513,33 +514,38 @@ export default function DoctorsPage() {
 
   if (editing) {
     return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEditing(null)}
-            className="h-9 gap-1.5 border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
-          >
-            <ChevronLeft className="size-4" />
-            Back to Doctors
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Edit Doctor</h1>
-            <p className="text-sm text-slate-500">Modify doctor details, fee, and schedule.</p>
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setEditing(null)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Edit Doctor</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Modify doctor details, fee, and schedule
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className={formContainerClass}>
-          <DoctorForm
-            initial={doctorToForm(editing)}
-            isEdit={true}
-            saving={saving}
-            onSave={async (form) => {
-              await handleSave(form);
-              setEditing(null);
-            }}
-          />
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <DoctorForm
+              initial={doctorToForm(editing)}
+              isEdit={true}
+              saving={saving}
+              onSave={async (form) => {
+                await handleSave(form);
+                setEditing(null);
+              }}
+            />
+          </div>
         </div>
       </div>
     );
@@ -921,24 +927,24 @@ function DoctorForm({
   }
 
   const inputBase = (key: string) =>
-    `h-11 rounded-lg border-slate-200 bg-white focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-100 ${
-      errors[key] ? "border-red-300 focus-visible:border-red-400 focus-visible:ring-red-100" : ""
+    `border ${
+      errors[key] ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
     }`;
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-6 p-5 sm:p-8">
+    <form onSubmit={submit} noValidate className="space-y-6">
       {/* 1. PERSONAL INFORMATION */}
-      <section className="rounded-lg border border-slate-200 bg-white p-5">
-        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-            <User className="size-5" />
-          </div>
-          <h3 className="text-base font-semibold text-slate-900">1. Personal Information</h3>
-        </div>
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            1. Personal Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <div className="grid gap-2 lg:col-span-2">
-            <Label className="text-sm font-medium text-slate-700">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-2 md:col-span-2">
+            <Label className="text-sm font-medium text-gray-700">
               Full Name <RequiredStar />
             </Label>
             <Input
@@ -951,7 +957,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">
+            <Label className="text-sm font-medium text-gray-700">
               Gender <RequiredStar />
             </Label>
             <Select value={form.gender} onValueChange={(v) => set("gender", v ?? "")}>
@@ -968,21 +974,18 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Date of Birth</Label>
-            <div className="relative">
-              <CalendarDays className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                type="date"
-                value={form.dateOfBirth}
-                onChange={(e) => set("dateOfBirth", e.target.value)}
-                className={`${inputBase("dateOfBirth")} pl-9`}
-              />
-            </div>
+            <Label className="text-sm font-medium text-gray-700">Date of Birth</Label>
+            <Input
+              type="date"
+              value={form.dateOfBirth}
+              onChange={(e) => set("dateOfBirth", e.target.value)}
+              className={inputBase("dateOfBirth")}
+            />
             <FieldError message={errors.dateOfBirth} />
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">
+            <Label className="text-sm font-medium text-gray-700">
               Phone Number <RequiredStar />
             </Label>
             <Input
@@ -996,7 +999,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">
+            <Label className="text-sm font-medium text-gray-700">
               Email <RequiredStar />
             </Label>
             <Input
@@ -1010,7 +1013,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Nationality</Label>
+            <Label className="text-sm font-medium text-gray-700">Nationality</Label>
             <Select value={form.nationality} onValueChange={(v) => set("nationality", v ?? "")}>
               <SelectTrigger className={`${inputBase("nationality")} w-full`}>
                 <SelectValue placeholder="Select nationality" />
@@ -1026,8 +1029,8 @@ function DoctorForm({
             <FieldError message={errors.nationality} />
           </div>
 
-          <div className="grid gap-2 lg:col-span-2">
-            <Label className="text-sm font-medium text-slate-700">Address</Label>
+          <div className="grid gap-2 md:col-span-2">
+            <Label className="text-sm font-medium text-gray-700">Address</Label>
             <Input
               value={form.address}
               onChange={(e) => set("address", e.target.value)}
@@ -1037,20 +1040,21 @@ function DoctorForm({
             <FieldError message={errors.address} />
           </div>
         </div>
-      </section>
+      </CardContent>
+      </Card>
 
       {/* 2. PROFESSIONAL INFORMATION */}
-      <section className="rounded-lg border border-slate-200 bg-white p-5">
-        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-            <Briefcase className="size-5" />
-          </div>
-          <h3 className="text-base font-semibold text-slate-900">2. Professional Information</h3>
-        </div>
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            2. Professional Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">
+            <Label className="text-sm font-medium text-gray-700">
               Specialization <RequiredStar />
             </Label>
             <Input
@@ -1063,7 +1067,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">
+            <Label className="text-sm font-medium text-gray-700">
               Qualification <RequiredStar />
             </Label>
             <Input
@@ -1076,7 +1080,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Experience (Years)</Label>
+            <Label className="text-sm font-medium text-gray-700">Experience (Years)</Label>
             <Input
               type="number"
               min="0"
@@ -1090,7 +1094,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">License Number</Label>
+            <Label className="text-sm font-medium text-gray-700">License Number</Label>
             <Input
               value={form.licenseNo}
               onChange={(e) => set("licenseNo", e.target.value)}
@@ -1101,7 +1105,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Registration Number</Label>
+            <Label className="text-sm font-medium text-gray-700">Registration Number</Label>
             <Input
               value={form.registrationNo}
               onChange={(e) => set("registrationNo", e.target.value)}
@@ -1112,7 +1116,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Issuing Authority</Label>
+            <Label className="text-sm font-medium text-gray-700">Issuing Authority</Label>
             <Input
               value={form.issuingAuthority}
               onChange={(e) => set("issuingAuthority", e.target.value)}
@@ -1123,7 +1127,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Consultation Fee (₹)</Label>
+            <Label className="text-sm font-medium text-gray-700">Consultation Fee (₹)</Label>
             <Input
               type="number"
               min="0"
@@ -1136,7 +1140,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Department</Label>
+            <Label className="text-sm font-medium text-gray-700">Department</Label>
             <Select value={form.department} onValueChange={(v) => set("department", v ?? "")}>
               <SelectTrigger className={`${inputBase("department")} w-full`}>
                 <SelectValue placeholder="Select department" />
@@ -1152,20 +1156,21 @@ function DoctorForm({
             <FieldError message={errors.department} />
           </div>
         </div>
-      </section>
+      </CardContent>
+      </Card>
 
       {/* 3. ACCOUNT & ACCESS */}
-      <section className="rounded-lg border border-slate-200 bg-white p-5">
-        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-            <ShieldCheck className="size-5" />
-          </div>
-          <h3 className="text-base font-semibold text-slate-900">3. Account & Access</h3>
-        </div>
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            3. Account & Access
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">
+            <Label className="text-sm font-medium text-gray-700">
               Username <RequiredStar />
             </Label>
             <Input
@@ -1178,7 +1183,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">
+            <Label className="text-sm font-medium text-gray-700">
               Password <RequiredStar />
             </Label>
             <div className="relative">
@@ -1193,7 +1198,7 @@ function DoctorForm({
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
@@ -1202,7 +1207,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">
+            <Label className="text-sm font-medium text-gray-700">
               Confirm Password <RequiredStar />
             </Label>
             <div className="relative">
@@ -1217,7 +1222,7 @@ function DoctorForm({
                 type="button"
                 onClick={() => setShowConfirmPassword((s) => !s)}
                 aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
@@ -1226,7 +1231,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Role</Label>
+            <Label className="text-sm font-medium text-gray-700">Role</Label>
             <Select value={form.role} onValueChange={(v) => set("role", v ?? "Doctor")}>
               <SelectTrigger className={`${inputBase("role")} w-full`}>
                 <SelectValue />
@@ -1238,7 +1243,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Status</Label>
+            <Label className="text-sm font-medium text-gray-700">Status</Label>
             <Select value={form.status} onValueChange={(v) => set("status", v ?? "active")}>
               <SelectTrigger className={`${inputBase("status")} w-full`}>
                 <SelectValue />
@@ -1250,48 +1255,47 @@ function DoctorForm({
             </Select>
           </div>
 
-          <div className="grid gap-2 lg:col-span-2">
-            <Label className="text-sm font-medium text-slate-700">Allow Login</Label>
-            <div className="flex h-11 items-center gap-6">
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="radio"
-                  name="allow-login"
-                  checked={form.allowLogin === "yes"}
-                  onChange={() => set("allowLogin", "yes")}
-                  className="size-4 accent-sky-600"
-                />
-                Yes
-              </label>
-              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="radio"
-                  name="allow-login"
-                  checked={form.allowLogin === "no"}
-                  onChange={() => set("allowLogin", "no")}
-                  className="size-4 accent-sky-600"
-                />
-                No
-              </label>
+          <div className="grid gap-2 md:col-span-2">
+            <Label className="text-sm font-medium text-gray-700">Allow Login</Label>
+            <div className="mt-3 space-y-2">
+              {(["yes", "no"] as const).map((option) => (
+                <label
+                  key={option}
+                  className="flex items-center gap-3 rounded-lg p-3 hover:bg-blue-50"
+                >
+                  <input
+                    type="radio"
+                    name="allow-login"
+                    value={option}
+                    checked={form.allowLogin === option}
+                    onChange={() => set("allowLogin", option)}
+                    className="h-4 w-4 border-blue-300 text-blue-600"
+                  />
+                  <span className="text-sm font-medium text-gray-700">
+                    {option === "yes" ? "Yes, create login account" : "No, access only"}
+                  </span>
+                </label>
+              ))}
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-gray-500">
               A login account is created with the doctor&apos;s email and password.
             </p>
           </div>
         </div>
-      </section>
+      </CardContent>
+      </Card>
 
       {/* 4. CONSULTATION SCHEDULE */}
-      <section className="rounded-lg border border-slate-200 bg-white p-5">
-        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-            <CalendarDays className="size-5" />
-          </div>
-          <h3 className="text-base font-semibold text-slate-900">4. Consultation Schedule</h3>
-        </div>
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            4. Consultation Schedule
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
 
         <div className="grid gap-5 lg:grid-cols-2">
-          <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+          <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-4">
             <Label className="mb-3 block text-sm font-medium text-slate-700">Select Days</Label>
             <div className="flex flex-wrap gap-x-6 gap-y-3">
               {DAYS.map((day) => (
@@ -1310,36 +1314,30 @@ function DoctorForm({
             <FieldError message={errors.days} />
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+          <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-4">
             <Label className="mb-3 block text-sm font-medium text-slate-700">Default Time Slot</Label>
             <div className="space-y-3">
               {form.timeSlots.map((slot, i) => (
                 <div key={i} className="flex items-end gap-3">
                   <div className="grid gap-2">
-                    <Label className="text-xs text-slate-500">Start time</Label>
-                    <div className="relative">
-                      <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        type="time"
-                        value={slot.start}
-                        onChange={(e) => setSlot(i, { start: e.target.value })}
-                        className={`${inputBase(`slot-${i}-start`)} w-32 pl-9`}
-                      />
-                    </div>
+                    <Label className="text-xs text-gray-500">Start time</Label>
+                    <Input
+                      type="time"
+                      value={slot.start}
+                      onChange={(e) => setSlot(i, { start: e.target.value })}
+                      className={`${inputBase(`slot-${i}-start`)} w-32`}
+                    />
                     <FieldError message={errors[`slot-${i}-start`]} />
                   </div>
                   <span className="pb-3 text-sm text-slate-500">to</span>
                   <div className="grid gap-2">
-                    <Label className="text-xs text-slate-500">End time</Label>
-                    <div className="relative">
-                      <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                      <Input
-                        type="time"
-                        value={slot.end}
-                        onChange={(e) => setSlot(i, { end: e.target.value })}
-                        className={`${inputBase(`slot-${i}-end`)} w-32 pl-9`}
-                      />
-                    </div>
+                    <Label className="text-xs text-gray-500">End time</Label>
+                    <Input
+                      type="time"
+                      value={slot.end}
+                      onChange={(e) => setSlot(i, { end: e.target.value })}
+                      className={`${inputBase(`slot-${i}-end`)} w-32`}
+                    />
                     <FieldError message={errors[`slot-${i}-end`]} />
                   </div>
                   {form.timeSlots.length > 1 && (
@@ -1362,55 +1360,56 @@ function DoctorForm({
               type="button"
               variant="outline"
               onClick={addSlot}
-              className="mt-4 h-10 w-full rounded-lg border-slate-200 bg-white text-sky-600 hover:bg-sky-50"
+              className="mt-4 h-10 w-full rounded-lg border-blue-300 bg-white text-blue-600 hover:bg-blue-50"
             >
               <Plus className="mr-1.5 size-4" />
               Add Another Time Slot
             </Button>
           </div>
         </div>
-      </section>
+      </CardContent>
+      </Card>
 
       {/* 5. ADDITIONAL INFORMATION */}
-      <section className="rounded-lg border border-slate-200 bg-white p-5">
-        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-3">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-            <FileText className="size-5" />
-          </div>
-          <h3 className="text-base font-semibold text-slate-900">5. Additional Information (Optional)</h3>
-        </div>
+      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-gray-800">
+            5. Additional Information (Optional)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">About Doctor</Label>
+            <Label className="text-sm font-medium text-gray-700">About Doctor</Label>
             <textarea
               value={form.about}
               onChange={(e) => set("about", e.target.value)}
               placeholder="Briefly about the doctor"
               rows={4}
-              className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-100"
+              className="w-full resize-none rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-100"
             />
             <FieldError message={errors.about} />
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Languages Known</Label>
+            <Label className="text-sm font-medium text-gray-700">Languages Known</Label>
             <textarea
               value={form.languages}
               onChange={(e) => set("languages", e.target.value)}
               placeholder="e.g. English, Hindi, Tamil"
               rows={4}
-              className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-100"
+              className="w-full resize-none rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-100"
             />
             <FieldError message={errors.languages} />
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Profile Image</Label>
+            <Label className="text-sm font-medium text-gray-700">Profile Image</Label>
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex h-[104px] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-sky-300 bg-sky-50/40 text-sky-600 transition-colors hover:bg-sky-50"
+              className="flex h-[104px] flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-blue-200 bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
             >
               {previewUrl ? (
                 <img
@@ -1422,7 +1421,7 @@ function DoctorForm({
                 <Upload className="size-6" />
               )}
               <span className="text-sm font-medium">Upload Image</span>
-              <span className="text-xs text-slate-400">JPG, PNG (Max 2MB)</span>
+              <span className="text-xs text-gray-500">JPG, PNG (Max 2MB)</span>
             </button>
             <input
               ref={fileInputRef}
@@ -1435,49 +1434,46 @@ function DoctorForm({
               }}
             />
             {form.profileImage && (
-              <p className="truncate text-xs text-slate-500">{form.profileImage.name}</p>
+              <p className="truncate text-xs text-gray-500">{form.profileImage.name}</p>
             )}
             <FieldError message={errors.profileImage} />
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-slate-700">Notes</Label>
+            <Label className="text-sm font-medium text-gray-700">Notes</Label>
             <textarea
               value={form.notes}
               onChange={(e) => set("notes", e.target.value)}
               placeholder="Any additional notes"
               rows={4}
-              className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-100"
+              className="w-full resize-none rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-100"
             />
             <FieldError message={errors.notes} />
           </div>
         </div>
-      </section>
+      </CardContent>
+      </Card>
 
       {/* BOTTOM ACTIONS */}
-      <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-5">
+      <div className="flex gap-3 border-t border-blue-200 pt-8">
         <Button
           type="button"
           variant="outline"
           onClick={resetForm}
           disabled={saving}
-          className="h-11 rounded-lg border-sky-200 bg-white px-6 text-sky-700 hover:bg-sky-50"
+          className="border-blue-300 text-blue-600 hover:bg-blue-50"
         >
           Reset
         </Button>
+        <div className="flex-1" />
         <Button
           type="submit"
+          onClick={submit}
           disabled={saving}
-          className="h-11 min-w-36 rounded-lg bg-sky-600 px-6 text-white shadow-sm hover:bg-sky-700"
+          className="bg-blue-600 text-white hover:bg-blue-700"
+          size="lg"
         >
-          {saving ? (
-            <>
-              <Loader2 className="size-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            "Save Doctor"
-          )}
+          {saving ? "Saving..." : "Save Doctor"}
         </Button>
       </div>
     </form>
