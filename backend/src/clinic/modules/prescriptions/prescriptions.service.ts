@@ -71,6 +71,24 @@ export class PrescriptionService {
       metadata: { patientId: input.patientId, doctorId, visitDate: input.visitDate },
     });
 
+    await this.db.collection("clc_prescription_notifications").updateOne(
+      { prescriptionId: prescription.prescriptionId, action: "created", status: "pending" },
+      {
+        $set: {
+          clinicId,
+          patientId: input.patientId,
+          updatedAt: new Date(),
+        },
+        $setOnInsert: {
+          createdAt: new Date(),
+          attempts: 0,
+          status: "pending",
+          lastError: null,
+        }
+      },
+      { upsert: true }
+    );
+
     return prescription;
   }
 
@@ -115,6 +133,27 @@ export class PrescriptionService {
     });
 
     const updated = await repo.findByPrescriptionId(prescriptionId);
+
+    if (updated) {
+      await this.db.collection("clc_prescription_notifications").updateOne(
+        { prescriptionId: updated.prescriptionId, action: "updated", status: "pending" },
+        {
+          $set: {
+            clinicId: updated.clinicId,
+            patientId: updated.patientId,
+            updatedAt: new Date(),
+          },
+          $setOnInsert: {
+            createdAt: new Date(),
+            attempts: 0,
+            status: "pending",
+            lastError: null,
+          }
+        },
+        { upsert: true }
+      );
+    }
+
     return updated ?? existing;
   }
 

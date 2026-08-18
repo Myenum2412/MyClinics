@@ -3,6 +3,8 @@ import { getDb } from "@/lib/db";
 import { scanAndQueueReminders } from "@/services/reminder/reminder.service";
 import { syncCronJobs } from "@/services/cronjob/cronjob.service";
 import { requireCronSecret } from "@/plugins/auth";
+import { processPrescriptionNotifications } from "@/services/whatsapp/prescription-notification.service";
+import { processAppointmentNotifications } from "@/services/whatsapp/appointment-notification.service";
 
 /**
  * Entry point for the appointment reminder scheduler (cron-job.org pings this
@@ -16,6 +18,8 @@ export function registerCronRoutes(app: FastifyInstance): void {
     try {
       const db = await getDb();
       const result = await scanAndQueueReminders(db, new Date());
+      await processPrescriptionNotifications(db);
+      await processAppointmentNotifications(db);
       return reply.send({ ok: true, ...result });
     } catch (error) {
       console.error("Cron reminders error", error);

@@ -4,6 +4,7 @@ import {
   requireClinicAccess,
   requireRoles,
 } from "@/clinic/core/scope";
+import { getDb } from "@/lib/db";
 
 /**
  * Appointment routes — scoped to the URL clinic AND to the caller's
@@ -28,6 +29,35 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
     "/api/clinics/:clinicId/appointments",
     { preHandler: [requireClinicAccess, requireRoles("doctor")] },
     async (request, reply) => controller.list(request, reply)
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/appointments/notifications",
+    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    async (request, reply) => {
+      const { clinicId } = request.params as { clinicId: string };
+      const db = await getDb();
+      const notifications = await db.collection("clc_appointment_notifications")
+        .find({ clinicId })
+        .sort({ createdAt: -1 })
+        .limit(200)
+        .toArray();
+      return reply.send({ notifications });
+    }
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/appointments/:appointmentId/notifications",
+    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    async (request, reply) => {
+      const { clinicId, appointmentId } = request.params as { clinicId: string; appointmentId: string };
+      const db = await getDb();
+      const notifications = await db.collection("clc_appointment_notifications")
+        .find({ clinicId, appointmentId })
+        .sort({ createdAt: -1 })
+        .toArray();
+      return reply.send({ notifications });
+    }
   );
 
   app.get(

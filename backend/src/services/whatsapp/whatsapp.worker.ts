@@ -11,6 +11,8 @@ import { setSessionStage } from "@/services/whatsapp/whatsapp.session";
 import { handleIncomingMessage } from "@/services/whatsapp/whatsapp.message-handler";
 import { processDueReminders, scanAndQueueReminders } from "@/services/reminder/reminder.service";
 import { processDueNotifications } from "@/services/whatsapp/notification.service";
+import { processPrescriptionNotifications } from "@/services/whatsapp/prescription-notification.service";
+import { processAppointmentNotifications } from "@/services/whatsapp/appointment-notification.service";
 
 const MAX_RECONNECT_ATTEMPTS = 10;
 const REMINDER_POLL_MS = 30_000;
@@ -31,6 +33,8 @@ function startReminderLoop(db: Awaited<ReturnType<typeof getDb>>): void {
     try {
       const org = await ensureDefaultOrganization(db);
       await scanAndQueueReminders(db, new Date());
+      await processPrescriptionNotifications(db);
+      await processAppointmentNotifications(db);
       await processDueReminders(client, db, org.id);
       await processDueNotifications(client, db, org.id);
     } catch (err) {

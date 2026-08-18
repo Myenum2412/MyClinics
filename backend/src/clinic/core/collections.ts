@@ -20,6 +20,8 @@ export const CLINIC_COLLECTIONS = {
   settings: "clc_settings",
   notifications: "clc_notifications",
   auditLogs: "clc_audit_logs",
+  prescriptionNotifications: "clc_prescription_notifications",
+  appointmentNotifications: "clc_appointment_notifications",
 } as const;
 
 export type ClinicCollectionName =

@@ -22,6 +22,8 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
   const settings = db.collection(CLINIC_COLLECTIONS.settings);
   const notifications = db.collection(CLINIC_COLLECTIONS.notifications);
   const auditLogs = db.collection(CLINIC_COLLECTIONS.auditLogs);
+  const prescriptionNotifications = db.collection(CLINIC_COLLECTIONS.prescriptionNotifications);
+  const appointmentNotifications = db.collection(CLINIC_COLLECTIONS.appointmentNotifications);
 
   await Promise.all([
     // ── Clinics ──────────────────────────────────────────────────────────
@@ -127,5 +129,13 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     auditLogs.createIndex({ clinicId: 1, entity: 1, entityId: 1, createdAt: -1 }),
     auditLogs.createIndex({ clinicId: 1, actorId: 1, createdAt: -1 }),
     auditLogs.createIndex({ clinicId: 1, action: 1, createdAt: -1 }),
+
+    // ── Prescription Notifications ────────────────────────────────────────
+    prescriptionNotifications.createIndex({ clinicId: 1, prescriptionId: 1, status: 1, attempts: 1 }),
+    prescriptionNotifications.createIndex({ clinicId: 1, status: 1, attempts: 1 }),
+
+    // ── Appointment Notifications ─────────────────────────────────────────
+    appointmentNotifications.createIndex({ clinicId: 1, appointmentId: 1, status: 1, attempts: 1 }),
+    appointmentNotifications.createIndex({ clinicId: 1, status: 1, attempts: 1, scheduledTime: 1 }),
   ]);
 }

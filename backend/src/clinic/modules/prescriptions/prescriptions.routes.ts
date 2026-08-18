@@ -4,6 +4,7 @@ import {
   requireClinicAccess,
   requireRoles,
 } from "@/clinic/core/scope";
+import { getDb } from "@/lib/db";
 
 /**
  * Prescription routes — scoped to the URL clinic AND to the caller's
@@ -40,6 +41,35 @@ export function registerPrescriptionRoutes(app: FastifyInstance): void {
     "/api/clinics/:clinicId/prescriptions/:prescriptionId",
     { preHandler: [requireClinicAccess, requireRoles("doctor")] },
     async (request, reply) => controller.updateById(request, reply)
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/prescriptions/notifications",
+    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    async (request, reply) => {
+      const { clinicId } = request.params as { clinicId: string };
+      const db = await getDb();
+      const notifications = await db.collection("clc_prescription_notifications")
+        .find({ clinicId })
+        .sort({ createdAt: -1 })
+        .limit(200)
+        .toArray();
+      return reply.send({ notifications });
+    }
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/prescriptions/:prescriptionId/notifications",
+    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    async (request, reply) => {
+      const { clinicId, prescriptionId } = request.params as { clinicId: string; prescriptionId: string };
+      const db = await getDb();
+      const notifications = await db.collection("clc_prescription_notifications")
+        .find({ clinicId, prescriptionId })
+        .sort({ createdAt: -1 })
+        .toArray();
+      return reply.send({ notifications });
+    }
   );
 
   app.delete(

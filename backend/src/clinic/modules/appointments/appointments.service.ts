@@ -12,6 +12,7 @@ import { generateAppointmentId } from "@/clinic/core/ids";
 import type { CreateAppointmentInput, UpdateAppointmentInput } from "@/clinic/modules/appointments/appointments.dto";
 import { AppointmentRepository } from "@/clinic/modules/appointments/appointments.repository";
 import type { AppointmentDoc } from "@/clinic/modules/appointments/appointments.schema";
+import { queueAppointmentNotifications } from "@/services/whatsapp/appointment-notification.service";
 
 export class AppointmentService {
   constructor(private readonly db: Db) {}
@@ -65,6 +66,8 @@ export class AppointmentService {
         time: input.time,
       },
     });
+
+    await queueAppointmentNotifications(this.db, clinicId, appointment.appointmentId, "created");
 
     return appointment;
   }
@@ -134,6 +137,12 @@ export class AppointmentService {
     });
 
     const updated = await repo.findByAppointmentId(appointmentId);
+
+    if (patch.status || patch.date || patch.time) {
+      const action = patch.status === "cancelled" ? "cancelled" : "updated";
+      await queueAppointmentNotifications(this.db, requireClinicOf(ctx), appointmentId, action);
+    }
+
     return updated ?? existing;
   }
 
@@ -143,6 +152,8 @@ export class AppointmentService {
     if (!existing) throw new NotFoundError("Appointment not found");
 
     await repo.softDelete(appointmentId);
+
+    await queueAppointmentNotifications(this.db, requireClinicOf(ctx), appointmentId, "cancelled");
 
     await writeAudit(this.db, ctx, {
       action: "delete",
