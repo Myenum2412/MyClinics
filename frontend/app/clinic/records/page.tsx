@@ -512,7 +512,7 @@ export default function RecordsPage() {
         setSelectedIds(new Set());
       })
       .catch(() => {
-        toast.error("Failed to load medical records");
+        toast.error("Failed to load medicine records");
       })
       .finally(() => setLoading(false));
   }, [clinicId]);
@@ -629,7 +629,7 @@ export default function RecordsPage() {
       if (editing) {
         const updated = await updateRecord(clinicId, editing.recordId, recordPayload);
         savedRecord = { ...updated, notes: recordPayload.notes as string };
-        toast.success("Medical record updated");
+        toast.success("Medicine record updated");
       } else {
         const newRecord = await createRecord(clinicId, recordPayload);
         savedRecord = { ...newRecord, notes: recordPayload.notes as string };
@@ -643,15 +643,15 @@ export default function RecordsPage() {
             medicines: form.medicines,
             notes: form.advice || null,
           });
-          toast.success("Medical record and prescription saved");
+          toast.success("Medicine record and prescription saved");
         } else {
-          toast.success("Medical record saved");
+          toast.success("Medicine record saved");
         }
       }
 
       setCreating(false);
       load();
-      // Open the saved medical record for review.
+      // Open the saved medicine record for review.
       setEditing(savedRecord);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save record");
@@ -662,7 +662,7 @@ export default function RecordsPage() {
 
   async function handleDelete(record: MedicalRecord) {
     const patientName = patientLookup[record.patientId] || record.patientId;
-    if (!confirm(`Delete medical record for patient ${patientName}?`)) return;
+    if (!confirm(`Delete medicine record for patient ${patientName}?`)) return;
     try {
       await deleteRecord(clinicId, record.recordId);
       toast.success("Record deleted");
@@ -702,7 +702,7 @@ export default function RecordsPage() {
   const recordsStats = useMemo(
     () => [
       {
-        name: "Total Records",
+        name: "Total Medicines",
         percentage: Math.min(100, Math.round((totalCount / 500) * 100)),
         current: totalCount,
         allowed: 500,
@@ -750,7 +750,7 @@ export default function RecordsPage() {
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
-    toast.success(`Exported ${selected.length} medical records to JSON.`);
+    toast.success(`Exported ${selected.length} medicine records to JSON.`);
   };
 
   const totalPages = Math.ceil(filteredItems.length / pageSize);
@@ -789,7 +789,7 @@ export default function RecordsPage() {
                 <ChevronLeft size={20} className="text-blue-600" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">New Medical Record</h1>
+                <h1 className="text-2xl font-bold text-gray-900">New Medicine Record</h1>
                 <p className="mt-1 text-sm text-gray-600">
                   Record a patient visit with diagnosis and medicines in one place
                 </p>
@@ -829,7 +829,7 @@ export default function RecordsPage() {
                 <ChevronLeft size={20} className="text-blue-600" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Medical Record</h1>
+                <h1 className="text-2xl font-bold text-gray-900">Medicine Record</h1>
                 <p className="mt-1 text-sm text-gray-600">
                   Saved record details — review or update the visit information
                 </p>
@@ -862,13 +862,13 @@ export default function RecordsPage() {
       {!loading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
-            title="Medical Records"
+            title="Medicine"
             description="Real-time insights on diagnoses, symptom records, and treatment documentation."
             items={recordsStats}
             action={
               <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
                 <Plus className="size-4" />
-                New Record
+                New Medicine
               </Button>
             }
           />
@@ -909,7 +909,7 @@ export default function RecordsPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <CardTitle className="text-xl font-semibold text-foreground">
-                Medical Records Listing
+                Medicine Records Listing
               </CardTitle>
               <p className="text-sm text-muted-foreground">
                 Search and manage patient consultation history, diagnosis reports, and prescribed treatments.
@@ -962,7 +962,7 @@ export default function RecordsPage() {
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
-              No medical records found.
+              No medicine records found.
             </div>
           ) : (
             <>

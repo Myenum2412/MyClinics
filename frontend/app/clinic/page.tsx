@@ -455,7 +455,7 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
     );
   }, [prescriptions, q]);
 
-  // 3. Medical Records Filter & Export
+  // 3. Medicine Filter & Export
   const filteredRecords = useMemo(() => {
     if (!q) return records;
     const lower = q.toLowerCase();
@@ -585,7 +585,7 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
           <TabsList className="bg-muted p-1 rounded-lg">
             <TabsTrigger value="appointments" className="gap-2"><Calendar className="size-4" /> Appointments</TabsTrigger>
             <TabsTrigger value="prescriptions" className="gap-2"><Pill className="size-4" /> Prescriptions</TabsTrigger>
-            <TabsTrigger value="records" className="gap-2"><Clipboard className="size-4" /> Medical Records</TabsTrigger>
+            <TabsTrigger value="records" className="gap-2"><Clipboard className="size-4" /> Medicine</TabsTrigger>
             <TabsTrigger value="bills" className="gap-2"><Receipt className="size-4" /> Bills</TabsTrigger>
             <TabsTrigger value="reports" className="gap-2"><FileBarChart className="size-4" /> Reports</TabsTrigger>
           </TabsList>
@@ -722,7 +722,7 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
                   </div>
                 )}
 
-                {/* 3. Medical Records content */}
+                {/* 3. Medicine content */}
                 {activeTab === "records" && (
                   <Table>
                     <TableHeader className="bg-muted/40">

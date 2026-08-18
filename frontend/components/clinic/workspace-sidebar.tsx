@@ -68,7 +68,7 @@ const NAV_ITEMS: NavItem[] = [
   },
 
   {
-    title: "Medical Records",
+    title: "Medicine",
     url: "/clinic/records",
     icon: <RecordsIcon />,
     minRole: "doctor",
