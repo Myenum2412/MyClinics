@@ -91,29 +91,29 @@ export default function RecordsPage() {
   const pageSize = 10;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const load = useCallback(() => {
+  const load = useCallback(async () => {
     if (!clinicId) return;
     setLoading(true);
+    try {
+      const [patientRes, recordRes] = await Promise.all([
+        listPatients(clinicId, { limit: 500 }),
+        listRecords(clinicId, { limit: 200 }),
+      ]);
 
-    // Fetch patients for lookup map
-    listPatients(clinicId, { limit: 500 })
-      .then((res) => {
-        const map: Record<string, string> = {};
-        res.items.forEach((p) => {
-          map[p.patientId] = p.fullName;
-        });
-        setPatientLookup(map);
-      })
-      .catch(() => {});
+      const map: Record<string, string> = {};
+      patientRes.items.forEach((p) => {
+        map[p.patientId] = p.fullName;
+      });
 
-    listRecords(clinicId, { limit: 200 })
-      .then((res) => {
-        setItems(res.items);
-        setCurrentPage(1);
-        setSelectedIds(new Set());
-      })
-      .catch(() => toast.error("Failed to load medical records"))
-      .finally(() => setLoading(false));
+      setPatientLookup(map);
+      setItems(recordRes.items);
+      setCurrentPage(1);
+      setSelectedIds(new Set());
+    } catch {
+      toast.error("Failed to load medical records");
+    } finally {
+      setLoading(false);
+    }
   }, [clinicId]);
 
   useEffect(() => {

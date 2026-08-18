@@ -176,27 +176,27 @@ export default function AppointmentsPage() {
     return map;
   }, [doctors]);
 
-  // Load Data
   const loadData = useCallback(async () => {
     if (!clinicId) return;
     setLoading(true);
     try {
-      // 1. Fetch appointments
-      const apptsRes = await listAppointments(clinicId, { limit: 1000 });
+      // Fetch appointments, patients, and doctors in parallel
+      const [apptsRes, patientsRes, doctorsRes] = await Promise.all([
+        listAppointments(clinicId, { limit: 1000 }),
+        fetch(`/api/clinics/${clinicId}/patients?limit=1000`).then((r) =>
+          r.ok ? r.json() : null
+        ),
+        fetch(`/api/clinics/${clinicId}/doctors?limit=100`).then((r) =>
+          r.ok ? r.json() : null
+        ),
+      ]);
+
       setAppointments(apptsRes.items);
-
-      // 2. Fetch patients for display resolution
-      const patientsRes = await fetch(`/api/clinics/${clinicId}/patients?limit=1000`);
-      if (patientsRes.ok) {
-        const data = await patientsRes.json();
-        setPatients(data.items || []);
+      if (patientsRes) {
+        setPatients(patientsRes.items || []);
       }
-
-      // 3. Fetch doctors
-      const doctorsRes = await fetch(`/api/clinics/${clinicId}/doctors?limit=100`);
-      if (doctorsRes.ok) {
-        const data = await doctorsRes.json();
-        setDoctors(data.items || []);
+      if (doctorsRes) {
+        setDoctors(doctorsRes.items || []);
       }
     } catch {
       toast.error("Failed to load appointments data");

@@ -175,36 +175,38 @@ export default function ClinicDashboardPage() {
   };
 
   // Staff Stats
-  const totalPatients = patients.length;
-  const totalApptsToday = appointments.length;
-  const unpaidTotal = bills.reduce((sum, b) => sum + b.total, 0);
+  const stats = useMemo(() => {
+    const totalPatients = patients.length;
+    const totalApptsToday = appointments.length;
+    const unpaidTotal = bills.reduce((sum, b) => sum + b.total, 0);
 
-  const stats = [
-    {
-      name: "Registered Patients",
-      percentage: Math.min(100, Math.round((totalPatients / 500) * 100)),
-      current: totalPatients,
-      allowed: 500,
-      allowedLabel: "target limit",
-      fill: "var(--chart-1)",
-    },
-    {
-      name: "Appointments Today",
-      percentage: Math.min(100, Math.round((totalApptsToday / 50) * 100)),
-      current: totalApptsToday,
-      allowed: 50,
-      allowedLabel: "capacity",
-      fill: "var(--chart-2)",
-    },
-    {
-      name: "Outstanding Revenue",
-      percentage: Math.min(100, Math.round((unpaidTotal / 100000) * 100)),
-      current: `₹${unpaidTotal.toLocaleString("en-IN")}`,
-      allowed: "₹1,00,000",
-      allowedLabel: "receivable target",
-      fill: "var(--chart-3)",
-    },
-  ];
+    return [
+      {
+        name: "Registered Patients",
+        percentage: Math.min(100, Math.round((totalPatients / 500) * 100)),
+        current: totalPatients,
+        allowed: 500,
+        allowedLabel: "target limit",
+        fill: "var(--chart-1)",
+      },
+      {
+        name: "Appointments Today",
+        percentage: Math.min(100, Math.round((totalApptsToday / 50) * 100)),
+        current: totalApptsToday,
+        allowed: 50,
+        allowedLabel: "capacity",
+        fill: "var(--chart-2)",
+      },
+      {
+        name: "Outstanding Revenue",
+        percentage: Math.min(100, Math.round((unpaidTotal / 100000) * 100)),
+        current: `₹${unpaidTotal.toLocaleString("en-IN")}`,
+        allowed: "₹1,00,000",
+        allowedLabel: "receivable target",
+        fill: "var(--chart-3)",
+      },
+    ];
+  }, [patients, appointments, bills]);
 
   return (
     <div className="flex flex-col gap-6">

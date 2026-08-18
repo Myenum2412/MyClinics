@@ -101,7 +101,7 @@ export default function PatientsPage() {
   const load = useCallback(() => {
     if (!clinicId) return;
     setLoading(true);
-    listPatients(clinicId, { q: q || undefined, limit: 100 })
+    listPatients(clinicId, { limit: 500 })
       .then((res) => {
         setItems(res.items);
         setCurrentPage(1);
@@ -109,7 +109,7 @@ export default function PatientsPage() {
       })
       .catch(() => toast.error("Failed to load patients"))
       .finally(() => setLoading(false));
-  }, [clinicId, q]);
+  }, [clinicId]);
 
   useEffect(() => {
     load();
@@ -228,12 +228,26 @@ export default function PatientsPage() {
     toast.success(`Exported ${selectedPatients.length} patients to JSON.`);
   };
 
+  // Client-side search filtering
+  const filteredItems = useMemo(() => {
+    if (!q) return items;
+    const lower = q.toLowerCase();
+    return items.filter((p) => {
+      return (
+        p.fullName.toLowerCase().includes(lower) ||
+        (p.email && p.email.toLowerCase().includes(lower)) ||
+        p.mobile.includes(lower) ||
+        (p.city && p.city.toLowerCase().includes(lower))
+      );
+    });
+  }, [items, q]);
+
   // Pagination calculation
-  const totalPages = Math.ceil(items.length / pageSize);
+  const totalPages = Math.ceil(filteredItems.length / pageSize);
   const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
-    return items.slice(startIndex, startIndex + pageSize);
-  }, [items, currentPage, pageSize]);
+    return filteredItems.slice(startIndex, startIndex + pageSize);
+  }, [filteredItems, currentPage, pageSize]);
 
   const toggleSelectAll = () => {
     if (selectedIds.size === paginatedItems.length) {
@@ -474,11 +488,11 @@ export default function PatientsPage() {
                   <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground">
-                        Showing <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to{" "}
+                        Showing <span className="font-medium">{filteredItems.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> to{" "}
                         <span className="font-medium">
-                          {Math.min(currentPage * pageSize, items.length)}
+                          {Math.min(currentPage * pageSize, filteredItems.length)}
                         </span>{" "}
-                        of <span className="font-medium">{items.length}</span> results
+                        of <span className="font-medium">{filteredItems.length}</span> results
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
