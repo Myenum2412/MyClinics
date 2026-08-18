@@ -29,7 +29,6 @@ import {
   ClipboardDocumentListIcon as ClipboardListIcon,
   ShieldCheckIcon as ShieldIcon,
   BellIcon,
-  UserGroupIcon as UserCogIcon,
   ClipboardDocumentCheckIcon as RecordsIcon,
 } from "@heroicons/react/24/outline";
 
@@ -68,12 +67,7 @@ const NAV_ITEMS: NavItem[] = [
     icon: <StethoscopeIcon />,
     minRole: "doctor",
   },
-  {
-    title: "Staff",
-    url: "/clinic/staff",
-    icon: <UserCogIcon />,
-    minRole: "staff",
-  },
+
   {
     title: "Medical Records",
     url: "/clinic/records",
