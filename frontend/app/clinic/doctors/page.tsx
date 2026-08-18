@@ -28,6 +28,8 @@ import {
   EyeOff,
   Trash2,
   Upload,
+  User,
+  Camera,
   AlertCircle,
 } from "lucide-react";
 import {
@@ -941,6 +943,36 @@ function DoctorForm({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Upload profile photo"
+            className="relative shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+          >
+            {previewUrl ? (
+              <img
+                src={previewUrl}
+                alt="Profile preview"
+                className="size-20 rounded-full border border-blue-200 object-cover"
+              />
+            ) : (
+              <span className="flex size-20 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600">
+                <User className="size-9" />
+              </span>
+            )}
+            <span className="absolute -bottom-0.5 -right-0.5 flex size-7 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-600 shadow-sm">
+              <Camera className="size-3.5" />
+            </span>
+          </button>
+          <div>
+            <p className="text-sm font-medium text-gray-700">Doctor Photo</p>
+            <p className="mt-0.5 text-xs text-gray-500">
+              Click the avatar to upload a profile photo (JPG, PNG — Max 2MB)
+            </p>
+          </div>
+        </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2 md:col-span-2">
