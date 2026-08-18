@@ -174,7 +174,7 @@ export default function AdminClinicsPage() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                   <TableHead>Clinic</TableHead>
                   <TableHead>Clinic ID</TableHead>
                   <TableHead>Email</TableHead>

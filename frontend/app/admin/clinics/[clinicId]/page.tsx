@@ -192,7 +192,7 @@ export default function AdminClinicDetailPage() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                   <TableHead>Name</TableHead>
                   <TableHead>Mobile</TableHead>
                   <TableHead>Email</TableHead>

@@ -654,7 +654,7 @@ export default function AppointmentsPage() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                     <TableHead className="w-12 pl-4">
                       <Checkbox
                         checked={selectedIds.size === filteredAndSortedAppointments.length && filteredAndSortedAppointments.length > 0}
@@ -667,7 +667,7 @@ export default function AppointmentsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 gap-1 pl-0 text-left font-semibold text-xs text-foreground"
+                          className="h-8 gap-1 pl-0 text-xs font-medium tracking-wide text-muted-foreground uppercase hover:text-foreground"
                           onClick={() => handleSort("date")}
                         >
                           Date & Time
@@ -695,7 +695,7 @@ export default function AppointmentsPage() {
                     const dLabel = doctor ? doctor.name : a.doctorId;
 
                     return (
-                      <TableRow key={a.appointmentId} className="hover:bg-muted/10 transition-colors">
+                      <TableRow key={a.appointmentId} className="hover:bg-muted/30 transition-colors">
                         <TableCell className="pl-4">
                           <Checkbox
                             checked={selectedIds.has(a.appointmentId)}

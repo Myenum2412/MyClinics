@@ -282,19 +282,19 @@ export default function ClinicDashboardPage() {
             <>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="w-12 pl-6">
-                      <Checkbox
-                        checked={selectedIds.size === paginatedAppointments.length && paginatedAppointments.length > 0}
-                        onCheckedChange={toggleSelectAll}
-                        aria-label="Select all"
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground">Time</TableHead>
-                    <TableHead className="font-semibold text-foreground">Patient</TableHead>
-                    <TableHead className="font-semibold text-foreground">Reason</TableHead>
-                    <TableHead className="font-semibold text-foreground">Status</TableHead>
-                  </TableRow>
+                  <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                      <TableHead className="w-12 pl-6">
+                        <Checkbox
+                          checked={selectedIds.size === paginatedAppointments.length && paginatedAppointments.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                          aria-label="Select all"
+                        />
+                      </TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Patient</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedAppointments.map((a) => (
@@ -322,7 +322,7 @@ export default function ClinicDashboardPage() {
 
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/10">
+                <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/20">
                   <div className="flex flex-1 justify-between sm:hidden">
                     <Button
                       variant="outline"
@@ -642,18 +642,18 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
                 {/* 1. Appointments content */}
                 {activeTab === "appointments" && (
                   <Table>
-                    <TableHeader className="bg-muted/40">
-                      <TableRow>
+                    <TableHeader>
+                      <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                         <TableHead className="w-12 pl-6">
                           <Checkbox
                             checked={selectedIds.size === paginatedItems.length && paginatedItems.length > 0}
                             onCheckedChange={toggleSelectAll}
                           />
                         </TableHead>
-                        <TableHead className="font-semibold text-foreground">Date</TableHead>
-                        <TableHead className="font-semibold text-foreground">Time</TableHead>
-                        <TableHead className="font-semibold text-foreground">Reason</TableHead>
-                        <TableHead className="font-semibold text-foreground">Status</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Time</TableHead>
+                        <TableHead>Reason</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -725,18 +725,18 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
                 {/* 3. Medicine content */}
                 {activeTab === "records" && (
                   <Table>
-                    <TableHeader className="bg-muted/40">
-                      <TableRow>
+                    <TableHeader>
+                      <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                         <TableHead className="w-12 pl-6">
                           <Checkbox
                             checked={selectedIds.size === paginatedItems.length && paginatedItems.length > 0}
                             onCheckedChange={toggleSelectAll}
                           />
                         </TableHead>
-                        <TableHead className="font-semibold text-foreground">Date</TableHead>
-                        <TableHead className="font-semibold text-foreground">Diagnosis</TableHead>
-                        <TableHead className="font-semibold text-foreground">Treatment</TableHead>
-                        <TableHead className="font-semibold text-foreground">Symptoms</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Diagnosis</TableHead>
+                        <TableHead>Treatment</TableHead>
+                        <TableHead>Symptoms</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -761,18 +761,18 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
                 {/* 4. Bills content */}
                 {activeTab === "bills" && (
                   <Table>
-                    <TableHeader className="bg-muted/40">
-                      <TableRow>
+                    <TableHeader>
+                      <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                         <TableHead className="w-12 pl-6">
                           <Checkbox
                             checked={selectedIds.size === paginatedItems.length && paginatedItems.length > 0}
                             onCheckedChange={toggleSelectAll}
                           />
                         </TableHead>
-                        <TableHead className="font-semibold text-foreground">Bill No.</TableHead>
-                        <TableHead className="font-semibold text-foreground">Date</TableHead>
-                        <TableHead className="font-semibold text-foreground">Total</TableHead>
-                        <TableHead className="font-semibold text-foreground">Status</TableHead>
+                        <TableHead>Bill No.</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Total</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -799,18 +799,18 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
                 {/* 5. Reports content */}
                 {activeTab === "reports" && (
                   <Table>
-                    <TableHeader className="bg-muted/40">
-                      <TableRow>
+                    <TableHeader>
+                      <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                         <TableHead className="w-12 pl-6">
                           <Checkbox
                             checked={selectedIds.size === paginatedItems.length && paginatedItems.length > 0}
                             onCheckedChange={toggleSelectAll}
                           />
                         </TableHead>
-                        <TableHead className="font-semibold text-foreground">Title</TableHead>
-                        <TableHead className="font-semibold text-foreground">Type</TableHead>
-                        <TableHead className="font-semibold text-foreground">Date</TableHead>
-                        <TableHead className="font-semibold text-foreground">Status</TableHead>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -836,7 +836,7 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
 
                 {/* Generic Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/10">
+                  <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/20">
                     <div className="flex flex-1 justify-between sm:hidden">
                       <Button
                         variant="outline"

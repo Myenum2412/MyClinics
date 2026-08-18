@@ -540,7 +540,7 @@ export default function ReportsPage() {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                   {visibleColumns.select && (
                     <TableHead className="w-12 pl-6">
                       <Checkbox
@@ -627,7 +627,7 @@ export default function ReportsPage() {
 
           {/* Pagination Footer */}
           {!loading && pageCount > 1 && (
-            <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/10">
+            <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/20">
               <div>
                 <p className="text-sm text-muted-foreground">
                   Showing <span className="font-medium">{filteredItems.length > 0 ? pageIndex * pageSize + 1 : 0}</span> to{" "}

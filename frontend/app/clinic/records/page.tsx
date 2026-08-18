@@ -954,7 +954,7 @@ export default function RecordsPage() {
             <>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                     {visibleColumns.select && (
                       <TableHead className="w-12 pl-6">
                         <Checkbox
@@ -965,21 +965,21 @@ export default function RecordsPage() {
                       </TableHead>
                     )}
                     {visibleColumns.visitDate && (
-                      <TableHead className="font-semibold text-foreground">Visit date</TableHead>
+                      <TableHead>Visit date</TableHead>
                     )}
                     {visibleColumns.patient && (
-                      <TableHead className="font-semibold text-foreground">Patient</TableHead>
+                      <TableHead>Patient</TableHead>
                     )}
                     {visibleColumns.diagnosis && (
-                      <TableHead className="font-semibold text-foreground">Diagnosis</TableHead>
+                      <TableHead>Diagnosis</TableHead>
                     )}
                     {visibleColumns.symptoms && (
-                      <TableHead className="font-semibold text-foreground">Symptoms</TableHead>
+                      <TableHead>Symptoms</TableHead>
                     )}
                     {visibleColumns.treatment && (
-                      <TableHead className="font-semibold text-foreground">Treatment</TableHead>
+                      <TableHead>Treatment</TableHead>
                     )}
-                    <TableHead className="text-right pr-6 font-semibold text-foreground">Actions</TableHead>
+                    <TableHead className="text-right pr-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1045,7 +1045,7 @@ export default function RecordsPage() {
               </Table>
 
               {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/10">
+                <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/20">
                   <div>
                     <p className="text-sm text-muted-foreground">
                       Showing{" "}

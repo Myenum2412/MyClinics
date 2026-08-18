@@ -684,7 +684,7 @@ export default function DoctorsPage() {
             <>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/40 hover:bg-muted/40">
+                  <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                     {visibleColumns.select && (
                       <TableHead className="w-12 pl-6">
                         <Checkbox
@@ -694,13 +694,13 @@ export default function DoctorsPage() {
                         />
                       </TableHead>
                     )}
-                    {visibleColumns.name && <TableHead className="font-semibold text-foreground">Name</TableHead>}
-                    {visibleColumns.specialization && <TableHead className="font-semibold text-foreground">Specialization</TableHead>}
-                    {visibleColumns.phone && <TableHead className="font-semibold text-foreground">Phone</TableHead>}
-                    {visibleColumns.email && <TableHead className="font-semibold text-foreground">Email</TableHead>}
-                    {visibleColumns.fee && <TableHead className="font-semibold text-foreground">Fee</TableHead>}
-                    {visibleColumns.status && <TableHead className="font-semibold text-foreground">Status</TableHead>}
-                    {canManage && <TableHead className="text-right pr-6 font-semibold text-foreground">Actions</TableHead>}
+                    {visibleColumns.name && <TableHead>Name</TableHead>}
+                    {visibleColumns.specialization && <TableHead>Specialization</TableHead>}
+                    {visibleColumns.phone && <TableHead>Phone</TableHead>}
+                    {visibleColumns.email && <TableHead>Email</TableHead>}
+                    {visibleColumns.fee && <TableHead>Fee</TableHead>}
+                    {visibleColumns.status && <TableHead>Status</TableHead>}
+                    {canManage && <TableHead className="text-right pr-6">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -759,7 +759,7 @@ export default function DoctorsPage() {
 
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/10">
+                <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/20">
                   <div>
                     <p className="text-sm text-muted-foreground">
                       Showing <span className="font-medium">{filteredItems.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> to{" "}

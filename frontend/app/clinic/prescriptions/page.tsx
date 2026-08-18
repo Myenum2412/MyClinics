@@ -563,7 +563,7 @@ export default function PrescriptionsPage() {
                         <button
                           type="button"
                           onClick={() => toggleSort("visitDate")}
-                          className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground"
+                          className="inline-flex items-center gap-1 text-xs font-medium tracking-wide uppercase text-muted-foreground hover:text-foreground"
                         >
                           Date
                           {sortField === "visitDate" ? (
@@ -580,31 +580,31 @@ export default function PrescriptionsPage() {
                     )}
 
                     {visibleColumns.patient && (
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <TableHead>
                         Patient
                       </TableHead>
                     )}
 
                     {visibleColumns.doctor && (
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <TableHead>
                         Doctor
                       </TableHead>
                     )}
 
                     {visibleColumns.diagnosis && (
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <TableHead>
                         Diagnosis
                       </TableHead>
                     )}
 
                     {visibleColumns.medicines && (
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <TableHead>
                         Medicines
                       </TableHead>
                     )}
 
                     {visibleColumns.status && (
-                      <TableHead className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <TableHead>
                         Notification Status
                       </TableHead>
                     )}
