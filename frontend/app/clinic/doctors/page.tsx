@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
@@ -9,6 +9,7 @@ import {
   deleteDoctor,
   listDoctors,
   updateDoctor,
+  createClinicUser,
 } from "@/lib/clinic-api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +17,25 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Download, Trash, Columns, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Download,
+  Columns,
+  ChevronLeft,
+  ChevronRight,
+  User,
+  Briefcase,
+  ShieldCheck,
+  CalendarDays,
+  FileText,
+  Eye,
+  EyeOff,
+  Clock,
+  Trash2,
+  Upload,
+  Loader2,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -37,15 +56,6 @@ const COLUMN_LABELS: Record<string, string> = {
   status: "Status",
 };
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -61,40 +71,180 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatTime } from "@/lib/format-time";
 import { sessionCan } from "@/hooks/use-clinic-session";
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAYS = [
+  { value: "Mon", label: "Monday" },
+  { value: "Tue", label: "Tuesday" },
+  { value: "Wed", label: "Wednesday" },
+  { value: "Thu", label: "Thursday" },
+  { value: "Fri", label: "Friday" },
+  { value: "Sat", label: "Saturday" },
+  { value: "Sun", label: "Sunday" },
+];
 
-interface ScheduleEntry {
-  day: string;
+const NATIONALITIES = [
+  "Indian",
+  "American",
+  "British",
+  "Australian",
+  "Canadian",
+  "German",
+  "French",
+  "Japanese",
+  "Chinese",
+  "Nigerian",
+  "Pakistani",
+  "Bangladeshi",
+  "Sri Lankan",
+  "Nepali",
+  "Emirati",
+  "Saudi",
+  "Qatari",
+  "Omani",
+  "Kuwaiti",
+  "Singaporean",
+  "Malaysian",
+  "Other",
+];
+
+const DEPARTMENTS = [
+  "General Medicine",
+  "Cardiology",
+  "Pediatrics",
+  "Orthopedics",
+  "Dermatology",
+  "ENT",
+  "Ophthalmology",
+  "Gynecology & Obstetrics",
+  "Neurology",
+  "Psychiatry",
+  "Dental",
+  "Other",
+];
+
+interface TimeSlot {
   start: string;
   end: string;
 }
 
 interface DoctorFormState {
+  // 1. Personal information
   name: string;
-  specialization: string;
-  licenseNo: string;
-  qualification: string;
+  gender: string;
+  dateOfBirth: string;
   phone: string;
   email: string;
+  nationality: string;
+  address: string;
+  // 2. Professional information
+  specialization: string;
+  qualification: string;
+  experienceYears: string;
+  licenseNo: string;
+  registrationNo: string;
+  issuingAuthority: string;
   fee: string;
+  department: string;
+  // 3. Account & access
+  username: string;
+  password: string;
+  confirmPassword: string;
+  role: string;
   status: string;
-  schedule: ScheduleEntry[];
+  allowLogin: string;
+  // 4. Consultation schedule
+  days: string[];
+  timeSlots: TimeSlot[];
+  // 5. Additional information
+  about: string;
+  languages: string;
+  profileImage: File | null;
+  notes: string;
 }
+
+const DEFAULT_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 
 const EMPTY_FORM: DoctorFormState = {
   name: "",
-  specialization: "",
-  licenseNo: "",
-  qualification: "",
+  gender: "",
+  dateOfBirth: "",
   phone: "",
   email: "",
+  nationality: "",
+  address: "",
+  specialization: "",
+  qualification: "",
+  experienceYears: "",
+  licenseNo: "",
+  registrationNo: "",
+  issuingAuthority: "",
   fee: "",
+  department: "",
+  username: "",
+  password: "",
+  confirmPassword: "",
+  role: "Doctor",
   status: "active",
-  schedule: [{ day: "Mon", start: "09:00", end: "17:00" }],
+  allowLogin: "yes",
+  days: [...DEFAULT_DAYS],
+  timeSlots: [{ start: "09:00", end: "17:00" }],
+  about: "",
+  languages: "",
+  profileImage: null,
+  notes: "",
 };
+
+function doctorToForm(doctor: Doctor): DoctorFormState {
+  const days =
+    doctor.scheduleDays && doctor.scheduleDays.length > 0
+      ? doctor.scheduleDays
+      : Array.from(new Set(doctor.schedule.map((s) => s.day)));
+  const slots: TimeSlot[] = [];
+  doctor.schedule.forEach((s) => {
+    if (!slots.some((x) => x.start === s.start && x.end === s.end)) {
+      slots.push({ start: s.start, end: s.end });
+    }
+  });
+  return {
+    name: doctor.name,
+    gender: doctor.gender ?? "",
+    dateOfBirth: doctor.dateOfBirth ?? "",
+    phone: doctor.phone ?? "",
+    email: doctor.email ?? "",
+    nationality: doctor.nationality ?? "",
+    address: doctor.address ?? "",
+    specialization: doctor.specialization,
+    qualification: doctor.qualification ?? "",
+    experienceYears: doctor.experienceYears != null ? String(doctor.experienceYears) : "",
+    licenseNo: doctor.licenseNo ?? "",
+    registrationNo: doctor.registrationNo ?? "",
+    issuingAuthority: doctor.issuingAuthority ?? "",
+    fee: doctor.fee != null ? String(doctor.fee) : "",
+    department: doctor.department ?? "",
+    username: doctor.username ?? "",
+    password: "",
+    confirmPassword: "",
+    role: "Doctor",
+    status: doctor.status,
+    allowLogin: doctor.allowLogin === false ? "no" : "yes",
+    days: days.length > 0 ? days : [...DEFAULT_DAYS],
+    timeSlots: slots.length > 0 ? slots : [{ start: "09:00", end: "17:00" }],
+    about: doctor.about ?? "",
+    languages: doctor.languages ?? "",
+    profileImage: null,
+    notes: doctor.notes ?? "",
+  };
+}
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-xs font-medium text-red-500">{message}</p>;
+}
+
+function RequiredStar() {
+  return <span className="text-red-500">*</span>;
+}
 
 export default function DoctorsPage() {
   const session = useRequireRole("doctor");
@@ -148,24 +298,68 @@ export default function DoctorsPage() {
     setSaving(true);
     try {
       const payload: Record<string, unknown> = {
-        name: form.name,
-        specialization: form.specialization,
-        licenseNo: form.licenseNo || null,
-        qualification: form.qualification || null,
-        phone: form.phone || null,
-        email: form.email || null,
-        fee: form.fee ? Number(form.fee) : null,
-        status: form.status,
-        schedule: form.schedule.filter(
-          (s) => s.day && s.start && s.end && s.end > s.start
-        ),
+        name: form.name.trim(),
+        specialization: form.specialization.trim(),
+        licenseNo: form.licenseNo.trim() || null,
+        qualification: form.qualification.trim() || null,
+        phone: form.phone.trim() || null,
+        email: form.email.trim() || null,
+        fee: form.fee.trim() ? Number(form.fee.trim()) : null,
+        status: form.status === "active" ? "active" : "inactive",
+        gender: form.gender || null,
+        dateOfBirth: form.dateOfBirth || null,
+        nationality: form.nationality || null,
+        address: form.address.trim() || null,
+        experienceYears: form.experienceYears.trim()
+          ? Number(form.experienceYears.trim())
+          : null,
+        registrationNo: form.registrationNo.trim() || null,
+        issuingAuthority: form.issuingAuthority.trim() || null,
+        department: form.department || null,
+        about: form.about.trim() || null,
+        languages: form.languages.trim() || null,
+        notes: form.notes.trim() || null,
+        username: form.username.trim() || null,
+        allowLogin: form.allowLogin === "yes",
+        profileImage: form.profileImage ? form.profileImage.name : null,
+        scheduleDays: form.days,
+        schedule: form.timeSlots
+          .filter((s) => s.start && s.end && s.end > s.start)
+          .map((s) => ({
+            day: form.days[0] || "Mon",
+            start: s.start,
+            end: s.end,
+          })),
       };
+
       if (editing) {
         await updateDoctor(clinicId, editing.doctorId, payload);
         toast.success("Doctor updated");
       } else {
-        await createDoctor(clinicId, payload);
-        toast.success("Doctor added");
+        const created = await createDoctor(clinicId, payload);
+
+        // Create the login account when Allow Login is enabled.
+        if (form.allowLogin === "yes" && form.password && form.email.trim()) {
+          try {
+            await createClinicUser(clinicId, {
+              name: form.name.trim(),
+              email: form.email.trim(),
+              password: form.password,
+              role: "doctor",
+              phone: form.phone.trim() || null,
+              doctorId: created.doctorId,
+            });
+            toast.success("Doctor added with login access");
+          } catch (e) {
+            toast.error(
+              `Doctor saved, but login account could not be created: ${
+                e instanceof Error ? e.message : "unknown error"
+              }`
+            );
+          }
+        } else {
+          toast.success("Doctor added");
+        }
       }
       setEditing(null);
       setCreating(false);
@@ -280,39 +474,38 @@ export default function DoctorsPage() {
     });
   };
 
+  const formContainerClass =
+    "rounded-xl border border-slate-200 bg-white";
+
   if (creating) {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCreating(false)}
-              className="h-9 gap-1.5 border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
-            >
-              <ChevronLeft className="size-4" />
-              Back to Doctors
-            </Button>
-          </div>
-          <div className="text-right">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreating(false)}
+            className="h-9 gap-1.5 border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Doctors
+          </Button>
+          <div>
             <h1 className="text-2xl font-bold text-slate-900">Add Doctor</h1>
             <p className="text-sm text-slate-500">Register a new doctor at this clinic.</p>
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-sky-200 bg-sky-50/80 p-4 shadow-sm">
-          <div className="rounded-[24px] border border-sky-100 bg-white p-5 sm:p-6">
-            <DoctorForm
-              clinicId={clinicId}
-              initial={EMPTY_FORM}
-              saving={saving}
-              onSave={async (form) => {
-                await handleSave(form);
-                setCreating(false);
-              }}
-            />
-          </div>
+        <div className={formContainerClass}>
+          <DoctorForm
+            initial={EMPTY_FORM}
+            isEdit={false}
+            saving={saving}
+            onSave={async (form) => {
+              await handleSave(form);
+              setCreating(false);
+            }}
+          />
         </div>
       </div>
     );
@@ -321,46 +514,32 @@ export default function DoctorsPage() {
   if (editing) {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditing(null)}
-              className="h-9 gap-1.5 border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
-            >
-              <ChevronLeft className="size-4" />
-              Back to Doctors
-            </Button>
-          </div>
-          <div className="text-right">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditing(null)}
+            className="h-9 gap-1.5 border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Doctors
+          </Button>
+          <div>
             <h1 className="text-2xl font-bold text-slate-900">Edit Doctor</h1>
             <p className="text-sm text-slate-500">Modify doctor details, fee, and schedule.</p>
           </div>
         </div>
 
-        <div className="rounded-[28px] border border-sky-200 bg-sky-50/80 p-4 shadow-sm">
-          <div className="rounded-[24px] border border-sky-100 bg-white p-5 sm:p-6">
-            <DoctorForm
-              clinicId={clinicId}
-              initial={{
-                name: editing.name,
-                specialization: editing.specialization,
-                licenseNo: editing.licenseNo ?? "",
-                qualification: editing.qualification ?? "",
-                phone: editing.phone ?? "",
-                email: editing.email ?? "",
-                fee: editing.fee != null ? String(editing.fee) : "",
-                status: editing.status,
-                schedule: editing.schedule ?? [],
-              }}
-              saving={saving}
-              onSave={async (form) => {
-                await handleSave(form);
-                setEditing(null);
-              }}
-            />
-          </div>
+        <div className={formContainerClass}>
+          <DoctorForm
+            initial={doctorToForm(editing)}
+            isEdit={true}
+            saving={saving}
+            onSave={async (form) => {
+              await handleSave(form);
+              setEditing(null);
+            }}
+          />
         </div>
       </div>
     );
@@ -599,247 +778,706 @@ export default function DoctorsPage() {
 }
 
 function DoctorForm({
-  clinicId,
   initial,
+  isEdit,
   saving,
   onSave,
 }: {
-  clinicId: string;
   initial: DoctorFormState;
+  isEdit: boolean;
   saving: boolean;
   onSave: (form: DoctorFormState) => Promise<void>;
 }) {
   const [form, setForm] = useState<DoctorFormState>(initial);
-  const set = <K extends keyof DoctorFormState>(key: K, value: DoctorFormState[K] | null) =>
-    setForm((f) => ({ ...f, [key]: (value ?? "") as DoctorFormState[K] }));
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  function setScheduleEntry(i: number, patch: Partial<ScheduleEntry>) {
-    setForm((f) => ({
-      ...f,
-      schedule: f.schedule.map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
-    }));
-  }
-
-  function addScheduleEntry() {
-    setForm((f) => ({
-      ...f,
-      schedule: [...f.schedule, { day: "Mon", start: "09:00", end: "17:00" }],
-    }));
-  }
-
-  function removeScheduleEntry(i: number) {
-    setForm((f) => ({
-      ...f,
-      schedule: f.schedule.length > 1 ? f.schedule.filter((_, idx) => idx !== i) : f.schedule,
-    }));
-  }
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    await onSave(form);
-  }
-
-  const resetForm = () => {
-    setForm({
-      ...initial,
-      schedule: initial.schedule.length ? initial.schedule.map((entry) => ({ ...entry })) : [{ day: "Mon", start: "09:00", end: "17:00" }],
+  const set = <K extends keyof DoctorFormState>(key: K, value: DoctorFormState[K]) => {
+    setForm((f) => ({ ...f, [key]: value }));
+    setErrors((e) => {
+      const next = { ...e };
+      delete next[String(key)];
+      return next;
     });
   };
 
+  function toggleDay(day: string, checked: boolean) {
+    setForm((f) => ({
+      ...f,
+      days: checked
+        ? Array.from(new Set([...f.days, day]))
+        : f.days.filter((d) => d !== day),
+    }));
+    setErrors((e) => {
+      const next = { ...e };
+      delete next.days;
+      return next;
+    });
+  }
+
+  function setSlot(i: number, patch: Partial<TimeSlot>) {
+    setForm((f) => ({
+      ...f,
+      timeSlots: f.timeSlots.map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
+    }));
+    setErrors((e) => {
+      const next = { ...e };
+      delete next[`slot-${i}-start`];
+      delete next[`slot-${i}-end`];
+      return next;
+    });
+  }
+
+  function addSlot() {
+    setForm((f) => ({ ...f, timeSlots: [...f.timeSlots, { start: "09:00", end: "17:00" }] }));
+  }
+
+  function removeSlot(i: number) {
+    setForm((f) => ({
+      ...f,
+      timeSlots: f.timeSlots.length > 1 ? f.timeSlots.filter((_, idx) => idx !== i) : f.timeSlots,
+    }));
+  }
+
+  function handleProfileImage(file: File | null) {
+    if (!file) return;
+    const ok = ["image/jpeg", "image/png"].includes(file.type);
+    if (!ok) {
+      setErrors((e) => ({ ...e, profileImage: "Only JPG or PNG images are allowed" }));
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setErrors((e) => ({ ...e, profileImage: "Image must be smaller than 2MB" }));
+      return;
+    }
+    setErrors((e) => {
+      const next = { ...e };
+      delete next.profileImage;
+      return next;
+    });
+    setForm((f) => ({ ...f, profileImage: file }));
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(URL.createObjectURL(file));
+  }
+
+  const resetForm = () => {
+    setForm({ ...initial, timeSlots: initial.timeSlots.map((s) => ({ ...s })) });
+    setErrors({});
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+  };
+
+  const validate = (): Record<string, string> => {
+    const errs: Record<string, string> = {};
+    if (!form.name.trim()) errs.name = "Full name is required";
+    else if (form.name.trim().length < 2) errs.name = "Enter a valid full name";
+    if (!form.gender) errs.gender = "Gender is required";
+    if (!form.phone.trim()) errs.phone = "Phone number is required";
+    else if (!/^\+?[\d\s()-]{10,15}$/.test(form.phone.trim())) errs.phone = "Enter a valid phone number";
+    if (!form.email.trim()) errs.email = "Email address is required";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errs.email = "Enter a valid email address";
+    if (!form.specialization.trim()) errs.specialization = "Specialization is required";
+    else if (form.specialization.trim().length < 2) errs.specialization = "Enter a valid specialization";
+    if (!form.qualification.trim()) errs.qualification = "Qualification is required";
+    if (form.experienceYears.trim()) {
+      const years = Number(form.experienceYears.trim());
+      if (Number.isNaN(years) || years < 0 || years > 100) errs.experienceYears = "Enter valid years (0–100)";
+    }
+    if (form.fee.trim()) {
+      const fee = Number(form.fee.trim());
+      if (Number.isNaN(fee) || fee < 0) errs.fee = "Enter a valid consultation fee";
+    }
+    if (!form.username.trim()) errs.username = "Username is required";
+    else if (form.username.trim().length < 3) errs.username = "Username must be at least 3 characters";
+    if (!isEdit && !form.password) errs.password = "Password is required";
+    else if (form.password && form.password.length < 8) errs.password = "Password must be at least 8 characters";
+    if (form.password && form.confirmPassword !== form.password) errs.confirmPassword = "Passwords do not match";
+    if (form.days.length === 0) errs.days = "Select at least one day";
+    form.timeSlots.forEach((s, i) => {
+      if (!s.start) errs[`slot-${i}-start`] = "Start time is required";
+      else if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(s.start)) errs[`slot-${i}-start`] = "Invalid time";
+      if (!s.end) errs[`slot-${i}-end`] = "End time is required";
+      else if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(s.end)) errs[`slot-${i}-end`] = "Invalid time";
+      if (s.start && s.end && s.end <= s.start) errs[`slot-${i}-end`] = "End must be after start";
+    });
+    return errs;
+  };
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (saving) return;
+    const errs = validate();
+    if (Object.keys(errs).length > 0) {
+      setErrors(errs);
+      toast.error("Please fix the highlighted fields");
+      return;
+    }
+    await onSave(form);
+  }
+
+  const inputBase = (key: string) =>
+    `h-11 rounded-lg border-slate-200 bg-white focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-100 ${
+      errors[key] ? "border-red-300 focus-visible:border-red-400 focus-visible:ring-red-100" : ""
+    }`;
+
   return (
-    <form onSubmit={submit} className="space-y-6">
-      <div className="flex items-center justify-between gap-3 border-b border-sky-100 pb-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-600">Doctor profile</p>
-          <h2 className="mt-1 text-xl font-semibold text-slate-900">Clinic registration</h2>
+    <form onSubmit={submit} noValidate className="space-y-6 p-5 sm:p-8">
+      {/* 1. PERSONAL INFORMATION */}
+      <section className="rounded-lg border border-slate-200 bg-white p-5">
+        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+            <User className="size-5" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-900">1. Personal Information</h3>
         </div>
-        <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-          {form.status === "active" ? "Active" : "Inactive"}
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2 lg:col-span-2">
+            <Label className="text-sm font-medium text-slate-700">
+              Full Name <RequiredStar />
+            </Label>
+            <Input
+              value={form.name}
+              onChange={(e) => set("name", e.target.value)}
+              placeholder="Enter full name"
+              className={inputBase("name")}
+            />
+            <FieldError message={errors.name} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">
+              Gender <RequiredStar />
+            </Label>
+            <Select value={form.gender} onValueChange={(v) => set("gender", v ?? "")}>
+              <SelectTrigger className={`${inputBase("gender")} w-full`}>
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            <FieldError message={errors.gender} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Date of Birth</Label>
+            <div className="relative">
+              <CalendarDays className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                type="date"
+                value={form.dateOfBirth}
+                onChange={(e) => set("dateOfBirth", e.target.value)}
+                className={`${inputBase("dateOfBirth")} pl-9`}
+              />
+            </div>
+            <FieldError message={errors.dateOfBirth} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">
+              Phone Number <RequiredStar />
+            </Label>
+            <Input
+              type="tel"
+              value={form.phone}
+              onChange={(e) => set("phone", e.target.value)}
+              placeholder="Enter phone number"
+              className={inputBase("phone")}
+            />
+            <FieldError message={errors.phone} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">
+              Email <RequiredStar />
+            </Label>
+            <Input
+              type="email"
+              value={form.email}
+              onChange={(e) => set("email", e.target.value)}
+              placeholder="Enter email address"
+              className={inputBase("email")}
+            />
+            <FieldError message={errors.email} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Nationality</Label>
+            <Select value={form.nationality} onValueChange={(v) => set("nationality", v ?? "")}>
+              <SelectTrigger className={`${inputBase("nationality")} w-full`}>
+                <SelectValue placeholder="Select nationality" />
+              </SelectTrigger>
+              <SelectContent>
+                {NATIONALITIES.map((n) => (
+                  <SelectItem key={n} value={n}>
+                    {n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldError message={errors.nationality} />
+          </div>
+
+          <div className="grid gap-2 lg:col-span-2">
+            <Label className="text-sm font-medium text-slate-700">Address</Label>
+            <Input
+              value={form.address}
+              onChange={(e) => set("address", e.target.value)}
+              placeholder="Enter full address"
+              className={inputBase("address")}
+            />
+            <FieldError message={errors.address} />
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div className="space-y-5">
-        <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="inline-flex size-2 rounded-full bg-sky-500" />
-            <h3 className="text-sm font-semibold text-sky-800">Personal details</h3>
+      {/* 2. PROFESSIONAL INFORMATION */}
+      <section className="rounded-lg border border-slate-200 bg-white p-5">
+        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+            <Briefcase className="size-5" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-900">2. Professional Information</h3>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">
+              Specialization <RequiredStar />
+            </Label>
+            <Input
+              value={form.specialization}
+              onChange={(e) => set("specialization", e.target.value)}
+              placeholder="e.g. Cardiology"
+              className={inputBase("specialization")}
+            />
+            <FieldError message={errors.specialization} />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="grid gap-2">
-              <Label className="text-sm font-medium text-slate-700">Full name</Label>
-              <Input
-                value={form.name}
-                onChange={(e) => set("name", e.target.value)}
-                required
-                minLength={2}
-                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
-                placeholder="Dr. Priya Nair"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label className="text-sm font-medium text-slate-700">Phone number</Label>
-              <Input
-                value={form.phone}
-                onChange={(e) => set("phone", e.target.value)}
-                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
-                placeholder="+91 98765 43210"
-              />
-            </div>
-
-            <div className="grid gap-2 md:col-span-2">
-              <Label className="text-sm font-medium text-slate-700">Email address</Label>
-              <Input
-                type="email"
-                value={form.email}
-                onChange={(e) => set("email", e.target.value)}
-                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
-                placeholder="doctor@clinic.com"
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="inline-flex size-2 rounded-full bg-violet-500" />
-            <h3 className="text-sm font-semibold text-violet-800">Professional information</h3>
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">
+              Qualification <RequiredStar />
+            </Label>
+            <Input
+              value={form.qualification}
+              onChange={(e) => set("qualification", e.target.value)}
+              placeholder="e.g. MD, DM"
+              className={inputBase("qualification")}
+            />
+            <FieldError message={errors.qualification} />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="grid gap-2">
-              <Label className="text-sm font-medium text-slate-700">Specialization</Label>
-              <Input
-                value={form.specialization}
-                onChange={(e) => set("specialization", e.target.value)}
-                required
-                minLength={2}
-                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
-                placeholder="Cardiology"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label className="text-sm font-medium text-slate-700">Qualification</Label>
-              <Input
-                value={form.qualification}
-                onChange={(e) => set("qualification", e.target.value)}
-                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
-                placeholder="MD, DM"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label className="text-sm font-medium text-slate-700">License number</Label>
-              <Input
-                value={form.licenseNo}
-                onChange={(e) => set("licenseNo", e.target.value)}
-                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
-                placeholder="MH-2024-013"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label className="text-sm font-medium text-slate-700">Consultation fee</Label>
-              <Input
-                type="number"
-                min="0"
-                value={form.fee}
-                onChange={(e) => set("fee", e.target.value)}
-                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
-                placeholder="1500"
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <span className="inline-flex size-2 rounded-full bg-emerald-500" />
-            <h3 className="text-sm font-semibold text-emerald-800">Access & schedule</h3>
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Experience (Years)</Label>
+            <Input
+              type="number"
+              min="0"
+              max="100"
+              value={form.experienceYears}
+              onChange={(e) => set("experienceYears", e.target.value)}
+              placeholder="e.g. 10"
+              className={inputBase("experienceYears")}
+            />
+            <FieldError message={errors.experienceYears} />
           </div>
 
-          <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-            <div className="grid gap-2">
-              <Label className="text-sm font-medium text-slate-700">Status</Label>
-              <Select value={form.status} onValueChange={(v) => set("status", v)}>
-                <SelectTrigger className="h-11 rounded-xl border-sky-200 bg-white focus:ring-sky-200">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="rounded-xl border border-dashed border-sky-200 bg-white/70 px-3 py-2 text-sm text-slate-600">
-              Access is managed through clinic role permissions. Keep the doctor status aligned with their active roster.
-            </div>
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">License Number</Label>
+            <Input
+              value={form.licenseNo}
+              onChange={(e) => set("licenseNo", e.target.value)}
+              placeholder="e.g. MH-2024-013"
+              className={inputBase("licenseNo")}
+            />
+            <FieldError message={errors.licenseNo} />
           </div>
 
-          <div className="mt-4 space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <Label className="text-sm font-medium text-slate-700">Consultation schedule</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addScheduleEntry} className="h-8 rounded-lg border-sky-200 bg-white text-sky-700 hover:bg-sky-50">
-                Add slot
-              </Button>
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Registration Number</Label>
+            <Input
+              value={form.registrationNo}
+              onChange={(e) => set("registrationNo", e.target.value)}
+              placeholder="e.g. MCI-123456"
+              className={inputBase("registrationNo")}
+            />
+            <FieldError message={errors.registrationNo} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Issuing Authority</Label>
+            <Input
+              value={form.issuingAuthority}
+              onChange={(e) => set("issuingAuthority", e.target.value)}
+              placeholder="e.g. Medical Council of India"
+              className={inputBase("issuingAuthority")}
+            />
+            <FieldError message={errors.issuingAuthority} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Consultation Fee (₹)</Label>
+            <Input
+              type="number"
+              min="0"
+              value={form.fee}
+              onChange={(e) => set("fee", e.target.value)}
+              placeholder="e.g. 1500"
+              className={inputBase("fee")}
+            />
+            <FieldError message={errors.fee} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Department</Label>
+            <Select value={form.department} onValueChange={(v) => set("department", v ?? "")}>
+              <SelectTrigger className={`${inputBase("department")} w-full`}>
+                <SelectValue placeholder="Select department" />
+              </SelectTrigger>
+              <SelectContent>
+                {DEPARTMENTS.map((d) => (
+                  <SelectItem key={d} value={d}>
+                    {d}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FieldError message={errors.department} />
+          </div>
+        </div>
+      </section>
+
+      {/* 3. ACCOUNT & ACCESS */}
+      <section className="rounded-lg border border-slate-200 bg-white p-5">
+        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+            <ShieldCheck className="size-5" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-900">3. Account & Access</h3>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">
+              Username <RequiredStar />
+            </Label>
+            <Input
+              value={form.username}
+              onChange={(e) => set("username", e.target.value)}
+              placeholder="Enter username"
+              className={inputBase("username")}
+            />
+            <FieldError message={errors.username} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">
+              Password <RequiredStar />
+            </Label>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={(e) => set("password", e.target.value)}
+                placeholder="Enter password"
+                className={`${inputBase("password")} pr-10`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
             </div>
+            <FieldError message={errors.password} />
+          </div>
 
-            {form.schedule.map((entry, i) => (
-              <div key={i} className="grid gap-3 rounded-xl border border-sky-100 bg-white p-3 md:grid-cols-[1fr_140px_140px_auto] md:items-end">
-                <div className="grid gap-2">
-                  <Label className="text-xs uppercase tracking-wide text-slate-500">Day</Label>
-                  <Select value={entry.day} onValueChange={(v) => setScheduleEntry(i, { day: v ?? "Mon" })}>
-                    <SelectTrigger className="h-10 rounded-xl border-sky-200 bg-white">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DAYS.map((d) => (
-                        <SelectItem key={d} value={d}>
-                          {d}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">
+              Confirm Password <RequiredStar />
+            </Label>
+            <div className="relative">
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                value={form.confirmPassword}
+                onChange={(e) => set("confirmPassword", e.target.value)}
+                placeholder="Confirm password"
+                className={`${inputBase("confirmPassword")} pr-10`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((s) => !s)}
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+              </button>
+            </div>
+            <FieldError message={errors.confirmPassword} />
+          </div>
 
-                <div className="grid gap-2">
-                  <Label className="text-xs uppercase tracking-wide text-slate-500">Start</Label>
-                  <Input
-                    type="time"
-                    value={entry.start}
-                    onChange={(e) => setScheduleEntry(i, { start: e.target.value })}
-                    className="h-10 rounded-xl border-sky-200 bg-white"
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Role</Label>
+            <Select value={form.role} onValueChange={(v) => set("role", v ?? "Doctor")}>
+              <SelectTrigger className={`${inputBase("role")} w-full`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Doctor">Doctor</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Status</Label>
+            <Select value={form.status} onValueChange={(v) => set("status", v ?? "active")}>
+              <SelectTrigger className={`${inputBase("status")} w-full`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2 lg:col-span-2">
+            <Label className="text-sm font-medium text-slate-700">Allow Login</Label>
+            <div className="flex h-11 items-center gap-6">
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="radio"
+                  name="allow-login"
+                  checked={form.allowLogin === "yes"}
+                  onChange={() => set("allowLogin", "yes")}
+                  className="size-4 accent-sky-600"
+                />
+                Yes
+              </label>
+              <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="radio"
+                  name="allow-login"
+                  checked={form.allowLogin === "no"}
+                  onChange={() => set("allowLogin", "no")}
+                  className="size-4 accent-sky-600"
+                />
+                No
+              </label>
+            </div>
+            <p className="text-xs text-slate-400">
+              A login account is created with the doctor&apos;s email and password.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. CONSULTATION SCHEDULE */}
+      <section className="rounded-lg border border-slate-200 bg-white p-5">
+        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+            <CalendarDays className="size-5" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-900">4. Consultation Schedule</h3>
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-2">
+          <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+            <Label className="mb-3 block text-sm font-medium text-slate-700">Select Days</Label>
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
+              {DAYS.map((day) => (
+                <label
+                  key={day.value}
+                  className="flex cursor-pointer items-center gap-2 text-sm text-slate-700"
+                >
+                  <Checkbox
+                    checked={form.days.includes(day.value)}
+                    onCheckedChange={(checked) => toggleDay(day.value, !!checked)}
                   />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label className="text-xs uppercase tracking-wide text-slate-500">End</Label>
-                  <Input
-                    type="time"
-                    value={entry.end}
-                    onChange={(e) => setScheduleEntry(i, { end: e.target.value })}
-                    className="h-10 rounded-xl border-sky-200 bg-white"
-                  />
-                </div>
-
-                <Button type="button" variant="ghost" size="sm" onClick={() => removeScheduleEntry(i)} className="h-10 text-slate-500 hover:text-red-600 hover:bg-red-50">
-                  Remove
-                </Button>
-              </div>
-            ))}
+                  {day.label}
+                </label>
+              ))}
+            </div>
+            <FieldError message={errors.days} />
           </div>
-        </section>
-      </div>
 
-      <div className="flex items-center justify-end gap-3 border-t border-sky-100 pt-4">
-        <Button type="button" variant="outline" onClick={resetForm} className="h-10 rounded-xl border-sky-200 bg-white text-slate-700 hover:bg-sky-50">
+          <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+            <Label className="mb-3 block text-sm font-medium text-slate-700">Default Time Slot</Label>
+            <div className="space-y-3">
+              {form.timeSlots.map((slot, i) => (
+                <div key={i} className="flex items-end gap-3">
+                  <div className="grid gap-2">
+                    <Label className="text-xs text-slate-500">Start time</Label>
+                    <div className="relative">
+                      <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                      <Input
+                        type="time"
+                        value={slot.start}
+                        onChange={(e) => setSlot(i, { start: e.target.value })}
+                        className={`${inputBase(`slot-${i}-start`)} w-32 pl-9`}
+                      />
+                    </div>
+                    <FieldError message={errors[`slot-${i}-start`]} />
+                  </div>
+                  <span className="pb-3 text-sm text-slate-500">to</span>
+                  <div className="grid gap-2">
+                    <Label className="text-xs text-slate-500">End time</Label>
+                    <div className="relative">
+                      <Clock className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                      <Input
+                        type="time"
+                        value={slot.end}
+                        onChange={(e) => setSlot(i, { end: e.target.value })}
+                        className={`${inputBase(`slot-${i}-end`)} w-32 pl-9`}
+                      />
+                    </div>
+                    <FieldError message={errors[`slot-${i}-end`]} />
+                  </div>
+                  {form.timeSlots.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeSlot(i)}
+                      aria-label="Remove time slot"
+                      className="mb-0.5 h-9 w-9 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addSlot}
+              className="mt-4 h-10 w-full rounded-lg border-slate-200 bg-white text-sky-600 hover:bg-sky-50"
+            >
+              <Plus className="mr-1.5 size-4" />
+              Add Another Time Slot
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. ADDITIONAL INFORMATION */}
+      <section className="rounded-lg border border-slate-200 bg-white p-5">
+        <div className="mb-5 flex items-center gap-3 border-b border-slate-100 pb-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+            <FileText className="size-5" />
+          </div>
+          <h3 className="text-base font-semibold text-slate-900">5. Additional Information (Optional)</h3>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">About Doctor</Label>
+            <textarea
+              value={form.about}
+              onChange={(e) => set("about", e.target.value)}
+              placeholder="Briefly about the doctor"
+              rows={4}
+              className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-100"
+            />
+            <FieldError message={errors.about} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Languages Known</Label>
+            <textarea
+              value={form.languages}
+              onChange={(e) => set("languages", e.target.value)}
+              placeholder="e.g. English, Hindi, Tamil"
+              rows={4}
+              className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-100"
+            />
+            <FieldError message={errors.languages} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Profile Image</Label>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex h-[104px] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-sky-300 bg-sky-50/40 text-sky-600 transition-colors hover:bg-sky-50"
+            >
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Profile preview"
+                  className="h-16 w-16 rounded-full object-cover"
+                />
+              ) : (
+                <Upload className="size-6" />
+              )}
+              <span className="text-sm font-medium">Upload Image</span>
+              <span className="text-xs text-slate-400">JPG, PNG (Max 2MB)</span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png"
+              className="hidden"
+              onChange={(e) => {
+                handleProfileImage(e.target.files?.[0] ?? null);
+                e.target.value = "";
+              }}
+            />
+            {form.profileImage && (
+              <p className="truncate text-xs text-slate-500">{form.profileImage.name}</p>
+            )}
+            <FieldError message={errors.profileImage} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-slate-700">Notes</Label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => set("notes", e.target.value)}
+              placeholder="Any additional notes"
+              rows={4}
+              className="w-full resize-none rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition-colors placeholder:text-slate-400 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-100"
+            />
+            <FieldError message={errors.notes} />
+          </div>
+        </div>
+      </section>
+
+      {/* BOTTOM ACTIONS */}
+      <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-5">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={resetForm}
+          disabled={saving}
+          className="h-11 rounded-lg border-sky-200 bg-white px-6 text-sky-700 hover:bg-sky-50"
+        >
           Reset
         </Button>
-        <Button type="submit" disabled={saving} className="h-10 rounded-xl bg-sky-600 text-white shadow-sm hover:bg-sky-700">
-          {saving ? "Saving..." : "Save Doctor"}
+        <Button
+          type="submit"
+          disabled={saving}
+          className="h-11 min-w-36 rounded-lg bg-sky-600 px-6 text-white shadow-sm hover:bg-sky-700"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            "Save Doctor"
+          )}
         </Button>
       </div>
     </form>

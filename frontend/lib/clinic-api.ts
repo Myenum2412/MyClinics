@@ -117,6 +117,21 @@ export interface Doctor {
   fee: number | null;
   schedule: { day: string; start: string; end: string }[];
   status: "active" | "inactive";
+  gender?: "male" | "female" | "other" | null;
+  dateOfBirth?: string | null;
+  nationality?: string | null;
+  address?: string | null;
+  experienceYears?: number | null;
+  registrationNo?: string | null;
+  issuingAuthority?: string | null;
+  department?: string | null;
+  about?: string | null;
+  languages?: string | null;
+  notes?: string | null;
+  username?: string | null;
+  allowLogin?: boolean | null;
+  profileImage?: string | null;
+  scheduleDays?: string[] | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -650,6 +665,39 @@ export function updateDoctor(
 export function deleteDoctor(clinicId: string, doctorId: string): Promise<{ ok: true }> {
   return request(tenantPath(clinicId, `/doctors/${doctorId}`), {
     method: "DELETE",
+  });
+}
+
+// ── Users (clinic accounts) ────────────────────────────────────────────────
+
+export interface ClinicUser {
+  userId: string;
+  name: string;
+  email: string;
+  role: "clinic_admin" | "doctor" | "staff" | "patient";
+  doctorId: string | null;
+  staffId: string | null;
+  patientId: string | null;
+  phone: string | null;
+  status: "active" | "inactive";
+}
+
+export function createClinicUser(
+  clinicId: string,
+  input: {
+    name: string;
+    email: string;
+    password: string;
+    role: "doctor" | "staff" | "patient";
+    phone?: string | null;
+    doctorId?: string;
+    staffId?: string;
+    patientId?: string;
+  }
+): Promise<ClinicUser> {
+  return request(tenantPath(clinicId, "/users"), {
+    method: "POST",
+    body: JSON.stringify(input),
   });
 }
 

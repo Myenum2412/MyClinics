@@ -36,6 +36,22 @@ export const createDoctorSchema = z.object({
   fee: z.number().nonnegative().max(1_000_000).optional().nullable(),
   schedule: z.array(scheduleEntrySchema).max(7).optional(),
   status: z.enum(["active", "inactive"]).optional(),
+  // Extended profile fields (all optional — backfilled on create only).
+  gender: z.enum(["male", "female", "other"]).optional().nullable(),
+  dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date").optional().nullable(),
+  nationality: optionalString(120),
+  address: optionalString(500),
+  experienceYears: z.number().int().min(0).max(100).optional().nullable(),
+  registrationNo: optionalString(120),
+  issuingAuthority: optionalString(200),
+  department: optionalString(120),
+  about: optionalString(2000),
+  languages: optionalString(500),
+  notes: optionalString(2000),
+  username: optionalString(120),
+  allowLogin: z.boolean().optional().nullable(),
+  profileImage: optionalString(255),
+  scheduleDays: z.array(z.enum(SCHEDULE_DAYS)).max(7).optional(),
 });
 
 export type CreateDoctorInput = z.infer<typeof createDoctorSchema>;
