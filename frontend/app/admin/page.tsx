@@ -124,12 +124,12 @@ export default function AdminClinicsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center justify-center gap-2">
         <Input
           placeholder="Search clinics..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="w-64"
+          className="w-full max-w-md"
         />
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "")}>
           <SelectTrigger className="w-40">

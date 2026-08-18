@@ -258,13 +258,13 @@ export default function ClinicDashboardPage() {
             <CardTitle className="text-xl font-semibold text-foreground">
               Today's Scheduled Appointments
             </CardTitle>
-            <div className="relative w-full sm:w-64">
+            <div className="relative mx-auto w-full max-w-md sm:w-72">
               <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
               <Input
                 placeholder="Search appointments..."
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                className="pl-9 h-9"
+                className="h-9 w-full pl-9"
               />
             </div>
           </div>
@@ -586,13 +586,13 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
             <TabsTrigger value="reports" className="gap-2"><FileBarChart className="size-4" /> Reports</TabsTrigger>
           </TabsList>
 
-          <div className="relative w-full sm:w-64">
+          <div className="relative mx-auto w-full max-w-md sm:w-72">
             <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
             <Input
               placeholder={`Search ${activeTab}...`}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className="pl-9 h-9"
+              className="h-9 w-full pl-9"
             />
           </div>
         </div>

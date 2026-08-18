@@ -429,14 +429,14 @@ export default function DoctorsPage() {
                 Manage medical practitioners, consultation hours, fees, and system access.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative w-full sm:w-64">
+            <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto">
+              <div className="relative mx-auto w-full max-w-md sm:w-72">
                 <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
                 <Input
                   placeholder="Search doctors..."
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  className="pl-9 h-9"
+                  className="h-9 w-full pl-9"
                 />
               </div>
               <DropdownMenu>

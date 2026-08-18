@@ -446,8 +446,8 @@ export default function ReportsPage() {
                 Search and manage lab test results and clinical document uploads.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative w-full sm:w-64">
+            <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto">
+              <div className="relative mx-auto w-full max-w-md sm:w-72">
                 <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
                 <Input
                   placeholder="Search reports..."
@@ -456,7 +456,7 @@ export default function ReportsPage() {
                     setSearchTerm(e.target.value);
                     setPageIndex(0);
                   }}
-                  className="pl-9 h-9"
+                  className="h-9 w-full pl-9"
                 />
               </div>
 
