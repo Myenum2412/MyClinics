@@ -207,7 +207,7 @@ export default function ClinicDashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6 py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-col gap-6">
       {/* Stats Section */}
       {!loading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
@@ -545,7 +545,7 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-6 py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex flex-col gap-6">
         <Skeleton className="h-32 w-full rounded-xl" />
         <Skeleton className="h-64 w-full rounded-xl" />
       </div>
@@ -553,7 +553,7 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-6 py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="flex flex-col gap-6">
       {/* Patient Header Card */}
       <Card className="border-border bg-gradient-to-r from-primary/10 to-primary/5 shadow-sm">
         <CardHeader className="p-6">
