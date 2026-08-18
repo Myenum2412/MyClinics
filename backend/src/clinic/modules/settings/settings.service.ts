@@ -26,6 +26,7 @@ export class SettingsService {
     if (input.currency !== undefined) patch.currency = input.currency;
     if (input.timezone !== undefined) patch.timezone = input.timezone;
     if (input.receiptFooter !== undefined) patch.receiptFooter = input.receiptFooter;
+    if (input.soulMd !== undefined) patch.soulMd = input.soulMd;
     if (input.smsEnabled !== undefined) patch.smsEnabled = input.smsEnabled;
     if (input.emailNotifications !== undefined) patch.emailNotifications = input.emailNotifications;
 

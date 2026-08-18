@@ -7,6 +7,7 @@ export interface ClinicSettingsDoc extends ClinicDocument {
   currency: string;
   timezone: string;
   receiptFooter: string | null;
+  soulMd: string | null;
   smsEnabled: boolean;
   emailNotifications: boolean;
   createdAt: Date;
@@ -20,6 +21,7 @@ export function settingsToPublic(doc: ClinicSettingsDoc) {
     currency: doc.currency,
     timezone: doc.timezone,
     receiptFooter: doc.receiptFooter,
+    soulMd: doc.soulMd,
     smsEnabled: doc.smsEnabled,
     emailNotifications: doc.emailNotifications,
     updatedAt: doc.updatedAt,

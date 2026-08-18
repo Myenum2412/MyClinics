@@ -282,6 +282,7 @@ export interface ClinicSettings {
   currency: string;
   timezone: string;
   receiptFooter: string | null;
+  soulMd: string | null;
   smsEnabled: boolean;
   emailNotifications: boolean;
   updatedAt: string;

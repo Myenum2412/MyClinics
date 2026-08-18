@@ -137,18 +137,18 @@ export function WorkspaceSidebar({
               render={<a href="/clinic" />}
               className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
             >
-              <div className="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg">
+              <div className="flex aspect-square size-10 items-center justify-center overflow-hidden rounded-lg">
                 <Image
                   src="/logo.png"
                   alt="My Clinic"
-                  width={32}
-                  height={32}
+                  width={40}
+                  height={40}
                   className="size-full object-contain"
                 />
               </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
+              <div className="grid flex-1 text-left text-base leading-tight">
                 <span className="truncate font-medium">{clinicName}</span>
-                <span className="truncate text-xs capitalize">{role}</span>
+                <span className="truncate text-sm capitalize">{role}</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -166,6 +166,7 @@ export function WorkspaceSidebar({
                 <SidebarMenuButton
                   render={<a href={item.url} />}
                   isActive={active}
+                  className="h-10! text-base! [&_svg]:size-5! group-data-[collapsible=icon]:h-8!"
                 >
                   {item.icon}
                   <span>{item.title}</span>
