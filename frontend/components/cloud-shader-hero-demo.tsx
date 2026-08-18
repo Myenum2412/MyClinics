@@ -2,15 +2,9 @@
 
 import Link from "next/link";
 import { CloudShader } from "@/components/ui/cloud-shader";
-import AppointmentForm, {
-  type DoctorOption,
-} from "@/components/AppointmentForm";
+import { Button } from "@/components/ui/button";
 
-export default function CloudShaderHeroDemo({
-  doctors,
-}: {
-  doctors: DoctorOption[];
-}) {
+export default function CloudShaderHeroDemo() {
   return (
     <div className="relative min-h-[50rem] w-full overflow-hidden">
       <CloudShader
@@ -33,9 +27,6 @@ export default function CloudShaderHeroDemo({
           </span>
         </Link>
         <div className="hidden items-center gap-8 text-sm font-medium text-white/90 md:flex">
-          <a href="#book" className="transition hover:text-white">
-            Book Appointment
-          </a>
           <a href="/login" className="transition hover:text-white">
             Login
           </a>
@@ -48,7 +39,7 @@ export default function CloudShaderHeroDemo({
             Sign in
           </Link>
           <Link
-            href="/signup"
+            href="/signup/clinic"
             className="rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-black shadow-md transition hover:bg-white/90"
           >
             Get started
@@ -62,18 +53,37 @@ export default function CloudShaderHeroDemo({
           Healthcare above the clouds
         </h1>
         <p className="mt-6 max-w-2xl text-base text-black md:text-lg">
-          My Clinics gives your clinic one home for appointments, medicines,
-          billing and medical reports. Care that works for patients while your
-          team sleeps.
+          My Clinics gives your clinic one secure home for appointments,
+          medical records, prescriptions, billing and reports. One clinic, one
+          tenant — your data never mixes with anyone else&apos;s.
         </p>
       </div>
 
-      {/* booking form */}
-      <div
-        id="book"
-        className="relative z-10 mx-auto mt-12 w-full max-w-4xl scroll-mt-24 px-4 pb-16"
-      >
-        <AppointmentForm doctors={doctors} />
+      {/* CTA */}
+      <div className="relative z-10 mx-auto mt-12 w-full max-w-4xl px-4 pb-16">
+        <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/50 bg-white/60 p-8 text-center shadow-2xl shadow-[#0D47A1]/20 backdrop-blur-xl sm:flex-row sm:justify-center sm:gap-6">
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-sm font-semibold text-gray-700">
+              Already a clinic?
+            </span>
+            <Button render={<Link href="/login" />} className="w-48">
+              Login
+            </Button>
+          </div>
+          <div className="hidden h-16 w-px bg-gray-300 sm:block" />
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-sm font-semibold text-gray-700">
+              New to My Clinics?
+            </span>
+            <Button
+              render={<Link href="/signup/clinic" />}
+              variant="outline"
+              className="w-48 text-black"
+            >
+              Create your clinic
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

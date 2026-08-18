@@ -1,0 +1,55 @@
+import type { FastifyInstance } from "fastify";
+import { requireClinicAccess } from "@/clinic/core/scope";
+import { AppointmentController } from "@/clinic/modules/appointments/appointments.controller";
+import { BillingController } from "@/clinic/modules/billing/billing.controller";
+import { MedicalRecordController } from "@/clinic/modules/medical-records/medical-records.controller";
+import { PrescriptionController } from "@/clinic/modules/prescriptions/prescriptions.controller";
+import { ReportController } from "@/clinic/modules/reports/reports.controller";
+
+/**
+ * Patient portal — `/api/clinics/:clinicId/me/*`.
+ *
+ * The patient's ONLY entry point into their own medical data. Each handler
+ * passes the authenticated context to the service, which restricts every
+ * query to `patientId = ctx.patientId` (repository patient-scope). Staff and
+ * doctors may also call these endpoints (they see the same data via the
+ * module routes); patients are blocked from the module routes by
+ * `requireRoles("staff")`/`requireRoles("doctor")`.
+ */
+export function registerPatientPortalRoutes(app: FastifyInstance): void {
+  const appointments = new AppointmentController();
+  const records = new MedicalRecordController();
+  const prescriptions = new PrescriptionController();
+  const billing = new BillingController();
+  const reports = new ReportController();
+
+  app.get(
+    "/api/clinics/:clinicId/me/appointments",
+    { preHandler: requireClinicAccess },
+    async (request, reply) => appointments.getMine(request, reply)
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/me/records",
+    { preHandler: requireClinicAccess },
+    async (request, reply) => records.getMine(request, reply)
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/me/prescriptions",
+    { preHandler: requireClinicAccess },
+    async (request, reply) => prescriptions.getMine(request, reply)
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/me/bills",
+    { preHandler: requireClinicAccess },
+    async (request, reply) => billing.getMine(request, reply)
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/me/reports",
+    { preHandler: requireClinicAccess },
+    async (request, reply) => reports.getMine(request, reply)
+  );
+}

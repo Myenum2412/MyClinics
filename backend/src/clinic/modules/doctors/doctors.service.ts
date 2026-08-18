@@ -1,0 +1,116 @@
+import type { Db, WithId } from "mongodb";
+import { writeAudit } from "@/clinic/core/audit";
+import { requireClinicOf, type ClinicContext } from "@/clinic/core/context";
+import { ForbiddenError, NotFoundError } from "@/clinic/core/errors";
+import { generateDoctorId } from "@/clinic/core/ids";
+import type { CreateDoctorInput, UpdateDoctorInput } from "@/clinic/modules/doctors/doctors.dto";
+import { DoctorRepository } from "@/clinic/modules/doctors/doctors.repository";
+import type { DoctorDoc } from "@/clinic/modules/doctors/doctors.schema";
+
+export class DoctorService {
+  constructor(private readonly db: Db) {}
+
+  private repo(ctx: ClinicContext): DoctorRepository {
+    return new DoctorRepository(this.db, requireClinicOf(ctx));
+  }
+
+  async createDoctor(ctx: ClinicContext, input: CreateDoctorInput): Promise<WithId<DoctorDoc>> {
+    const now = new Date();
+    const doctor = await this.repo(ctx).insert({
+      doctorId: generateDoctorId(),
+      userId: null,
+      name: input.name,
+      specialization: input.specialization,
+      licenseNo: input.licenseNo ?? null,
+      qualification: input.qualification ?? null,
+      phone: input.phone ?? null,
+      email: input.email ?? null,
+      fee: input.fee ?? null,
+      schedule: input.schedule ?? [],
+      status: input.status ?? "active",
+      createdBy: ctx.userId,
+    });
+
+    await writeAudit(this.db, ctx, {
+      action: "create",
+      entity: "doctor",
+      entityId: doctor.doctorId,
+      metadata: { name: doctor.name, specialization: doctor.specialization },
+    });
+    return doctor;
+  }
+
+  async getDoctor(ctx: ClinicContext, doctorId: string): Promise<WithId<DoctorDoc>> {
+    const doctor = await this.repo(ctx).findByDoctorId(doctorId);
+    if (!doctor) throw new NotFoundError("Doctor not found");
+    return doctor;
+  }
+
+  async listDoctors(
+    ctx: ClinicContext,
+    query: { q?: string; specialization?: string; status?: string; skip: number; limit: number }
+  ) {
+    const [items, total] = await this.repo(ctx).list(query);
+    return { items, total };
+  }
+
+  async updateDoctor(
+    ctx: ClinicContext,
+    doctorId: string,
+    input: UpdateDoctorInput
+  ): Promise<WithId<DoctorDoc>> {
+    // A doctor may only edit their OWN profile; clinic_admin edits any.
+    if (ctx.role === "doctor" && ctx.doctorId !== doctorId) {
+      throw new ForbiddenError("Doctors may only edit their own profile");
+    }
+
+    const existing = await this.repo(ctx).findByDoctorId(doctorId);
+    if (!existing) throw new NotFoundError("Doctor not found");
+
+    const patch: Record<string, unknown> = {};
+    for (const key of [
+      "name",
+      "specialization",
+      "licenseNo",
+      "qualification",
+      "phone",
+      "email",
+      "fee",
+      "schedule",
+      "status",
+    ] as const) {
+      const value = input[key];
+      if (value !== undefined) patch[key] = value;
+    }
+    if (Object.keys(patch).length === 0) return existing;
+
+    await this.repo(ctx).update(doctorId, patch);
+
+    await writeAudit(this.db, ctx, {
+      action: "update",
+      entity: "doctor",
+      entityId: doctorId,
+      metadata: { fields: Object.keys(patch) },
+    });
+
+    const updated = await this.repo(ctx).findByDoctorId(doctorId);
+    return updated ?? existing;
+  }
+
+  async deleteDoctor(ctx: ClinicContext, doctorId: string): Promise<void> {
+    if (ctx.role !== "clinic_admin") {
+      throw new ForbiddenError("Only the clinic admin can remove doctors");
+    }
+    const existing = await this.repo(ctx).findByDoctorId(doctorId);
+    if (!existing) throw new NotFoundError("Doctor not found");
+
+    await this.repo(ctx).softDelete(doctorId);
+
+    await writeAudit(this.db, ctx, {
+      action: "delete",
+      entity: "doctor",
+      entityId: doctorId,
+      metadata: { name: existing.name },
+    });
+  }
+}

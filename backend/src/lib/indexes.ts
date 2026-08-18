@@ -1,13 +1,10 @@
 import type { Db } from "mongodb";
-import { ensureMultiTenantIndexes } from "@/mt/indexes";
 
 /**
- * Idempotent index creation, run once at server/worker startup.
- * Indexes cover the hot query patterns: daily lists, queue reads, patient
- * lookups, billing/report listing, and per-customer AI/WhatsApp data.
+ * Idempotent index creation for platform collections (WhatsApp/AI services),
+ * run once at server/worker startup.
  */
 export async function ensureIndexes(db: Db): Promise<void> {
-  await ensureMultiTenantIndexes(db);
   const appointments = db.collection("appointments");
   const patients = db.collection("patients");
   const users = db.collection("users");

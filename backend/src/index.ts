@@ -2,6 +2,8 @@ import "./scripts/bootstrap-env";
 import { buildServer } from "@/app";
 import { getDb } from "@/lib/db";
 import { ensureIndexes } from "@/lib/indexes";
+import { ensureClinicIndexes } from "@/clinic/indexes";
+import { ensurePlatformAdmin } from "@/clinic/seed";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { syncCronJobs } from "@/services/cronjob/cronjob.service";
 
@@ -11,6 +13,8 @@ const HOST = process.env.BACKEND_HOST ?? "0.0.0.0";
 async function main() {
   const db = await getDb();
   await ensureIndexes(db);
+  await ensureClinicIndexes(db);
+  await ensurePlatformAdmin(db);
   await ensureDefaultOrganization(db);
 
   const app = buildServer();

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     "My Clinics is a complete clinic management platform for doctors and patients — book appointments, manage medicines, track billing and store medical reports securely.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">

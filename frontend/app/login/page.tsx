@@ -29,7 +29,7 @@ export default async function LoginPage({
       <div className="auth-card relative z-10 w-full max-w-sm rounded-2xl border border-white/40 bg-white/70 p-6 shadow-2xl shadow-[#0D47A1]/30 backdrop-blur-xl sm:p-8">
         <Suspense>
           <LoginForm
-            callbackUrl={callbackUrl ?? "/doctor"}
+            callbackUrl={callbackUrl ?? "/clinic"}
             clinicName={clinicName}
           />
         </Suspense>

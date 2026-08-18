@@ -1,6 +1,7 @@
 "use client"
 
-import { signOut } from "next-auth/react"
+import * as React from "react"
+import { useRouter } from "next/navigation"
 import {
   Avatar,
   AvatarFallback,
@@ -22,11 +23,10 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import {
-  CheckBadgeIcon as BadgeCheckIcon,
-  BellIcon,
-  ChevronUpDownIcon as ChevronsUpDownIcon,
   ArrowLeftEndOnRectangleIcon as LogOutIcon,
+  ChevronUpDownIcon as ChevronsUpDownIcon,
 } from "@heroicons/react/24/outline";
+import { logout } from "@/lib/clinic-api";
 
 export function NavUser({
   user,
@@ -34,11 +34,18 @@ export function NavUser({
   user: {
     name: string
     email: string
-    image?: string | null
     role?: string
   }
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
+
+  async function handleLogout() {
+    await logout()
+    router.push("/login")
+    router.refresh()
+  }
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -49,7 +56,6 @@ export function NavUser({
             }
           >
             <Avatar>
-              <AvatarImage src={user.image ?? undefined} alt={user.name} />
               <AvatarFallback>
                 {user.name
                   .split(" ")
@@ -75,7 +81,6 @@ export function NavUser({
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <Avatar>
-                    <AvatarImage src={user.image ?? undefined} alt={user.name} />
                     <AvatarFallback>
                       {user.name
                         .split(" ")
@@ -93,28 +98,7 @@ export function NavUser({
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem
-                render={
-                  <a
-                    href={
-                      user.role === "patient"
-                        ? "/patient/profile"
-                        : "/doctor/profile"
-                    }
-                  />
-                }
-              >
-                <BadgeCheckIcon />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <BellIcon />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOutIcon />
               Log out
             </DropdownMenuItem>

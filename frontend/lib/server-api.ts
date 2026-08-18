@@ -1,10 +1,9 @@
 import { cookies } from "next/headers";
 
 // Server components call the standalone API server directly (server-to-server)
-// and forward the next-auth session cookie, so the backend's auth plugin
-// verifies the same JWE the browser holds. BACKEND_URL may be overridden via
-// env; production defaults to the public API gateway on the application
-// server (nginx -> Fastify).
+// and forward cookies so the backend sees the same request context as the
+// browser. BACKEND_URL may be overridden via env; production defaults to the
+// public API gateway on the application server (nginx -> Fastify).
 export const BACKEND_URL =
   process.env.BACKEND_URL?.trim() ||
   (process.env.NODE_ENV === "production"

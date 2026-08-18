@@ -102,7 +102,12 @@ class FakeCursor {
   }
 
   limit(n: number): this {
-    this.items = this.items.slice(0, n);
+    if (n > 0) this.items = this.items.slice(0, n); // 0 = unlimited, like MongoDB
+    return this;
+  }
+
+  skip(n: number): this {
+    this.items = this.items.slice(n);
     return this;
   }
 

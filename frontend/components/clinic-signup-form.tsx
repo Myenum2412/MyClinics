@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +12,7 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { signupClinic, type SignupResponse } from "@/lib/mt-api";
+import { signupClinic, type SignupResponse } from "@/lib/clinic-api";
 
 /**
  * Clinic signup — creates a brand-new clinic tenant.
@@ -25,6 +26,7 @@ export function ClinicSignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter();
   const [clinicName, setClinicName] = useState("");
   const [adminName, setAdminName] = useState("");
   const [email, setEmail] = useState("");
@@ -109,8 +111,8 @@ export function ClinicSignupForm({
 
         <FieldSeparator />
 
-        <Button render={<Link href="/login" />} className="w-full">
-          Go to login
+        <Button onClick={() => router.push("/clinic")} className="w-full">
+          Enter clinic workspace
         </Button>
       </div>
     );
