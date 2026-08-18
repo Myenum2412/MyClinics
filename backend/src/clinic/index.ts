@@ -8,6 +8,7 @@ import { registerStaffRoutes } from "@/clinic/modules/staff/staff.routes";
 import { registerPatientRoutes, registerPatientSelfRoutes } from "@/clinic/modules/patients/patients.routes";
 import { registerAppointmentRoutes } from "@/clinic/modules/appointments/appointments.routes";
 import { registerMedicineRoutes } from "@/clinic/modules/medicine/medicine.routes";
+import { registerMedicalRecordRoutes } from "@/clinic/modules/medical-record/medical-record.routes";
 import { registerPrescriptionRoutes } from "@/clinic/modules/prescriptions/prescriptions.routes";
 import { registerBillingRoutes } from "@/clinic/modules/billing/billing.routes";
 import { registerReportRoutes } from "@/clinic/modules/reports/reports.routes";
@@ -47,6 +48,7 @@ export function registerClinicApi(app: FastifyInstance): void {
     registerPatientSelfRoutes(tenantApi);
     registerAppointmentRoutes(tenantApi);
     registerMedicineRoutes(tenantApi);
+    registerMedicalRecordRoutes(tenantApi);
     registerPrescriptionRoutes(tenantApi);
     registerBillingRoutes(tenantApi);
     registerReportRoutes(tenantApi);

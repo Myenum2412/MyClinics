@@ -33,6 +33,10 @@ export function generateRecordId(): string {
   return `mrc_${randomToken(12)}`;
 }
 
+export function generateFileId(): string {
+  return `mrf_${randomToken(12)}`;
+}
+
 export function generatePrescriptionId(): string {
   return `rx_${randomToken(12)}`;
 }

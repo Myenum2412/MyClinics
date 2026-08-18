@@ -31,6 +31,7 @@ import {
   ClipboardDocumentListIcon as ClipboardListIcon,
   BellIcon,
   ClipboardDocumentCheckIcon as RecordsIcon,
+  FolderOpenIcon,
 } from "@heroicons/react/24/outline";
 
 interface NavItem {
@@ -72,6 +73,12 @@ const NAV_ITEMS: NavItem[] = [
     title: "Medicine",
     url: "/clinic/records",
     icon: <RecordsIcon className="size-6" />,
+    minRole: "doctor",
+  },
+  {
+    title: "Medical Record",
+    url: "/clinic/medical-record",
+    icon: <FolderOpenIcon className="size-6" />,
     minRole: "doctor",
   },
   {

@@ -957,6 +957,74 @@ export function deleteReport(clinicId: string, reportId: string): Promise<{ ok: 
   });
 }
 
+// ── Medical Record (Drive-style folders) ─────────────────────────────────
+
+export interface MedicalRecordFile {
+  fileId: string;
+  patientId: string;
+  patientName: string;
+  patientPhone: string | null;
+  fileName: string;
+  mimeType: string | null;
+  size: number;
+  uploadedBy: string;
+  uploadedByName: string | null;
+  createdAt: string;
+}
+
+export function listMedicalRecordFiles(clinicId: string): Promise<{ files: MedicalRecordFile[] }> {
+  return request(tenantPath(clinicId, "/medical-record"), { cache: "no-store" });
+}
+
+export async function uploadMedicalRecordFile(
+  clinicId: string,
+  patientId: string,
+  file: File
+): Promise<MedicalRecordFile> {
+  const form = new FormData();
+  form.append("patientId", patientId);
+  form.append("file", file);
+
+  const headers: Record<string, string> = {};
+  const token = typeof window !== "undefined" ? getStoredToken() : null;
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}${tenantPath(clinicId, "/medical-record/upload")}`, {
+    method: "POST",
+    headers,
+    body: form,
+    cache: "no-store",
+  });
+
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  if (!res.ok) {
+    const err = data as { error?: string };
+    throw new ClinicApiError(err.error ?? `Upload failed (${res.status})`, res.status);
+  }
+  return data as MedicalRecordFile;
+}
+
+export function getMedicalRecordDownloadUrl(
+  clinicId: string,
+  fileId: string
+): Promise<{ url: string }> {
+  return request(tenantPath(clinicId, `/medical-record/${fileId}/download`), {
+    cache: "no-store",
+  });
+}
+
+export function deleteMedicalRecordFile(
+  clinicId: string,
+  fileId: string
+): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/medical-record/${fileId}`), { method: "DELETE" });
+}
+
 // ── Settings ───────────────────────────────────────────────────────────────
 
 export function getClinicSettings(clinicId: string): Promise<ClinicSettings> {
