@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { PincodeLookup } from "@/components/clinic/pincode-lookup";
 import {
   Dialog,
   DialogContent,
@@ -78,6 +79,7 @@ interface PatientFormState {
   bloodGroup: string;
   address: string;
   city: string;
+  state: string;
   pincode: string;
   allergies: string;
   notes: string;
@@ -94,6 +96,7 @@ const EMPTY_FORM: PatientFormState = {
   bloodGroup: "",
   address: "",
   city: "",
+  state: "",
   pincode: "",
   allergies: "",
   notes: "",
@@ -152,6 +155,7 @@ export default function PatientsPage() {
         bloodGroup: form.bloodGroup || null,
         address: form.address || null,
         city: form.city || null,
+        state: form.state || null,
         pincode: form.pincode || null,
         allergies: form.allergies
           .split(",")
@@ -363,6 +367,7 @@ export default function PatientsPage() {
                 bloodGroup: editing.bloodGroup ?? "",
                 address: editing.address ?? "",
                 city: editing.city ?? "",
+                state: editing.state ?? "",
                 pincode: editing.pincode ?? "",
                 allergies: (editing.allergies ?? []).join(", "),
                 notes: editing.notes ?? "",
@@ -699,16 +704,14 @@ function PatientForm({
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="grid gap-2">
-            <Label>City</Label>
-            <Input value={form.city} onChange={(e) => set("city", e.target.value)} />
-          </div>
-          <div className="grid gap-2">
-            <Label>Pincode</Label>
-            <Input value={form.pincode} onChange={(e) => set("pincode", e.target.value)} maxLength={6} />
-          </div>
-        </div>
+        <PincodeLookup
+          pincode={form.pincode}
+          city={form.city}
+          state={form.state}
+          onPincodeChange={(v) => set("pincode", v)}
+          onCityChange={(v) => set("city", v)}
+          onStateChange={(v) => set("state", v)}
+        />
         <div className="grid gap-2">
           <Label>Address</Label>
           <Input value={form.address} onChange={(e) => set("address", e.target.value)} />

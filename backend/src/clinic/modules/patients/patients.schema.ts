@@ -15,6 +15,7 @@ export interface PatientDoc extends ClinicDocument {
   bloodGroup: string | null;
   address: string | null;
   city: string | null;
+  state: string | null;
   pincode: string | null;
   allergies: string[];
   notes: string | null;
@@ -38,6 +39,7 @@ export function patientToPublic(doc: PatientDoc) {
     bloodGroup: doc.bloodGroup,
     address: doc.address,
     city: doc.city,
+    state: doc.state,
     pincode: doc.pincode,
     allergies: doc.allergies,
     notes: doc.notes,

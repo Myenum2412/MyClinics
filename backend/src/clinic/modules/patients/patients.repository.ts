@@ -68,6 +68,7 @@ export class PatientRepository {
         { mobile: { $regex: query.q, $options: "i" } },
         { email: { $regex: query.q, $options: "i" } },
         { city: { $regex: query.q, $options: "i" } },
+        { state: { $regex: query.q, $options: "i" } },
       ];
     }
     const scoped = this.scoped(filter);

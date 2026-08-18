@@ -41,6 +41,14 @@ export const createDoctorSchema = z.object({
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date").optional().nullable(),
   nationality: optionalString(120),
   address: optionalString(500),
+  city: optionalString(120),
+  state: optionalString(120),
+  pincode: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, "Invalid pincode")
+    .optional()
+    .nullable(),
   experienceYears: z.number().int().min(0).max(100).optional().nullable(),
   registrationNo: optionalString(120),
   issuingAuthority: optionalString(200),

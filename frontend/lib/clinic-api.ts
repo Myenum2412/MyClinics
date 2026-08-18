@@ -121,6 +121,9 @@ export interface Doctor {
   dateOfBirth?: string | null;
   nationality?: string | null;
   address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
   experienceYears?: number | null;
   registrationNo?: string | null;
   issuingAuthority?: string | null;
@@ -161,6 +164,7 @@ export interface Patient {
   bloodGroup: string | null;
   address: string | null;
   city: string | null;
+  state: string | null;
   pincode: string | null;
   allergies: string[];
   notes: string | null;

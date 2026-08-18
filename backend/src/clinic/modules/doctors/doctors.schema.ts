@@ -19,6 +19,9 @@ export interface DoctorDoc extends ClinicDocument {
   dateOfBirth?: string | null;
   nationality?: string | null;
   address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  pincode?: string | null;
   experienceYears?: number | null;
   registrationNo?: string | null;
   issuingAuthority?: string | null;
@@ -53,6 +56,9 @@ export function doctorToPublic(doc: DoctorDoc) {
     dateOfBirth: doc.dateOfBirth ?? null,
     nationality: doc.nationality ?? null,
     address: doc.address ?? null,
+    city: doc.city ?? null,
+    state: doc.state ?? null,
+    pincode: doc.pincode ?? null,
     experienceYears: doc.experienceYears ?? null,
     registrationNo: doc.registrationNo ?? null,
     issuingAuthority: doc.issuingAuthority ?? null,

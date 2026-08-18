@@ -25,6 +25,7 @@ export const createPatientSchema = z.object({
     .nullable(),
   address: optionalString(300),
   city: optionalString(120),
+  state: optionalString(120),
   pincode: z
     .string()
     .trim()

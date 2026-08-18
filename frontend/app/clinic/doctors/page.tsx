@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PincodeLookup } from "@/components/clinic/pincode-lookup";
 import {
   Plus,
   Search,
@@ -133,10 +134,14 @@ interface DoctorFormState {
   email: string;
   nationality: string;
   address: string;
+  city: string;
+  state: string;
+  pincode: string;
   // 2. Professional information
   specialization: string;
   qualification: string;
   experienceYears: string;
+  // 2. Professional information
   licenseNo: string;
   registrationNo: string;
   issuingAuthority: string;
@@ -170,6 +175,9 @@ const EMPTY_FORM: DoctorFormState = {
   email: "",
   nationality: "",
   address: "",
+  city: "",
+  state: "",
+  pincode: "",
   specialization: "",
   qualification: "",
   experienceYears: "",
@@ -216,6 +224,9 @@ function doctorToForm(doctor: Doctor): DoctorFormState {
     email: doctor.email ?? "",
     nationality: doctor.nationality ?? "",
     address: doctor.address ?? "",
+    city: doctor.city ?? "",
+    state: doctor.state ?? "",
+    pincode: doctor.pincode ?? "",
     specialization: doctor.specialization,
     qualification: doctor.qualification ?? "",
     experienceYears: doctor.experienceYears != null ? String(doctor.experienceYears) : "",
@@ -316,6 +327,9 @@ export default function DoctorsPage() {
         dateOfBirth: form.dateOfBirth || null,
         nationality: form.nationality || null,
         address: form.address.trim() || null,
+        city: form.city.trim() || null,
+        state: form.state.trim() || null,
+        pincode: form.pincode.trim() || null,
         experienceYears: form.experienceYears.trim()
           ? Number(form.experienceYears.trim())
           : null,
@@ -901,6 +915,9 @@ function DoctorForm({
     if (!isEdit && !form.password) errs.password = "Password is required";
     else if (form.password && form.password.length < 8) errs.password = "Password must be at least 8 characters";
     if (form.password && form.confirmPassword !== form.password) errs.confirmPassword = "Passwords do not match";
+    if (form.pincode.trim() && !/^[1-9]\d{5}$/.test(form.pincode.trim())) {
+      errs.pincode = "Enter a valid Indian pincode";
+    }
     if (form.schedule.length === 0) errs.days = "Select at least one day";
     form.schedule.forEach((s) => {
       if (!s.start) errs[`slot-${s.day}-start`] = "Start time is required";
@@ -1065,6 +1082,18 @@ function DoctorForm({
               </SelectContent>
             </Select>
             <FieldError message={errors.nationality} />
+          </div>
+
+          <div className="grid gap-2 md:col-span-2">
+            <PincodeLookup
+              pincode={form.pincode}
+              city={form.city}
+              state={form.state}
+              pincodeError={errors.pincode}
+              onPincodeChange={(v) => set("pincode", v)}
+              onCityChange={(v) => set("city", v)}
+              onStateChange={(v) => set("state", v)}
+            />
           </div>
 
           <div className="grid gap-2 md:col-span-2">

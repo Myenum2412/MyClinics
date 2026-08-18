@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { createPatient } from "@/lib/clinic-api";
 import { DoctorSelect } from "@/components/clinic/pickers";
+import { PincodeLookup } from "@/components/clinic/pincode-lookup";
 import {
   AttachmentUploader,
   type AttachmentFile,
@@ -362,6 +363,7 @@ export default function NewPatientPage() {
         bloodGroup: form.bloodGroup || null,
         address: form.address.trim() || null,
         city: form.city.trim() || null,
+        state: form.state.trim() || null,
         pincode: form.pincode.trim() || null,
         allergies: form.allergies
           .split(",")
@@ -603,31 +605,15 @@ export default function NewPatientPage() {
 
           {/* 2. Address */}
           <SectionCard title="2. Address">
-            <div className="grid gap-4 md:grid-cols-3">
-              <FormField
-                label="City"
-                name="city"
-                value={form.city}
-                onChange={(v) => handleChange("city", v)}
-                placeholder="Mumbai"
-              />
-              <FormField
-                label="State"
-                name="state"
-                value={form.state}
-                onChange={(v) => handleChange("state", v)}
-                placeholder="Maharashtra"
-              />
-              <FormField
-                label="Pincode"
-                name="pincode"
-                value={form.pincode}
-                onChange={(v) => handleChange("pincode", v)}
-                error={errors.pincode}
-                placeholder="400001"
-                helperText="6-digit Indian pincode"
-              />
-            </div>
+            <PincodeLookup
+              pincode={form.pincode}
+              city={form.city}
+              state={form.state}
+              pincodeError={errors.pincode}
+              onPincodeChange={(v) => handleChange("pincode", v)}
+              onCityChange={(v) => handleChange("city", v)}
+              onStateChange={(v) => handleChange("state", v)}
+            />
             <FormField
               label="Full Address"
               name="address"
