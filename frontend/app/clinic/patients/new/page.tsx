@@ -361,21 +361,21 @@ export default function NewPatientPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-blue-200 bg-white/80 backdrop-blur-sm">
-        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8">
+      <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+        <div className="px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-4">
               <Link
                 href="/clinic/patients"
-                className="inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100 mt-1"
               >
                 <ChevronLeft size={20} className="text-blue-600" />
               </Link>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">New Patient</h1>
-                <p className="text-sm text-gray-600">
+                <h1 className="text-2xl font-bold text-gray-900">New Patient</h1>
+                <p className="text-sm text-gray-600 mt-1">
                   Register a new patient in your clinic
                 </p>
               </div>
