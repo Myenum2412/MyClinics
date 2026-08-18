@@ -12,6 +12,7 @@ import {
   createClinicUser,
 } from "@/lib/clinic-api";
 import { Button } from "@/components/ui/button";
+import { TimePicker } from "@/components/ui/time-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -1353,22 +1354,18 @@ function DoctorForm({
                 <div key={i} className="flex items-end gap-3">
                   <div className="grid gap-2">
                     <Label className="text-xs text-gray-500">Start time</Label>
-                    <Input
-                      type="time"
+                    <TimePicker
                       value={slot.start}
-                      onChange={(e) => setSlot(i, { start: e.target.value })}
-                      className={`${inputBase(`slot-${i}-start`)} w-32`}
+                      onChange={(v) => setSlot(i, { start: v })}
                     />
                     <FieldError message={errors[`slot-${i}-start`]} />
                   </div>
                   <span className="pb-3 text-sm text-slate-500">to</span>
                   <div className="grid gap-2">
                     <Label className="text-xs text-gray-500">End time</Label>
-                    <Input
-                      type="time"
+                    <TimePicker
                       value={slot.end}
-                      onChange={(e) => setSlot(i, { end: e.target.value })}
-                      className={`${inputBase(`slot-${i}-end`)} w-32`}
+                      onChange={(v) => setSlot(i, { end: v })}
                     />
                     <FieldError message={errors[`slot-${i}-end`]} />
                   </div>

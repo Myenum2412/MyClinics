@@ -14,6 +14,7 @@ import {
   updateAppointment,
   // Let's assume listPatients and listDoctors can be fetched
 } from "@/lib/clinic-api";
+import { TimePicker } from "@/components/ui/time-picker";
 import { formatTime } from "@/lib/format-time";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1384,14 +1385,9 @@ function NewAppointmentForm({
               <Label className="text-sm font-medium text-gray-700">
                 Time <span className="ml-1 text-red-500">*</span>
               </Label>
-              <Input
-                type="time"
+              <TimePicker
                 value={time}
-                onChange={(e) => setTime(e.target.value)}
-                required
-                className={`border ${
-                  error && !time ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
-                }`}
+                onChange={setTime}
               />
             </div>
 
@@ -1469,7 +1465,7 @@ function NewAppointmentForm({
                             : "border-blue-200 bg-white text-blue-700 hover:bg-blue-100"
                       }`}
                     >
-                      {slot}
+{formatTime(slot)}
                     </button>
                   );
                 })}

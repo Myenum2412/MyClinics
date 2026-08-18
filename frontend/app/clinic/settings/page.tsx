@@ -12,6 +12,7 @@ import {
   updateOwnClinic,
 } from "@/lib/clinic-api";
 import { Button } from "@/components/ui/button";
+import { TimePicker } from "@/components/ui/time-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -192,28 +193,26 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="grid gap-2">
                     <Label>Open time</Label>
-                    <Input
-                      type="time"
+                    <TimePicker
                       value={settings.workingHours.open}
                       disabled={!canEdit}
-                      onChange={(e) =>
+                      onChange={(v) =>
                         setSettings({
                           ...settings,
-                          workingHours: { ...settings.workingHours, open: e.target.value },
+                          workingHours: { ...settings.workingHours, open: v },
                         })
                       }
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label>Close time</Label>
-                    <Input
-                      type="time"
+                    <TimePicker
                       value={settings.workingHours.close}
                       disabled={!canEdit}
-                      onChange={(e) =>
+                      onChange={(v) =>
                         setSettings({
                           ...settings,
-                          workingHours: { ...settings.workingHours, close: e.target.value },
+                          workingHours: { ...settings.workingHours, close: v },
                         })
                       }
                     />

@@ -21,6 +21,7 @@ import {
 } from "@/lib/clinic-api";
 import { formatTime } from "@/lib/format-time";
 import { Button } from "@/components/ui/button";
+import { TimePicker } from "@/components/ui/time-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1366,11 +1367,9 @@ function RecordForm({
           </div>
           <div className="grid gap-2">
             <Label className="text-sm font-medium text-gray-700">Visit time</Label>
-            <Input
-              type="time"
+            <TimePicker
               value={form.visitTime}
-              onChange={(e) => set("visitTime", e.target.value)}
-              className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+              onChange={(v) => set("visitTime", v)}
             />
           </div>
           <div className="grid gap-2 md:col-span-2">
