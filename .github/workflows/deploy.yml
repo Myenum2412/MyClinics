@@ -61,6 +61,6 @@ jobs:
           ssh ubuntu@51.21.222.25 '
             set -e
             pm2 status myclinic-backend myclinic-whatsapp
-            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 http://127.0.0.1:3100/api/doctors)
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 http://127.0.0.1:3100/api/clinics/auth/me)
             test "$code" = "401" && echo "health check: backend OK (401 = auth gate up)" || { echo "health check failed: HTTP $code"; exit 1; }
           '
