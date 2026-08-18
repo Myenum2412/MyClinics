@@ -265,7 +265,6 @@ export default function DoctorsPage() {
 
   const load = useCallback(() => {
     if (!clinicId) return;
-    setLoading(true);
     listDoctors(clinicId, { limit: 100 })
       .then((res) => {
         setItems(res.items);
@@ -280,11 +279,11 @@ export default function DoctorsPage() {
     load();
   }, [load]);
 
-  // Reset page/selection on search
-  useEffect(() => {
+  const handleSearchChange = (v: string) => {
+    setQ(v);
     setCurrentPage(1);
     setSelectedIds(new Set());
-  }, [q]);
+  };
 
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
     select: true,
@@ -623,7 +622,7 @@ export default function DoctorsPage() {
                 <Input
                   placeholder="Search doctors..."
                   value={q}
-                  onChange={(e) => setQ(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="h-9 w-full pl-9"
                 />
               </div>

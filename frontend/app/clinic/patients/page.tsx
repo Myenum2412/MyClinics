@@ -126,7 +126,6 @@ export default function PatientsPage() {
 
   const load = useCallback(() => {
     if (!clinicId) return;
-    setLoading(true);
     listPatients(clinicId, { limit: 500 })
       .then((res) => {
         setItems(res.items);

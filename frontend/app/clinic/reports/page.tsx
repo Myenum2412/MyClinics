@@ -143,27 +143,26 @@ export default function ReportsPage() {
   const [pageIndex, setPageIndex] = useState(0);
   const pageSize = 10;
 
-  const load = useCallback(async () => {
+  const load = useCallback(() => {
     if (!clinicId) return;
-    setLoading(true);
-    try {
-      const [reportsRes, patientsRes] = await Promise.all([
-        listReports(clinicId, { limit: 500 }),
-        listPatients(clinicId, { limit: 500 }),
-      ]);
-      const map: Record<string, string> = {};
-      patientsRes.items.forEach((p) => {
-        map[p.patientId] = p.fullName;
-      });
-      setPatientLookup(map);
-      setItems(reportsRes.items);
-      setSelectedIds(new Set());
-      setPageIndex(0);
-    } catch {
-      toast.error("Failed to load reports");
-    } finally {
-      setLoading(false);
-    }
+    Promise.all([
+      listReports(clinicId, { limit: 500 }),
+      listPatients(clinicId, { limit: 500 }),
+    ])
+      .then(([reportsRes, patientsRes]) => {
+        const map: Record<string, string> = {};
+        patientsRes.items.forEach((p) => {
+          map[p.patientId] = p.fullName;
+        });
+        setPatientLookup(map);
+        setItems(reportsRes.items);
+        setSelectedIds(new Set());
+        setPageIndex(0);
+      })
+      .catch(() => {
+        toast.error("Failed to load reports");
+      })
+      .finally(() => setLoading(false));
   }, [clinicId]);
 
   useEffect(() => {

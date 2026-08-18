@@ -58,7 +58,6 @@ export default function NotificationsPage() {
 
   const load = useCallback(() => {
     if (!clinicId) return;
-    setLoading(true);
     listNotifications(clinicId, { limit: 50 })
       .then((res) => {
         setItems(res.items);

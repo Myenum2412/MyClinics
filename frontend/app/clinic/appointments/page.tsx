@@ -13,6 +13,7 @@ import {
   listAppointments,
   updateAppointment,
   // Let's assume listPatients and listDoctors can be fetched
+  API_BASE_URL,
 } from "@/lib/clinic-api";
 import { TimePicker } from "@/components/ui/time-picker";
 import { formatTime } from "@/lib/format-time";
@@ -177,33 +178,30 @@ export default function AppointmentsPage() {
     return map;
   }, [doctors]);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(() => {
     if (!clinicId) return;
-    setLoading(true);
-    try {
-      // Fetch appointments, patients, and doctors in parallel
-      const [apptsRes, patientsRes, doctorsRes] = await Promise.all([
-        listAppointments(clinicId, { limit: 1000 }),
-        fetch(`/api/clinics/${clinicId}/patients?limit=1000`).then((r) =>
-          r.ok ? r.json() : null
-        ),
-        fetch(`/api/clinics/${clinicId}/doctors?limit=100`).then((r) =>
-          r.ok ? r.json() : null
-        ),
-      ]);
-
-      setAppointments(apptsRes.items);
-      if (patientsRes) {
-        setPatients(patientsRes.items || []);
-      }
-      if (doctorsRes) {
-        setDoctors(doctorsRes.items || []);
-      }
-    } catch {
-      toast.error("Failed to load appointments data");
-    } finally {
-      setLoading(false);
-    }
+    Promise.all([
+      listAppointments(clinicId, { limit: 1000 }),
+      fetch(`${API_BASE_URL}/api/clinics/${clinicId}/patients?limit=1000`).then((r) =>
+        r.ok ? r.json() : null
+      ),
+      fetch(`${API_BASE_URL}/api/clinics/${clinicId}/doctors?limit=100`).then((r) =>
+        r.ok ? r.json() : null
+      ),
+    ])
+      .then(([apptsRes, patientsRes, doctorsRes]) => {
+        setAppointments(apptsRes.items);
+        if (patientsRes) {
+          setPatients(patientsRes.items || []);
+        }
+        if (doctorsRes) {
+          setDoctors(doctorsRes.items || []);
+        }
+      })
+      .catch(() => {
+        toast.error("Failed to load appointments data");
+      })
+      .finally(() => setLoading(false));
   }, [clinicId]);
 
   useEffect(() => {
@@ -350,7 +348,7 @@ export default function AppointmentsPage() {
     setLoadingLogs(true);
     setLogs([]);
     try {
-      const res = await fetch(`/api/clinics/${clinicId}/appointments/${appt.appointmentId}/notifications`);
+      const res = await fetch(`${API_BASE_URL}/api/clinics/${clinicId}/appointments/${appt.appointmentId}/notifications`);
       if (res.ok) {
         const data = await res.json();
         setLogs(data.notifications || []);

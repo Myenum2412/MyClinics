@@ -367,6 +367,22 @@ export function storeSessionToken(token: string, ttlSeconds: number): void {
 
 // ── Request core ───────────────────────────────────────────────────────────
 
+/**
+ * API base for browser-side calls. In production the browser talks to the
+ * API gateway directly (CORS-enabled) instead of round-tripping through the
+ * Vercel proxy — that halves latency on every request. Falls back to the
+ * same-origin proxy when unset (local dev).
+ */
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") ?? "";
+
+/** Base URL for direct API calls ("" = same-origin proxy in dev). */
+export const API_BASE_URL = API_BASE;
+
+/** Short-lived in-memory cache for GET requests (avoids refetch on nav). */
+const getCache = new Map<string, { data: unknown; expires: number }>();
+const GET_CACHE_TTL_MS = 30_000;
+
 async function request<T>(
   path: string,
   init: RequestInit = {}
@@ -378,7 +394,18 @@ async function request<T>(
   const token = typeof window !== "undefined" ? getStoredToken() : null;
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(path, { ...init, headers, cache: "no-store" });
+  const url = `${API_BASE}${path}`;
+  const method = (init.method ?? "GET").toUpperCase();
+  const cacheKey = `${method} ${url}`;
+
+  if (method === "GET") {
+    const hit = getCache.get(cacheKey);
+    if (hit && hit.expires > Date.now()) return hit.data as T;
+  } else {
+    getCache.clear();
+  }
+
+  const res = await fetch(url, { ...init, headers, cache: "no-store" });
 
   let data: unknown;
   try {
@@ -394,6 +421,16 @@ async function request<T>(
       res.status,
       err.code
     );
+  }
+
+  if (method === "GET") {
+    getCache.set(cacheKey, { data, expires: Date.now() + GET_CACHE_TTL_MS });
+    if (getCache.size > 200) {
+      const now = Date.now();
+      for (const [key, entry] of getCache) {
+        if (entry.expires <= now) getCache.delete(key);
+      }
+    }
   }
   return data as T;
 }

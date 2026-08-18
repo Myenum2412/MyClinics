@@ -123,30 +123,28 @@ export default function BillingPage() {
   const [pageIndex, setPageIndex] = useState(0);
   const pageSize = 10;
 
-  const load = useCallback(async () => {
+  const load = useCallback(() => {
     if (!clinicId) return;
-    setLoading(true);
-    try {
-      const [billsRes, patientsRes] = await Promise.all([
-        listBills(clinicId, { limit: 500 }),
-        listPatients(clinicId, { limit: 500 }),
-      ]);
+    Promise.all([
+      listBills(clinicId, { limit: 500 }),
+      listPatients(clinicId, { limit: 500 }),
+    ])
+      .then(([billsRes, patientsRes]) => {
+        const map: Record<string, string> = {};
+        patientsRes.items.forEach((p) => {
+          map[p.patientId] = p.fullName;
+        });
 
-      const map: Record<string, string> = {};
-      patientsRes.items.forEach((p) => {
-        map[p.patientId] = p.fullName;
-      });
-
-      setPatientLookup(map);
-      setPatients(patientsRes.items);
-      setItems(billsRes.items);
-      setSelectedIds(new Set());
-      setPageIndex(0);
-    } catch {
-      toast.error("Failed to load bills");
-    } finally {
-      setLoading(false);
-    }
+        setPatientLookup(map);
+        setPatients(patientsRes.items);
+        setItems(billsRes.items);
+        setSelectedIds(new Set());
+        setPageIndex(0);
+      })
+      .catch(() => {
+        toast.error("Failed to load bills");
+      })
+      .finally(() => setLoading(false));
   }, [clinicId]);
 
   useEffect(() => {

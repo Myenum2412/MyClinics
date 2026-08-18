@@ -33,7 +33,6 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!clinicId) return;
-    setLoading(true);
     Promise.all([getOwnClinic(clinicId), getClinicSettings(clinicId)])
       .then(([c, s]) => {
         setClinic(c);

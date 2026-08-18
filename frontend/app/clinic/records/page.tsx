@@ -494,39 +494,38 @@ export default function RecordsPage() {
   const pageSize = 10;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const load = useCallback(async () => {
+  const load = useCallback(() => {
     if (!clinicId) return;
-    setLoading(true);
-    try {
-      const [patientRes, recordRes] = await Promise.all([
-        listPatients(clinicId, { limit: 500 }),
-        listRecords(clinicId, { limit: 200 }),
-      ]);
+    Promise.all([
+      listPatients(clinicId, { limit: 500 }),
+      listRecords(clinicId, { limit: 200 }),
+    ])
+      .then(([patientRes, recordRes]) => {
+        const map: Record<string, string> = {};
+        patientRes.items.forEach((p) => {
+          map[p.patientId] = p.fullName;
+        });
 
-      const map: Record<string, string> = {};
-      patientRes.items.forEach((p) => {
-        map[p.patientId] = p.fullName;
-      });
-
-      setPatientLookup(map);
-      setItems(recordRes.items);
-      setCurrentPage(1);
-      setSelectedIds(new Set());
-    } catch {
-      toast.error("Failed to load medical records");
-    } finally {
-      setLoading(false);
-    }
+        setPatientLookup(map);
+        setItems(recordRes.items);
+        setCurrentPage(1);
+        setSelectedIds(new Set());
+      })
+      .catch(() => {
+        toast.error("Failed to load medical records");
+      })
+      .finally(() => setLoading(false));
   }, [clinicId]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  useEffect(() => {
+  const handleSearchChange = (v: string) => {
+    setQ(v);
     setCurrentPage(1);
     setSelectedIds(new Set());
-  }, [q]);
+  };
 
   const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
     select: true,
@@ -922,7 +921,7 @@ export default function RecordsPage() {
                 <Input
                   placeholder="Search records..."
                   value={q}
-                  onChange={(e) => setQ(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="h-9 w-full pl-9"
                 />
               </div>

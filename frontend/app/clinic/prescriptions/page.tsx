@@ -13,6 +13,7 @@ import {
   listPrescriptions,
   listPatients,
   listDoctors,
+  API_BASE_URL,
 } from "@/lib/clinic-api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -166,37 +167,36 @@ export default function PrescriptionsPage() {
     return map;
   }, [doctors]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(() => {
     if (!clinicId) return;
-    setLoading(true);
-    try {
-      const [prescRes, patientRes, docRes] = await Promise.all([
-        listPrescriptions(clinicId, { limit: 500 }),
-        listPatients(clinicId, { limit: 500 }),
-        listDoctors(clinicId, { limit: 100 }),
-      ]);
-      setItems(prescRes.items);
-      setPatients(patientRes.items);
-      setDoctors(docRes.items);
-
-      // Fetch latest notification delivery statuses
-      const notifRes = await fetch(`/api/clinics/${clinicId}/prescriptions/notifications`);
-      if (notifRes.ok) {
-        const notifData = await notifRes.json();
-        const map: Record<string, any> = {};
-        (notifData.notifications || []).forEach((n: any) => {
-          // Keep the newest notification status per prescription
-          if (!map[n.prescriptionId] || new Date(n.updatedAt) > new Date(map[n.prescriptionId].updatedAt)) {
-            map[n.prescriptionId] = n;
-          }
-        });
-        setNotificationsMap(map);
-      }
-    } catch (e) {
-      toast.error("Failed to load prescription dashboard data");
-    } finally {
-      setLoading(false);
-    }
+    Promise.all([
+      listPrescriptions(clinicId, { limit: 500 }),
+      listPatients(clinicId, { limit: 500 }),
+      listDoctors(clinicId, { limit: 100 }),
+    ])
+      .then(([prescRes, patientRes, docRes]) => {
+        setItems(prescRes.items);
+        setPatients(patientRes.items);
+        setDoctors(docRes.items);
+      })
+      .then(() =>
+        fetch(`${API_BASE_URL}/api/clinics/${clinicId}/prescriptions/notifications`)
+          .then((notifRes) => (notifRes.ok ? notifRes.json() : { notifications: [] }))
+          .then((notifData) => {
+            const map: Record<string, any> = {};
+            (notifData.notifications || []).forEach((n: any) => {
+              // Keep the newest notification status per prescription
+              if (!map[n.prescriptionId] || new Date(n.updatedAt) > new Date(map[n.prescriptionId].updatedAt)) {
+                map[n.prescriptionId] = n;
+              }
+            });
+            setNotificationsMap(map);
+          })
+      )
+      .catch(() => {
+        toast.error("Failed to load prescription dashboard data");
+      })
+      .finally(() => setLoading(false));
   }, [clinicId]);
 
   useEffect(() => {
@@ -298,7 +298,7 @@ export default function PrescriptionsPage() {
     setLogsOpen(true);
     setLogsLoading(true);
     try {
-      const res = await fetch(`/api/clinics/${clinicId}/prescriptions/${p.prescriptionId}/notifications`);
+      const res = await fetch(`${API_BASE_URL}/api/clinics/${clinicId}/prescriptions/${p.prescriptionId}/notifications`);
       if (res.ok) {
         const data = await res.json();
         setLogs(data.notifications || []);

@@ -84,7 +84,6 @@ export default function AuditLogsPage() {
 
   const load = useCallback(() => {
     if (!clinicId) return;
-    setLoading(true);
     listAuditLogs(clinicId, {
       entity: entity || undefined,
       action: action || undefined,

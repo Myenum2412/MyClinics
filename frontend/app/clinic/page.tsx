@@ -85,38 +85,37 @@ export default function ClinicDashboardPage() {
 
   const isPatient = session?.role === "patient";
 
-  const loadStaffStats = useCallback(async (clinicId: string) => {
-    const [p, a, b] = await Promise.all([
+  const loadStaffStats = useCallback((clinicId: string) => {
+    return Promise.all([
       listPatients(clinicId, { limit: 100 }),
       listAppointments(clinicId, { date: today(), limit: 100 }),
       listBills(clinicId, { status: "issued", limit: 100 }),
-    ]);
+    ]).then(([p, a, b]) => {
+      const map: Record<string, string> = {};
+      p.items.forEach((pt) => {
+        map[pt.patientId] = pt.fullName;
+      });
 
-    const map: Record<string, string> = {};
-    p.items.forEach((pt) => {
-      map[pt.patientId] = pt.fullName;
+      setPatients(p.items);
+      setAppointments(a.items);
+      setBills(b.items);
+      setPatientLookup(map);
     });
-
-    setPatients(p.items);
-    setAppointments(a.items);
-    setBills(b.items);
-    setPatientLookup(map);
   }, []);
 
   useEffect(() => {
     if (!session?.clinicId) return;
     if (isPatient) return;
-    setLoading(true);
     loadStaffStats(session.clinicId)
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [session?.clinicId, isPatient, loadStaffStats]);
 
-  // Reset pagination/selection on search
-  useEffect(() => {
+  const handleSearchChange = (v: string) => {
+    setQ(v);
     setCurrentPage(1);
     setSelectedIds(new Set());
-  }, [q]);
+  };
 
   if (isPatient) {
     return <PatientPortal clinicId={session?.clinicId ?? ""} />;
@@ -263,7 +262,7 @@ export default function ClinicDashboardPage() {
               <Input
                 placeholder="Search appointments..."
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="h-9 w-full pl-9"
               />
             </div>
@@ -403,7 +402,6 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
 
   useEffect(() => {
     if (!clinicId) return;
-    setLoading(true);
     Promise.all([
       myAppointments(clinicId, { limit: 50 }),
       myBills(clinicId, { limit: 50 }),
@@ -422,12 +420,18 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
       .finally(() => setLoading(false));
   }, [clinicId]);
 
-  // Reset tab specific states
-  useEffect(() => {
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
     setQ("");
     setSelectedIds(new Set());
     setCurrentPage(1);
-  }, [activeTab]);
+  };
+
+  const handleSearchChange = (v: string) => {
+    setQ(v);
+    setCurrentPage(1);
+    setSelectedIds(new Set());
+  };
 
   // 1. Appointments Filter & Export
   const filteredAppointments = useMemo(() => {
@@ -576,7 +580,7 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
       </Card>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-col gap-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-border pb-3">
           <TabsList className="bg-muted p-1 rounded-lg">
             <TabsTrigger value="appointments" className="gap-2"><Calendar className="size-4" /> Appointments</TabsTrigger>
@@ -591,7 +595,7 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
             <Input
               placeholder={`Search ${activeTab}...`}
               value={q}
-              onChange={(e) => setQ(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="h-9 w-full pl-9"
             />
           </div>
