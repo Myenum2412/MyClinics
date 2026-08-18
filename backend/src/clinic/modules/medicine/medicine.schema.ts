@@ -1,6 +1,6 @@
 import type { ClinicDocument } from "@/clinic/core/repository";
 
-export interface MedicalRecordDoc extends ClinicDocument {
+export interface MedicineRecordDoc extends ClinicDocument {
   clinicId: string;
   recordId: string;
   patientId: string;
@@ -18,7 +18,7 @@ export interface MedicalRecordDoc extends ClinicDocument {
   deletedAt?: Date;
 }
 
-export function recordToPublic(doc: MedicalRecordDoc) {
+export function recordToPublic(doc: MedicineRecordDoc) {
   return {
     recordId: doc.recordId,
     patientId: doc.patientId,

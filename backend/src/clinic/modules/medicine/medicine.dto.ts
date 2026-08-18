@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const createMedicalRecordSchema = z.object({
+export const createMedicineRecordSchema = z.object({
   patientId: z.string().startsWith("pat_"),
   doctorId: z.string().startsWith("doc_").nullable().optional(),
   diagnosis: z.string().trim().min(2, "Diagnosis is required").max(2000),
@@ -20,13 +20,13 @@ export const createMedicalRecordSchema = z.object({
     .optional(),
 });
 
-export type CreateMedicalRecordInput = z.infer<typeof createMedicalRecordSchema>;
+export type CreateMedicineRecordInput = z.infer<typeof createMedicineRecordSchema>;
 
-export const updateMedicalRecordSchema = createMedicalRecordSchema.partial();
+export const updateMedicineRecordSchema = createMedicineRecordSchema.partial();
 
-export type UpdateMedicalRecordInput = z.infer<typeof updateMedicalRecordSchema>;
+export type UpdateMedicineRecordInput = z.infer<typeof updateMedicineRecordSchema>;
 
-export const listMedicalRecordsSchema = z.object({
+export const listMedicineRecordsSchema = z.object({
   patientId: z.string().startsWith("pat_").optional(),
   doctorId: z.string().startsWith("doc_").optional(),
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

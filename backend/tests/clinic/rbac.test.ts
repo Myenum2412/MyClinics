@@ -44,11 +44,11 @@ describe("Permission matrix", () => {
     expect(can("clinic_admin", "patients", "delete")).toBe(true);
   });
 
-  it("medical-records: create/edit is clinical-only (doctor+); staff forbidden", () => {
-    expect(can("doctor", "medical-records", "create")).toBe(true);
-    expect(can("staff", "medical-records", "create")).toBe(false);
-    expect(can("patient", "medical-records", "create")).toBe(false);
-    expect(can("clinic_admin", "medical-records", "create")).toBe(true);
+  it("medicine: create/edit is clinical-only (doctor+); staff forbidden", () => {
+    expect(can("doctor", "medicine", "create")).toBe(true);
+    expect(can("staff", "medicine", "create")).toBe(false);
+    expect(can("patient", "medicine", "create")).toBe(false);
+    expect(can("clinic_admin", "medicine", "create")).toBe(true);
   });
 
   it("billing: staff can manage; patients cannot (portal-only read)", () => {
@@ -60,12 +60,12 @@ describe("Permission matrix", () => {
 
   it("patient portal is the patient's only data path — module list/read stays staff+/doctor+", () => {
     expect(can("patient", "appointments", "list")).toBe(false);
-    expect(can("patient", "medical-records", "list")).toBe(false);
+    expect(can("patient", "medicine", "list")).toBe(false);
     expect(can("patient", "prescriptions", "list")).toBe(false);
     expect(can("patient", "reports", "list")).toBe(false);
     // doctors may read clinical data, staff never can
-    expect(can("staff", "medical-records", "read")).toBe(false);
-    expect(can("doctor", "medical-records", "read")).toBe(true);
+    expect(can("staff", "medicine", "read")).toBe(false);
+    expect(can("doctor", "medicine", "read")).toBe(true);
   });
 
   it("clinics: platform_admin only", () => {

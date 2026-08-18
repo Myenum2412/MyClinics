@@ -37,7 +37,7 @@ function seedDb() {
       { clinicId: CLINIC_A, appointmentId: "apt_portal_a1", patientId: PATIENT_A1, doctorId: DOCTOR_A1, date: "2026-01-10", time: "10:00", status: "scheduled", createdAt: t, updatedAt: t },
       { clinicId: CLINIC_A, appointmentId: "apt_portal_a2", patientId: PATIENT_A2, doctorId: DOCTOR_A1, date: "2026-01-10", time: "11:00", status: "scheduled", createdAt: t, updatedAt: t },
     ],
-    clc_medical_records: [
+    clc_medicine: [
       { clinicId: CLINIC_A, recordId: "mrc_portal_a1", patientId: PATIENT_A1, doctorId: DOCTOR_A1, diagnosis: "D1", visitDate: "2026-01-10", createdAt: t, updatedAt: t },
       { clinicId: CLINIC_A, recordId: "mrc_portal_a2", patientId: PATIENT_A2, doctorId: DOCTOR_A1, diagnosis: "D2", visitDate: "2026-01-10", createdAt: t, updatedAt: t },
     ],
@@ -142,7 +142,7 @@ describe("Patient portal /me/* endpoints", () => {
     const token = await loginAs(app, "p1@portal.test");
     for (const path of [
       `/api/clinics/${CLINIC_A}/appointments`,
-      `/api/clinics/${CLINIC_A}/medical-records`,
+      `/api/clinics/${CLINIC_A}/medicine`,
       `/api/clinics/${CLINIC_A}/prescriptions`,
       `/api/clinics/${CLINIC_A}/billing`,
       `/api/clinics/${CLINIC_A}/reports`,
@@ -165,7 +165,7 @@ describe("Patient portal /me/* endpoints", () => {
     const token = await loginAs(app, "staff@portal.test");
     for (const path of [
       `/api/clinics/${CLINIC_A}/appointments`,
-      `/api/clinics/${CLINIC_A}/medical-records`,
+      `/api/clinics/${CLINIC_A}/medicine`,
       `/api/clinics/${CLINIC_A}/prescriptions`,
     ]) {
       const res = await app.inject({

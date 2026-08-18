@@ -4,7 +4,7 @@ import { AppointmentService } from "@/clinic/modules/appointments/appointments.s
 import { AuditLogService } from "@/clinic/modules/audit-logs/audit-logs.service";
 import { BillingService } from "@/clinic/modules/billing/billing.service";
 import { DoctorService } from "@/clinic/modules/doctors/doctors.service";
-import { MedicalRecordService } from "@/clinic/modules/medical-records/medical-records.service";
+import { MedicineService } from "@/clinic/modules/medicine/medicine.service";
 import { NotificationService } from "@/clinic/modules/notifications/notifications.service";
 import { PatientService } from "@/clinic/modules/patients/patients.service";
 import { PrescriptionService } from "@/clinic/modules/prescriptions/prescriptions.service";
@@ -79,12 +79,12 @@ describe("Tenant isolation — Clinic A can NEVER retrieve Clinic B's data", () 
 
   describe("medical records", () => {
     it("clinic A admin cannot read clinic B's record by id", async () => {
-      const service = new MedicalRecordService(db);
+      const service = new MedicineService(db);
       await expect(service.getRecord(adminA, RECORD_B1)).rejects.toThrow(NotFoundError);
     });
 
     it("clinic A admin listing never contains clinic B records", async () => {
-      const service = new MedicalRecordService(db);
+      const service = new MedicineService(db);
       const { items } = await service.listRecords(adminA, { skip: 0, limit: 100 });
       expect(items.some((r) => r.recordId === RECORD_B1)).toBe(false);
       expect(items.length).toBe(2);

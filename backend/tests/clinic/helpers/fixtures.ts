@@ -117,7 +117,7 @@ export function seedIsolationDb(): { db: Db; dump: (name: string) => Record<stri
       { clinicId: CLINIC_A, appointmentId: APPOINTMENT_A2, patientId: PATIENT_A2, doctorId: DOCTOR_A2, date: "2026-01-10", time: "11:00", status: "scheduled", createdAt: t, updatedAt: t },
       { clinicId: CLINIC_B, appointmentId: APPOINTMENT_B1, patientId: PATIENT_B1, doctorId: DOCTOR_B1, date: "2026-01-10", time: "12:00", status: "scheduled", createdAt: t, updatedAt: t },
     ],
-    clc_medical_records: [
+    clc_medicine: [
       { clinicId: CLINIC_A, recordId: RECORD_A1, patientId: PATIENT_A1, doctorId: DOCTOR_A1, diagnosis: "A1 diagnosis", visitDate: "2026-01-10", createdAt: t, updatedAt: t },
       { clinicId: CLINIC_A, recordId: RECORD_A2, patientId: PATIENT_A2, doctorId: DOCTOR_A2, diagnosis: "A2 diagnosis", visitDate: "2026-01-10", createdAt: t, updatedAt: t },
       { clinicId: CLINIC_B, recordId: RECORD_B1, patientId: PATIENT_B1, doctorId: DOCTOR_B1, diagnosis: "B1 diagnosis", visitDate: "2026-01-10", createdAt: t, updatedAt: t },

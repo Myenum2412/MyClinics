@@ -51,7 +51,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PatientSelect } from "@/components/clinic/pickers";
+import { DoctorSelect, PatientSelect } from "@/components/clinic/pickers";
+import {
+  AttachmentUploader,
+  makeAttachmentFile,
+  type AttachmentFile,
+} from "@/components/clinic/attachment-uploader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import {
@@ -68,6 +73,20 @@ import {
 } from "lucide-react";
 
 const REPORT_STATUSES = ["uploaded", "processing", "ready", "failed"];
+
+const REPORT_TYPES = [
+  "Blood Test",
+  "Urine Test",
+  "Stool Test",
+  "X-Ray",
+  "MRI",
+  "CT Scan",
+  "Ultrasound",
+  "ECG",
+  "Pathology",
+  "Biopsy",
+  "Other",
+];
 
 const STATUS_CLASS: Record<string, string> = {
   uploaded: "bg-blue-50 text-blue-700 border-blue-200",
@@ -661,8 +680,26 @@ function ReportForm({
   onSave: (form: ReportFormState) => Promise<void>;
 }) {
   const [form, setForm] = useState<ReportFormState>(initial);
+  const [attachment, setAttachment] = useState<AttachmentFile[]>(() =>
+    initial.fileUrl
+      ? [
+          makeAttachmentFile(null, {
+            name: initial.fileUrl.split("/").pop() ?? initial.fileUrl,
+            url: initial.fileUrl,
+            mimeType: initial.mimeType || null,
+          }),
+        ]
+      : []
+  );
   const set = <K extends keyof ReportFormState>(key: K, value: ReportFormState[K] | null) =>
     setForm((f) => ({ ...f, [key]: (value ?? "") as ReportFormState[K] }));
+
+  function handleAttachmentChange(files: AttachmentFile[]) {
+    setAttachment(files);
+    const first = files[0];
+    set("fileUrl", first?.url ?? "");
+    set("mimeType", first?.file?.type ?? first?.mimeType ?? "");
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -679,22 +716,34 @@ function ReportForm({
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Report type</Label>
-            <Input value={form.type} onChange={(e) => set("type", e.target.value)} required minLength={2} placeholder="Blood test, X-ray..." />
+            <Select value={form.type} onValueChange={(v) => set("type", v)} required>
+              <SelectTrigger>
+                <SelectValue placeholder="Select report type" />
+              </SelectTrigger>
+              <SelectContent>
+                {REPORT_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid gap-2">
             <Label>Title</Label>
             <Input value={form.title} onChange={(e) => set("title", e.target.value)} required minLength={2} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="grid gap-2">
-            <Label>File URL</Label>
-            <Input value={form.fileUrl} onChange={(e) => set("fileUrl", e.target.value)} placeholder="https://..." />
-          </div>
-          <div className="grid gap-2">
-            <Label>MIME type</Label>
-            <Input value={form.mimeType} onChange={(e) => set("mimeType", e.target.value)} placeholder="application/pdf" />
-          </div>
+        <div className="grid gap-2">
+          <Label>Attachment</Label>
+          <AttachmentUploader
+            files={attachment}
+            onChange={handleAttachmentChange}
+            maxFiles={1}
+            allowUrl
+            allowDescription={false}
+            description="Attach the report file (PDF, PNG, JPG up to 25 MB) or paste its URL."
+          />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-2">
@@ -714,7 +763,7 @@ function ReportForm({
           </div>
           <div className="grid gap-2">
             <Label>Doctor</Label>
-            <Input value={form.doctorId} onChange={(e) => set("doctorId", e.target.value)} placeholder="doc_..." />
+            <DoctorSelect clinicId={clinicId} value={form.doctorId || null} onChange={(v) => set("doctorId", v)} allowEmpty />
           </div>
         </div>
         <div className="grid gap-2">

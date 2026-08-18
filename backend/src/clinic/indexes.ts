@@ -15,7 +15,7 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
   const staff = db.collection(CLINIC_COLLECTIONS.staff);
   const patients = db.collection(CLINIC_COLLECTIONS.patients);
   const appointments = db.collection(CLINIC_COLLECTIONS.appointments);
-  const medicalRecords = db.collection(CLINIC_COLLECTIONS.medicalRecords);
+  const medicine = db.collection(CLINIC_COLLECTIONS.medicalRecords);
   const prescriptions = db.collection(CLINIC_COLLECTIONS.prescriptions);
   const bills = db.collection(CLINIC_COLLECTIONS.bills);
   const reports = db.collection(CLINIC_COLLECTIONS.reports);
@@ -94,10 +94,10 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
       { unique: true, partialFilterExpression: { status: "scheduled" } }
     ),
 
-    // ── Medical records ──────────────────────────────────────────────────
-    medicalRecords.createIndex({ clinicId: 1, recordId: 1 }, { unique: true }),
-    medicalRecords.createIndex({ clinicId: 1, patientId: 1, visitDate: -1 }),
-    medicalRecords.createIndex({ clinicId: 1, doctorId: 1, visitDate: -1 }),
+    // ── Medicine ─────────────────────────────────────────────────────────
+    medicine.createIndex({ clinicId: 1, recordId: 1 }, { unique: true }),
+    medicine.createIndex({ clinicId: 1, patientId: 1, visitDate: -1 }),
+    medicine.createIndex({ clinicId: 1, doctorId: 1, visitDate: -1 }),
 
     // ── Prescriptions ────────────────────────────────────────────────────
     prescriptions.createIndex({ clinicId: 1, prescriptionId: 1 }, { unique: true }),

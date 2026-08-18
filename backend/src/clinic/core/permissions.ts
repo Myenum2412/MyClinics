@@ -18,7 +18,7 @@ export type ClinicModule =
   | "staff"
   | "patients"
   | "appointments"
-  | "medical-records"
+  | "medicine"
   | "prescriptions"
   | "billing"
   | "reports"
@@ -84,7 +84,7 @@ export const MODULE_POLICY: Record<ClinicModule, Partial<Record<ClinicAction, Cl
     delete: "clinic_admin",
     manage: "clinic_admin",
   },
-  "medical-records": {
+  medicine: {
     list: "doctor",
     read: "doctor",
     create: "doctor",

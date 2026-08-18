@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ForbiddenError, NotFoundError } from "@/clinic/core/errors";
 import { AppointmentService } from "@/clinic/modules/appointments/appointments.service";
 import { BillingService } from "@/clinic/modules/billing/billing.service";
-import { MedicalRecordService } from "@/clinic/modules/medical-records/medical-records.service";
+import { MedicineService } from "@/clinic/modules/medicine/medicine.service";
 import { PatientService } from "@/clinic/modules/patients/patients.service";
 import { PrescriptionService } from "@/clinic/modules/prescriptions/prescriptions.service";
 import { ReportService } from "@/clinic/modules/reports/reports.service";
@@ -95,13 +95,13 @@ describe("Doctor isolation — Doctor A1 can never access Doctor A2's data", () 
 
   describe("medical records", () => {
     it("doctor A1 lists only their own records", async () => {
-      const service = new MedicalRecordService(db);
+      const service = new MedicineService(db);
       const { items } = await service.listRecords(doctorA1, { skip: 0, limit: 100 });
       expect(items.map((r) => r.recordId)).toEqual([RECORD_A1]);
     });
 
     it("doctor A1 cannot read doctor A2's record by id", async () => {
-      const service = new MedicalRecordService(db);
+      const service = new MedicineService(db);
       await expect(service.getRecord(doctorA1, RECORD_A2)).rejects.toThrow(NotFoundError);
     });
   });
@@ -153,7 +153,7 @@ describe("Doctor isolation — Doctor A1 can never access Doctor A2's data", () 
     });
 
     it("clinic admin sees BOTH doctors' records", async () => {
-      const service = new MedicalRecordService(db);
+      const service = new MedicineService(db);
       const { items } = await service.listRecords(adminA, { skip: 0, limit: 100 });
       expect(items.map((r) => r.recordId).sort()).toEqual([RECORD_A1, RECORD_A2].sort());
     });

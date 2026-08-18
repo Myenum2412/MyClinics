@@ -167,7 +167,7 @@ isolation is enforced at every layer. Sign up at `/signup/clinic` (or
 
 - Roles: `clinic_admin` (full control) → `staff` (clinical data) → `patient` (own data only).
 - Every collection carries `clinicId`: `mt_clinics`, `mt_users`, `mt_patients`,
-  `mt_appointments`, `mt_medical_records`, `mt_prescriptions`, `mt_audit_logs`.
+  `mt_appointments`, `mt_medicine`, `mt_prescriptions`, `mt_audit_logs`.
 - The **tenant-scope middleware** (`backend/src/mt/core/tenant-scope.ts`) verifies the
   JWT, re-validates the user + clinic against the DB (30s cache), and injects
   `request.tenant` into every handler. No handler runs without it.
@@ -200,7 +200,7 @@ mt/
 │   ├── users/                 # staff/patient accounts
 │   ├── patients/              # create + get-by-id with full tenant safety
 │   ├── appointments/
-│   ├── medical-records/
+│   ├── medicine/
 │   ├── prescriptions/
 │   └── audit-logs/            # admin queries + patient transparency
 │       # each module: dto.ts (Zod) · schema.ts · repository.ts · service.ts
@@ -223,8 +223,8 @@ mt/
 | GET | `/api/mt/patients`, `/api/mt/patients/:patientId` | staff (clinic-wide) / patient (own) |
 | PATCH/DELETE | `/api/mt/patients/:patientId` | staff / admin (patient: own only) |
 | POST/GET | `/api/mt/appointments[/:appointmentId]` | staff+ (patient: own) |
-| POST | `/api/mt/medical-records`, `/api/mt/prescriptions` | staff+ |
-| GET | `/api/mt/medical-records/patient/:patientId`, `/api/mt/prescriptions/patient/:patientId` | staff / patient (own) |
+| POST | `/api/mt/medicine`, `/api/mt/prescriptions` | staff+ |
+| GET | `/api/mt/medicine/patient/:patientId`, `/api/mt/prescriptions/patient/:patientId` | staff / patient (own) |
 | GET | `/api/mt/audit-logs` | admin |
 | GET | `/api/mt/audit-logs/patient/:patientId` | admin / patient (own) |
 

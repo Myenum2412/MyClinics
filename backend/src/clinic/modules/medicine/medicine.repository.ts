@@ -1,12 +1,12 @@
 import type { Db, WithId } from "mongodb";
-import type { MedicalRecordDoc } from "@/clinic/modules/medical-records/medical-records.schema";
+import type { MedicineRecordDoc } from "@/clinic/modules/medicine/medicine.schema";
 
 /**
- * Medical records repository — doctor-patient scoped:
+ * Medicine records repository — doctor-patient scoped:
  *   doctor  → doctorId: ctx.doctorId (own authored records only)
  *   patient → patientId: ctx.patientId (own records only)
  */
-export class MedicalRecordRepository {
+export class MedicineRepository {
   constructor(
     private readonly db: Db,
     private readonly clinicId: string,
@@ -18,7 +18,7 @@ export class MedicalRecordRepository {
   ) {}
 
   private collection() {
-    return this.db.collection<MedicalRecordDoc>("clc_medical_records");
+    return this.db.collection<MedicineRecordDoc>("clc_medicine");
   }
 
   private scoped(base: Record<string, unknown> = {}): Record<string, unknown> {
@@ -32,7 +32,7 @@ export class MedicalRecordRepository {
     return { clinicId: this.clinicId, ...filter };
   }
 
-  async findByRecordId(recordId: string): Promise<WithId<MedicalRecordDoc> | null> {
+  async findByRecordId(recordId: string): Promise<WithId<MedicineRecordDoc> | null> {
     return this.collection().findOne(this.scoped({ recordId }));
   }
 
@@ -43,7 +43,7 @@ export class MedicalRecordRepository {
     to?: string;
     skip: number;
     limit: number;
-  }): Promise<[WithId<MedicalRecordDoc>[], number]> {
+  }): Promise<[WithId<MedicineRecordDoc>[], number]> {
     const filter: Record<string, unknown> = {};
     if (query.patientId) filter.patientId = query.patientId;
     if (query.doctorId) filter.doctorId = query.doctorId;
@@ -66,7 +66,7 @@ export class MedicalRecordRepository {
     return [items, total];
   }
 
-  async insert(doc: Omit<MedicalRecordDoc, "_id" | "clinicId" | "createdAt" | "updatedAt">): Promise<WithId<MedicalRecordDoc>> {
+  async insert(doc: Omit<MedicineRecordDoc, "_id" | "clinicId" | "createdAt" | "updatedAt">): Promise<WithId<MedicineRecordDoc>> {
     const now = new Date();
     await this.collection().insertOne({
       ...doc,
@@ -74,7 +74,7 @@ export class MedicalRecordRepository {
       createdAt: now,
       updatedAt: now,
     } as never);
-    return (await this.findByRecordId(doc.recordId)) as WithId<MedicalRecordDoc>;
+    return (await this.findByRecordId(doc.recordId)) as WithId<MedicineRecordDoc>;
   }
 
   async update(recordId: string, patch: Record<string, unknown>): Promise<boolean> {

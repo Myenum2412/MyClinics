@@ -5,7 +5,7 @@ import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
   type Appointment,
   type Bill,
-  type MedicalRecord,
+  type MedicineRecord,
   type Patient,
   type Prescription,
   type Report,
@@ -389,7 +389,7 @@ function PatientPortal({ clinicId }: { clinicId: string }) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const [records, setRecords] = useState<MedicalRecord[]>([]);
+  const [records, setRecords] = useState<MedicineRecord[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 

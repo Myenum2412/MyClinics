@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { NotFoundError } from "@/clinic/core/errors";
 import { AppointmentService } from "@/clinic/modules/appointments/appointments.service";
 import { BillingService } from "@/clinic/modules/billing/billing.service";
-import { MedicalRecordService } from "@/clinic/modules/medical-records/medical-records.service";
+import { MedicineService } from "@/clinic/modules/medicine/medicine.service";
 import { NotificationService } from "@/clinic/modules/notifications/notifications.service";
 import { PatientService } from "@/clinic/modules/patients/patients.service";
 import { PrescriptionService } from "@/clinic/modules/prescriptions/prescriptions.service";
@@ -66,13 +66,13 @@ describe("Patient isolation — patients see only their own data", () => {
   });
 
   it("patient A1 sees only their own medical records", async () => {
-    const service = new MedicalRecordService(db);
+    const service = new MedicineService(db);
     const { items } = await service.listRecords(patientA1, { skip: 0, limit: 100 });
     expect(items.map((r) => r.recordId)).toEqual([RECORD_A1]);
   });
 
   it("patient A1 cannot read patient A2's medical record", async () => {
-    const service = new MedicalRecordService(db);
+    const service = new MedicineService(db);
     await expect(service.getRecord(patientA1, RECORD_A2)).rejects.toThrow(NotFoundError);
   });
 

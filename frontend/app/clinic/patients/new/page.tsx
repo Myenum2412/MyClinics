@@ -6,6 +6,10 @@ import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { createPatient } from "@/lib/clinic-api";
 import { DoctorSelect } from "@/components/clinic/pickers";
+import {
+  AttachmentUploader,
+  type AttachmentFile,
+} from "@/components/clinic/attachment-uploader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -74,6 +78,9 @@ interface PatientFormState {
   referredBy: string;
   howDidYouHear: string;
   notes: string;
+
+  // Attachments
+  attachments: AttachmentFile[];
 }
 
 const EMPTY_FORM: PatientFormState = {
@@ -106,6 +113,7 @@ const EMPTY_FORM: PatientFormState = {
   referredBy: "",
   howDidYouHear: "",
   notes: "",
+  attachments: [],
 };
 
 // Validation functions
@@ -814,19 +822,16 @@ export default function NewPatientPage() {
             </FormField>
           </SectionCard>
 
-          {/* 7. Attachments - Placeholder for future implementation */}
+          {/* 7. Attachments */}
           <SectionCard
             title="7. Attachments"
             description="Optional - upload patient documents"
           >
-            <div className="rounded-lg border-2 border-dashed border-blue-200 bg-blue-50 p-6 text-center">
-              <p className="text-sm text-gray-600">
-                Document upload feature coming soon
-              </p>
-              <p className="mt-1 text-xs text-gray-500">
-                Supported formats: JPG, PNG, PDF
-              </p>
-            </div>
+            <AttachmentUploader
+              files={form.attachments}
+              onChange={(files) => setForm((f) => ({ ...f, attachments: files }))}
+              description="Upload ID proofs, reports, or documents (PDF, PNG, JPG up to 25 MB)."
+            />
           </SectionCard>
 
           {/* Bottom Actions */}

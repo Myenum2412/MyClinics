@@ -8,15 +8,15 @@ import {
   NotFoundError,
 } from "@/clinic/core/errors";
 import { generateRecordId } from "@/clinic/core/ids";
-import type { CreateMedicalRecordInput, UpdateMedicalRecordInput } from "@/clinic/modules/medical-records/medical-records.dto";
-import { MedicalRecordRepository } from "@/clinic/modules/medical-records/medical-records.repository";
-import type { MedicalRecordDoc } from "@/clinic/modules/medical-records/medical-records.schema";
+import type { CreateMedicineRecordInput, UpdateMedicineRecordInput } from "@/clinic/modules/medicine/medicine.dto";
+import { MedicineRepository } from "@/clinic/modules/medicine/medicine.repository";
+import type { MedicineRecordDoc } from "@/clinic/modules/medicine/medicine.schema";
 
-export class MedicalRecordService {
+export class MedicineService {
   constructor(private readonly db: Db) {}
 
-  private repo(ctx: ClinicContext): MedicalRecordRepository {
-    return new MedicalRecordRepository(this.db, requireClinicOf(ctx), {
+  private repo(ctx: ClinicContext): MedicineRepository {
+    return new MedicineRepository(this.db, requireClinicOf(ctx), {
       role: ctx.role,
       doctorId: ctx.doctorId,
       patientId: ctx.patientId,
@@ -25,8 +25,8 @@ export class MedicalRecordService {
 
   async createRecord(
     ctx: ClinicContext,
-    input: CreateMedicalRecordInput
-  ): Promise<WithId<MedicalRecordDoc>> {
+    input: CreateMedicineRecordInput
+  ): Promise<WithId<MedicineRecordDoc>> {
     const clinicId = requireClinicOf(ctx);
     const patient = await this.db
       .collection(CLINIC_COLLECTIONS.patients)
@@ -69,7 +69,7 @@ export class MedicalRecordService {
 
     await writeAudit(this.db, ctx, {
       action: "create",
-      entity: "medical_record",
+      entity: "medicine_record",
       entityId: record.recordId,
       metadata: { patientId: input.patientId, doctorId, visitDate: input.visitDate },
     });
@@ -77,9 +77,9 @@ export class MedicalRecordService {
     return record;
   }
 
-  async getRecord(ctx: ClinicContext, recordId: string): Promise<WithId<MedicalRecordDoc>> {
+  async getRecord(ctx: ClinicContext, recordId: string): Promise<WithId<MedicineRecordDoc>> {
     const record = await this.repo(ctx).findByRecordId(recordId);
-    if (!record) throw new NotFoundError("Medical record not found");
+    if (!record) throw new NotFoundError("Medicine record not found");
     return record;
   }
 
@@ -94,11 +94,11 @@ export class MedicalRecordService {
   async updateRecord(
     ctx: ClinicContext,
     recordId: string,
-    input: UpdateMedicalRecordInput
-  ): Promise<WithId<MedicalRecordDoc>> {
+    input: UpdateMedicineRecordInput
+  ): Promise<WithId<MedicineRecordDoc>> {
     const repo = this.repo(ctx);
     const existing = await repo.findByRecordId(recordId);
-    if (!existing) throw new NotFoundError("Medical record not found");
+    if (!existing) throw new NotFoundError("Medicine record not found");
 
     const patch: Record<string, unknown> = {};
     for (const key of [
@@ -116,11 +116,11 @@ export class MedicalRecordService {
     if (Object.keys(patch).length === 0) return existing;
 
     const ok = await repo.update(recordId, patch);
-    if (!ok) throw new NotFoundError("Medical record not found");
+    if (!ok) throw new NotFoundError("Medicine record not found");
 
     await writeAudit(this.db, ctx, {
       action: "update",
-      entity: "medical_record",
+      entity: "medicine_record",
       entityId: recordId,
       metadata: { fields: Object.keys(patch) },
     });
@@ -132,13 +132,13 @@ export class MedicalRecordService {
   async deleteRecord(ctx: ClinicContext, recordId: string): Promise<void> {
     const repo = this.repo(ctx);
     const existing = await repo.findByRecordId(recordId);
-    if (!existing) throw new NotFoundError("Medical record not found");
+    if (!existing) throw new NotFoundError("Medicine record not found");
 
     await repo.softDelete(recordId);
 
     await writeAudit(this.db, ctx, {
       action: "delete",
-      entity: "medical_record",
+      entity: "medicine_record",
       entityId: recordId,
       metadata: { patientId: existing.patientId },
     });

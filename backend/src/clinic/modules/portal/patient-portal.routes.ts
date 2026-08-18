@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { requireClinicAccess } from "@/clinic/core/scope";
 import { AppointmentController } from "@/clinic/modules/appointments/appointments.controller";
 import { BillingController } from "@/clinic/modules/billing/billing.controller";
-import { MedicalRecordController } from "@/clinic/modules/medical-records/medical-records.controller";
+import { MedicineController } from "@/clinic/modules/medicine/medicine.controller";
 import { PrescriptionController } from "@/clinic/modules/prescriptions/prescriptions.controller";
 import { ReportController } from "@/clinic/modules/reports/reports.controller";
 
@@ -18,7 +18,7 @@ import { ReportController } from "@/clinic/modules/reports/reports.controller";
  */
 export function registerPatientPortalRoutes(app: FastifyInstance): void {
   const appointments = new AppointmentController();
-  const records = new MedicalRecordController();
+  const records = new MedicineController();
   const prescriptions = new PrescriptionController();
   const billing = new BillingController();
   const reports = new ReportController();

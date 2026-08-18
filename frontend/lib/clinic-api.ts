@@ -184,7 +184,7 @@ export interface Appointment {
   updatedAt: string;
 }
 
-export interface MedicalRecord {
+export interface MedicineRecord {
   recordId: string;
   patientId: string;
   doctorId: string;
@@ -781,25 +781,25 @@ export function deleteStaff(clinicId: string, staffId: string): Promise<{ ok: tr
 
 
 
-// ── Medical records ────────────────────────────────────────────────────────
+// ── Medicine ───────────────────────────────────────────────────────────────
 
 export function listRecords(
   clinicId: string,
   query: { patientId?: string; from?: string; to?: string; limit?: number } = {}
-): Promise<PageResult<MedicalRecord>> {
+): Promise<PageResult<MedicineRecord>> {
   const params = new URLSearchParams();
   if (query.patientId) params.set("patientId", query.patientId);
   if (query.from) params.set("from", query.from);
   if (query.to) params.set("to", query.to);
   params.set("limit", String(query.limit ?? 100));
-  return request(tenantPath(clinicId, `/medical-records?${params}`));
+  return request(tenantPath(clinicId, `/medicine?${params}`));
 }
 
 export function createRecord(
   clinicId: string,
   input: Record<string, unknown>
-): Promise<MedicalRecord> {
-  return request(tenantPath(clinicId, "/medical-records"), {
+): Promise<MedicineRecord> {
+  return request(tenantPath(clinicId, "/medicine"), {
     method: "POST",
     body: JSON.stringify(input),
   });
@@ -809,15 +809,15 @@ export function updateRecord(
   clinicId: string,
   recordId: string,
   input: Record<string, unknown>
-): Promise<MedicalRecord> {
-  return request(tenantPath(clinicId, `/medical-records/${recordId}`), {
+): Promise<MedicineRecord> {
+  return request(tenantPath(clinicId, `/medicine/${recordId}`), {
     method: "PATCH",
     body: JSON.stringify(input),
   });
 }
 
 export function deleteRecord(clinicId: string, recordId: string): Promise<{ ok: true }> {
-  return request(tenantPath(clinicId, `/medical-records/${recordId}`), {
+  return request(tenantPath(clinicId, `/medicine/${recordId}`), {
     method: "DELETE",
   });
 }
@@ -1027,7 +1027,7 @@ export function myAppointments(clinicId: string, query: { status?: string; limit
   return request(tenantPath(clinicId, `/me/appointments?${params}`));
 }
 
-export function myRecords(clinicId: string, query: { limit?: number } = {}): Promise<PageResult<MedicalRecord>> {
+export function myRecords(clinicId: string, query: { limit?: number } = {}): Promise<PageResult<MedicineRecord>> {
   const params = new URLSearchParams();
   params.set("limit", String(query.limit ?? 50));
   return request(tenantPath(clinicId, `/me/records?${params}`));

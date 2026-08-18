@@ -8,24 +8,24 @@ import {
 } from "@/clinic/core/errors";
 import { parsePagination } from "@/clinic/core/pagination";
 import {
-  createMedicalRecordSchema,
-  listMedicalRecordsSchema,
-  updateMedicalRecordSchema,
-} from "@/clinic/modules/medical-records/medical-records.dto";
-import { recordToPublic } from "@/clinic/modules/medical-records/medical-records.schema";
-import { MedicalRecordService } from "@/clinic/modules/medical-records/medical-records.service";
+  createMedicineRecordSchema,
+  listMedicineRecordsSchema,
+  updateMedicineRecordSchema,
+} from "@/clinic/modules/medicine/medicine.dto";
+import { recordToPublic } from "@/clinic/modules/medicine/medicine.schema";
+import { MedicineService } from "@/clinic/modules/medicine/medicine.service";
 
-export class MedicalRecordController {
-  private service(db: Db): MedicalRecordService {
-    return new MedicalRecordService(db);
+export class MedicineController {
+  private service(db: Db): MedicineService {
+    return new MedicineService(db);
   }
 
   async create(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
-    const parsed = createMedicalRecordSchema.safeParse(request.body);
+    const parsed = createMedicineRecordSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new BadRequestError(parsed.error.issues[0]?.message ?? "Invalid medical record data");
+      throw new BadRequestError(parsed.error.issues[0]?.message ?? "Invalid medicine record data");
     }
     const db = await getDb();
     const record = await this.service(db).createRecord(ctx, parsed.data);
@@ -35,7 +35,7 @@ export class MedicalRecordController {
   async list(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
-    const parsed = listMedicalRecordsSchema.safeParse(request.query);
+    const parsed = listMedicineRecordsSchema.safeParse(request.query);
     if (!parsed.success) {
       throw new BadRequestError(parsed.error.issues[0]?.message ?? "Invalid query");
     }
@@ -58,9 +58,9 @@ export class MedicalRecordController {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
     const { recordId } = request.params as { recordId: string };
-    const parsed = updateMedicalRecordSchema.safeParse(request.body);
+    const parsed = updateMedicineRecordSchema.safeParse(request.body);
     if (!parsed.success) {
-      throw new BadRequestError(parsed.error.issues[0]?.message ?? "Invalid medical record data");
+      throw new BadRequestError(parsed.error.issues[0]?.message ?? "Invalid medicine record data");
     }
     const db = await getDb();
     const record = await this.service(db).updateRecord(ctx, recordId, parsed.data);
@@ -75,7 +75,7 @@ export class MedicalRecordController {
     await this.service(db).deleteRecord(ctx, recordId);
     return reply.send({ ok: true });
   }
-  /** Patient portal: lists only the caller's OWN medical-records (scoped in the service). */
+  /** Patient portal: lists only the caller's OWN medicine records (scoped in the service). */
   async getMine(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();

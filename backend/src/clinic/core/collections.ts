@@ -13,7 +13,7 @@ export const CLINIC_COLLECTIONS = {
   staff: "clc_staff",
   patients: "clc_patients",
   appointments: "clc_appointments",
-  medicalRecords: "clc_medical_records",
+  medicalRecords: "clc_medicine",
   prescriptions: "clc_prescriptions",
   bills: "clc_bills",
   reports: "clc_reports",

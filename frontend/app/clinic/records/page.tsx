@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
-  type MedicalRecord,
+  type MedicineRecord,
   type Doctor,
   type Patient,
   type Appointment,
@@ -36,8 +36,6 @@ import {
   ChevronRight,
   ChevronDown,
   Trash2,
-  X,
-  Paperclip,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -65,6 +63,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import StatsGeneric from "@/components/stats-generic";
+import {
+  AttachmentUploader,
+  makeAttachmentFile,
+  type AttachmentFile,
+} from "@/components/clinic/attachment-uploader";
 
 const COLUMN_LABELS: Record<string, string> = {
   select: "Select",
@@ -96,12 +99,6 @@ interface MedicineEntry {
   instructions: string;
 }
 
-interface AttachmentEntry {
-  file: File | null;
-  documentType: string;
-  description: string;
-}
-
 interface RecordFormState {
   patientId: string;
   doctorId: string;
@@ -127,7 +124,7 @@ interface RecordFormState {
   allergies: string;
   labTests: string;
   internalNotes: string;
-  attachments: AttachmentEntry[];
+  attachments: AttachmentFile[];
 }
 
 const EMPTY_FORM: RecordFormState = {
@@ -161,20 +158,6 @@ const EMPTY_MEDICINE: MedicineEntry = {
   duration: "",
   instructions: "",
 };
-
-const EMPTY_ATTACHMENT: AttachmentEntry = {
-  file: null,
-  documentType: "",
-  description: "",
-};
-
-const ATTACHMENT_TYPES = [
-  "Medical Report",
-  "Lab Report",
-  "Image",
-  "PDF Document",
-  "Other",
-];
 
 const INSTRUCTION_SUGGESTIONS = [
   "Before food",
@@ -482,9 +465,9 @@ export default function RecordsPage() {
   const searchParams = useSearchParams();
   const appointmentParam = searchParams.get("appointmentId");
 
-  const [items, setItems] = useState<MedicalRecord[]>([]);
+  const [items, setItems] = useState<MedicineRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState<MedicalRecord | null>(null);
+  const [editing, setEditing] = useState<MedicineRecord | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -559,7 +542,7 @@ export default function RecordsPage() {
     return JSON.stringify(metadata);
   }
 
-  function recordToForm(record: MedicalRecord): RecordFormState {
+  function recordToForm(record: MedicineRecord): RecordFormState {
     let meta: Record<string, unknown> = {};
     if (record.notes) {
       try {
@@ -597,11 +580,14 @@ export default function RecordsPage() {
       allergies: str(meta.allergies),
       labTests: str(meta.labTests),
       internalNotes: str(meta.internalNotes),
-      attachments: record.attachments.map((a, i) => ({
-        file: null,
-        documentType: attachmentDetails[i]?.documentType ?? "",
-        description: attachmentDetails[i]?.description ?? a.name,
-      })),
+      attachments: record.attachments.map((a, i) =>
+        makeAttachmentFile(null, {
+          documentType: attachmentDetails[i]?.documentType ?? "",
+          description: attachmentDetails[i]?.description ?? a.name,
+          name: a.name,
+          mimeType: a.mimeType,
+        })
+      ),
     };
   }
 
@@ -625,7 +611,7 @@ export default function RecordsPage() {
           })),
       };
 
-      let savedRecord: MedicalRecord;
+      let savedRecord: MedicineRecord;
       if (editing) {
         const updated = await updateRecord(clinicId, editing.recordId, recordPayload);
         savedRecord = { ...updated, notes: recordPayload.notes as string };
@@ -660,7 +646,7 @@ export default function RecordsPage() {
     }
   }
 
-  async function handleDelete(record: MedicalRecord) {
+  async function handleDelete(record: MedicineRecord) {
     const patientName = patientLookup[record.patientId] || record.patientId;
     if (!confirm(`Delete medicine record for patient ${patientName}?`)) return;
     try {
@@ -746,7 +732,7 @@ export default function RecordsPage() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(mappedSelected, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `medical_records_export_${Date.now()}.json`);
+    downloadAnchor.setAttribute("download", `medicine_export_${Date.now()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -1159,27 +1145,6 @@ function RecordForm({
     setForm((f) => ({
       ...f,
       medicines: f.medicines.map((m, i) => (i === index ? { ...m, ...patch } : m)),
-    }));
-  };
-
-  const addAttachment = () => {
-    setForm((f) => ({
-      ...f,
-      attachments: [...f.attachments, { ...EMPTY_ATTACHMENT }],
-    }));
-  };
-
-  const removeAttachment = (index: number) => {
-    setForm((f) => ({
-      ...f,
-      attachments: f.attachments.filter((_, i) => i !== index),
-    }));
-  };
-
-  const setAttachment = (index: number, patch: Partial<AttachmentEntry>) => {
-    setForm((f) => ({
-      ...f,
-      attachments: f.attachments.map((a, i) => (i === index ? { ...a, ...patch } : a)),
     }));
   };
 
@@ -1726,90 +1691,13 @@ function RecordForm({
             6. Attachments (Optional)
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-xs text-gray-500">
-            Upload medical reports, lab reports, images, or PDF documents.
-          </p>
-          {form.attachments.map((attachment, i) => (
-            <div key={i} className="space-y-2 rounded-lg border border-blue-100 bg-white p-3">
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => document.getElementById(`attachment-file-${i}`)?.click()}
-                  className="h-9 gap-1.5 rounded-lg border-blue-200 bg-white text-blue-700 hover:bg-blue-50"
-                >
-                  <Paperclip className="size-3.5" />
-                  {attachment.file ? attachment.file.name : "Choose file"}
-                </Button>
-                <input
-                  id={`attachment-file-${i}`}
-                  type="file"
-                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0] ?? null;
-                    setAttachment(i, { file });
-                  }}
-                />
-                {attachment.file && (
-                  <span className="truncate text-xs text-gray-500">
-                    {((attachment.file.size || 0) / 1024).toFixed(0)} KB
-                  </span>
-                )}
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => removeAttachment(i)}
-                  className="ml-auto h-8 text-red-600 hover:bg-red-50 hover:text-red-700"
-                >
-                  <X className="size-4" />
-                </Button>
-              </div>
-              <div className="grid gap-2 md:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label className="text-xs uppercase tracking-wide text-gray-500">Document type</Label>
-                  <Select
-                    value={attachment.documentType}
-                    onValueChange={(v) => setAttachment(i, { documentType: v ?? "" })}
-                  >
-                    <SelectTrigger className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400">
-                      <SelectValue placeholder="Select type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ATTACHMENT_TYPES.map((t) => (
-                        <SelectItem key={t} value={t}>
-                          {t}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label className="text-xs uppercase tracking-wide text-gray-500">Description</Label>
-                  <Input
-                    value={attachment.description}
-                    onChange={(e) => setAttachment(i, { description: e.target.value })}
-                    className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
-                    placeholder="e.g., CBC report from Aug 2026"
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addAttachment}
-            className="h-9 gap-1.5 rounded-lg border-blue-300 text-blue-600 hover:bg-blue-50"
-          >
-            <Plus className="size-3.5" />
-            Add Attachment
-          </Button>
-      </CardContent>
+        <CardContent>
+          <AttachmentUploader
+            files={form.attachments}
+            onChange={(files) => setForm((f) => ({ ...f, attachments: files }))}
+            description="Upload medical reports, lab reports, images, or PDF documents. Supports PDF, PNG, JPG up to 25 MB."
+          />
+        </CardContent>
       </Card>
 
       {/* SUMMARY */}
