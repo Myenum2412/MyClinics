@@ -137,6 +137,93 @@ const calculateAge = (dateOfBirth: string): number | null => {
   return age >= 0 ? age : null;
 };
 
+function FormField({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  error,
+  required = false,
+  placeholder,
+  helperText,
+  maxLength,
+  pattern,
+  disabled = false,
+  children,
+}: {
+  label: string;
+  name: string;
+  type?: string;
+  value?: string | number;
+  onChange?: (val: string) => void;
+  error?: string;
+  required?: boolean;
+  placeholder?: string;
+  helperText?: string;
+  maxLength?: number;
+  pattern?: string;
+  disabled?: boolean;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={name} className="text-sm font-medium text-gray-700">
+        {label}
+        {required && <span className="ml-1 text-red-500">*</span>}
+      </Label>
+      {children || (
+        <Input
+          id={name}
+          type={type}
+          value={value ?? ""}
+          onChange={(e) => onChange?.(e.target.value)}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          pattern={pattern}
+          disabled={disabled}
+          className={`border ${
+            error
+              ? "border-red-500 focus:ring-red-500"
+              : "border-blue-200 focus:ring-blue-400"
+          }`}
+        />
+      )}
+      {error && (
+        <div className="flex items-center gap-1.5 text-sm text-red-600">
+          <AlertCircle size={16} />
+          {error}
+        </div>
+      )}
+      {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
+    </div>
+  );
+}
+
+function SectionCard({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-semibold text-gray-800">
+          {title}
+        </CardTitle>
+        {description && (
+          <p className="mt-1 text-sm text-gray-600">{description}</p>
+        )}
+      </CardHeader>
+      <CardContent className="space-y-4">{children}</CardContent>
+    </Card>
+  );
+}
+
 export default function NewPatientPage() {
   const session = useRequireRole("doctor");
   const clinicId = session?.clinicId ?? "";
@@ -276,89 +363,6 @@ export default function NewPatientPage() {
       setErrors({});
     }
   };
-
-  const FormField = ({
-    label,
-    name,
-    type = "text",
-    value,
-    onChange,
-    error,
-    required = false,
-    placeholder,
-    helperText,
-    maxLength,
-    pattern,
-    disabled = false,
-    children,
-  }: {
-    label: string;
-    name: keyof PatientFormState | string;
-    type?: string;
-    value?: string | number;
-    onChange?: (val: string) => void;
-    error?: string;
-    required?: boolean;
-    placeholder?: string;
-    helperText?: string;
-    maxLength?: number;
-    pattern?: string;
-    disabled?: boolean;
-    children?: React.ReactNode;
-  }) => (
-    <div className="space-y-2">
-      <Label htmlFor={name} className="text-sm font-medium text-gray-700">
-        {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
-      </Label>
-      {children || (
-        <Input
-          id={name}
-          type={type}
-          value={value ?? ""}
-          onChange={(e) => onChange?.(e.target.value)}
-          placeholder={placeholder}
-          maxLength={maxLength}
-          pattern={pattern}
-          disabled={disabled}
-          className={`border ${
-            error
-              ? "border-red-500 focus:ring-red-500"
-              : "border-blue-200 focus:ring-blue-400"
-          }`}
-        />
-      )}
-      {error && (
-        <div className="flex items-center gap-1.5 text-sm text-red-600">
-          <AlertCircle size={16} />
-          {error}
-        </div>
-      )}
-      {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
-    </div>
-  );
-
-  const SectionCard = ({
-    title,
-    description,
-    children,
-  }: {
-    title: string;
-    description?: string;
-    children: React.ReactNode;
-  }) => (
-    <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold text-gray-800">
-          {title}
-        </CardTitle>
-        {description && (
-          <p className="mt-1 text-sm text-gray-600">{description}</p>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-4">{children}</CardContent>
-    </Card>
-  );
 
   return (
     <div className="min-h-screen bg-white">

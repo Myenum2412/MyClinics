@@ -117,10 +117,6 @@ export default function ClinicDashboardPage() {
     setSelectedIds(new Set());
   };
 
-  if (isPatient) {
-    return <PatientPortal clinicId={session?.clinicId ?? ""} />;
-  }
-
   // Filter today's appointments
   const filteredAppointments = appointments.filter((a) => {
     if (!q) return true;
@@ -206,6 +202,10 @@ export default function ClinicDashboardPage() {
       },
     ];
   }, [patients, appointments, bills]);
+
+  if (isPatient) {
+    return <PatientPortal clinicId={session?.clinicId ?? ""} />;
+  }
 
   return (
     <div className="flex flex-col gap-6">
