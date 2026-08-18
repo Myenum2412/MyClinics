@@ -27,8 +27,6 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
-  Trash2,
-  Upload,
   User,
   Camera,
   AlertCircle,
@@ -120,7 +118,8 @@ const DEPARTMENTS = [
   "Other",
 ];
 
-interface TimeSlot {
+interface DaySchedule {
+  day: string;
   start: string;
   end: string;
 }
@@ -151,8 +150,7 @@ interface DoctorFormState {
   status: string;
   allowLogin: string;
   // 4. Consultation schedule
-  days: string[];
-  timeSlots: TimeSlot[];
+  schedule: DaySchedule[];
   // 5. Additional information
   about: string;
   languages: string;
@@ -161,6 +159,8 @@ interface DoctorFormState {
 }
 
 const DEFAULT_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
+const DEFAULT_SLOT = { start: "09:00", end: "17:00" } as const;
 
 const EMPTY_FORM: DoctorFormState = {
   name: "",
@@ -184,8 +184,7 @@ const EMPTY_FORM: DoctorFormState = {
   role: "Doctor",
   status: "active",
   allowLogin: "yes",
-  days: [...DEFAULT_DAYS],
-  timeSlots: [{ start: "09:00", end: "17:00" }],
+  schedule: DEFAULT_DAYS.map((day) => ({ day, ...DEFAULT_SLOT })),
   about: "",
   languages: "",
   profileImage: null,
@@ -197,12 +196,18 @@ function doctorToForm(doctor: Doctor): DoctorFormState {
     doctor.scheduleDays && doctor.scheduleDays.length > 0
       ? doctor.scheduleDays
       : Array.from(new Set(doctor.schedule.map((s) => s.day)));
-  const slots: TimeSlot[] = [];
+  const slotForDay = new Map<string, { start: string; end: string }>();
   doctor.schedule.forEach((s) => {
-    if (!slots.some((x) => x.start === s.start && x.end === s.end)) {
-      slots.push({ start: s.start, end: s.end });
+    if (s.start && s.end && !slotForDay.has(s.day)) {
+      slotForDay.set(s.day, { start: s.start, end: s.end });
     }
   });
+  const schedule = days
+    .map((day) => ({ day, ...(slotForDay.get(day) ?? DEFAULT_SLOT) }))
+    .sort(
+      (a, b) =>
+        DAYS.findIndex((d) => d.value === a.day) - DAYS.findIndex((d) => d.value === b.day)
+    );
   return {
     name: doctor.name,
     gender: doctor.gender ?? "",
@@ -225,8 +230,8 @@ function doctorToForm(doctor: Doctor): DoctorFormState {
     role: "Doctor",
     status: doctor.status,
     allowLogin: doctor.allowLogin === false ? "no" : "yes",
-    days: days.length > 0 ? days : [...DEFAULT_DAYS],
-    timeSlots: slots.length > 0 ? slots : [{ start: "09:00", end: "17:00" }],
+    schedule:
+      schedule.length > 0 ? schedule : DEFAULT_DAYS.map((day) => ({ day, ...DEFAULT_SLOT })),
     about: doctor.about ?? "",
     languages: doctor.languages ?? "",
     profileImage: null,
@@ -323,14 +328,12 @@ export default function DoctorsPage() {
         username: form.username.trim() || null,
         allowLogin: form.allowLogin === "yes",
         profileImage: form.profileImage ? form.profileImage.name : null,
-        scheduleDays: form.days,
-        schedule: form.timeSlots
+        scheduleDays: form.schedule
           .filter((s) => s.start && s.end && s.end > s.start)
-          .map((s) => ({
-            day: form.days[0] || "Mon",
-            start: s.start,
-            end: s.end,
-          })),
+          .map((s) => s.day),
+        schedule: form.schedule
+          .filter((s) => s.start && s.end && s.end > s.start)
+          .map((s) => ({ day: s.day, start: s.start, end: s.end })),
       };
 
       if (editing) {
@@ -815,39 +818,32 @@ function DoctorForm({
   function toggleDay(day: string, checked: boolean) {
     setForm((f) => ({
       ...f,
-      days: checked
-        ? Array.from(new Set([...f.days, day]))
-        : f.days.filter((d) => d !== day),
+      schedule: checked
+        ? Array.from(
+            new Map([...f.schedule, { day, ...DEFAULT_SLOT }].map((s) => [s.day, s])).values()
+          )
+        : f.schedule.filter((s) => s.day !== day),
     }));
     setErrors((e) => {
       const next = { ...e };
       delete next.days;
+      delete next[`slot-${day}-start`];
+      delete next[`slot-${day}-end`];
       return next;
     });
   }
 
-  function setSlot(i: number, patch: Partial<TimeSlot>) {
+  function setDaySlot(day: string, patch: Partial<Pick<DaySchedule, "start" | "end">>) {
     setForm((f) => ({
       ...f,
-      timeSlots: f.timeSlots.map((s, idx) => (idx === i ? { ...s, ...patch } : s)),
+      schedule: f.schedule.map((s) => (s.day === day ? { ...s, ...patch } : s)),
     }));
     setErrors((e) => {
       const next = { ...e };
-      delete next[`slot-${i}-start`];
-      delete next[`slot-${i}-end`];
+      delete next[`slot-${day}-start`];
+      delete next[`slot-${day}-end`];
       return next;
     });
-  }
-
-  function addSlot() {
-    setForm((f) => ({ ...f, timeSlots: [...f.timeSlots, { start: "09:00", end: "17:00" }] }));
-  }
-
-  function removeSlot(i: number) {
-    setForm((f) => ({
-      ...f,
-      timeSlots: f.timeSlots.length > 1 ? f.timeSlots.filter((_, idx) => idx !== i) : f.timeSlots,
-    }));
   }
 
   function handleProfileImage(file: File | null) {
@@ -872,7 +868,7 @@ function DoctorForm({
   }
 
   const resetForm = () => {
-    setForm({ ...initial, timeSlots: initial.timeSlots.map((s) => ({ ...s })) });
+    setForm({ ...initial, schedule: initial.schedule.map((s) => ({ ...s })) });
     setErrors({});
     setShowPassword(false);
     setShowConfirmPassword(false);
@@ -905,13 +901,13 @@ function DoctorForm({
     if (!isEdit && !form.password) errs.password = "Password is required";
     else if (form.password && form.password.length < 8) errs.password = "Password must be at least 8 characters";
     if (form.password && form.confirmPassword !== form.password) errs.confirmPassword = "Passwords do not match";
-    if (form.days.length === 0) errs.days = "Select at least one day";
-    form.timeSlots.forEach((s, i) => {
-      if (!s.start) errs[`slot-${i}-start`] = "Start time is required";
-      else if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(s.start)) errs[`slot-${i}-start`] = "Invalid time";
-      if (!s.end) errs[`slot-${i}-end`] = "End time is required";
-      else if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(s.end)) errs[`slot-${i}-end`] = "Invalid time";
-      if (s.start && s.end && s.end <= s.start) errs[`slot-${i}-end`] = "End must be after start";
+    if (form.schedule.length === 0) errs.days = "Select at least one day";
+    form.schedule.forEach((s) => {
+      if (!s.start) errs[`slot-${s.day}-start`] = "Start time is required";
+      else if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(s.start)) errs[`slot-${s.day}-start`] = "Invalid time";
+      if (!s.end) errs[`slot-${s.day}-end`] = "End time is required";
+      else if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(s.end)) errs[`slot-${s.day}-end`] = "Invalid time";
+      if (s.start && s.end && s.end <= s.start) errs[`slot-${s.day}-end`] = "End must be after start";
     });
     return errs;
   };
@@ -972,6 +968,16 @@ function DoctorForm({
               Click the avatar to upload a profile photo (JPG, PNG — Max 2MB)
             </p>
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png"
+            className="hidden"
+            onChange={(e) => {
+              handleProfileImage(e.target.files?.[0] ?? null);
+              e.target.value = "";
+            }}
+          />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -1326,73 +1332,59 @@ function DoctorForm({
         </CardHeader>
         <CardContent className="space-y-4">
 
-        <div className="grid gap-5 lg:grid-cols-2">
-          <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-4">
-            <Label className="mb-3 block text-sm font-medium text-slate-700">Select Days</Label>
-            <div className="flex flex-wrap gap-x-6 gap-y-3">
-              {DAYS.map((day) => (
-                <label
+        <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-4">
+          <Label className="mb-3 block text-sm font-medium text-slate-700">
+            Consultation Schedule
+          </Label>
+          <div className="space-y-2">
+            {DAYS.map((day) => {
+              const slot = form.schedule.find((s) => s.day === day.value);
+              const selected = !!slot;
+              return (
+                <div
                   key={day.value}
-                  className="flex cursor-pointer items-center gap-2 text-sm text-slate-700"
+                  className={`flex flex-wrap items-center gap-3 rounded-lg border bg-white px-3 py-2 transition-colors ${
+                    selected ? "border-blue-200" : "border-slate-200 opacity-70"
+                  }`}
                 >
-                  <Checkbox
-                    checked={form.days.includes(day.value)}
-                    onCheckedChange={(checked) => toggleDay(day.value, !!checked)}
-                  />
-                  {day.label}
-                </label>
-              ))}
-            </div>
-            <FieldError message={errors.days} />
-          </div>
-
-          <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-4">
-            <Label className="mb-3 block text-sm font-medium text-slate-700">Default Time Slot</Label>
-            <div className="space-y-3">
-              {form.timeSlots.map((slot, i) => (
-                <div key={i} className="flex items-end gap-3">
-                  <div className="grid gap-2">
-                    <Label className="text-xs text-gray-500">Start time</Label>
-                    <TimePicker
-                      value={slot.start}
-                      onChange={(v) => setSlot(i, { start: v })}
+                  <label className="flex min-w-[150px] cursor-pointer items-center gap-2 text-sm font-medium text-slate-700">
+                    <Checkbox
+                      checked={selected}
+                      onCheckedChange={(checked) => toggleDay(day.value, !!checked)}
                     />
-                    <FieldError message={errors[`slot-${i}-start`]} />
-                  </div>
-                  <span className="pb-3 text-sm text-slate-500">to</span>
-                  <div className="grid gap-2">
-                    <Label className="text-xs text-gray-500">End time</Label>
-                    <TimePicker
-                      value={slot.end}
-                      onChange={(v) => setSlot(i, { end: v })}
-                    />
-                    <FieldError message={errors[`slot-${i}-end`]} />
-                  </div>
-                  {form.timeSlots.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeSlot(i)}
-                      aria-label="Remove time slot"
-                      className="mb-0.5 h-9 w-9 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    {day.label}
+                  </label>
+                  {selected ? (
+                    <>
+                      <div className="flex items-end gap-2">
+                        <div className="grid gap-1">
+                          <Label className="text-xs text-gray-500">Start time</Label>
+                          <TimePicker
+                            value={slot.start}
+                            onChange={(v) => setDaySlot(day.value, { start: v })}
+                          />
+                        </div>
+                        <span className="pb-2.5 text-sm text-slate-500">to</span>
+                        <div className="grid gap-1">
+                          <Label className="text-xs text-gray-500">End time</Label>
+                          <TimePicker
+                            value={slot.end}
+                            onChange={(v) => setDaySlot(day.value, { end: v })}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid gap-1">
+                        <FieldError message={errors[`slot-${day.value}-start`]} />
+                        <FieldError message={errors[`slot-${day.value}-end`]} />
+                      </div>
+                    </>
+                  ) : (
+                    <span className="text-xs text-slate-400">Unavailable</span>
                   )}
                 </div>
-              ))}
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addSlot}
-              className="mt-4 h-10 w-full rounded-lg border-blue-300 bg-white text-blue-600 hover:bg-blue-50"
-            >
-              <Plus className="mr-1.5 size-4" />
-              Add Another Time Slot
-            </Button>
+              );
+            })}
+            <FieldError message={errors.days} />
           </div>
         </div>
       </CardContent>
@@ -1430,41 +1422,6 @@ function DoctorForm({
               className="w-full resize-none rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-100"
             />
             <FieldError message={errors.languages} />
-          </div>
-
-          <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Profile Image</Label>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex h-[104px] flex-col items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-blue-200 bg-blue-50 text-blue-600 transition-colors hover:bg-blue-100"
-            >
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt="Profile preview"
-                  className="h-16 w-16 rounded-full object-cover"
-                />
-              ) : (
-                <Upload className="size-6" />
-              )}
-              <span className="text-sm font-medium">Upload Image</span>
-              <span className="text-xs text-gray-500">JPG, PNG (Max 2MB)</span>
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png"
-              className="hidden"
-              onChange={(e) => {
-                handleProfileImage(e.target.files?.[0] ?? null);
-                e.target.value = "";
-              }}
-            />
-            {form.profileImage && (
-              <p className="truncate text-xs text-gray-500">{form.profileImage.name}</p>
-            )}
-            <FieldError message={errors.profileImage} />
           </div>
 
           <div className="grid gap-2">

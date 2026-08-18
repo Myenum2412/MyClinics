@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, AlertCircle, CheckCircle } from "lucide-react";
+import { ChevronLeft, AlertCircle, CheckCircle, Camera, User } from "lucide-react";
 import Link from "next/link";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
@@ -240,6 +240,9 @@ export default function NewPatientPage() {
   const [form, setForm] = useState<PatientFormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Calculate age from date of birth
   const calculatedAge = useMemo(() => {
@@ -320,6 +323,27 @@ export default function NewPatientPage() {
     }
   };
 
+  // Handle avatar selection
+  const handleProfileImage = (file: File | null) => {
+    if (!file) return;
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      setErrors((e) => ({ ...e, profileImage: "Only JPG or PNG images are allowed" }));
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setErrors((e) => ({ ...e, profileImage: "Image must be smaller than 2MB" }));
+      return;
+    }
+    setErrors((e) => {
+      const next = { ...e };
+      delete next.profileImage;
+      return next;
+    });
+    setProfileImage(file);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
   // Handle save
   const handleSave = async () => {
     if (!validateForm()) {
@@ -369,6 +393,9 @@ export default function NewPatientPage() {
     ) {
       setForm(EMPTY_FORM);
       setErrors({});
+      setProfileImage(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
     }
   };
 
@@ -401,6 +428,51 @@ export default function NewPatientPage() {
         <div className="space-y-6">
           {/* 1. Patient Information */}
           <SectionCard title="1. Patient Information">
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                aria-label="Upload patient photo"
+                className="relative shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+              >
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Patient photo preview"
+                    className="size-20 rounded-full border border-blue-200 object-cover"
+                  />
+                ) : (
+                  <span className="flex size-20 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600">
+                    <User className="size-9" />
+                  </span>
+                )}
+                <span className="absolute -bottom-0.5 -right-0.5 flex size-7 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-600 shadow-sm">
+                  <Camera className="size-3.5" />
+                </span>
+              </button>
+              <div>
+                <p className="text-sm font-medium text-gray-700">Patient Photo</p>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  Click the avatar to upload a profile photo (JPG, PNG — Max 2MB)
+                </p>
+                {profileImage && (
+                  <p className="mt-1 truncate text-xs text-blue-600">{profileImage.name}</p>
+                )}
+                {errors.profileImage && (
+                  <p className="mt-1 text-xs text-red-600">{errors.profileImage}</p>
+                )}
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png"
+                className="hidden"
+                onChange={(e) => {
+                  handleProfileImage(e.target.files?.[0] ?? null);
+                  e.target.value = "";
+                }}
+              />
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 label="Full Name"
