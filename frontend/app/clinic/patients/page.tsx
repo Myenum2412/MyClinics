@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, useMemo } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
@@ -391,10 +392,12 @@ export default function PatientsPage() {
             description="Real-time analytics on patient demographics, engagement, and registrations."
             items={patientStats}
             action={
-              <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
-                <Plus className="size-4" />
-                New Patient
-              </Button>
+              <Link href="/clinic/patients/new">
+                <Button className="flex items-center gap-1.5 shadow-sm">
+                  <Plus className="size-4" />
+                  New Patient
+                </Button>
+              </Link>
             }
           />
         </div>
