@@ -282,7 +282,6 @@ export interface ClinicSettings {
   currency: string;
   timezone: string;
   receiptFooter: string | null;
-  soulMd: string | null;
   smsEnabled: boolean;
   emailNotifications: boolean;
   updatedAt: string;
@@ -402,8 +401,9 @@ async function request<T>(
   const url = `${API_BASE}${path}`;
   const method = (init.method ?? "GET").toUpperCase();
   const cacheKey = `${method} ${url}`;
+  const skipCache = init.cache === "no-store";
 
-  if (method === "GET") {
+  if (method === "GET" && !skipCache) {
     const hit = getCache.get(cacheKey);
     if (hit && hit.expires > Date.now()) return hit.data as T;
   } else {
@@ -428,7 +428,7 @@ async function request<T>(
     );
   }
 
-  if (method === "GET") {
+  if (method === "GET" && !skipCache) {
     getCache.set(cacheKey, { data, expires: Date.now() + GET_CACHE_TTL_MS });
     if (getCache.size > 200) {
       const now = Date.now();
@@ -971,6 +971,50 @@ export function updateClinicSettings(
     method: "PATCH",
     body: JSON.stringify(input),
   });
+}
+
+// ── Platform services (WhatsApp + soul.md) ───────────────────────────────
+
+export interface SoulRecord {
+  content: string;
+  fallbackReply: string;
+  version: number;
+}
+
+export function getSoul(): Promise<{ soul: SoulRecord }> {
+  return request("/api/soul");
+}
+
+export function updateSoul(
+  content: string,
+  fallbackReply?: string
+): Promise<{ soul: SoulRecord }> {
+  return request("/api/soul", {
+    method: "PUT",
+    body: JSON.stringify({ content, fallbackReply }),
+  });
+}
+
+export interface WhatsappSessionState {
+  connected: boolean;
+  stage:
+    | "idle"
+    | "qr"
+    | "authenticated"
+    | "ready"
+    | "disconnected"
+    | "error";
+  updatedAt: string;
+}
+
+export interface WhatsappSession {
+  state: WhatsappSessionState | null;
+  qr: { dataUrl: string; generatedAt: string } | null;
+}
+
+/** Live WhatsApp session state — bypasses the GET cache for polling. */
+export function getWhatsappSession(): Promise<WhatsappSession> {
+  return request("/api/whatsapp/session", { cache: "no-store" });
 }
 
 // ── Notifications ──────────────────────────────────────────────────────────
