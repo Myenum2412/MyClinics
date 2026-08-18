@@ -137,7 +137,7 @@ export function WorkspaceSidebar({
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader className="h-20 shrink-0 justify-center border-b bg-sidebar/40">
+      <SidebarHeader className="h-20 shrink-0 justify-center border-b bg-sidebar/40 group-data-[collapsible=icon]:h-20 group-data-[collapsible=icon]:justify-center">
         <div className="flex items-center gap-2.5 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-xl ring-1 ring-border shadow-sm">
             <Image
@@ -176,7 +176,7 @@ export function WorkspaceSidebar({
                     tooltip={item.title}
                     render={<a href={item.url} />}
                     data-active={active}
-                    className="h-11 rounded-lg text-[13.5px] font-medium"
+                    className="h-11 rounded-lg text-[13.5px] font-medium group-data-[collapsible=icon]:h-12!"
                   >
                     {item.icon}
                     <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
