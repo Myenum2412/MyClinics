@@ -694,46 +694,7 @@ export function deleteStaff(clinicId: string, staffId: string): Promise<{ ok: tr
   });
 }
 
-// ── Users ──────────────────────────────────────────────────────────────────
 
-export function listUsers(
-  clinicId: string,
-  query: { q?: string; role?: string; status?: string; limit?: number } = {}
-): Promise<PageResult<ClinicUser>> {
-  const params = new URLSearchParams();
-  if (query.q) params.set("q", query.q);
-  if (query.role) params.set("role", query.role);
-  if (query.status) params.set("status", query.status);
-  params.set("limit", String(query.limit ?? 100));
-  return request(tenantPath(clinicId, `/users?${params}`));
-}
-
-export function createUser(
-  clinicId: string,
-  input: Record<string, unknown>
-): Promise<ClinicUser> {
-  return request(tenantPath(clinicId, "/users"), {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
-export function updateUser(
-  clinicId: string,
-  userId: string,
-  input: Record<string, unknown>
-): Promise<ClinicUser> {
-  return request(tenantPath(clinicId, `/users/${userId}`), {
-    method: "PATCH",
-    body: JSON.stringify(input),
-  });
-}
-
-export function deleteUser(clinicId: string, userId: string): Promise<{ ok: true }> {
-  return request(tenantPath(clinicId, `/users/${userId}`), {
-    method: "DELETE",
-  });
-}
 
 // ── Medical records ────────────────────────────────────────────────────────
 

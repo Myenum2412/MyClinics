@@ -27,7 +27,6 @@ import {
   IdentificationIcon as StethoscopeIcon,
   UsersIcon,
   ClipboardDocumentListIcon as ClipboardListIcon,
-  ShieldCheckIcon as ShieldIcon,
   BellIcon,
   ClipboardDocumentCheckIcon as RecordsIcon,
 } from "@heroicons/react/24/outline";
@@ -91,12 +90,6 @@ const NAV_ITEMS: NavItem[] = [
     url: "/clinic/reports",
     icon: <FileTextIcon />,
     minRole: "staff",
-  },
-  {
-    title: "Users",
-    url: "/clinic/users",
-    icon: <ShieldIcon />,
-    minRole: "clinic_admin",
   },
   {
     title: "Audit Logs",

@@ -33,7 +33,6 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { sessionCan } from "@/hooks/use-clinic-session";
-import { listUsers } from "@/lib/clinic-api";
 
 const NOTIFICATION_TYPES = ["appointment", "bill", "report", "prescription", "general"];
 
@@ -218,21 +217,7 @@ function NotificationForm({
   const [body, setBody] = useState("");
   const [link, setLink] = useState("");
 
-  useEffect(() => {
-    if (!clinicId) return;
-    if (sessionCan(session, "clinic_admin")) {
-      listUsers(clinicId, { limit: 200 })
-        .then((res) =>
-          setUsers(
-            res.items.map((u) => ({
-              userId: u.userId,
-              label: `${u.name} (${u.role.replace("_", " ")})`,
-            }))
-          )
-        )
-        .catch(() => {});
-    }
-  }, [clinicId, session]);
+
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
