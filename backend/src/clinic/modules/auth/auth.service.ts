@@ -195,6 +195,73 @@ export class AuthService {
     };
   }
 
+  /**
+   * Google sign-in: links by verified email. The user (and their clinic)
+   * must already exist and be active — Google never creates accounts.
+   */
+  async loginWithGoogle(email: string, meta: { ip: string | null; userAgent: string | null }) {
+    const normalized = normalizeEmail(email);
+    const user = await this.repo.findUserByEmail(normalized);
+    if (!user) {
+      await writeAudit(this.db, null, {
+        action: "login_failed",
+        entity: "user",
+        entityId: null,
+        metadata: { email: normalized, reason: "google_no_account" },
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+      });
+      throw new UnauthorizedError("No clinic account matches this Google email");
+    }
+
+    if (user.status !== "active") {
+      throw new UnauthorizedError("This account has been deactivated");
+    }
+
+    if (user.role !== "platform_admin") {
+      const clinic = user.clinicId
+        ? await this.repo.findClinicByClinicId(user.clinicId)
+        : null;
+      if (!clinic || clinic.status !== "active") {
+        throw new UnauthorizedError("This clinic is not active");
+      }
+    }
+
+    await this.repo.touchLastLogin(user.userId);
+
+    const token = await this.issueToken({
+      userId: user.userId,
+      clinicId: user.clinicId,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+      doctorId: user.doctorId,
+      patientId: user.patientId,
+    });
+
+    await writeAudit(this.db, userToCtx(user), {
+      action: "login",
+      entity: "user",
+      entityId: user.userId,
+      metadata: { email: user.email, provider: "google" },
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
+
+    return {
+      userId: user.userId,
+      clinicId: user.clinicId,
+      clinicName: user.clinicId ? (await this.repo.findClinicByClinicId(user.clinicId))?.name ?? null : null,
+      role: user.role,
+      name: user.name,
+      email: user.email,
+      doctorId: user.doctorId,
+      patientId: user.patientId,
+      token,
+      tokenExpiresInSeconds: accessTokenTtlSeconds(),
+    };
+  }
+
   /** Re-issues a fresh token from a still-valid one (sliding expiry). */
   async refresh(token: string) {
     let verified: Awaited<ReturnType<typeof verifyClinicToken>>;

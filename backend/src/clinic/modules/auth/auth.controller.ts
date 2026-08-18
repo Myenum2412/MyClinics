@@ -8,6 +8,17 @@ import {
 import { requestMeta } from "@/clinic/core/context";
 import { loginSchema, refreshSchema, signupSchema } from "@/clinic/modules/auth/auth.dto";
 import { AuthService } from "@/clinic/modules/auth/auth.service";
+import {
+  buildAuthorizationUrl,
+  consumeStateToken,
+  exchangeCodeForTokens,
+  fetchGoogleUserInfo,
+  frontendBaseUrl,
+  googleConfig,
+  issueStateToken,
+} from "@/clinic/modules/auth/google-oauth";
+
+const GOOGLE_CALLBACK_PATH = "/api/clinics/auth/google/callback";
 
 export class AuthController {
   async signup(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
@@ -53,5 +64,64 @@ export class AuthController {
       doctorId: ctx.doctorId,
       patientId: ctx.patientId,
     });
+  }
+
+  /** Starts Google OAuth: redirects the browser to Google's consent screen. */
+  async googleLogin(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const config = googleConfig();
+    if (!config) {
+      return reply.redirect(`${frontendBaseUrl(request)}/login?error=google_unavailable`);
+    }
+    const redirectUri = `${frontendBaseUrl(request)}${GOOGLE_CALLBACK_PATH}`;
+    return reply.redirect(
+      buildAuthorizationUrl(config.clientId, redirectUri, issueStateToken())
+    );
+  }
+
+  /** Google redirects back here with `?code=...&state=...`. */
+  async googleCallback(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const base = frontendBaseUrl(request);
+    const fail = (error: string) => reply.redirect(`${base}/login?error=${error}`);
+
+    const config = googleConfig();
+    if (!config) return fail("google_unavailable");
+
+    const query = request.query as { code?: string; state?: string; error?: string };
+    if (query.error) return fail("google_denied");
+    if (typeof query.code !== "string" || !query.code) return fail("google_callback");
+    if (typeof query.state !== "string" || !consumeStateToken(query.state)) {
+      return fail("google_state");
+    }
+
+    const redirectUri = `${base}${GOOGLE_CALLBACK_PATH}`;
+    let email: string;
+    try {
+      const tokens = await exchangeCodeForTokens(
+        config.clientId,
+        config.clientSecret,
+        query.code,
+        redirectUri
+      );
+      const info = await fetchGoogleUserInfo(tokens.access_token);
+      if (!info.email || info.email_verified !== true) {
+        return fail("google_email_unverified");
+      }
+      email = info.email;
+    } catch {
+      return fail("google_exchange");
+    }
+
+    try {
+      const db = await getDb();
+      const { ip, userAgent } = requestMeta(request);
+      const result = await new AuthService(db).loginWithGoogle(email, { ip, userAgent });
+      const expires = result.tokenExpiresInSeconds ?? 24 * 3600;
+      return reply.redirect(
+        `${base}/login?google_token=${encodeURIComponent(result.token)}&google_expires=${expires}`
+      );
+    } catch (error) {
+      if (error instanceof UnauthorizedError) return fail("google_no_account");
+      throw error;
+    }
   }
 }

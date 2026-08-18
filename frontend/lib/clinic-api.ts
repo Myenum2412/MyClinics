@@ -345,6 +345,11 @@ export function clearSession(): void {
   document.cookie = `${CLINIC_TOKEN_KEY}=; path=/; max-age=0; samesite=lax`;
 }
 
+/** Stores an externally issued session token (e.g. Google OAuth callback). */
+export function storeSessionToken(token: string, ttlSeconds: number): void {
+  setToken(token, ttlSeconds > 0 ? ttlSeconds : 24 * 3600);
+}
+
 // ── Request core ───────────────────────────────────────────────────────────
 
 async function request<T>(

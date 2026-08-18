@@ -33,6 +33,14 @@ export function registerPublicAuthRoutes(app: FastifyInstance): void {
     { preHandler: limitAuth },
     async (request, reply) => controller.refresh(request, reply)
   );
+
+  app.get("/api/clinics/auth/google", async (request, reply) =>
+    controller.googleLogin(request, reply)
+  );
+
+  app.get("/api/clinics/auth/google/callback", async (request, reply) =>
+    controller.googleCallback(request, reply)
+  );
 }
 
 export function registerProtectedAuthRoutes(app: FastifyInstance): void {
