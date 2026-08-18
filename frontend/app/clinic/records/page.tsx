@@ -17,8 +17,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Download } from "lucide-react";
+import { Plus, Search, Download, Columns, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import StatsGeneric from "@/components/stats-generic";
+
+const COLUMN_LABELS: Record<string, string> = {
+  select: "Select",
+  visitDate: "Visit Date",
+  patient: "Patient",
+  diagnosis: "Diagnosis",
+  symptoms: "Symptoms",
+  treatment: "Treatment",
+};
 import {
   Dialog,
   DialogContent,
@@ -125,6 +142,15 @@ export default function RecordsPage() {
     setCurrentPage(1);
     setSelectedIds(new Set());
   }, [q]);
+
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+    select: true,
+    visitDate: true,
+    patient: true,
+    diagnosis: true,
+    symptoms: true,
+    treatment: true,
+  });
 
   async function handleSave(form: RecordFormState) {
     setSaving(true);
@@ -340,21 +366,50 @@ export default function RecordsPage() {
         </div>
       )}
 
-      {/* Main card containing listing */}
       <Card className="border-border shadow-sm">
         <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-xl font-semibold text-foreground">
-              Medical Records Listing
-            </CardTitle>
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Search records..."
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                className="pl-9 h-9"
-              />
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-semibold text-foreground">
+                Medical Records Listing
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Search and manage client consultation history, diagnosis reports, and prescribed treatments.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search records..."
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  className="pl-9 h-9"
+                />
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger render={
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5">
+                    <Columns className="size-4" />
+                    Columns
+                  </Button>
+                } />
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {Object.keys(COLUMN_LABELS).map((colKey) => (
+                    <DropdownMenuCheckboxItem
+                      key={colKey}
+                      checked={visibleColumns[colKey]}
+                      onCheckedChange={(checked) =>
+                        setVisibleColumns((prev) => ({ ...prev, [colKey]: !!checked }))
+                      }
+                    >
+                      {COLUMN_LABELS[colKey]}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>
@@ -374,18 +429,20 @@ export default function RecordsPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="w-12 pl-6">
-                      <Checkbox
-                        checked={selectedIds.size === paginatedItems.length && paginatedItems.length > 0}
-                        onCheckedChange={toggleSelectAll}
-                        aria-label="Select all"
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground">Visit date</TableHead>
-                    <TableHead className="font-semibold text-foreground">Patient</TableHead>
-                    <TableHead className="font-semibold text-foreground">Diagnosis</TableHead>
-                    <TableHead className="font-semibold text-foreground">Symptoms</TableHead>
-                    <TableHead className="font-semibold text-foreground">Treatment</TableHead>
+                    {visibleColumns.select && (
+                      <TableHead className="w-12 pl-6">
+                        <Checkbox
+                          checked={selectedIds.size === paginatedItems.length && paginatedItems.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                          aria-label="Select all"
+                        />
+                      </TableHead>
+                    )}
+                    {visibleColumns.visitDate && <TableHead className="font-semibold text-foreground">Visit date</TableHead>}
+                    {visibleColumns.patient && <TableHead className="font-semibold text-foreground">Patient</TableHead>}
+                    {visibleColumns.diagnosis && <TableHead className="font-semibold text-foreground">Diagnosis</TableHead>}
+                    {visibleColumns.symptoms && <TableHead className="font-semibold text-foreground">Symptoms</TableHead>}
+                    {visibleColumns.treatment && <TableHead className="font-semibold text-foreground">Treatment</TableHead>}
                     <TableHead className="text-right pr-6 font-semibold text-foreground">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -393,22 +450,26 @@ export default function RecordsPage() {
                   {paginatedItems.map((r) => (
                     <TableRow
                       key={r.recordId}
-                      className="hover:bg-muted/30 border-b border-border last:border-0"
+                      className={`hover:bg-muted/30 border-b border-border last:border-0 ${selectedIds.has(r.recordId) ? "bg-muted/30" : ""}`}
                     >
-                      <TableCell className="pl-6">
-                        <Checkbox
-                          checked={selectedIds.has(r.recordId)}
-                          onCheckedChange={() => toggleSelectRow(r.recordId)}
-                          aria-label={`Select record for ${patientLookup[r.patientId] || r.patientId}`}
-                        />
-                      </TableCell>
-                      <TableCell>{formatDate(r.visitDate)}</TableCell>
-                      <TableCell className="font-medium text-foreground">
-                        {patientLookup[r.patientId] || r.patientId}
-                      </TableCell>
-                      <TableCell className="max-w-48 truncate font-medium text-foreground">{r.diagnosis}</TableCell>
-                      <TableCell className="max-w-40 truncate">{r.symptoms ?? "—"}</TableCell>
-                      <TableCell className="max-w-40 truncate">{r.treatment ?? "—"}</TableCell>
+                      {visibleColumns.select && (
+                        <TableCell className="pl-6">
+                          <Checkbox
+                            checked={selectedIds.has(r.recordId)}
+                            onCheckedChange={() => toggleSelectRow(r.recordId)}
+                            aria-label={`Select record for ${patientLookup[r.patientId] || r.patientId}`}
+                          />
+                        </TableCell>
+                      )}
+                      {visibleColumns.visitDate && <TableCell className="text-muted-foreground">{formatDate(r.visitDate)}</TableCell>}
+                      {visibleColumns.patient && (
+                        <TableCell className="font-medium text-foreground">
+                          {patientLookup[r.patientId] || r.patientId}
+                        </TableCell>
+                      )}
+                      {visibleColumns.diagnosis && <TableCell className="max-w-48 truncate font-medium text-foreground">{r.diagnosis}</TableCell>}
+                      {visibleColumns.symptoms && <TableCell className="max-w-40 truncate text-muted-foreground">{r.symptoms ?? "—"}</TableCell>}
+                      {visibleColumns.treatment && <TableCell className="max-w-40 truncate text-muted-foreground">{r.treatment ?? "—"}</TableCell>}
                       <TableCell className="text-right pr-6">
                         <div className="flex justify-end gap-2">
                           <Dialog>
@@ -454,15 +515,28 @@ export default function RecordsPage() {
               {/* Pagination Controls */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/10">
-                  <div className="flex flex-1 justify-between sm:hidden">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Showing <span className="font-medium">{filteredItems.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> to{" "}
+                      <span className="font-medium">
+                        {Math.min(currentPage * pageSize, filteredItems.length)}
+                      </span>{" "}
+                      of <span className="font-medium">{filteredItems.length}</span> results
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
                     >
+                      <ChevronLeft className="size-4 mr-1" />
                       Previous
                     </Button>
+                    <span className="text-xs text-muted-foreground">
+                      Page {currentPage} of {totalPages}
+                    </span>
                     <Button
                       variant="outline"
                       size="sm"
@@ -470,39 +544,8 @@ export default function RecordsPage() {
                       disabled={currentPage === totalPages}
                     >
                       Next
+                      <ChevronRight className="size-4 ml-1" />
                     </Button>
-                  </div>
-                  <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Showing <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to{" "}
-                        <span className="font-medium">
-                          {Math.min(currentPage * pageSize, filteredItems.length)}
-                        </span>{" "}
-                        of <span className="font-medium">{filteredItems.length}</span> results
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                      >
-                        Previous
-                      </Button>
-                      <span className="text-xs text-muted-foreground">
-                        Page {currentPage} of {totalPages}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                      >
-                        Next
-                      </Button>
-                    </div>
                   </div>
                 </div>
               )}

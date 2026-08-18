@@ -16,8 +16,26 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Download, Trash } from "lucide-react";
+import { Plus, Search, Download, Trash, Columns, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import StatsGeneric from "@/components/stats-generic";
+
+const COLUMN_LABELS: Record<string, string> = {
+  select: "Select",
+  name: "Name",
+  specialization: "Specialization",
+  phone: "Phone",
+  email: "Email",
+  fee: "Consultation Fee",
+  status: "Status",
+};
 import {
   Dialog,
   DialogContent,
@@ -115,6 +133,16 @@ export default function DoctorsPage() {
     setCurrentPage(1);
     setSelectedIds(new Set());
   }, [q]);
+
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+    select: true,
+    name: true,
+    specialization: true,
+    phone: true,
+    email: true,
+    fee: true,
+    status: true,
+  });
 
   async function handleSave(form: DoctorFormState) {
     setSaving(true);
@@ -320,17 +348,47 @@ export default function DoctorsPage() {
       <Card className="border-border shadow-sm">
         <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardTitle className="text-xl font-semibold text-foreground">
-              Doctors Listing
-            </CardTitle>
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Search doctors..."
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                className="pl-9 h-9"
-              />
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-semibold text-foreground">
+                Doctors Listing
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Manage medical practitioners, consultation hours, fees, and system access.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search doctors..."
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  className="pl-9 h-9"
+                />
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger render={
+                  <Button variant="outline" size="sm" className="h-9 gap-1.5">
+                    <Columns className="size-4" />
+                    Columns
+                  </Button>
+                } />
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {Object.keys(COLUMN_LABELS).map((colKey) => (
+                    <DropdownMenuCheckboxItem
+                      key={colKey}
+                      checked={visibleColumns[colKey]}
+                      onCheckedChange={(checked) =>
+                        setVisibleColumns((prev) => ({ ...prev, [colKey]: !!checked }))
+                      }
+                    >
+                      {COLUMN_LABELS[colKey]}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>
@@ -350,19 +408,21 @@ export default function DoctorsPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40 hover:bg-muted/40">
-                    <TableHead className="w-12 pl-6">
-                      <Checkbox
-                        checked={selectedIds.size === paginatedItems.length && paginatedItems.length > 0}
-                        onCheckedChange={toggleSelectAll}
-                        aria-label="Select all"
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground">Name</TableHead>
-                    <TableHead className="font-semibold text-foreground">Specialization</TableHead>
-                    <TableHead className="font-semibold text-foreground">Phone</TableHead>
-                    <TableHead className="font-semibold text-foreground">Email</TableHead>
-                    <TableHead className="font-semibold text-foreground">Fee</TableHead>
-                    <TableHead className="font-semibold text-foreground">Status</TableHead>
+                    {visibleColumns.select && (
+                      <TableHead className="w-12 pl-6">
+                        <Checkbox
+                          checked={selectedIds.size === paginatedItems.length && paginatedItems.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                          aria-label="Select all"
+                        />
+                      </TableHead>
+                    )}
+                    {visibleColumns.name && <TableHead className="font-semibold text-foreground">Name</TableHead>}
+                    {visibleColumns.specialization && <TableHead className="font-semibold text-foreground">Specialization</TableHead>}
+                    {visibleColumns.phone && <TableHead className="font-semibold text-foreground">Phone</TableHead>}
+                    {visibleColumns.email && <TableHead className="font-semibold text-foreground">Email</TableHead>}
+                    {visibleColumns.fee && <TableHead className="font-semibold text-foreground">Fee</TableHead>}
+                    {visibleColumns.status && <TableHead className="font-semibold text-foreground">Status</TableHead>}
                     {canManage && <TableHead className="text-right pr-6 font-semibold text-foreground">Actions</TableHead>}
                   </TableRow>
                 </TableHeader>
@@ -370,31 +430,36 @@ export default function DoctorsPage() {
                   {paginatedItems.map((d) => (
                     <TableRow
                       key={d.doctorId}
-                      className="hover:bg-muted/30 border-b border-border last:border-0"
+                      className={`hover:bg-muted/30 border-b border-border last:border-0 ${selectedIds.has(d.doctorId) ? "bg-muted/30" : ""}`}
                     >
-                      <TableCell className="pl-6">
-                        <Checkbox
-                          checked={selectedIds.has(d.doctorId)}
-                          onCheckedChange={() => toggleSelectRow(d.doctorId)}
-                          aria-label={`Select ${d.name}`}
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium text-foreground">{d.name}</TableCell>
-                      <TableCell>{d.specialization}</TableCell>
-                      <TableCell>{d.phone ?? "—"}</TableCell>
-                      <TableCell>{d.email ?? "—"}</TableCell>
-                      <TableCell>{d.fee != null ? `₹${d.fee}` : "—"}</TableCell>
-                      <TableCell>
-                        <Badge
-                          className={
-                            d.status === "active"
-                              ? "bg-green-100 text-green-700 hover:bg-green-100 border-0"
-                              : "bg-slate-200 text-slate-600 hover:bg-slate-200 border-0"
-                          }
-                        >
-                          {d.status}
-                        </Badge>
-                      </TableCell>
+                      {visibleColumns.select && (
+                        <TableCell className="pl-6">
+                          <Checkbox
+                            checked={selectedIds.has(d.doctorId)}
+                            onCheckedChange={() => toggleSelectRow(d.doctorId)}
+                            aria-label={`Select ${d.name}`}
+                          />
+                        </TableCell>
+                      )}
+                      {visibleColumns.name && <TableCell className="font-medium text-foreground">{d.name}</TableCell>}
+                      {visibleColumns.specialization && <TableCell className="text-muted-foreground">{d.specialization}</TableCell>}
+                      {visibleColumns.phone && <TableCell className="text-muted-foreground">{d.phone ?? "—"}</TableCell>}
+                      {visibleColumns.email && <TableCell className="text-muted-foreground">{d.email ?? "—"}</TableCell>}
+                      {visibleColumns.fee && <TableCell className="text-muted-foreground font-medium">{d.fee != null ? `₹${d.fee}` : "—"}</TableCell>}
+                      {visibleColumns.status && (
+                        <TableCell>
+                          <Badge
+                            className={
+                              d.status === "active"
+                                ? "bg-green-50 text-green-700 hover:bg-green-50 border-green-200"
+                                : "bg-slate-50 text-slate-700 hover:bg-slate-50 border-slate-200"
+                            }
+                            variant="outline"
+                          >
+                            {d.status}
+                          </Badge>
+                        </TableCell>
+                      )}
                       {canManage && (
                         <TableCell className="text-right pr-6">
                           <div className="flex justify-end gap-2">
@@ -441,15 +506,28 @@ export default function DoctorsPage() {
               {/* Pagination Controls */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/10">
-                  <div className="flex flex-1 justify-between sm:hidden">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Showing <span className="font-medium">{filteredItems.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> to{" "}
+                      <span className="font-medium">
+                        {Math.min(currentPage * pageSize, filteredItems.length)}
+                      </span>{" "}
+                      of <span className="font-medium">{filteredItems.length}</span> results
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
                     >
+                      <ChevronLeft className="size-4 mr-1" />
                       Previous
                     </Button>
+                    <span className="text-xs text-muted-foreground">
+                      Page {currentPage} of {totalPages}
+                    </span>
                     <Button
                       variant="outline"
                       size="sm"
@@ -457,39 +535,8 @@ export default function DoctorsPage() {
                       disabled={currentPage === totalPages}
                     >
                       Next
+                      <ChevronRight className="size-4 ml-1" />
                     </Button>
-                  </div>
-                  <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Showing <span className="font-medium">{(currentPage - 1) * pageSize + 1}</span> to{" "}
-                        <span className="font-medium">
-                          {Math.min(currentPage * pageSize, filteredItems.length)}
-                        </span>{" "}
-                        of <span className="font-medium">{filteredItems.length}</span> results
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                      >
-                        Previous
-                      </Button>
-                      <span className="text-xs text-muted-foreground">
-                        Page {currentPage} of {totalPages}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                        disabled={currentPage === totalPages}
-                      >
-                        Next
-                      </Button>
-                    </div>
                   </div>
                 </div>
               )}
