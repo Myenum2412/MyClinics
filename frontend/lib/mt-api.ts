@@ -6,8 +6,6 @@
  * `POST /api/mt/auth/login`. The token embeds clinicId + role and is stored
  * in localStorage so the tenant boundary travels with every request.
  */
-import { BACKEND_URL } from "@/lib/server-api";
-
 export const MT_TOKEN_KEY = "mt_token";
 
 export interface MtTokenResponse {
@@ -55,7 +53,7 @@ async function request<T>(
   const token = typeof window !== "undefined" ? localStorage.getItem(MT_TOKEN_KEY) : null;
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${BACKEND_URL}${path}`, {
+  const res = await fetch(path, {
     ...init,
     headers,
     cache: "no-store",
