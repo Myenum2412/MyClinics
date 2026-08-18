@@ -1,4 +1,5 @@
 import type { Db } from "mongodb";
+import { ensureMultiTenantIndexes } from "@/mt/indexes";
 
 /**
  * Idempotent index creation, run once at server/worker startup.
@@ -6,6 +7,7 @@ import type { Db } from "mongodb";
  * lookups, billing/report listing, and per-customer AI/WhatsApp data.
  */
 export async function ensureIndexes(db: Db): Promise<void> {
+  await ensureMultiTenantIndexes(db);
   const appointments = db.collection("appointments");
   const patients = db.collection("patients");
   const users = db.collection("users");

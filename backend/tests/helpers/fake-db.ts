@@ -183,16 +183,16 @@ export function createFakeDb(seed: Record<string, any[]> = {}): { db: Db; dump: 
           const target = docs.find((d) => matches(d, filter));
           if (target) {
             applyUpdate(target, update);
-            return { modifiedCount: 1, upsertedCount: 0 };
+            return { matchedCount: 1, modifiedCount: 1, upsertedCount: 0 };
           }
           if (opts.upsert) {
             const _id = nextId();
             const created: Doc = { _id };
             applyUpdate(created, update);
             docs.push(created);
-            return { modifiedCount: 0, upsertedCount: 1, upsertedId: _id };
+            return { matchedCount: 0, modifiedCount: 0, upsertedCount: 1, upsertedId: _id };
           }
-          return { modifiedCount: 0, upsertedCount: 0 };
+          return { matchedCount: 0, modifiedCount: 0, upsertedCount: 0 };
         },
         async findOneAndUpdate(
           filter: Filter,

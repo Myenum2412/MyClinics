@@ -30,6 +30,8 @@ import { registerKnowledgeRoutes } from "@/routes/knowledge";
 import { registerWhatsappSessionRoutes } from "@/routes/whatsapp-session";
 import { registerCronRoutes } from "@/routes/cron-reminders";
 import { registerAiRoutes } from "@/routes/ai";
+import { registerMultiTenantApi } from "@/mt";
+import { AppError } from "@/mt/core/errors";
 
 export const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 
@@ -81,6 +83,9 @@ export function buildServer() {
   void app.register(registerCronRoutes);
   void app.register(registerAiRoutes);
 
+  // Multi-tenant API — a fully isolated tenant scope for clinics.
+  void app.register(registerMultiTenantApi);
+
   app.setNotFoundHandler((_request, reply) => {
     reply.code(404).send({ error: "Not found" });
   });
@@ -94,6 +99,12 @@ export function buildServer() {
       // Invalid JSON body from Fastify's parser → keep the previous 400 contract.
       if (error.statusCode === 400) {
         return reply.code(400).send({ error: "Invalid JSON body" });
+      }
+      // Multi-tenant domain errors (validation, isolation, ownership).
+      if (error instanceof AppError) {
+        return reply
+          .code(error.statusCode)
+          .send({ error: error.message, code: error.code });
       }
       if (error.statusCode) {
         return reply.code(error.statusCode).send({ error: error.message });

@@ -101,6 +101,11 @@ MONGODB_URI=mongodb+srv://<user>:<pass>@<cluster>/myclinic
 AUTH_SECRET=<generate a long random string>
 AI_INTERNAL_TOKEN=<64-char random string, shared by web server and worker>
 
+# Multi-tenant API (see "Multi-tenant Clinic API" below). Falls back to AUTH_SECRET when unset.
+MT_JWT_SECRET=<generate another long random string>
+# Optional: access token lifetime in hours (default 24)
+MT_JWT_TTL_HOURS=24
+
 # Optional. Frontend proxies /api/* here (default http://localhost:3100)
 BACKEND_URL=http://localhost:3100
 
@@ -149,6 +154,82 @@ WhatsApp bot:
    to `WHATSAPP_SESSION_PATH\qr.png` (the worker refreshes it until scanned).
 3. The worker log should show `whatsapp connected` / `ready`, and status is written to
    `status.json` in the session folder.
+
+## Multi-tenant Clinic API (`/api/mt/*`)
+
+An enterprise-grade multi-tenant layer where **every clinic is a tenant** and strict
+isolation is enforced at every layer. Sign up at `/signup/clinic` (or
+`POST /api/mt/auth/signup`) to create a clinic — the backend generates the **Clinic ID**
+(`clc_...`), stamps it on the clinic + admin user, and returns a JWT embedding
+`clinicId` + `role` + `patientId`.
+
+### Tenant isolation model
+
+- Roles: `clinic_admin` (full control) → `staff` (clinical data) → `patient` (own data only).
+- Every collection carries `clinicId`: `mt_clinics`, `mt_users`, `mt_patients`,
+  `mt_appointments`, `mt_medical_records`, `mt_prescriptions`, `mt_audit_logs`.
+- The **tenant-scope middleware** (`backend/src/mt/core/tenant-scope.ts`) verifies the
+  JWT, re-validates the user + clinic against the DB (30s cache), and injects
+  `request.tenant` into every handler. No handler runs without it.
+- The **tenant-scoped repository base** (`backend/src/mt/core/tenant-repository.ts`)
+  merges `clinicId` into every query automatically; callers cannot pass their own
+  `clinicId` (throws), and the raw collection is never exposed.
+- Patient routes verify **ownership**: a patient's `patientId` claim must match the
+  resource — mismatches return 404 so other patients' existence is never leaked.
+- **Audit logs** record `create` / `update` / `delete` / `access` / `login` events with
+  actor, clinic, entity, IP and user-agent (`mt_audit_logs`).
+
+### Folder structure (`backend/src/mt/`)
+
+```
+mt/
+├── core/                      # Tenant foundation
+│   ├── errors.ts              # AppError hierarchy (401/403/404/409/400)
+│   ├── ids.ts                 # clinicId / userId / patientId generators
+│   ├── roles.ts               # clinic_admin > staff > patient
+│   ├── collections.ts         # MT collection names
+│   ├── jwt.ts                 # HS256 JWT: clinicId + role + patientId claims
+│   ├── tenant-context.ts      # TenantContext + request.tenant decoration
+│   ├── tenant-scope.ts        # Middleware: JWT → tenant, role guards, ownership guard
+│   ├── tenant-repository.ts   # Base repo — clinicId injected into every query
+│   ├── audit.ts               # Audit entry writer (never throws)
+│   └── pagination.ts
+├── modules/                   # Clean architecture per domain
+│   ├── auth/                  # signup (Clinic ID), login, refresh, me
+│   ├── clinics/               # tenant profile
+│   ├── users/                 # staff/patient accounts
+│   ├── patients/              # create + get-by-id with full tenant safety
+│   ├── appointments/
+│   ├── medical-records/
+│   ├── prescriptions/
+│   └── audit-logs/            # admin queries + patient transparency
+│       # each module: dto.ts (Zod) · schema.ts · repository.ts · service.ts
+│       #                 controller.ts · routes.ts
+├── indexes.ts                 # tenant-scoped indexes (unique on clinicId pairs)
+└── index.ts                   # plugin wiring (public + scoped routers)
+```
+
+### API surface
+
+| Method | Route | Access |
+| --- | --- | --- |
+| POST | `/api/mt/auth/signup` | public — creates clinic + Clinic ID |
+| POST | `/api/mt/auth/login` | public |
+| POST | `/api/mt/auth/refresh`, GET `/api/mt/auth/me` | authenticated |
+| GET/PATCH | `/api/mt/clinics/me` | all / admin |
+| POST | `/api/mt/users` | staff+ (staff creation: admin) |
+| GET | `/api/mt/users`, `/api/mt/users/:userId` | staff+ |
+| POST | `/api/mt/patients` | staff+ |
+| GET | `/api/mt/patients`, `/api/mt/patients/:patientId` | staff (clinic-wide) / patient (own) |
+| PATCH/DELETE | `/api/mt/patients/:patientId` | staff / admin (patient: own only) |
+| POST/GET | `/api/mt/appointments[/:appointmentId]` | staff+ (patient: own) |
+| POST | `/api/mt/medical-records`, `/api/mt/prescriptions` | staff+ |
+| GET | `/api/mt/medical-records/patient/:patientId`, `/api/mt/prescriptions/patient/:patientId` | staff / patient (own) |
+| GET | `/api/mt/audit-logs` | admin |
+| GET | `/api/mt/audit-logs/patient/:patientId` | admin / patient (own) |
+
+Auth via `Authorization: Bearer <token>` (or `mt_token` cookie). Token lifetime:
+`MT_JWT_TTL_HOURS` (default 24h). Tests live in `backend/tests/mt/`.
 
 ## WhatsApp AI assistant
 
