@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 
 export function SignupForm({
   className,
-  callbackUrl = "/doctor",
+  callbackUrl = "/patient",
   ...props
 }: React.ComponentProps<"div"> & { callbackUrl?: string }) {
   const router = useRouter();
@@ -35,7 +35,7 @@ export function SignupForm({
     const res = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, role: "doctor" }),
+      body: JSON.stringify({ name, email, password, role: "patient" }),
     });
     const data = await res.json();
 

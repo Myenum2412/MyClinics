@@ -43,6 +43,38 @@ export function registerAuthRoutes(app: FastifyInstance): void {
         createdAt: new Date(),
       });
 
+      // When a patient self-registers, create a matching patients record so that
+      // loadPatientData can find them by email and scope all data to this user only.
+      if (role === "patient") {
+        await db.collection("patients").insertOne({
+          fullName: String(name),
+          mobile: null,
+          secondaryMobile: null,
+          age: null,
+          gender: null,
+          email: String(email).toLowerCase(),
+          whatsapp: null,
+          bloodGroup: null,
+          dateOfBirth: null,
+          weight: null,
+          height: null,
+          guardianName: null,
+          emergencyContactName: null,
+          emergencyContactPhone: null,
+          maritalStatus: null,
+          smoking: null,
+          alcohol: null,
+          address: null,
+          city: null,
+          pincode: null,
+          occupation: null,
+          medicalHistory: null,
+          allergies: null,
+          userId: result.insertedId,
+          createdAt: new Date(),
+        });
+      }
+
       return reply.code(201).send({
         user: {
           id: result.insertedId.toString(),
