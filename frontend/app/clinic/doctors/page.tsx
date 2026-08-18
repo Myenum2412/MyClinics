@@ -280,6 +280,92 @@ export default function DoctorsPage() {
     });
   };
 
+  if (creating) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreating(false)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Doctors
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Add Doctor</h1>
+            <p className="text-sm text-muted-foreground">Register a new doctor at this clinic.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Doctor Information</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <DoctorForm
+              clinicId={clinicId}
+              initial={EMPTY_FORM}
+              saving={saving}
+              onSave={async (form) => {
+                await handleSave(form);
+                setCreating(false);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditing(null)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Doctors
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Edit Doctor</h1>
+            <p className="text-sm text-muted-foreground">Modify doctor specialization, fee, schedule, or qualifications.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Doctor Information</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <DoctorForm
+              clinicId={clinicId}
+              initial={{
+                name: editing.name,
+                specialization: editing.specialization,
+                licenseNo: editing.licenseNo ?? "",
+                qualification: editing.qualification ?? "",
+                phone: editing.phone ?? "",
+                email: editing.email ?? "",
+                fee: editing.fee != null ? String(editing.fee) : "",
+                status: editing.status,
+                schedule: editing.schedule ?? [],
+              }}
+              saving={saving}
+              onSave={async (form) => {
+                await handleSave(form);
+                setEditing(null);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Stats Section with action slot */}
@@ -291,23 +377,10 @@ export default function DoctorsPage() {
             items={doctorStats}
             action={
               canManage && (
-                <Dialog open={creating} onOpenChange={setCreating}>
-                  <DialogTrigger render={
-                    <Button className="flex items-center gap-1.5 shadow-sm">
-                      <Plus className="size-4" />
-                      Add Doctor
-                    </Button>
-                  } />
-                  <DialogContent className="max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle>Add Doctor</DialogTitle>
-                      <DialogDescription>
-                        Register a doctor at this clinic.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DoctorForm clinicId={clinicId} initial={EMPTY_FORM} saving={saving} onSave={handleSave} />
-                  </DialogContent>
-                </Dialog>
+                <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
+                  <Plus className="size-4" />
+                  Add Doctor
+                </Button>
               )
             }
           />
@@ -463,30 +536,7 @@ export default function DoctorsPage() {
                       {canManage && (
                         <TableCell className="text-right pr-6">
                           <div className="flex justify-end gap-2">
-                            <Dialog>
-                              <DialogTrigger render={<Button variant="ghost" size="sm">Edit</Button>} />
-                              <DialogContent className="max-h-[90vh] overflow-y-auto">
-                                <DialogHeader>
-                                  <DialogTitle>Edit Doctor</DialogTitle>
-                                </DialogHeader>
-                                <DoctorForm
-                                  clinicId={clinicId}
-                                  initial={{
-                                    name: d.name,
-                                    specialization: d.specialization,
-                                    licenseNo: d.licenseNo ?? "",
-                                    qualification: d.qualification ?? "",
-                                    phone: d.phone ?? "",
-                                    email: d.email ?? "",
-                                    fee: d.fee != null ? String(d.fee) : "",
-                                    status: d.status,
-                                    schedule: d.schedule ?? [],
-                                  }}
-                                  saving={saving}
-                                  onSave={handleSave}
-                                />
-                              </DialogContent>
-                            </Dialog>
+                            <Button variant="ghost" size="sm" onClick={() => setEditing(d)}>Edit</Button>
                             <Button
                               variant="ghost"
                               size="sm"

@@ -373,6 +373,44 @@ export default function PrescriptionsPage() {
     }
   };
 
+  if (creating) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreating(false)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Prescriptions
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Create Prescription</h1>
+            <p className="text-sm text-muted-foreground">Write diagnosis and prescribe medication. Respective patients will receive secure automated WhatsApp alerts.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Prescription Details</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <PrescriptionForm
+              clinicId={clinicId}
+              doctorId={session?.doctorId ?? ""}
+              saving={saving}
+              onSave={async (form) => {
+                await handleSave(form);
+                setCreating(false);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Metrics Section */}
@@ -382,28 +420,10 @@ export default function PrescriptionsPage() {
             prescriptions={items}
             patients={patients}
             action={
-              <Dialog open={creating} onOpenChange={setCreating}>
-                <DialogTrigger render={
-                  <Button className="flex items-center gap-1.5 shadow-sm">
-                    <Plus className="size-4" />
-                    New Prescription
-                  </Button>
-                } />
-                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
-                  <DialogHeader>
-                    <DialogTitle>Create Prescription</DialogTitle>
-                    <DialogDescription>
-                      Write diagnosis and prescribe medication. Respective patients will receive secure automated WhatsApp alerts.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <PrescriptionForm
-                    clinicId={clinicId}
-                    doctorId={session?.doctorId ?? ""}
-                    saving={saving}
-                    onSave={handleSave}
-                  />
-                </DialogContent>
-              </Dialog>
+              <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
+                <Plus className="size-4" />
+                New Prescription
+              </Button>
             }
           />
         </div>

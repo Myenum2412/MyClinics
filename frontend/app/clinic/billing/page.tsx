@@ -295,6 +295,43 @@ export default function BillingPage() {
     }
   };
 
+  if (creating) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreating(false)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Bills
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">New Bill</h1>
+            <p className="text-sm text-muted-foreground">Create a bill with line items; totals are computed by the server.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Bill Details</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <BillForm
+              clinicId={clinicId}
+              saving={saving}
+              onSave={async (form) => {
+                await handleCreate(form);
+                setCreating(false);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Metrics Section */}
@@ -303,23 +340,10 @@ export default function BillingPage() {
           <StatsBilling
             bills={items}
             action={
-              <Dialog open={creating} onOpenChange={setCreating}>
-                <DialogTrigger render={
-                  <Button className="flex items-center gap-1.5 shadow-sm">
-                    <Plus className="size-4" />
-                    New Bill
-                  </Button>
-                } />
-                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
-                  <DialogHeader>
-                    <DialogTitle>New Bill</DialogTitle>
-                    <DialogDescription>
-                      Create a bill with line items; totals are computed by the server.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <BillForm clinicId={clinicId} saving={saving} onSave={handleCreate} />
-                </DialogContent>
-              </Dialog>
+              <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
+                <Plus className="size-4" />
+                New Bill
+              </Button>
             }
           />
         </div>

@@ -421,6 +421,43 @@ export default function AppointmentsPage() {
     );
   }
 
+  if (creating) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreating(false)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Appointments
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">New Appointment</h1>
+            <p className="text-sm text-muted-foreground">Schedule a patient visit. Automated WhatsApp alerts will be instantly queued for both patient and doctor.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Appointment Details</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <NewAppointmentForm
+              clinicId={clinicId}
+              onSave={async (form) => {
+                await handleCreate(form);
+                setCreating(false);
+              }}
+              saving={saving}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Stats Section with action slot */}
@@ -441,27 +478,10 @@ export default function AppointmentsPage() {
                   Sync
                 </Button>
 
-                <Dialog open={creating} onOpenChange={setCreating}>
-                  <DialogTrigger render={
-                    <Button className="flex items-center gap-1.5 shadow-sm h-9">
-                      <Plus className="size-4" />
-                      New Appointment
-                    </Button>
-                  } />
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>New Appointment</DialogTitle>
-                      <DialogDescription>
-                        Schedule a patient visit. Automated WhatsApp alerts will be instantly queued for both patient and doctor.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <NewAppointmentForm
-                      clinicId={clinicId}
-                      onSave={handleCreate}
-                      saving={saving}
-                    />
-                  </DialogContent>
-                </Dialog>
+                <Button className="flex items-center gap-1.5 shadow-sm h-9" onClick={() => setCreating(true)}>
+                  <Plus className="size-4" />
+                  New Appointment
+                </Button>
               </div>
             }
           />

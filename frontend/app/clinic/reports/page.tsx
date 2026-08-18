@@ -303,6 +303,91 @@ export default function ReportsPage() {
     }
   };
 
+  if (creating) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreating(false)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Reports
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Add Report</h1>
+            <p className="text-sm text-muted-foreground">Register a medical report for a patient.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Report Information</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <ReportForm
+              clinicId={clinicId}
+              initial={EMPTY_FORM}
+              saving={saving}
+              onSave={async (form) => {
+                await handleSave(form);
+                setCreating(false);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditing(null)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Reports
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Edit Report</h1>
+            <p className="text-sm text-muted-foreground">Modify report metadata or file attachment information.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Report Information</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <ReportForm
+              clinicId={clinicId}
+              initial={{
+                patientId: editing.patientId,
+                doctorId: editing.doctorId ?? "",
+                type: editing.type,
+                title: editing.title,
+                description: editing.description ?? "",
+                fileUrl: editing.fileUrl ?? "",
+                mimeType: editing.mimeType ?? "",
+                status: editing.status,
+              }}
+              saving={saving}
+              onSave={async (form) => {
+                await handleSave(form);
+                setEditing(null);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Top Header Card */}
@@ -313,28 +398,10 @@ export default function ReportsPage() {
             Upload and view digital medical records, diagnostics, and lab report attachments.
           </p>
         </div>
-        <Dialog open={creating} onOpenChange={setCreating}>
-          <DialogTrigger render={
-            <Button className="flex items-center gap-1.5 shadow-sm shrink-0">
-              <Plus className="size-4" />
-              Add Report
-            </Button>
-          } />
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add report</DialogTitle>
-              <DialogDescription>
-                Register a medical report for a patient.
-              </DialogDescription>
-            </DialogHeader>
-            <ReportForm
-              clinicId={clinicId}
-              initial={EMPTY_FORM}
-              saving={saving}
-              onSave={handleSave}
-            />
-          </DialogContent>
-        </Dialog>
+        <Button className="flex items-center gap-1.5 shadow-sm shrink-0" onClick={() => setCreating(true)}>
+          <Plus className="size-4" />
+          Add Report
+        </Button>
       </div>
 
       {/* Bulk actions bar if selected */}
@@ -527,29 +594,7 @@ export default function ReportsPage() {
                       </TableCell>
                     )}
                     <TableCell className="text-right pr-6 whitespace-nowrap">
-                      <Dialog>
-                        <DialogTrigger render={<Button variant="ghost" size="sm" className="h-8">Edit</Button>} />
-                        <DialogContent className="max-h-[90vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle>Edit report</DialogTitle>
-                          </DialogHeader>
-                          <ReportForm
-                            clinicId={clinicId}
-                            initial={{
-                              patientId: r.patientId,
-                              doctorId: r.doctorId ?? "",
-                              type: r.type,
-                              title: r.title,
-                              description: r.description ?? "",
-                              fileUrl: r.fileUrl ?? "",
-                              mimeType: r.mimeType ?? "",
-                              status: r.status,
-                            }}
-                            saving={saving}
-                            onSave={handleSave}
-                          />
-                        </DialogContent>
-                      </Dialog>
+                      <Button variant="ghost" size="sm" className="h-8" onClick={() => setEditing(r)}>Edit</Button>
                       {canManage && (
                         <Button variant="ghost" size="sm" className="h-8 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(r)}>
                           Delete

@@ -291,6 +291,96 @@ export default function PatientsPage() {
     });
   };
 
+  if (creating) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreating(false)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Patients
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">New Patient</h1>
+            <p className="text-sm text-muted-foreground">Register a new patient profile at this clinic.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Patient Information</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <PatientForm
+              clinicId={clinicId}
+              initial={EMPTY_FORM}
+              saving={saving}
+              onSave={async (form) => {
+                await handleSave(form);
+                setCreating(false);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditing(null)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Patients
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Edit Patient</h1>
+            <p className="text-sm text-muted-foreground">Modify patient demographics, status, or notes.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Patient Information</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <PatientForm
+              clinicId={clinicId}
+              initial={{
+                fullName: editing.fullName,
+                mobile: editing.mobile,
+                email: editing.email ?? "",
+                gender: editing.gender ?? "",
+                dateOfBirth: editing.dateOfBirth ?? "",
+                bloodGroup: editing.bloodGroup ?? "",
+                address: editing.address ?? "",
+                city: editing.city ?? "",
+                pincode: editing.pincode ?? "",
+                allergies: (editing.allergies ?? []).join(", "),
+                notes: editing.notes ?? "",
+                doctorId: editing.doctorId,
+                password: "",
+              }}
+              saving={saving}
+              onSave={async (form) => {
+                await handleSave(form);
+                setEditing(null);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Stats Section with action slot */}
@@ -301,28 +391,10 @@ export default function PatientsPage() {
             description="Real-time analytics on patient demographics, engagement, and registrations."
             items={patientStats}
             action={
-              <Dialog open={creating} onOpenChange={setCreating}>
-                <DialogTrigger render={
-                  <Button className="flex items-center gap-1.5 shadow-sm">
-                    <Plus className="size-4" />
-                    New Patient
-                  </Button>
-                } />
-                <DialogContent className="max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>New Patient</DialogTitle>
-                    <DialogDescription>
-                      Register a patient. A portal login can be created with a password.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <PatientForm
-                    clinicId={clinicId}
-                    initial={EMPTY_FORM}
-                    saving={saving}
-                    onSave={handleSave}
-                  />
-                </DialogContent>
-              </Dialog>
+              <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
+                <Plus className="size-4" />
+                New Patient
+              </Button>
             }
           />
         </div>
@@ -486,34 +558,7 @@ export default function PatientsPage() {
                       )}
                       <TableCell className="text-right pr-6">
                         <div className="flex justify-end gap-2">
-                          <Dialog>
-                            <DialogTrigger render={<Button variant="ghost" size="sm">Edit</Button>} />
-                            <DialogContent className="max-h-[90vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>Edit Patient</DialogTitle>
-                              </DialogHeader>
-                              <PatientForm
-                                clinicId={clinicId}
-                                initial={{
-                                  fullName: p.fullName,
-                                  mobile: p.mobile,
-                                  email: p.email ?? "",
-                                  gender: p.gender ?? "",
-                                  dateOfBirth: p.dateOfBirth ?? "",
-                                  bloodGroup: p.bloodGroup ?? "",
-                                  address: p.address ?? "",
-                                  city: p.city ?? "",
-                                  pincode: p.pincode ?? "",
-                                  allergies: (p.allergies ?? []).join(", "),
-                                  notes: p.notes ?? "",
-                                  doctorId: p.doctorId,
-                                  password: "",
-                                }}
-                                saving={saving}
-                                onSave={handleSave}
-                              />
-                            </DialogContent>
-                          </Dialog>
+                          <Button variant="ghost" size="sm" onClick={() => setEditing(p)}>Edit</Button>
                           {canManage && (
                             <Button
                               variant="ghost"

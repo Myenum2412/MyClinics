@@ -298,6 +298,92 @@ export default function RecordsPage() {
     });
   };
 
+  if (creating) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCreating(false)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Records
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">New Medical Record</h1>
+            <p className="text-sm text-muted-foreground">Record a diagnosis, symptoms and treatment for a visit.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Record Details</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <RecordForm
+              clinicId={clinicId}
+              doctorId={session?.doctorId ?? ""}
+              initial={EMPTY_FORM}
+              saving={saving}
+              onSave={async (form) => {
+                await handleSave(form);
+                setCreating(false);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (editing) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditing(null)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Records
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Edit Medical Record</h1>
+            <p className="text-sm text-muted-foreground">Update treatment details, diagnosis, or clinician notes.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Record Details</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <RecordForm
+              clinicId={clinicId}
+              doctorId={session?.doctorId ?? ""}
+              initial={{
+                patientId: editing.patientId,
+                doctorId: editing.doctorId,
+                diagnosis: editing.diagnosis,
+                symptoms: editing.symptoms ?? "",
+                treatment: editing.treatment ?? "",
+                notes: editing.notes ?? "",
+                visitDate: editing.visitDate,
+              }}
+              saving={saving}
+              onSave={async (form) => {
+                await handleSave(form);
+                setEditing(null);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Stats Section with action slot */}
@@ -308,29 +394,10 @@ export default function RecordsPage() {
             description="Real-time insights on diagnoses, symptom records, and treatment coverages."
             items={recordsStats}
             action={
-              <Dialog open={creating} onOpenChange={setCreating}>
-                <DialogTrigger render={
-                  <Button className="flex items-center gap-1.5 shadow-sm">
-                    <Plus className="size-4" />
-                    New Record
-                  </Button>
-                } />
-                <DialogContent className="max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>New medical record</DialogTitle>
-                    <DialogDescription>
-                      Record a diagnosis, symptoms and treatment for a visit.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <RecordForm
-                    clinicId={clinicId}
-                    doctorId={session?.doctorId ?? ""}
-                    initial={EMPTY_FORM}
-                    saving={saving}
-                    onSave={handleSave}
-                  />
-                </DialogContent>
-              </Dialog>
+              <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
+                <Plus className="size-4" />
+                New Record
+              </Button>
             }
           />
         </div>
@@ -472,29 +539,7 @@ export default function RecordsPage() {
                       {visibleColumns.treatment && <TableCell className="max-w-40 truncate text-muted-foreground">{r.treatment ?? "—"}</TableCell>}
                       <TableCell className="text-right pr-6">
                         <div className="flex justify-end gap-2">
-                          <Dialog>
-                            <DialogTrigger render={<Button variant="ghost" size="sm">Edit</Button>} />
-                            <DialogContent className="max-h-[90vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>Edit Medical Record</DialogTitle>
-                              </DialogHeader>
-                              <RecordForm
-                                clinicId={clinicId}
-                                doctorId={session?.doctorId ?? ""}
-                                initial={{
-                                  patientId: r.patientId,
-                                  doctorId: r.doctorId,
-                                  diagnosis: r.diagnosis,
-                                  symptoms: r.symptoms ?? "",
-                                  treatment: r.treatment ?? "",
-                                  notes: r.notes ?? "",
-                                  visitDate: r.visitDate,
-                                }}
-                                saving={saving}
-                                onSave={handleSave}
-                              />
-                            </DialogContent>
-                          </Dialog>
+                          <Button variant="ghost" size="sm" onClick={() => setEditing(r)}>Edit</Button>
                           {canManage && (
                             <Button
                               variant="ghost"
