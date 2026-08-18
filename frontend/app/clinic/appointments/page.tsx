@@ -217,16 +217,39 @@ export default function AppointmentsPage() {
     time: string;
     reason: string;
     notes: string;
+    department?: string;
+    visitType?: string;
+    duration?: number;
+    priority?: string;
+    symptoms?: string;
+    previousVisit?: string;
+    reminder?: string;
+    whatsappAlert?: boolean;
+    doctorNotification?: boolean;
   }) {
     setSaving(true);
     try {
+      const additionalInfo = [
+        form.department ? `Department: ${form.department}` : null,
+        form.visitType ? `Visit Type: ${form.visitType}` : null,
+        form.duration ? `Duration: ${form.duration} min` : null,
+        form.priority ? `Priority: ${form.priority}` : null,
+        form.symptoms ? `Symptoms: ${form.symptoms}` : null,
+        form.previousVisit ? `Previous Visit: ${form.previousVisit}` : null,
+        form.reminder ? `Reminder: ${form.reminder}` : null,
+        form.whatsappAlert !== undefined ? `WhatsApp Alert: ${form.whatsappAlert ? "Yes" : "No"}` : null,
+        form.doctorNotification !== undefined ? `Doctor Notification: ${form.doctorNotification ? "Yes" : "No"}` : null,
+      ].filter(Boolean).join("\n");
+
+      const combinedNotes = [form.notes, additionalInfo].filter(Boolean).join("\n\n");
+
       await createAppointment(clinicId, {
         patientId: form.patientId,
         doctorId: form.doctorId,
         date: form.date,
         time: form.time,
         reason: form.reason || null,
-        notes: form.notes || null,
+        notes: combinedNotes || null,
       });
       toast.success("Appointment successfully created. WhatsApp alerts queued!");
       setCreating(false);
@@ -446,6 +469,9 @@ export default function AppointmentsPage() {
           <CardContent className="p-6">
             <NewAppointmentForm
               clinicId={clinicId}
+              appointments={appointments}
+              patients={patients}
+              doctors={doctors}
               onSave={async (form) => {
                 await handleCreate(form);
                 setCreating(false);
@@ -539,15 +565,15 @@ export default function AppointmentsPage() {
             </CardTitle>
 
             {/* Filters / Search Bar */}
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative">
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <div className="relative mx-auto w-full max-w-md sm:w-72">
                 <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search name, doctor, reason..."
-                  className="h-8 w-60 pl-8 text-xs focus-visible:ring-1"
+                  className="h-8 w-full pl-8 text-xs focus-visible:ring-1"
                 />
               </div>
 
@@ -1040,10 +1066,16 @@ export default function AppointmentsPage() {
 
 function NewAppointmentForm({
   clinicId,
+  appointments,
+  patients,
+  doctors,
   onSave,
   saving,
 }: {
   clinicId: string;
+  appointments: Appointment[];
+  patients: Patient[];
+  doctors: Doctor[];
   onSave: (form: {
     patientId: string;
     doctorId: string;
@@ -1051,63 +1083,444 @@ function NewAppointmentForm({
     time: string;
     reason: string;
     notes: string;
+    department?: string;
+    visitType?: string;
+    duration?: number;
+    priority?: string;
+    symptoms?: string;
+    previousVisit?: string;
+    reminder?: string;
+    whatsappAlert?: boolean;
+    doctorNotification?: boolean;
   }) => Promise<void>;
   saving: boolean;
 }) {
   const [patientId, setPatientId] = useState("");
   const [doctorId, setDoctorId] = useState("");
+  const [department, setDepartment] = useState("");
+  const [visitType, setVisitType] = useState("New Visit");
   const [date, setDate] = useState(today());
   const [time, setTime] = useState("10:00");
+  const [duration, setDuration] = useState(30);
   const [reason, setReason] = useState("");
+  const [priority, setPriority] = useState("Normal");
+  const [symptoms, setSymptoms] = useState("");
+  const [previousVisit, setPreviousVisit] = useState("");
   const [notes, setNotes] = useState("");
+  const [reminder, setReminder] = useState("Same Day");
+  const [whatsappAlert, setWhatsappAlert] = useState(true);
+  const [doctorNotification, setDoctorNotification] = useState(true);
+  const [patientQuery, setPatientQuery] = useState("");
+  const [doctorQuery, setDoctorQuery] = useState("");
   const [error, setError] = useState("");
+  const [showOptionalInfo, setShowOptionalInfo] = useState(false);
+
+  const selectedPatient = useMemo(
+    () => patients.find((p) => p.patientId === patientId) ?? null,
+    [patients, patientId]
+  );
+  const selectedDoctor = useMemo(
+    () => doctors.find((d) => d.doctorId === doctorId) ?? null,
+    [doctors, doctorId]
+  );
+
+  const filteredPatients = useMemo(() => {
+    const q = patientQuery.trim().toLowerCase();
+    if (!q) return patients.slice(0, 20);
+    return patients.filter((p) => p.fullName.toLowerCase().includes(q) || p.mobile.includes(q));
+  }, [patients, patientQuery]);
+
+  const filteredDoctors = useMemo(() => {
+    const q = doctorQuery.trim().toLowerCase();
+    if (!q) return doctors.slice(0, 20);
+    return doctors.filter((d) => d.name.toLowerCase().includes(q) || d.specialization?.toLowerCase().includes(q));
+  }, [doctors, doctorQuery]);
+
+  const endTime = useMemo(() => {
+    if (!time) return "--:--";
+    const [hours, minutes] = time.split(":").map(Number);
+    const totalMinutes = hours * 60 + minutes + duration;
+    const endHours = Math.floor(totalMinutes / 60) % 24;
+    const endMinutes = totalMinutes % 60;
+    const suffix = endHours >= 12 ? "PM" : "AM";
+    const h12 = ((endHours + 11) % 12) + 1;
+    return `${String(h12).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")} ${suffix}`;
+  }, [time, duration]);
+
+  const occupiedSlots = useMemo(() => {
+    if (!doctorId || !date) return [] as string[];
+    const chosen = appointments.filter((appt) => appt.doctorId === doctorId && appt.date === date);
+    return chosen.map((appt) => appt.time).sort();
+  }, [appointments, doctorId, date]);
+
+  function timeToMinutes(value: string) {
+    if (!value) return 0;
+    const [h, m] = value.split(":").map(Number);
+    return h * 60 + m;
+  }
+
+  function conflictExists() {
+    if (!doctorId || !date || !time) return false;
+    const slotStart = timeToMinutes(time);
+    const slotEnd = slotStart + duration;
+
+    return appointments.some((appt) => {
+      if (appt.doctorId !== doctorId || appt.date !== date) return false;
+      const apptStart = timeToMinutes(appt.time);
+      const apptEnd = apptStart + 30;
+      return slotStart < apptEnd && slotEnd > apptStart;
+    });
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
     if (!patientId || !doctorId) {
-      setError("Patient and doctor are required");
+      setError("Patient and doctor are required.");
       return;
     }
-    await onSave({ patientId, doctorId, date, time, reason, notes });
+    if (!date || !time) {
+      setError("Date and time are required.");
+      return;
+    }
+    if (!reason.trim()) {
+      setError("Reason for visit is required.");
+      return;
+    }
+    if (conflictExists()) {
+      setError("This doctor already has an appointment at the selected time. Please choose another slot.");
+      return;
+    }
+
+    await onSave({
+      patientId,
+      doctorId,
+      date,
+      time,
+      reason,
+      notes,
+      department,
+      visitType,
+      duration,
+      priority,
+      symptoms,
+      previousVisit,
+      reminder,
+      whatsappAlert,
+      doctorNotification,
+    });
+  }
+
+  function resetForm() {
+    setPatientId("");
+    setDoctorId("");
+    setDepartment("");
+    setVisitType("New Visit");
+    setDate(today());
+    setTime("10:00");
+    setDuration(30);
+    setReason("");
+    setPriority("Normal");
+    setSymptoms("");
+    setPreviousVisit("");
+    setNotes("");
+    setReminder("Same Day");
+    setWhatsappAlert(true);
+    setDoctorNotification(true);
+    setPatientQuery("");
+    setDoctorQuery("");
+    setError("");
   }
 
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <div className="grid gap-3">
-        <div className="grid gap-2">
-          <Label className="text-xs">Patient</Label>
-          <PatientSelect clinicId={clinicId} value={patientId} onChange={(v) => setPatientId(v ?? "")} required />
-        </div>
-        <div className="grid gap-2">
-          <Label className="text-xs">Doctor</Label>
-          <DoctorSelect clinicId={clinicId} value={doctorId} onChange={(v) => setDoctorId(v ?? "")} required />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="grid gap-2">
-            <Label className="text-xs">Date</Label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} required className="h-9 text-xs" />
+    <form onSubmit={submit} className="space-y-5">
+      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-2 md:col-span-2">
+          <Label className="text-xs font-medium text-foreground">Patient</Label>
+          <div className="relative">
+            <Input
+              value={selectedPatient ? selectedPatient.fullName : patientQuery}
+              onChange={(e) => {
+                setPatientId("");
+                setPatientQuery(e.target.value);
+              }}
+              onFocus={() => setPatientQuery(selectedPatient?.fullName ?? patientQuery)}
+              placeholder="Search patient"
+              className="h-10 border-blue-200 bg-white text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-blue-500"
+            />
+            {!selectedPatient && filteredPatients.length > 0 && patientQuery.trim() && (
+              <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
+                {filteredPatients.slice(0, 8).map((p) => (
+                  <button
+                    key={p.patientId}
+                    type="button"
+                    onClick={() => {
+                      setPatientId(p.patientId);
+                      setPatientQuery(p.fullName);
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
+                  >
+                    <span className="font-medium text-foreground">{p.fullName}</span>
+                    <span className="text-muted-foreground">{p.mobile}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="grid gap-2">
-            <Label className="text-xs">Time</Label>
-            <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} required className="h-9 text-xs" />
+        </div>
+
+        <div className="grid gap-2 md:col-span-2">
+          <Label className="text-xs font-medium text-foreground">Doctor</Label>
+          <div className="relative">
+            <Input
+              value={selectedDoctor ? selectedDoctor.name : doctorQuery}
+              onChange={(e) => {
+                setDoctorId("");
+                setDoctorQuery(e.target.value);
+              }}
+              onFocus={() => setDoctorQuery(selectedDoctor?.name ?? doctorQuery)}
+              placeholder="Search doctor"
+              className="h-10 border-blue-200 bg-white text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-blue-500"
+            />
+            {!selectedDoctor && filteredDoctors.length > 0 && doctorQuery.trim() && (
+              <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
+                {filteredDoctors.slice(0, 8).map((d) => (
+                  <button
+                    key={d.doctorId}
+                    type="button"
+                    onClick={() => {
+                      setDoctorId(d.doctorId);
+                      setDoctorQuery(d.name);
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
+                  >
+                    <span className="font-medium text-foreground">{d.name}</span>
+                    <span className="text-muted-foreground">{d.specialization || "General"}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
+
         <div className="grid gap-2">
-          <Label className="text-xs">Reason</Label>
-          <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Fever, checkup..." className="h-9 text-xs" />
+          <Label className="text-xs font-medium text-foreground">Department</Label>
+          <Input
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            placeholder="Optional"
+            className="h-10 border-blue-200 bg-white text-sm shadow-sm"
+          />
         </div>
+
         <div className="grid gap-2">
-          <Label className="text-xs">Notes</Label>
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} className="text-xs" />
+          <Label className="text-xs font-medium text-foreground">Visit Type</Label>
+          <Select value={visitType} onValueChange={(value) => setVisitType(value ?? "New Visit")}>
+            <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="New Visit">New Visit</SelectItem>
+              <SelectItem value="Follow-up">Follow-up</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-2">
+          <Label className="text-xs font-medium text-foreground">Date</Label>
+          <Input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+            className="h-10 border-blue-200 bg-white text-sm shadow-sm"
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label className="text-xs font-medium text-foreground">Time</Label>
+          <Input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            required
+            className="h-10 border-blue-200 bg-white text-sm shadow-sm"
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label className="text-xs font-medium text-foreground">Duration</Label>
+          <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))}>
+            <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[15, 30, 45, 60].map((mins) => (
+                <SelectItem key={mins} value={String(mins)}>{mins} minutes</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-2">
+          <Label className="text-xs font-medium text-foreground">Reason for Visit</Label>
+          <Input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Fever, checkup, follow-up..."
+            required
+            className="h-10 border-blue-200 bg-white text-sm shadow-sm"
+          />
+        </div>
+
+        <div className="grid gap-2">
+          <Label className="text-xs font-medium text-foreground">Priority</Label>
+          <Select value={priority} onValueChange={(value) => setPriority(value ?? "Normal")}>
+            <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Normal">Normal</SelectItem>
+              <SelectItem value="High">High</SelectItem>
+              <SelectItem value="Urgent">Urgent</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-2 md:col-span-2 xl:col-span-3">
+          <div className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50/50 px-3 py-2 text-xs text-blue-900">
+            <span className="font-medium">End Time</span>
+            <span className="font-semibold">{endTime}</span>
+          </div>
         </div>
       </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      <DialogFooter className="pt-2">
-        <Button type="submit" disabled={saving} className="h-9 text-xs">
-          {saving ? "Scheduling..." : "Create appointment"}
+
+      {doctorId && date && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold text-foreground">Doctor schedule</p>
+            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Available / occupied</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"].map((slot) => {
+              const busy = occupiedSlots.includes(slot);
+              const selected = slot === time;
+              return (
+                <button
+                  type="button"
+                  key={slot}
+                  onClick={() => setTime(slot)}
+                  className={`rounded-full border px-2 py-1 text-[10px] font-medium transition ${
+                    selected
+                      ? "border-blue-600 bg-blue-600 text-white"
+                      : busy
+                        ? "border-red-200 bg-red-50 text-red-600"
+                        : "border-blue-200 bg-white text-blue-700 hover:bg-blue-100"
+                  }`}
+                >
+                  {slot}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-xl border border-border bg-muted/20 p-3">
+        <button
+          type="button"
+          onClick={() => setShowOptionalInfo((v) => !v)}
+          className="flex w-full items-center justify-between text-left text-xs font-semibold text-foreground"
+        >
+          Additional Information
+          <span className="rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[10px] text-blue-700">
+            {showOptionalInfo ? "Hide" : "Show"}
+          </span>
+        </button>
+
+        {showOptionalInfo && (
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <div className="grid gap-2 md:col-span-2">
+              <Label className="text-xs font-medium text-foreground">Symptoms</Label>
+              <Textarea value={symptoms} onChange={(e) => setSymptoms(e.target.value)} rows={2} className="border-blue-200 bg-white text-xs shadow-sm" placeholder="Brief symptoms or complaints" />
+            </div>
+            <div className="grid gap-2">
+              <Label className="text-xs font-medium text-foreground">Previous Visit</Label>
+              <Input value={previousVisit} onChange={(e) => setPreviousVisit(e.target.value)} placeholder="Optional" className="h-10 border-blue-200 bg-white text-sm shadow-sm" />
+            </div>
+            <div className="grid gap-2">
+              <Label className="text-xs font-medium text-foreground">Internal Notes</Label>
+              <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Staff notes" className="h-10 border-blue-200 bg-white text-sm shadow-sm" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-xl border border-blue-200 bg-white p-3">
+        <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-2">
+            <Label className="text-xs font-medium text-foreground">Patient Reminder</Label>
+            <Select value={reminder} onValueChange={(value) => setReminder(value ?? "Same Day")}>
+              <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="None">None</SelectItem>
+                <SelectItem value="Same Day">Same Day</SelectItem>
+                <SelectItem value="1 Day Before">1 Day Before</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-xs font-medium text-foreground">WhatsApp Alert</Label>
+            <Select value={whatsappAlert ? "Yes" : "No"} onValueChange={(v) => setWhatsappAlert(v === "Yes")}>
+              <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Yes">Yes</SelectItem>
+                <SelectItem value="No">No</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-xs font-medium text-foreground">Doctor Notification</Label>
+            <Select value={doctorNotification ? "Yes" : "No"} onValueChange={(v) => setDoctorNotification(v === "Yes")}>
+              <SelectTrigger className="h-10 border-blue-200 bg-white text-sm shadow-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Yes">Yes</SelectItem>
+                <SelectItem value="No">No</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <p className="mt-3 text-[11px] text-muted-foreground">
+          {whatsappAlert || doctorNotification
+            ? "Patient and staff notifications will be sent based on the selected reminder and alert preferences."
+            : "No notifications will be sent for this appointment."}
+        </p>
+      </div>
+
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={resetForm} className="h-10 border-blue-200 bg-white text-sm">
+          Reset
         </Button>
-      </DialogFooter>
+        <Button type="submit" disabled={saving} className="h-10 bg-blue-600 text-sm text-white hover:bg-blue-700">
+          {saving ? "Creating..." : "Create Appointment"}
+        </Button>
+      </div>
     </form>
   );
 }

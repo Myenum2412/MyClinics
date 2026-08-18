@@ -480,15 +480,15 @@ export default function PrescriptionsPage() {
             </CardTitle>
 
             {/* Filters / Visibility Controls */}
-            <div className="flex items-center gap-2">
-              <div className="relative">
+            <div className="flex items-center justify-center gap-2">
+              <div className="relative mx-auto w-full max-w-md sm:w-72">
                 <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search patients, doctors..."
-                  className="h-8 w-60 pl-8 text-xs focus-visible:ring-1"
+                  className="h-8 w-full pl-8 text-xs focus-visible:ring-1"
                 />
               </div>
 

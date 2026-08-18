@@ -644,8 +644,8 @@ export default function TableBlock() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
+          <div className="flex items-center justify-center gap-2">
+            <div className="relative mx-auto w-full max-w-md sm:w-64">
               <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               <Input
                 type="search"
@@ -654,7 +654,7 @@ export default function TableBlock() {
                   table.getColumn("name")?.setFilterValue(event.target.value)
                 }
                 placeholder="Search members..."
-                className="h-7 w-48 pl-8 text-sm"
+                className="h-7 w-full pl-8 text-sm"
                 aria-label="Search members by name or email"
               />
             </div>

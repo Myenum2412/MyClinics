@@ -282,27 +282,27 @@ export default function DoctorsPage() {
 
   if (creating) {
     return (
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCreating(false)}
-            className="h-9 gap-1.5"
-          >
-            <ChevronLeft className="size-4" />
-            Back to Doctors
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Add Doctor</h1>
-            <p className="text-sm text-muted-foreground">Register a new doctor at this clinic.</p>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCreating(false)}
+              className="h-9 gap-1.5 border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+            >
+              <ChevronLeft className="size-4" />
+              Back to Doctors
+            </Button>
+          </div>
+          <div className="text-right">
+            <h1 className="text-2xl font-bold text-slate-900">Add Doctor</h1>
+            <p className="text-sm text-slate-500">Register a new doctor at this clinic.</p>
           </div>
         </div>
-        <Card className="border-border shadow-sm max-w-2xl">
-          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-            <CardTitle className="text-lg font-semibold">Doctor Information</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
+
+        <div className="rounded-[28px] border border-sky-200 bg-sky-50/80 p-4 shadow-sm">
+          <div className="rounded-[24px] border border-sky-100 bg-white p-5 sm:p-6">
             <DoctorForm
               clinicId={clinicId}
               initial={EMPTY_FORM}
@@ -312,35 +312,35 @@ export default function DoctorsPage() {
                 setCreating(false);
               }}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (editing) {
     return (
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEditing(null)}
-            className="h-9 gap-1.5"
-          >
-            <ChevronLeft className="size-4" />
-            Back to Doctors
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Edit Doctor</h1>
-            <p className="text-sm text-muted-foreground">Modify doctor specialization, fee, schedule, or qualifications.</p>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditing(null)}
+              className="h-9 gap-1.5 border-sky-200 bg-white text-sky-700 hover:bg-sky-50"
+            >
+              <ChevronLeft className="size-4" />
+              Back to Doctors
+            </Button>
+          </div>
+          <div className="text-right">
+            <h1 className="text-2xl font-bold text-slate-900">Edit Doctor</h1>
+            <p className="text-sm text-slate-500">Modify doctor details, fee, and schedule.</p>
           </div>
         </div>
-        <Card className="border-border shadow-sm max-w-2xl">
-          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-            <CardTitle className="text-lg font-semibold">Doctor Information</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
+
+        <div className="rounded-[28px] border border-sky-200 bg-sky-50/80 p-4 shadow-sm">
+          <div className="rounded-[24px] border border-sky-100 bg-white p-5 sm:p-6">
             <DoctorForm
               clinicId={clinicId}
               initial={{
@@ -360,8 +360,8 @@ export default function DoctorsPage() {
                 setEditing(null);
               }}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -639,90 +639,209 @@ function DoctorForm({
     await onSave(form);
   }
 
+  const resetForm = () => {
+    setForm({
+      ...initial,
+      schedule: initial.schedule.length ? initial.schedule.map((entry) => ({ ...entry })) : [{ day: "Mon", start: "09:00", end: "17:00" }],
+    });
+  };
+
   return (
-    <form onSubmit={submit} className="space-y-4">
-      <div className="grid gap-3">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="grid gap-2">
-            <Label>Name</Label>
-            <Input value={form.name} onChange={(e) => set("name", e.target.value)} required minLength={2} />
-          </div>
-          <div className="grid gap-2">
-            <Label>Specialization</Label>
-            <Input value={form.specialization} onChange={(e) => set("specialization", e.target.value)} required minLength={2} />
-          </div>
+    <form onSubmit={submit} className="space-y-6">
+      <div className="flex items-center justify-between gap-3 border-b border-sky-100 pb-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-600">Doctor profile</p>
+          <h2 className="mt-1 text-xl font-semibold text-slate-900">Clinic registration</h2>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="grid gap-2">
-            <Label>License no.</Label>
-            <Input value={form.licenseNo} onChange={(e) => set("licenseNo", e.target.value)} />
-          </div>
-          <div className="grid gap-2">
-            <Label>Qualification</Label>
-            <Input value={form.qualification} onChange={(e) => set("qualification", e.target.value)} />
-          </div>
+        <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+          {form.status === "active" ? "Active" : "Inactive"}
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="grid gap-2">
-            <Label>Phone</Label>
-            <Input value={form.phone} onChange={(e) => set("phone", e.target.value)} />
+      </div>
+
+      <div className="space-y-5">
+        <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="inline-flex size-2 rounded-full bg-sky-500" />
+            <h3 className="text-sm font-semibold text-sky-800">Personal details</h3>
           </div>
-          <div className="grid gap-2">
-            <Label>Email</Label>
-            <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label className="text-sm font-medium text-slate-700">Full name</Label>
+              <Input
+                value={form.name}
+                onChange={(e) => set("name", e.target.value)}
+                required
+                minLength={2}
+                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
+                placeholder="Dr. Priya Nair"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="text-sm font-medium text-slate-700">Phone number</Label>
+              <Input
+                value={form.phone}
+                onChange={(e) => set("phone", e.target.value)}
+                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
+                placeholder="+91 98765 43210"
+              />
+            </div>
+
+            <div className="grid gap-2 md:col-span-2">
+              <Label className="text-sm font-medium text-slate-700">Email address</Label>
+              <Input
+                type="email"
+                value={form.email}
+                onChange={(e) => set("email", e.target.value)}
+                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
+                placeholder="doctor@clinic.com"
+              />
+            </div>
           </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="grid gap-2">
-            <Label>Consultation fee</Label>
-            <Input type="number" min="0" value={form.fee} onChange={(e) => set("fee", e.target.value)} />
+        </section>
+
+        <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="inline-flex size-2 rounded-full bg-violet-500" />
+            <h3 className="text-sm font-semibold text-violet-800">Professional information</h3>
           </div>
-          <div className="grid gap-2">
-            <Label>Status</Label>
-            <Select value={form.status} onValueChange={(v) => set("status", v)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">active</SelectItem>
-                <SelectItem value="inactive">inactive</SelectItem>
-              </SelectContent>
-            </Select>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label className="text-sm font-medium text-slate-700">Specialization</Label>
+              <Input
+                value={form.specialization}
+                onChange={(e) => set("specialization", e.target.value)}
+                required
+                minLength={2}
+                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
+                placeholder="Cardiology"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="text-sm font-medium text-slate-700">Qualification</Label>
+              <Input
+                value={form.qualification}
+                onChange={(e) => set("qualification", e.target.value)}
+                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
+                placeholder="MD, DM"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="text-sm font-medium text-slate-700">License number</Label>
+              <Input
+                value={form.licenseNo}
+                onChange={(e) => set("licenseNo", e.target.value)}
+                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
+                placeholder="MH-2024-013"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="text-sm font-medium text-slate-700">Consultation fee</Label>
+              <Input
+                type="number"
+                min="0"
+                value={form.fee}
+                onChange={(e) => set("fee", e.target.value)}
+                className="h-11 rounded-xl border-sky-200 bg-white focus-visible:ring-sky-200"
+                placeholder="1500"
+              />
+            </div>
           </div>
-        </div>
-        <div className="grid gap-2">
-          <Label>Schedule</Label>
-          {form.schedule.map((entry, i) => (
-            <div key={i} className="grid grid-cols-[1fr_auto_auto_auto] items-end gap-2">
-              <Select value={entry.day} onValueChange={(v) => setScheduleEntry(i, { day: v ?? "Mon" })}>
-                <SelectTrigger>
+        </section>
+
+        <section className="rounded-2xl border border-sky-100 bg-sky-50/40 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="inline-flex size-2 rounded-full bg-emerald-500" />
+            <h3 className="text-sm font-semibold text-emerald-800">Access & schedule</h3>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-[220px_1fr]">
+            <div className="grid gap-2">
+              <Label className="text-sm font-medium text-slate-700">Status</Label>
+              <Select value={form.status} onValueChange={(v) => set("status", v)}>
+                <SelectTrigger className="h-11 rounded-xl border-sky-200 bg-white focus:ring-sky-200">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {DAYS.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
-              <Input type="time" value={entry.start} onChange={(e) => setScheduleEntry(i, { start: e.target.value })} className="w-28" />
-              <Input type="time" value={entry.end} onChange={(e) => setScheduleEntry(i, { end: e.target.value })} className="w-28" />
-              <Button type="button" variant="ghost" size="sm" onClick={() => removeScheduleEntry(i)}>
-                Remove
+            </div>
+
+            <div className="rounded-xl border border-dashed border-sky-200 bg-white/70 px-3 py-2 text-sm text-slate-600">
+              Access is managed through clinic role permissions. Keep the doctor status aligned with their active roster.
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <Label className="text-sm font-medium text-slate-700">Consultation schedule</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addScheduleEntry} className="h-8 rounded-lg border-sky-200 bg-white text-sky-700 hover:bg-sky-50">
+                Add slot
               </Button>
             </div>
-          ))}
-          <Button type="button" variant="outline" size="sm" onClick={addScheduleEntry}>
-            Add schedule entry
-          </Button>
-        </div>
+
+            {form.schedule.map((entry, i) => (
+              <div key={i} className="grid gap-3 rounded-xl border border-sky-100 bg-white p-3 md:grid-cols-[1fr_140px_140px_auto] md:items-end">
+                <div className="grid gap-2">
+                  <Label className="text-xs uppercase tracking-wide text-slate-500">Day</Label>
+                  <Select value={entry.day} onValueChange={(v) => setScheduleEntry(i, { day: v ?? "Mon" })}>
+                    <SelectTrigger className="h-10 rounded-xl border-sky-200 bg-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAYS.map((d) => (
+                        <SelectItem key={d} value={d}>
+                          {d}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label className="text-xs uppercase tracking-wide text-slate-500">Start</Label>
+                  <Input
+                    type="time"
+                    value={entry.start}
+                    onChange={(e) => setScheduleEntry(i, { start: e.target.value })}
+                    className="h-10 rounded-xl border-sky-200 bg-white"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label className="text-xs uppercase tracking-wide text-slate-500">End</Label>
+                  <Input
+                    type="time"
+                    value={entry.end}
+                    onChange={(e) => setScheduleEntry(i, { end: e.target.value })}
+                    className="h-10 rounded-xl border-sky-200 bg-white"
+                  />
+                </div>
+
+                <Button type="button" variant="ghost" size="sm" onClick={() => removeScheduleEntry(i)} className="h-10 text-slate-500 hover:text-red-600 hover:bg-red-50">
+                  Remove
+                </Button>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
-      <DialogFooter>
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save doctor"}
+
+      <div className="flex items-center justify-end gap-3 border-t border-sky-100 pt-4">
+        <Button type="button" variant="outline" onClick={resetForm} className="h-10 rounded-xl border-sky-200 bg-white text-slate-700 hover:bg-sky-50">
+          Reset
         </Button>
-      </DialogFooter>
+        <Button type="submit" disabled={saving} className="h-10 rounded-xl bg-sky-600 text-white shadow-sm hover:bg-sky-700">
+          {saving ? "Saving..." : "Save Doctor"}
+        </Button>
+      </div>
     </form>
   );
 }
