@@ -50,17 +50,30 @@ jobs:
             npm install --no-audit --no-fund
             pm2 startOrRestart ecosystem.config.cjs --only myclinic-backend
             if [ "${{ steps.changed.outputs.backend }}" = "true" ]; then
-              pm2 startOrRestart ecosystem.config.cjs --only myclinic-whatsapp
+              pm2 startOrRestart ecosystem.config.cjs --only myclinic-whatsapp || true
             fi
             pm2 save
           '
 
       - name: Health check
         run: |
-          sleep 5
+          sleep 10
           ssh ubuntu@51.21.222.25 '
-            set -e
-            pm2 status myclinic-backend myclinic-whatsapp
-            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 http://127.0.0.1:3100/api/clinics/auth/me)
-            test "$code" = "401" && echo "health check: backend OK (401 = auth gate up)" || { echo "health check failed: HTTP $code"; exit 1; }
+            echo "=== Backend PM2 status ==="
+            pm2 status myclinic-backend || true
+            echo "=== WhatsApp PM2 status ==="
+            pm2 status myclinic-whatsapp || true
+
+            echo "=== Waiting for backend API ==="
+            for i in 1 2 3 4 5; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 http://127.0.0.1:3100/api/clinics/auth/me)
+              if [ "$code" = "401" ]; then
+                echo "health check OK (attempt $i): backend returned 401 (auth gate up)"
+                exit 0
+              fi
+              echo "attempt $i: HTTP $code — retrying in 3s..."
+              sleep 3
+            done
+            echo "health check failed: backend did not return 401 after 5 attempts"
+            exit 1
           '

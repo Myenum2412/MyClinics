@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,8 @@ export function ClinicSignupForm({
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<SignupResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [countdown, setCountdown] = useState(5);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const googleEmail = searchParams.get("email");
@@ -64,6 +66,12 @@ export function ClinicSignupForm({
       const result = gticket
         ? await signupClinicGoogle({ clinicName, adminName, gticket })
         : await signupClinic({ clinicName, adminName, email, password });
+      if (gticket) {
+        // Google signup — redirect immediately to clinic settings
+        router.replace("/clinic/settings");
+        router.refresh();
+        return;
+      }
       setCreated(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -79,13 +87,33 @@ export function ClinicSignupForm({
     setTimeout(() => setCopied(false), 2000);
   }
 
+  // Start countdown once the (password) signup success screen appears
+  useEffect(() => {
+    if (!created) return;
+    setCountdown(5);
+    countdownRef.current = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) {
+          clearInterval(countdownRef.current!);
+          router.replace("/clinic/settings");
+          router.refresh();
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, [created, router]);
+
   if (created) {
     return (
       <div className={cn("flex flex-col gap-6", className)} {...props}>
         <div className="flex flex-col items-center gap-2 text-center">
-          <h1 className="text-xl font-bold text-black">Clinic created!</h1>
+          <h1 className="text-xl font-bold text-black">Clinic created! 🎉</h1>
           <p className="text-sm text-gray-500">
-            Your clinic is live and you are signed in as its administrator.
+            Your clinic is live. Redirecting to clinic details in {countdown}s…
           </p>
         </div>
 
@@ -102,7 +130,7 @@ export function ClinicSignupForm({
             {created.clinicId}
           </button>
           <p className="mt-2 text-xs text-gray-500">
-            {copied ? "Copied to clipboard!" : "Click to copy. Keep it safe — it identifies your tenant."}
+            {copied ? "Copied to clipboard! ✓" : "Click to copy. Keep it safe — it identifies your tenant."}
           </p>
         </div>
 
@@ -123,8 +151,15 @@ export function ClinicSignupForm({
 
         <FieldSeparator />
 
-        <Button onClick={() => router.push("/clinic")} className="w-full">
-          Enter clinic workspace
+        <Button
+          onClick={() => {
+            if (countdownRef.current) clearInterval(countdownRef.current);
+            router.replace("/clinic/settings");
+            router.refresh();
+          }}
+          className="w-full"
+        >
+          Go to Clinic Details now
         </Button>
       </div>
     );
