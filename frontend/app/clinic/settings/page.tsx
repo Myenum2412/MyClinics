@@ -92,44 +92,6 @@ export default function SettingsPage() {
     <div className="grid gap-4">
       <Card>
         <CardHeader>
-          <CardTitle>soul.md</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={saveSoulMd} className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              The story and purpose of your clinic, stored as a markdown file. The WhatsApp
-              assistant uses this file to answer patients in your clinic&apos;s voice.
-            </p>
-            <div className="grid gap-2">
-              <Label htmlFor="soul" className="text-sm font-medium text-gray-700">
-                soul.md content
-              </Label>
-              <Textarea
-                id="soul"
-                value={soulDraft}
-                disabled={!canEdit}
-                rows={12}
-                placeholder={"# Our clinic's soul\n\nWhy we exist, what we stand for..."}
-                className="min-h-64 resize-y font-mono text-sm"
-                onChange={(e) => setSoulDraft(e.target.value)}
-              />
-            </div>
-            {soul && (
-              <p className="text-xs text-gray-500">
-                Version {soul.version} · fallback reply: “{soul.fallbackReply}”
-              </p>
-            )}
-            {canEdit && (
-              <Button type="submit" disabled={savingSoul}>
-                {savingSoul ? "Saving..." : "Save soul.md"}
-              </Button>
-            )}
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>WhatsApp connection</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4 text-center">
@@ -181,6 +143,44 @@ export default function SettingsPage() {
               ? new Date(waSession.state.updatedAt).toLocaleTimeString("en-IN")
               : "—"}
           </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>soul.md</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={saveSoulMd} className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              The story and purpose of your clinic, stored as a markdown file. The WhatsApp
+              assistant uses this file to answer patients in your clinic&apos;s voice.
+            </p>
+            <div className="grid gap-2">
+              <Label htmlFor="soul" className="text-sm font-medium text-gray-700">
+                soul.md content
+              </Label>
+              <Textarea
+                id="soul"
+                value={soulDraft}
+                disabled={!canEdit}
+                rows={12}
+                placeholder={"# Our clinic's soul\n\nWhy we exist, what we stand for..."}
+                className="min-h-64 resize-y font-mono text-sm"
+                onChange={(e) => setSoulDraft(e.target.value)}
+              />
+            </div>
+            {soul && (
+              <p className="text-xs text-gray-500">
+                Version {soul.version} · fallback reply: “{soul.fallbackReply}”
+              </p>
+            )}
+            {canEdit && (
+              <Button type="submit" disabled={savingSoul}>
+                {savingSoul ? "Saving..." : "Save soul.md"}
+              </Button>
+            )}
+          </form>
         </CardContent>
       </Card>
     </div>
