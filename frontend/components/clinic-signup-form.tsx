@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { GoogleSignInButton } from "@/components/google-signin-button";
 import { signupClinic, type SignupResponse } from "@/lib/clinic-api";
 
 /**
@@ -27,6 +28,7 @@ export function ClinicSignupForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [clinicName, setClinicName] = useState("");
   const [adminName, setAdminName] = useState("");
   const [email, setEmail] = useState("");
@@ -36,6 +38,17 @@ export function ClinicSignupForm({
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState<SignupResponse | null>(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const googleError = searchParams.get("error");
+    const googleEmail = searchParams.get("email");
+    if (googleError === "google_no_account") {
+      setError(
+        "No clinic account matches this Google email. Create your clinic below."
+      );
+    }
+    if (googleEmail) setEmail(googleEmail);
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -210,6 +223,9 @@ export function ClinicSignupForm({
           </Field>
         </FieldGroup>
       </form>
+
+      <GoogleSignInButton from="signup" />
+
       <p className="px-6 text-center text-xs leading-normal font-normal text-gray-400">
         Already have a clinic?{" "}
         <Link href="/login" className="text-gray-600 underline underline-offset-4 hover:text-black">

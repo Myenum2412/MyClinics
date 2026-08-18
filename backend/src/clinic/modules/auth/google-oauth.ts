@@ -57,25 +57,26 @@ export function frontendBaseUrl(request: {
 
 // ── One-time state tokens (CSRF protection) ────────────────────────────────
 
-const pendingStates = new Map<string, number>();
+const pendingStates = new Map<string, { exp: number; from: "login" | "signup" }>();
 
-export function issueStateToken(): string {
+export function issueStateToken(from: "login" | "signup" = "login"): string {
   const state = randomBytes(24).toString("hex");
-  pendingStates.set(state, Date.now() + STATE_TTL_MS);
+  pendingStates.set(state, { exp: Date.now() + STATE_TTL_MS, from });
   if (pendingStates.size > 1000) {
     const now = Date.now();
-    for (const [key, exp] of pendingStates) {
-      if (exp < now) pendingStates.delete(key);
+    for (const [key, entry] of pendingStates) {
+      if (entry.exp < now) pendingStates.delete(key);
     }
   }
   return state;
 }
 
-export function consumeStateToken(state: string): boolean {
-  const exp = pendingStates.get(state);
-  if (!exp) return false;
+/** Returns the flow origin ("login" | "signup") the state was issued for, or null. */
+export function consumeStateToken(state: string): "login" | "signup" | null {
+  const entry = pendingStates.get(state);
+  if (!entry) return null;
   pendingStates.delete(state);
-  return exp >= Date.now();
+  return entry.exp >= Date.now() ? entry.from : null;
 }
 
 // ── Google calls ───────────────────────────────────────────────────────────

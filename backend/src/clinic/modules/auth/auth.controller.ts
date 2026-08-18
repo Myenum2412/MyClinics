@@ -72,9 +72,11 @@ export class AuthController {
     if (!config) {
       return reply.redirect(`${frontendBaseUrl(request)}/login?error=google_unavailable`);
     }
+    const query = request.query as { from?: string };
+    const from = query.from === "signup" ? "signup" : "login";
     const redirectUri = `${frontendBaseUrl(request)}${GOOGLE_CALLBACK_PATH}`;
     return reply.redirect(
-      buildAuthorizationUrl(config.clientId, redirectUri, issueStateToken())
+      buildAuthorizationUrl(config.clientId, redirectUri, issueStateToken(from))
     );
   }
 
@@ -89,9 +91,8 @@ export class AuthController {
     const query = request.query as { code?: string; state?: string; error?: string };
     if (query.error) return fail("google_denied");
     if (typeof query.code !== "string" || !query.code) return fail("google_callback");
-    if (typeof query.state !== "string" || !consumeStateToken(query.state)) {
-      return fail("google_state");
-    }
+    const from = typeof query.state === "string" ? consumeStateToken(query.state) : null;
+    if (!from) return fail("google_state");
 
     const redirectUri = `${base}${GOOGLE_CALLBACK_PATH}`;
     let email: string;
@@ -120,7 +121,14 @@ export class AuthController {
         `${base}/login?google_token=${encodeURIComponent(result.token)}&google_expires=${expires}`
       );
     } catch (error) {
-      if (error instanceof UnauthorizedError) return fail("google_no_account");
+      if (error instanceof UnauthorizedError) {
+        if (from === "signup") {
+          return reply.redirect(
+            `${base}/signup/clinic?error=google_no_account&email=${encodeURIComponent(email)}`
+          );
+        }
+        return fail("google_no_account");
+      }
       throw error;
     }
   }
