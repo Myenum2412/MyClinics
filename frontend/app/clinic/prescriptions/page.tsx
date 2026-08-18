@@ -378,43 +378,36 @@ export default function PrescriptionsPage() {
       {/* Metrics Section */}
       {!loading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <Stats07 prescriptions={items} patients={patients} />
+          <Stats07
+            prescriptions={items}
+            patients={patients}
+            action={
+              <Dialog open={creating} onOpenChange={setCreating}>
+                <DialogTrigger render={
+                  <Button className="flex items-center gap-1.5 shadow-sm">
+                    <Plus className="size-4" />
+                    New Prescription
+                  </Button>
+                } />
+                <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+                  <DialogHeader>
+                    <DialogTitle>Create Prescription</DialogTitle>
+                    <DialogDescription>
+                      Write diagnosis and prescribe medication. Respective patients will receive secure automated WhatsApp alerts.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <PrescriptionForm
+                    clinicId={clinicId}
+                    doctorId={session?.doctorId ?? ""}
+                    saving={saving}
+                    onSave={handleSave}
+                  />
+                </DialogContent>
+              </Dialog>
+            }
+          />
         </div>
       )}
-
-      {/* Main Header / Actions Bar */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
-            Clinic Prescription Hub
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Create, manage, and monitor secure Patient notifications.
-          </p>
-        </div>
-        <Dialog open={creating} onOpenChange={setCreating}>
-          <DialogTrigger render={
-            <Button className="flex items-center gap-1.5 shadow-sm">
-              <Plus className="size-4" />
-              New Prescription
-            </Button>
-          } />
-          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
-            <DialogHeader>
-              <DialogTitle>Create Prescription</DialogTitle>
-              <DialogDescription>
-                Write diagnosis and prescribe medication. Respective patients will receive secure automated WhatsApp alerts.
-              </DialogDescription>
-            </DialogHeader>
-            <PrescriptionForm
-              clinicId={clinicId}
-              doctorId={session?.doctorId ?? ""}
-              saving={saving}
-              onSave={handleSave}
-            />
-          </DialogContent>
-        </Dialog>
-      </div>
 
       {/* Bulk actions bar if selected */}
       {selectedIds.size > 0 && (

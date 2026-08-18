@@ -22,9 +22,11 @@ function getTodayString(): string {
 export default function Stats07({
   prescriptions,
   patients,
+  action,
 }: {
   prescriptions: Prescription[];
   patients: Patient[];
+  action?: React.ReactNode;
 }) {
   const totalCount = prescriptions.length;
   
@@ -79,12 +81,17 @@ export default function Stats07({
 
   return (
     <div className="w-full">
-      <h2 className="text-balance font-medium text-foreground text-xl">
-        Prescription Metrics
-      </h2>
-      <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
-        Real-time insights on issued prescriptions and notification delivery readiness.
-      </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h2 className="text-balance font-medium text-foreground text-xl">
+            Prescription Metrics
+          </h2>
+          <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
+            Real-time insights on issued prescriptions and notification delivery readiness.
+          </p>
+        </div>
+        {action && <div className="shrink-0">{action}</div>}
+      </div>
       <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {data.map((item) => (
           <Card className="p-4 shadow-sm" key={item.name}>
