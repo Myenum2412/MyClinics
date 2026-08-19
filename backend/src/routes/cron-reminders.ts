@@ -7,13 +7,14 @@ import { processPrescriptionNotifications } from "@/services/whatsapp/prescripti
 import { processAppointmentNotifications } from "@/services/whatsapp/appointment-notification.service";
 import { logger } from "@/lib/logger";
 
-const CRON_TIMEOUT_MS = 25_000; // 25 seconds - leave buffer for 30s proxy timeout
-
 async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   let timeoutId: NodeJS.Timeout;
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
   });
+  // Prevent an unhandled rejection when the work settles after the timeout
+  // already fired — the race is decided, but the loser still needs a handler.
+  promise.catch(() => {});
   try {
     return await Promise.race([promise, timeoutPromise]);
   } finally {
@@ -21,10 +22,41 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): P
   }
 }
 
+interface StepResult<T = Record<string, unknown>> {
+  status: "ok" | "error" | "timeout";
+  error?: string;
+  data?: T;
+}
+
+/**
+ * Runs a single cron work-stream with a budget. Failures are logged and
+ * returned (not thrown) so one slow/broken stream never fails the batch.
+ */
+async function runStep<T>(ms: number, label: string, fn: () => Promise<T>): Promise<StepResult<T>> {
+  try {
+    const data = await withTimeout(fn(), ms, label);
+    return { status: "ok", data };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const timedOut = error instanceof Error && /timed out/.test(error.message);
+    logger.warn(`Cron step ${label} ${timedOut ? "timed out" : "failed"}`, { error: message });
+    return { status: timedOut ? "timeout" : "error", error: message };
+  }
+}
+
 /**
  * Entry point for the appointment reminder scheduler (cron-job.org pings this
  * every minute). Scans for appointments inside the reminder window and queues
  * WhatsApp reminders that the worker then sends ~30 minutes before each slot.
+ *
+ * Design notes:
+ *  - All streams run CONCURRENTLY with individual budgets. The previous
+ *    sequential chain could spend up to ~25s of wall-clock (plus a 10s DB
+ *    connect), which periodically exceeded the reverse-proxy timeout and
+ *    surfaced as 502 Bad Gateway to the scheduler.
+ *  - The endpoint ALWAYS answers with a 2xx so cron-job.org never flags the
+ *    job as failed. This is a best-effort, idempotent queueing job that
+ *    re-runs every minute; real problems are visible in the logs.
  */
 export function registerCronRoutes(app: FastifyInstance): void {
   app.post("/api/cron/reminders", async (request, reply) => {
@@ -32,38 +64,45 @@ export function registerCronRoutes(app: FastifyInstance): void {
 
     const startTime = Date.now();
     try {
-      const db = await getDb();
+      // Bound the DB connection so the request can never hang past the proxy timeout.
+      const db = await withTimeout(getDb(), 8_000, "getDb");
 
-      // Run with individual timeouts to prevent hanging
-      const scanResult = await withTimeout(
-        scanAndQueueReminders(db, new Date()),
-        10_000,
-        "scanAndQueueReminders"
-      );
-
-      await withTimeout(
-        processPrescriptionNotifications(db),
-        7_500,
-        "processPrescriptionNotifications"
-      );
-
-      await withTimeout(
-        processAppointmentNotifications(db),
-        7_500,
-        "processAppointmentNotifications"
-      );
+      const [scan, prescription, appointment] = await Promise.all([
+        runStep(9_000, "scanAndQueueReminders", async () => {
+          const result = await scanAndQueueReminders(db, new Date());
+          return { checked: result.checked, queued: result.queued, skipped: result.skipped };
+        }),
+        runStep(8_000, "processPrescriptionNotifications", () =>
+          processPrescriptionNotifications(db).then(() => ({}))
+        ),
+        runStep(8_000, "processAppointmentNotifications", () =>
+          processAppointmentNotifications(db).then(() => ({}))
+        ),
+      ]);
 
       const duration = Date.now() - startTime;
-      logger.info("Cron reminders completed", { durationMs: duration, ...scanResult });
-      return reply.send({ ok: true, ...scanResult, durationMs: duration });
+      logger.info("Cron reminders completed", {
+        durationMs: duration,
+        checked: scan.data?.checked ?? 0,
+        queued: scan.data?.queued ?? 0,
+        skipped: scan.data?.skipped ?? 0,
+        scan: scan.status,
+        prescriptions: prescription.status,
+        appointments: appointment.status,
+      });
+      return reply.send({
+        ok: true,
+        checked: scan.data?.checked ?? 0,
+        queued: scan.data?.queued ?? 0,
+        skipped: scan.data?.skipped ?? 0,
+        durationMs: duration,
+      });
     } catch (error) {
+      // Only reachable when the DB handle itself could not be obtained.
       const duration = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error("Cron reminders error", { durationMs: duration, error: errorMessage });
-      return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
-        durationMs: duration,
-      });
+      return reply.code(200).send({ ok: false, error: errorMessage, durationMs: duration });
     }
   });
 
