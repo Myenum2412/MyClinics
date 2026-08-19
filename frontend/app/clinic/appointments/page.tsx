@@ -1321,7 +1321,7 @@ function AppointmentForm({
     <form onSubmit={submit} className="space-y-6">
       <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
       {/* 1. PATIENT & DOCTOR */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="overflow-visible border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-gray-800">
             1. Patient &amp; Doctor
@@ -1351,7 +1351,7 @@ function AppointmentForm({
                     error && !patientId ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
                   }`}
                 />
-                {!selectedPatient && showPatientDropdown && filteredPatients.length > 0 && (
+                {showPatientDropdown && filteredPatients.length > 0 && (
                   <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
                     {filteredPatients.slice(0, 8).map((p) => (
                       <button
@@ -1360,6 +1360,7 @@ function AppointmentForm({
                         onClick={() => {
                           setPatientId(p.patientId);
                           setPatientQuery(p.fullName);
+                          setShowPatientDropdown(false);
                         }}
                         className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
                       >
@@ -1394,7 +1395,7 @@ function AppointmentForm({
                     error && !doctorId ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
                   }`}
                 />
-                {!selectedDoctor && showDoctorDropdown && filteredDoctors.length > 0 && (
+                {showDoctorDropdown && filteredDoctors.length > 0 && (
                   <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
                     {filteredDoctors.slice(0, 8).map((d) => (
                       <button
@@ -1403,6 +1404,7 @@ function AppointmentForm({
                         onClick={() => {
                           setDoctorId(d.doctorId);
                           setDoctorQuery(d.name);
+                          setShowDoctorDropdown(false);
                         }}
                         className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
                       >
