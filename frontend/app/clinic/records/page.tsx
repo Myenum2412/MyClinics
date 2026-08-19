@@ -536,6 +536,14 @@ export default function RecordsPage() {
           );
         }
       }
+      for (const a of form.attachments.filter((a) => !a.file && a.fileId)) {
+        uploadedAttachments.push({
+          name: a.name,
+          url: a.url,
+          mimeType: a.mimeType,
+          fileId: a.fileId,
+        });
+      }
 
       const recordPayload: Record<string, unknown> = {
         patientId: form.patientId,
