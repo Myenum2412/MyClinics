@@ -69,7 +69,25 @@ interface PatientFormState {
   city: string;
   state: string;
   pincode: string;
+  height: string;
+  weight: string;
+  occupation: string;
+  maritalStatus: string;
+  emergencyContactName: string;
+  emergencyContactRelationship: string;
+  emergencyContactMobile: string;
   allergies: string;
+  medicalConditions: string;
+  previousSurgeries: string;
+  currentMedications: string;
+  idType: string;
+  idNumber: string;
+  insuranceProvider: string;
+  insurancePolicyNumber: string;
+  insurancePolicyHolderName: string;
+  insuranceValidTill: string;
+  referredBy: string;
+  howDidYouHear: string;
   notes: string;
   doctorId: string | null;
   password: string;
@@ -87,7 +105,25 @@ const EMPTY_FORM: PatientFormState = {
   city: "",
   state: "",
   pincode: "",
+  height: "",
+  weight: "",
+  occupation: "",
+  maritalStatus: "",
+  emergencyContactName: "",
+  emergencyContactRelationship: "",
+  emergencyContactMobile: "",
   allergies: "",
+  medicalConditions: "",
+  previousSurgeries: "",
+  currentMedications: "",
+  idType: "",
+  idNumber: "",
+  insuranceProvider: "",
+  insurancePolicyNumber: "",
+  insurancePolicyHolderName: "",
+  insuranceValidTill: "",
+  referredBy: "",
+  howDidYouHear: "",
   notes: "",
   doctorId: null,
   password: "",
@@ -150,10 +186,28 @@ export default function PatientsPage() {
         city: form.city || null,
         state: form.state || null,
         pincode: form.pincode || null,
+        height: form.height || null,
+        weight: form.weight || null,
+        occupation: form.occupation || null,
+        maritalStatus: form.maritalStatus || null,
+        emergencyContactName: form.emergencyContactName || null,
+        emergencyContactRelationship: form.emergencyContactRelationship || null,
+        emergencyContactMobile: form.emergencyContactMobile || null,
         allergies: form.allergies
           .split(",")
           .map((a) => a.trim())
           .filter(Boolean),
+        medicalConditions: form.medicalConditions || null,
+        previousSurgeries: form.previousSurgeries || null,
+        currentMedications: form.currentMedications || null,
+        idType: form.idType || null,
+        idNumber: form.idNumber || null,
+        insuranceProvider: form.insuranceProvider || null,
+        insurancePolicyNumber: form.insurancePolicyNumber || null,
+        insurancePolicyHolderName: form.insurancePolicyHolderName || null,
+        insuranceValidTill: form.insuranceValidTill || null,
+        referredBy: form.referredBy || null,
+        howDidYouHear: form.howDidYouHear || null,
         notes: form.notes || null,
         doctorId: form.doctorId || null,
       };
@@ -364,7 +418,25 @@ export default function PatientsPage() {
                 city: editing.city ?? "",
                 state: editing.state ?? "",
                 pincode: editing.pincode ?? "",
+                height: editing.height ?? "",
+                weight: editing.weight ?? "",
+                occupation: editing.occupation ?? "",
+                maritalStatus: editing.maritalStatus ?? "",
+                emergencyContactName: editing.emergencyContactName ?? "",
+                emergencyContactRelationship: editing.emergencyContactRelationship ?? "",
+                emergencyContactMobile: editing.emergencyContactMobile ?? "",
                 allergies: (editing.allergies ?? []).join(", "),
+                medicalConditions: editing.medicalConditions ?? "",
+                previousSurgeries: editing.previousSurgeries ?? "",
+                currentMedications: editing.currentMedications ?? "",
+                idType: editing.idType ?? "",
+                idNumber: editing.idNumber ?? "",
+                insuranceProvider: editing.insuranceProvider ?? "",
+                insurancePolicyNumber: editing.insurancePolicyNumber ?? "",
+                insurancePolicyHolderName: editing.insurancePolicyHolderName ?? "",
+                insuranceValidTill: editing.insuranceValidTill ?? "",
+                referredBy: editing.referredBy ?? "",
+                howDidYouHear: editing.howDidYouHear ?? "",
                 notes: editing.notes ?? "",
                 doctorId: editing.doctorId,
                 password: "",
@@ -692,6 +764,127 @@ function PatientForm({
         <div className="grid gap-2">
           <Label>Allergies (comma separated)</Label>
           <Input value={form.allergies} onChange={(e) => set("allergies", e.target.value)} placeholder="Penicillin, Dust" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-2">
+            <Label>Height (cm)</Label>
+            <Input value={form.height} onChange={(e) => set("height", e.target.value)} placeholder="170" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Weight (kg)</Label>
+            <Input value={form.weight} onChange={(e) => set("weight", e.target.value)} placeholder="65" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-2">
+            <Label>Occupation</Label>
+            <Input value={form.occupation} onChange={(e) => set("occupation", e.target.value)} placeholder="Software Engineer" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Marital status</Label>
+            <Select value={form.maritalStatus} onValueChange={(v) => set("maritalStatus", v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {getOptions("marital_statuses").map((m) => (
+                  <SelectItem key={m} value={m}>
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="grid gap-2">
+            <Label>Emergency contact</Label>
+            <Input value={form.emergencyContactName} onChange={(e) => set("emergencyContactName", e.target.value)} placeholder="Name" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Relationship</Label>
+            <Input value={form.emergencyContactRelationship} onChange={(e) => set("emergencyContactRelationship", e.target.value)} placeholder="Spouse" />
+          </div>
+          <div className="grid gap-2">
+            <Label>Mobile</Label>
+            <Input value={form.emergencyContactMobile} onChange={(e) => set("emergencyContactMobile", e.target.value)} placeholder="98765 43210" />
+          </div>
+        </div>
+        <div className="grid gap-2">
+          <Label>Medical conditions</Label>
+          <Input value={form.medicalConditions} onChange={(e) => set("medicalConditions", e.target.value)} placeholder="Diabetes, hypertension" />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-2">
+            <Label>Previous surgeries</Label>
+            <Input value={form.previousSurgeries} onChange={(e) => set("previousSurgeries", e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Current medications</Label>
+            <Input value={form.currentMedications} onChange={(e) => set("currentMedications", e.target.value)} placeholder="Metformin 500mg" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-2">
+            <Label>ID type</Label>
+            <Select value={form.idType} onValueChange={(v) => set("idType", v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {getOptions("id_proof_types").map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-2">
+            <Label>ID number</Label>
+            <Input value={form.idNumber} onChange={(e) => set("idNumber", e.target.value)} placeholder="Aadhaar / PAN" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-2">
+            <Label>Insurance provider</Label>
+            <Input value={form.insuranceProvider} onChange={(e) => set("insuranceProvider", e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Policy number</Label>
+            <Input value={form.insurancePolicyNumber} onChange={(e) => set("insurancePolicyNumber", e.target.value)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-2">
+            <Label>Policy holder name</Label>
+            <Input value={form.insurancePolicyHolderName} onChange={(e) => set("insurancePolicyHolderName", e.target.value)} />
+          </div>
+          <div className="grid gap-2">
+            <Label>Valid till</Label>
+            <Input type="date" value={form.insuranceValidTill} onChange={(e) => set("insuranceValidTill", e.target.value)} />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-2">
+            <Label>Referred by</Label>
+            <Input value={form.referredBy} onChange={(e) => set("referredBy", e.target.value)} placeholder="Dr. Sharma" />
+          </div>
+          <div className="grid gap-2">
+            <Label>How did you hear about us?</Label>
+            <Select value={form.howDidYouHear} onValueChange={(v) => set("howDidYouHear", v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                {getOptions("how_did_you_hear").map((h) => (
+                  <SelectItem key={h} value={h}>
+                    {h}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <div className="grid gap-2">
           <Label>Doctor</Label>
