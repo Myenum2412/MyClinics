@@ -105,7 +105,7 @@ export class AppointmentService {
     if (!existing) throw new NotFoundError("Appointment not found");
 
     const patch: Record<string, unknown> = {};
-    for (const key of ["date", "time", "status", "reason", "notes"] as const) {
+    for (const key of ["patientId", "doctorId", "date", "time", "status", "reason", "notes"] as const) {
       const value = input[key];
       if (value !== undefined) patch[key] = value;
     }
@@ -114,11 +114,21 @@ export class AppointmentService {
       throw new ForbiddenError();
     }
 
-    // Re-check double booking when the slot changed.
+    // A doctor may only book appointments for their OWN patients.
+    const newPatientId = (patch.patientId as string) ?? existing.patientId;
+    const newDoctorId = (patch.doctorId as string) ?? existing.doctorId;
+    if (patch.patientId || patch.doctorId) {
+      const { patient } = await this.verifyReferences(ctx, newPatientId, newDoctorId);
+      if (ctx.role === "doctor" && patient.doctorId !== ctx.doctorId) {
+        throw new ForbiddenError("You can only book appointments for your own patients");
+      }
+    }
+
+    // Re-check double booking when the slot or doctor changed.
     const newDate = (patch.date as string) ?? existing.date;
     const newTime = (patch.time as string) ?? existing.time;
-    if (patch.date || patch.time) {
-      const conflict = await repo.findConflicting(existing.doctorId, newDate, newTime, appointmentId);
+    if (patch.date || patch.time || patch.doctorId) {
+      const conflict = await repo.findConflicting(newDoctorId, newDate, newTime, appointmentId);
       if (conflict) {
         throw new ConflictError("The doctor already has an appointment at this time");
       }

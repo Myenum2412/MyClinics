@@ -19,6 +19,8 @@ export const appointmentSchema = z.object({
 export type CreateAppointmentInput = z.infer<typeof appointmentSchema>;
 
 export const updateAppointmentSchema = z.object({
+  patientId: z.string().startsWith("pat_").optional(),
+  doctorId: z.string().startsWith("doc_").optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),
   status: z.enum(APPOINTMENT_STATUSES).optional(),

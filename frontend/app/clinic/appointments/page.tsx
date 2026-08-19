@@ -86,6 +86,7 @@ import {
   ChevronRight,
   Phone,
   CalendarCheck,
+  Pencil,
 } from "lucide-react";
 
 const STATUSES: AppointmentStatus[] = ["scheduled", "completed", "cancelled", "no_show"];
@@ -110,6 +111,64 @@ function today(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
     d.getDate()
   ).padStart(2, "0")}`;
+}
+
+interface AppointmentFormState {
+  patientId: string;
+  doctorId: string;
+  department: string;
+  visitType: string;
+  date: string;
+  time: string;
+  duration: number;
+  reason: string;
+  priority: string;
+  symptoms: string;
+  previousVisit: string;
+  notes: string;
+  reminder: string;
+  whatsappAlert: boolean;
+  doctorNotification: boolean;
+}
+
+function emptyAppointmentForm(): AppointmentFormState {
+  return {
+    patientId: "",
+    doctorId: "",
+    department: "",
+    visitType: "New Visit",
+    date: today(),
+    time: "10:00",
+    duration: 30,
+    reason: "",
+    priority: "Normal",
+    symptoms: "",
+    previousVisit: "",
+    notes: "",
+    reminder: "Same Day",
+    whatsappAlert: true,
+    doctorNotification: true,
+  };
+}
+
+function appointmentToForm(appt: Appointment): AppointmentFormState {
+  return {
+    patientId: appt.patientId,
+    doctorId: appt.doctorId,
+    department: "",
+    visitType: "New Visit",
+    date: appt.date,
+    time: appt.time,
+    duration: 30,
+    reason: appt.reason ?? "",
+    notes: appt.notes ?? "",
+    priority: "Normal",
+    symptoms: "",
+    previousVisit: "",
+    reminder: "Same Day",
+    whatsappAlert: true,
+    doctorNotification: true,
+  };
 }
 
 export default function AppointmentsPage() {
@@ -154,7 +213,8 @@ export default function AppointmentsPage() {
   
   // Detail Modal
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
-  const [viewingDetails, setViewingDetails] = useState(false);
+  const [viewing, setViewing] = useState(false);
+  const [editingAppt, setEditingAppt] = useState<Appointment | null>(null);
 
   // Notification Logs Modal
   const [logs, setLogs] = useState<any[]>([]);
@@ -198,6 +258,38 @@ export default function AppointmentsPage() {
   }, [loadData]);
 
   // Actions
+  function buildNotes(form: {
+    patientId: string;
+    doctorId: string;
+    date: string;
+    time: string;
+    reason: string;
+    notes: string;
+    department?: string;
+    visitType?: string;
+    duration?: number;
+    priority?: string;
+    symptoms?: string;
+    previousVisit?: string;
+    reminder?: string;
+    whatsappAlert?: boolean;
+    doctorNotification?: boolean;
+  }): string | null {
+    const additionalInfo = [
+      form.department ? `Department: ${form.department}` : null,
+      form.visitType ? `Visit Type: ${form.visitType}` : null,
+      form.duration ? `Duration: ${form.duration} min` : null,
+      form.priority ? `Priority: ${form.priority}` : null,
+      form.symptoms ? `Symptoms: ${form.symptoms}` : null,
+      form.previousVisit ? `Previous Visit: ${form.previousVisit}` : null,
+      form.reminder ? `Reminder: ${form.reminder}` : null,
+      form.whatsappAlert !== undefined ? `WhatsApp Alert: ${form.whatsappAlert ? "Yes" : "No"}` : null,
+      form.doctorNotification !== undefined ? `Doctor Notification: ${form.doctorNotification ? "Yes" : "No"}` : null,
+    ].filter(Boolean).join("\n");
+
+    return [form.notes, additionalInfo].filter(Boolean).join("\n\n") || null;
+  }
+
   async function handleCreate(form: {
     patientId: string;
     doctorId: string;
@@ -217,33 +309,56 @@ export default function AppointmentsPage() {
   }) {
     setSaving(true);
     try {
-      const additionalInfo = [
-        form.department ? `Department: ${form.department}` : null,
-        form.visitType ? `Visit Type: ${form.visitType}` : null,
-        form.duration ? `Duration: ${form.duration} min` : null,
-        form.priority ? `Priority: ${form.priority}` : null,
-        form.symptoms ? `Symptoms: ${form.symptoms}` : null,
-        form.previousVisit ? `Previous Visit: ${form.previousVisit}` : null,
-        form.reminder ? `Reminder: ${form.reminder}` : null,
-        form.whatsappAlert !== undefined ? `WhatsApp Alert: ${form.whatsappAlert ? "Yes" : "No"}` : null,
-        form.doctorNotification !== undefined ? `Doctor Notification: ${form.doctorNotification ? "Yes" : "No"}` : null,
-      ].filter(Boolean).join("\n");
-
-      const combinedNotes = [form.notes, additionalInfo].filter(Boolean).join("\n\n");
-
       await createAppointment(clinicId, {
         patientId: form.patientId,
         doctorId: form.doctorId,
         date: form.date,
         time: form.time,
         reason: form.reason || null,
-        notes: combinedNotes || null,
+        notes: buildNotes(form),
       });
       toast.success("Appointment successfully created. WhatsApp alerts queued!");
       setCreating(false);
       loadData();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to create appointment");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleUpdate(appointment: Appointment, form: {
+    patientId: string;
+    doctorId: string;
+    date: string;
+    time: string;
+    reason: string;
+    notes: string;
+    department?: string;
+    visitType?: string;
+    duration?: number;
+    priority?: string;
+    symptoms?: string;
+    previousVisit?: string;
+    reminder?: string;
+    whatsappAlert?: boolean;
+    doctorNotification?: boolean;
+  }) {
+    setSaving(true);
+    try {
+      await updateAppointment(clinicId, appointment.appointmentId, {
+        patientId: form.patientId,
+        doctorId: form.doctorId,
+        date: form.date,
+        time: form.time,
+        reason: form.reason || null,
+        notes: buildNotes(form),
+      });
+      toast.success("Appointment updated successfully.");
+      setEditingAppt(null);
+      loadData();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update appointment");
     } finally {
       setSaving(false);
     }
@@ -453,26 +568,101 @@ export default function AppointmentsPage() {
 
         <div className="px-4 py-8 sm:px-6 lg:px-8">
           <div className="space-y-6">
-            <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold text-gray-800">
-                  Appointment Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <AppointmentForm
-                  clinicId={clinicId}
-                  appointments={appointments}
-                  patients={patients}
-                  doctors={doctors}
-                  onSave={async (form) => {
-                    await handleCreate(form);
-                    setCreating(false);
-                  }}
-                  saving={saving}
-                />
-              </CardContent>
-            </Card>
+            <AppointmentForm
+              clinicId={clinicId}
+              appointments={appointments}
+              patients={patients}
+              doctors={doctors}
+              initial={emptyAppointmentForm()}
+              onSave={async (form) => {
+                await handleCreate(form);
+                setCreating(false);
+              }}
+              saving={saving}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (editingAppt) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setEditingAppt(null)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Edit Appointment</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Modify appointment details, patient, doctor, date, and time.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <AppointmentForm
+              clinicId={clinicId}
+              appointments={appointments}
+              patients={patients}
+              doctors={doctors}
+              initial={appointmentToForm(editingAppt)}
+              isEdit
+              onSave={async (form) => {
+                await handleUpdate(editingAppt, form);
+                setEditingAppt(null);
+              }}
+              saving={saving}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (viewing && selectedAppt) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setViewing(false)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">View Appointment</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Appointment details, patient, doctor, and status.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <AppointmentForm
+              clinicId={clinicId}
+              appointments={appointments}
+              patients={patients}
+              doctors={doctors}
+              initial={appointmentToForm(selectedAppt)}
+              isEdit
+              readOnly
+              saving={false}
+            />
           </div>
         </div>
       </div>
@@ -757,23 +947,23 @@ export default function AppointmentsPage() {
                                 className="text-xs gap-1.5 cursor-pointer"
                                 onClick={() => {
                                   setSelectedAppt(a);
-                                  setViewingDetails(true);
+                                  setViewing(true);
                                 }}
                               >
                                 <Eye className="size-3.5" />
                                 View Details
                               </DropdownMenuItem>
 
-                              <DropdownMenuItem
-                                className="text-xs gap-1.5 cursor-pointer"
-                                onClick={() => fetchNotificationLogs(a)}
-                              >
-                                <Bell className="size-3.5 text-primary" />
-                                WhatsApp Logs
-                              </DropdownMenuItem>
-
                               {canManage && (
                                 <>
+                                  <DropdownMenuItem
+                                    className="text-xs gap-1.5 cursor-pointer"
+                                    onClick={() => setEditingAppt(a)}
+                                  >
+                                    <Pencil className="size-3.5 text-primary" />
+                                    Edit
+                                  </DropdownMenuItem>
+
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     className="text-xs gap-1.5 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
@@ -784,6 +974,14 @@ export default function AppointmentsPage() {
                                   </DropdownMenuItem>
                                 </>
                               )}
+
+                              <DropdownMenuItem
+                                className="text-xs gap-1.5 cursor-pointer"
+                                onClick={() => fetchNotificationLogs(a)}
+                              >
+                                <Bell className="size-3.5 text-primary" />
+                                WhatsApp Logs
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -812,77 +1010,6 @@ export default function AppointmentsPage() {
           />
         )}
       </Card>
-
-      {/* Appointment Details Modal */}
-      <Dialog open={viewingDetails} onOpenChange={setViewingDetails}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Appointment Details</DialogTitle>
-            <DialogDescription>Full details and history of the selected appointment slot.</DialogDescription>
-          </DialogHeader>
-          
-          {selectedAppt && (
-            <div className="space-y-4 py-3 text-sm">
-              <div className="grid grid-cols-2 gap-4 border-b border-border pb-3">
-                <div>
-                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Date</span>
-                  <p className="font-semibold text-foreground flex items-center gap-1.5 mt-0.5">
-                    <Calendar className="size-4 text-primary" />
-                    {selectedAppt.date}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Time</span>
-                  <p className="font-semibold text-foreground flex items-center gap-1.5 mt-0.5">
-                    <Clock className="size-4 text-primary" />
-                    {formatTime(selectedAppt.time)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 border-b border-border pb-3">
-                <div>
-                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Patient Name</span>
-                  <p className="font-medium text-foreground mt-0.5">
-                    {patientMap.get(selectedAppt.patientId)?.fullName || "Unknown"}
-                  </p>
-                </div>
-                <div>
-                  <span className="text-[10px] text-muted-foreground uppercase font-semibold">Doctor Assigned</span>
-                  <p className="font-medium text-foreground mt-0.5">
-                    {doctorMap.get(selectedAppt.doctorId)?.name || "Unknown"}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-semibold">Reason for Visit</span>
-                <p className="text-foreground bg-muted/40 p-2.5 rounded border border-border mt-1 whitespace-pre-line">
-                  {selectedAppt.reason || "No reason specified."}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-[10px] text-muted-foreground uppercase font-semibold">Doctor Notes</span>
-                <p className="text-muted-foreground bg-muted/20 p-2.5 rounded border border-dashed mt-1 whitespace-pre-line text-xs">
-                  {selectedAppt.notes || "No notes added."}
-                </p>
-              </div>
-
-              <div className="flex justify-between items-center bg-muted/30 px-3 py-2 rounded-lg border border-border text-xs">
-                <span className="text-muted-foreground">Internal ID: {selectedAppt.appointmentId}</span>
-                <Badge className={STATUS_CLASS[selectedAppt.status]}>
-                  {STATUS_LABELS[selectedAppt.status]}
-                </Badge>
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <Button onClick={() => setViewingDetails(false)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* WhatsApp Logs Modal */}
       <Dialog open={viewingLogs} onOpenChange={setViewingLogs}>
@@ -1027,50 +1154,43 @@ function AppointmentForm({
   appointments,
   patients,
   doctors,
+  initial,
   onSave,
   saving,
+  readOnly,
 }: {
   clinicId: string;
   appointments: Appointment[];
   patients: Patient[];
   doctors: Doctor[];
-  onSave: (form: {
-    patientId: string;
-    doctorId: string;
-    date: string;
-    time: string;
-    reason: string;
-    notes: string;
-    department?: string;
-    visitType?: string;
-    duration?: number;
-    priority?: string;
-    symptoms?: string;
-    previousVisit?: string;
-    reminder?: string;
-    whatsappAlert?: boolean;
-    doctorNotification?: boolean;
-  }) => Promise<void>;
+  initial: AppointmentFormState;
+  onSave?: (form: AppointmentFormState) => Promise<void>;
   saving: boolean;
+  readOnly?: boolean;
+  isEdit?: boolean;
 }) {
-  const [patientId, setPatientId] = useState("");
-  const [doctorId, setDoctorId] = useState("");
-  const [department, setDepartment] = useState("");
-  const [visitType, setVisitType] = useState("New Visit");
-  const [date, setDate] = useState(today());
-  const [time, setTime] = useState("10:00");
+  const [patientId, setPatientId] = useState(initial.patientId);
+  const [doctorId, setDoctorId] = useState(initial.doctorId);
+  const [department, setDepartment] = useState(initial.department);
+  const [visitType, setVisitType] = useState(initial.visitType);
+  const [date, setDate] = useState(initial.date);
+  const [time, setTime] = useState(initial.time);
   const { getOptions } = useDropdownOptions(clinicId);
-  const [duration, setDuration] = useState(30);
-  const [reason, setReason] = useState("");
-  const [priority, setPriority] = useState("Normal");
-  const [symptoms, setSymptoms] = useState("");
-  const [previousVisit, setPreviousVisit] = useState("");
-  const [notes, setNotes] = useState("");
-  const [reminder, setReminder] = useState("Same Day");
-  const [whatsappAlert, setWhatsappAlert] = useState(true);
-  const [doctorNotification, setDoctorNotification] = useState(true);
-  const [patientQuery, setPatientQuery] = useState("");
-  const [doctorQuery, setDoctorQuery] = useState("");
+  const [duration, setDuration] = useState(initial.duration);
+  const [reason, setReason] = useState(initial.reason);
+  const [priority, setPriority] = useState(initial.priority);
+  const [symptoms, setSymptoms] = useState(initial.symptoms);
+  const [previousVisit, setPreviousVisit] = useState(initial.previousVisit);
+  const [notes, setNotes] = useState(initial.notes);
+  const [reminder, setReminder] = useState(initial.reminder);
+  const [whatsappAlert, setWhatsappAlert] = useState(initial.whatsappAlert);
+  const [doctorNotification, setDoctorNotification] = useState(initial.doctorNotification);
+  const [patientQuery, setPatientQuery] = useState(
+    initial.patientId ? patients.find((p) => p.patientId === initial.patientId)?.fullName ?? "" : ""
+  );
+  const [doctorQuery, setDoctorQuery] = useState(
+    initial.doctorId ? doctors.find((d) => d.doctorId === initial.doctorId)?.name ?? "" : ""
+  );
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
   const [showDoctorDropdown, setShowDoctorDropdown] = useState(false);
   const [error, setError] = useState("");
@@ -1135,6 +1255,7 @@ function AppointmentForm({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (readOnly || !onSave) return;
     setError("");
 
     if (!patientId || !doctorId) {
@@ -1174,23 +1295,23 @@ function AppointmentForm({
   }
 
   function resetForm() {
-    setPatientId("");
-    setDoctorId("");
-    setDepartment("");
-    setVisitType("New Visit");
-    setDate(today());
-    setTime("10:00");
-    setDuration(30);
-    setReason("");
-    setPriority("Normal");
-    setSymptoms("");
-    setPreviousVisit("");
-    setNotes("");
-    setReminder("Same Day");
-    setWhatsappAlert(true);
-    setDoctorNotification(true);
-    setPatientQuery("");
-    setDoctorQuery("");
+    setPatientId(initial.patientId);
+    setDoctorId(initial.doctorId);
+    setDepartment(initial.department);
+    setVisitType(initial.visitType);
+    setDate(initial.date);
+    setTime(initial.time);
+    setDuration(initial.duration);
+    setReason(initial.reason);
+    setPriority(initial.priority);
+    setSymptoms(initial.symptoms);
+    setPreviousVisit(initial.previousVisit);
+    setNotes(initial.notes);
+    setReminder(initial.reminder);
+    setWhatsappAlert(initial.whatsappAlert);
+    setDoctorNotification(initial.doctorNotification);
+    setPatientQuery(initial.patientId ? patients.find((p) => p.patientId === initial.patientId)?.fullName ?? "" : "");
+    setDoctorQuery(initial.doctorId ? doctors.find((d) => d.doctorId === initial.doctorId)?.name ?? "" : "");
     setShowPatientDropdown(false);
     setShowDoctorDropdown(false);
     setError("");
@@ -1198,6 +1319,7 @@ function AppointmentForm({
 
   return (
     <form onSubmit={submit} className="space-y-6">
+      <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
       {/* 1. PATIENT & DOCTOR */}
       <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
         <CardHeader className="pb-3">
@@ -1535,6 +1657,7 @@ function AppointmentForm({
           </p>
         </CardContent>
       </Card>
+      </fieldset>
 
       {error && (
         <div className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
@@ -1543,15 +1666,17 @@ function AppointmentForm({
         </div>
       )}
 
-      <div className="flex gap-3 border-t border-blue-200 pt-8">
-        <Button type="button" variant="outline" onClick={resetForm} className="border-blue-300 text-blue-600 hover:bg-blue-50">
-          Reset
-        </Button>
-        <div className="flex-1" />
-        <Button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700" size="lg">
-          {saving ? "Creating..." : "Create Appointment"}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex gap-3 border-t border-blue-200 pt-8">
+          <Button type="button" variant="outline" onClick={resetForm} className="border-blue-300 text-blue-600 hover:bg-blue-50">
+            Reset
+          </Button>
+          <div className="flex-1" />
+          <Button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700" size="lg">
+            {saving ? "Saving..." : "Save Appointment"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }
