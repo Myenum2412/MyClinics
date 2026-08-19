@@ -499,18 +499,15 @@ export default function AccountPage() {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-4 rounded-xl border border-sky-100 bg-sky-50/50 p-4">
-                  <InfoField label="Clinic Name" value={clinic.name} />
-                  <InfoField label="Door / Building No." value="—" />
-                  <InfoField label="Street / Area" value={clinic.address ?? "—"} />
-                  <InfoField label="Landmark" value="—" />
-                  <InfoField label="City" value="—" />
-                  <InfoField label="District" value="—" />
-                  <InfoField label="State" value="—" />
-                  <InfoField label="Pincode" value="—" />
-                  <InfoField label="Country" value="—" />
-                  <InfoField label="Clinic Phone" value={clinic.phone ?? "—"} />
-                  <InfoField label="Clinic Email" value={clinic.email ?? "—"} />
+                <div className="flex flex-col gap-y-4 rounded-xl border border-sky-100 bg-sky-50/50 p-4">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                    <InfoField label="Clinic Name" value={clinic.name} />
+                    <InfoField label="Clinic Phone" value={clinic.phone ?? "—"} />
+                  </div>
+                  <InfoField label="Full Address" value={clinic.address ?? "—"} />
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+                    <InfoField label="Clinic Email" value={clinic.email ?? "—"} />
+                  </div>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button
