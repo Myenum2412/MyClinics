@@ -37,6 +37,10 @@ export function generateFileId(): string {
   return `mrf_${randomToken(12)}`;
 }
 
+export function generateFolderId(): string {
+  return `mrfld_${randomToken(12)}`;
+}
+
 export function generatePrescriptionId(): string {
   return `rx_${randomToken(12)}`;
 }

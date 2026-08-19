@@ -2,14 +2,16 @@ import type { Db } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import { requireClinicOf, type ClinicContext } from "@/clinic/core/context";
-import { NotFoundError } from "@/clinic/core/errors";
-import { generateFileId } from "@/clinic/core/ids";
+import { BadRequestError, NotFoundError } from "@/clinic/core/errors";
+import { generateFileId, generateFolderId } from "@/clinic/core/ids";
 import { deleteFromR2, getDownloadUrl, uploadToR2 } from "@/lib/r2";
 import { enqueueNotification } from "@/services/whatsapp/notification.service";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import {
   type MedicalRecordFileDoc,
+  type MedicalRecordFolderDoc,
   medicalRecordFileToPublic,
+  medicalRecordFolderToPublic,
 } from "@/clinic/modules/medical-record/medical-record.schema";
 
 export interface UploadMedicalRecordFileInput {
@@ -17,7 +19,16 @@ export interface UploadMedicalRecordFileInput {
   fileName: string;
   mimeType: string | null;
   data: Buffer;
+  /** Folder key the file belongs to — "medicine" | "medical" | "prescriptions" or a custom folder id. */
+  folder?: string;
 }
+
+export interface CreateMedicalRecordFolderInput {
+  patientId: string;
+  name: string;
+}
+
+export const DEFAULT_FOLDER = "medical";
 
 function sanitizeFileName(name: string): string {
   const base = name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
@@ -35,6 +46,10 @@ export class MedicalRecordService {
     return this.db.collection<MedicalRecordFileDoc>(CLINIC_COLLECTIONS.medicalRecordFiles);
   }
 
+  private folderCollection() {
+    return this.db.collection<MedicalRecordFolderDoc>(CLINIC_COLLECTIONS.medicalRecordFolders);
+  }
+
   async uploadFile(
     ctx: ClinicContext,
     input: UploadMedicalRecordFileInput
@@ -45,19 +60,27 @@ export class MedicalRecordService {
       .findOne({ clinicId, patientId: input.patientId, status: { $ne: "deleted" } });
     if (!patient) throw new NotFoundError("Patient not found");
 
+    const folder = (input.folder ?? DEFAULT_FOLDER).trim().slice(0, 80) || DEFAULT_FOLDER;
+    if (folder !== DEFAULT_FOLDER && folder !== "medicine" && folder !== "prescriptions") {
+      const custom = await this.folderCollection().findOne({ clinicId, folderId: folder });
+      if (!custom) throw new NotFoundError("Folder not found");
+    }
+
     const fileId = generateFileId();
     const key = r2Key(clinicId, input.patientId, fileId, input.fileName);
     await uploadToR2(key, input.data, input.mimeType ?? "application/octet-stream");
 
     const now = new Date();
+    const patientPhone = String(patient.whatsapp ?? patient.mobile ?? patient.phone ?? "");
     const doc: MedicalRecordFileDoc = {
       clinicId,
       fileId,
       patientId: input.patientId,
       patientName: String(patient.fullName ?? patient.name ?? "Patient"),
-      patientPhone: typeof patient.phone === "string" ? patient.phone : null,
+      patientPhone: patientPhone || null,
       fileName: input.fileName,
       r2Key: key,
+      folder,
       mimeType: input.mimeType,
       size: input.data.length,
       uploadedBy: ctx.userId,
@@ -74,6 +97,7 @@ export class MedicalRecordService {
         patientId: input.patientId,
         patientName: doc.patientName,
         fileName: input.fileName,
+        folder,
         size: doc.size,
       },
     });
@@ -110,6 +134,67 @@ export class MedicalRecordService {
     return docs as unknown as MedicalRecordFileDoc[];
   }
 
+  async createFolder(
+    ctx: ClinicContext,
+    input: CreateMedicalRecordFolderInput
+  ): Promise<MedicalRecordFolderDoc> {
+    const clinicId = requireClinicOf(ctx);
+    const patient = await this.db
+      .collection(CLINIC_COLLECTIONS.patients)
+      .findOne({ clinicId, patientId: input.patientId, status: { $ne: "deleted" } });
+    if (!patient) throw new NotFoundError("Patient not found");
+
+    const name = input.name.trim().replace(/\s+/g, " ").slice(0, 60);
+    if (!name) throw new BadRequestError("Folder name is required");
+
+    const folderId = generateFolderId();
+    const now = new Date();
+    const doc: MedicalRecordFolderDoc = {
+      clinicId,
+      folderId,
+      patientId: input.patientId,
+      name,
+      createdBy: ctx.userId,
+      createdByName: ctx.name,
+      createdAt: now,
+    };
+    await this.folderCollection().insertOne(doc as never);
+
+    await writeAudit(this.db, ctx, {
+      action: "create",
+      entity: "medical_record_folder",
+      entityId: folderId,
+      metadata: { patientId: input.patientId, name },
+    });
+
+    return doc;
+  }
+
+  async listFolders(ctx: ClinicContext): Promise<MedicalRecordFolderDoc[]> {
+    const clinicId = requireClinicOf(ctx);
+    const docs = await this.folderCollection()
+      .find({ clinicId })
+      .sort({ createdAt: 1 })
+      .toArray();
+    return docs as unknown as MedicalRecordFolderDoc[];
+  }
+
+  async deleteFolder(ctx: ClinicContext, folderId: string): Promise<void> {
+    const clinicId = requireClinicOf(ctx);
+    const folder = await this.folderCollection().findOne({ clinicId, folderId });
+    if (!folder) throw new NotFoundError("Folder not found");
+
+    await this.collection().deleteMany({ clinicId, folder: folderId });
+    await this.folderCollection().deleteOne({ clinicId, folderId });
+
+    await writeAudit(this.db, ctx, {
+      action: "delete",
+      entity: "medical_record_folder",
+      entityId: folderId,
+      metadata: { patientId: folder.patientId, name: folder.name },
+    });
+  }
+
   async getFile(ctx: ClinicContext, fileId: string): Promise<MedicalRecordFileDoc> {
     const clinicId = requireClinicOf(ctx);
     const doc = await this.collection().findOne({ clinicId, fileId });
@@ -136,4 +221,4 @@ export class MedicalRecordService {
   }
 }
 
-export { medicalRecordFileToPublic, type MedicalRecordFileDoc };
+export { medicalRecordFileToPublic, medicalRecordFolderToPublic, type MedicalRecordFileDoc };

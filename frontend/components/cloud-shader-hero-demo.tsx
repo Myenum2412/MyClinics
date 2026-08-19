@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { CloudShader } from "@/components/ui/cloud-shader";
-import { Button } from "@/components/ui/button";
+import { AppointmentBookingForm } from "@/components/appointment-booking-form";
 
 export default function CloudShaderHeroDemo() {
   return (
@@ -59,31 +59,9 @@ export default function CloudShaderHeroDemo() {
         </p>
       </div>
 
-      {/* CTA */}
-      <div className="relative z-10 mx-auto mt-12 w-full max-w-4xl px-4 pb-16">
-        <div className="flex flex-col items-center gap-4 rounded-3xl border border-white/50 bg-white/60 p-8 text-center shadow-2xl shadow-[#0D47A1]/20 backdrop-blur-xl sm:flex-row sm:justify-center sm:gap-6">
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-sm font-semibold text-gray-700">
-              Already a clinic?
-            </span>
-            <Button render={<Link href="/login" />} className="w-48">
-              Login
-            </Button>
-          </div>
-          <div className="hidden h-16 w-px bg-gray-300 sm:block" />
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-sm font-semibold text-gray-700">
-              New to My Clinics?
-            </span>
-            <Button
-              render={<Link href="/signup/clinic" />}
-              variant="outline"
-              className="w-48 text-black"
-            >
-              Create your clinic
-            </Button>
-          </div>
-        </div>
+      {/* Appointment form */}
+      <div className="relative z-10 mx-auto mt-12 w-full px-4 pb-16">
+        <AppointmentBookingForm />
       </div>
     </div>
   );

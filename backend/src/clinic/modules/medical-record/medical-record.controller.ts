@@ -6,6 +6,7 @@ import { isAllowedUpload } from "@/clinic/core/upload-guard";
 import {
   MedicalRecordService,
   medicalRecordFileToPublic,
+  medicalRecordFolderToPublic,
 } from "@/clinic/modules/medical-record/medical-record.service";
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
@@ -21,12 +22,14 @@ export class MedicalRecordController {
 
     let patientId = "";
     let fileName = "";
+    let folder = "";
     let mimeType: string | null = null;
     let data: Buffer | null = null;
 
     for await (const part of request.parts()) {
       if (part.type === "field") {
         if (part.fieldname === "patientId") patientId = String(part.value ?? "");
+        if (part.fieldname === "folder") folder = String(part.value ?? "");
       } else if (part.type === "file") {
         const buf = await part.toBuffer();
         if (buf.length > MAX_FILE_BYTES) {
@@ -52,6 +55,7 @@ export class MedicalRecordController {
       fileName,
       mimeType,
       data,
+      folder: folder || undefined,
     });
     return reply.code(201).send(medicalRecordFileToPublic(file));
   }
@@ -62,6 +66,40 @@ export class MedicalRecordController {
     const db = await getDb();
     const files = await this.service(db).listFiles(ctx);
     return reply.send({ files: files.map(medicalRecordFileToPublic) });
+  }
+
+  async createFolder(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (!ctx) throw new UnauthorizedError();
+    const body = (request.body ?? {}) as { patientId?: string; name?: string };
+    if (!body.patientId) throw new BadRequestError("patientId is required");
+    if (!body.name || !String(body.name).trim()) {
+      throw new BadRequestError("Folder name is required");
+    }
+    const db = await getDb();
+    const folder = await this.service(db).createFolder(ctx, {
+      patientId: String(body.patientId),
+      name: String(body.name),
+    });
+    return reply.code(201).send(medicalRecordFolderToPublic(folder));
+  }
+
+  async listFolders(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (!ctx) throw new UnauthorizedError();
+    const db = await getDb();
+    const folders = await this.service(db).listFolders(ctx);
+    return reply.send({ folders: folders.map(medicalRecordFolderToPublic) });
+  }
+
+  async removeFolder(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (!ctx) throw new UnauthorizedError();
+    const { folderId } = request.params as { folderId: string };
+    if (!folderId) throw new BadRequestError("folderId is required");
+    const db = await getDb();
+    await this.service(db).deleteFolder(ctx, folderId);
+    return reply.send({ ok: true });
   }
 
   async download(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {

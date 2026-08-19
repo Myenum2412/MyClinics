@@ -1037,10 +1037,20 @@ export interface MedicalRecordFile {
   patientName: string;
   patientPhone: string | null;
   fileName: string;
+  /** Folder key — "medicine" | "medical" | "prescriptions" or a custom folder id. */
+  folder: string;
   mimeType: string | null;
   size: number;
   uploadedBy: string;
   uploadedByName: string | null;
+  createdAt: string;
+}
+
+export interface MedicalRecordFolder {
+  folderId: string;
+  patientId: string;
+  name: string;
+  createdByName: string | null;
   createdAt: string;
 }
 
@@ -1051,10 +1061,12 @@ export function listMedicalRecordFiles(clinicId: string): Promise<{ files: Medic
 export async function uploadMedicalRecordFile(
   clinicId: string,
   patientId: string,
-  file: File
+  file: File,
+  folder?: string
 ): Promise<MedicalRecordFile> {
   const form = new FormData();
   form.append("patientId", patientId);
+  if (folder) form.append("folder", folder);
   form.append("file", file);
 
   const headers: Record<string, string> = {};
@@ -1095,6 +1107,32 @@ export function deleteMedicalRecordFile(
   fileId: string
 ): Promise<{ ok: true }> {
   return request(tenantPath(clinicId, `/medical-record/${fileId}`), { method: "DELETE" });
+}
+
+export function listMedicalRecordFolders(
+  clinicId: string
+): Promise<{ folders: MedicalRecordFolder[] }> {
+  return request(tenantPath(clinicId, "/medical-record/folders"), { cache: "no-store" });
+}
+
+export function createMedicalRecordFolder(
+  clinicId: string,
+  patientId: string,
+  name: string
+): Promise<MedicalRecordFolder> {
+  return request(tenantPath(clinicId, "/medical-record/folders"), {
+    method: "POST",
+    body: JSON.stringify({ patientId, name }),
+  });
+}
+
+export function deleteMedicalRecordFolder(
+  clinicId: string,
+  folderId: string
+): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/medical-record/folders/${folderId}`), {
+    method: "DELETE",
+  });
 }
 
 // ── Settings ───────────────────────────────────────────────────────────────
