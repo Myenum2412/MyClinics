@@ -14,17 +14,14 @@ export class SettingsRepository {
   }
 
   async get(): Promise<WithId<ClinicSettingsDoc>> {
-    const existing = await this.collection().findOne({ clinicId: this.clinicId });
-    if (existing) return existing;
-    const now = new Date();
-    const doc: ClinicSettingsDoc = {
-      clinicId: this.clinicId,
-      ...DEFAULT_SETTINGS,
-      createdAt: now,
-      updatedAt: now,
-    };
-    await this.collection().insertOne(doc as never);
-    return (await this.collection().findOne({ clinicId: this.clinicId })) as WithId<ClinicSettingsDoc>;
+    const result = await this.collection().findOneAndUpdate(
+      { clinicId: this.clinicId },
+      {
+        $setOnInsert: { ...DEFAULT_SETTINGS, clinicId: this.clinicId, createdAt: new Date(), updatedAt: new Date() },
+      },
+      { upsert: true, returnDocument: "after" }
+    );
+    return result as WithId<ClinicSettingsDoc>;
   }
 
   async update(patch: Record<string, unknown>): Promise<WithId<ClinicSettingsDoc> | null> {
