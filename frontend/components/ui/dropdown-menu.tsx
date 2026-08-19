@@ -24,11 +24,12 @@ function DropdownMenuContent({
   side = "bottom",
   sideOffset = 4,
   className,
+  collisionBoundary,
   ...props
 }: MenuPrimitive.Popup.Props &
   Pick<
     MenuPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset"
+    "align" | "alignOffset" | "side" | "sideOffset" | "collisionBoundary"
   >) {
   return (
     <MenuPrimitive.Portal>
@@ -38,6 +39,12 @@ function DropdownMenuContent({
         alignOffset={alignOffset}
         side={side}
         sideOffset={sideOffset}
+        collisionBoundary={
+          collisionBoundary ??
+          (typeof window !== "undefined"
+            ? { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight }
+            : "clipping-ancestors")
+        }
       >
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"

@@ -68,11 +68,12 @@ function SelectContent({
   align = "center",
   alignOffset = 0,
   alignItemWithTrigger = true,
+  collisionBoundary,
   ...props
 }: SelectPrimitive.Popup.Props &
   Pick<
     SelectPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
+    "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger" | "collisionBoundary"
   >) {
   return (
     <SelectPrimitive.Portal>
@@ -82,6 +83,12 @@ function SelectContent({
         align={align}
         alignOffset={alignOffset}
         alignItemWithTrigger={alignItemWithTrigger}
+        collisionBoundary={
+          collisionBoundary ??
+          (typeof window !== "undefined"
+            ? { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight }
+            : "clipping-ancestors")
+        }
         className="isolate z-50"
       >
         <SelectPrimitive.Popup
