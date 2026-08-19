@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
@@ -38,6 +38,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   ArrowLeft,
   ClipboardList,
@@ -223,6 +230,204 @@ type DefaultFolderKey = "medicine" | "medical" | "prescriptions";
 
 const DEFAULT_FOLDER_KEYS: DefaultFolderKey[] = ["medicine", "medical", "prescriptions"];
 
+function MedicineRecordCard({
+  record,
+  doctorName,
+  onDownload,
+}: {
+  record: MedicineRecord;
+  doctorName: (doctorId: string | null) => string;
+  onDownload: (fileId: string, name: string) => void;
+}) {
+  const meta = parseRecordMetadata(record.notes);
+  const metaFields = metadataFields(meta);
+  return (
+    <Card className="border-blue-100">
+      <CardContent className="p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50">
+            {formatDate(record.visitDate)}
+          </Badge>
+          <span className="text-xs text-gray-500">Doctor: {doctorName(record.doctorId)}</span>
+        </div>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Diagnosis</p>
+            <p className="text-sm font-medium text-gray-800">{record.diagnosis}</p>
+          </div>
+          {record.symptoms && (
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Symptoms</p>
+              <p className="text-sm text-gray-700">{record.symptoms}</p>
+            </div>
+          )}
+          {record.treatment && (
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Treatment</p>
+              <p className="text-sm text-gray-700">{record.treatment}</p>
+            </div>
+          )}
+          {metaFields.map((f) => (
+            <div key={f.label}>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{f.label}</p>
+              <p className="text-sm text-gray-700">{f.value}</p>
+            </div>
+          ))}
+          {!meta && record.notes && (
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Notes</p>
+              <p className="text-sm text-gray-700">{record.notes}</p>
+            </div>
+          )}
+        </div>
+        {record.attachments.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+            {record.attachments.map((a, i) => (
+              <button
+                key={i}
+                type="button"
+                disabled={!a.fileId && !a.url}
+                onClick={() => {
+                  if (a.fileId) onDownload(a.fileId, a.name);
+                  else if (a.url) window.open(a.url, "_blank", "noopener,noreferrer");
+                }}
+                className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-gray-600 ring-1 ring-slate-200 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Download className="size-3" />
+                {a.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function PrescriptionCard({
+  prescription,
+  doctorName,
+}: {
+  prescription: Prescription;
+  doctorName: (doctorId: string | null) => string;
+}) {
+  return (
+    <Card className="border-emerald-100">
+      <CardContent className="p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
+            {formatDate(prescription.visitDate)}
+          </Badge>
+          <span className="text-xs text-gray-500">Doctor: {doctorName(prescription.doctorId)}</span>
+        </div>
+        {prescription.diagnosis && (
+          <div className="mt-3">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Diagnosis</p>
+            <p className="text-sm font-medium text-gray-800">{prescription.diagnosis}</p>
+          </div>
+        )}
+        <div className="mt-3 overflow-hidden rounded-lg ring-1 ring-slate-200">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-gray-500">
+              <tr>
+                <th className="px-3 py-2 font-medium">Medicine</th>
+                <th className="px-3 py-2 font-medium">Dosage</th>
+                <th className="px-3 py-2 font-medium">Frequency</th>
+                <th className="px-3 py-2 font-medium">Duration</th>
+                <th className="px-3 py-2 font-medium">Instructions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {prescription.medicines.map((m, i) => (
+                <tr key={i}>
+                  <td className="px-3 py-2 font-medium text-gray-800">{m.name}</td>
+                  <td className="px-3 py-2 text-gray-600">{m.dosage ?? "—"}</td>
+                  <td className="px-3 py-2 text-gray-600">{m.frequency ?? "—"}</td>
+                  <td className="px-3 py-2 text-gray-600">{m.duration ?? "—"}</td>
+                  <td className="px-3 py-2 text-gray-600">{m.instructions ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {prescription.notes && (
+          <p className="mt-3 text-sm text-gray-700">
+            <span className="font-medium text-gray-500">Notes: </span>
+            {prescription.notes}
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function UploadedFileRow({
+  file,
+  onDownload,
+  onDelete,
+}: {
+  file: MedicalRecordFile;
+  onDownload: (file: MedicalRecordFile) => void;
+  onDelete: (file: MedicalRecordFile) => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      {fileIcon(file.mimeType, file.fileName)}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium text-gray-800">{file.fileName}</p>
+        <p className="text-xs text-gray-500">
+          {formatSize(file.size)} · {formatDate(file.createdAt)}
+          {file.uploadedByName ? ` · by ${file.uploadedByName}` : ""}
+        </p>
+      </div>
+      <div className="flex items-center gap-1">
+        <Button variant="ghost" size="icon" onClick={() => onDownload(file)} aria-label="Download">
+          <Download className="size-4 text-blue-600" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onDelete(file)}
+          aria-label="Delete"
+          className="hover:bg-red-50 hover:text-red-600"
+        >
+          <Trash2 className="size-4 text-red-500" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeading({
+  Icon,
+  tint,
+  title,
+  count,
+  countLabel,
+  action,
+}: {
+  Icon: typeof ClipboardList;
+  tint: string;
+  title: string;
+  count: number;
+  countLabel: string;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <span className={`flex size-8 items-center justify-center rounded-full bg-slate-100 ${tint}`}>
+        <Icon className="size-4" />
+      </span>
+      <h2 className="text-sm font-semibold text-gray-800">{title}</h2>
+      <Badge variant="secondary">
+        {count} {countLabel}
+        {count === 1 ? "" : "s"}
+      </Badge>
+      {action && <div className="ml-auto">{action}</div>}
+    </div>
+  );
+}
+
 const FOLDER_META: Record<
   DefaultFolderKey,
   { title: string; icon: typeof ClipboardList; tint: string; bg: string; hint: string }
@@ -271,6 +476,8 @@ export default function MedicalRecordPage() {
   const [search, setSearch] = useState("");
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
+  const [uploadTarget, setUploadTarget] = useState<string>("medical");
+  const dragDepth = useRef(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(() => {
@@ -428,8 +635,9 @@ export default function MedicalRecordPage() {
   }, [patients, search]);
 
   const handleUpload = useCallback(
-    async (fileList: FileList | null) => {
+    async (fileList: FileList | null, targetFolder?: string) => {
       if (!folder || !fileList?.length || uploading) return;
+      const target = targetFolder ?? "medical";
       setUploading(true);
       let uploaded = 0;
       let failed = 0;
@@ -445,7 +653,7 @@ export default function MedicalRecordPage() {
           continue;
         }
         try {
-          await uploadMedicalRecordFile(clinicId, folder.patientId, file, activeFolder ?? "medical");
+          await uploadMedicalRecordFile(clinicId, folder.patientId, file, target);
           uploaded += 1;
         } catch (err) {
           failed += 1;
@@ -460,7 +668,46 @@ export default function MedicalRecordPage() {
       }
       setUploading(false);
     },
-    [clinicId, folder, activeFolder, uploading, refresh]
+    [clinicId, folder, uploading, refresh]
+  );
+
+  const folderLabel = useCallback(
+    (key: string): string => {
+      if (key === "medicine" || key === "medical" || key === "prescriptions")
+        return FOLDER_META[key].title;
+      const fo = folders.find((x) => x.folderId === key);
+      return fo?.name ?? "Folder";
+    },
+    [folders]
+  );
+
+  const onPageDragEnter = useCallback((e: DragEvent) => {
+    if (!e.dataTransfer.types.includes("Files")) return;
+    e.preventDefault();
+    dragDepth.current += 1;
+    setDragging(true);
+  }, []);
+
+  const onPageDragOver = useCallback((e: DragEvent) => {
+    if (!e.dataTransfer.types.includes("Files")) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "copy";
+  }, []);
+
+  const onPageDragLeave = useCallback(() => {
+    dragDepth.current = Math.max(0, dragDepth.current - 1);
+    if (dragDepth.current === 0) setDragging(false);
+  }, []);
+
+  const onPageDrop = useCallback(
+    (e: DragEvent, targetFolder?: string) => {
+      if (!e.dataTransfer.types.includes("Files")) return;
+      e.preventDefault();
+      dragDepth.current = 0;
+      setDragging(false);
+      void handleUpload(e.dataTransfer.files, targetFolder);
+    },
+    [handleUpload]
   );
 
   const handleCreateFolder = useCallback(async () => {
@@ -560,7 +807,24 @@ export default function MedicalRecordPage() {
           ? folderPrescriptions.length + folderKeyFiles.length
           : folderKeyFiles.length;
     return (
-      <div className="space-y-4">
+      <div
+        className="space-y-4"
+        onDragEnter={onPageDragEnter}
+        onDragOver={onPageDragOver}
+        onDragLeave={onPageDragLeave}
+        onDrop={(e) => onPageDrop(e, activeFolder)}
+      >
+        {dragging && (
+          <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/10">
+            <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-blue-400 bg-white px-10 py-8 shadow-lg">
+              <UploadCloud className="size-10 text-blue-500" />
+              <p className="text-sm font-semibold text-gray-800">Drop files to upload</p>
+              <p className="text-xs text-gray-500">
+                into the {meta.title} folder of {folder.fullName}
+              </p>
+            </div>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-3">
           <Button
             variant="ghost"
@@ -610,22 +874,8 @@ export default function MedicalRecordPage() {
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-8">
             <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragging(true);
-              }}
-              onDragLeave={() => setDragging(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragging(false);
-                void handleUpload(e.dataTransfer.files);
-              }}
               onClick={() => inputRef.current?.click()}
-              className={`flex w-full max-w-lg cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-6 py-8 text-center transition-colors ${
-                dragging
-                  ? "border-blue-400 bg-blue-50"
-                  : "border-blue-200 bg-blue-50/40 hover:border-blue-300 hover:bg-blue-50"
-              }`}
+              className="flex w-full max-w-lg cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/40 px-6 py-8 text-center transition-colors hover:border-blue-300 hover:bg-blue-50"
             >
               {uploading ? (
                 <Loader2 className="size-8 animate-spin text-blue-500" />
@@ -633,11 +883,11 @@ export default function MedicalRecordPage() {
                 <UploadCloud className="size-8 text-blue-500" />
               )}
               <p className="text-sm font-medium text-gray-700">
-                {uploading ? "Uploading…" : "Click or drag & drop files"}
+                {uploading ? "Uploading…" : "Click to browse — or drag & drop anywhere on this page"}
               </p>
               <p className="text-xs text-gray-500">
-                Files added here appear in the {meta.title} folder — a copy is sent to{" "}
-                {folder.fullName}&apos;s WhatsApp number automatically
+                Files land in the {meta.title} folder — a copy is sent to {folder.fullName}
+                &apos;s WhatsApp number automatically
               </p>
             </div>
             <input
@@ -647,7 +897,7 @@ export default function MedicalRecordPage() {
               accept={ACCEPT}
               className="hidden"
               onChange={(e) => {
-                void handleUpload(e.target.files);
+                void handleUpload(e.target.files, activeFolder);
                 e.target.value = "";
               }}
             />
@@ -658,35 +908,12 @@ export default function MedicalRecordPage() {
           <Card>
             <CardContent className="divide-y divide-slate-100 p-0">
               {folderKeyFiles.map((f) => (
-                <div key={f.fileId} className="flex items-center gap-3 px-4 py-3">
-                  {fileIcon(f.mimeType, f.fileName)}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-800">{f.fileName}</p>
-                    <p className="text-xs text-gray-500">
-                      {formatSize(f.size)} · {formatDate(f.createdAt)}
-                      {f.uploadedByName ? ` · by ${f.uploadedByName}` : ""}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => void handleDownload(f)}
-                      aria-label="Download"
-                    >
-                      <Download className="size-4 text-blue-600" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setDeleteTarget(f)}
-                      aria-label="Delete"
-                      className="hover:bg-red-50 hover:text-red-600"
-                    >
-                      <Trash2 className="size-4 text-red-500" />
-                    </Button>
-                  </div>
-                </div>
+                <UploadedFileRow
+                  key={f.fileId}
+                  file={f}
+                  onDownload={handleDownload}
+                  onDelete={(file) => setDeleteTarget(file)}
+                />
               ))}
             </CardContent>
           </Card>
@@ -703,83 +930,14 @@ export default function MedicalRecordPage() {
             <div className="space-y-3">
               {[...folderRecords]
                 .sort((a, b) => b.visitDate.localeCompare(a.visitDate))
-                .map((r) => {
-                  const meta = parseRecordMetadata(r.notes);
-                  const metaFields = metadataFields(meta);
-                  return (
-                    <Card key={r.recordId} className="border-blue-100">
-                      <CardContent className="p-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50">
-                            {formatDate(r.visitDate)}
-                          </Badge>
-                          <span className="text-xs text-gray-500">
-                            Doctor: {doctorName(r.doctorId)}
-                          </span>
-                        </div>
-                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                          <div>
-                            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                              Diagnosis
-                            </p>
-                            <p className="text-sm font-medium text-gray-800">{r.diagnosis}</p>
-                          </div>
-                          {r.symptoms && (
-                            <div>
-                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                                Symptoms
-                              </p>
-                              <p className="text-sm text-gray-700">{r.symptoms}</p>
-                            </div>
-                          )}
-                          {r.treatment && (
-                            <div>
-                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                                Treatment
-                              </p>
-                              <p className="text-sm text-gray-700">{r.treatment}</p>
-                            </div>
-                          )}
-                          {metaFields.map((f) => (
-                            <div key={f.label}>
-                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                                {f.label}
-                              </p>
-                              <p className="text-sm text-gray-700">{f.value}</p>
-                            </div>
-                          ))}
-                          {!meta && r.notes && (
-                            <div>
-                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                                Notes
-                              </p>
-                              <p className="text-sm text-gray-700">{r.notes}</p>
-                            </div>
-                          )}
-                        </div>
-                        {r.attachments.length > 0 && (
-                          <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-                            {r.attachments.map((a, i) => (
-                              <button
-                                key={i}
-                                type="button"
-                                disabled={!a.fileId && !a.url}
-                                onClick={() => {
-                                  if (a.fileId) void handleRecordAttachmentDownload(a.fileId, a.name);
-                                  else if (a.url) window.open(a.url, "_blank", "noopener,noreferrer");
-                                }}
-                                className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-gray-600 ring-1 ring-slate-200 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                              >
-                                <Download className="size-3" />
-                                {a.name}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
+                .map((r) => (
+                  <MedicineRecordCard
+                    key={r.recordId}
+                    record={r}
+                    doctorName={doctorName}
+                    onDownload={handleRecordAttachmentDownload}
+                  />
+                ))}
             </div>
           ) : (
             <Card>
@@ -795,56 +953,11 @@ export default function MedicalRecordPage() {
               {[...folderPrescriptions]
                 .sort((a, b) => b.visitDate.localeCompare(a.visitDate))
                 .map((p) => (
-                  <Card key={p.prescriptionId} className="border-emerald-100">
-                    <CardContent className="p-4">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
-                          {formatDate(p.visitDate)}
-                        </Badge>
-                        <span className="text-xs text-gray-500">
-                          Doctor: {doctorName(p.doctorId)}
-                        </span>
-                      </div>
-                      {p.diagnosis && (
-                        <div className="mt-3">
-                          <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                            Diagnosis
-                          </p>
-                          <p className="text-sm font-medium text-gray-800">{p.diagnosis}</p>
-                        </div>
-                      )}
-                      <div className="mt-3 overflow-hidden rounded-lg ring-1 ring-slate-200">
-                        <table className="w-full text-left text-sm">
-                          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-gray-500">
-                            <tr>
-                              <th className="px-3 py-2 font-medium">Medicine</th>
-                              <th className="px-3 py-2 font-medium">Dosage</th>
-                              <th className="px-3 py-2 font-medium">Frequency</th>
-                              <th className="px-3 py-2 font-medium">Duration</th>
-                              <th className="px-3 py-2 font-medium">Instructions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {p.medicines.map((m, i) => (
-                              <tr key={i}>
-                                <td className="px-3 py-2 font-medium text-gray-800">{m.name}</td>
-                                <td className="px-3 py-2 text-gray-600">{m.dosage ?? "—"}</td>
-                                <td className="px-3 py-2 text-gray-600">{m.frequency ?? "—"}</td>
-                                <td className="px-3 py-2 text-gray-600">{m.duration ?? "—"}</td>
-                                <td className="px-3 py-2 text-gray-600">{m.instructions ?? "—"}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      {p.notes && (
-                        <p className="mt-3 text-sm text-gray-700">
-                          <span className="font-medium text-gray-500">Notes: </span>
-                          {p.notes}
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <PrescriptionCard
+                    key={p.prescriptionId}
+                    prescription={p}
+                    doctorName={doctorName}
+                  />
                 ))}
             </div>
           ) : (
@@ -886,12 +999,35 @@ export default function MedicalRecordPage() {
     );
   }
 
-  // ── Patient view (folders) ─────────────────────────────────────────────
+  // ── Patient view (all records on one page) ─────────────────────────────
   if (folder) {
     const stats = patientStats.get(folder.patientId);
     const age = calculateAge(folder.dateOfBirth);
+    const allFolderFiles = folderFiles;
+    const uploadFolderLabel = folderLabel(uploadTarget);
+    const groupedKeys = [
+      ...DEFAULT_FOLDER_KEYS.filter((k) => (filesByFolderKey.get(k) ?? []).length > 0),
+      ...customFoldersForPatient.map((fo) => fo.folderId),
+    ];
     return (
-      <div className="space-y-4">
+      <div
+        className="space-y-4"
+        onDragEnter={onPageDragEnter}
+        onDragOver={onPageDragOver}
+        onDragLeave={onPageDragLeave}
+        onDrop={(e) => onPageDrop(e, uploadTarget)}
+      >
+        {dragging && (
+          <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/10">
+            <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-blue-400 bg-white px-10 py-8 shadow-lg">
+              <UploadCloud className="size-10 text-blue-500" />
+              <p className="text-sm font-semibold text-gray-800">Drop files to upload</p>
+              <p className="text-xs text-gray-500">
+                into {uploadFolderLabel} of {folder.fullName}
+              </p>
+            </div>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => setFolder(null)} aria-label="Back">
             <ArrowLeft className="size-5" />
@@ -933,107 +1069,271 @@ export default function MedicalRecordPage() {
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {DEFAULT_FOLDER_KEYS.map((kind) => {
-            const meta = FOLDER_META[kind];
-            const filesInFolder = filesByFolderKey.get(kind) ?? [];
-            const count =
-              kind === "medicine"
-                ? folderRecords.length + filesInFolder.length
-                : kind === "medical"
-                  ? filesInFolder.length
-                  : folderPrescriptions.length + filesInFolder.length;
-            const sub =
-              kind === "medical" && filesInFolder.length > 0
-                ? `${formatSize(filesInFolder.reduce((s, f) => s + f.size, 0))} stored`
-                : kind === "medicine" && folderRecords.length > 0
-                  ? `Last visit ${formatDate([...folderRecords].sort((a, b) => b.visitDate.localeCompare(a.visitDate))[0].visitDate)}`
-                  : kind === "prescriptions" && folderPrescriptions.length > 0
-                    ? `Last issued ${formatDate([...folderPrescriptions].sort((a, b) => b.visitDate.localeCompare(a.visitDate))[0].visitDate)}`
-                    : "Empty folder";
-            return (
-              <button
-                key={kind}
-                onClick={() => setActiveFolder(kind)}
-                className="group flex flex-col gap-3 rounded-xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-4 text-left transition-all hover:border-slate-300 hover:shadow-md"
+        <Card>
+          <CardContent className="flex flex-col items-center gap-4 py-8">
+            <div
+              onClick={() => inputRef.current?.click()}
+              className="flex w-full max-w-lg cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/40 px-6 py-8 text-center transition-colors hover:border-blue-300 hover:bg-blue-50"
+            >
+              {uploading ? (
+                <Loader2 className="size-8 animate-spin text-blue-500" />
+              ) : (
+                <UploadCloud className="size-8 text-blue-500" />
+              )}
+              <p className="text-sm font-medium text-gray-700">
+                {uploading ? "Uploading…" : "Click to browse — or drag & drop anywhere on this page"}
+              </p>
+              <p className="text-xs text-gray-500">
+                Files land in {uploadFolderLabel} — a copy is sent to {folder.fullName}
+                &apos;s WhatsApp number automatically
+              </p>
+            </div>
+            <div className="flex w-full max-w-lg items-center gap-2">
+              <Select value={uploadTarget} onValueChange={(v) => setUploadTarget(v ?? "medical")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Upload to folder" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DEFAULT_FOLDER_KEYS.map((k) => (
+                    <SelectItem key={k} value={k}>
+                      {FOLDER_META[k].title}
+                    </SelectItem>
+                  ))}
+                  {customFoldersForPatient.map((fo) => (
+                    <SelectItem key={fo.folderId} value={fo.folderId}>
+                      {fo.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1.5 text-xs"
+                onClick={() => setNewFolderOpen(true)}
               >
-                <div className="flex items-center gap-3">
-                  <span className={`flex size-10 shrink-0 items-center justify-center rounded-full ${meta.bg} ${meta.tint}`}>
-                    <meta.icon className="size-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-gray-800">{meta.title}</p>
-                    <p className="text-xs text-gray-500">{meta.hint}</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>
-                    {count} {kind === "medicine" ? "item" : kind === "medical" ? "file" : "item"}
-                    {count === 1 ? "" : "s"} · {sub}
-                  </span>
-                  <span className="text-blue-600 opacity-0 transition-opacity group-hover:opacity-100">
-                    Open →
-                  </span>
-                </div>
-              </button>
-            );
-          })}
+                <FolderPlus className="size-3.5" />
+                New Folder
+              </Button>
+            </div>
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              accept={ACCEPT}
+              className="hidden"
+              onChange={(e) => {
+                void handleUpload(e.target.files, uploadTarget);
+                e.target.value = "";
+              }}
+            />
+          </CardContent>
+        </Card>
 
-          {customFoldersForPatient.map((fo) => {
-            const meta = customFolderMeta(fo.folderId);
-            const filesInFolder = filesByFolderKey.get(fo.folderId) ?? [];
-            return (
-              <div
-                key={fo.folderId}
-                className="group relative flex flex-col gap-3 rounded-xl border border-violet-200 bg-gradient-to-b from-violet-50/40 to-white p-4 text-left transition-all hover:border-violet-300 hover:shadow-md"
+        <SectionHeading
+          Icon={ClipboardList}
+          tint="text-blue-600"
+          title="Medicine Records"
+          count={folderRecords.length}
+          countLabel="record"
+          action={
+            folderRecords.length > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => setActiveFolder("medicine")}
               >
-                <button
-                  onClick={() => setActiveFolder(fo.folderId)}
-                  className="flex flex-1 flex-col gap-3 text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className={`flex size-10 shrink-0 items-center justify-center rounded-full ${meta.bg} ${meta.tint}`}>
-                      <meta.icon className="size-5" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-gray-800">{fo.name}</p>
-                      <p className="text-xs text-gray-500">{meta.hint}</p>
+                Open folder
+              </Button>
+            ) : undefined
+          }
+        />
+        {folderRecords.length > 0 ? (
+          <div className="space-y-3">
+            {[...folderRecords]
+              .sort((a, b) => b.visitDate.localeCompare(a.visitDate))
+              .map((r) => (
+                <MedicineRecordCard
+                  key={r.recordId}
+                  record={r}
+                  doctorName={doctorName}
+                  onDownload={handleRecordAttachmentDownload}
+                />
+              ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="py-10 text-center text-sm text-gray-500">
+              No medicine records yet. Create them from the Medicine page.
+            </CardContent>
+          </Card>
+        )}
+
+        <SectionHeading
+          Icon={Folder}
+          tint="text-amber-600"
+          title="Uploaded Files"
+          count={allFolderFiles.length}
+          countLabel="file"
+          action={
+            customFoldersForPatient.length > 0 || groupedKeys.length > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => setActiveFolder("medical")}
+              >
+                Open folder
+              </Button>
+            ) : undefined
+          }
+        />
+        {allFolderFiles.length > 0 || customFoldersForPatient.length > 0 ? (
+          <div className="space-y-4">
+            {groupedKeys.map((key) => {
+              const list = filesByFolderKey.get(key) ?? [];
+              const isDefault = key === "medicine" || key === "medical" || key === "prescriptions";
+              const meta = isDefault
+                ? FOLDER_META[key as DefaultFolderKey]
+                : customFolderMeta(key);
+              const customFolder = isDefault
+                ? undefined
+                : folders.find((fo) => fo.folderId === key);
+              return (
+                <Card key={key} className="border-slate-200">
+                  <CardContent className="p-0">
+                    <div className="flex items-center gap-2 border-b border-slate-100 px-4 py-3">
+                      <span
+                        className={`flex size-7 shrink-0 items-center justify-center rounded-full ${meta.bg} ${meta.tint}`}
+                      >
+                        <meta.icon className="size-3.5" />
+                      </span>
+                      <p className="text-sm font-semibold text-gray-800">{meta.title}</p>
+                      <span className="text-xs text-gray-500">
+                        {list.length} file{list.length === 1 ? "" : "s"}
+                        {list.length > 0
+                          ? ` · ${formatSize(list.reduce((s, f) => s + f.size, 0))}`
+                          : ""}
+                      </span>
+                      <div className="ml-auto flex items-center gap-1">
+                        {customFolder && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Delete folder ${customFolder.name}`}
+                            onClick={() => setDeleteFolderTarget(customFolder)}
+                            className="size-7 hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash2 className="size-3.5 text-red-400" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => setActiveFolder(key)}
+                        >
+                          Open
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>
-                      {filesInFolder.length} file{filesInFolder.length === 1 ? "" : "s"}
-                      {filesInFolder.length > 0
-                        ? ` · ${formatSize(filesInFolder.reduce((s, f) => s + f.size, 0))}`
-                        : ""}
-                    </span>
-                    <span className="text-blue-600 opacity-0 transition-opacity group-hover:opacity-100">
-                      Open →
-                    </span>
-                  </div>
-                </button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Delete folder ${fo.name}`}
-                  onClick={() => setDeleteFolderTarget(fo)}
-                  className="absolute right-2 top-2 size-7 hover:bg-red-50 hover:text-red-600"
-                >
-                  <Trash2 className="size-3.5 text-red-400" />
-                </Button>
-              </div>
-            );
-          })}
+                    {list.length > 0 ? (
+                      <div className="divide-y divide-slate-100">
+                        {list.map((f) => (
+                          <UploadedFileRow
+                            key={f.fileId}
+                            file={f}
+                            onDownload={handleDownload}
+                            onDelete={(file) => setDeleteTarget(file)}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="px-4 py-6 text-center text-sm text-gray-500">
+                        No files in this folder yet. Drag & drop files here and pick this folder as
+                        the target.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="py-10 text-center text-sm text-gray-500">
+              No files uploaded yet. Drag & drop files anywhere on this page.
+            </CardContent>
+          </Card>
+        )}
 
-          <button
-            onClick={() => setNewFolderOpen(true)}
-            className="flex min-h-32 flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 p-4 text-center text-slate-400 transition-all hover:border-violet-300 hover:bg-violet-50/40 hover:text-violet-500"
-          >
-            <FolderPlus className="size-6" />
-            <span className="text-sm font-medium">New Folder</span>
-            <span className="text-xs">Create a custom folder for {folder.fullName}</span>
-          </button>
-        </div>
+        <SectionHeading
+          Icon={Pill}
+          tint="text-emerald-600"
+          title="Prescriptions"
+          count={folderPrescriptions.length}
+          countLabel="prescription"
+          action={
+            folderPrescriptions.length > 0 ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => setActiveFolder("prescriptions")}
+              >
+                Open folder
+              </Button>
+            ) : undefined
+          }
+        />
+        {folderPrescriptions.length > 0 ? (
+          <div className="space-y-3">
+            {[...folderPrescriptions]
+              .sort((a, b) => b.visitDate.localeCompare(a.visitDate))
+              .map((p) => (
+                <PrescriptionCard
+                  key={p.prescriptionId}
+                  prescription={p}
+                  doctorName={doctorName}
+                />
+              ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="py-10 text-center text-sm text-gray-500">
+              No prescriptions yet. Create them from the Prescriptions page.
+            </CardContent>
+          </Card>
+        )}
+
+        <ConfirmDeleteDialog
+          open={deleteTarget !== null}
+          onOpenChange={(open) => {
+            if (!open) setDeleteTarget(null);
+          }}
+          title={`Delete "${deleteTarget?.fileName ?? ""}"?`}
+          description="This file will be permanently removed. This action cannot be undone."
+          onConfirm={async () => {
+            if (deleteTarget) await handleDelete(deleteTarget);
+            setDeleteTarget(null);
+          }}
+        />
+
+        <ConfirmDeleteDialog
+          open={deleteFolderTarget !== null}
+          onOpenChange={(open) => {
+            if (!open) setDeleteFolderTarget(null);
+          }}
+          title={`Delete folder "${deleteFolderTarget?.name ?? ""}"?`}
+          description="The folder and all files inside it will be permanently removed. This action cannot be undone."
+          onConfirm={async () => {
+            if (deleteFolderTarget) {
+              await handleDeleteFolder(deleteFolderTarget);
+              setDeleteFolderTarget(null);
+            }
+          }}
+        />
 
         <Dialog open={newFolderOpen} onOpenChange={setNewFolderOpen}>
           <DialogContent className="sm:max-w-md">
@@ -1085,7 +1385,28 @@ export default function MedicalRecordPage() {
 
   // ── Root view (overall patients data) ──────────────────────────────────
   return (
-    <div className="space-y-4">
+    <div
+      className="space-y-4"
+      onDragEnter={onPageDragEnter}
+      onDragOver={onPageDragOver}
+      onDragLeave={onPageDragLeave}
+      onDrop={(e) => {
+        if (!e.dataTransfer.types.includes("Files")) return;
+        e.preventDefault();
+        dragDepth.current = 0;
+        setDragging(false);
+        toast.info("Open a patient folder first, then drag & drop files anywhere inside it");
+      }}
+    >
+      {dragging && (
+        <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/10">
+          <div className="flex flex-col items-center gap-2 rounded-2xl border-2 border-dashed border-blue-400 bg-white px-10 py-8 shadow-lg">
+            <UploadCloud className="size-10 text-blue-500" />
+            <p className="text-sm font-semibold text-gray-800">Drop files to upload</p>
+            <p className="text-xs text-gray-500">Open a patient folder first</p>
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-xl font-semibold text-gray-800">Medical Record</h1>
         <p className="hidden text-sm text-gray-500 sm:block">

@@ -57,6 +57,8 @@ export function DoctorSelect({
   allowEmpty?: boolean;
 }) {
   const doctors = useDoctorOptions(clinicId);
+  const selectedDoctor = useMemo(() => doctors.find((d) => d.doctorId === value), [doctors, value]);
+
   return (
     <Select
       value={value ?? ""}
@@ -64,7 +66,9 @@ export function DoctorSelect({
       required={required}
     >
       <SelectTrigger>
-        <SelectValue placeholder="Select doctor" />
+        <SelectValue placeholder="Select doctor">
+          {selectedDoctor ? selectedDoctor.name : value ? "Loading..." : ""}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {allowEmpty && <SelectItem value="">None</SelectItem>}
@@ -205,10 +209,14 @@ export function PatientSelect({
   required?: boolean;
 }) {
   const patients = usePatientOptions(clinicId);
+  const selectedPatient = useMemo(() => patients.find((p) => p.patientId === value), [patients, value]);
+
   return (
     <Select value={value ?? ""} onValueChange={onChange} required={required}>
       <SelectTrigger>
-        <SelectValue placeholder="Select patient" />
+        <SelectValue placeholder="Select patient">
+          {selectedPatient ? selectedPatient.fullName : value ? "Loading..." : ""}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {patients.map((p) => (
