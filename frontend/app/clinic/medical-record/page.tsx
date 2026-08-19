@@ -34,6 +34,77 @@ import {
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 
+const ALLOWED_EXTENSIONS = [
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".heic",
+  ".heif",
+  ".bmp",
+  ".tif",
+  ".tiff",
+  ".svg",
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".rtf",
+  ".odt",
+  ".txt",
+  ".xls",
+  ".xlsx",
+  ".csv",
+  ".ods",
+  ".ppt",
+  ".pptx",
+  ".odp",
+];
+
+const ACCEPT = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/heic",
+  "image/bmp",
+  "image/tiff",
+  "image/svg+xml",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/rtf",
+  "text/plain",
+  "text/csv",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  ...ALLOWED_EXTENSIONS,
+].join(",");
+
+function isAllowedFile(file: File): boolean {
+  const name = file.name.toLowerCase();
+  const ext = name.includes(".") ? name.slice(name.lastIndexOf(".")) : "";
+  if (ext && !ALLOWED_EXTENSIONS.includes(ext)) return false;
+  const mime = file.type.toLowerCase();
+  if (mime) {
+    if (mime.startsWith("image/") || mime.startsWith("text/")) return true;
+    if (
+      mime.includes("pdf") ||
+      mime.includes("msword") ||
+      mime.includes("openxmlformats-officedocument") ||
+      mime.includes("ms-excel") ||
+      mime.includes("ms-powerpoint") ||
+      mime.includes("oasis.opendocument") ||
+      mime === "application/rtf"
+    )
+      return true;
+    return false;
+  }
+  return true;
+}
+
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -125,6 +196,11 @@ export default function MedicalRecordPage() {
       for (const file of Array.from(fileList)) {
         if (file.size > MAX_FILE_BYTES) {
           toast.error(`${file.name} exceeds 25MB — skipped`);
+          failed += 1;
+          continue;
+        }
+        if (!isAllowedFile(file)) {
+          toast.error(`${file.name} — only images, PDFs and Office documents are allowed`);
           failed += 1;
           continue;
         }
@@ -235,14 +311,15 @@ export default function MedicalRecordPage() {
                 {uploading ? "Uploading…" : "Click or drag & drop files"}
               </p>
               <p className="text-xs text-gray-500">
-                Any file format up to 25MB — a copy is sent to {folder.fullName}&apos;s WhatsApp
-                number automatically
+                Images, PDFs and Office documents (DOC, XLS, PPT, CSV, TXT) up to 25MB — a copy is sent
+                to {folder.fullName}&apos;s WhatsApp number automatically
               </p>
             </div>
             <input
               ref={inputRef}
               type="file"
               multiple
+              accept={ACCEPT}
               className="hidden"
               onChange={(e) => {
                 void handleUpload(e.target.files);

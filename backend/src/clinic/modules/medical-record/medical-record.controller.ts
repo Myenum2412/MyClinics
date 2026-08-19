@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Db } from "mongodb";
 import { getDb } from "@/lib/db";
 import { BadRequestError, UnauthorizedError } from "@/clinic/core/errors";
+import { isAllowedUpload } from "@/clinic/core/upload-guard";
 import {
   MedicalRecordService,
   medicalRecordFileToPublic,
@@ -39,6 +40,11 @@ export class MedicalRecordController {
 
     if (!patientId) throw new BadRequestError("patientId is required");
     if (!data || data.length === 0) throw new BadRequestError("A file is required");
+    if (!isAllowedUpload(fileName, mimeType)) {
+      throw new BadRequestError(
+        "Unsupported file type. Only images, PDFs, and Office documents (DOC, XLS, PPT, CSV, TXT) are allowed."
+      );
+    }
 
     const db = await getDb();
     const file = await this.service(db).uploadFile(ctx, {
