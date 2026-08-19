@@ -935,6 +935,43 @@ export function voidBill(clinicId: string, billId: string): Promise<{ ok: true }
   });
 }
 
+/** Downloads the bill as a PDF and triggers the browser save dialog. */
+export async function downloadBillPdf(
+  clinicId: string,
+  billId: string,
+  filename: string
+): Promise<void> {
+  const token = typeof window !== "undefined" ? getStoredToken() : null;
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}${tenantPath(clinicId, `/billing/${billId}/pdf`)}`, {
+    method: "GET",
+    headers,
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    let error = `Download failed (${res.status})`;
+    try {
+      const data = await res.json();
+      error = (data as { error?: string }).error ?? error;
+    } catch {
+      // non-JSON error body — keep the default message
+    }
+    throw new ClinicApiError(error, res.status);
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 // ── Reports ────────────────────────────────────────────────────────────────
 
 export function listReports(

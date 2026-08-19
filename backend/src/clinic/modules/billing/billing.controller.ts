@@ -10,6 +10,13 @@ import { parsePagination } from "@/clinic/core/pagination";
 import { createBillSchema, listBillsSchema, updateBillSchema } from "@/clinic/modules/billing/billing.dto";
 import { billToPublic } from "@/clinic/modules/billing/billing.schema";
 import { BillingService } from "@/clinic/modules/billing/billing.service";
+import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
+import { requireClinicOf } from "@/clinic/core/context";
+import {
+  generateBillPdf,
+  type Bill as PdfBill,
+} from "@/lib/bill-pdf";
+import type { OrganizationRecord } from "@/services/customer/customer-context.service";
 
 export class BillingController {
   private service(db: Db): BillingService {
@@ -71,6 +78,76 @@ export class BillingController {
     await this.service(db).voidBill(ctx, billId);
     return reply.send({ ok: true });
   }
+
+  async downloadPdf(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (!ctx) throw new UnauthorizedError();
+    const { billId } = request.params as { billId: string };
+    if (!billId) throw new BadRequestError("billId is required");
+    const db = await getDb();
+    const clinicId = requireClinicOf(ctx);
+    const bill = await this.service(db).getBill(ctx, billId);
+
+    const patient = await db
+      .collection(CLINIC_COLLECTIONS.patients)
+      .findOne({ clinicId, patientId: bill.patientId, status: { $ne: "deleted" } });
+    const doctor = bill.doctorId
+      ? await db
+          .collection(CLINIC_COLLECTIONS.doctors)
+          .findOne({ clinicId, doctorId: bill.doctorId, status: { $ne: "deleted" } })
+      : null;
+
+    const clinic = await db
+      .collection(CLINIC_COLLECTIONS.clinics)
+      .findOne({ clinicId, status: { $ne: "deleted" } });
+
+    const company: OrganizationRecord = {
+      id: clinicId,
+      name: clinic?.name ?? "My Clinic",
+      whatsappNumber: null,
+      settings: {
+        open: clinic?.settings?.workingHours?.open ?? "09:00",
+        close: clinic?.settings?.workingHours?.close ?? "17:00",
+        slotMinutes: clinic?.settings?.slotMinutes ?? 30,
+      },
+      phone: clinic?.phone ?? null,
+      email: clinic?.email ?? null,
+      address: clinic?.address ?? null,
+      website: clinic?.website ?? null,
+      description: clinic?.description ?? null,
+    };
+
+    const pdfData: PdfBill = {
+      billNumber: bill.billNumber,
+      patientName: patient?.fullName ?? null,
+      patientPhone: patient?.mobile ?? null,
+      doctorName: doctor?.name ?? null,
+      date: bill.createdAt.toISOString(),
+      items: bill.items.map((item) => ({
+        name: item.description,
+        qty: item.quantity,
+        price: item.unitPrice,
+        amount: item.lineTotal,
+      })),
+      subtotal: bill.subtotal,
+      discount: bill.discount,
+      taxRate: bill.taxPercent,
+      tax: bill.taxAmount,
+      total: bill.total,
+      paymentMethod: bill.paymentMethod,
+      status: bill.status,
+      notes: bill.notes,
+    };
+
+    const pdf = await generateBillPdf(pdfData, company);
+    const filename = `bill-${bill.billNumber.replace(/[^A-Za-z0-9-]+/g, "_")}.pdf`;
+    return reply
+      .type("application/pdf")
+      .header("Content-Disposition", `attachment; filename="${filename}"`)
+      .header("Content-Length", pdf.length)
+      .send(pdf);
+  }
+
   /** Patient portal: lists only the caller's OWN billing (scoped in the service). */
   async getMine(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const ctx = request.clinic;

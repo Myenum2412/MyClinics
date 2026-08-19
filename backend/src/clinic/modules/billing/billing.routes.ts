@@ -12,6 +12,7 @@ import {
  *   POST   /api/clinics/:clinicId/billing                staff+ | doctor (own patients)
  *   GET    /api/clinics/:clinicId/billing                staff+ | doctor (own) | patient (own)
  *   GET    /api/clinics/:clinicId/billing/:billId        staff+ | doctor (own) | patient (own)
+ *   GET    /api/clinics/:clinicId/billing/:billId/pdf    staff+ | doctor (own) | patient (own)
  *   PATCH  /api/clinics/:clinicId/billing/:billId        staff+ | doctor (own patients)
  *   POST   /api/clinics/:clinicId/billing/:billId/void   staff+
  */
@@ -34,6 +35,12 @@ export function registerBillingRoutes(app: FastifyInstance): void {
     "/api/clinics/:clinicId/billing/:billId",
     { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => controller.getById(request, reply)
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/billing/:billId/pdf",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.downloadPdf(request, reply)
   );
 
   app.patch(

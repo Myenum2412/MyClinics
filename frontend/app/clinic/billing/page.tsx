@@ -8,6 +8,7 @@ import {
   type BillItem,
   type Patient,
   createBill,
+  downloadBillPdf,
   listBills,
   listPatients,
   updateBill,
@@ -222,6 +223,17 @@ export default function BillingPage() {
     downloadAnchor.click();
     downloadAnchor.remove();
     toast.success(`Exported ${selectedIds.size} bills.`);
+  };
+
+  // Download a single bill as a PDF
+  const handleDownloadPdf = async (bill: Bill) => {
+    try {
+      const filename = `${bill.billNumber.replace(/[^A-Za-z0-9-]+/g, "_")}.pdf`;
+      await downloadBillPdf(clinicId, bill.billId, filename);
+      toast.success(`Downloaded ${bill.billNumber}.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Download failed");
+    }
   };
 
   // Filtering & Search
@@ -600,6 +612,14 @@ export default function BillingPage() {
                       </TableCell>
                     )}
                     <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8"
+                        onClick={() => handleDownloadPdf(b)}
+                      >
+                        <Download className="size-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
