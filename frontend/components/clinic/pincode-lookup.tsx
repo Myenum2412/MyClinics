@@ -48,7 +48,7 @@ export function PincodeLookup({
       setLookingUp(true);
       setMessage(null);
       try {
-        const res = await fetch(`/api/pincode/${pincode}`);
+        const res = await fetch(`/pincode/${pincode}`);
         if (seq !== seqRef.current) return;
         if (!res.ok) {
           const body = (await res.json().catch(() => null)) as { error?: string } | null;

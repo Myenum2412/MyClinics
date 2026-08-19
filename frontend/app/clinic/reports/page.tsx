@@ -133,8 +133,9 @@ const COLUMN_LABELS: Record<string, string> = {
 };
 
 export default function ReportsPage() {
-  const session = useRequireRole("staff");
+  const session = useRequireRole("doctor");
   const clinicId = session?.clinicId ?? "";
+  const isDoctor = session?.role === "doctor";
 
   // Core States
   const [items, setItems] = useState<Report[]>([]);
@@ -413,13 +414,16 @@ export default function ReportsPage() {
         <div>
           <h2 className="text-balance font-medium text-foreground text-xl">Reports Dashboard</h2>
           <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
-            Upload and view digital medical records, diagnostics, and lab report attachments.
+            View digital medical records, diagnostics, and lab report attachments.
+            {isDoctor && " Only reports for your own patients are shown."}
           </p>
         </div>
-        <Button className="flex items-center gap-1.5 shadow-sm shrink-0" onClick={() => setCreating(true)}>
-          <Plus className="size-4" />
-          Add Report
-        </Button>
+        {!isDoctor && (
+          <Button className="flex items-center gap-1.5 shadow-sm shrink-0" onClick={() => setCreating(true)}>
+            <Plus className="size-4" />
+            Add Report
+          </Button>
+        )}
       </div>
 
       {/* Bulk actions bar if selected */}
@@ -612,7 +616,9 @@ export default function ReportsPage() {
                       </TableCell>
                     )}
                     <TableCell className="text-right pr-6 whitespace-nowrap">
-                      <Button variant="ghost" size="sm" className="h-8" onClick={() => setEditing(r)}>Edit</Button>
+                      {!isDoctor && (
+                        <Button variant="ghost" size="sm" className="h-8" onClick={() => setEditing(r)}>Edit</Button>
+                      )}
                       {canManage && (
                         <Button variant="ghost" size="sm" className="h-8 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(r)}>
                           Delete

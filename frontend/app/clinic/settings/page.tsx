@@ -23,7 +23,7 @@ const STAGE_LABEL: Record<string, string> = {
 };
 
 export default function SettingsPage() {
-  const session = useRequireRole("doctor");
+  const session = useRequireRole("staff");
   const canEdit = sessionCan(session, "clinic_admin");
 
   const [soul, setSoul] = useState<SoulRecord | null>(null);

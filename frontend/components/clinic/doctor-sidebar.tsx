@@ -19,9 +19,9 @@ import {
 } from "@/components/ui/sidebar"
 import {
   CalendarDaysIcon,
+  DocumentTextIcon as FileTextIcon,
   Squares2X2Icon as LayoutDashboardIcon,
   BeakerIcon as PillIcon,
-  Cog6ToothIcon as Settings2Icon,
   IdentificationIcon as StethoscopeIcon,
   UsersIcon,
   BellIcon,
@@ -80,14 +80,14 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     icon: <PillIcon className="size-6" />,
   },
   {
+    title: "Reports",
+    url: "/clinic/reports",
+    icon: <FileTextIcon className="size-6" />,
+  },
+  {
     title: "Notifications",
     url: "/clinic/notifications",
     icon: <BellIcon className="size-6" />,
-  },
-  {
-    title: "Settings",
-    url: "/clinic/settings",
-    icon: <Settings2Icon className="size-6" />,
   },
 ]
 

@@ -8,7 +8,7 @@ import {
 /**
  * Settings routes.
  *
- *   GET   /api/clinics/:clinicId/settings   clinic staff roles (doctors read-only)
+ *   GET   /api/clinics/:clinicId/settings   clinic staff roles
  *   PATCH /api/clinics/:clinicId/settings   clinic_admin
  */
 export function registerSettingsRoutes(app: FastifyInstance): void {
@@ -16,7 +16,7 @@ export function registerSettingsRoutes(app: FastifyInstance): void {
 
   app.get(
     "/api/clinics/:clinicId/settings",
-    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => controller.get(request, reply)
   );
 
