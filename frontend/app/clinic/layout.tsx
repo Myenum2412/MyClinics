@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { getOwnClinic } from "@/lib/clinic-api";
 import { DoctorSidebar } from "@/components/clinic/doctor-sidebar";
@@ -16,7 +15,6 @@ export default function ClinicLayout({
   children: React.ReactNode;
 }) {
   const session = useRequireRole("patient");
-  const pathname = usePathname();
   const [clinicName, setClinicName] = useState("My Clinic");
 
   useEffect(() => {
@@ -40,11 +38,6 @@ export default function ClinicLayout({
         <Skeleton className="h-10 w-64" />
       </div>
     );
-  }
-
-  // Standalone full-width pages (clinic profile) render without the sidebar.
-  if (pathname === "/clinic/account") {
-    return <div className="min-h-svh bg-white">{children}</div>;
   }
 
   return (
