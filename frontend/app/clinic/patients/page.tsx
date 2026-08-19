@@ -48,6 +48,7 @@ import { DoctorSelect } from "@/components/clinic/pickers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { useDropdownOptions } from "@/lib/dropdown-options";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
@@ -101,6 +102,7 @@ export default function PatientsPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Patient | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Patient | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -182,7 +184,6 @@ export default function PatientsPage() {
   }
 
   async function handleDelete(patient: Patient) {
-    if (!confirm(`Delete patient ${patient.fullName}?`)) return;
     try {
       await deletePatient(clinicId, patient.patientId);
       toast.success("Patient deleted");
@@ -549,7 +550,7 @@ export default function PatientsPage() {
                               variant="ghost"
                               size="sm"
                               className="text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDelete(p)}
+                              onClick={() => setDeleteTarget(p)}
                             >
                               Delete
                             </Button>
@@ -576,6 +577,18 @@ export default function PatientsPage() {
         </CardContent>
       </Card>
 
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={`Delete patient ${deleteTarget?.fullName ?? ""}?`}
+        description="This will permanently delete the patient and their medical records. This action cannot be undone."
+        onConfirm={async () => {
+          if (deleteTarget) await handleDelete(deleteTarget);
+          setDeleteTarget(null);
+        }}
+      />
     </div>
   );
 }

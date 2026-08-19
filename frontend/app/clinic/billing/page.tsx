@@ -13,6 +13,7 @@ import {
   updateBill,
   voidBill,
 } from "@/lib/clinic-api";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -86,6 +87,7 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [creating, setCreating] = useState(false);
+  const [voidTarget, setVoidTarget] = useState<Bill | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Table options (sorting, filtering, selection, visibility, pagination)
@@ -175,7 +177,6 @@ export default function BillingPage() {
   }
 
   async function handleVoid(bill: Bill) {
-    if (!confirm(`Void bill ${bill.billNumber}?`)) return;
     try {
       await voidBill(clinicId, bill.billId);
       toast.success("Bill voided");
@@ -519,7 +520,7 @@ export default function BillingPage() {
                           variant="ghost"
                           size="sm"
                           className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => handleVoid(b)}
+                          onClick={() => setVoidTarget(b)}
                         >
                           Void
                         </Button>
@@ -543,6 +544,20 @@ export default function BillingPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDeleteDialog
+        open={voidTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setVoidTarget(null);
+        }}
+        title={`Void bill ${voidTarget?.billNumber ?? ""}?`}
+        description="Voiding the bill marks it as cancelled and cannot be undone."
+        confirmLabel="Void"
+        onConfirm={async () => {
+          if (voidTarget) await handleVoid(voidTarget);
+          setVoidTarget(null);
+        }}
+      />
     </div>
   );
 }

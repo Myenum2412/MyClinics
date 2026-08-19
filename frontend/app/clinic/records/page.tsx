@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import {
   type MedicineRecord,
   type Doctor,
@@ -381,6 +382,7 @@ export default function RecordsPage() {
   const [items, setItems] = useState<MedicineRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<MedicineRecord | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MedicineRecord | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -561,7 +563,6 @@ export default function RecordsPage() {
 
   async function handleDelete(record: MedicineRecord) {
     const patientName = patientLookup[record.patientId] || record.patientId;
-    if (!confirm(`Delete medicine record for patient ${patientName}?`)) return;
     try {
       await deleteRecord(clinicId, record.recordId);
       toast.success("Record deleted");
@@ -920,7 +921,7 @@ export default function RecordsPage() {
                               variant="ghost"
                               size="sm"
                               className="text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDelete(r)}
+                              onClick={() => setDeleteTarget(r)}
                             >
                               Delete
                             </Button>
@@ -945,6 +946,25 @@ export default function RecordsPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title="Delete medicine record?"
+        description={
+          deleteTarget
+            ? `Delete the medicine record for patient ${
+                patientLookup[deleteTarget.patientId] ?? deleteTarget.patientId
+              }?`
+            : undefined
+        }
+        onConfirm={async () => {
+          if (deleteTarget) await handleDelete(deleteTarget);
+          setDeleteTarget(null);
+        }}
+      />
     </div>
   );
 }

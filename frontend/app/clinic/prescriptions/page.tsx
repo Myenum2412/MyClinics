@@ -15,6 +15,7 @@ import {
   listDoctors,
   API_BASE_URL,
 } from "@/lib/clinic-api";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -121,6 +122,8 @@ export default function PrescriptionsPage() {
   // Modal / Form states
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Prescription | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
   const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
@@ -215,7 +218,6 @@ export default function PrescriptionsPage() {
   }
 
   async function handleDelete(p: Prescription) {
-    if (!confirm(`Are you sure you want to delete this prescription?`)) return;
     try {
       await deletePrescription(clinicId, p.prescriptionId);
       toast.success("Prescription deleted successfully");
@@ -267,7 +269,6 @@ export default function PrescriptionsPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedIds.size} selected prescriptions?`)) return;
     try {
       setLoading(true);
       await Promise.all(
@@ -460,7 +461,7 @@ export default function PrescriptionsPage() {
                 variant="outline"
                 size="sm"
                 className="h-8 gap-1 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={handleBulkDelete}
+                onClick={() => setBulkDeleteOpen(true)}
               >
                 <Trash className="size-3.5" />
                 Delete Selected
@@ -740,7 +741,7 @@ export default function PrescriptionsPage() {
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     variant="destructive"
-                                    onClick={() => handleDelete(p)}
+                                    onClick={() => setDeleteTarget(p)}
                                     className="text-xs text-destructive"
                                   >
                                     <Trash className="mr-2 size-3.5" />
@@ -923,6 +924,29 @@ export default function PrescriptionsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title="Delete prescription?"
+        description="Are you sure you want to delete this prescription? This action cannot be undone."
+        onConfirm={async () => {
+          if (deleteTarget) await handleDelete(deleteTarget);
+          setDeleteTarget(null);
+        }}
+      />
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={`Delete ${selectedIds.size} selected prescriptions?`}
+        description="All selected prescriptions will be permanently deleted."
+        onConfirm={async () => {
+          await handleBulkDelete();
+          setBulkDeleteOpen(false);
+        }}
+      />
     </div>
   );
 }

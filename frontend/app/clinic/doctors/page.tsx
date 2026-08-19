@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import {
   type Doctor,
   createDoctor,
@@ -224,6 +225,7 @@ export default function DoctorsPage() {
   const [items, setItems] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Doctor | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Doctor | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -345,7 +347,6 @@ export default function DoctorsPage() {
   }
 
   async function handleDelete(doctor: Doctor) {
-    if (!confirm(`Delete doctor ${doctor.name}?`)) return;
     try {
       await deleteDoctor(clinicId, doctor.doctorId);
       toast.success("Doctor deleted");
@@ -677,7 +678,7 @@ export default function DoctorsPage() {
                               variant="ghost"
                               size="sm"
                               className="text-destructive hover:bg-destructive/10"
-                              onClick={() => handleDelete(d)}
+                              onClick={() => setDeleteTarget(d)}
                             >
                               Delete
                             </Button>
@@ -703,6 +704,19 @@ export default function DoctorsPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={`Delete doctor ${deleteTarget?.name ?? ""}?`}
+        description="This will permanently remove the doctor and their clinic user account. This action cannot be undone."
+        onConfirm={async () => {
+          if (deleteTarget) await handleDelete(deleteTarget);
+          setDeleteTarget(null);
+        }}
+      />
     </div>
   );
 }

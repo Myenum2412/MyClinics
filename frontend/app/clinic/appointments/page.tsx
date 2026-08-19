@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import {
   type Appointment,
   type AppointmentStatus,
@@ -146,6 +147,8 @@ export default function AppointmentsPage() {
 
   // Modal Dialogs
   const [creating, setCreating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Appointment | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   
   // Detail Modal
@@ -266,7 +269,6 @@ export default function AppointmentsPage() {
   async function handleDelete(appointment: Appointment) {
     const patient = patientMap.get(appointment.patientId);
     const patientLabel = patient ? patient.fullName : appointment.patientId;
-    if (!confirm(`Are you sure you want to delete the appointment for ${patientLabel}?`)) return;
 
     try {
       await deleteAppointment(clinicId, appointment.appointmentId);
@@ -291,8 +293,6 @@ export default function AppointmentsPage() {
   }
 
   async function handleBulkDelete() {
-    if (!confirm(`Are you sure you want to delete ${selectedIds.size} selected appointments?`)) return;
-
     let successCount = 0;
     let failCount = 0;
 
@@ -547,7 +547,7 @@ export default function AppointmentsPage() {
                 variant="outline"
                 size="sm"
                 className="h-8 gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive text-xs"
-                onClick={handleBulkDelete}
+                onClick={() => setBulkDeleteOpen(true)}
               >
                 <Trash2 className="size-3.5" />
                 Delete Selected
@@ -784,7 +784,7 @@ export default function AppointmentsPage() {
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     className="text-xs gap-1.5 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
-                                    onClick={() => handleDelete(a)}
+                                    onClick={() => setDeleteTarget(a)}
                                   >
                                     <Trash2 className="size-3.5" />
                                     Delete
@@ -995,6 +995,36 @@ export default function AppointmentsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title="Delete appointment?"
+        description={
+          deleteTarget
+            ? `Are you sure you want to delete the appointment for ${
+                patientMap.get(deleteTarget.patientId)?.fullName ??
+                deleteTarget.patientId
+              }?`
+            : undefined
+        }
+        onConfirm={async () => {
+          if (deleteTarget) await handleDelete(deleteTarget);
+          setDeleteTarget(null);
+        }}
+      />
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={`Delete ${selectedIds.size} selected appointments?`}
+        description="All selected appointments will be permanently deleted and cancel alerts will be queued."
+        onConfirm={async () => {
+          await handleBulkDelete();
+          setBulkDeleteOpen(false);
+        }}
+      />
     </div>
   );
 }

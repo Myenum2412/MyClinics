@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import {
   type Report,
   type Patient,
@@ -116,6 +117,7 @@ export default function ReportsPage() {
   const [patientLookup, setPatientLookup] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Report | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Report | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -194,7 +196,6 @@ export default function ReportsPage() {
   }
 
   async function handleDelete(report: Report) {
-    if (!confirm(`Delete report "${report.title}"?`)) return;
     try {
       await deleteReport(clinicId, report.reportId);
       toast.success("Report deleted");
@@ -570,7 +571,7 @@ export default function ReportsPage() {
                         <Button variant="ghost" size="sm" className="h-8" onClick={() => setEditing(r)}>Edit</Button>
                       )}
                       {canManage && (
-                        <Button variant="ghost" size="sm" className="h-8 text-destructive hover:bg-destructive/10" onClick={() => handleDelete(r)}>
+                        <Button variant="ghost" size="sm" className="h-8 text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(r)}>
                           Delete
                         </Button>
                       )}
@@ -593,6 +594,19 @@ export default function ReportsPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={`Delete report "${deleteTarget?.title ?? ""}"?`}
+        description="This will permanently delete the report and its file. This action cannot be undone."
+        onConfirm={async () => {
+          if (deleteTarget) await handleDelete(deleteTarget);
+          setDeleteTarget(null);
+        }}
+      />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   listPatients,
   uploadMedicalRecordFile,
 } from "@/lib/clinic-api";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -66,6 +67,7 @@ export default function MedicalRecordPage() {
   const [files, setFiles] = useState<MedicalRecordFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [folder, setFolder] = useState<Patient | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MedicalRecordFile | null>(null);
   const [search, setSearch] = useState("");
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -159,7 +161,6 @@ export default function MedicalRecordPage() {
 
   const handleDelete = useCallback(
     async (file: MedicalRecordFile) => {
-      if (!confirm(`Delete "${file.fileName}"? This cannot be undone.`)) return;
       try {
         await deleteMedicalRecordFile(clinicId, file.fileId);
         toast.success("File deleted");
@@ -276,7 +277,7 @@ export default function MedicalRecordPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => void handleDelete(f)}
+                      onClick={() => setDeleteTarget(f)}
                       aria-label="Delete"
                       className="hover:bg-red-50 hover:text-red-600"
                     >
@@ -360,6 +361,19 @@ export default function MedicalRecordPage() {
           })}
         </div>
       )}
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={`Delete "${deleteTarget?.fileName ?? ""}"?`}
+        description="This file will be permanently removed. This action cannot be undone."
+        onConfirm={async () => {
+          if (deleteTarget) await handleDelete(deleteTarget);
+          setDeleteTarget(null);
+        }}
+      />
     </div>
   );
 }
