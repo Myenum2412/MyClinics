@@ -46,6 +46,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DoctorSelect, PatientSelect } from "@/components/clinic/pickers";
+import { NameAvatar } from "@/components/clinic/name-avatar";
 import {
   AttachmentUploader,
   makeAttachmentFile,
@@ -597,8 +598,13 @@ export default function ReportsPage() {
                       <TableCell className="text-muted-foreground">{r.type}</TableCell>
                     )}
                     {visibleColumns.patient && (
-                      <TableCell className="text-muted-foreground font-medium">
-                        {patientLookup[r.patientId] || r.patientId}
+                      <TableCell>
+                        <div className="flex items-center gap-2.5">
+                          <NameAvatar name={patientLookup[r.patientId] || r.patientId} />
+                          <span className="text-muted-foreground font-medium">
+                            {patientLookup[r.patientId] || r.patientId}
+                          </span>
+                        </div>
                       </TableCell>
                     )}
                     {visibleColumns.createdAt && (

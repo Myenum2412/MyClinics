@@ -11,6 +11,7 @@ import {
   listPrescriptions,
 } from "@/lib/clinic-api";
 import { formatTime } from "@/lib/format-time";
+import { NameAvatar } from "@/components/clinic/name-avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -205,7 +206,10 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                       {formatTime(a.time)}
                     </TableCell>
                     <TableCell>
-                      {patientLookup[a.patientId] ?? a.patientId}
+                      <div className="flex items-center gap-2.5">
+                        <NameAvatar name={patientLookup[a.patientId] ?? a.patientId} />
+                        <span>{patientLookup[a.patientId] ?? a.patientId}</span>
+                      </div>
                     </TableCell>
                     <TableCell>{a.reason ?? "—"}</TableCell>
                     <TableCell>
@@ -260,7 +264,12 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                     key={p.patientId}
                     className="hover:bg-muted/30 border-b border-border last:border-0"
                   >
-                    <TableCell className="font-medium text-foreground">{p.fullName}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2.5">
+                        <NameAvatar name={p.fullName} />
+                        <span className="font-medium text-foreground">{p.fullName}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-muted-foreground">{p.mobile}</TableCell>
                     <TableCell className="text-muted-foreground">{p.email ?? "—"}</TableCell>
                     <TableCell>
@@ -322,7 +331,10 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                   >
                     <TableCell className="font-medium text-foreground">{pr.visitDate}</TableCell>
                     <TableCell>
-                      {patientLookup[pr.patientId] ?? pr.patientId}
+                      <div className="flex items-center gap-2.5">
+                        <NameAvatar name={patientLookup[pr.patientId] ?? pr.patientId} />
+                        <span>{patientLookup[pr.patientId] ?? pr.patientId}</span>
+                      </div>
                     </TableCell>
                     <TableCell>{pr.diagnosis ?? "—"}</TableCell>
                     <TableCell>{pr.medicines.length} medicine(s)</TableCell>

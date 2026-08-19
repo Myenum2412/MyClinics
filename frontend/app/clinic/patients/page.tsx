@@ -45,6 +45,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DoctorSelect } from "@/components/clinic/pickers";
+import { NameAvatar } from "@/components/clinic/name-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { useDropdownOptions } from "@/lib/dropdown-options";
@@ -659,7 +660,14 @@ export default function PatientsPage() {
                           />
                         </TableCell>
                       )}
-                      {visibleColumns.name && <TableCell className="font-medium text-foreground">{p.fullName}</TableCell>}
+                      {visibleColumns.name && (
+                        <TableCell>
+                          <div className="flex items-center gap-2.5">
+                            <NameAvatar name={p.fullName} />
+                            <span className="font-medium text-foreground">{p.fullName}</span>
+                          </div>
+                        </TableCell>
+                      )}
                       {visibleColumns.mobile && <TableCell className="text-muted-foreground">{p.mobile}</TableCell>}
                       {visibleColumns.email && <TableCell className="text-muted-foreground">{p.email ?? "—"}</TableCell>}
                       {visibleColumns.doctor && !isDoctor && (

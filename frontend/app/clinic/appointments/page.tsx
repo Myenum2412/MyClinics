@@ -63,6 +63,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { DoctorSelect, PatientSelect } from "@/components/clinic/pickers";
+import { NameAvatar } from "@/components/clinic/name-avatar";
 import StatsAppointments from "@/components/stats-appointments";
 import {
   Calendar,
@@ -849,7 +850,6 @@ export default function AppointmentsPage() {
                   {paginatedAppointments.map((a) => {
                     const patient = patientMap.get(a.patientId);
                     const doctor = doctorMap.get(a.doctorId);
-                    const pInitial = patient?.fullName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "P";
                     const dLabel = doctor ? doctor.name : a.doctorId;
 
                     return (
@@ -879,9 +879,7 @@ export default function AppointmentsPage() {
                         {visibleColumns.patient && (
                           <TableCell>
                             <div className="flex items-center gap-2.5">
-                              <div className="flex size-7.5 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-                                {pInitial}
-                              </div>
+                              <NameAvatar name={patient?.fullName || "Unknown Patient"} />
                               <div className="flex flex-col">
                                 <span className="text-xs font-semibold text-foreground leading-tight">
                                   {patient?.fullName || "Unknown Patient"}
@@ -897,9 +895,12 @@ export default function AppointmentsPage() {
 
                         {visibleColumns.doctor && (
                           <TableCell>
-                            <span className="text-xs font-medium text-foreground">
-                              {dLabel}
-                            </span>
+                            <div className="flex items-center gap-2.5">
+                              <NameAvatar name={doctor?.name || a.doctorId} />
+                              <span className="text-xs font-medium text-foreground">
+                                {dLabel}
+                              </span>
+                            </div>
                           </TableCell>
                         )}
 

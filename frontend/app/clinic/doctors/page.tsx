@@ -57,6 +57,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
+import { NameAvatar } from "@/components/clinic/name-avatar";
 
 const DAYS = [
   { value: "Mon", label: "Monday" },
@@ -688,7 +689,14 @@ export default function DoctorsPage() {
                           />
                         </TableCell>
                       )}
-                      {visibleColumns.name && <TableCell className="font-medium text-foreground">{d.name}</TableCell>}
+                      {visibleColumns.name && (
+                          <TableCell>
+                            <div className="flex items-center gap-2.5">
+                              <NameAvatar name={d.name} />
+                              <span className="font-medium text-foreground">{d.name}</span>
+                            </div>
+                          </TableCell>
+                        )}
                       {visibleColumns.specialization && <TableCell className="text-muted-foreground">{d.specialization}</TableCell>}
                       {visibleColumns.phone && <TableCell className="text-muted-foreground">{d.phone ?? "—"}</TableCell>}
                       {visibleColumns.email && <TableCell className="text-muted-foreground">{d.email ?? "—"}</TableCell>}

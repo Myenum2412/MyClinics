@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NameAvatar } from "@/components/clinic/name-avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -752,8 +753,13 @@ export default function PrescriptionsPage() {
                         )}
 
                         {visibleColumns.doctor && (
-                          <TableCell className="text-xs text-foreground font-medium">
-                            {doctor?.name ?? "—"}
+                          <TableCell>
+                            <div className="flex items-center gap-2.5">
+                              <NameAvatar name={doctor?.name || "Unknown Doctor"} />
+                              <span className="text-xs text-foreground font-medium">
+                                {doctor?.name ?? "—"}
+                              </span>
+                            </div>
                           </TableCell>
                         )}
 

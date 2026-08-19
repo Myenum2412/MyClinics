@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { NameAvatar } from "@/components/clinic/name-avatar";
 import {
   type MedicineRecord,
   type Doctor,
@@ -932,8 +933,13 @@ export default function RecordsPage() {
                         <TableCell className="text-muted-foreground">{formatDate(r.visitDate)}</TableCell>
                       )}
                       {visibleColumns.patient && (
-                        <TableCell className="font-medium text-foreground">
-                          {patientLookup[r.patientId] || r.patientId}
+                        <TableCell>
+                          <div className="flex items-center gap-2.5">
+                            <NameAvatar name={patientLookup[r.patientId] || r.patientId} />
+                            <span className="font-medium text-foreground">
+                              {patientLookup[r.patientId] || r.patientId}
+                            </span>
+                          </div>
                         </TableCell>
                       )}
                       {visibleColumns.diagnosis && (
