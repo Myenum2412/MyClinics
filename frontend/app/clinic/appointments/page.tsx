@@ -237,20 +237,27 @@ export default function AppointmentsPage() {
 
   const loadData = useCallback(() => {
     if (!clinicId) return;
-    Promise.all([
+    Promise.allSettled([
       listAppointments(clinicId, { limit: 1000 }),
       listPatients(clinicId, { limit: 1000 }),
       listDoctors(clinicId, { limit: 100 }),
-    ])
-      .then(([apptsRes, patientsRes, doctorsRes]) => {
-        setAppointments(apptsRes.items);
-        setPatients(patientsRes.items);
-        setDoctors(doctorsRes.items);
-      })
-      .catch(() => {
-        toast.error("Failed to load appointments data");
-      })
-      .finally(() => setLoading(false));
+    ]).then(([apptsRes, patientsRes, doctorsRes]) => {
+      if (apptsRes.status === "fulfilled") {
+        setAppointments(apptsRes.value.items);
+      } else {
+        toast.error("Failed to load appointments");
+      }
+      if (patientsRes.status === "fulfilled") {
+        setPatients(patientsRes.value.items);
+      } else {
+        toast.error("Failed to load patients");
+      }
+      if (doctorsRes.status === "fulfilled") {
+        setDoctors(doctorsRes.value.items);
+      } else {
+        toast.error("Failed to load doctors");
+      }
+    }).finally(() => setLoading(false));
   }, [clinicId]);
 
   useEffect(() => {
@@ -1208,7 +1215,7 @@ function AppointmentForm({
   const filteredPatients = useMemo(() => {
     const q = patientQuery.trim().toLowerCase();
     if (!q) return patients.slice(0, 20);
-    return patients.filter((p) => p.fullName.toLowerCase().includes(q) || p.mobile.includes(q));
+    return patients.filter((p) => p.fullName.toLowerCase().includes(q) || (p.mobile ?? "").includes(q));
   }, [patients, patientQuery]);
 
   const filteredDoctors = useMemo(() => {
@@ -1351,23 +1358,31 @@ function AppointmentForm({
                     error && !patientId ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
                   }`}
                 />
-                {showPatientDropdown && filteredPatients.length > 0 && (
+                {showPatientDropdown && (
                   <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
-                    {filteredPatients.slice(0, 8).map((p) => (
-                      <button
-                        key={p.patientId}
-                        type="button"
-                        onClick={() => {
-                          setPatientId(p.patientId);
-                          setPatientQuery(p.fullName);
-                          setShowPatientDropdown(false);
-                        }}
-                        className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
-                      >
-                        <span className="font-medium text-gray-700">{p.fullName}</span>
-                        <span className="text-gray-500">{p.mobile}</span>
-                      </button>
-                    ))}
+                    {filteredPatients.length === 0 ? (
+                      <div className="px-2 py-2 text-xs text-gray-500">
+                        {patients.length === 0
+                          ? "No patients found. Add patients first."
+                          : "No matching patients"}
+                      </div>
+                    ) : (
+                      filteredPatients.slice(0, 8).map((p) => (
+                        <button
+                          key={p.patientId}
+                          type="button"
+                          onClick={() => {
+                            setPatientId(p.patientId);
+                            setPatientQuery(p.fullName);
+                            setShowPatientDropdown(false);
+                          }}
+                          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
+                        >
+                          <span className="font-medium text-gray-700">{p.fullName}</span>
+                          <span className="text-gray-500">{p.mobile}</span>
+                        </button>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
@@ -1395,23 +1410,31 @@ function AppointmentForm({
                     error && !doctorId ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
                   }`}
                 />
-                {showDoctorDropdown && filteredDoctors.length > 0 && (
+                {showDoctorDropdown && (
                   <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
-                    {filteredDoctors.slice(0, 8).map((d) => (
-                      <button
-                        key={d.doctorId}
-                        type="button"
-                        onClick={() => {
-                          setDoctorId(d.doctorId);
-                          setDoctorQuery(d.name);
-                          setShowDoctorDropdown(false);
-                        }}
-                        className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
-                      >
-                        <span className="font-medium text-gray-700">{d.name}</span>
-                        <span className="text-gray-500">{d.specialization || "General"}</span>
-                      </button>
-                    ))}
+                    {filteredDoctors.length === 0 ? (
+                      <div className="px-2 py-2 text-xs text-gray-500">
+                        {doctors.length === 0
+                          ? "No doctors found. Add doctors first."
+                          : "No matching doctors"}
+                      </div>
+                    ) : (
+                      filteredDoctors.slice(0, 8).map((d) => (
+                        <button
+                          key={d.doctorId}
+                          type="button"
+                          onClick={() => {
+                            setDoctorId(d.doctorId);
+                            setDoctorQuery(d.name);
+                            setShowDoctorDropdown(false);
+                          }}
+                          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
+                        >
+                          <span className="font-medium text-gray-700">{d.name}</span>
+                          <span className="text-gray-500">{d.specialization || "General"}</span>
+                        </button>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
