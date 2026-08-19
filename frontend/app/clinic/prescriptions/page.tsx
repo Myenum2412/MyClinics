@@ -121,11 +121,12 @@ export default function PrescriptionsPage() {
 
   // Modal / Form states
   const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<Prescription | null>(null);
+  const [viewing, setViewing] = useState<Prescription | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Prescription | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
-  const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
   const [logsLoading, setLogsLoading] = useState(false);
   const [logs, setLogs] = useState<any[]>([]);
@@ -403,6 +404,116 @@ export default function PrescriptionsPage() {
                     await handleSave(form);
                     setCreating(false);
                   }}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (editing) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setEditing(null)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Edit Prescription</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Modify the prescription details. Respective patients will receive secure automated WhatsApp alerts on update.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold text-gray-800">
+                  Prescription Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <PrescriptionForm
+                  clinicId={clinicId}
+                  doctorId={session?.doctorId ?? ""}
+                  initial={{
+                    patientId: editing.patientId,
+                    doctorId: editing.doctorId ?? "",
+                    visitDate: editing.visitDate,
+                    diagnosis: editing.diagnosis ?? "",
+                    medicines: editing.medicines,
+                    notes: editing.notes ?? "",
+                  }}
+                  isEdit
+                  saving={saving}
+                  onSave={async (form) => {
+                    await handleSave(form);
+                    setEditing(null);
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (viewing) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setViewing(null)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">View Prescription</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Read-only view of the prescription details.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold text-gray-800">
+                  Prescription Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <PrescriptionForm
+                  clinicId={clinicId}
+                  doctorId={session?.doctorId ?? ""}
+                  initial={{
+                    patientId: viewing.patientId,
+                    doctorId: viewing.doctorId ?? "",
+                    visitDate: viewing.visitDate,
+                    diagnosis: viewing.diagnosis ?? "",
+                    medicines: viewing.medicines,
+                    notes: viewing.notes ?? "",
+                  }}
+                  saving={false}
+                  readOnly
                 />
               </CardContent>
             </Card>
@@ -721,13 +832,21 @@ export default function PrescriptionsPage() {
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => {
-                                  setSelectedPrescription(p);
-                                  setViewDetailsOpen(true);
+                                  setViewing(p);
                                 }}
                                 className="text-xs"
                               >
                                 <FileText className="mr-2 size-3.5 text-muted-foreground" />
                                 View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setEditing(p);
+                                }}
+                                className="text-xs"
+                              >
+                                <Pencil className="mr-2 size-3.5 text-muted-foreground" />
+                                Edit
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => viewLogs(p)}
@@ -773,77 +892,6 @@ export default function PrescriptionsPage() {
         </CardContent>
       </Card>
 
-      {/* Modal: View Details */}
-      <Dialog open={viewDetailsOpen} onOpenChange={setViewDetailsOpen}>
-        <DialogContent className="max-w-md">
-          {selectedPrescription && (
-            <>
-              <DialogHeader>
-                <DialogTitle>Prescription Details</DialogTitle>
-                <DialogDescription>
-                  Detailed overview of the prescription issued on {formatDate(selectedPrescription.visitDate)}.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-3">
-                <div className="grid grid-cols-2 gap-2 border-b pb-3 text-xs">
-                  <div>
-                    <span className="font-bold text-muted-foreground uppercase text-[10px]">Patient</span>
-                    <p className="font-medium text-foreground">
-                      {patientMap.get(selectedPrescription.patientId)?.fullName ?? selectedPrescription.patientId}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="font-bold text-muted-foreground uppercase text-[10px]">Doctor</span>
-                    <p className="font-medium text-foreground">
-                      {doctorMap.get(selectedPrescription.doctorId)?.name ?? "—"}
-                    </p>
-                  </div>
-                </div>
-
-                <div>
-                  <span className="font-bold text-muted-foreground uppercase text-[10px]">Diagnosis</span>
-                  <p className="text-sm font-medium text-foreground mt-0.5">
-                    {selectedPrescription.diagnosis ?? "—"}
-                  </p>
-                </div>
-
-                <div>
-                  <span className="font-bold text-muted-foreground uppercase text-[10px]">Medicines List</span>
-                  <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                    {selectedPrescription.medicines.map((m, idx) => (
-                      <div key={idx} className="rounded-lg border bg-muted/30 p-2 text-xs">
-                        <p className="font-bold text-foreground">{m.name}</p>
-                        <div className="flex flex-wrap gap-x-4 mt-0.5 text-muted-foreground text-[11px]">
-                          {m.dosage && <span>Dosage: {m.dosage}</span>}
-                          {m.frequency && <span>Frequency: {m.frequency}</span>}
-                          {m.duration && <span>Duration: {m.duration}</span>}
-                        </div>
-                        {m.instructions && (
-                          <p className="mt-1 text-[10px] text-primary leading-tight">
-                            Instructions: {m.instructions}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <span className="font-bold text-muted-foreground uppercase text-[10px]">Notes & Instructions</span>
-                  <p className="text-xs text-muted-foreground mt-0.5 whitespace-pre-line leading-relaxed">
-                    {selectedPrescription.notes ?? "No additional notes."}
-                  </p>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setViewDetailsOpen(false)} className="w-full">
-                  Close
-                </Button>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Modal: Notification logs */}
       <Dialog open={logsOpen} onOpenChange={setLogsOpen}>
@@ -954,15 +1002,21 @@ export default function PrescriptionsPage() {
 function PrescriptionForm({
   clinicId,
   doctorId,
+  initial,
   saving,
   onSave,
+  isEdit,
+  readOnly,
 }: {
   clinicId: string;
   doctorId: string;
+  initial?: PrescriptionFormState;
   saving: boolean;
-  onSave: (form: PrescriptionFormState) => Promise<void>;
+  onSave?: (form: PrescriptionFormState) => Promise<void>;
+  isEdit?: boolean;
+  readOnly?: boolean;
 }) {
-  const [form, setForm] = useState<PrescriptionFormState>({
+  const [form, setForm] = useState<PrescriptionFormState>(initial || {
     patientId: "",
     doctorId,
     visitDate: today(),
@@ -998,11 +1052,12 @@ function PrescriptionForm({
       toast.error("Please select a patient");
       return;
     }
-    await onSave(form);
+    if (onSave) await onSave(form);
   }
 
   return (
     <form onSubmit={submit} className="space-y-6">
+      <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
       {/* 1. PATIENT & DIAGNOSIS */}
       <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
         <CardHeader className="pb-3">
@@ -1086,16 +1141,19 @@ function PrescriptionForm({
           <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} placeholder="Add doctor instructions..." className="border border-blue-200 focus:ring-blue-400" />
         </CardContent>
       </Card>
+      </fieldset>
 
-      <div className="flex gap-3 border-t border-blue-200 pt-8">
-        <Button type="button" variant="outline" onClick={() => setForm({ patientId: "", doctorId, visitDate: today(), diagnosis: "", medicines: [{ ...EMPTY_MEDICINE }], notes: "" })} className="border-blue-300 text-blue-600 hover:bg-blue-50">
-          Reset
-        </Button>
-        <div className="flex-1" />
-        <Button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700" size="lg">
-          {saving ? "Saving Prescription..." : "Save & Queue WhatsApp Alert"}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex gap-3 border-t border-blue-200 pt-8">
+          <Button type="button" variant="outline" onClick={() => setForm(initial || { patientId: "", doctorId, visitDate: today(), diagnosis: "", medicines: [{ ...EMPTY_MEDICINE }], notes: "" })} className="border-blue-300 text-blue-600 hover:bg-blue-50">
+            Reset
+          </Button>
+          <div className="flex-1" />
+          <Button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700" size="lg">
+            {saving ? "Saving Prescription..." : isEdit ? "Save Changes" : "Save & Queue WhatsApp Alert"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

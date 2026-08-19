@@ -382,6 +382,7 @@ export default function RecordsPage() {
   const [items, setItems] = useState<MedicineRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<MedicineRecord | null>(null);
+  const [viewing, setViewing] = useState<MedicineRecord | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MedicineRecord | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -757,6 +758,45 @@ export default function RecordsPage() {
     );
   }
 
+  if (viewing) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setViewing(null)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">View Medicine Record</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Read-only view of the visit information
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <RecordForm
+              clinicId={clinicId}
+              doctorId={session?.doctorId ?? ""}
+              initial={recordToForm(viewing)}
+              appointmentParam={null}
+              restoreMedicines
+              saving={false}
+              readOnly={true}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {!loading && (
@@ -913,6 +953,9 @@ export default function RecordsPage() {
                       )}
                       <TableCell className="text-right pr-6">
                         <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => setViewing(r)}>
+                            View
+                          </Button>
                           <Button variant="ghost" size="sm" onClick={() => setEditing(r)}>
                             Edit
                           </Button>
@@ -977,6 +1020,7 @@ function RecordForm({
   restoreMedicines,
   saving,
   onSave,
+  readOnly,
 }: {
   clinicId: string;
   doctorId: string;
@@ -984,7 +1028,8 @@ function RecordForm({
   appointmentParam: string | null;
   restoreMedicines?: boolean;
   saving: boolean;
-  onSave: (form: RecordFormState) => Promise<void>;
+  onSave?: (form: RecordFormState) => Promise<void>;
+  readOnly?: boolean;
 }) {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -1164,7 +1209,7 @@ function RecordForm({
     }
     savingRef.current = true;
     try {
-      await onSave(form);
+      if (onSave) await onSave(form);
     } finally {
       savingRef.current = false;
     }
@@ -1176,6 +1221,7 @@ function RecordForm({
 
   return (
     <form onSubmit={submit} className="space-y-6">
+      <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
 
       {/* 1. VISIT INFORMATION */}
       <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
@@ -1621,29 +1667,32 @@ function RecordForm({
         </div>
       </CardContent>
       </Card>
+      </fieldset>
 
       {/* ACTIONS */}
-      <div className="flex gap-3 border-t border-blue-200 pt-8">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={resetForm}
-          disabled={saving}
-          className="border-blue-300 text-blue-600 hover:bg-blue-50"
-        >
-          Reset
-        </Button>
-        <div className="flex-1" />
-        <Button
-          type="submit"
-          onClick={submit}
-          disabled={saving}
-          className="bg-blue-600 text-white hover:bg-blue-700"
-          size="lg"
-        >
-          {saving ? "Saving..." : "Save Record"}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex gap-3 border-t border-blue-200 pt-8">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={resetForm}
+            disabled={saving}
+            className="border-blue-300 text-blue-600 hover:bg-blue-50"
+          >
+            Reset
+          </Button>
+          <div className="flex-1" />
+          <Button
+            type="submit"
+            onClick={submit}
+            disabled={saving}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+            size="lg"
+          >
+            {saving ? "Saving..." : "Save Record"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

@@ -117,6 +117,7 @@ export default function ReportsPage() {
   const [patientLookup, setPatientLookup] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Report | null>(null);
+  const [viewing, setViewing] = useState<Report | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Report | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -382,6 +383,50 @@ export default function ReportsPage() {
     );
   }
 
+  if (viewing) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setViewing(null)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Reports
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">View Report</h1>
+            <p className="text-sm text-muted-foreground">Read-only view of the report metadata and attachments.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Report Information</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <ReportForm
+              clinicId={clinicId}
+              initial={{
+                patientId: viewing.patientId,
+                doctorId: viewing.doctorId ?? "",
+                type: viewing.type,
+                title: viewing.title,
+                description: viewing.description ?? "",
+                fileUrl: viewing.fileUrl ?? "",
+                mimeType: viewing.mimeType ?? "",
+                status: viewing.status,
+              }}
+              saving={false}
+              readOnly={true}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Top Header Card */}
@@ -567,6 +612,7 @@ export default function ReportsPage() {
                       </TableCell>
                     )}
                     <TableCell className="text-right pr-6 whitespace-nowrap">
+                      <Button variant="ghost" size="sm" className="h-8" onClick={() => setViewing(r)}>View</Button>
                       {!isDoctor && (
                         <Button variant="ghost" size="sm" className="h-8" onClick={() => setEditing(r)}>Edit</Button>
                       )}
@@ -616,11 +662,13 @@ function ReportForm({
   initial,
   saving,
   onSave,
+  readOnly,
 }: {
   clinicId: string;
   initial: ReportFormState;
   saving: boolean;
-  onSave: (form: ReportFormState) => Promise<void>;
+  onSave?: (form: ReportFormState) => Promise<void>;
+  readOnly?: boolean;
 }) {
   const [form, setForm] = useState<ReportFormState>(initial);
   const { getOptions } = useDropdownOptions(clinicId);
@@ -648,11 +696,12 @@ function ReportForm({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    await onSave(form);
+    if (onSave) await onSave(form);
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
+      <fieldset disabled={readOnly} className="space-y-4 border-0 p-0 m-0">
       <div className="grid gap-3">
         <div className="grid gap-2">
           <Label>Patient</Label>
@@ -716,11 +765,14 @@ function ReportForm({
           <Textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={2} />
         </div>
       </div>
-      <DialogFooter>
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save report"}
-        </Button>
-      </DialogFooter>
+      </fieldset>
+      {!readOnly && (
+        <DialogFooter>
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving..." : "Save report"}
+          </Button>
+        </DialogFooter>
+      )}
     </form>
   );
 }
