@@ -13,6 +13,7 @@ import type { CreateBillInput, UpdateBillInput } from "@/clinic/modules/billing/
 import { BillRepository } from "@/clinic/modules/billing/billing.repository";
 import {
   computeBillTotals,
+  derivePaymentStatus,
   type BillDoc,
 } from "@/clinic/modules/billing/billing.schema";
 
@@ -52,30 +53,61 @@ export class BillingService {
     }
 
     // Totals are ALWAYS computed server-side — client numbers are ignored.
-    const totals = computeBillTotals(input.items, input.discount ?? 0, input.taxPercent ?? 0);
+    const totals = computeBillTotals(input.items);
+
+    // Legacy global discount/taxPercent fallback applied on top of the
+    // per-item totals (only when explicitly provided and non-zero).
+    let discount = totals.discount;
+    let taxAmount = totals.taxAmount;
+    if ((input.discount ?? 0) > 0) {
+      discount = Math.min(input.discount!, totals.subtotal);
+    }
+    if ((input.taxPercent ?? 0) > 0) {
+      taxAmount += Math.round((totals.subtotal - discount) * (input.taxPercent! / 100) * 100) / 100;
+    }
+    const total = Math.round((totals.subtotal - discount + taxAmount) * 100) / 100;
+
+    const amountPaid = Math.min(Math.max(input.amountPaid ?? 0, 0), total);
+    const paymentStatus = derivePaymentStatus(total, amountPaid);
+    const status = input.status ?? (paymentStatus === "paid" && total > 0 ? "paid" : "draft");
     const now = new Date();
-    const status = input.status ?? "draft";
 
     const bill = await this.repo(ctx).insert({
       billId: generateBillId(),
       billNumber: await this.repo(ctx).nextBillNumber(),
       patientId: input.patientId,
       doctorId,
-      items: input.items.map((item) => ({
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        lineTotal: Math.round(item.quantity * item.unitPrice * 100) / 100,
-      })),
+      items: input.items.map((item) => {
+        const gross = item.quantity * item.unitPrice;
+        const itemDiscount = Math.min(Math.max(item.discount ?? 0, 0), gross);
+        const itemTax = Math.round((gross - itemDiscount) * ((item.taxPercent ?? 0) / 100) * 100) / 100;
+        return {
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discount: itemDiscount,
+          taxPercent: item.taxPercent ?? 0,
+          lineTotal: Math.round((gross - itemDiscount + itemTax) * 100) / 100,
+        };
+      }),
       subtotal: totals.subtotal,
-      discount: totals.discount,
-      taxPercent: totals.taxPercent,
-      taxAmount: totals.taxAmount,
-      total: totals.total,
+      discount: Math.round(discount * 100) / 100,
+      taxPercent: input.taxPercent ?? 0,
+      taxAmount: Math.round(taxAmount * 100) / 100,
+      total,
       status,
-      paymentMethod: status === "paid" ? "cash" : null,
+      paymentType: input.paymentType ?? null,
+      amountPaid,
+      balanceDue: Math.round((total - amountPaid) * 100) / 100,
+      paymentStatus,
+      paymentMethod: input.paymentType ?? null,
+      invoiceDate: input.invoiceDate ? new Date(`${input.invoiceDate}T00:00:00`) : now,
+      dueDate: input.dueDate ? new Date(`${input.dueDate}T00:00:00`) : null,
       paidAt: status === "paid" ? now : null,
       notes: input.notes ?? null,
+      internalNotes: input.internalNotes ?? null,
+      reference: input.reference ?? null,
+      sendMethod: input.sendMethod ?? "none",
       createdBy: ctx.userId,
     });
 
@@ -120,35 +152,71 @@ export class BillingService {
       throw new ConflictError("Paid bills cannot be modified");
     }
 
-    const patch: Record<string, unknown> = {};
-
-    // Recompute totals whenever items/discount/tax change.
     const items = input.items ?? existing.items;
-    const discount = input.discount ?? existing.discount;
-    const taxPercent = input.taxPercent ?? existing.taxPercent;
-    const totals = computeBillTotals(items, discount, taxPercent);
+    const totals = computeBillTotals(items);
+
+    // Per-item totals, plus the legacy global discount/taxPercent fallback.
+    const discount =
+      input.discount !== undefined
+        ? Math.min(Math.max(input.discount, 0), totals.subtotal)
+        : totals.discount;
+    const globalTaxPercent = input.taxPercent ?? existing.taxPercent ?? 0;
+    const globalTax = Math.round((totals.subtotal - discount) * (globalTaxPercent / 100) * 100) / 100;
+    const taxAmount = Math.max(totals.taxAmount, globalTax);
+    const total = Math.round((totals.subtotal - discount + taxAmount) * 100) / 100;
+
+    const amountPaid =
+      input.amountPaid !== undefined
+        ? Math.min(Math.max(input.amountPaid, 0), total)
+        : (existing.amountPaid ?? 0);
+    const paymentStatus = derivePaymentStatus(total, amountPaid);
+    const balanceDue = Math.round((total - amountPaid) * 100) / 100;
+
+    const patch: Record<string, unknown> = {
+      subtotal: totals.subtotal,
+      discount: Math.round(discount * 100) / 100,
+      taxPercent: input.taxPercent ?? existing.taxPercent ?? 0,
+      taxAmount: Math.round(taxAmount * 100) / 100,
+      total,
+      amountPaid,
+      balanceDue,
+      paymentStatus,
+      paymentType:
+        input.paymentType !== undefined ? input.paymentType : (existing.paymentType ?? null),
+    };
 
     if (input.items !== undefined) {
-      patch.items = items.map((item) => ({
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        lineTotal: Math.round(item.quantity * item.unitPrice * 100) / 100,
-      }));
+      patch.items = items.map((item) => {
+        const gross = item.quantity * item.unitPrice;
+        const itemDiscount = Math.min(Math.max(item.discount ?? 0, 0), gross);
+        const itemTax = Math.round((gross - itemDiscount) * ((item.taxPercent ?? 0) / 100) * 100) / 100;
+        return {
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          discount: itemDiscount,
+          taxPercent: item.taxPercent ?? 0,
+          lineTotal: Math.round((gross - itemDiscount + itemTax) * 100) / 100,
+        };
+      });
     }
-    if (input.discount !== undefined) patch.discount = totals.discount;
-    if (input.taxPercent !== undefined) patch.taxPercent = totals.taxPercent;
-    patch.subtotal = totals.subtotal;
-    patch.taxAmount = totals.taxAmount;
-    patch.total = totals.total;
-
     if (input.notes !== undefined) patch.notes = input.notes;
+    if (input.internalNotes !== undefined) patch.internalNotes = input.internalNotes;
+    if (input.reference !== undefined) patch.reference = input.reference;
+    if (input.sendMethod !== undefined) patch.sendMethod = input.sendMethod;
+    if (input.invoiceDate !== undefined) {
+      patch.invoiceDate = new Date(`${input.invoiceDate}T00:00:00`);
+    }
+    if (input.dueDate !== undefined) {
+      patch.dueDate = input.dueDate ? new Date(`${input.dueDate}T00:00:00`) : null;
+    }
     if (input.paymentMethod !== undefined) patch.paymentMethod = input.paymentMethod;
     if (input.status !== undefined) {
       patch.status = input.status;
       if (input.status === "paid") {
         patch.paidAt = new Date();
-        patch.paymentMethod = input.paymentMethod ?? existing.paymentMethod ?? "cash";
+        patch.paymentMethod =
+          input.paymentType ?? input.paymentMethod ?? existing.paymentMethod ?? "cash";
       } else if (input.status === "draft" || input.status === "void") {
         patch.paidAt = null;
       }

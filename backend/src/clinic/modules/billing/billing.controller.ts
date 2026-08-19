@@ -134,7 +134,7 @@ export class BillingController {
       taxRate: bill.taxPercent,
       tax: bill.taxAmount,
       total: bill.total,
-      paymentMethod: bill.paymentMethod,
+      paymentMethod: bill.paymentType ?? bill.paymentMethod,
       status: bill.status,
       notes: bill.notes,
     };

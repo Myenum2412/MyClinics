@@ -244,10 +244,15 @@ export interface Prescription {
 
 export type BillStatus = "draft" | "issued" | "paid" | "void";
 
+export type PaymentType = "cash" | "upi" | "card" | "other";
+export type PaymentStatus = "unpaid" | "partial" | "paid";
+
 export interface BillItem {
   description: string;
   quantity: number;
   unitPrice: number;
+  discount: number;
+  taxPercent: number;
   lineTotal: number;
 }
 
@@ -263,9 +268,18 @@ export interface Bill {
   taxAmount: number;
   total: number;
   status: BillStatus;
+  paymentType: PaymentType | null;
+  amountPaid: number;
+  balanceDue: number;
+  paymentStatus: PaymentStatus;
   paymentMethod: string | null;
+  invoiceDate: string;
+  dueDate: string | null;
   paidAt: string | null;
   notes: string | null;
+  internalNotes: string | null;
+  reference: string | null;
+  sendMethod: "whatsapp" | "email" | "none";
   createdAt: string;
   updatedAt: string;
 }
