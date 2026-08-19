@@ -467,7 +467,7 @@ export default function AppointmentsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <NewAppointmentForm
+                <AppointmentForm
                   clinicId={clinicId}
                   appointments={appointments}
                   patients={patients}
@@ -1029,7 +1029,7 @@ export default function AppointmentsPage() {
   );
 }
 
-function NewAppointmentForm({
+function AppointmentForm({
   clinicId,
   appointments,
   patients,

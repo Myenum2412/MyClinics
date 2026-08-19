@@ -225,6 +225,7 @@ export default function DoctorsPage() {
   const [items, setItems] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Doctor | null>(null);
+  const [viewing, setViewing] = useState<Doctor | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Doctor | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -526,6 +527,42 @@ export default function DoctorsPage() {
     );
   }
 
+  if (viewing) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+          <div className="px-4 py-6 sm:px-6 lg:px-8">
+            <div className="flex items-start gap-4">
+              <button
+                onClick={() => setViewing(null)}
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              >
+                <ChevronLeft size={20} className="text-blue-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">View Doctor</h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Doctor details, fee, and schedule
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <DoctorForm
+              initial={doctorToForm(viewing)}
+              isEdit={true}
+              saving={false}
+              readOnly={true}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Stats Section with action slot */}
@@ -673,6 +710,7 @@ export default function DoctorsPage() {
                       {canManage && (
                         <TableCell className="text-right pr-6">
                           <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => setViewing(d)}>View</Button>
                             <Button variant="ghost" size="sm" onClick={() => setEditing(d)}>Edit</Button>
                             <Button
                               variant="ghost"
@@ -726,11 +764,13 @@ function DoctorForm({
   isEdit,
   saving,
   onSave,
+  readOnly,
 }: {
   initial: DoctorFormState;
   isEdit: boolean;
   saving: boolean;
-  onSave: (form: DoctorFormState) => Promise<void>;
+  onSave?: (form: DoctorFormState) => Promise<void>;
+  readOnly?: boolean;
 }) {
   const [form, setForm] = useState<DoctorFormState>(initial);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -864,7 +904,7 @@ function DoctorForm({
       toast.error("Please fix the highlighted fields");
       return;
     }
-    await onSave(form);
+    if (onSave) await onSave(form);
   }
 
   const inputBase = (key: string) =>
@@ -874,6 +914,7 @@ function DoctorForm({
 
   return (
     <form onSubmit={submit} noValidate className="space-y-6">
+      <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
       {/* 1. PERSONAL INFORMATION */}
       <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
         <CardHeader className="pb-3">
@@ -1404,29 +1445,32 @@ function DoctorForm({
         </div>
       </CardContent>
       </Card>
+      </fieldset>
 
       {/* BOTTOM ACTIONS */}
-      <div className="flex gap-3 border-t border-blue-200 pt-8">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={resetForm}
-          disabled={saving}
-          className="border-blue-300 text-blue-600 hover:bg-blue-50"
-        >
-          Reset
-        </Button>
-        <div className="flex-1" />
-        <Button
-          type="submit"
-          onClick={submit}
-          disabled={saving}
-          className="bg-blue-600 text-white hover:bg-blue-700"
-          size="lg"
-        >
-          {saving ? "Saving..." : "Save Doctor"}
-        </Button>
-      </div>
+      {!readOnly && (
+        <div className="flex gap-3 border-t border-blue-200 pt-8">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={resetForm}
+            disabled={saving}
+            className="border-blue-300 text-blue-600 hover:bg-blue-50"
+          >
+            Reset
+          </Button>
+          <div className="flex-1" />
+          <Button
+            type="submit"
+            onClick={submit}
+            disabled={saving}
+            className="bg-blue-600 text-white hover:bg-blue-700"
+            size="lg"
+          >
+            {saving ? "Saving..." : "Save Doctor"}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

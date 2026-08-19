@@ -138,6 +138,7 @@ export default function PatientsPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Patient | null>(null);
+  const [viewing, setViewing] = useState<Patient | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Patient | null>(null);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -453,6 +454,75 @@ export default function PatientsPage() {
     );
   }
 
+  if (viewing) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setViewing(null)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Patients
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">View Patient</h1>
+            <p className="text-sm text-muted-foreground">Patient demographics and details.</p>
+          </div>
+        </div>
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Patient Information</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <PatientForm
+              clinicId={clinicId}
+              initial={{
+                fullName: viewing.fullName,
+                mobile: viewing.mobile,
+                whatsapp: viewing.whatsapp ?? "",
+                email: viewing.email ?? "",
+                gender: viewing.gender ?? "",
+                dateOfBirth: viewing.dateOfBirth ?? "",
+                bloodGroup: viewing.bloodGroup ?? "",
+                address: viewing.address ?? "",
+                city: viewing.city ?? "",
+                state: viewing.state ?? "",
+                pincode: viewing.pincode ?? "",
+                height: viewing.height ?? "",
+                weight: viewing.weight ?? "",
+                occupation: viewing.occupation ?? "",
+                maritalStatus: viewing.maritalStatus ?? "",
+                emergencyContactName: viewing.emergencyContactName ?? "",
+                emergencyContactRelationship: viewing.emergencyContactRelationship ?? "",
+                emergencyContactMobile: viewing.emergencyContactMobile ?? "",
+                allergies: (viewing.allergies ?? []).join(", "),
+                medicalConditions: viewing.medicalConditions ?? "",
+                previousSurgeries: viewing.previousSurgeries ?? "",
+                currentMedications: viewing.currentMedications ?? "",
+                idType: viewing.idType ?? "",
+                idNumber: viewing.idNumber ?? "",
+                insuranceProvider: viewing.insuranceProvider ?? "",
+                insurancePolicyNumber: viewing.insurancePolicyNumber ?? "",
+                insurancePolicyHolderName: viewing.insurancePolicyHolderName ?? "",
+                insuranceValidTill: viewing.insuranceValidTill ?? "",
+                referredBy: viewing.referredBy ?? "",
+                howDidYouHear: viewing.howDidYouHear ?? "",
+                notes: viewing.notes ?? "",
+                doctorId: viewing.doctorId,
+                password: "",
+              }}
+              saving={false}
+              readOnly={true}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Stats Section with action slot */}
@@ -617,6 +687,7 @@ export default function PatientsPage() {
                       )}
                       <TableCell className="text-right pr-6">
                         <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => setViewing(p)}>View</Button>
                           <Button variant="ghost" size="sm" onClick={() => setEditing(p)}>Edit</Button>
                           {canManage && (
                             <Button
@@ -671,11 +742,13 @@ function PatientForm({
   initial,
   saving,
   onSave,
+  readOnly,
 }: {
   clinicId: string;
   initial: PatientFormState;
   saving: boolean;
-  onSave: (form: PatientFormState) => Promise<void>;
+  onSave?: (form: PatientFormState) => Promise<void>;
+  readOnly?: boolean;
 }) {
   const [form, setForm] = useState<PatientFormState>(initial);
   const { getOptions } = useDropdownOptions(clinicId);
@@ -685,12 +758,12 @@ function PatientForm({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    await onSave(form);
+    if (onSave) await onSave(form);
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <div className="grid gap-3">
+      <fieldset disabled={readOnly} className="grid gap-3 border-0 p-0 m-0">
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Full name</Label>
@@ -905,12 +978,14 @@ function PatientForm({
           <Label>Notes</Label>
           <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} />
         </div>
-      </div>
-      <DialogFooter>
-        <Button type="submit" disabled={saving}>
-          {saving ? "Saving..." : "Save patient"}
-        </Button>
-      </DialogFooter>
+      </fieldset>
+      {!readOnly && (
+        <DialogFooter>
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving..." : "Save patient"}
+          </Button>
+        </DialogFooter>
+      )}
     </form>
   );
 }
