@@ -1,12 +1,24 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { ArrowLeftEndOnRectangleIcon } from "@heroicons/react/24/outline";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import { ClinicProfile } from "@/components/clinic/clinic-profile";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { logout } from "@/lib/clinic-api";
 
 export default function AccountPage() {
   const session = useRequireRole("staff");
   const clinicId = session?.clinicId ?? "";
   const canEdit = sessionCan(session, "clinic_admin");
+  const router = useRouter();
+
+  async function handleLogout() {
+    await logout();
+    router.push("/login");
+    router.refresh();
+  }
 
   return (
     <div className="space-y-4">
@@ -19,6 +31,20 @@ export default function AccountPage() {
       <div className="grid gap-4 md:grid-cols-1">
         <ClinicProfile clinicId={clinicId} canEdit={canEdit} />
       </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Session</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-3 text-sm text-muted-foreground">
+            Sign out of this clinic workspace on this device.
+          </p>
+          <Button variant="destructive" onClick={handleLogout}>
+            <ArrowLeftEndOnRectangleIcon className="size-4" />
+            Log out
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
