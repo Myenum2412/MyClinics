@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -24,6 +24,7 @@ import {
   Users,
   UserCog,
   ExternalLink,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
@@ -112,19 +113,6 @@ function StatTile({
   );
 }
 
-function CardAction({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
-  return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={onClick}
-      className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-800"
-    >
-      {children}
-    </Button>
-  );
-}
-
 function ContactRow({
   icon: Icon,
   iconClass,
@@ -179,22 +167,23 @@ export default function AccountPage() {
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [stats, setStats] = useState<Record<string, number | null>>({});
   const [statsLoading, setStatsLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unread, setUnread] = useState(0);
   const [waSession, setWaSession] = useState<WhatsappSession | null>(null);
 
-  const [editAddress, setEditAddress] = useState(false);
-  const [editHours, setEditHours] = useState(false);
-  const [addressDraft, setAddressDraft] = useState({ address: "", phone: "", email: "" });
-  const [hoursDraft, setHoursDraft] = useState({ open: "", close: "" });
-  const [profileDraft, setProfileDraft] = useState({
+  const [draft, setDraft] = useState({
     name: "",
     description: "",
     website: "",
+    phone: "",
+    email: "",
+    address: "",
+    open: "",
+    close: "",
   });
-  const settingsRef = useRef<HTMLDivElement | null>(null);
 
   const deviceInfo = useMemo(() => parseDeviceInfo(), []);
 
@@ -203,19 +192,15 @@ export default function AccountPage() {
     getOwnClinic(clinicId)
       .then((res) => {
         setClinic(res);
-        setAddressDraft({
-          address: res.address ?? "",
-          phone: res.phone ?? "",
-          email: res.email ?? "",
-        });
-        setHoursDraft({
-          open: res.settings.workingHours.open,
-          close: res.settings.workingHours.close,
-        });
-        setProfileDraft({
+        setDraft({
           name: res.name,
           description: res.description ?? "",
           website: res.website ?? "",
+          phone: res.phone ?? "",
+          email: res.email ?? "",
+          address: res.address ?? "",
+          open: res.settings.workingHours.open,
+          close: res.settings.workingHours.close,
         });
       })
       .catch(() => toast.error("Failed to load clinic profile"))
@@ -265,55 +250,43 @@ export default function AccountPage() {
     router.refresh();
   }
 
-  async function saveAddress() {
+  function startEdit() {
     if (!clinic) return;
-    setSaving(true);
-    try {
-      const updated = await updateOwnClinic(clinicId, {
-        address: addressDraft.address,
-        phone: addressDraft.phone,
-        email: addressDraft.email,
-      });
-      setClinic(updated);
-      setEditAddress(false);
-      toast.success("Clinic address updated");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update address");
-    } finally {
-      setSaving(false);
-    }
+    setDraft({
+      name: clinic.name,
+      description: clinic.description ?? "",
+      website: clinic.website ?? "",
+      phone: clinic.phone ?? "",
+      email: clinic.email ?? "",
+      address: clinic.address ?? "",
+      open: clinic.settings.workingHours.open,
+      close: clinic.settings.workingHours.close,
+    });
+    setIsEditing(true);
   }
 
-  async function saveHours() {
-    if (!clinic) return;
-    setSaving(true);
-    try {
-      const updated = await updateOwnClinic(clinicId, {
-        settings: { workingHours: { ...hoursDraft } },
-      });
-      setClinic(updated);
-      setEditHours(false);
-      toast.success("Working hours updated");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update working hours");
-    } finally {
-      setSaving(false);
-    }
+  function cancelEdit() {
+    setIsEditing(false);
   }
 
-  async function saveProfile() {
+  async function saveAll() {
     if (!clinic) return;
     setSaving(true);
     try {
       const updated = await updateOwnClinic(clinicId, {
-        name: profileDraft.name,
-        description: profileDraft.description,
-        website: profileDraft.website,
+        name: draft.name,
+        description: draft.description,
+        website: draft.website,
+        phone: draft.phone,
+        email: draft.email,
+        address: draft.address,
+        settings: { workingHours: { open: draft.open, close: draft.close } },
       });
       setClinic(updated);
-      toast.success("Clinic profile saved");
+      setIsEditing(false);
+      toast.success("Clinic profile updated");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save profile");
+      toast.error(err instanceof Error ? err.message : "Failed to update clinic profile");
     } finally {
       setSaving(false);
     }
@@ -446,14 +419,28 @@ export default function AccountPage() {
               </div>
             </div>
           </div>
-          <CardAction
-            onClick={() =>
-              settingsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-            }
-          >
-            <Pencil className="size-3.5" />
-            Edit Profile
-          </CardAction>
+          {isEditing ? (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={cancelEdit} className="gap-1.5 text-slate-600">
+                <X className="size-3.5" />
+                Cancel
+              </Button>
+              <Button size="sm" onClick={saveAll} disabled={saving} className="gap-1.5">
+                <Save className="size-3.5" />
+                {saving ? "Saving…" : "Save Changes"}
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={startEdit}
+              className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-800"
+            >
+              <Pencil className="size-3.5" />
+              Edit Profile
+            </Button>
+          )}
         </CardContent>
       </Card>
 
@@ -474,58 +461,40 @@ export default function AccountPage() {
       <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {/* Clinic Address Details */}
         <Card className="border-sky-100 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <MapPin className="size-4.5 text-sky-600" />
               Clinic Address Details
             </CardTitle>
-            <CardAction onClick={() => setEditAddress((v) => !v)}>
-              <Pencil className="size-3.5" />
-              Edit Address
-            </CardAction>
           </CardHeader>
           <CardContent className="pt-0">
-            {editAddress ? (
+            {isEditing ? (
               <div className="space-y-4">
                 <div className="grid gap-3">
                   <div className="grid gap-2">
                     <Label>Address</Label>
                     <Textarea
-                      rows={2}
-                      value={addressDraft.address}
-                      onChange={(e) =>
-                        setAddressDraft((d) => ({ ...d, address: e.target.value }))
-                      }
+                      rows={3}
+                      value={draft.address}
+                      placeholder="Door no., street, area, city, district, state, pincode"
+                      onChange={(e) => setDraft((d) => ({ ...d, address: e.target.value }))}
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label>Clinic Phone</Label>
                     <Input
-                      value={addressDraft.phone}
-                      onChange={(e) =>
-                        setAddressDraft((d) => ({ ...d, phone: e.target.value }))
-                      }
+                      value={draft.phone}
+                      onChange={(e) => setDraft((d) => ({ ...d, phone: e.target.value }))}
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label>Clinic Email</Label>
                     <Input
                       type="email"
-                      value={addressDraft.email}
-                      onChange={(e) =>
-                        setAddressDraft((d) => ({ ...d, email: e.target.value }))
-                      }
+                      value={draft.email}
+                      onChange={(e) => setDraft((d) => ({ ...d, email: e.target.value }))}
                     />
                   </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" onClick={saveAddress} disabled={saving}>
-                    <Save className="size-4" />
-                    Save Address
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setEditAddress(false)}>
-                    Cancel
-                  </Button>
                 </div>
               </div>
             ) : (
@@ -570,129 +539,149 @@ export default function AccountPage() {
 
         {/* Clinic Contact & Working Hours */}
         <Card className="border-sky-100 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
               <Phone className="size-4.5 text-sky-600" />
               Contact &amp; Working Hours
             </CardTitle>
-            <CardAction onClick={() => setEditHours((v) => !v)}>
-              <Pencil className="size-3.5" />
-              Edit Working Hours
-            </CardAction>
           </CardHeader>
           <CardContent className="space-y-3 pt-0">
-            <ContactRow
-              icon={Phone}
-              iconClass="bg-sky-50 text-sky-600"
-              label="Primary Phone"
-              value={clinic.phone ?? "—"}
-            />
-            <ContactRow
-              icon={MessageCircle}
-              iconClass="bg-emerald-50 text-emerald-600"
-              label="WhatsApp Number"
-              value={clinic.phone ?? "—"}
-              action={
-                clinic.phone ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      window.open(
-                        `https://wa.me/${clinic.phone!.replace(/\D/g, "")}`,
-                        "_blank",
-                        "noopener,noreferrer"
-                      )
-                    }
-                  >
-                    <ExternalLink className="size-3.5" />
-                  </Button>
-                ) : undefined
-              }
-            />
-            <ContactRow
-              icon={Mail}
-              iconClass="bg-sky-50 text-sky-600"
-              label="Email"
-              value={clinic.email ?? "—"}
-            />
-            <ContactRow
-              icon={Globe}
-              iconClass="bg-sky-50 text-sky-600"
-              label="Website"
-              value={clinic.website ?? "—"}
-              action={
-                clinic.website ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      window.open(
-                        clinic.website!.startsWith("http")
-                          ? clinic.website!
-                          : `https://${clinic.website!}`,
-                        "_blank",
-                        "noopener,noreferrer"
-                      )
-                    }
-                  >
-                    <ExternalLink className="size-3.5" />
-                  </Button>
-                ) : undefined
-              }
-            />
-            <Separator />
-            {editHours ? (
-              <div className="space-y-4 pt-1">
+            {isEditing ? (
+              <div className="space-y-3">
+                <div className="grid gap-2">
+                  <Label>Primary Phone</Label>
+                  <Input
+                    value={draft.phone}
+                    onChange={(e) => setDraft((d) => ({ ...d, phone: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>WhatsApp Number</Label>
+                  <Input
+                    value={draft.phone}
+                    onChange={(e) => setDraft((d) => ({ ...d, phone: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={draft.email}
+                    onChange={(e) => setDraft((d) => ({ ...d, email: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Website</Label>
+                  <Input
+                    value={draft.website}
+                    placeholder="https://myclinic.example.com"
+                    onChange={(e) => setDraft((d) => ({ ...d, website: e.target.value }))}
+                  />
+                </div>
+                <Separator />
                 <div className="grid grid-cols-2 gap-3">
                   <div className="grid gap-2">
                     <Label>Open</Label>
                     <Input
                       type="time"
-                      value={hoursDraft.open}
-                      onChange={(e) => setHoursDraft((d) => ({ ...d, open: e.target.value }))}
+                      value={draft.open}
+                      onChange={(e) => setDraft((d) => ({ ...d, open: e.target.value }))}
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label>Close</Label>
                     <Input
                       type="time"
-                      value={hoursDraft.close}
-                      onChange={(e) => setHoursDraft((d) => ({ ...d, close: e.target.value }))}
+                      value={draft.close}
+                      onChange={(e) => setDraft((d) => ({ ...d, close: e.target.value }))}
                     />
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button size="sm" onClick={saveHours} disabled={saving}>
-                    <Save className="size-4" />
-                    Save Hours
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setEditHours(false)}>
-                    Cancel
-                  </Button>
-                </div>
               </div>
             ) : (
-              <div className="space-y-1.5 pt-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-500">Monday – Saturday</span>
-                  <span className="font-medium text-slate-800">
-                    {clinic.settings.workingHours.open} – {clinic.settings.workingHours.close}
-                  </span>
+              <>
+                <ContactRow
+                  icon={Phone}
+                  iconClass="bg-sky-50 text-sky-600"
+                  label="Primary Phone"
+                  value={clinic.phone ?? "—"}
+                />
+                <ContactRow
+                  icon={MessageCircle}
+                  iconClass="bg-emerald-50 text-emerald-600"
+                  label="WhatsApp Number"
+                  value={clinic.phone ?? "—"}
+                  action={
+                    clinic.phone ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          window.open(
+                            `https://wa.me/${clinic.phone!.replace(/\D/g, "")}`,
+                            "_blank",
+                            "noopener,noreferrer"
+                          )
+                        }
+                      >
+                        <ExternalLink className="size-3.5" />
+                      </Button>
+                    ) : undefined
+                  }
+                />
+                <ContactRow
+                  icon={Mail}
+                  iconClass="bg-sky-50 text-sky-600"
+                  label="Email"
+                  value={clinic.email ?? "—"}
+                />
+                <ContactRow
+                  icon={Globe}
+                  iconClass="bg-sky-50 text-sky-600"
+                  label="Website"
+                  value={clinic.website ?? "—"}
+                  action={
+                    clinic.website ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          window.open(
+                            clinic.website!.startsWith("http")
+                              ? clinic.website!
+                              : `https://${clinic.website!}`,
+                            "_blank",
+                            "noopener,noreferrer"
+                          )
+                        }
+                      >
+                        <ExternalLink className="size-3.5" />
+                      </Button>
+                    ) : undefined
+                  }
+                />
+                <Separator />
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Monday – Saturday</span>
+                    <span className="font-medium text-slate-800">
+                      {clinic.settings.workingHours.open} – {clinic.settings.workingHours.close}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Sunday</span>
+                    <span className="text-slate-400">—</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Emergency Hours</span>
+                    <span className="text-slate-400">—</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">Holiday / Closed</span>
+                    <span className="text-slate-400">—</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-500">Sunday</span>
-                  <span className="text-slate-400">—</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-500">Emergency Hours</span>
-                  <span className="text-slate-400">—</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-slate-500">Holiday / Closed</span>
-                  <span className="text-slate-400">—</span>
-                </div>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -704,7 +693,14 @@ export default function AccountPage() {
               <MessageCircle className="size-4.5 text-sky-600" />
               WhatsApp Connection
             </CardTitle>
-            <CardAction onClick={() => router.push("/clinic/settings")}>Manage Connection</CardAction>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push("/clinic/settings")}
+              className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-800"
+            >
+              Manage Connection
+            </Button>
           </CardHeader>
           <CardContent className="pt-0">
             {waSession === null ? (
@@ -847,89 +843,69 @@ export default function AccountPage() {
       </Card>
 
       {/* 7. Clinic profile settings */}
-      <div ref={settingsRef} className="scroll-mt-4">
-        <Card className="border-sky-100 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Building2 className="size-4.5 text-sky-600" />
-              Clinic Profile Settings
-            </CardTitle>
-            <CardAction
-              onClick={() => {
-                setProfileDraft({
-                  name: clinic.name,
-                  description: clinic.description ?? "",
-                  website: clinic.website ?? "",
-                });
-                toast.success("Profile form reset to saved values");
-              }}
-            >
-              Manage Clinic Profile
-            </CardAction>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="mb-4 flex items-center gap-3">
-              <Avatar className="size-12 border-2 border-sky-100">
-                <AvatarFallback className="bg-sky-50 text-sm text-sky-700">{initials}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm font-medium text-slate-800">Clinic Logo</p>
-                <p className="text-xs text-slate-400">Initials are shown until a logo is uploaded</p>
-              </div>
+      <Card className="border-sky-100 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Building2 className="size-4.5 text-sky-600" />
+            Clinic Profile Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="mb-4 flex items-center gap-3">
+            <Avatar className="size-12 border-2 border-sky-100">
+              <AvatarFallback className="bg-sky-50 text-sm text-sky-700">{initials}</AvatarFallback>
+            </Avatar>
+            <div>
+              <p className="text-sm font-medium text-slate-800">Clinic Logo</p>
+              <p className="text-xs text-slate-400">Initials are shown until a logo is uploaded</p>
             </div>
+          </div>
+          {isEditing ? (
             <div className="grid gap-3 md:grid-cols-2">
               <div className="grid gap-2">
                 <Label>Clinic Name</Label>
                 <Input
-                  value={profileDraft.name}
-                  onChange={(e) => setProfileDraft((d) => ({ ...d, name: e.target.value }))}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Website</Label>
-                <Input
-                  value={profileDraft.website}
-                  placeholder="https://myclinic.example.com"
-                  onChange={(e) => setProfileDraft((d) => ({ ...d, website: e.target.value }))}
+                  value={draft.name}
+                  onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
                 />
               </div>
               <div className="grid gap-2 md:col-span-2">
                 <Label>Clinic Description</Label>
                 <Textarea
                   rows={3}
-                  value={profileDraft.description}
+                  value={draft.description}
                   placeholder="Tell patients what your clinic is about..."
                   onChange={(e) =>
-                    setProfileDraft((d) => ({ ...d, description: e.target.value }))
+                    setDraft((d) => ({ ...d, description: e.target.value }))
                   }
                 />
               </div>
-              <div className="grid gap-2">
-                <Label>Services</Label>
-                <Input disabled placeholder="Coming soon" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Specialties</Label>
-                <Input disabled placeholder="Coming soon" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Consultation Information</Label>
-                <Input disabled placeholder="Coming soon" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Social Links</Label>
-                <Input disabled placeholder="Coming soon" />
-              </div>
             </div>
-            <div className="mt-4 flex gap-2">
-              <Button size="sm" onClick={saveProfile} disabled={saving}>
+          ) : (
+            <div className="grid gap-x-8 gap-y-4 rounded-xl border border-sky-100 bg-sky-50/50 p-4 sm:grid-cols-2 lg:grid-cols-3">
+              <InfoField label="Clinic Name" value={clinic.name} />
+              <InfoField label="Clinic Description" value={clinic.description ?? "—"} />
+              <InfoField label="Website" value={clinic.website ?? "—"} />
+              <InfoField label="Services" value="—" />
+              <InfoField label="Specialties" value="—" />
+              <InfoField label="Consultation Information" value="—" />
+              <InfoField label="Social Links" value="—" />
+            </div>
+          )}
+          {isEditing && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button size="sm" onClick={saveAll} disabled={saving} className="gap-1.5">
                 <Save className="size-4" />
-                Save Changes
+                {saving ? "Saving…" : "Save Changes"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={cancelEdit} className="gap-1.5 text-slate-600">
+                <X className="size-4" />
+                Cancel
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
       <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-slate-400">
         <Landmark className="size-3.5" />
