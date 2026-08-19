@@ -264,6 +264,18 @@ export class PatientService {
     }
     if (input.email !== undefined) patch.email = input.email;
 
+    if (input.doctorId !== undefined) {
+      if (input.doctorId !== null) {
+        const doctorExists = await this.db
+          .collection(CLINIC_COLLECTIONS.doctors)
+          .findOne({ clinicId: requireClinicOf(ctx), doctorId: input.doctorId, status: { $ne: "deleted" } });
+        if (!doctorExists) {
+          throw new BadRequestError("The assigned doctor does not exist in this clinic");
+        }
+      }
+      patch.doctorId = input.doctorId;
+    }
+
     if (Object.keys(patch).length === 0) {
       throw new ConflictError("No fields to update");
     }

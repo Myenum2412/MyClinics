@@ -449,6 +449,7 @@ export default function NewPatientPage() {
         notes: form.notes.trim() || null,
         portalAccess: form.portalAccess,
         loginNotification: form.loginNotification,
+        doctorId: form.doctorId || null,
       };
 
       if (portalEnabled) {

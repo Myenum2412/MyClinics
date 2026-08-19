@@ -62,9 +62,7 @@ export const createPatientSchema = z.object({
 
 export type CreatePatientInput = z.infer<typeof createPatientSchema>;
 
-export const updatePatientSchema = createPatientSchema
-  .omit({ password: true, doctorId: true })
-  .partial();
+export const updatePatientSchema = createPatientSchema.omit({ password: true }).partial();
 
 export type UpdatePatientInput = z.infer<typeof updatePatientSchema>;
 

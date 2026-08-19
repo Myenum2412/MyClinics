@@ -155,6 +155,7 @@ export default function PatientsPage() {
           .map((a) => a.trim())
           .filter(Boolean),
         notes: form.notes || null,
+        doctorId: form.doctorId || null,
       };
       if (editing) {
         await updatePatient(clinicId, editing.patientId, payload);
