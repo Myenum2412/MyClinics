@@ -15,6 +15,7 @@ import { registerCronRoutes } from "@/routes/cron-reminders";
 import { registerPincodeRoutes } from "@/routes/pincode";
 import { registerAiRoutes } from "@/routes/ai";
 import { registerOrganizationRoutes } from "@/routes/organization";
+import { registerHealthRoutes } from "@/routes/health";
 import { registerClinicApi } from "@/clinic";
 import { AppError } from "@/clinic/core/errors";
 
@@ -25,6 +26,7 @@ export function buildServer() {
     logger: false,
     bodyLimit: MAX_UPLOAD_BYTES + 1024 * 1024,
     trustProxy: true,
+    requestTimeout: 30_000, // 30 second global request timeout
   });
 
   void app.register(compress, {
@@ -53,6 +55,7 @@ export function buildServer() {
   void app.register(registerPincodeRoutes);
   void app.register(registerAiRoutes);
   void app.register(registerOrganizationRoutes);
+  void app.register(registerHealthRoutes);
 
   // Clinic SaaS API — the multi-tenant domain. Every tenant route lives
   // under /api/clinics and is guarded by the clinic-scope middleware.
