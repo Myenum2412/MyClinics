@@ -239,18 +239,6 @@ export default function AccountPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Workspace</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <p className="text-sm text-muted-foreground">
-                {canEdit
-                  ? "You can manage clinic settings, staff and data."
-                  : "You have read and limited edit access to this clinic."}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
               <CardTitle>WhatsApp connection</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
