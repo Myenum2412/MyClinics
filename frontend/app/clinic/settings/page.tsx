@@ -132,8 +132,9 @@ export default function SettingsPage() {
                 {STAGE_LABEL[stage] ?? "WhatsApp unavailable"}
               </p>
               <p className="max-w-sm text-sm text-muted-foreground">
-                Make sure the WhatsApp worker is running on the server (pm2:
-                myclinic-whatsapp) and a Chromium browser is available.
+                {waSession === null
+                  ? "The status service is not reachable right now. The WhatsApp worker may be down — check pm2 status on the server (myclinic-whatsapp), then reload this page."
+                  : "Make sure the WhatsApp worker is running on the server (pm2: myclinic-whatsapp) and a Chromium browser is available."}
               </p>
             </div>
           )}
