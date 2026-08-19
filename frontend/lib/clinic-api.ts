@@ -286,6 +286,7 @@ export interface ClinicSettings {
   receiptFooter: string | null;
   smsEnabled: boolean;
   emailNotifications: boolean;
+  lookups?: Record<string, string[]>;
   updatedAt: string;
 }
 

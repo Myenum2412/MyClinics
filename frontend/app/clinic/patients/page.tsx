@@ -47,13 +47,13 @@ import {
 import { DoctorSelect } from "@/components/clinic/pickers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
+import { useDropdownOptions } from "@/lib/dropdown-options";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
 import { sessionCan } from "@/hooks/use-clinic-session";
 
 
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const GENDERS = ["male", "female", "other"];
 
 interface PatientFormState {
@@ -95,6 +95,8 @@ const EMPTY_FORM: PatientFormState = {
 export default function PatientsPage() {
   const session = useRequireRole("doctor");
   const clinicId = session?.clinicId ?? "";
+  const { getOptions } = useDropdownOptions(clinicId);
+  const bloodGroups = getOptions("blood_groups");
   const [items, setItems] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
@@ -590,6 +592,8 @@ function PatientForm({
   onSave: (form: PatientFormState) => Promise<void>;
 }) {
   const [form, setForm] = useState<PatientFormState>(initial);
+  const { getOptions } = useDropdownOptions(clinicId);
+  const bloodGroups = getOptions("blood_groups");
   const set = <K extends keyof PatientFormState>(key: K, value: PatientFormState[K] | null) =>
     setForm((f) => ({ ...f, [key]: (value ?? "") as PatientFormState[K] }));
 
@@ -650,7 +654,7 @@ function PatientForm({
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                {BLOOD_GROUPS.map((b) => (
+                {bloodGroups.map((b) => (
                   <SelectItem key={b} value={b}>
                     {b}
                   </SelectItem>

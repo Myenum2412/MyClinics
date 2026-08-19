@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
+import { useDropdownOptions } from "@/lib/dropdown-options";
 import { createPatient } from "@/lib/clinic-api";
 import { DoctorSelect } from "@/components/clinic/pickers";
 import { PincodeLookup } from "@/components/clinic/pincode-lookup";
@@ -30,17 +31,7 @@ import {
 import { ChevronLeft, AlertCircle, CheckCircle, Camera, User } from "lucide-react";
 import Link from "next/link";
 
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const GENDERS = ["Male", "Female", "Other"];
-const MARITAL_STATUS = ["Single", "Married", "Divorced", "Widowed"];
-const HOW_DID_YOU_HEAR = [
-  "Family/Friends Referral",
-  "Google Search",
-  "Social Media",
-  "Doctor Referral",
-  "Walk-in",
-  "Other",
-];
 
 interface PatientFormState {
   // Patient Information
@@ -242,6 +233,10 @@ function SectionCard({
 export default function NewPatientPage() {
   const session = useRequireRole("doctor");
   const clinicId = session?.clinicId ?? "";
+  const { getOptions } = useDropdownOptions(clinicId);
+  const bloodGroups = getOptions("blood_groups");
+  const maritalStatuses = getOptions("marital_statuses");
+  const howDidYouHear = getOptions("how_did_you_hear");
   const router = useRouter();
 
   const [form, setForm] = useState<PatientFormState>(EMPTY_FORM);
@@ -577,7 +572,7 @@ export default function NewPatientPage() {
                     <SelectValue placeholder="Select blood group" />
                   </SelectTrigger>
                   <SelectContent>
-                    {BLOOD_GROUPS.map((bg) => (
+                    {bloodGroups.map((bg) => (
                       <SelectItem key={bg} value={bg}>
                         {bg}
                       </SelectItem>
@@ -611,7 +606,7 @@ export default function NewPatientPage() {
                     <SelectValue placeholder="Select marital status" />
                   </SelectTrigger>
                   <SelectContent>
-                    {MARITAL_STATUS.map((ms) => (
+                    {maritalStatuses.map((ms) => (
                       <SelectItem key={ms} value={ms.toLowerCase()}>
                         {ms}
                       </SelectItem>
@@ -877,7 +872,7 @@ export default function NewPatientPage() {
                     <SelectValue placeholder="Select option" />
                   </SelectTrigger>
                   <SelectContent>
-                    {HOW_DID_YOU_HEAR.map((option) => (
+                    {howDidYouHear.map((option) => (
                       <SelectItem
                         key={option}
                         value={option.toLowerCase()}

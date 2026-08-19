@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
+import { useDropdownOptions } from "@/lib/dropdown-options";
 import {
   type Report,
   type Patient,
@@ -66,19 +67,6 @@ import {
 
 const REPORT_STATUSES = ["uploaded", "processing", "ready", "failed"];
 
-const REPORT_TYPES = [
-  "Blood Test",
-  "Urine Test",
-  "Stool Test",
-  "X-Ray",
-  "MRI",
-  "CT Scan",
-  "Ultrasound",
-  "ECG",
-  "Pathology",
-  "Biopsy",
-  "Other",
-];
 
 const STATUS_CLASS: Record<string, string> = {
   uploaded: "bg-blue-50 text-blue-700 border-blue-200",
@@ -119,6 +107,8 @@ const EMPTY_FORM: ReportFormState = {
 export default function ReportsPage() {
   const session = useRequireRole("doctor");
   const clinicId = session?.clinicId ?? "";
+  const { getOptions } = useDropdownOptions(clinicId);
+  const reportTypes = getOptions("report_types");
   const isDoctor = session?.role === "doctor";
 
   // Core States
@@ -619,6 +609,8 @@ function ReportForm({
   onSave: (form: ReportFormState) => Promise<void>;
 }) {
   const [form, setForm] = useState<ReportFormState>(initial);
+  const { getOptions } = useDropdownOptions(clinicId);
+  const reportTypes = getOptions("report_types");
   const [attachment, setAttachment] = useState<AttachmentFile[]>(() =>
     initial.fileUrl
       ? [
@@ -660,7 +652,7 @@ function ReportForm({
                 <SelectValue placeholder="Select report type" />
               </SelectTrigger>
               <SelectContent>
-                {REPORT_TYPES.map((t) => (
+                {reportTypes.map((t) => (
                   <SelectItem key={t} value={t}>
                     {t}
                   </SelectItem>

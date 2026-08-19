@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
+import { useDropdownOptions } from "@/lib/dropdown-options";
 import {
   type Doctor,
   createDoctor,
@@ -64,46 +65,6 @@ const DAYS = [
   { value: "Fri", label: "Friday" },
   { value: "Sat", label: "Saturday" },
   { value: "Sun", label: "Sunday" },
-];
-
-const NATIONALITIES = [
-  "Indian",
-  "American",
-  "British",
-  "Australian",
-  "Canadian",
-  "German",
-  "French",
-  "Japanese",
-  "Chinese",
-  "Nigerian",
-  "Pakistani",
-  "Bangladeshi",
-  "Sri Lankan",
-  "Nepali",
-  "Emirati",
-  "Saudi",
-  "Qatari",
-  "Omani",
-  "Kuwaiti",
-  "Singaporean",
-  "Malaysian",
-  "Other",
-];
-
-const DEPARTMENTS = [
-  "General Medicine",
-  "Cardiology",
-  "Pediatrics",
-  "Orthopedics",
-  "Dermatology",
-  "ENT",
-  "Ophthalmology",
-  "Gynecology & Obstetrics",
-  "Neurology",
-  "Psychiatry",
-  "Dental",
-  "Other",
 ];
 
 interface DaySchedule {
@@ -257,6 +218,9 @@ function RequiredStar() {
 export default function DoctorsPage() {
   const session = useRequireRole("doctor");
   const clinicId = session?.clinicId ?? "";
+  const { getOptions } = useDropdownOptions(clinicId);
+  const nationalities = getOptions("nationalities");
+  const departments = getOptions("doctor_departments");
   const [items, setItems] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Doctor | null>(null);
@@ -760,6 +724,10 @@ function DoctorForm({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const session = useRequireRole("doctor");
+  const { getOptions } = useDropdownOptions(session?.clinicId ?? "");
+  const nationalities = getOptions("nationalities");
+  const departments = getOptions("doctor_departments");
 
   const set = <K extends keyof DoctorFormState>(key: K, value: DoctorFormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -1029,7 +997,7 @@ function DoctorForm({
                 <SelectValue placeholder="Select nationality" />
               </SelectTrigger>
               <SelectContent>
-                {NATIONALITIES.map((n) => (
+                {nationalities.map((n) => (
                   <SelectItem key={n} value={n}>
                     {n}
                   </SelectItem>
@@ -1168,7 +1136,7 @@ function DoctorForm({
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
               <SelectContent>
-                {DEPARTMENTS.map((d) => (
+                {departments.map((d) => (
                   <SelectItem key={d} value={d}>
                     {d}
                   </SelectItem>

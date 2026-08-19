@@ -13,6 +13,12 @@ export const updateSettingsSchema = z.object({
   receiptFooter: z.string().trim().max(500).nullable().optional(),
   smsEnabled: z.boolean().optional(),
   emailNotifications: z.boolean().optional(),
+  lookups: z
+    .record(
+      z.string().trim().min(1).max(40),
+      z.array(z.string().trim().min(1).max(80)).max(500)
+    )
+    .optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
@@ -25,4 +31,5 @@ export const DEFAULT_SETTINGS = {
   receiptFooter: null,
   smsEnabled: false,
   emailNotifications: false,
+  lookups: {} as Record<string, string[]>,
 } as const;

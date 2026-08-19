@@ -5,11 +5,14 @@ import { toast } from "sonner";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import { getSoul, updateSoul, getWhatsappSession } from "@/lib/clinic-api";
 import type { SoulRecord, WhatsappSession } from "@/lib/clinic-api";
+import { DROPDOWN_OPTION_DEFS, useDropdownOptions } from "@/lib/dropdown-options";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ListPlus, Plus, Trash2, X } from "lucide-react";
 
 const WHATSAPP_POLL_MS = 5_000;
 
@@ -78,6 +81,47 @@ export default function SettingsPage() {
 
   const stage = waSession?.state?.stage ?? (waLoading ? "idle" : "idle");
   const connected = waSession?.state?.connected === true;
+
+  const {
+    getOptions,
+    addOption,
+    removeOption,
+    loading: dropdownsLoading,
+  } = useDropdownOptions(session?.clinicId ?? "");
+
+  const [dropdownDrafts, setDropdownDrafts] = useState<Record<string, string>>({});
+  const [dropdownSaving, setDropdownSaving] = useState<Record<string, boolean>>({});
+
+  async function handleAddOption(key: string) {
+    const value = (dropdownDrafts[key] ?? "").trim();
+    if (!value) return;
+    setDropdownSaving((s) => ({ ...s, [key]: true }));
+    try {
+      const added = await addOption(key, value);
+      if (added) {
+        toast.success(`Added "${value}"`);
+        setDropdownDrafts((d) => ({ ...d, [key]: "" }));
+      } else {
+        toast.error("This option already exists");
+      }
+    } catch {
+      /* toast handled in hook */
+    } finally {
+      setDropdownSaving((s) => ({ ...s, [key]: false }));
+    }
+  }
+
+  async function handleRemoveOption(key: string, value: string) {
+    setDropdownSaving((s) => ({ ...s, [key]: true }));
+    try {
+      await removeOption(key, value);
+      toast.success(`Removed "${value}"`);
+    } catch {
+      /* toast handled in hook */
+    } finally {
+      setDropdownSaving((s) => ({ ...s, [key]: false }));
+    }
+  }
 
   if (loading) {
     return (
@@ -184,6 +228,97 @@ export default function SettingsPage() {
           </form>
         </CardContent>
       </Card>
+
+      {canEdit && (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ListPlus className="size-4.5 text-blue-600" />
+            Dropdown Options
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Manage the options available in the dropdowns across the app. Add new values or
+            remove existing ones — changes apply to every form and filter using that dropdown.
+          </p>
+          {dropdownsLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-24 w-full" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {DROPDOWN_OPTION_DEFS.map((def) => {
+                const values = getOptions(def.key);
+                const saving = dropdownSaving[def.key];
+                return (
+                  <div key={def.key} className="rounded-xl border border-slate-100 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-medium text-slate-800">{def.label}</p>
+                        {def.description && (
+                          <p className="text-xs text-slate-400">{def.description}</p>
+                        )}
+                      </div>
+                      <span className="text-xs text-slate-400">
+                        {values.length} option{values.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {values.map((value) => (
+                        <span
+                          key={value}
+                          className="inline-flex items-center gap-1 rounded-full border border-sky-100 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-800"
+                        >
+                          {value}
+                          <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => handleRemoveOption(def.key, value)}
+                            aria-label={`Remove ${value}`}
+                            className="text-sky-400 transition hover:text-red-500"
+                          >
+                            <X className="size-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <Input
+                        value={dropdownDrafts[def.key] ?? ""}
+                        placeholder={`Add a new option...`}
+                        className="h-8 max-w-xs text-xs"
+                        disabled={saving}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            void handleAddOption(def.key);
+                          }
+                        }}
+                        onChange={(e) =>
+                          setDropdownDrafts((d) => ({ ...d, [def.key]: e.target.value }))
+                        }
+                      />
+                      <Button
+                        size="sm"
+                        className="h-8 gap-1 text-xs"
+                        disabled={saving || !(dropdownDrafts[def.key] ?? "").trim()}
+                        onClick={() => handleAddOption(def.key)}
+                      >
+                        {saving ? <Trash2 className="size-3.5" /> : <Plus className="size-3.5" />}
+                        {saving ? "Saving..." : "Add"}
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      )}
     </div>
   );
 }

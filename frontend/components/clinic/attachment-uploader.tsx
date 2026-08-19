@@ -22,6 +22,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { useRequireRole } from "@/hooks/use-clinic-session"
+import { useDropdownOptions } from "@/lib/dropdown-options"
 import { Check, FileText, Plus, UploadCloud, X } from "lucide-react"
 
 export interface AttachmentFile {
@@ -49,14 +51,6 @@ export function makeAttachmentFile(file: File | null, extra?: Partial<Attachment
   }
 }
 
-const DEFAULT_DOCUMENT_TYPES = [
-  "Medicine Report",
-  "Lab Report",
-  "Image",
-  "PDF Document",
-  "Other",
-]
-
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -75,7 +69,7 @@ function matchesAccept(file: File, accept: string[]): boolean {
 export function AttachmentUploader({
   files,
   onChange,
-  documentTypes = DEFAULT_DOCUMENT_TYPES,
+  documentTypes,
   accept = ["image/*", "application/pdf", ".doc", ".docx", ".xls", ".xlsx", ".txt"],
   maxSizeMB = 25,
   maxFiles,
@@ -93,6 +87,9 @@ export function AttachmentUploader({
   allowDescription?: boolean
   description?: string
 }) {
+  const session = useRequireRole("patient");
+  const { getOptions } = useDropdownOptions(session?.clinicId ?? "");
+  const effectiveDocumentTypes = documentTypes ?? getOptions("document_types");
   const [isDragging, setIsDragging] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const inputRef = useRef<HTMLInputElement>(null)
@@ -288,7 +285,7 @@ export function AttachmentUploader({
                         <SelectValue placeholder="Select type..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {documentTypes.map((t) => (
+                        {effectiveDocumentTypes.map((t) => (
                           <SelectItem key={t} value={t}>
                             {t}
                           </SelectItem>

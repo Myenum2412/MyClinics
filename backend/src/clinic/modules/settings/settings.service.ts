@@ -28,6 +28,7 @@ export class SettingsService {
     if (input.receiptFooter !== undefined) patch.receiptFooter = input.receiptFooter;
     if (input.smsEnabled !== undefined) patch.smsEnabled = input.smsEnabled;
     if (input.emailNotifications !== undefined) patch.emailNotifications = input.emailNotifications;
+    if (input.lookups !== undefined) patch.lookups = input.lookups;
 
     const updated = await this.repo(ctx).update(patch);
     if (!updated) {

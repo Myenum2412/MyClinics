@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
+import { useDropdownOptions } from "@/lib/dropdown-options";
 import {
   type Appointment,
   type AppointmentStatus,
@@ -112,6 +113,7 @@ function today(): string {
 export default function AppointmentsPage() {
   const session = useRequireRole("doctor");
   const clinicId = session?.clinicId ?? "";
+  const { getOptions } = useDropdownOptions(clinicId);
   const canManage = sessionCan(session, "clinic_admin");
 
   // Main Data States
@@ -1034,6 +1036,7 @@ function NewAppointmentForm({
   const [visitType, setVisitType] = useState("New Visit");
   const [date, setDate] = useState(today());
   const [time, setTime] = useState("10:00");
+  const { getOptions } = useDropdownOptions(clinicId);
   const [duration, setDuration] = useState(30);
   const [reason, setReason] = useState("");
   const [priority, setPriority] = useState("Normal");
@@ -1282,8 +1285,9 @@ function NewAppointmentForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="New Visit">New Visit</SelectItem>
-                  <SelectItem value="Follow-up">Follow-up</SelectItem>
+                  {getOptions("visit_types").map((vt) => (
+                    <SelectItem key={vt} value={vt}>{vt}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -1320,8 +1324,8 @@ function NewAppointmentForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {[15, 30, 45, 60].map((mins) => (
-                    <SelectItem key={mins} value={String(mins)}>{mins} minutes</SelectItem>
+                  {getOptions("appointment_durations").map((mins) => (
+                    <SelectItem key={mins} value={mins}>{mins} minutes</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -1349,9 +1353,9 @@ function NewAppointmentForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Normal">Normal</SelectItem>
-                  <SelectItem value="High">High</SelectItem>
-                  <SelectItem value="Urgent">Urgent</SelectItem>
+                  {getOptions("appointment_priorities").map((pr) => (
+                    <SelectItem key={pr} value={pr}>{pr}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -1453,9 +1457,9 @@ function NewAppointmentForm({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="None">None</SelectItem>
-                  <SelectItem value="Same Day">Same Day</SelectItem>
-                  <SelectItem value="1 Day Before">1 Day Before</SelectItem>
+                  {getOptions("reminder_options").map((rm) => (
+                    <SelectItem key={rm} value={rm}>{rm}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

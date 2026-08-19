@@ -9,6 +9,7 @@ export interface ClinicSettingsDoc extends ClinicDocument {
   receiptFooter: string | null;
   smsEnabled: boolean;
   emailNotifications: boolean;
+  lookups: Record<string, string[]>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,6 +23,7 @@ export function settingsToPublic(doc: ClinicSettingsDoc) {
     receiptFooter: doc.receiptFooter,
     smsEnabled: doc.smsEnabled,
     emailNotifications: doc.emailNotifications,
+    lookups: doc.lookups ?? {},
     updatedAt: doc.updatedAt,
   };
 }

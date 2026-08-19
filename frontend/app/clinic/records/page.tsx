@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
+import { useDropdownOptions } from "@/lib/dropdown-options";
 import {
   type MedicineRecord,
   type Doctor,
@@ -142,81 +143,6 @@ const EMPTY_MEDICINE: MedicineEntry = {
   duration: "",
   instructions: "",
 };
-
-const INSTRUCTION_SUGGESTIONS = [
-  "Before food",
-  "After food",
-  "With food",
-  "Empty stomach",
-  "Before breakfast",
-  "After breakfast",
-  "At bedtime",
-  "As needed",
-];
-
-/** Curated common-medicines list used to power the medicine autocomplete. */
-const COMMON_MEDICINES = [
-  "Paracetamol 500mg",
-  "Paracetamol Syrup (Pediatric)",
-  "Ibuprofen 400mg",
-  "Diclofenac 50mg",
-  "Aceclofenac 100mg",
-  "Amoxicillin 500mg",
-  "Amoxicillin + Clavulanic Acid 625mg",
-  "Azithromycin 500mg",
-  "Cefixime 200mg",
-  "Cefuroxime 500mg",
-  "Ciprofloxacin 500mg",
-  "Ofloxacin 200mg",
-  "Levofloxacin 500mg",
-  "Doxycycline 100mg",
-  "Metronidazole 400mg",
-  "Nitrofurantoin 100mg",
-  "Omeprazole 20mg",
-  "Pantoprazole 40mg",
-  "Rabeprazole 20mg",
-  "Domperidone 10mg",
-  "Ondansetron 4mg",
-  "Ranitidine 150mg",
-  "Cetirizine 10mg",
-  "Levocetirizine 5mg",
-  "Loratadine 10mg",
-  "Pheniramine 22.75mg/5ml",
-  "Montelukast 10mg",
-  "Salbutamol (Asthalin) Inhaler",
-  "Budesonide Inhaler",
-  "Ambroxol 30mg",
-  "Dextromethorphan Syrup",
-  "Cough Syrup (Chlorpheniramine + Dextromethorphan)",
-  "ORS Powder",
-  "Zinc Tablets",
-  "Vitamin D3 60K",
-  "Vitamin B12 1500mcg",
-  "Folic Acid 5mg",
-  "Iron + Folic Acid",
-  "Calcium + Vitamin D3",
-  "Metformin 500mg",
-  "Glimepiride 1mg",
-  "Sitagliptin 100mg",
-  "Insulin Mixtard 30/70",
-  "Atorvastatin 10mg",
-  "Rosuvastatin 10mg",
-  "Amlodipine 5mg",
-  "Telmisartan 40mg",
-  "Losartan 50mg",
-  "Metoprolol 25mg",
-  "Aspirin 75mg",
-  "Clopidogrel 75mg",
-  "Furosemide 40mg",
-  "Spironolactone 25mg",
-  "Tamsulosin 0.4mg",
-  "Finasteride 5mg",
-  "Levothyroxine 25mcg",
-  "Betamethasone Cream",
-  "Clotrimazole Cream",
-  "Hydrocortisone Cream",
-  "Mupirocin Ointment",
-];
 
 /**
  * Searchable dropdown/autocomplete for entity picks (patient, doctor,
@@ -372,6 +298,9 @@ function MedicineNameInput({
   onChange: (value: string) => void;
   placeholder?: string;
 }) {
+  const session = useRequireRole("doctor");
+  const { getOptions } = useDropdownOptions(session?.clinicId ?? "");
+  const medicines = getOptions("medicines");
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -388,11 +317,11 @@ function MedicineNameInput({
 
   const suggestions = useMemo(() => {
     const q = value.trim().toLowerCase();
-    if (!q) return COMMON_MEDICINES.slice(0, 8);
-    return COMMON_MEDICINES.filter((m) => m.toLowerCase().includes(q)).slice(0, 8);
-  }, [value]);
+    if (!q) return medicines.slice(0, 8);
+    return medicines.filter((m) => m.toLowerCase().includes(q)).slice(0, 8);
+  }, [value, medicines]);
 
-  const exactMatch = COMMON_MEDICINES.some(
+  const exactMatch = medicines.some(
     (m) => m.toLowerCase() === value.trim().toLowerCase()
   );
 
@@ -1041,6 +970,7 @@ function RecordForm({
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingMasters, setLoadingMasters] = useState(true);
+  const { getOptions } = useDropdownOptions(clinicId);
   const [form, setForm] = useState<RecordFormState>({
     ...initial,
     doctorId: initial.doctorId || initialDoctorId,
@@ -1463,7 +1393,7 @@ function RecordForm({
                       placeholder="e.g., Before food"
                     />
                     <datalist id="medicine-instruction-suggestions">
-                      {INSTRUCTION_SUGGESTIONS.map((s) => (
+                      {getOptions("medicine_instructions").map((s) => (
                         <option key={s} value={s} />
                       ))}
                     </datalist>
