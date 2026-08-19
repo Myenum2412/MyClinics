@@ -12,6 +12,7 @@ import { registerKnowledgeRoutes } from "@/routes/knowledge";
 import { registerSoulRoutes } from "@/routes/soul";
 import { registerWhatsappSessionRoutes } from "@/routes/whatsapp-session";
 import { registerCronRoutes } from "@/routes/cron-reminders";
+import { registerPincodeRoutes } from "@/routes/pincode";
 import { registerAiRoutes } from "@/routes/ai";
 import { registerOrganizationRoutes } from "@/routes/organization";
 import { registerClinicApi } from "@/clinic";
@@ -49,6 +50,7 @@ export function buildServer() {
   void app.register(registerSoulRoutes);
   void app.register(registerWhatsappSessionRoutes);
   void app.register(registerCronRoutes);
+  void app.register(registerPincodeRoutes);
   void app.register(registerAiRoutes);
   void app.register(registerOrganizationRoutes);
 

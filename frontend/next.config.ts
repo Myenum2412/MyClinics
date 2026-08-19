@@ -13,6 +13,12 @@ const BACKEND_URL =
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // indiapins reads its pincode data shards with readFileSync at runtime,
+  // which Next.js file tracing cannot discover statically — include them
+  // explicitly so the serverless function gets the data (Vercel prod).
+  outputFileTracingIncludes: {
+    "/pincode/\\[pincode\\]": ["./node_modules/indiapins/data/**/*"],
+  },
   async rewrites() {
     return [
       {
