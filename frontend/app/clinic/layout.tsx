@@ -44,7 +44,7 @@ export default function ClinicLayout({
 
   // Standalone full-width pages (clinic profile) render without the sidebar.
   if (pathname === "/clinic/account") {
-    return <div className="min-h-svh bg-sky-50/60">{children}</div>;
+    return <div className="min-h-svh bg-white">{children}</div>;
   }
 
   return (

@@ -8,7 +8,6 @@ import {
   Building2,
   CalendarDays,
   CheckCircle2,
-  Clock,
   FileText,
   Globe,
   Landmark,
@@ -123,6 +122,35 @@ function CardAction({ onClick, children }: { onClick: () => void; children: Reac
     >
       {children}
     </Button>
+  );
+}
+
+function ContactRow({
+  icon: Icon,
+  iconClass,
+  label,
+  value,
+  action,
+}: {
+  icon: typeof Phone;
+  iconClass: string;
+  label: string;
+  value: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 p-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${iconClass}`}>
+          <Icon className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-xs text-slate-400">{label}</p>
+          <p className="truncate text-sm font-medium text-slate-800">{value}</p>
+        </div>
+      </div>
+      {action}
+    </div>
   );
 }
 
@@ -293,6 +321,12 @@ export default function AccountPage() {
 
   const role = session?.role ?? "staff";
   const roleLabel = ROLE_LABELS[role] ?? "Member";
+  const userInitials = (session?.name ?? "?")
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
   const initials = (clinic?.name ?? session?.name ?? "?")
     .split(" ")
     .map((n) => n[0])
@@ -308,7 +342,7 @@ export default function AccountPage() {
 
   if (loading || !clinic) {
     return (
-      <div className="mx-auto max-w-6xl space-y-4 px-4 py-6 md:px-8">
+      <div className="mx-auto max-w-7xl space-y-4 px-4 py-6 md:px-8">
         <Skeleton className="h-10 w-64" />
         <Skeleton className="h-40 w-full" />
         <Skeleton className="h-64 w-full" />
@@ -317,9 +351,9 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 md:px-8">
+    <div className="mx-auto max-w-7xl px-4 py-6 md:px-8">
       {/* 1. Top header */}
-      <div className="mb-6 flex flex-wrap items-center gap-3">
+      <header className="mb-6 flex flex-wrap items-center gap-3">
         <Button
           variant="ghost"
           size="icon"
@@ -331,7 +365,9 @@ export default function AccountPage() {
         </Button>
         <div className="min-w-0 flex-1">
           <h1 className="text-xl font-semibold text-slate-800">Clinic Profile</h1>
-          <p className="text-sm text-slate-500">Manage your clinic information and public profile</p>
+          <p className="text-sm text-slate-500">
+            Manage your clinic information and public profile
+          </p>
         </div>
         <Button
           variant="ghost"
@@ -349,28 +385,29 @@ export default function AccountPage() {
         </Button>
         <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pr-1 pl-3 shadow-sm">
           <Avatar className="size-7">
-            <AvatarFallback className="text-[10px]">
-              {(session?.name ?? "?")
-                .split(" ")
-                .map((n) => n[0])
-                .join("")
-                .slice(0, 2)
-                .toUpperCase()}
-            </AvatarFallback>
+            <AvatarFallback className="text-[10px]">{userInitials}</AvatarFallback>
           </Avatar>
           <span className="hidden text-sm font-medium text-slate-700 sm:block">
             {session?.name ?? "User"}
           </span>
-          <Button variant="outline" size="sm" onClick={handleLogout} className="gap-1.5 text-slate-600">
+          <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
+            {roleLabel}
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            className="gap-1.5 text-red-600 hover:text-red-700"
+          >
             <LogOut className="size-4" />
             Log out
           </Button>
         </div>
-      </div>
+      </header>
 
-      {/* 2. Clinic profile header card */}
-      <Card className="mb-4 border-sky-100 shadow-sm">
-        <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
+      {/* 2. Profile summary */}
+      <Card className="mb-6 border-sky-100 shadow-sm">
+        <CardContent className="flex flex-col gap-5 pt-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-4">
             <Avatar className="size-16 border-2 border-sky-100">
               <AvatarFallback className="bg-sky-50 text-lg text-sky-700">{initials}</AvatarFallback>
@@ -381,17 +418,30 @@ export default function AccountPage() {
                 <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
                   {roleLabel}
                 </Badge>
-                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
+                <Badge
+                  variant="outline"
+                  className="border-emerald-200 bg-emerald-50 text-emerald-700"
+                >
                   <CheckCircle2 className="mr-1 size-3" />
                   Active
                 </Badge>
               </div>
-              <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
-                <span className="flex items-center gap-1">
-                  <Mail className="size-3.5" /> {clinic.email ?? "—"}
+              <div className="mt-2 grid gap-x-6 gap-y-1 text-sm text-slate-500 sm:grid-cols-2 lg:grid-cols-4">
+                <span className="flex min-w-0 items-center gap-1">
+                  <Mail className="size-3.5 shrink-0" />
+                  <span className="truncate">{clinic.email ?? "—"}</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <Phone className="size-3.5" /> {clinic.phone ?? "—"}
+                  <Phone className="size-3.5 shrink-0" />
+                  {clinic.phone ?? "—"}
+                </span>
+                <span className="flex items-center gap-1">
+                  <CalendarDays className="size-3.5 shrink-0" />
+                  Member since {new Date(clinic.createdAt).toLocaleDateString("en-IN")}
+                </span>
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="size-3.5 shrink-0" />
+                  Role: {roleLabel}
                 </span>
               </div>
             </div>
@@ -407,200 +457,193 @@ export default function AccountPage() {
         </CardContent>
       </Card>
 
-      {/* 3. Clinic address details */}
-      <Card className="mb-4 border-sky-100 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <MapPin className="size-4.5 text-sky-600" />
-            Clinic Address Details
-          </CardTitle>
-          <CardAction onClick={() => setEditAddress((v) => !v)}>
-            <Pencil className="size-3.5" />
-            Edit Address
-          </CardAction>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {editAddress ? (
-            <div className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="grid gap-2 md:col-span-2">
-                  <Label>Address</Label>
-                  <Textarea
-                    rows={2}
-                    value={addressDraft.address}
-                    onChange={(e) => setAddressDraft((d) => ({ ...d, address: e.target.value }))}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Clinic Phone</Label>
-                  <Input
-                    value={addressDraft.phone}
-                    onChange={(e) => setAddressDraft((d) => ({ ...d, phone: e.target.value }))}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Clinic Email</Label>
-                  <Input
-                    type="email"
-                    value={addressDraft.email}
-                    onChange={(e) => setAddressDraft((d) => ({ ...d, email: e.target.value }))}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button size="sm" onClick={saveAddress} disabled={saving}>
-                  <Save className="size-4" />
-                  Save Address
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => setEditAddress(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-x-8 gap-y-4 rounded-xl border border-sky-100 bg-sky-50/50 p-4 sm:grid-cols-2 lg:grid-cols-4">
-                <InfoField label="Clinic Name" value={clinic.name} />
-                <InfoField label="Door / Building No." value="—" />
-                <InfoField label="Street / Area" value={clinic.address ?? "—"} />
-                <InfoField label="Landmark" value="—" />
-                <InfoField label="City" value="—" />
-                <InfoField label="District" value="—" />
-                <InfoField label="State" value="—" />
-                <InfoField label="Pincode" value="—" />
-                <InfoField label="Country" value="—" />
-                <InfoField label="Google Maps location" value={clinic.address ? "Available" : "—"} />
-                <InfoField label="Clinic Phone" value={clinic.phone ?? "—"} />
-                <InfoField label="Clinic Email" value={clinic.email ?? "—"} />
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(mapsUrl, "_blank", "noopener,noreferrer")}
-                  className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50"
-                >
-                  <ExternalLink className="size-3.5" />
-                  Open in Google Maps
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditAddress(true)}
-                  className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50"
-                >
-                  <Pencil className="size-3.5" />
-                  Edit Address
-                </Button>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+      {/* 3. Overview statistics */}
+      <div className="mb-6">
+        <h2 className="mb-2 text-sm font-medium text-slate-700">Clinic Overview</h2>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <StatTile icon={Users} label="Total Patients" value={stats.patients ?? null} loading={statsLoading} />
+          <StatTile icon={Stethoscope} label="Active Doctors" value={stats.doctors ?? null} loading={statsLoading} />
+          <StatTile icon={UserCog} label="Staff Members" value={stats.staff ?? null} loading={statsLoading} />
+          <StatTile icon={CalendarDays} label="Total Appointments" value={stats.appointments ?? null} loading={statsLoading} />
+          <StatTile icon={FileText} label="Prescriptions" value={stats.prescriptions ?? null} loading={statsLoading} />
+          <StatTile icon={Building2} label="Departments / Services" value={null} loading={false} />
+        </div>
+      </div>
 
-      {/* 4. Contact & working hours */}
-      <div className="mb-4 grid gap-4 lg:grid-cols-2">
-        <Card className="border-sky-100 shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Phone className="size-4.5 text-sky-600" />
-              Contact
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-0">
-            <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-100 p-3">
-              <div className="flex items-center gap-3">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-                  <Phone className="size-4" />
-                </span>
-                <div>
-                  <p className="text-xs text-slate-400">Primary Phone</p>
-                  <p className="text-sm font-medium text-slate-800">{clinic.phone ?? "—"}</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-100 p-3">
-              <div className="flex items-center gap-3">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                  <MessageCircle className="size-4" />
-                </span>
-                <div>
-                  <p className="text-xs text-slate-400">WhatsApp Number</p>
-                  <p className="text-sm font-medium text-slate-800">{clinic.phone ?? "—"}</p>
-                </div>
-              </div>
-              {clinic.phone && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    window.open(
-                      `https://wa.me/${clinic.phone!.replace(/\D/g, "")}`,
-                      "_blank",
-                      "noopener,noreferrer"
-                    )
-                  }
-                >
-                  <ExternalLink className="size-3.5" />
-                </Button>
-              )}
-            </div>
-            <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-100 p-3">
-              <div className="flex items-center gap-3">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-                  <Mail className="size-4" />
-                </span>
-                <div>
-                  <p className="text-xs text-slate-400">Email</p>
-                  <p className="text-sm font-medium text-slate-800">{clinic.email ?? "—"}</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-100 p-3">
-              <div className="flex items-center gap-3">
-                <span className="flex size-8 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
-                  <Globe className="size-4" />
-                </span>
-                <div>
-                  <p className="text-xs text-slate-400">Website</p>
-                  <p className="truncate text-sm font-medium text-slate-800">
-                    {clinic.website ?? "—"}
-                  </p>
-                </div>
-              </div>
-              {clinic.website && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    window.open(
-                      clinic.website!.startsWith("http") ? clinic.website! : `https://${clinic.website!}`,
-                      "_blank",
-                      "noopener,noreferrer"
-                    )
-                  }
-                >
-                  <ExternalLink className="size-3.5" />
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
+      {/* 4. Main content — responsive 3-column card layout */}
+      <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {/* Clinic Address Details */}
         <Card className="border-sky-100 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Clock className="size-4.5 text-sky-600" />
-              Working Hours
+              <MapPin className="size-4.5 text-sky-600" />
+              Clinic Address Details
+            </CardTitle>
+            <CardAction onClick={() => setEditAddress((v) => !v)}>
+              <Pencil className="size-3.5" />
+              Edit Address
+            </CardAction>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {editAddress ? (
+              <div className="space-y-4">
+                <div className="grid gap-3">
+                  <div className="grid gap-2">
+                    <Label>Address</Label>
+                    <Textarea
+                      rows={2}
+                      value={addressDraft.address}
+                      onChange={(e) =>
+                        setAddressDraft((d) => ({ ...d, address: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Clinic Phone</Label>
+                    <Input
+                      value={addressDraft.phone}
+                      onChange={(e) =>
+                        setAddressDraft((d) => ({ ...d, phone: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Clinic Email</Label>
+                    <Input
+                      type="email"
+                      value={addressDraft.email}
+                      onChange={(e) =>
+                        setAddressDraft((d) => ({ ...d, email: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" onClick={saveAddress} disabled={saving}>
+                    <Save className="size-4" />
+                    Save Address
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setEditAddress(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-4 rounded-xl border border-sky-100 bg-sky-50/50 p-4">
+                  <InfoField label="Clinic Name" value={clinic.name} />
+                  <InfoField label="Door / Building No." value="—" />
+                  <InfoField label="Street / Area" value={clinic.address ?? "—"} />
+                  <InfoField label="Landmark" value="—" />
+                  <InfoField label="City" value="—" />
+                  <InfoField label="District" value="—" />
+                  <InfoField label="State" value="—" />
+                  <InfoField label="Pincode" value="—" />
+                  <InfoField label="Country" value="—" />
+                  <InfoField label="Clinic Phone" value={clinic.phone ?? "—"} />
+                  <InfoField label="Clinic Email" value={clinic.email ?? "—"} />
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(mapsUrl, "_blank", "noopener,noreferrer")}
+                    className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50"
+                  >
+                    <MapPin className="size-3.5" />
+                    View on Map
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(mapsUrl, "_blank", "noopener,noreferrer")}
+                    className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50"
+                  >
+                    <ExternalLink className="size-3.5" />
+                    Open in Google Maps
+                  </Button>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Clinic Contact & Working Hours */}
+        <Card className="border-sky-100 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Phone className="size-4.5 text-sky-600" />
+              Contact &amp; Working Hours
             </CardTitle>
             <CardAction onClick={() => setEditHours((v) => !v)}>
               <Pencil className="size-3.5" />
               Edit Working Hours
             </CardAction>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="space-y-3 pt-0">
+            <ContactRow
+              icon={Phone}
+              iconClass="bg-sky-50 text-sky-600"
+              label="Primary Phone"
+              value={clinic.phone ?? "—"}
+            />
+            <ContactRow
+              icon={MessageCircle}
+              iconClass="bg-emerald-50 text-emerald-600"
+              label="WhatsApp Number"
+              value={clinic.phone ?? "—"}
+              action={
+                clinic.phone ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      window.open(
+                        `https://wa.me/${clinic.phone!.replace(/\D/g, "")}`,
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
+                    <ExternalLink className="size-3.5" />
+                  </Button>
+                ) : undefined
+              }
+            />
+            <ContactRow
+              icon={Mail}
+              iconClass="bg-sky-50 text-sky-600"
+              label="Email"
+              value={clinic.email ?? "—"}
+            />
+            <ContactRow
+              icon={Globe}
+              iconClass="bg-sky-50 text-sky-600"
+              label="Website"
+              value={clinic.website ?? "—"}
+              action={
+                clinic.website ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      window.open(
+                        clinic.website!.startsWith("http")
+                          ? clinic.website!
+                          : `https://${clinic.website!}`,
+                        "_blank",
+                        "noopener,noreferrer"
+                      )
+                    }
+                  >
+                    <ExternalLink className="size-3.5" />
+                  </Button>
+                ) : undefined
+              }
+            />
+            <Separator />
             {editHours ? (
-              <div className="space-y-4">
+              <div className="space-y-4 pt-1">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="grid gap-2">
                     <Label>Open</Label>
@@ -619,7 +662,7 @@ export default function AccountPage() {
                     />
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button size="sm" onClick={saveHours} disabled={saving}>
                     <Save className="size-4" />
                     Save Hours
@@ -630,24 +673,63 @@ export default function AccountPage() {
                 </div>
               </div>
             ) : (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3">
-                  <span className="text-sm text-slate-600">Monday – Saturday</span>
-                  <span className="text-sm font-medium text-slate-800">
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Monday – Saturday</span>
+                  <span className="font-medium text-slate-800">
                     {clinic.settings.workingHours.open} – {clinic.settings.workingHours.close}
                   </span>
                 </div>
-                <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3">
-                  <span className="text-sm text-slate-600">Sunday</span>
-                  <span className="text-sm text-slate-400">—</span>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Sunday</span>
+                  <span className="text-slate-400">—</span>
                 </div>
-                <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3">
-                  <span className="text-sm text-slate-600">Emergency Hours</span>
-                  <span className="text-sm text-slate-400">—</span>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Emergency Hours</span>
+                  <span className="text-slate-400">—</span>
                 </div>
-                <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3">
-                  <span className="text-sm text-slate-600">Holiday / Closed</span>
-                  <span className="text-sm text-slate-400">—</span>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Holiday / Closed</span>
+                  <span className="text-slate-400">—</span>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* WhatsApp Connection */}
+        <Card className="border-sky-100 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <MessageCircle className="size-4.5 text-sky-600" />
+              WhatsApp Connection
+            </CardTitle>
+            <CardAction onClick={() => router.push("/clinic/settings")}>Manage Connection</CardAction>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {waSession === null ? (
+              <p className="text-sm text-slate-400">Checking status…</p>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 rounded-lg border border-slate-100 p-3">
+                  <span
+                    className={`size-2.5 rounded-full ${waConnected ? "bg-emerald-500" : "bg-amber-500"}`}
+                  />
+                  <span className="text-sm font-medium text-slate-800">
+                    {waConnected ? "Connected" : waSession.state?.stage ?? "Unavailable"}
+                  </span>
+                </div>
+                <div className="rounded-lg border border-slate-100 p-3">
+                  <p className="text-xs text-slate-400">WhatsApp number</p>
+                  <p className="text-sm font-medium text-slate-800">{waPhone ?? "—"}</p>
+                </div>
+                <div className="rounded-lg border border-slate-100 p-3">
+                  <p className="text-xs text-slate-400">Last updated</p>
+                  <p className="text-sm font-medium text-slate-800">
+                    {waSession.state?.updatedAt
+                      ? new Date(waSession.state.updatedAt).toLocaleString("en-IN")
+                      : "—"}
+                  </p>
                 </div>
               </div>
             )}
@@ -655,21 +737,8 @@ export default function AccountPage() {
         </Card>
       </div>
 
-      {/* 5. Clinic overview */}
-      <div className="mb-4">
-        <h2 className="mb-2 text-sm font-medium text-slate-700">Clinic Overview</h2>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
-          <StatTile icon={Users} label="Total Patients" value={stats.patients ?? null} loading={statsLoading} />
-          <StatTile icon={Stethoscope} label="Active Doctors" value={stats.doctors ?? null} loading={statsLoading} />
-          <StatTile icon={UserCog} label="Staff Members" value={stats.staff ?? null} loading={statsLoading} />
-          <StatTile icon={CalendarDays} label="Appointments" value={stats.appointments ?? null} loading={statsLoading} />
-          <StatTile icon={FileText} label="Prescriptions" value={stats.prescriptions ?? null} loading={statsLoading} />
-          <StatTile icon={Building2} label="Departments" value={null} loading={false} />
-        </div>
-      </div>
-
-      {/* 6. Account details */}
-      <div className="mb-4 grid gap-4 lg:grid-cols-2">
+      {/* 5. Account details & Session */}
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <Card className="border-sky-100 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -698,86 +767,36 @@ export default function AccountPage() {
           </CardContent>
         </Card>
 
-        <div className="space-y-4">
-          {/* 7. WhatsApp connection */}
-          <Card className="border-sky-100 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <MessageCircle className="size-4.5 text-sky-600" />
-                WhatsApp Connection
-              </CardTitle>
-              <CardAction onClick={() => router.push("/clinic/settings")}>Manage Connection</CardAction>
-            </CardHeader>
-            <CardContent className="pt-0">
-              {waSession === null ? (
-                <p className="text-sm text-slate-400">Checking status…</p>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`size-2.5 rounded-full ${waConnected ? "bg-emerald-500" : "bg-amber-500"}`}
-                    />
-                    <span className="text-sm font-medium text-slate-800">
-                      {waConnected ? "Connected" : waSession.state?.stage ?? "Unavailable"}
-                    </span>
-                  </div>
-                  {waConnected && (
-                    <p className="text-sm text-slate-500">
-                      Connected WhatsApp number: <span className="font-medium text-slate-700">{waPhone ?? "—"}</span>
-                    </p>
-                  )}
-                  <p className="text-xs text-slate-400">
-                    Last updated:{" "}
-                    {waSession.state?.updatedAt
-                      ? new Date(waSession.state.updatedAt).toLocaleString("en-IN")
-                      : "—"}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* 8. Session */}
-          <Card className="border-sky-100 shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Monitor className="size-4.5 text-sky-600" />
-                Session
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Current device</span>
-                <span className="font-medium text-slate-800">{deviceInfo.device}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Browser</span>
-                <span className="font-medium text-slate-800">{deviceInfo.browser}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Last login</span>
-                <span className="text-slate-400">—</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-500">Login time</span>
-                <span className="text-slate-400">—</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="mt-2 gap-1.5 text-slate-600"
-              >
-                <LogOut className="size-4" />
-                Log out from this device
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="border-sky-100 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Monitor className="size-4.5 text-sky-600" />
+              Session
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <DetailRow label="Current device" value={deviceInfo.device} />
+            <Separator />
+            <DetailRow label="Browser" value={deviceInfo.browser} />
+            <Separator />
+            <DetailRow label="Last login" value="—" />
+            <Separator />
+            <DetailRow label="Login time" value="—" />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              className="mt-3 gap-1.5 text-red-600 hover:text-red-700"
+            >
+              <LogOut className="size-4" />
+              Log out from this device
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* 9. Recent notifications */}
-      <Card className="mb-4 border-sky-100 shadow-sm">
+      {/* 6. Recent notifications */}
+      <Card className="mb-6 border-sky-100 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base">
             <Bell className="size-4.5 text-sky-600" />
@@ -808,7 +827,9 @@ export default function AccountPage() {
                   {n.readAt && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-transparent" />}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-slate-800">{n.title}</p>
-                    {n.body && <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{n.body}</p>}
+                    {n.body && (
+                      <p className="mt-0.5 line-clamp-1 text-xs text-slate-500">{n.body}</p>
+                    )}
                   </div>
                   <span className="shrink-0 text-xs text-slate-400">
                     {new Date(n.createdAt).toLocaleString("en-IN", {
@@ -825,7 +846,7 @@ export default function AccountPage() {
         </CardContent>
       </Card>
 
-      {/* 10. Clinic profile settings */}
+      {/* 7. Clinic profile settings */}
       <div ref={settingsRef} className="scroll-mt-4">
         <Card className="border-sky-100 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between">
