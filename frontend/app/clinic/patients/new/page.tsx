@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { createPatient } from "@/lib/clinic-api";
-import { DoctorSelect } from "@/components/clinic/pickers";
+import { DoctorComboBox } from "@/components/clinic/pickers";
 import { PincodeLookup } from "@/components/clinic/pincode-lookup";
 import {
   WhatsAppInput,
@@ -28,13 +28,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, AlertCircle, CheckCircle, Camera, User } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  ChevronLeft,
+  AlertCircle,
+  CheckCircle,
+  Camera,
+  User,
+  ExternalLink,
+  KeyRound,
+  Mail,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
 
 const GENDERS = ["Male", "Female", "Other"];
 
 interface PatientFormState {
-  // Patient Information
+  // 1. Patient Information
   fullName: string;
   mobile: string;
   whatsapp: string;
@@ -47,36 +65,46 @@ interface PatientFormState {
   maritalStatus: string;
   occupation: string;
 
-  // Address
+  // 2. Address
   address: string;
   city: string;
   state: string;
   pincode: string;
 
-  // Emergency Contact
+  // 3. Emergency Contact
   emergencyContactName: string;
   emergencyContactRelationship: string;
   emergencyContactMobile: string;
 
-  // Medical Information
+  // 4. Medical Information
   allergies: string;
   medicalConditions: string;
   previousSurgeries: string;
   currentMedications: string;
 
-  // Account & Portal Access
+  // 5. Identification
+  idType: string;
+  idNumber: string;
+
+  // 6. Account & Portal Access
   doctorId: string | null;
   password: string;
   confirmPassword: string;
   portalAccess: "enable" | "disable";
   loginNotification: "whatsapp" | "email" | "none";
 
-  // Additional Information
+  // 7. Insurance
+  insuranceProvider: string;
+  insurancePolicyNumber: string;
+  insurancePolicyHolderName: string;
+  insuranceValidTill: string;
+
+  // 8. Additional Information
   referredBy: string;
   howDidYouHear: string;
   notes: string;
 
-  // Attachments
+  // 9. Attachments
   attachments: AttachmentFile[];
 }
 
@@ -103,11 +131,17 @@ const EMPTY_FORM: PatientFormState = {
   medicalConditions: "",
   previousSurgeries: "",
   currentMedications: "",
+  idType: "",
+  idNumber: "",
   doctorId: null,
   password: "",
   confirmPassword: "",
   portalAccess: "enable",
   loginNotification: "none",
+  insuranceProvider: "",
+  insurancePolicyNumber: "",
+  insurancePolicyHolderName: "",
+  insuranceValidTill: "",
   referredBy: "",
   howDidYouHear: "",
   notes: "",
@@ -237,6 +271,7 @@ export default function NewPatientPage() {
   const bloodGroups = getOptions("blood_groups");
   const maritalStatuses = getOptions("marital_statuses");
   const howDidYouHear = getOptions("how_did_you_hear");
+  const idProofTypes = getOptions("id_proof_types");
   const router = useRouter();
 
   const [form, setForm] = useState<PatientFormState>(EMPTY_FORM);
@@ -245,6 +280,16 @@ export default function NewPatientPage() {
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [createdPatient, setCreatedPatient] = useState<{
+    patientId: string;
+    fullName: string;
+    email: string;
+    password: string;
+    loginNotification: string;
+  } | null>(null);
+
+  const portalEnabled = form.portalAccess === "enable";
 
   // Calculate age from date of birth
   const calculatedAge = useMemo(() => {
@@ -276,19 +321,28 @@ export default function NewPatientPage() {
     if (!form.doctorId) {
       newErrors.doctorId = "Please assign a doctor";
     }
-    if (!form.password) {
-      newErrors.password = "Portal password is required";
-    } else if (form.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-    if (!form.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm password";
-    } else if (form.password !== form.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+
+    // Portal credentials (only enforced when portal access is enabled)
+    if (portalEnabled) {
+      if (!form.email.trim()) {
+        newErrors.email = "Email is required to enable portal access";
+      } else if (!validateEmail(form.email)) {
+        newErrors.email = "Enter a valid email address";
+      }
+      if (!form.password) {
+        newErrors.password = "Portal password is required";
+      } else if (form.password.length < 8) {
+        newErrors.password = "Password must be at least 8 characters";
+      }
+      if (!form.confirmPassword) {
+        newErrors.confirmPassword = "Please confirm password";
+      } else if (form.password !== form.confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+      }
     }
 
     // Optional validations
-    if (form.email && !validateEmail(form.email)) {
+    if (form.email && !portalEnabled && !validateEmail(form.email)) {
       newErrors.email = "Enter a valid email address";
     }
     if (form.whatsapp && !isIndianMobile(form.whatsapp)) {
@@ -307,7 +361,7 @@ export default function NewPatientPage() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [form]);
+  }, [form, portalEnabled]);
 
   // Handle form input changes
   const handleChange = (
@@ -366,25 +420,55 @@ export default function NewPatientPage() {
         gender: form.gender.toLowerCase() || null,
         dateOfBirth: form.dateOfBirth || null,
         bloodGroup: form.bloodGroup || null,
+        height: form.height.trim() || null,
+        weight: form.weight.trim() || null,
+        occupation: form.occupation.trim() || null,
+        maritalStatus: form.maritalStatus || null,
         address: form.address.trim() || null,
         city: form.city.trim() || null,
         state: form.state.trim() || null,
         pincode: form.pincode.trim() || null,
+        emergencyContactName: form.emergencyContactName.trim() || null,
+        emergencyContactRelationship: form.emergencyContactRelationship.trim() || null,
+        emergencyContactMobile: form.emergencyContactMobile.trim() || null,
         allergies: form.allergies
           .split(",")
           .map((a) => a.trim())
           .filter(Boolean),
+        medicalConditions: form.medicalConditions.trim() || null,
+        previousSurgeries: form.previousSurgeries.trim() || null,
+        currentMedications: form.currentMedications.trim() || null,
+        idType: form.idType || null,
+        idNumber: form.idNumber.trim() || null,
+        insuranceProvider: form.insuranceProvider.trim() || null,
+        insurancePolicyNumber: form.insurancePolicyNumber.trim() || null,
+        insurancePolicyHolderName: form.insurancePolicyHolderName.trim() || null,
+        insuranceValidTill: form.insuranceValidTill || null,
+        referredBy: form.referredBy.trim() || null,
+        howDidYouHear: form.howDidYouHear || null,
         notes: form.notes.trim() || null,
+        portalAccess: form.portalAccess,
+        loginNotification: form.loginNotification,
       };
 
-      await createPatient(clinicId, {
-        ...payload,
-        password: form.password,
-        loginNotification: form.loginNotification,
-      });
+      if (portalEnabled) {
+        payload.password = form.password;
+      }
 
-      toast.success("Patient registered successfully");
-      router.push(`/clinic/patients`);
+      const created = await createPatient(clinicId, payload);
+
+      if (portalEnabled && created.userId) {
+        setCreatedPatient({
+          patientId: created.patientId,
+          fullName: created.fullName,
+          email: form.email.trim(),
+          password: form.password,
+          loginNotification: form.loginNotification,
+        });
+      } else {
+        toast.success("Patient registered successfully");
+        router.push("/clinic/patients");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to register patient");
     } finally {
@@ -525,6 +609,11 @@ export default function NewPatientPage() {
                 onChange={(v) => handleChange("email", v)}
                 error={errors.email}
                 placeholder="john@example.com"
+                helperText={
+                  portalEnabled
+                    ? "Required — this is the patient's portal login username"
+                    : undefined
+                }
               />
               <FormField
                 label="Gender"
@@ -607,7 +696,7 @@ export default function NewPatientPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {maritalStatuses.map((ms) => (
-                      <SelectItem key={ms} value={ms.toLowerCase()}>
+                      <SelectItem key={ms} value={ms}>
                         {ms}
                       </SelectItem>
                     ))}
@@ -691,7 +780,10 @@ export default function NewPatientPage() {
           </SectionCard>
 
           {/* 4. Medical Information */}
-          <SectionCard title="4. Medical Information">
+          <SectionCard
+            title="4. Medical Information"
+            description="Shared with the assigned doctor for prescriptions and consultations"
+          >
             <FormField
               label="Known Allergies"
               name="allergies"
@@ -740,10 +832,40 @@ export default function NewPatientPage() {
             </FormField>
           </SectionCard>
 
-          {/* 5. Account & Portal Access */}
+          {/* 5. Identification */}
           <SectionCard
-            title="5. Account & Portal Access"
-            description="Create patient portal credentials"
+            title="5. Identification"
+            description="Optional — only fill if required by your clinic"
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField label="ID Proof Type" name="idType" error={errors.idType}>
+                <Select value={form.idType} onValueChange={(v) => handleChange("idType", v)}>
+                  <SelectTrigger className="border-blue-200">
+                    <SelectValue placeholder="Select ID proof type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {idProofTypes.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormField>
+              <FormField
+                label="ID Number"
+                name="idNumber"
+                value={form.idNumber}
+                onChange={(v) => handleChange("idNumber", v)}
+                placeholder="Enter the ID number"
+              />
+            </div>
+          </SectionCard>
+
+          {/* 6. Account & Portal Access */}
+          <SectionCard
+            title="6. Account & Portal Access"
+            description="Assign the patient to a doctor and optionally create patient portal credentials"
           >
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
@@ -752,7 +874,7 @@ export default function NewPatientPage() {
                 required
                 error={errors.doctorId}
               >
-                <DoctorSelect
+                <DoctorComboBox
                   clinicId={clinicId}
                   value={form.doctorId}
                   onChange={(v) => handleChange("doctorId", v)}
@@ -768,6 +890,7 @@ export default function NewPatientPage() {
                 onChange={(v) => handleChange("password", v)}
                 error={errors.password}
                 required
+                disabled={!portalEnabled}
                 placeholder="••••••••"
                 helperText="Minimum 8 characters"
               />
@@ -779,6 +902,7 @@ export default function NewPatientPage() {
                 onChange={(v) => handleChange("confirmPassword", v)}
                 error={errors.confirmPassword}
                 required
+                disabled={!portalEnabled}
                 placeholder="••••••••"
               />
             </div>
@@ -786,7 +910,7 @@ export default function NewPatientPage() {
             <div className="space-y-4 border-t border-blue-200 pt-4">
               <div>
                 <Label className="text-sm font-medium text-gray-700">
-                  Portal Access
+                  Patient Portal Access
                 </Label>
                 <div className="mt-3 space-y-2">
                   {(["enable", "disable"] as const).map((option) => (
@@ -799,9 +923,18 @@ export default function NewPatientPage() {
                         name="portalAccess"
                         value={option}
                         checked={form.portalAccess === option}
-                        onChange={(e) =>
-                          handleChange("portalAccess", e.target.value as any)
-                        }
+                        onChange={(e) => {
+                          handleChange("portalAccess", e.target.value as "enable" | "disable");
+                          if (e.target.value === "disable") {
+                            setForm((prev) => ({
+                              ...prev,
+                              portalAccess: "disable",
+                              password: "",
+                              confirmPassword: "",
+                              loginNotification: "none",
+                            }));
+                          }
+                        }}
                         className="h-4 w-4 border-blue-300 text-blue-600"
                       />
                       <span className="text-sm font-medium text-gray-700">
@@ -812,45 +945,87 @@ export default function NewPatientPage() {
                 </div>
               </div>
 
-              <div>
-                <Label className="text-sm font-medium text-gray-700">
-                  Send Login Details Via
-                </Label>
-                <div className="mt-3 space-y-2">
-                  {(["whatsapp", "email", "none"] as const).map((option) => (
-                    <label
-                      key={option}
-                      className="flex items-center gap-3 rounded-lg p-3 hover:bg-blue-50"
-                    >
-                      <input
-                        type="radio"
-                        name="loginNotification"
-                        value={option}
-                        checked={form.loginNotification === option}
-                        onChange={(e) =>
-                          handleChange(
-                            "loginNotification",
-                            e.target.value as any
-                          )
-                        }
-                        className="h-4 w-4 border-blue-300 text-blue-600"
-                      />
-                      <span className="text-sm font-medium text-gray-700">
-                        {option === "whatsapp"
-                          ? "WhatsApp"
-                          : option === "email"
-                            ? "Email"
-                            : "Do Not Send"}
-                      </span>
-                    </label>
-                  ))}
+              {portalEnabled && (
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">
+                    Send Login Details Via
+                  </Label>
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    The patient receives login credentials only through the selected method
+                  </p>
+                  <div className="mt-3 space-y-2">
+                    {(["whatsapp", "email", "none"] as const).map((option) => (
+                      <label
+                        key={option}
+                        className="flex items-center gap-3 rounded-lg p-3 hover:bg-blue-50"
+                      >
+                        <input
+                          type="radio"
+                          name="loginNotification"
+                          value={option}
+                          checked={form.loginNotification === option}
+                          onChange={(e) =>
+                            handleChange(
+                              "loginNotification",
+                              e.target.value as "whatsapp" | "email" | "none"
+                            )
+                          }
+                          className="h-4 w-4 border-blue-300 text-blue-600"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          {option === "whatsapp"
+                            ? "Send login details via WhatsApp"
+                            : option === "email"
+                              ? "Send login details via Email"
+                              : "Do not send"}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </SectionCard>
 
-          {/* 6. Additional Information */}
-          <SectionCard title="6. Additional Information">
+          {/* 7. Insurance */}
+          <SectionCard
+            title="7. Insurance"
+            description="Optional — add if the patient has health insurance"
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <FormField
+                label="Insurance Provider"
+                name="insuranceProvider"
+                value={form.insuranceProvider}
+                onChange={(v) => handleChange("insuranceProvider", v)}
+                placeholder="e.g. Star Health, ICICI Lombard"
+              />
+              <FormField
+                label="Policy Number"
+                name="insurancePolicyNumber"
+                value={form.insurancePolicyNumber}
+                onChange={(v) => handleChange("insurancePolicyNumber", v)}
+                placeholder="Policy number"
+              />
+              <FormField
+                label="Policy Holder Name"
+                name="insurancePolicyHolderName"
+                value={form.insurancePolicyHolderName}
+                onChange={(v) => handleChange("insurancePolicyHolderName", v)}
+                placeholder="Name on the policy"
+              />
+              <FormField
+                label="Valid Till"
+                name="insuranceValidTill"
+                type="date"
+                value={form.insuranceValidTill}
+                onChange={(v) => handleChange("insuranceValidTill", v)}
+              />
+            </div>
+          </SectionCard>
+
+          {/* 8. Additional Information */}
+          <SectionCard title="8. Additional Information">
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 label="Referred By"
@@ -873,10 +1048,7 @@ export default function NewPatientPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {howDidYouHear.map((option) => (
-                      <SelectItem
-                        key={option}
-                        value={option.toLowerCase()}
-                      >
+                      <SelectItem key={option} value={option}>
                         {option}
                       </SelectItem>
                     ))}
@@ -894,22 +1066,27 @@ export default function NewPatientPage() {
               <Textarea
                 value={form.notes}
                 onChange={(e) => handleChange("notes", e.target.value)}
-                placeholder="Internal notes visible only to authorized clinic staff"
+                placeholder="Internal notes — visible only to authorized clinic staff"
                 rows={3}
                 className="border-blue-200"
               />
+              <p className="text-xs text-amber-600 flex items-center gap-1">
+                <ShieldCheck className="size-3.5" />
+                Visible only to authorized clinic staff, never to the patient
+              </p>
             </FormField>
           </SectionCard>
 
-          {/* 7. Attachments */}
+          {/* 9. Attachments */}
           <SectionCard
-            title="7. Attachments"
+            title="9. Attachments"
             description="Optional - upload patient documents"
           >
             <AttachmentUploader
               files={form.attachments}
               onChange={(files) => setForm((f) => ({ ...f, attachments: files }))}
-              description="Upload ID proofs, reports, or documents (PDF, PNG, JPG up to 25 MB)."
+              description="Upload ID proofs, reports, or documents (JPG, PNG, PDF up to 25 MB)."
+              accept={["image/jpeg", "image/png", "application/pdf"]}
             />
           </SectionCard>
 
@@ -918,6 +1095,7 @@ export default function NewPatientPage() {
             <Button
               variant="outline"
               onClick={handleReset}
+              disabled={saving}
               className="border-blue-300 text-blue-600 hover:bg-blue-50"
             >
               Reset
@@ -934,6 +1112,95 @@ export default function NewPatientPage() {
           </div>
         </div>
       </div>
+
+      {/* Success Dialog */}
+      <Dialog
+        open={createdPatient !== null}
+        onOpenChange={(open) => {
+          if (!open && createdPatient) {
+            setCreatedPatient(null);
+            router.push("/clinic/patients");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-green-100">
+              <CheckCircle className="size-7 text-green-600" />
+            </div>
+            <DialogTitle className="text-center text-lg">
+              Patient Registered Successfully
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {createdPatient?.fullName} has been added to your clinic with
+              patient ID{" "}
+              <span className="font-semibold text-gray-800">
+                {createdPatient?.patientId}
+              </span>
+              .
+            </DialogDescription>
+          </DialogHeader>
+
+          {createdPatient && (
+            <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                  <Mail className="size-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500">Portal Login (Email)</p>
+                  <p className="truncate text-sm font-medium text-gray-800">
+                    {createdPatient.email}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                  <KeyRound className="size-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500">Password</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {createdPatient.password}
+                  </p>
+                </div>
+              </div>
+              {createdPatient.loginNotification === "whatsapp" && (
+                <p className="text-xs text-blue-700 flex items-center gap-1">
+                  Login details sent via WhatsApp
+                </p>
+              )}
+              {createdPatient.loginNotification === "email" && (
+                <p className="text-xs text-blue-700 flex items-center gap-1">
+                  Login details sent via Email
+                </p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              className="border-blue-300 text-blue-600 hover:bg-blue-50 flex-1"
+              onClick={() => {
+                setCreatedPatient(null);
+                router.push("/clinic/patients");
+              }}
+            >
+              Go to Patients
+            </Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white flex-1 gap-1.5"
+              onClick={() => {
+                window.open("/login?callbackUrl=/clinic", "_blank");
+              }}
+            >
+              <ExternalLink className="size-4" />
+              Open Patient Dashboard
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

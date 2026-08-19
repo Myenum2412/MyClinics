@@ -20,10 +20,7 @@ export const createPatientSchema = z.object({
   email: optionalString(EMAIL_MAX),
   gender: z.enum(["male", "female", "other"]).optional().nullable(),
   dateOfBirth: z.string().trim().nullable().optional(),
-  bloodGroup: z
-    .enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
-    .optional()
-    .nullable(),
+  bloodGroup: optionalString(20),
   address: optionalString(300),
   city: optionalString(120),
   state: optionalString(120),
@@ -33,12 +30,32 @@ export const createPatientSchema = z.object({
     .regex(/^\d{6}$/, "Invalid pincode")
     .optional()
     .nullable(),
+  height: optionalString(20),
+  weight: optionalString(20),
+  occupation: optionalString(120),
+  maritalStatus: optionalString(40),
+  emergencyContactName: optionalString(120),
+  emergencyContactRelationship: optionalString(80),
+  emergencyContactMobile: optionalString(PHONE_MAX),
   allergies: z.array(z.string().trim().min(1).max(200)).max(50).optional(),
+  medicalConditions: optionalString(2000),
+  previousSurgeries: optionalString(2000),
+  currentMedications: optionalString(2000),
+  idType: optionalString(80),
+  idNumber: optionalString(80),
+  insuranceProvider: optionalString(120),
+  insurancePolicyNumber: optionalString(120),
+  insurancePolicyHolderName: optionalString(120),
+  insuranceValidTill: optionalString(20),
+  referredBy: optionalString(120),
+  howDidYouHear: optionalString(120),
   notes: optionalString(1000),
   /** Assigns the patient to a doctor (must exist in this clinic). */
   doctorId: z.string().startsWith("doc_").nullable().optional(),
   /** When set, a patient portal account is created with this password. */
   password: z.string().min(8, "Password must be at least 8 characters").max(200).optional(),
+  /** Whether portal access is enabled for this patient. */
+  portalAccess: z.enum(["enable", "disable"]).optional(),
   /** How login details are delivered after registration (WhatsApp supported today). */
   loginNotification: z.enum(["whatsapp", "email", "none"]).optional(),
 });

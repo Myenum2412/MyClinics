@@ -30,6 +30,19 @@ export const DROPDOWN_OPTION_DEFS: DropdownOptionDef[] = [
     defaults: ["Single", "Married", "Divorced", "Widowed"],
   },
   {
+    key: "id_proof_types",
+    label: "ID Proof Types",
+    description: "Patient identification document options",
+    defaults: [
+      "Aadhaar Card",
+      "PAN Card",
+      "Driving License",
+      "Passport",
+      "Voter ID",
+      "Other",
+    ],
+  },
+  {
     key: "how_did_you_hear",
     label: "How Did You Hear About Us",
     description: "Patient referral source options",

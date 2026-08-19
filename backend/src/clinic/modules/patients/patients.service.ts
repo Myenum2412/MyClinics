@@ -49,6 +49,40 @@ export class PatientService {
     const patientId = generatePatientId();
     const now = new Date();
 
+    const patients = this.db.collection<PatientDoc>(CLINIC_COLLECTIONS.patients);
+
+    // Prevent duplicate registrations inside this clinic.
+    const dupByMobile = await patients.findOne({
+      clinicId,
+      mobile: input.mobile,
+      status: { $ne: "deleted" },
+    });
+    if (dupByMobile) {
+      throw new ConflictError("A patient with this mobile number already exists in your clinic");
+    }
+    if (input.email) {
+      const dupByEmail = await patients.findOne({
+        clinicId,
+        email: input.email,
+        status: { $ne: "deleted" },
+      });
+      if (dupByEmail) {
+        throw new ConflictError("A patient with this email already exists in your clinic");
+      }
+    }
+
+    // Portal access needs an email (patients sign in with email + password).
+    // Legacy clients omit portalAccess: keep the old email+password behavior.
+    const portalEnabled =
+      input.portalAccess === "enable" ||
+      (input.portalAccess === undefined && Boolean(input.email && input.password));
+    if (portalEnabled && !input.email) {
+      throw new BadRequestError("An email is required to enable patient portal access");
+    }
+    if (input.portalAccess === "disable" && input.password) {
+      throw new BadRequestError("Portal password is set but portal access is disabled");
+    }
+
     let assignedDoctor: Notifyable | null = null;
     if (input.doctorId) {
       const doctorExists = await this.db
@@ -75,7 +109,25 @@ export class PatientService {
       city: input.city ?? null,
       state: input.state ?? null,
       pincode: input.pincode ?? null,
+      height: input.height ?? null,
+      weight: input.weight ?? null,
+      occupation: input.occupation ?? null,
+      maritalStatus: input.maritalStatus ?? null,
+      emergencyContactName: input.emergencyContactName ?? null,
+      emergencyContactRelationship: input.emergencyContactRelationship ?? null,
+      emergencyContactMobile: input.emergencyContactMobile ?? null,
       allergies: input.allergies ?? [],
+      medicalConditions: input.medicalConditions ?? null,
+      previousSurgeries: input.previousSurgeries ?? null,
+      currentMedications: input.currentMedications ?? null,
+      idType: input.idType ?? null,
+      idNumber: input.idNumber ?? null,
+      insuranceProvider: input.insuranceProvider ?? null,
+      insurancePolicyNumber: input.insurancePolicyNumber ?? null,
+      insurancePolicyHolderName: input.insurancePolicyHolderName ?? null,
+      insuranceValidTill: input.insuranceValidTill ?? null,
+      referredBy: input.referredBy ?? null,
+      howDidYouHear: input.howDidYouHear ?? null,
       notes: input.notes ?? null,
       status: "active",
       createdBy: ctx.userId,
@@ -83,7 +135,7 @@ export class PatientService {
       updatedAt: now,
     };
 
-    if (input.email && input.password) {
+    if (portalEnabled && input.email && input.password) {
       const users = this.db.collection<UserDoc>(CLINIC_COLLECTIONS.users);
       const existing = await users.findOne({ email: input.email });
       if (existing) {
@@ -186,7 +238,25 @@ export class PatientService {
       "city",
       "state",
       "pincode",
+      "height",
+      "weight",
+      "occupation",
+      "maritalStatus",
+      "emergencyContactName",
+      "emergencyContactRelationship",
+      "emergencyContactMobile",
       "allergies",
+      "medicalConditions",
+      "previousSurgeries",
+      "currentMedications",
+      "idType",
+      "idNumber",
+      "insuranceProvider",
+      "insurancePolicyNumber",
+      "insurancePolicyHolderName",
+      "insuranceValidTill",
+      "referredBy",
+      "howDidYouHear",
       "notes",
     ] as const) {
       const value = input[key];

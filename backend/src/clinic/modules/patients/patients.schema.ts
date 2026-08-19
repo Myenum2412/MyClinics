@@ -18,7 +18,25 @@ export interface PatientDoc extends ClinicDocument {
   city: string | null;
   state: string | null;
   pincode: string | null;
+  height: string | null;
+  weight: string | null;
+  occupation: string | null;
+  maritalStatus: string | null;
+  emergencyContactName: string | null;
+  emergencyContactRelationship: string | null;
+  emergencyContactMobile: string | null;
   allergies: string[];
+  medicalConditions: string | null;
+  previousSurgeries: string | null;
+  currentMedications: string | null;
+  idType: string | null;
+  idNumber: string | null;
+  insuranceProvider: string | null;
+  insurancePolicyNumber: string | null;
+  insurancePolicyHolderName: string | null;
+  insuranceValidTill: string | null;
+  referredBy: string | null;
+  howDidYouHear: string | null;
   notes: string | null;
   status: "active" | "inactive" | "deleted";
   createdBy: string;
@@ -43,7 +61,25 @@ export function patientToPublic(doc: PatientDoc) {
     city: doc.city,
     state: doc.state,
     pincode: doc.pincode,
+    height: doc.height,
+    weight: doc.weight,
+    occupation: doc.occupation,
+    maritalStatus: doc.maritalStatus,
+    emergencyContactName: doc.emergencyContactName,
+    emergencyContactRelationship: doc.emergencyContactRelationship,
+    emergencyContactMobile: doc.emergencyContactMobile,
     allergies: doc.allergies,
+    medicalConditions: doc.medicalConditions,
+    previousSurgeries: doc.previousSurgeries,
+    currentMedications: doc.currentMedications,
+    idType: doc.idType,
+    idNumber: doc.idNumber,
+    insuranceProvider: doc.insuranceProvider,
+    insurancePolicyNumber: doc.insurancePolicyNumber,
+    insurancePolicyHolderName: doc.insurancePolicyHolderName,
+    insuranceValidTill: doc.insuranceValidTill,
+    referredBy: doc.referredBy,
+    howDidYouHear: doc.howDidYouHear,
     notes: doc.notes,
     status: doc.status,
     createdAt: doc.createdAt,
