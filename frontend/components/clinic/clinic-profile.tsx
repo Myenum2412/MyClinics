@@ -63,25 +63,26 @@ export function ClinicProfile({
       </CardHeader>
       <CardContent>
         {clinic && (
-          <form onSubmit={saveClinic} className="space-y-4">
-            <div className="grid gap-3">
-              <div className="grid gap-2">
-                <Label>Clinic name</Label>
-                <Input
-                  value={clinic.name}
-                  disabled={!canEdit}
-                  onChange={(e) => setClinic({ ...clinic, name: e.target.value })}
-                  required
-                  minLength={2}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+          <>
+            <form onSubmit={saveClinic} className="space-y-4">
+              <div className="grid gap-3">
                 <div className="grid gap-2">
-                  <Label>Phone</Label>
+                  <Label>Clinic name</Label>
                   <Input
-                    value={clinic.phone ?? ""}
+                    value={clinic.name}
                     disabled={!canEdit}
-                    onChange={(e) => setClinic({ ...clinic, phone: e.target.value })}
+                    onChange={(e) => setClinic({ ...clinic, name: e.target.value })}
+                    required
+                    minLength={2}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="grid gap-2">
+                    <Label>Phone</Label>
+                    <Input
+                      value={clinic.phone ?? ""}
+                      disabled={!canEdit}
+                      onChange={(e) => setClinic({ ...clinic, phone: e.target.value })}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -135,7 +136,56 @@ export function ClinicProfile({
                 {saving ? "Saving..." : "Save clinic"}
               </Button>
             )}
-          </form>
+            </form>
+
+            <div className="mt-6 border-t border-gray-100 pt-4">
+              <p className="mb-3 text-sm font-medium text-gray-700">Clinic details</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3 md:grid-cols-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Slug</p>
+                  <p className="truncate font-mono text-sm text-gray-800">{clinic.slug}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Clinic ID</p>
+                  <p className="truncate font-mono text-sm text-gray-800">{clinic.clinicId}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Status</p>
+                  <p className="text-sm capitalize text-gray-800">{clinic.status}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Working hours</p>
+                  <p className="text-sm text-gray-800">
+                    {clinic.settings.workingHours.open} – {clinic.settings.workingHours.close}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Slot duration</p>
+                  <p className="text-sm text-gray-800">{clinic.settings.slotMinutes} min</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Currency</p>
+                  <p className="text-sm text-gray-800">{clinic.settings.currency}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Timezone</p>
+                  <p className="text-sm text-gray-800">{clinic.settings.timezone}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Created</p>
+                  <p className="text-sm text-gray-800">
+                    {new Date(clinic.createdAt).toLocaleDateString("en-IN")}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Last updated</p>
+                  <p className="text-sm text-gray-800">
+                    {new Date(clinic.updatedAt).toLocaleDateString("en-IN")}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
