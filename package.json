@@ -2,7 +2,10 @@
   "name": "myclinics",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["frontend", "backend"],
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
   "scripts": {
     "dev": "concurrently -k -n api,web -c blue,green \"npm run dev -w @myclinics/backend\" \"npm run dev -w frontend\"",
     "build": "npm run build -w frontend",
@@ -14,5 +17,8 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.0"
+  },
+  "dependencies": {
+    "indiapins": "https://github.com/paramadeep/indiapins/releases/download/v2026.6.28/indiapins-2026.6.28.tgz"
   }
 }

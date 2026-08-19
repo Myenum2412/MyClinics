@@ -32,6 +32,7 @@ export const createDoctorSchema = z.object({
   licenseNo: optionalString(120),
   qualification: optionalString(200),
   phone: optionalString(PHONE_MAX),
+  whatsapp: optionalString(PHONE_MAX),
   email: optionalString(EMAIL_MAX),
   fee: z.number().nonnegative().max(1_000_000).optional().nullable(),
   schedule: z.array(scheduleEntrySchema).max(7).optional(),

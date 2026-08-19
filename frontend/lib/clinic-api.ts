@@ -113,6 +113,7 @@ export interface Doctor {
   licenseNo: string | null;
   qualification: string | null;
   phone: string | null;
+  whatsapp?: string | null;
   email: string | null;
   fee: number | null;
   schedule: { day: string; start: string; end: string }[];
@@ -158,6 +159,7 @@ export interface Patient {
   userId: string | null;
   fullName: string;
   mobile: string;
+  whatsapp?: string | null;
   email: string | null;
   gender: "male" | "female" | "other" | null;
   dateOfBirth: string | null;

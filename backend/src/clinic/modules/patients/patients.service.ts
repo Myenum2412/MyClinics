@@ -17,6 +17,15 @@ import type {
 } from "@/clinic/modules/patients/patients.dto";
 import { PatientRepository } from "@/clinic/modules/patients/patients.repository";
 import type { PatientDoc } from "@/clinic/modules/patients/patients.schema";
+import {
+  notifyDoctorOfAssignment,
+  notifyDoctorOfNewPatient,
+  notifyDoctorOfPatientUpdate,
+  notifyPatientAssigned,
+  notifyPatientRegistered,
+  notifyPatientUpdated,
+  type Notifyable,
+} from "@/services/whatsapp/save-notification.service";
 
 export class PatientService {
   constructor(private readonly db: Db) {}
@@ -40,6 +49,7 @@ export class PatientService {
     const patientId = generatePatientId();
     const now = new Date();
 
+    let assignedDoctor: Notifyable | null = null;
     if (input.doctorId) {
       const doctorExists = await this.db
         .collection(CLINIC_COLLECTIONS.doctors)
@@ -47,6 +57,7 @@ export class PatientService {
       if (!doctorExists) {
         throw new BadRequestError("The assigned doctor does not exist in this clinic");
       }
+      assignedDoctor = doctorExists as unknown as Notifyable;
     }
 
     const doc: Omit<PatientDoc, "clinicId"> = {
@@ -55,6 +66,7 @@ export class PatientService {
       userId: null,
       fullName: input.fullName,
       mobile: input.mobile,
+      whatsapp: input.whatsapp ?? null,
       email: input.email ?? null,
       gender: input.gender ?? null,
       dateOfBirth: input.dateOfBirth ?? null,
@@ -115,6 +127,16 @@ export class PatientService {
       metadata: { fullName: created.fullName, mobile: created.mobile, doctorId: created.doctorId },
     });
 
+    // Notify the patient (and the assigned doctor) that the profile was created.
+    await notifyPatientRegistered(this.db, created, {
+      sendCredentials: input.loginNotification === "whatsapp",
+      portalUsername: input.email ?? null,
+      password: input.password ?? null,
+    });
+    if (assignedDoctor) {
+      await notifyDoctorOfNewPatient(this.db, assignedDoctor, created.fullName);
+    }
+
     return created;
   }
 
@@ -156,6 +178,7 @@ export class PatientService {
     for (const key of [
       "fullName",
       "mobile",
+      "whatsapp",
       "gender",
       "dateOfBirth",
       "bloodGroup",
@@ -186,7 +209,24 @@ export class PatientService {
     });
 
     const updated = await repo.findByPatientId(patientId);
-    return updated ?? patient;
+    const saved = updated ?? patient;
+
+    // Notify the patient and their assigned doctor that the profile changed.
+    await notifyPatientUpdated(this.db, saved, Object.keys(patch));
+    if (saved.doctorId) {
+      const doctor = await this.db
+        .collection(CLINIC_COLLECTIONS.doctors)
+        .findOne({
+          clinicId: requireClinicOf(ctx),
+          doctorId: saved.doctorId,
+          status: { $ne: "deleted" },
+        });
+      if (doctor) {
+        await notifyDoctorOfPatientUpdate(this.db, doctor as unknown as Notifyable, saved.fullName, Object.keys(patch));
+      }
+    }
+
+    return saved;
   }
 
   /** Reassigns a patient to another doctor (or unassigns). */
@@ -200,6 +240,7 @@ export class PatientService {
     const patient = await repo.findByPatientId(patientId);
     if (!patient) throw new NotFoundError("Patient not found");
 
+    let newDoctor: Notifyable | null = null;
     if (input.doctorId) {
       const doctorExists = await this.db
         .collection(CLINIC_COLLECTIONS.doctors)
@@ -207,6 +248,7 @@ export class PatientService {
       if (!doctorExists) {
         throw new BadRequestError("The assigned doctor does not exist in this clinic");
       }
+      newDoctor = doctorExists as unknown as Notifyable;
     }
 
     const ok = await repo.assignDoctor(patientId, input.doctorId);
@@ -220,7 +262,18 @@ export class PatientService {
     });
 
     const updated = await repo.findByPatientId(patientId);
-    return updated ?? patient;
+    const saved = updated ?? patient;
+
+    // Notify the patient and the newly assigned doctor.
+    const doctorName = newDoctor
+      ? ((newDoctor.name ?? newDoctor.fullName) as string | undefined)
+      : undefined;
+    await notifyPatientAssigned(this.db, saved, doctorName ?? null);
+    if (newDoctor) {
+      await notifyDoctorOfAssignment(this.db, newDoctor, saved.fullName);
+    }
+
+    return saved;
   }
 
   async deletePatient(ctx: ClinicContext, patientId: string): Promise<void> {

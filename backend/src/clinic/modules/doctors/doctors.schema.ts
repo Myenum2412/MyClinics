@@ -10,6 +10,7 @@ export interface DoctorDoc extends ClinicDocument {
   licenseNo: string | null;
   qualification: string | null;
   phone: string | null;
+  whatsapp?: string | null;
   email: string | null;
   fee: number | null;
   schedule: { day: string; start: string; end: string }[];
@@ -48,6 +49,7 @@ export function doctorToPublic(doc: DoctorDoc) {
     licenseNo: doc.licenseNo,
     qualification: doc.qualification,
     phone: doc.phone,
+    whatsapp: doc.whatsapp ?? null,
     email: doc.email,
     fee: doc.fee,
     schedule: doc.schedule,

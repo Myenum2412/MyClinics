@@ -14,6 +14,7 @@ import { isClinicRole, ROLE_PRIORITY, type ClinicRole } from "@/clinic/core/role
 import type { UserDoc } from "@/clinic/core/types";
 import type { CreateUserInput, UpdateUserInput } from "@/clinic/modules/users/users.dto";
 import { UsersRepository } from "@/clinic/modules/users/users.repository";
+import { notifyUserLoginDetails } from "@/services/whatsapp/save-notification.service";
 
 export class UsersService {
   constructor(private readonly db: Db) {}
@@ -96,6 +97,17 @@ export class UsersService {
       entityId: doc.userId,
       metadata: { email, role: input.role, linkedId: Object.values(linkField)[0] },
     });
+
+    // Send login details over WhatsApp when the profile has a phone number.
+    if (doc.phone && input.role !== "patient") {
+      await notifyUserLoginDetails(this.db, {
+        name: input.name,
+        role: input.role,
+        phone: doc.phone,
+        email,
+        password: input.password,
+      });
+    }
 
     return doc as unknown as WithId<UserDoc>;
   }

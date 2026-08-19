@@ -16,6 +16,7 @@ const optionalString = (max: number) =>
 export const createPatientSchema = z.object({
   fullName: z.string().trim().min(2, "Patient name is required").max(NAME_MAX),
   mobile: z.string().trim().min(8, "Mobile number is required").max(PHONE_MAX),
+  whatsapp: optionalString(PHONE_MAX),
   email: optionalString(EMAIL_MAX),
   gender: z.enum(["male", "female", "other"]).optional().nullable(),
   dateOfBirth: z.string().trim().nullable().optional(),
@@ -38,6 +39,8 @@ export const createPatientSchema = z.object({
   doctorId: z.string().startsWith("doc_").nullable().optional(),
   /** When set, a patient portal account is created with this password. */
   password: z.string().min(8, "Password must be at least 8 characters").max(200).optional(),
+  /** How login details are delivered after registration (WhatsApp supported today). */
+  loginNotification: z.enum(["whatsapp", "email", "none"]).optional(),
 });
 
 export type CreatePatientInput = z.infer<typeof createPatientSchema>;

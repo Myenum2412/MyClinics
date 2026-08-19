@@ -9,6 +9,7 @@ export interface PatientDoc extends ClinicDocument {
   userId: string | null;
   fullName: string;
   mobile: string;
+  whatsapp: string | null;
   email: string | null;
   gender: "male" | "female" | "other" | null;
   dateOfBirth: string | null;
@@ -33,6 +34,7 @@ export function patientToPublic(doc: PatientDoc) {
     userId: doc.userId,
     fullName: doc.fullName,
     mobile: doc.mobile,
+    whatsapp: doc.whatsapp ?? null,
     email: doc.email,
     gender: doc.gender,
     dateOfBirth: doc.dateOfBirth,

@@ -36,6 +36,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Search, Download, Calendar, Pill, Receipt, Clipboard, FileBarChart } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
+import { DoctorDashboard } from "@/components/clinic/doctor-dashboard";
 import { toast } from "sonner";
 
 function today(): string {
@@ -205,6 +206,10 @@ export default function ClinicDashboardPage() {
 
   if (isPatient) {
     return <PatientPortal clinicId={session?.clinicId ?? ""} />;
+  }
+
+  if (session?.role === "doctor") {
+    return <DoctorDashboard clinicId={session?.clinicId ?? ""} />;
   }
 
   return (

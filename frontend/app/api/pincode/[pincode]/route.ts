@@ -1,9 +1,6 @@
-export const dynamic = "force-dynamic";
+import { lookup } from "indiapins";
 
-interface PostalResponse {
-  Status: string;
-  PostOffice?: { District: string; State: string }[];
-}
+export const dynamic = "force-dynamic";
 
 export async function GET(
   _request: Request,
@@ -15,22 +12,13 @@ export async function GET(
   }
 
   try {
-    const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`, {
-      headers: { accept: "application/json" },
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) {
-      return Response.json({ error: "Pincode lookup failed" }, { status: 502 });
-    }
-
-    const data = (await res.json()) as PostalResponse[];
-    const entry = Array.isArray(data) ? data[0] : undefined;
-    if (!entry || entry.Status !== "Success" || !entry.PostOffice?.length) {
+    const offices = lookup(pincode);
+    if (!offices.length) {
       return Response.json({ error: "No results for this pincode" }, { status: 404 });
     }
 
-    const office = entry.PostOffice[0];
-    return Response.json({ city: office.District, state: office.State });
+    const office = offices[0];
+    return Response.json({ city: office.district, state: office.state });
   } catch {
     return Response.json({ error: "Pincode lookup unavailable" }, { status: 502 });
   }

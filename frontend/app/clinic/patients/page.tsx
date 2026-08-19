@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PincodeLookup } from "@/components/clinic/pincode-lookup";
+import { WhatsAppInput } from "@/components/clinic/whatsapp-input";
 import {
   Dialog,
   DialogContent,
@@ -73,6 +74,7 @@ const GENDERS = ["male", "female", "other"];
 interface PatientFormState {
   fullName: string;
   mobile: string;
+  whatsapp: string;
   email: string;
   gender: string;
   dateOfBirth: string;
@@ -90,6 +92,7 @@ interface PatientFormState {
 const EMPTY_FORM: PatientFormState = {
   fullName: "",
   mobile: "",
+  whatsapp: "",
   email: "",
   gender: "",
   dateOfBirth: "",
@@ -149,6 +152,7 @@ export default function PatientsPage() {
       const payload: Record<string, unknown> = {
         fullName: form.fullName,
         mobile: form.mobile,
+        whatsapp: form.whatsapp || null,
         email: form.email || null,
         gender: form.gender || null,
         dateOfBirth: form.dateOfBirth || null,
@@ -202,6 +206,7 @@ export default function PatientsPage() {
   }
 
   const canManage = sessionCan(session, "clinic_admin");
+  const isDoctor = session?.role === "doctor";
 
   // Stats calculations
   const totalPatients = items.length;
@@ -361,6 +366,7 @@ export default function PatientsPage() {
               initial={{
                 fullName: editing.fullName,
                 mobile: editing.mobile,
+                whatsapp: editing.whatsapp ?? "",
                 email: editing.email ?? "",
                 gender: editing.gender ?? "",
                 dateOfBirth: editing.dateOfBirth ?? "",
@@ -393,15 +399,21 @@ export default function PatientsPage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
             title="Patient Directory"
-            description="Real-time analytics on patient demographics, engagement, and registrations."
+            description={
+              isDoctor
+                ? "Real-time analytics on patients assigned to you. You can only see patients assigned to your care."
+                : "Real-time analytics on patient demographics, engagement, and registrations."
+            }
             items={patientStats}
             action={
-              <Link href="/clinic/patients/new">
-                <Button className="flex items-center gap-1.5 shadow-sm">
-                  <Plus className="size-4" />
-                  New Patient
-                </Button>
-              </Link>
+              !isDoctor && (
+                <Link href="/clinic/patients/new">
+                  <Button className="flex items-center gap-1.5 shadow-sm">
+                    <Plus className="size-4" />
+                    New Patient
+                  </Button>
+                </Link>
+              )
             }
           />
         </div>
@@ -446,7 +458,9 @@ export default function PatientsPage() {
                 Patients Listing
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Manage registered clinic patients, assign primary doctors, and view profile records.
+                {isDoctor
+                  ? "Only patients assigned to you are listed here. Other patients are never visible."
+                  : "Manage registered clinic patients, assign primary doctors, and view profile records."}
               </p>
             </div>
             <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto">
@@ -469,10 +483,12 @@ export default function PatientsPage() {
                     Columns
                   </Button>
                 } />
-                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {Object.keys(COLUMN_LABELS).map((colKey) => (
+                  {Object.keys(COLUMN_LABELS)
+                    .filter((colKey) => !(isDoctor && colKey === "doctor"))
+                    .map((colKey) => (
                     <DropdownMenuCheckboxItem
                       key={colKey}
                       checked={visibleColumns[colKey]}
@@ -516,7 +532,7 @@ export default function PatientsPage() {
                     {visibleColumns.name && <TableHead>Name</TableHead>}
                     {visibleColumns.mobile && <TableHead>Mobile</TableHead>}
                     {visibleColumns.email && <TableHead>Email</TableHead>}
-                    {visibleColumns.doctor && <TableHead>Doctor</TableHead>}
+                    {visibleColumns.doctor && !isDoctor && <TableHead>Doctor</TableHead>}
                     {visibleColumns.status && <TableHead>Status</TableHead>}
                     <TableHead className="text-right pr-6">Actions</TableHead>
                   </TableRow>
@@ -539,7 +555,7 @@ export default function PatientsPage() {
                       {visibleColumns.name && <TableCell className="font-medium text-foreground">{p.fullName}</TableCell>}
                       {visibleColumns.mobile && <TableCell className="text-muted-foreground">{p.mobile}</TableCell>}
                       {visibleColumns.email && <TableCell className="text-muted-foreground">{p.email ?? "—"}</TableCell>}
-                      {visibleColumns.doctor && (
+                      {visibleColumns.doctor && !isDoctor && (
                         <TableCell>
                           <DoctorSelect
                             clinicId={clinicId}
@@ -664,9 +680,15 @@ function PatientForm({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-2">
+            <Label>WhatsApp Number</Label>
+            <WhatsAppInput value={form.whatsapp} onChange={(v) => set("whatsapp", v)} />
+          </div>
+          <div className="grid gap-2">
             <Label>Email</Label>
             <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
           </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Gender</Label>
             <Select value={form.gender} onValueChange={(v) => set("gender", v)}>

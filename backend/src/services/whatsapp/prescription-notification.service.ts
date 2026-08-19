@@ -79,7 +79,7 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
         continue;
       }
 
-      const phone = patient.mobile;
+      const phone = patient.whatsapp ?? patient.mobile;
       if (!phone) {
         await db.collection("clc_prescription_notifications").updateOne(
           { _id: notification._id },

@@ -6,6 +6,10 @@ import { generateDoctorId } from "@/clinic/core/ids";
 import type { CreateDoctorInput, UpdateDoctorInput } from "@/clinic/modules/doctors/doctors.dto";
 import { DoctorRepository } from "@/clinic/modules/doctors/doctors.repository";
 import type { DoctorDoc } from "@/clinic/modules/doctors/doctors.schema";
+import {
+  notifyDoctorRegistered,
+  notifyDoctorUpdated,
+} from "@/services/whatsapp/save-notification.service";
 
 export class DoctorService {
   constructor(private readonly db: Db) {}
@@ -24,6 +28,7 @@ export class DoctorService {
       licenseNo: input.licenseNo ?? null,
       qualification: input.qualification ?? null,
       phone: input.phone ?? null,
+      whatsapp: input.whatsapp ?? null,
       email: input.email ?? null,
       fee: input.fee ?? null,
       schedule: input.schedule ?? [],
@@ -55,6 +60,10 @@ export class DoctorService {
       entityId: doctor.doctorId,
       metadata: { name: doctor.name, specialization: doctor.specialization },
     });
+
+    // Notify the doctor that their profile was created.
+    await notifyDoctorRegistered(this.db, doctor);
+
     return doctor;
   }
 
@@ -92,6 +101,7 @@ export class DoctorService {
       "licenseNo",
       "qualification",
       "phone",
+      "whatsapp",
       "email",
       "fee",
       "schedule",
@@ -130,7 +140,12 @@ export class DoctorService {
     });
 
     const updated = await this.repo(ctx).findByDoctorId(doctorId);
-    return updated ?? existing;
+    const saved = updated ?? existing;
+
+    // Notify the doctor that their profile changed.
+    await notifyDoctorUpdated(this.db, saved, Object.keys(patch));
+
+    return saved;
   }
 
   async deleteDoctor(ctx: ClinicContext, doctorId: string): Promise<void> {

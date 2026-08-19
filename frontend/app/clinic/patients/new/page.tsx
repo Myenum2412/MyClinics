@@ -8,6 +8,10 @@ import { createPatient } from "@/lib/clinic-api";
 import { DoctorSelect } from "@/components/clinic/pickers";
 import { PincodeLookup } from "@/components/clinic/pincode-lookup";
 import {
+  WhatsAppInput,
+  isIndianMobile,
+} from "@/components/clinic/whatsapp-input";
+import {
   AttachmentUploader,
   type AttachmentFile,
 } from "@/components/clinic/attachment-uploader";
@@ -42,6 +46,7 @@ interface PatientFormState {
   // Patient Information
   fullName: string;
   mobile: string;
+  whatsapp: string;
   email: string;
   gender: string;
   dateOfBirth: string;
@@ -87,6 +92,7 @@ interface PatientFormState {
 const EMPTY_FORM: PatientFormState = {
   fullName: "",
   mobile: "",
+  whatsapp: "",
   email: "",
   gender: "",
   dateOfBirth: "",
@@ -290,6 +296,9 @@ export default function NewPatientPage() {
     if (form.email && !validateEmail(form.email)) {
       newErrors.email = "Enter a valid email address";
     }
+    if (form.whatsapp && !isIndianMobile(form.whatsapp)) {
+      newErrors.whatsapp = "Enter a valid Indian WhatsApp number";
+    }
     if (form.pincode && !validateIndianPincode(form.pincode)) {
       newErrors.pincode = "Enter a valid Indian pincode";
     }
@@ -357,6 +366,7 @@ export default function NewPatientPage() {
       const payload: Record<string, unknown> = {
         fullName: form.fullName.trim(),
         mobile: form.mobile.replace(/\D/g, ""),
+        whatsapp: form.whatsapp.trim() || null,
         email: form.email.trim() || null,
         gender: form.gender.toLowerCase() || null,
         dateOfBirth: form.dateOfBirth || null,
@@ -375,6 +385,7 @@ export default function NewPatientPage() {
       await createPatient(clinicId, {
         ...payload,
         password: form.password,
+        loginNotification: form.loginNotification,
       });
 
       toast.success("Patient registered successfully");
@@ -496,6 +507,21 @@ export default function NewPatientPage() {
                 placeholder="9876543210"
                 helperText="10-digit Indian mobile number"
               />
+              <div className="space-y-2">
+                <Label
+                  htmlFor="whatsapp"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  WhatsApp Number
+                </Label>
+                <WhatsAppInput
+                  id="whatsapp"
+                  value={form.whatsapp}
+                  onChange={(v) => handleChange("whatsapp", v)}
+                  error={errors.whatsapp}
+                  helperText="10-digit Indian WhatsApp number"
+                />
+              </div>
               <FormField
                 label="Email"
                 name="email"

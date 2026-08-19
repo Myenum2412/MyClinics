@@ -20,6 +20,10 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PincodeLookup } from "@/components/clinic/pincode-lookup";
 import {
+  WhatsAppInput,
+  isIndianMobile,
+} from "@/components/clinic/whatsapp-input";
+import {
   Plus,
   Search,
   Download,
@@ -131,6 +135,7 @@ interface DoctorFormState {
   gender: string;
   dateOfBirth: string;
   phone: string;
+  whatsapp: string;
   email: string;
   nationality: string;
   address: string;
@@ -172,6 +177,7 @@ const EMPTY_FORM: DoctorFormState = {
   gender: "",
   dateOfBirth: "",
   phone: "",
+  whatsapp: "",
   email: "",
   nationality: "",
   address: "",
@@ -221,6 +227,7 @@ function doctorToForm(doctor: Doctor): DoctorFormState {
     gender: doctor.gender ?? "",
     dateOfBirth: doctor.dateOfBirth ?? "",
     phone: doctor.phone ?? "",
+    whatsapp: doctor.whatsapp ?? "",
     email: doctor.email ?? "",
     nationality: doctor.nationality ?? "",
     address: doctor.address ?? "",
@@ -320,6 +327,7 @@ export default function DoctorsPage() {
         licenseNo: form.licenseNo.trim() || null,
         qualification: form.qualification.trim() || null,
         phone: form.phone.trim() || null,
+        whatsapp: form.whatsapp.trim() || null,
         email: form.email.trim() || null,
         fee: form.fee.trim() ? Number(form.fee.trim()) : null,
         status: form.status === "active" ? "active" : "inactive",
@@ -897,6 +905,9 @@ function DoctorForm({
     if (!form.gender) errs.gender = "Gender is required";
     if (!form.phone.trim()) errs.phone = "Phone number is required";
     else if (!/^\+?[\d\s()-]{10,15}$/.test(form.phone.trim())) errs.phone = "Enter a valid phone number";
+    if (form.whatsapp.trim() && !isIndianMobile(form.whatsapp)) {
+      errs.whatsapp = "Enter a valid Indian WhatsApp number";
+    }
     if (!form.email.trim()) errs.email = "Email address is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errs.email = "Enter a valid email address";
     if (!form.specialization.trim()) errs.specialization = "Specialization is required";
@@ -1051,6 +1062,17 @@ function DoctorForm({
               className={inputBase("phone")}
             />
             <FieldError message={errors.phone} />
+          </div>
+
+          <div className="grid gap-2">
+            <Label className="text-sm font-medium text-gray-700">WhatsApp Number</Label>
+            <WhatsAppInput
+              id="whatsapp"
+              value={form.whatsapp}
+              onChange={(v) => set("whatsapp", v)}
+              error={errors.whatsapp}
+              helperText="10-digit Indian WhatsApp number"
+            />
           </div>
 
           <div className="grid gap-2">
