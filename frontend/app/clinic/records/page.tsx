@@ -31,20 +31,11 @@ import {
   Plus,
   Search,
   Download,
-  Columns,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
   Trash2,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -69,14 +60,6 @@ import {
   type AttachmentFile,
 } from "@/components/clinic/attachment-uploader";
 
-const COLUMN_LABELS: Record<string, string> = {
-  select: "Select",
-  visitDate: "Visit Date",
-  patient: "Patient",
-  diagnosis: "Diagnosis",
-  symptoms: "Symptoms",
-  treatment: "Treatment",
-};
 
 function today(): string {
   const d = new Date();
@@ -510,7 +493,7 @@ export default function RecordsPage() {
     setSelectedIds(new Set());
   };
 
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+  const [visibleColumns] = useState<Record<string, boolean>>({
     select: true,
     visitDate: true,
     patient: true,
@@ -911,31 +894,6 @@ export default function RecordsPage() {
                   className="h-9 w-full pl-9"
                 />
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <Button variant="outline" size="sm" className="h-9 gap-1.5">
-                      <Columns className="size-4" />
-                      Columns
-                    </Button>
-                  }
-                />
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {Object.keys(COLUMN_LABELS).map((colKey) => (
-                    <DropdownMenuCheckboxItem
-                      key={colKey}
-                      checked={visibleColumns[colKey]}
-                      onCheckedChange={(checked) =>
-                        setVisibleColumns((prev) => ({ ...prev, [colKey]: !!checked }))
-                      }
-                    >
-                      {COLUMN_LABELS[colKey]}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
         </CardHeader>

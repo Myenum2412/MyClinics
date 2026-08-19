@@ -47,26 +47,10 @@ import {
 import { DoctorSelect } from "@/components/clinic/pickers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Download, Trash, Columns, ChevronLeft, ChevronRight } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
 import { sessionCan } from "@/hooks/use-clinic-session";
 
-const COLUMN_LABELS: Record<string, string> = {
-  select: "Select",
-  name: "Name",
-  mobile: "Mobile",
-  email: "Email",
-  doctor: "Assigned Doctor",
-  status: "Status",
-};
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const GENDERS = ["male", "female", "other"];
@@ -121,7 +105,7 @@ export default function PatientsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+  const [visibleColumns] = useState<Record<string, boolean>>({
     select: true,
     name: true,
     mobile: true,
@@ -476,31 +460,6 @@ export default function PatientsPage() {
                   className="h-9 w-full pl-9"
                 />
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger render={
-                  <Button variant="outline" size="sm" className="h-9 gap-1.5">
-                    <Columns className="size-4" />
-                    Columns
-                  </Button>
-                } />
-                  <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {Object.keys(COLUMN_LABELS)
-                    .filter((colKey) => !(isDoctor && colKey === "doctor"))
-                    .map((colKey) => (
-                    <DropdownMenuCheckboxItem
-                      key={colKey}
-                      checked={visibleColumns[colKey]}
-                      onCheckedChange={(checked) =>
-                        setVisibleColumns((prev) => ({ ...prev, [colKey]: !!checked }))
-                      }
-                    >
-                      {COLUMN_LABELS[colKey]}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
         </CardHeader>

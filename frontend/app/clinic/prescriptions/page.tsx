@@ -34,7 +34,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
@@ -64,7 +63,6 @@ import {
   Trash,
   UserCog,
   Search,
-  Columns,
   Plus,
   Download,
   ChevronLeft,
@@ -107,15 +105,6 @@ const EMPTY_MEDICINE: MedicineEntry = {
   instructions: "",
 };
 
-const COLUMN_LABELS: Record<string, string> = {
-  select: "Select",
-  visitDate: "Date",
-  patient: "Patient",
-  doctor: "Doctor",
-  diagnosis: "Diagnosis",
-  medicines: "Medicines",
-  status: "Notification Status",
-};
 
 export default function PrescriptionsPage() {
   const session = useRequireRole("doctor");
@@ -142,7 +131,7 @@ export default function PrescriptionsPage() {
   const [sortDesc, setSortDesc] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
+  const [visibleColumns] = useState<Record<string, boolean>>({
     select: true,
     visitDate: true,
     patient: true,
@@ -502,31 +491,6 @@ export default function PrescriptionsPage() {
                 />
               </div>
 
-              {/* Column Visibility dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger render={
-                  <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
-                    <Columns className="size-3.5" />
-                    Columns
-                  </Button>
-                } />
-                <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuLabel className="text-xs">Toggle Columns</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {Object.keys(COLUMN_LABELS).map((colKey) => (
-                    <DropdownMenuCheckboxItem
-                      key={colKey}
-                      checked={visibleColumns[colKey]}
-                      onCheckedChange={(checked) =>
-                        setVisibleColumns((prev) => ({ ...prev, [colKey]: checked }))
-                      }
-                      className="text-xs"
-                    >
-                      {COLUMN_LABELS[colKey]}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
           </div>
         </CardHeader>

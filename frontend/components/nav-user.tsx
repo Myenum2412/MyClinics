@@ -133,6 +133,14 @@ export function NavUser({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <SidebarMenuButton
+          size="sm"
+          onClick={handleLogout}
+          className="mt-1 flex items-center gap-2 text-muted-foreground hover:text-destructive"
+        >
+          <LogOutIcon className="size-4" />
+          <span>Log out</span>
+        </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>
   )
