@@ -30,6 +30,7 @@ export function PincodeLookup({
   const [message, setMessage] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const seqRef = useRef(0);
+  const lastLookupRef = useRef("");
 
   useEffect(() => {
     return () => {
@@ -42,6 +43,7 @@ export function PincodeLookup({
       queueMicrotask(() => setMessage(null));
       return;
     }
+    if (lastLookupRef.current === pincode) return;
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(async () => {
       const seq = ++seqRef.current;
@@ -50,6 +52,7 @@ export function PincodeLookup({
       try {
         const res = await fetch(`/pincode/${pincode}`);
         if (seq !== seqRef.current) return;
+        lastLookupRef.current = pincode;
         if (!res.ok) {
           const body = (await res.json().catch(() => null)) as { error?: string } | null;
           setMessage(body?.error ?? "Could not find this pincode");
@@ -60,7 +63,9 @@ export function PincodeLookup({
         onStateChange(body.state);
         setMessage("City and State filled from pincode");
       } catch {
-        if (seq === seqRef.current) setMessage("Pincode lookup failed");
+        if (seq !== seqRef.current) return;
+        lastLookupRef.current = pincode;
+        setMessage("Pincode lookup failed");
       } finally {
         if (seq === seqRef.current) setLookingUp(false);
       }
