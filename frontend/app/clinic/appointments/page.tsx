@@ -13,8 +13,9 @@ import {
   createAppointment,
   deleteAppointment,
   listAppointments,
+  listDoctors,
+  listPatients,
   updateAppointment,
-  // Let's assume listPatients and listDoctors can be fetched
   API_BASE_URL,
 } from "@/lib/clinic-api";
 import { TimePicker } from "@/components/ui/time-picker";
@@ -178,21 +179,13 @@ export default function AppointmentsPage() {
     if (!clinicId) return;
     Promise.all([
       listAppointments(clinicId, { limit: 1000 }),
-      fetch(`${API_BASE_URL}/api/clinics/${clinicId}/patients?limit=1000`).then((r) =>
-        r.ok ? r.json() : null
-      ),
-      fetch(`${API_BASE_URL}/api/clinics/${clinicId}/doctors?limit=100`).then((r) =>
-        r.ok ? r.json() : null
-      ),
+      listPatients(clinicId, { limit: 1000 }),
+      listDoctors(clinicId, { limit: 100 }),
     ])
       .then(([apptsRes, patientsRes, doctorsRes]) => {
         setAppointments(apptsRes.items);
-        if (patientsRes) {
-          setPatients(patientsRes.items || []);
-        }
-        if (doctorsRes) {
-          setDoctors(doctorsRes.items || []);
-        }
+        setPatients(patientsRes.items);
+        setDoctors(doctorsRes.items);
       })
       .catch(() => {
         toast.error("Failed to load appointments data");
@@ -1078,6 +1071,8 @@ function AppointmentForm({
   const [doctorNotification, setDoctorNotification] = useState(true);
   const [patientQuery, setPatientQuery] = useState("");
   const [doctorQuery, setDoctorQuery] = useState("");
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+  const [showDoctorDropdown, setShowDoctorDropdown] = useState(false);
   const [error, setError] = useState("");
   const [showOptionalInfo, setShowOptionalInfo] = useState(false);
 
@@ -1196,6 +1191,8 @@ function AppointmentForm({
     setDoctorNotification(true);
     setPatientQuery("");
     setDoctorQuery("");
+    setShowPatientDropdown(false);
+    setShowDoctorDropdown(false);
     setError("");
   }
 
@@ -1220,14 +1217,19 @@ function AppointmentForm({
                   onChange={(e) => {
                     setPatientId("");
                     setPatientQuery(e.target.value);
+                    setShowPatientDropdown(true);
                   }}
-                  onFocus={() => setPatientQuery(selectedPatient?.fullName ?? patientQuery)}
+                  onFocus={() => {
+                    setShowPatientDropdown(true);
+                    setPatientQuery(selectedPatient?.fullName ?? patientQuery);
+                  }}
+                  onBlur={() => setTimeout(() => setShowPatientDropdown(false), 150)}
                   placeholder="Search patient"
                   className={`border ${
                     error && !patientId ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
                   }`}
                 />
-                {!selectedPatient && filteredPatients.length > 0 && patientQuery.trim() && (
+                {!selectedPatient && showPatientDropdown && filteredPatients.length > 0 && (
                   <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
                     {filteredPatients.slice(0, 8).map((p) => (
                       <button
@@ -1258,14 +1260,19 @@ function AppointmentForm({
                   onChange={(e) => {
                     setDoctorId("");
                     setDoctorQuery(e.target.value);
+                    setShowDoctorDropdown(true);
                   }}
-                  onFocus={() => setDoctorQuery(selectedDoctor?.name ?? doctorQuery)}
+                  onFocus={() => {
+                    setShowDoctorDropdown(true);
+                    setDoctorQuery(selectedDoctor?.name ?? doctorQuery);
+                  }}
+                  onBlur={() => setTimeout(() => setShowDoctorDropdown(false), 150)}
                   placeholder="Search doctor"
                   className={`border ${
                     error && !doctorId ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
                   }`}
                 />
-                {!selectedDoctor && filteredDoctors.length > 0 && doctorQuery.trim() && (
+                {!selectedDoctor && showDoctorDropdown && filteredDoctors.length > 0 && (
                   <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
                     {filteredDoctors.slice(0, 8).map((d) => (
                       <button
