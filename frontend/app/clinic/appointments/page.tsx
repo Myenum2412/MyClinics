@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pagination } from "@/components/ui/pagination";
 import { DoctorSelect, PatientSelect } from "@/components/clinic/pickers";
 import StatsAppointments from "@/components/stats-appointments";
 import {
@@ -802,60 +803,18 @@ export default function AppointmentsPage() {
 
         {/* Pagination Footer */}
         {!loading && filteredAndSortedAppointments.length > 0 && (
-          <div className="flex items-center justify-between border-t border-border px-4 py-3 bg-muted/5">
-            <div className="text-xs text-muted-foreground">
-              Showing <span className="font-semibold text-foreground">{(currentPage - 1) * pageSize + 1}</span> to{" "}
-              <span className="font-semibold text-foreground">
-                {Math.min(currentPage * pageSize, filteredAndSortedAppointments.length)}
-              </span>{" "}
-              of <span className="font-semibold text-foreground">{filteredAndSortedAppointments.length}</span>{" "}
-              appointments
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Select
-                value={String(pageSize)}
-                onValueChange={(v) => {
-                  setPageSize(Number(v));
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="h-7 w-20 text-[11px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5" className="text-xs">5 / page</SelectItem>
-                  <SelectItem value="10" className="text-xs">10 / page</SelectItem>
-                  <SelectItem value="25" className="text-xs">25 / page</SelectItem>
-                  <SelectItem value="50" className="text-xs">50 / page</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-7"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                >
-                  <ChevronLeft className="size-3.5" />
-                </Button>
-                <span className="text-xs font-medium px-2">
-                  {currentPage} of {totalPages || 1}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-7"
-                  disabled={currentPage === totalPages || totalPages === 0}
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                >
-                  <ChevronRight className="size-3.5" />
-                </Button>
-              </div>
-            </div>
-          </div>
+          <Pagination
+            page={currentPage}
+            pageSize={pageSize}
+            totalItems={filteredAndSortedAppointments.length}
+            onPageChange={(p) => setCurrentPage(Math.max(1, Math.min(p, totalPages || 1)))}
+            pageSizeOptions={[5, 10, 25, 50]}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setCurrentPage(1);
+            }}
+            itemLabel="appointments"
+          />
         )}
       </Card>
 

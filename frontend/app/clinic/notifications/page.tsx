@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
 
 const NOTIFICATION_TYPES = ["appointment", "bill", "report", "prescription", "general"];
@@ -55,13 +56,16 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const load = useCallback(() => {
     if (!clinicId) return;
-    listNotifications(clinicId, { limit: 50 })
+    listNotifications(clinicId, { limit: 100 })
       .then((res) => {
         setItems(res.items);
         setUnread(res.unread);
+        setPageIndex(0);
       })
       .catch(() => toast.error("Failed to load notifications"))
       .finally(() => setLoading(false));
@@ -70,6 +74,12 @@ export default function NotificationsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const paginatedItems = useMemo(
+    () => items.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize),
+    [items, pageIndex, pageSize]
+  );
+  const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
 
   async function handleRead(n: Notification) {
     if (n.readAt) return;
@@ -161,7 +171,7 @@ export default function NotificationsPage() {
             </p>
           ) : (
             <div className="space-y-2">
-              {items.map((n) => (
+              {paginatedItems.map((n) => (
                 <button
                   key={n.notificationId}
                   type="button"
@@ -185,6 +195,22 @@ export default function NotificationsPage() {
                   </div>
                 </button>
               ))}
+            </div>
+          )}
+          {!loading && items.length > 0 && (
+            <div className="mt-4">
+              <Pagination
+                page={pageIndex + 1}
+                pageSize={pageSize}
+                totalItems={items.length}
+                onPageChange={(p) => setPageIndex(Math.max(0, Math.min(p - 1, pageCount - 1)))}
+                pageSizeOptions={[5, 10, 25, 50]}
+                onPageSizeChange={(size) => {
+                  setPageSize(size);
+                  setPageIndex(0);
+                }}
+                itemLabel="notifications"
+              />
             </div>
           )}
         </CardContent>

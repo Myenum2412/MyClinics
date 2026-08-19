@@ -46,6 +46,7 @@ import {
 } from "@/components/ui/table";
 import { DoctorSelect } from "@/components/clinic/pickers";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pagination } from "@/components/ui/pagination";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
@@ -559,41 +560,14 @@ export default function PatientsPage() {
               </Table>
 
               {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/20">
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Showing <span className="font-medium">{filteredItems.length > 0 ? (currentPage - 1) * pageSize + 1 : 0}</span> to{" "}
-                      <span className="font-medium">
-                        {Math.min(currentPage * pageSize, filteredItems.length)}
-                      </span>{" "}
-                      of <span className="font-medium">{filteredItems.length}</span> results
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="size-4 mr-1" />
-                      Previous
-                    </Button>
-                    <span className="text-xs text-muted-foreground">
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      Next
-                      <ChevronRight className="size-4 ml-1" />
-                    </Button>
-                  </div>
-                </div>
+              {filteredItems.length > 0 && (
+                <Pagination
+                  page={currentPage}
+                  pageSize={pageSize}
+                  totalItems={filteredItems.length}
+                  onPageChange={(p) => setCurrentPage(Math.max(1, Math.min(p, totalPages || 1)))}
+                  itemLabel="results"
+                />
               )}
             </>
           )}

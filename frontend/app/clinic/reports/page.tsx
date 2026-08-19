@@ -50,6 +50,7 @@ import {
   type AttachmentFile,
 } from "@/components/clinic/attachment-uploader";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import {
   ArrowUp,
@@ -591,41 +592,14 @@ export default function ReportsPage() {
           )}
 
           {/* Pagination Footer */}
-          {!loading && pageCount > 1 && (
-            <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/20">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium">{filteredItems.length > 0 ? pageIndex * pageSize + 1 : 0}</span> to{" "}
-                  <span className="font-medium">
-                    {Math.min((pageIndex + 1) * pageSize, filteredItems.length)}
-                  </span>{" "}
-                  of <span className="font-medium">{filteredItems.length}</span> results
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-                  disabled={pageIndex === 0}
-                >
-                  <ChevronLeft className="size-4 mr-1" />
-                  Previous
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  Page {pageIndex + 1} of {pageCount}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPageIndex((p) => Math.min(pageCount - 1, p + 1))}
-                  disabled={pageIndex >= pageCount - 1}
-                >
-                  Next
-                  <ChevronRight className="size-4 ml-1" />
-                </Button>
-              </div>
-            </div>
+          {!loading && sortedItems.length > 0 && (
+            <Pagination
+              page={pageIndex + 1}
+              pageSize={pageSize}
+              totalItems={sortedItems.length}
+              onPageChange={(p) => setPageIndex(Math.max(0, Math.min(p - 1, pageCount - 1)))}
+              itemLabel="results"
+            />
           )}
         </CardContent>
       </Card>

@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/table";
 import { PatientSelect } from "@/components/clinic/pickers";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import Stats07 from "@/components/stats-07";
 import {
@@ -485,7 +486,10 @@ export default function PrescriptionsPage() {
                 <Input
                   type="search"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setPageIndex(0);
+                  }}
                   placeholder="Search patients, doctors..."
                   className="h-8 w-full pl-8 text-xs focus-visible:ring-1"
                 />
@@ -757,37 +761,13 @@ export default function PrescriptionsPage() {
 
           {/* Table Footer / Pagination */}
           {!loading && sortedItems.length > 0 && (
-            <div className="flex items-center justify-between border-t border-border bg-muted/20 px-4 py-2.5">
-              <p className="text-xs text-muted-foreground">
-                Showing <span className="font-medium text-foreground">{paginatedItems.length}</span> of{" "}
-                <span className="font-medium text-foreground">{sortedItems.length}</span> prescriptions
-              </p>
-              <div className="flex items-center gap-1.5">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-7"
-                  onClick={() => setPageIndex((idx) => Math.max(0, idx - 1))}
-                  disabled={pageIndex === 0}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft className="size-3.5" />
-                </Button>
-                <span className="px-1 text-xs text-muted-foreground tabular-nums">
-                  Page {pageIndex + 1} of {Math.max(pageCount, 1)}
-                </span>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-7"
-                  onClick={() => setPageIndex((idx) => Math.min(pageCount - 1, idx + 1))}
-                  disabled={pageIndex >= pageCount - 1}
-                  aria-label="Next page"
-                >
-                  <ChevronRight className="size-3.5" />
-                </Button>
-              </div>
-            </div>
+            <Pagination
+              page={pageIndex + 1}
+              pageSize={pageSize}
+              totalItems={sortedItems.length}
+              onPageChange={(p) => setPageIndex(Math.max(0, Math.min(p - 1, pageCount - 1)))}
+              itemLabel="prescriptions"
+            />
           )}
         </CardContent>
       </Card>

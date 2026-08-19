@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Pagination } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
 import {
   Columns,
@@ -70,7 +71,7 @@ export default function AuditLogsPage() {
     listAuditLogs(clinicId, {
       entity: entity || undefined,
       action: action || undefined,
-      limit: 200,
+      limit: 500,
     })
       .then((res) => {
         setItems(res.items);
@@ -301,41 +302,14 @@ export default function AuditLogsPage() {
           )}
 
           {/* Pagination Footer */}
-          {!loading && pageCount > 1 && (
-            <div className="flex items-center justify-between border-t border-border px-6 py-4 bg-muted/20">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Showing <span className="font-medium">{items.length > 0 ? pageIndex * pageSize + 1 : 0}</span> to{" "}
-                  <span className="font-medium">
-                    {Math.min((pageIndex + 1) * pageSize, items.length)}
-                  </span>{" "}
-                  of <span className="font-medium">{items.length}</span> results
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-                  disabled={pageIndex === 0}
-                >
-                  <ChevronLeft className="size-4 mr-1" />
-                  Previous
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  Page {pageIndex + 1} of {pageCount}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPageIndex((p) => Math.min(pageCount - 1, p + 1))}
-                  disabled={pageIndex >= pageCount - 1}
-                >
-                  Next
-                  <ChevronRight className="size-4 ml-1" />
-                </Button>
-              </div>
-            </div>
+          {!loading && items.length > 0 && (
+            <Pagination
+              page={pageIndex + 1}
+              pageSize={pageSize}
+              totalItems={items.length}
+              onPageChange={(p) => setPageIndex(Math.max(0, Math.min(p - 1, pageCount - 1)))}
+              itemLabel="results"
+            />
           )}
         </CardContent>
       </Card>
