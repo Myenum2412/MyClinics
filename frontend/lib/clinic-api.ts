@@ -217,7 +217,12 @@ export interface MedicineRecord {
   treatment: string | null;
   notes: string | null;
   visitDate: string;
-  attachments: { name: string; url: string | null; mimeType: string | null }[];
+  attachments: {
+    name: string;
+    url: string | null;
+    mimeType: string | null;
+    fileId?: string | null;
+  }[];
   createdAt: string;
   updatedAt: string;
 }

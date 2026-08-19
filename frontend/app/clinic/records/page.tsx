@@ -21,6 +21,7 @@ import {
   listAppointments,
   listPrescriptions,
   createPrescription,
+  uploadMedicalRecordFile,
 } from "@/lib/clinic-api";
 import { formatTime } from "@/lib/format-time";
 import { Button } from "@/components/ui/button";
@@ -503,6 +504,8 @@ export default function RecordsPage() {
           description: attachmentDetails[i]?.description ?? a.name,
           name: a.name,
           mimeType: a.mimeType,
+          url: a.url,
+          fileId: a.fileId ?? null,
         })
       ),
     };
@@ -511,6 +514,29 @@ export default function RecordsPage() {
   async function handleSave(form: RecordFormState) {
     setSaving(true);
     try {
+      const uploadedAttachments: { name: string; url: string | null; mimeType: string | null; fileId?: string | null }[] =
+        [];
+      for (const a of form.attachments.filter((a) => a.file)) {
+        try {
+          const uploaded = await uploadMedicalRecordFile(
+            clinicId,
+            form.patientId,
+            a.file!,
+            "medicine"
+          );
+          uploadedAttachments.push({
+            name: a.file!.name,
+            url: null,
+            mimeType: a.file!.type || null,
+            fileId: uploaded.fileId,
+          });
+        } catch (err) {
+          toast.error(
+            `Failed to upload ${a.file!.name}${err instanceof Error ? `: ${err.message}` : ""}`
+          );
+        }
+      }
+
       const recordPayload: Record<string, unknown> = {
         patientId: form.patientId,
         doctorId: form.doctorId || undefined,
@@ -519,13 +545,7 @@ export default function RecordsPage() {
         treatment: form.treatment || null,
         notes: serializeMetadata(form),
         visitDate: form.visitDate,
-        attachments: form.attachments
-          .filter((a) => a.file)
-          .map((a) => ({
-            name: a.file!.name,
-            url: null,
-            mimeType: a.file!.type || null,
-          })),
+        attachments: uploadedAttachments,
       };
 
       let savedRecord: MedicineRecord;

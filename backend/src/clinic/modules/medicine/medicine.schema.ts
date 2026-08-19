@@ -11,7 +11,7 @@ export interface MedicineRecordDoc extends ClinicDocument {
   treatment: string | null;
   notes: string | null;
   visitDate: string;
-  attachments: { name: string; url: string | null; mimeType: string | null }[];
+  attachments: { name: string; url: string | null; mimeType: string | null; fileId?: string | null }[];
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;

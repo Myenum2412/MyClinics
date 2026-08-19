@@ -14,6 +14,7 @@ export const createMedicineRecordSchema = z.object({
         name: z.string().trim().min(1).max(255),
         url: z.string().trim().max(1000).nullable().optional(),
         mimeType: z.string().trim().max(120).nullable().optional(),
+        fileId: z.string().trim().max(120).nullable().optional(),
       })
     )
     .max(50)

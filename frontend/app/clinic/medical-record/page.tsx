@@ -166,6 +166,59 @@ function fileIcon(mimeType: string | null, name: string) {
   return <File className="size-5 text-slate-400" />;
 }
 
+interface RecordMetadata {
+  visitType?: unknown;
+  visitTime?: unknown;
+  followUpDate?: unknown;
+  chiefComplaint?: unknown;
+  icdCode?: unknown;
+  advice?: unknown;
+  nextReviewDate?: unknown;
+  referral?: unknown;
+  vitals?: { bp?: unknown; temperature?: unknown; pulse?: unknown };
+  allergies?: unknown;
+  labTests?: unknown;
+  internalNotes?: unknown;
+}
+
+/** The Medicine page stores extended form data as JSON inside `notes` — parse it for display. */
+function parseRecordMetadata(notes: string | null): RecordMetadata | null {
+  if (!notes) return null;
+  const trimmed = notes.trim();
+  if (!trimmed.startsWith("{")) return null;
+  try {
+    return JSON.parse(trimmed) as RecordMetadata;
+  } catch {
+    return null;
+  }
+}
+
+function metadataFields(
+  meta: RecordMetadata | null
+): { label: string; value: string }[] {
+  if (!meta) return [];
+  const fields: { label: string; value: string }[] = [];
+  if (meta.chiefComplaint) fields.push({ label: "Chief Complaint", value: String(meta.chiefComplaint) });
+  if (meta.visitType) fields.push({ label: "Visit Type", value: String(meta.visitType) });
+  if (meta.visitTime) fields.push({ label: "Visit Time", value: String(meta.visitTime) });
+  if (meta.followUpDate) fields.push({ label: "Follow-up Date", value: String(meta.followUpDate) });
+  if (meta.icdCode) fields.push({ label: "ICD Code", value: String(meta.icdCode) });
+  if (meta.vitals) {
+    const bp = String(meta.vitals.bp ?? "").trim();
+    const temp = String(meta.vitals.temperature ?? "").trim();
+    const pulse = String(meta.vitals.pulse ?? "").trim();
+    const parts = [bp && `BP ${bp}`, temp && `Temp ${temp}`, pulse && `Pulse ${pulse}`].filter(Boolean);
+    if (parts.length > 0) fields.push({ label: "Vitals", value: parts.join(" · ") });
+  }
+  if (meta.allergies) fields.push({ label: "Allergies", value: String(meta.allergies) });
+  if (meta.labTests) fields.push({ label: "Lab Tests", value: String(meta.labTests) });
+  if (meta.advice) fields.push({ label: "Advice", value: String(meta.advice) });
+  if (meta.nextReviewDate) fields.push({ label: "Next Review", value: String(meta.nextReviewDate) });
+  if (meta.referral) fields.push({ label: "Referral", value: String(meta.referral) });
+  if (meta.internalNotes) fields.push({ label: "Internal Notes", value: String(meta.internalNotes) });
+  return fields;
+}
+
 type DefaultFolderKey = "medicine" | "medical" | "prescriptions";
 
 const DEFAULT_FOLDER_KEYS: DefaultFolderKey[] = ["medicine", "medical", "prescriptions"];
@@ -457,6 +510,18 @@ export default function MedicalRecordPage() {
     [clinicId]
   );
 
+  const handleRecordAttachmentDownload = useCallback(
+    async (fileId: string, name: string) => {
+      try {
+        const { url } = await getMedicalRecordDownloadUrl(clinicId, fileId);
+        window.open(url, "_blank", "noopener,noreferrer");
+      } catch {
+        toast.error(`Failed to prepare download for ${name}`);
+      }
+    },
+    [clinicId]
+  );
+
   const handleDelete = useCallback(
     async (file: MedicalRecordFile) => {
       try {
@@ -638,71 +703,83 @@ export default function MedicalRecordPage() {
             <div className="space-y-3">
               {[...folderRecords]
                 .sort((a, b) => b.visitDate.localeCompare(a.visitDate))
-                .map((r) => (
-                  <Card key={r.recordId} className="border-blue-100">
-                    <CardContent className="p-4">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50">
-                          {formatDate(r.visitDate)}
-                        </Badge>
-                        <span className="text-xs text-gray-500">
-                          Doctor: {doctorName(r.doctorId)}
-                        </span>
-                      </div>
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        <div>
-                          <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                            Diagnosis
-                          </p>
-                          <p className="text-sm font-medium text-gray-800">{r.diagnosis}</p>
+                .map((r) => {
+                  const meta = parseRecordMetadata(r.notes);
+                  const metaFields = metadataFields(meta);
+                  return (
+                    <Card key={r.recordId} className="border-blue-100">
+                      <CardContent className="p-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-50">
+                            {formatDate(r.visitDate)}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            Doctor: {doctorName(r.doctorId)}
+                          </span>
                         </div>
-                        {r.symptoms && (
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
                           <div>
                             <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                              Symptoms
+                              Diagnosis
                             </p>
-                            <p className="text-sm text-gray-700">{r.symptoms}</p>
+                            <p className="text-sm font-medium text-gray-800">{r.diagnosis}</p>
                           </div>
-                        )}
-                        {r.treatment && (
-                          <div>
-                            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                              Treatment
-                            </p>
-                            <p className="text-sm text-gray-700">{r.treatment}</p>
-                          </div>
-                        )}
-                        {r.notes && (
-                          <div>
-                            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                              Notes
-                            </p>
-                            <p className="text-sm text-gray-700">{r.notes}</p>
-                          </div>
-                        )}
-                      </div>
-                      {r.attachments.length > 0 && (
-                        <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
-                          {r.attachments.map((a, i) => (
-                            <a
-                              key={i}
-                              href={a.url ?? undefined}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => {
-                                if (!a.url) e.preventDefault();
-                              }}
-                              className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-gray-600 ring-1 ring-slate-200 hover:bg-slate-100"
-                            >
-                              <Download className="size-3" />
-                              {a.name}
-                            </a>
+                          {r.symptoms && (
+                            <div>
+                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                                Symptoms
+                              </p>
+                              <p className="text-sm text-gray-700">{r.symptoms}</p>
+                            </div>
+                          )}
+                          {r.treatment && (
+                            <div>
+                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                                Treatment
+                              </p>
+                              <p className="text-sm text-gray-700">{r.treatment}</p>
+                            </div>
+                          )}
+                          {metaFields.map((f) => (
+                            <div key={f.label}>
+                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                                {f.label}
+                              </p>
+                              <p className="text-sm text-gray-700">{f.value}</p>
+                            </div>
                           ))}
+                          {!meta && r.notes && (
+                            <div>
+                              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                                Notes
+                              </p>
+                              <p className="text-sm text-gray-700">{r.notes}</p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
+                        {r.attachments.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
+                            {r.attachments.map((a, i) => (
+                              <button
+                                key={i}
+                                type="button"
+                                disabled={!a.fileId && !a.url}
+                                onClick={() => {
+                                  if (a.fileId) void handleRecordAttachmentDownload(a.fileId, a.name);
+                                  else if (a.url) window.open(a.url, "_blank", "noopener,noreferrer");
+                                }}
+                                className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-gray-600 ring-1 ring-slate-200 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                <Download className="size-3" />
+                                {a.name}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
             </div>
           ) : (
             <Card>

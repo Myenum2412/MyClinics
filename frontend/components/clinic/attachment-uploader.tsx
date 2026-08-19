@@ -35,6 +35,7 @@ export interface AttachmentFile {
   description: string
   url: string | null
   mimeType: string | null
+  fileId?: string | null
 }
 
 export function makeAttachmentFile(file: File | null, extra?: Partial<AttachmentFile>): AttachmentFile {
