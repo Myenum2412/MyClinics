@@ -176,7 +176,7 @@ export default function AppointmentsPage() {
   const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
   const { getOptions } = useDropdownOptions(clinicId);
-  const canManage = sessionCan(session, "clinic_admin");
+  const canManage = sessionCan(session, "staff");
 
   // Main Data States
   const [appointments, setAppointments] = useState<Appointment[]>([]);
