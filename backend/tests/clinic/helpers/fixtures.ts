@@ -44,10 +44,6 @@ export const BILL_A1 = "bil_a1aaaaaaaaaaaaa";
 export const BILL_A2 = "bil_a2aaaaaaaaaaaaa";
 export const BILL_B1 = "bil_b1aaaaaaaaaaaaa";
 
-export const REPORT_A1 = "rpt_a1aaaaaaaaaaaaa";
-export const REPORT_A2 = "rpt_a2aaaaaaaaaaaaa";
-export const REPORT_B1 = "rpt_b1aaaaaaaaaaaaa";
-
 export const NOTIFICATION_A1 = "ntf_a1aaaaaaaaaaaaa";
 export const NOTIFICATION_A2 = "ntf_a2aaaaaaaaaaaaa";
 
@@ -131,11 +127,6 @@ export function seedIsolationDb(): { db: Db; dump: (name: string) => Record<stri
       { clinicId: CLINIC_A, billId: BILL_A1, billNumber: "B-2026-0001", patientId: PATIENT_A1, doctorId: DOCTOR_A1, items: [], subtotal: 500, discount: 0, taxPercent: 0, taxAmount: 0, total: 500, status: "paid", createdAt: t, updatedAt: t },
       { clinicId: CLINIC_A, billId: BILL_A2, billNumber: "B-2026-0002", patientId: PATIENT_A2, doctorId: DOCTOR_A2, items: [], subtotal: 800, discount: 0, taxPercent: 0, taxAmount: 0, total: 800, status: "issued", createdAt: t, updatedAt: t },
       { clinicId: CLINIC_B, billId: BILL_B1, billNumber: "B-2026-0001", patientId: PATIENT_B1, doctorId: DOCTOR_B1, items: [], subtotal: 300, discount: 0, taxPercent: 0, taxAmount: 0, total: 300, status: "draft", createdAt: t, updatedAt: t },
-    ],
-    clc_reports: [
-      { clinicId: CLINIC_A, reportId: REPORT_A1, patientId: PATIENT_A1, doctorId: DOCTOR_A1, type: "X-Ray", title: "Chest X-Ray A1", status: "ready", createdAt: t, updatedAt: t },
-      { clinicId: CLINIC_A, reportId: REPORT_A2, patientId: PATIENT_A2, doctorId: DOCTOR_A2, type: "MRI", title: "MRI A2", status: "ready", createdAt: t, updatedAt: t },
-      { clinicId: CLINIC_B, reportId: REPORT_B1, patientId: PATIENT_B1, doctorId: DOCTOR_B1, type: "Blood", title: "Blood B1", status: "ready", createdAt: t, updatedAt: t },
     ],
     clc_settings: [
       { clinicId: CLINIC_A, workingHours: { open: "09:00", close: "18:00" }, slotMinutes: 30, currency: "INR", timezone: "Asia/Kolkata", smsEnabled: false, emailNotifications: false, createdAt: t, updatedAt: t },

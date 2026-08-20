@@ -314,23 +314,6 @@ export interface Bill {
   updatedAt: string;
 }
 
-export type ReportStatus = "uploaded" | "processing" | "ready" | "failed";
-
-export interface Report {
-  reportId: string;
-  patientId: string;
-  doctorId: string | null;
-  type: string;
-  title: string;
-  description: string | null;
-  fileUrl: string | null;
-  fileId: string | null;
-  mimeType: string | null;
-  status: ReportStatus;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface Notification {
   notificationId: string;
   type: "appointment" | "bill" | "report" | "prescription" | "general";
@@ -1024,49 +1007,6 @@ export async function downloadBillPdf(
   URL.revokeObjectURL(url);
 }
 
-// ── Reports ────────────────────────────────────────────────────────────────
-
-export function listReports(
-  clinicId: string,
-  query: { patientId?: string; type?: string; status?: string; from?: string; to?: string; limit?: number } = {}
-): Promise<PageResult<Report>> {
-  const params = new URLSearchParams();
-  if (query.patientId) params.set("patientId", query.patientId);
-  if (query.type) params.set("type", query.type);
-  if (query.status) params.set("status", query.status);
-  if (query.from) params.set("from", query.from);
-  if (query.to) params.set("to", query.to);
-  params.set("limit", String(query.limit ?? 100));
-  return request(tenantPath(clinicId, `/reports?${params}`));
-}
-
-export function createReport(
-  clinicId: string,
-  input: Record<string, unknown>
-): Promise<Report> {
-  return request(tenantPath(clinicId, "/reports"), {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
-export function updateReport(
-  clinicId: string,
-  reportId: string,
-  input: Record<string, unknown>
-): Promise<Report> {
-  return request(tenantPath(clinicId, `/reports/${reportId}`), {
-    method: "PATCH",
-    body: JSON.stringify(input),
-  });
-}
-
-export function deleteReport(clinicId: string, reportId: string): Promise<{ ok: true }> {
-  return request(tenantPath(clinicId, `/reports/${reportId}`), {
-    method: "DELETE",
-  });
-}
-
 // ── Medical Record (Google Drive-style folders) ──────────────────────────
 
 export interface MedicalRecordFileVersion {
@@ -1578,12 +1518,6 @@ export function myBills(clinicId: string, query: { limit?: number } = {}): Promi
   const params = new URLSearchParams();
   params.set("limit", String(query.limit ?? 50));
   return request(tenantPath(clinicId, `/me/bills?${params}`));
-}
-
-export function myReports(clinicId: string, query: { limit?: number } = {}): Promise<PageResult<Report>> {
-  const params = new URLSearchParams();
-  params.set("limit", String(query.limit ?? 50));
-  return request(tenantPath(clinicId, `/me/reports?${params}`));
 }
 
 // ── Platform admin ─────────────────────────────────────────────────────────

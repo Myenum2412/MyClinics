@@ -5,7 +5,6 @@ import { BillingService } from "@/clinic/modules/billing/billing.service";
 import { MedicineService } from "@/clinic/modules/medicine/medicine.service";
 import { PatientService } from "@/clinic/modules/patients/patients.service";
 import { PrescriptionService } from "@/clinic/modules/prescriptions/prescriptions.service";
-import { ReportService } from "@/clinic/modules/reports/reports.service";
 import {
   adminA,
   APPOINTMENT_A1,
@@ -22,8 +21,6 @@ import {
   PRESCRIPTION_A2,
   RECORD_A1,
   RECORD_A2,
-  REPORT_A1,
-  REPORT_A2,
   seedIsolationDb,
 } from "./helpers/fixtures";
 
@@ -129,19 +126,6 @@ describe("Doctor isolation — Doctor A1 can never access Doctor A2's data", () 
     it("doctor A1 cannot read doctor A2's bill by id", async () => {
       const service = new BillingService(db);
       await expect(service.getBill(doctorA1, BILL_A2)).rejects.toThrow(NotFoundError);
-    });
-  });
-
-  describe("reports", () => {
-    it("doctor A1 lists only reports for their own patients", async () => {
-      const service = new ReportService(db);
-      const { items } = await service.listReports(doctorA1, { skip: 0, limit: 100 });
-      expect(items.map((r) => r.reportId)).toEqual([REPORT_A1]);
-    });
-
-    it("doctor A1 cannot read doctor A2's report by id", async () => {
-      const service = new ReportService(db);
-      await expect(service.getReport(doctorA1, REPORT_A2)).rejects.toThrow(NotFoundError);
     });
   });
 

@@ -62,7 +62,6 @@ describe("Permission matrix", () => {
     expect(can("patient", "appointments", "list")).toBe(false);
     expect(can("patient", "medicine", "list")).toBe(false);
     expect(can("patient", "prescriptions", "list")).toBe(false);
-    expect(can("patient", "reports", "list")).toBe(false);
     // doctors may read clinical data, staff never can
     expect(can("staff", "medicine", "read")).toBe(false);
     expect(can("doctor", "medicine", "read")).toBe(true);

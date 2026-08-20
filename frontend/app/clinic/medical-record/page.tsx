@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
   type Appointment,
+  type AppointmentStatus,
   type Doctor,
   type MedicalRecordFile,
   type MedicalRecordFolder,
@@ -14,7 +15,9 @@ import {
   type Prescription,
   copyMedicalRecordFile,
   copyMedicalRecordFolder,
+  createAppointment,
   createMedicalRecordFolder,
+  deleteAppointment,
   deleteMedicalRecordFile,
   deleteMedicalRecordFolder,
   getMedicalRecordDownloadUrl,
@@ -29,6 +32,7 @@ import {
   moveMedicalRecordFolder,
   renameMedicalRecordFile,
   renameMedicalRecordFolder,
+  updateAppointment,
   uploadMedicalRecordFile,
   uploadMedicalRecordFileVersion,
 } from "@/lib/clinic-api";
@@ -39,6 +43,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { TimePicker } from "@/components/ui/time-picker";
+import { formatTime } from "@/lib/format-time";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -65,6 +79,7 @@ import {
 import {
   ArrowLeft,
   ArrowRight,
+  CalendarClock,
   CalendarDays,
   ClipboardCopy,
   ClipboardList,
@@ -93,6 +108,22 @@ import {
 } from "lucide-react";
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
+
+const APPT_STATUSES: AppointmentStatus[] = ["scheduled", "completed", "cancelled", "no_show"];
+
+const APPT_STATUS_LABELS: Record<AppointmentStatus, string> = {
+  scheduled: "Scheduled",
+  completed: "Completed",
+  cancelled: "Cancelled",
+  no_show: "No Show",
+};
+
+const APPT_STATUS_CLASS: Record<AppointmentStatus, string> = {
+  scheduled: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
+  completed: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
+  cancelled: "bg-rose-500/10 text-rose-500 border border-rose-500/20",
+  no_show: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+};
 
 // ── Strict medical-document allowlist (mirrors backend upload-guard) ──────
 
@@ -677,7 +708,7 @@ export default function MedicalRecordPage() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   /** null = patient root; otherwise a folder id (default key or custom id). */
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
-  const [view, setView] = useState<"drive" | "overview">("drive");
+  const [view, setView] = useState<"drive" | "overview" | "appointments">("drive");
 
   const [search, setSearch] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -1346,7 +1377,7 @@ export default function MedicalRecordPage() {
         {selectedPatient && (
           <div className="mt-4">
             <div className="flex gap-1 rounded-lg bg-slate-200/60 p-1">
-              {(["drive", "overview"] as const).map((v) => (
+              {(["drive", "overview", "appointments"] as const).map((v) => (
                 <button
                   key={v}
                   type="button"
@@ -1355,7 +1386,7 @@ export default function MedicalRecordPage() {
                     view === v ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
-                  {v === "drive" ? "Files" : "Overview"}
+                  {v === "drive" ? "Files" : v === "overview" ? "Overview" : "Appointments"}
                 </button>
               ))}
             </div>
@@ -1495,8 +1526,10 @@ export default function MedicalRecordPage() {
                   </div>
                 )}
               </>
-            ) : (
+            ) : view === "overview" ? (
               overview && <OverviewPanel />
+            ) : (
+              <AppointmentsPanel />
             )}
           </div>
         )}
@@ -1715,6 +1748,187 @@ export default function MedicalRecordPage() {
       />
     </div>
   );
+
+  function AppointmentsPanel() {
+    if (!selectedPatient) return null;
+    const p = selectedPatient;
+    const [doctorId, setDoctorId] = useState("");
+    const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+    const [time, setTime] = useState("10:00");
+    const [reason, setReason] = useState("");
+    const [saving, setSaving] = useState(false);
+
+    const patientAppointments = useMemo(
+      () =>
+        appointments.items
+          .filter((a) => a.patientId === p.patientId)
+          .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time)),
+      [appointments.items, p.patientId]
+    );
+
+    async function handleCreate(e: React.FormEvent) {
+      e.preventDefault();
+      if (!doctorId || !date || !time) {
+        toast.error("Doctor, date and time are required.");
+        return;
+      }
+      setSaving(true);
+      try {
+        await createAppointment(clinicId, {
+          patientId: p.patientId,
+          doctorId,
+          date,
+          time,
+          reason: reason.trim() || null,
+        });
+        toast.success("Appointment booked. WhatsApp alerts queued!");
+        setReason("");
+        refresh();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to book appointment");
+      } finally {
+        setSaving(false);
+      }
+    }
+
+    async function handleStatusChange(a: Appointment, status: AppointmentStatus) {
+      try {
+        await updateAppointment(clinicId, a.appointmentId, { status });
+        toast.success(`Status updated to ${APPT_STATUS_LABELS[status]}.`);
+        refresh();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to update status");
+      }
+    }
+
+    async function handleDelete(a: Appointment) {
+      try {
+        await deleteAppointment(clinicId, a.appointmentId);
+        toast.success("Appointment deleted.");
+        refresh();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to delete appointment");
+      }
+    }
+
+    return (
+      <div className="mt-4 space-y-4">
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-fuchsia-600">
+                <CalendarClock className="size-4" />
+              </span>
+              <h2 className="text-sm font-semibold text-gray-800">Book Appointment</h2>
+            </div>
+            <form onSubmit={handleCreate} className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-gray-600">Patient</Label>
+                <Input value={p.fullName} disabled />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-gray-600">Doctor *</Label>
+                <Select value={doctorId} onValueChange={(v) => setDoctorId(v ?? "")}>
+                  <SelectTrigger><SelectValue placeholder="Select doctor" /></SelectTrigger>
+                  <SelectContent>
+                    {doctors.map((d) => (
+                      <SelectItem key={d.doctorId} value={d.doctorId}>{d.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-gray-600">Date *</Label>
+                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-gray-600">Time *</Label>
+                <TimePicker value={time} onChange={setTime} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-gray-600">Reason</Label>
+                <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Follow-up" />
+              </div>
+              <div className="flex justify-end md:col-span-2 lg:col-span-5">
+                <Button type="submit" disabled={saving}>
+                  {saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                  {saving ? "Booking…" : "Book Appointment"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-5">
+            <SectionHeading
+              Icon={CalendarDays}
+              tint="text-fuchsia-600"
+              title="Appointments"
+              count={patientAppointments.length}
+              countLabel="appointment"
+            />
+            {patientAppointments.length === 0 ? (
+              <p className="mt-3 text-sm text-gray-500">No appointments for this patient yet.</p>
+            ) : (
+              <div className="mt-3 overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Doctor</TableHead>
+                      <TableHead>Reason</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {patientAppointments.map((a) => (
+                      <TableRow key={a.appointmentId}>
+                        <TableCell className="text-sm whitespace-nowrap">{formatDate(a.date)}</TableCell>
+                        <TableCell className="text-sm text-gray-600 whitespace-nowrap">{formatTime(a.time)}</TableCell>
+                        <TableCell className="text-sm">{doctorName(a.doctorId)}</TableCell>
+                        <TableCell className="text-sm text-gray-600">{a.reason || "—"}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={a.status}
+                            onValueChange={(v) => handleStatusChange(a, v as AppointmentStatus)}
+                          >
+                            <SelectTrigger className={`h-7 w-28 rounded-full text-[11px] font-semibold ${APPT_STATUS_CLASS[a.status]}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {APPT_STATUSES.map((s) => (
+                                <SelectItem key={s} value={s} className="text-xs">
+                                  {APPT_STATUS_LABELS[s]}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-600"
+                            onClick={() => handleDelete(a)}
+                            aria-label="Delete appointment"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   function OverviewPanel() {
     if (!selectedPatient || !overview) return null;

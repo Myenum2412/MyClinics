@@ -503,28 +503,27 @@ export default function PatientsPage() {
 
   if (viewing) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
-          <div className="px-4 py-6 sm:px-6 lg:px-8">
-            <div className="flex items-start gap-4">
-              <button
-                onClick={() => setViewing(null)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
-              >
-                <ChevronLeft size={20} className="text-blue-600" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">View Patient</h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  Complete patient details — demographics, contact, medical history, insurance, and notes.
-                </p>
-              </div>
-            </div>
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setViewing(null)}
+            className="h-9 gap-1.5"
+          >
+            <ChevronLeft className="size-4" />
+            Back to Patients
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">View Patient</h1>
+            <p className="text-sm text-muted-foreground">Complete patient details — demographics, contact, medical history, insurance, and notes.</p>
           </div>
         </div>
-
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
-          <div className="space-y-6">
+        <Card className="border-border shadow-sm max-w-2xl">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <CardTitle className="text-lg font-semibold">Patient Information</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
             <PatientForm
               clinicId={clinicId}
               initial={{
@@ -567,8 +566,8 @@ export default function PatientsPage() {
               saving={false}
               readOnly={true}
             />
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

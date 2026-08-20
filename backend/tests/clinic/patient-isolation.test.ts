@@ -6,7 +6,6 @@ import { MedicineService } from "@/clinic/modules/medicine/medicine.service";
 import { NotificationService } from "@/clinic/modules/notifications/notifications.service";
 import { PatientService } from "@/clinic/modules/patients/patients.service";
 import { PrescriptionService } from "@/clinic/modules/prescriptions/prescriptions.service";
-import { ReportService } from "@/clinic/modules/reports/reports.service";
 import {
   APPOINTMENT_A1,
   APPOINTMENT_A2,
@@ -21,8 +20,6 @@ import {
   PRESCRIPTION_A2,
   RECORD_A1,
   RECORD_A2,
-  REPORT_A1,
-  REPORT_A2,
   seedIsolationDb,
 } from "./helpers/fixtures";
 
@@ -96,17 +93,6 @@ describe("Patient isolation — patients see only their own data", () => {
   it("patient A1 cannot read patient A2's bill", async () => {
     const service = new BillingService(db);
     await expect(service.getBill(patientA1, BILL_A2)).rejects.toThrow(NotFoundError);
-  });
-
-  it("patient A1 sees only their own reports", async () => {
-    const service = new ReportService(db);
-    const { items } = await service.listReports(patientA1, { skip: 0, limit: 100 });
-    expect(items.map((r) => r.reportId)).toEqual([REPORT_A1]);
-  });
-
-  it("patient A1 cannot read patient A2's report", async () => {
-    const service = new ReportService(db);
-    await expect(service.getReport(patientA1, REPORT_A2)).rejects.toThrow(NotFoundError);
   });
 
   it("patient A1 never sees patient A2's notifications", async () => {

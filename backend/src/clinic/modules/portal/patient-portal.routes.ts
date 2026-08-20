@@ -4,7 +4,6 @@ import { AppointmentController } from "@/clinic/modules/appointments/appointment
 import { BillingController } from "@/clinic/modules/billing/billing.controller";
 import { MedicineController } from "@/clinic/modules/medicine/medicine.controller";
 import { PrescriptionController } from "@/clinic/modules/prescriptions/prescriptions.controller";
-import { ReportController } from "@/clinic/modules/reports/reports.controller";
 
 /**
  * Patient portal — `/api/clinics/:clinicId/me/*`.
@@ -21,7 +20,6 @@ export function registerPatientPortalRoutes(app: FastifyInstance): void {
   const records = new MedicineController();
   const prescriptions = new PrescriptionController();
   const billing = new BillingController();
-  const reports = new ReportController();
 
   app.get(
     "/api/clinics/:clinicId/me/appointments",
@@ -45,11 +43,5 @@ export function registerPatientPortalRoutes(app: FastifyInstance): void {
     "/api/clinics/:clinicId/me/bills",
     { preHandler: requireClinicAccess },
     async (request, reply) => billing.getMine(request, reply)
-  );
-
-  app.get(
-    "/api/clinics/:clinicId/me/reports",
-    { preHandler: requireClinicAccess },
-    async (request, reply) => reports.getMine(request, reply)
   );
 }

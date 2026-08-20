@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/sidebar"
 import {
   CalendarDaysIcon,
-  DocumentTextIcon as FileTextIcon,
   Squares2X2Icon as LayoutDashboardIcon,
   BeakerIcon as PillIcon,
   ReceiptPercentIcon as ReceiptTextIcon,
@@ -91,12 +90,6 @@ const NAV_ITEMS: NavItem[] = [
     url: "/clinic/billing",
     icon: <ReceiptTextIcon className="size-6" />,
     roles: ["patient", "doctor", "staff", "clinic_admin"],
-  },
-  {
-    title: "Reports",
-    url: "/clinic/reports",
-    icon: <FileTextIcon className="size-6" />,
-    roles: ["staff", "clinic_admin"],
   },
   {
     title: "Audit Logs",

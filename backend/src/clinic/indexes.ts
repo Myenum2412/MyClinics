@@ -18,7 +18,6 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
   const medicine = db.collection(CLINIC_COLLECTIONS.medicalRecords);
   const prescriptions = db.collection(CLINIC_COLLECTIONS.prescriptions);
   const bills = db.collection(CLINIC_COLLECTIONS.bills);
-  const reports = db.collection(CLINIC_COLLECTIONS.reports);
   const settings = db.collection(CLINIC_COLLECTIONS.settings);
   const notifications = db.collection(CLINIC_COLLECTIONS.notifications);
   const auditLogs = db.collection(CLINIC_COLLECTIONS.auditLogs);
@@ -110,12 +109,6 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     bills.createIndex({ clinicId: 1, patientId: 1, createdAt: -1 }),
     bills.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
     bills.createIndex({ clinicId: 1, doctorId: 1, createdAt: -1 }),
-
-    // ── Reports ──────────────────────────────────────────────────────────
-    reports.createIndex({ clinicId: 1, reportId: 1 }, { unique: true }),
-    reports.createIndex({ clinicId: 1, patientId: 1, createdAt: -1 }),
-    reports.createIndex({ clinicId: 1, doctorId: 1, createdAt: -1 }),
-    reports.createIndex({ clinicId: 1, type: 1, createdAt: -1 }),
 
     // ── Settings ─────────────────────────────────────────────────────────
     settings.createIndex({ clinicId: 1 }, { unique: true }),

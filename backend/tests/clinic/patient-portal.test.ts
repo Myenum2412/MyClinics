@@ -49,10 +49,6 @@ function seedDb() {
       { clinicId: CLINIC_A, billId: "bil_portal_a1", patientId: PATIENT_A1, total: 100, status: "paid", createdAt: t, updatedAt: t },
       { clinicId: CLINIC_A, billId: "bil_portal_a2", patientId: PATIENT_A2, total: 200, status: "issued", createdAt: t, updatedAt: t },
     ],
-    clc_reports: [
-      { clinicId: CLINIC_A, reportId: "rpt_portal_a1", patientId: PATIENT_A1, doctorId: DOCTOR_A1, type: "X-Ray", title: "T1", status: "ready", createdAt: t, updatedAt: t },
-      { clinicId: CLINIC_A, reportId: "rpt_portal_a2", patientId: PATIENT_A2, doctorId: DOCTOR_A1, type: "MRI", title: "T2", status: "ready", createdAt: t, updatedAt: t },
-    ],
   });
   mockDbHolder.db = db;
   return db;
@@ -125,18 +121,6 @@ describe("Patient portal /me/* endpoints", () => {
     expect((res.json() as { items: { billId: string }[] }).items.map((b) => b.billId)).toEqual(["bil_portal_a1"]);
   });
 
-  it("patient A1 sees ONLY their own reports", async () => {
-    const app = buildServer();
-    const token = await loginAs(app, "p1@portal.test");
-    const res = await app.inject({
-      method: "GET",
-      url: `/api/clinics/${CLINIC_A}/me/reports`,
-      headers: { authorization: `Bearer ${token}` },
-    });
-    expect(res.statusCode).toBe(200);
-    expect((res.json() as { items: { reportId: string }[] }).items.map((r) => r.reportId)).toEqual(["rpt_portal_a1"]);
-  });
-
   it("patients are BLOCKED from the module routes (no bypass)", async () => {
     const app = buildServer();
     const token = await loginAs(app, "p1@portal.test");
@@ -145,7 +129,6 @@ describe("Patient portal /me/* endpoints", () => {
       `/api/clinics/${CLINIC_A}/medicine`,
       `/api/clinics/${CLINIC_A}/prescriptions`,
       `/api/clinics/${CLINIC_A}/billing`,
-      `/api/clinics/${CLINIC_A}/reports`,
     ]) {
       const res = await app.inject({
         method: "GET",

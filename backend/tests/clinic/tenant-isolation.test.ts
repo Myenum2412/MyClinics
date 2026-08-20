@@ -8,7 +8,6 @@ import { MedicineService } from "@/clinic/modules/medicine/medicine.service";
 import { NotificationService } from "@/clinic/modules/notifications/notifications.service";
 import { PatientService } from "@/clinic/modules/patients/patients.service";
 import { PrescriptionService } from "@/clinic/modules/prescriptions/prescriptions.service";
-import { ReportService } from "@/clinic/modules/reports/reports.service";
 import { SettingsService } from "@/clinic/modules/settings/settings.service";
 import { StaffService } from "@/clinic/modules/staff/staff.service";
 import { UsersService } from "@/clinic/modules/users/users.service";
@@ -22,7 +21,6 @@ import {
   PATIENT_B1,
   PRESCRIPTION_B1,
   RECORD_B1,
-  REPORT_B1,
   seedIsolationDb,
   USER_PATIENT_B1,
 } from "./helpers/fixtures";
@@ -115,20 +113,6 @@ describe("Tenant isolation — Clinic A can NEVER retrieve Clinic B's data", () 
       const service = new BillingService(db);
       const { items } = await service.listBills(adminA, { skip: 0, limit: 100 });
       expect(items.some((b) => b.billId === BILL_B1)).toBe(false);
-      expect(items.length).toBe(2);
-    });
-  });
-
-  describe("reports", () => {
-    it("clinic A admin cannot read clinic B's report by id", async () => {
-      const service = new ReportService(db);
-      await expect(service.getReport(adminA, REPORT_B1)).rejects.toThrow(NotFoundError);
-    });
-
-    it("clinic A admin listing never contains clinic B reports", async () => {
-      const service = new ReportService(db);
-      const { items } = await service.listReports(adminA, { skip: 0, limit: 100 });
-      expect(items.some((r) => r.reportId === REPORT_B1)).toBe(false);
       expect(items.length).toBe(2);
     });
   });
