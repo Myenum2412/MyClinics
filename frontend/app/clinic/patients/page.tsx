@@ -10,6 +10,7 @@ import {
   createPatient,
   deletePatient,
   listPatients,
+  resendPatientCredentials,
   updatePatient,
   uploadAvatar,
 } from "@/lib/clinic-api";
@@ -52,7 +53,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
 import { sessionCan } from "@/hooks/use-clinic-session";
 
@@ -149,6 +150,8 @@ export default function PatientsPage() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [credentials, setCredentials] = useState<{ patientName: string; email: string; password: string } | null>(null);
+  const [resending, setResending] = useState(false);
 
   // Pagination & selection states
   const [currentPage, setCurrentPage] = useState(1);
@@ -265,6 +268,18 @@ export default function PatientsPage() {
     await deletePatient(clinicId, patient.patientId);
     toast.success("Patient deleted");
     load();
+  }
+
+  async function handleResendCredentials(patient: Patient) {
+    setResending(true);
+    try {
+      const result = await resendPatientCredentials(clinicId, patient.patientId);
+      setCredentials({ patientName: patient.fullName, email: result.email, password: result.password });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to resend credentials");
+    } finally {
+      setResending(false);
+    }
   }
 
   const canManage = sessionCan(session, "clinic_admin");
@@ -756,6 +771,16 @@ export default function PatientsPage() {
                         <div className="flex justify-end gap-2">
                           <Button variant="ghost" size="sm" onClick={() => setViewing(p)}>View</Button>
                           <Button variant="ghost" size="sm" onClick={() => setEditing(p)}>Edit</Button>
+                          {canManage && p.userId && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={resending}
+                              onClick={() => handleResendCredentials(p)}
+                            >
+                              Resend
+                            </Button>
+                          )}
                           {canManage && (
                             <Button
                               variant="ghost"
@@ -810,6 +835,57 @@ export default function PatientsPage() {
         confirmLabel="Delete All"
         onConfirm={handleBulkDelete}
       />
+
+      <Dialog
+        open={credentials !== null}
+        onOpenChange={(open) => {
+          if (!open) setCredentials(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-green-100">
+              <KeyRound className="size-7 text-green-600" />
+            </div>
+            <DialogTitle className="text-center text-lg">Credentials Sent</DialogTitle>
+            <DialogDescription className="text-center">
+              New portal login for {credentials?.patientName} has been sent via WhatsApp. Share these details securely.
+            </DialogDescription>
+          </DialogHeader>
+
+          {credentials && (
+            <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                  <Mail className="size-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500">Portal Login (Email)</p>
+                  <p className="truncate text-sm font-medium text-gray-800">{credentials.email}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                  <KeyRound className="size-4" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500">New Password</p>
+                  <p className="text-sm font-medium text-gray-800">{credentials.password}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white w-full"
+              onClick={() => setCredentials(null)}
+            >
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

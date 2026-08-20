@@ -659,6 +659,15 @@ export function deletePatient(clinicId: string, patientId: string): Promise<{ ok
   });
 }
 
+export function resendPatientCredentials(
+  clinicId: string,
+  patientId: string
+): Promise<{ email: string; password: string }> {
+  return request(tenantPath(clinicId, `/patients/${patientId}/resend-credentials`), {
+    method: "POST",
+  });
+}
+
 export function getMyPatient(clinicId: string): Promise<Patient | null> {
   return request(tenantPath(clinicId, "/me/patient"));
 }

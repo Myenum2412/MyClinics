@@ -216,6 +216,33 @@ export async function notifyPatientRegistered(
   await queue(db, phone, lines.join("\n"), "patient_registered");
 }
 
+/** Sent to a patient when their portal credentials are reset/resent. */
+export async function notifyPatientCredentials(
+  db: Db,
+  user: {
+    patientId: string;
+    name: string;
+    phone?: string | null;
+    whatsapp?: string | null;
+    email: string;
+    password: string;
+  }
+): Promise<void> {
+  const phone = pickNotifyPhone(user);
+  if (!phone) return;
+  const org = await ensureDefaultOrganization(db);
+  await queue(
+    db,
+    phone,
+    [
+      `Hi ${firstName(user)}, your patient portal login for ${org.name} has been reset.`,
+      `Email: ${user.email}`,
+      `Password: ${user.password}`,
+    ].join("\n"),
+    "patient_credentials"
+  );
+}
+
 /** Sent to the patient after their profile is updated. */
 export async function notifyPatientUpdated(
   db: Db,

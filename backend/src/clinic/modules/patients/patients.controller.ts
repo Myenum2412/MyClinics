@@ -91,6 +91,15 @@ export class PatientController {
     return reply.send({ ok: true });
   }
 
+  async resendCredentials(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (!ctx) throw new UnauthorizedError();
+    const { patientId } = request.params as { patientId: string };
+    const db = await getDb();
+    const result = await this.service(db).resendCredentials(ctx, patientId);
+    return reply.send(result);
+  }
+
   async getSelf(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();

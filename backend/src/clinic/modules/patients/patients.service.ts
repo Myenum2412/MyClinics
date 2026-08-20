@@ -22,6 +22,7 @@ import {
   notifyDoctorOfNewPatient,
   notifyDoctorOfPatientUpdate,
   notifyPatientAssigned,
+  notifyPatientCredentials,
   notifyPatientRegistered,
   notifyPatientUpdated,
   type Notifyable,
@@ -393,6 +394,54 @@ export class PatientService {
       entityId: patientId,
       metadata: { fullName: patient.fullName },
     });
+  }
+
+  /**
+   * Resets the patient's portal password to a fresh value, stores the hash,
+   * and sends the new credentials (email + password) via WhatsApp. The
+   * generated password is returned so the caller can display it.
+   */
+  async resendCredentials(ctx: ClinicContext, patientId: string): Promise<{ email: string; password: string }> {
+    const clinicId = requireClinicOf(ctx);
+    const patient = await this.repo(ctx).findByPatientId(patientId);
+    if (!patient) throw new NotFoundError("Patient not found");
+
+    const user = patient.userId
+      ? await this.db
+          .collection<UserDoc>(CLINIC_COLLECTIONS.users)
+          .findOne({ clinicId, userId: patient.userId })
+      : null;
+    if (!user) {
+      throw new BadRequestError("This patient does not have portal login access yet");
+    }
+    if (typeof user.passwordHash !== "string" || user.authProvider === "google") {
+      throw new BadRequestError("This account uses Google sign-in and has no password to resend");
+    }
+
+    // Fresh random password (>= 8 chars).
+    const password = randomToken(9).replace(/-/g, "A").replace(/_/g, "Z") + "1!";
+    const passwordHash = await bcrypt.hash(password, 12);
+    await this.db
+      .collection(CLINIC_COLLECTIONS.users)
+      .updateOne({ clinicId, userId: user.userId }, { $set: { passwordHash, updatedAt: new Date() } });
+
+    await writeAudit(this.db, ctx, {
+      action: "update",
+      entity: "user",
+      entityId: user.userId,
+      metadata: { patientId, fullName: patient.fullName, credentialsResent: true },
+    });
+
+    await notifyPatientCredentials(this.db, {
+      patientId,
+      name: patient.fullName,
+      phone: patient.mobile,
+      whatsapp: patient.whatsapp ?? null,
+      email: user.email,
+      password,
+    });
+
+    return { email: user.email, password };
   }
 }
 
