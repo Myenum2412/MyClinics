@@ -14,7 +14,7 @@ import { getDb } from "@/lib/db";
  *   GET    /api/clinics/:clinicId/appointments          staff+ | doctor (own) | patient (own)
  *   GET    /api/clinics/:clinicId/appointments/:appointmentId  staff+ | owner
  *   PATCH  /api/clinics/:clinicId/appointments/:appointmentId  staff+ | owner
- *   DELETE /api/clinics/:clinicId/appointments/:appointmentId  clinic_admin
+ *   DELETE /api/clinics/:clinicId/appointments/:appointmentId  staff+ | doctor (own)
  */
 export function registerAppointmentRoutes(app: FastifyInstance): void {
   const controller = new AppointmentController();
@@ -74,7 +74,7 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
 
   app.delete(
     "/api/clinics/:clinicId/appointments/:appointmentId",
-    { preHandler: [requireClinicAccess, requireRoles("clinic_admin")] },
+    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
     async (request, reply) => controller.delete(request, reply)
   );
 }

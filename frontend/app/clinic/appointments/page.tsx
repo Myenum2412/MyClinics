@@ -955,26 +955,22 @@ export default function AppointmentsPage() {
                                 View Details
                               </DropdownMenuItem>
 
-                              {canManage && (
-                                <>
-                                  <DropdownMenuItem
-                                    className="text-xs gap-1.5 cursor-pointer"
-                                    onClick={() => setEditingAppt(a)}
-                                  >
-                                    <Pencil className="size-3.5 text-primary" />
-                                    Edit
-                                  </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-xs gap-1.5 cursor-pointer"
+                                onClick={() => setEditingAppt(a)}
+                              >
+                                <Pencil className="size-3.5 text-primary" />
+                                Edit
+                              </DropdownMenuItem>
 
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    className="text-xs gap-1.5 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
-                                    onClick={() => setDeleteTarget(a)}
-                                  >
-                                    <Trash2 className="size-3.5" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </>
-                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                className="text-xs gap-1.5 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+                                onClick={() => setDeleteTarget(a)}
+                              >
+                                <Trash2 className="size-3.5" />
+                                Delete
+                              </DropdownMenuItem>
 
                               <DropdownMenuItem
                                 className="text-xs gap-1.5 cursor-pointer"
