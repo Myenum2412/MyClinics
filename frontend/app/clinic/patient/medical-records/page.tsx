@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
-  bookAppointment,
   getMedicalRecordDownloadUrl,
   listDoctors,
   listMedicalRecordFiles,
@@ -26,17 +25,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { TimePicker } from "@/components/ui/time-picker";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -46,12 +35,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  CalendarClock,
   Download,
   FileText,
   Folder,
-  Loader2,
-  Plus,
 } from "lucide-react";
 
 const APPT_STATUS_CLASS: Record<string, string> = {
@@ -73,12 +59,6 @@ export default function PatientMedicalRecordsPage() {
   const [files, setFiles] = useState<MedicalRecordFile[]>([]);
   const [folders, setFolders] = useState<MedicalRecordFolder[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [doctorId, setDoctorId] = useState("");
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [time, setTime] = useState("10:00");
-  const [reason, setReason] = useState("");
-  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     if (!session?.clinicId) return;
@@ -110,32 +90,6 @@ export default function PatientMedicalRecordsPage() {
     if (!session?.clinicId) return;
     load();
   }, [session?.clinicId, load]);
-
-  async function handleBook(e: React.FormEvent) {
-    e.preventDefault();
-    if (!session?.clinicId) return;
-    if (!doctorId || !date || !time) {
-      toast.error("Doctor, date and time are required.");
-      return;
-    }
-    setSaving(true);
-    try {
-      await bookAppointment(session.clinicId, {
-        doctorId,
-        date,
-        time,
-        reason: reason.trim() || null,
-      });
-      toast.success("Appointment booked. WhatsApp alerts queued!");
-      setReason("");
-      setDoctorId("");
-      await load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to book appointment");
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleDownload(file: MedicalRecordFile) {
     if (!session?.clinicId) return;
@@ -174,57 +128,9 @@ const orphanFiles = files.filter(
       <div>
         <h2 className="text-2xl font-bold text-slate-900">My Medical Records</h2>
         <p className="text-slate-500 mt-1">
-          Book appointments and access your own medical history.
+          Access your appointments and medical history.
         </p>
       </div>
-
-      {/* Book Appointment */}
-      <Card>
-        <CardHeader className="border-b border-slate-100 px-5 py-4">
-          <div className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-fuchsia-600">
-              <CalendarClock className="size-4" />
-            </span>
-            <CardTitle className="text-sm font-semibold text-gray-800">Book an Appointment</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-5">
-          <form onSubmit={handleBook} className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-gray-600">Doctor *</Label>
-              <Select value={doctorId} onValueChange={(v) => setDoctorId(v ?? "")}>
-                <SelectTrigger><SelectValue placeholder="Select doctor" /></SelectTrigger>
-                <SelectContent>
-                  {doctors.map((d) => (
-                    <SelectItem key={d.doctorId} value={d.doctorId}>
-                      {d.name}
-                      {d.specialization ? ` — ${d.specialization}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-gray-600">Date *</Label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-gray-600">Time *</Label>
-              <TimePicker value={time} onChange={setTime} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-gray-600">Reason</Label>
-              <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Follow-up" />
-            </div>
-            <div className="flex justify-end md:col-span-2 lg:col-span-4">
-              <Button type="submit" disabled={saving}>
-                {saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-                {saving ? "Booking…" : "Book Appointment"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
 
       {/* My Appointments */}
       <Card>
