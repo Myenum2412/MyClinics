@@ -272,7 +272,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="w-full">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Clinic Profile</h1>
@@ -349,9 +349,9 @@ export default function AccountPage() {
             title="Basic Details"
             description="Clinic identity and registration information."
           >
-            <FieldGrid cols={2}>
+            <FieldGrid cols={3}>
               {editing ? (
-                <Field label="Clinic Name" className="col-span-2">
+                <Field label="Clinic Name" className="col-span-3">
                   <Input
                     value={form.name}
                     onChange={(e) => set("name", e.target.value)}
@@ -360,7 +360,7 @@ export default function AccountPage() {
                   />
                 </Field>
               ) : (
-                <Field label="Clinic Name" value={clinic.name} className="col-span-2" />
+                <Field label="Clinic Name" value={clinic.name} className="col-span-3" />
               )}
               <Field label="Clinic Type">
                 {editing ? (
@@ -426,7 +426,7 @@ export default function AccountPage() {
             title="Contact Details"
             description="How patients can reach your clinic."
           >
-            <FieldGrid cols={2}>
+            <FieldGrid cols={3}>
               <Field label="Phone Number">
                 {editing ? (
                   <Input
@@ -480,8 +480,8 @@ export default function AccountPage() {
             title="Clinic Address"
             description="Physical location of the clinic."
           >
-            <FieldGrid cols={2}>
-              <Field label="Address Line 1" className="col-span-2">
+            <FieldGrid cols={3}>
+              <Field label="Address Line 1" className="col-span-3">
                 {editing ? (
                   <Input
                     value={form.profile.addressLine1 ?? ""}
@@ -492,7 +492,7 @@ export default function AccountPage() {
                   orDash(profile.addressLine1)
                 )}
               </Field>
-              <Field label="Address Line 2" className="col-span-2">
+              <Field label="Address Line 2" className="col-span-3">
                 {editing ? (
                   <Input
                     value={form.profile.addressLine2 ?? ""}
@@ -766,11 +766,17 @@ function FieldGrid({
   cols,
   children,
 }: {
-  cols: 1 | 2;
+  cols: 1 | 2 | 3;
   children: React.ReactNode;
 }) {
   return (
-    <div className={`grid gap-4 ${cols === 2 ? "sm:grid-cols-2" : ""}`}>{children}</div>
+    <div
+      className={`grid gap-4 ${
+        cols === 3 ? "sm:grid-cols-2 lg:grid-cols-3" : cols === 2 ? "sm:grid-cols-2" : ""
+      }`}
+    >
+      {children}
+    </div>
   );
 }
 
