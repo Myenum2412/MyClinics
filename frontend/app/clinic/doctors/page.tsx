@@ -12,6 +12,7 @@ import {
   listDoctors,
   updateDoctor,
   createClinicUser,
+  updateClinicUser,
   uploadAvatar,
 } from "@/lib/clinic-api";
 import { bustAvatarCache } from "@/components/clinic/person-avatar";
@@ -320,7 +321,37 @@ export default function DoctorsPage() {
             toast.warning("Doctor updated, but the profile photo could not be uploaded");
           }
         }
-        toast.success("Doctor updated");
+        // Reset the login password when a new one was provided.
+        if (form.password) {
+          try {
+            if (editing.userId) {
+              await updateClinicUser(clinicId, editing.userId, {
+                phone: form.phone.trim() || null,
+                whatsapp: form.whatsapp.trim() || null,
+                password: form.password,
+              });
+            } else if (form.email.trim()) {
+              await createClinicUser(clinicId, {
+                name: form.name.trim(),
+                email: form.email.trim(),
+                password: form.password,
+                role: "doctor",
+                phone: form.phone.trim() || null,
+                whatsapp: form.whatsapp.trim() || null,
+                doctorId: editing.doctorId,
+              });
+            }
+            toast.success("Doctor updated — new login password sent via WhatsApp");
+          } catch (e) {
+            toast.error(
+              `Doctor updated, but the password could not be reset: ${
+                e instanceof Error ? e.message : "unknown error"
+              }`
+            );
+          }
+        } else {
+          toast.success("Doctor updated");
+        }
       } else {
         const created = await createDoctor(clinicId, payload);
 

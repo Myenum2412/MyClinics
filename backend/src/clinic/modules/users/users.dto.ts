@@ -45,8 +45,14 @@ export type CreateUserInput = z.infer<typeof createUserSchema>;
 export const updateUserSchema = z.object({
   name: z.string().trim().min(2).max(NAME_MAX).optional(),
   phone: z.string().trim().max(PHONE_MAX).nullable().optional(),
+  whatsapp: z.string().trim().max(PHONE_MAX).nullable().optional(),
   status: z.enum(["active", "inactive"]).optional(),
   role: z.enum(["doctor", "staff", "patient"]).optional(),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(200)
+    .optional(),
 });
 
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;

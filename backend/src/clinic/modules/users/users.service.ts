@@ -143,6 +143,10 @@ export class UsersService {
     if (input.name !== undefined) patch.name = input.name;
     if (input.phone !== undefined) patch.phone = input.phone;
     if (input.status !== undefined) patch.status = input.status;
+    if (input.whatsapp !== undefined) patch.whatsapp = input.whatsapp;
+    if (input.password !== undefined) {
+      patch.passwordHash = await bcrypt.hash(input.password, 12);
+    }
 
     if (Object.keys(patch).length > 0) {
       const result = await this.collection().updateOne(
@@ -156,8 +160,27 @@ export class UsersService {
       action: "update",
       entity: "user",
       entityId: targetUserId,
-      metadata: { fields: Object.keys(patch) },
+      metadata: {
+        fields: Object.keys(patch).filter((k) => k !== "passwordHash"),
+        passwordReset: input.password !== undefined,
+      },
     });
+
+    // Notify over WhatsApp when the password was reset.
+    if (input.password !== undefined) {
+      const whatsapp = input.whatsapp ?? null;
+      const phone = input.phone ?? whatsapp ?? user.phone ?? null;
+      if (phone && user.role !== "patient") {
+        await notifyUserLoginDetails(this.db, {
+          name: input.name ?? user.name,
+          role: user.role,
+          phone: phone ?? null,
+          whatsapp,
+          email: user.email,
+          password: input.password,
+        });
+      }
+    }
 
     const updated = await this.collection().findOne({ clinicId, userId: targetUserId });
     if (!updated) throw new NotFoundError("User not found");

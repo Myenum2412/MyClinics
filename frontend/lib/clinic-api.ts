@@ -800,6 +800,23 @@ export function createClinicUser(
   });
 }
 
+export function updateClinicUser(
+  clinicId: string,
+  userId: string,
+  input: {
+    name?: string;
+    phone?: string | null;
+    whatsapp?: string | null;
+    status?: "active" | "inactive";
+    password?: string;
+  }
+): Promise<ClinicUser> {
+  return request(tenantPath(clinicId, `/users/${userId}`), {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
 // ── Staff ──────────────────────────────────────────────────────────────────
 
 export function listStaff(
