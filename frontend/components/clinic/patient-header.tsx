@@ -13,7 +13,7 @@ export function PatientHeader() {
       <Separator orientation="vertical" className="mr-2 data-[orientation=vertical]:h-4" />
       <h1 className="text-lg font-semibold text-slate-900">Patient</h1>
       <div className="ml-auto flex items-center gap-3">
-        <Link href="/clinic/patient/medical-records">
+        <Link href="/clinic/patient/book-appointment">
           <Button className="gap-2 rounded-lg bg-blue-600 px-4 shadow-sm hover:bg-blue-700">
             <CalendarPlus className="size-4" />
             Book Appointment
