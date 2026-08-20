@@ -26,15 +26,18 @@ import {
   ChevronUpDownIcon as ChevronsUpDownIcon,
   UserCircleIcon as BadgeCheckIcon,
 } from "@heroicons/react/24/outline";
+import { PersonAvatar } from "@/components/clinic/person-avatar";
 
 export function NavUser({
   user,
+  clinicId,
 }: {
   user: {
     name: string
     email: string
     role?: string
   }
+  clinicId?: string
 }) {
   const { isMobile, setOpenMobile } = useSidebar()
   const router = useRouter()
@@ -43,6 +46,28 @@ export function NavUser({
     if (isMobile) setOpenMobile(false)
     router.push(href)
   }
+
+  const avatar = clinicId ? (
+    <PersonAvatar
+      clinicId={clinicId}
+      ownerType="clinic"
+      ownerId={clinicId}
+      name={user.name}
+      size="sm"
+      className="size-8"
+    />
+  ) : (
+    <Avatar className="size-8">
+      <AvatarFallback>
+        {user.name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
+  )
 
   return (
     <SidebarMenu>
@@ -56,16 +81,7 @@ export function NavUser({
               }
               className="flex-1"
             >
-              <Avatar className="size-8">
-                <AvatarFallback>
-                  {user.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .slice(0, 2)
-                    .toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              {avatar}
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
                 <span className="truncate text-xs">{user.email}</span>
@@ -91,16 +107,7 @@ export function NavUser({
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="size-8">
-                  <AvatarFallback>
-                    {user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                {avatar}
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
                   <span className="truncate text-xs">{user.email}</span>

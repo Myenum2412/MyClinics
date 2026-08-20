@@ -94,6 +94,7 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
 export function DoctorSidebar({
   user,
   clinicName,
+  clinicId,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user: {
@@ -101,6 +102,7 @@ export function DoctorSidebar({
     email: string
   }
   clinicName: string
+  clinicId: string
 }) {
   const pathname = usePathname()
 
@@ -157,7 +159,7 @@ export function DoctorSidebar({
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser user={user} clinicId={clinicId} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -123,6 +123,7 @@ export function WorkspaceSidebar({
   user,
   clinicName,
   role,
+  clinicId,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   user: {
@@ -131,6 +132,7 @@ export function WorkspaceSidebar({
   }
   clinicName: string
   role: ClinicRole
+  clinicId: string
 }) {
   const pathname = usePathname()
   const items = NAV_ITEMS.filter((item) => can(role, item.minRole ?? "patient"))
@@ -188,7 +190,7 @@ export function WorkspaceSidebar({
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser user={user} clinicId={clinicId} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

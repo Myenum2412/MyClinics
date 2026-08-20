@@ -1,468 +1,387 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  Activity,
+  Bell,
+  BriefcaseMedical,
   Building2,
   Camera,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
   Clock,
-  ExternalLink,
-  FileText,
+  CreditCard,
   Globe,
   Mail,
   MapPin,
   Pencil,
   Phone,
-  Save,
-  Shield,
-  User,
-  X,
+  Settings,
+  ShieldCheck,
+  Stethoscope,
+  Users,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import type { Clinic } from "@/lib/clinic-api";
-import {
-  getOwnClinic,
-  updateOwnClinic,
-} from "@/lib/clinic-api";
-import { PersonAvatar, bustAvatarCache } from "@/components/clinic/person-avatar";
-import { uploadAvatar } from "@/lib/clinic-api";
+import { getOwnClinic } from "@/lib/clinic-api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
-
-const ROLE_LABELS: Record<string, string> = {
-  platform_admin: "Platform Admin",
-  clinic_admin: "Clinic Admin",
-  doctor: "Doctor",
-  staff: "Staff",
-  patient: "Patient",
-};
 
 export default function AccountPage() {
   const session = useRequireRole("staff");
   const clinicId = session?.clinicId ?? "";
-  
+
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [photoRefresh, setPhotoRefresh] = useState(0);
-  const photoInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-
-  async function handlePhotoUpload(file: File | null) {
-    if (!file) return;
-    if (!["image/jpeg", "image/png"].includes(file.type)) {
-      toast.error("Only JPG or PNG images are allowed");
-      return;
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image must be smaller than 2MB");
-      return;
-    }
-    setUploadingPhoto(true);
-    try {
-      await uploadAvatar(clinicId, "clinic", clinicId, file);
-      bustAvatarCache(clinicId, "clinic", clinicId);
-      setPhotoRefresh((n) => n + 1);
-      toast.success("Clinic photo updated");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update photo");
-    } finally {
-      setUploadingPhoto(false);
-    }
-  }
-
-  const [draft, setDraft] = useState({
-    name: "",
-    description: "",
-    website: "",
-    phone: "",
-    email: "",
-    address: "",
-    open: "",
-    close: "",
-  });
 
   useEffect(() => {
     if (!clinicId) return;
     getOwnClinic(clinicId)
       .then((res) => {
         setClinic(res);
-        setDraft({
-          name: res.name,
-          description: res.description ?? "",
-          website: res.website ?? "",
-          phone: res.phone ?? "",
-          email: res.email ?? "",
-          address: res.address ?? "",
-          open: res.settings.workingHours.open,
-          close: res.settings.workingHours.close,
-        });
       })
       .catch(() => toast.error("Failed to load clinic profile"))
       .finally(() => setLoading(false));
   }, [clinicId]);
 
-  async function saveAll() {
-    if (!clinic) return;
-    setSaving(true);
-    try {
-      const updated = await updateOwnClinic(clinicId, {
-        name: draft.name,
-        description: draft.description,
-        website: draft.website,
-        phone: draft.phone,
-        email: draft.email,
-        address: draft.address,
-        settings: { workingHours: { open: draft.open, close: draft.close } },
-      });
-      setClinic(updated);
-      setIsEditing(false);
-      toast.success("Clinic profile updated");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update clinic profile");
-    } finally {
-      setSaving(false);
-    }
-  }
-
   if (loading || !clinic) {
     return (
-      <div className="mx-auto max-w-5xl space-y-4 px-4 py-6 md:px-8">
-        <Skeleton className="h-64 w-full rounded-b-3xl" />
-        <Skeleton className="mx-auto -mt-12 h-24 w-24 rounded-full border-4 border-white" />
-        <Skeleton className="mx-auto mt-4 h-6 w-48" />
-        <Skeleton className="mx-auto mt-2 h-4 w-32" />
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          <Skeleton className="h-96 w-full rounded-xl" />
-          <Skeleton className="h-96 w-full rounded-xl" />
+      <div className="mx-auto max-w-7xl space-y-4 p-8">
+        <Skeleton className="h-16 w-full rounded-xl" />
+        <Skeleton className="h-64 w-full rounded-xl" />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Skeleton className="h-80 w-full rounded-xl" />
+          <Skeleton className="h-80 w-full rounded-xl" />
         </div>
       </div>
     );
   }
 
-  const role = session?.role ?? "staff";
-  const roleLabel = ROLE_LABELS[role] ?? "Member";
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([clinic.name, clinic.address].filter(Boolean).join(", "))}`;
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans">
-      {/* Top Banner Gradient */}
-      <div className="h-[280px] w-full bg-gradient-to-b from-[#7A8FF2] via-[#94A9F9] to-[#E0E9FA]" />
-
-      <div className="mx-auto max-w-[1100px] px-4 sm:px-6 lg:px-8">
-        {/* Profile Header */}
-        <div className="relative -mt-12 flex flex-col items-center">
-          <div className="relative">
-            <PersonAvatar
-              clinicId={clinicId}
-              ownerType="clinic"
-              ownerId={clinicId}
-              name={clinic.name}
-              refreshKey={photoRefresh}
-              className="size-[104px] border-4 border-white shadow-sm ring-1 ring-slate-900/5 text-3xl font-semibold"
-            />
-            <button
-              type="button"
-              onClick={() => photoInputRef.current?.click()}
-              disabled={uploadingPhoto}
-              className="absolute bottom-1 right-1 flex size-7 items-center justify-center rounded-full border-2 border-white bg-[#5E72E4] text-white shadow-sm hover:bg-[#4E62D4] transition-colors disabled:opacity-60"
-              aria-label="Upload clinic photo"
-            >
-              <Camera className="size-3.5" />
-            </button>
-            <input
-              ref={photoInputRef}
-              type="file"
-              accept="image/jpeg,image/png"
-              className="hidden"
-              onChange={(e) => {
-                handlePhotoUpload(e.target.files?.[0] ?? null);
-                e.target.value = "";
-              }}
-            />
+    <div className="min-h-screen bg-slate-50 font-sans">
+      {/* Header */}
+      <div className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
+        <div className="flex items-center gap-2">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+            <BriefcaseMedical className="size-5" />
           </div>
-          <h1 className="mt-3 text-[22px] font-bold text-slate-900">{clinic.name}</h1>
-          <p className="text-[15px] text-slate-500">{clinic.email ?? "No email provided"}</p>
-
-          <div className="mt-3 flex items-center gap-2">
-            <Badge className="gap-1.5 border-none bg-[#5E72E4] px-3.5 py-1 text-white hover:bg-[#4E62D4] rounded-full font-medium shadow-sm text-xs">
-              <Shield className="size-3" />
-              {roleLabel}
-            </Badge>
-            <Badge
-              variant="outline"
-              className="gap-1.5 rounded-full border-slate-200 bg-white/60 backdrop-blur-sm px-3.5 py-1 text-slate-600 font-medium text-xs shadow-sm"
-            >
-              <Building2 className="size-3 text-slate-400" />
-              {clinic.name}&apos;s Organization
-            </Badge>
+          <span className="text-xl font-bold text-slate-900">MyClinic</span>
+        </div>
+        <div className="flex items-center gap-4 md:gap-6">
+          <button className="relative text-slate-500 hover:text-slate-700">
+            <Bell className="size-5" />
+            <span className="absolute right-0 top-0 size-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+          </button>
+          <div className="flex items-center gap-3 border-l border-slate-200 pl-4 md:pl-6">
+            <div className="flex size-9 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
+              {session?.name ? session.name.substring(0, 2).toUpperCase() : "SS"}
+            </div>
+            <div className="hidden flex-col md:flex">
+              <span className="text-sm font-semibold text-slate-900">{session?.name || "Dr. Sarah Smith"}</span>
+              <span className="text-xs text-slate-500 capitalize">{session?.role?.replace("_", " ") || "Chief Medical Officer"}</span>
+            </div>
+            <ChevronDown className="size-4 text-slate-400" />
           </div>
         </div>
+      </div>
 
-        {/* Navigation & Edit Button */}
-        <div className="mt-10 flex flex-wrap items-center justify-between border-b border-slate-200/80 pb-4">
-          <div className="flex gap-2 px-2">
-            <button className="flex items-center gap-2 rounded-md bg-white px-4 py-2 text-[14px] font-medium text-slate-800 shadow-sm border border-slate-200">
-              <User className="size-[16px]" />
-              Profile
-            </button>
-            <button className="flex items-center gap-2 rounded-md px-4 py-2 text-[14px] font-medium text-slate-500 hover:bg-white hover:shadow-sm hover:border hover:border-slate-200 border border-transparent transition-all">
-              <Building2 className="size-[16px]" />
-              Company
-            </button>
-            <button className="flex items-center gap-2 rounded-md px-4 py-2 text-[14px] font-medium text-slate-500 hover:bg-white hover:shadow-sm hover:border hover:border-slate-200 border border-transparent transition-all">
-              <FileText className="size-[16px]" />
-              Terms
-            </button>
+      <div className="mx-auto max-w-[1200px] p-4 md:p-8">
+        {/* Page Header */}
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-8">
+          <div>
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <span className="hover:text-blue-600 cursor-pointer">Dashboard</span>
+              <span>/</span>
+              <span className="font-medium text-slate-900">Clinic Profile</span>
+            </div>
+            <h1 className="mt-2 text-2xl font-bold text-slate-900">Clinic Profile</h1>
+            <p className="text-sm text-slate-500">Manage your clinic information and preferences</p>
           </div>
-          <div className="flex items-center gap-2">
-            {isEditing ? (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditing(false)}
-                  className="h-9 gap-2 rounded-full border-slate-200 px-4 text-slate-600 shadow-sm hover:bg-slate-50"
-                >
-                  <X className="size-4" />
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={saveAll}
-                  disabled={saving}
-                  className="h-9 gap-2 rounded-full bg-[#5E72E4] px-4 text-white shadow-sm hover:bg-[#4E62D4]"
-                >
-                  <Save className="size-4" />
-                  {saving ? "Saving..." : "Save Changes"}
-                </Button>
-              </>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditing(true)}
-                className="h-9 gap-2 rounded-full border-slate-200 px-4 text-slate-600 shadow-sm hover:bg-slate-50"
-              >
-                <Pencil className="size-4" />
-                Edit Profile
-              </Button>
-            )}
-          </div>
+          <Button className="bg-blue-600 text-white hover:bg-blue-700 rounded-md shrink-0">
+            <Pencil className="mr-2 size-4" /> Edit Profile
+          </Button>
         </div>
 
-        {/* Content Area */}
-        <div className="mt-8 grid gap-6 md:grid-cols-2">
-          {/* Left Column: Personal Information */}
-          <Card className="rounded-[16px] border border-slate-200/60 bg-white shadow-sm overflow-hidden">
-            <div className="px-7 py-6 border-b border-slate-100">
-              <h2 className="flex items-center gap-2 text-[17px] font-semibold text-slate-800">
-                <User className="size-[18px] text-slate-600" />
-                Clinic Information
-              </h2>
+        {/* Main Clinic Profile Card */}
+        <Card className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm mb-6">
+          <div className="flex flex-col lg:flex-row">
+            {/* Left: Cover */}
+            <div className="relative h-48 lg:h-auto lg:w-72 shrink-0 bg-slate-100">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-indigo-50"></div>
+              <button className="absolute bottom-4 right-4 flex size-8 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow-sm hover:bg-white">
+                <Camera className="size-4" />
+              </button>
             </div>
             
-            <div className="flex flex-col px-7 pb-4">
-              {/* Field: Email */}
-              <div className="flex items-start gap-4 border-b border-slate-100 py-4.5 last:border-0">
-                <Mail className="mt-1 size-[16px] text-slate-400 shrink-0" />
-                <div className="w-full min-w-0">
-                  <p className="text-[13px] font-medium text-slate-400">Email</p>
-                  {isEditing ? (
-                    <Input
-                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
-                      value={draft.email}
-                      onChange={(e) => setDraft({ ...draft, email: e.target.value })}
-                    />
-                  ) : (
-                    <p className="mt-1 truncate text-[14px] text-slate-800">
-                      {clinic.email || "—"}
-                    </p>
-                  )}
+            <div className="flex flex-1 flex-col p-6 md:flex-row md:items-center md:justify-between">
+              {/* Middle: Info */}
+              <div className="flex items-start gap-6">
+                <div className="relative shrink-0">
+                  <div className="flex size-20 items-center justify-center rounded-full border-4 border-white bg-blue-600 text-2xl font-bold text-white shadow-sm">
+                    {clinic.name ? clinic.name.charAt(0).toUpperCase() : "H"}
+                  </div>
+                  <div className="absolute bottom-0 right-0 rounded-full bg-white p-0.5">
+                    <CheckCircle className="size-5 text-blue-600 fill-white" />
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <h2 className="truncate text-xl font-bold text-slate-900">{clinic.name || "HealthCare Medical Clinic"}</h2>
+                  <p className="mt-1 truncate text-sm text-slate-500">{clinic.description || "Compassionate Care, Better Health"}</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
+                    <Badge variant="secondary" className="bg-slate-100 text-slate-700 hover:bg-slate-100 font-medium">
+                      ID: #CL-29384
+                    </Badge>
+                    <span className="hidden sm:inline text-slate-400">•</span>
+                    <span className="text-slate-500">Member since Aug 2021</span>
+                    <span className="hidden sm:inline text-slate-400">•</span>
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 border-emerald-200 font-medium">
+                      <span className="mr-1.5 size-1.5 rounded-full bg-emerald-500"></span> Active
+                    </Badge>
+                  </div>
                 </div>
               </div>
 
-              {/* Field: Full Name */}
-              <div className="flex items-start gap-4 border-b border-slate-100 py-4.5 last:border-0">
-                <Building2 className="mt-1 size-[16px] text-slate-400 shrink-0" />
-                <div className="w-full min-w-0">
-                  <p className="text-[13px] font-medium text-slate-400">Clinic Name</p>
-                  {isEditing ? (
-                    <Input
-                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
-                      value={draft.name}
-                      onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                    />
-                  ) : (
-                    <p className="mt-1 truncate text-[14px] text-slate-800">
-                      {clinic.name || "—"}
-                    </p>
-                  )}
+              {/* Vertical Divider */}
+              <div className="my-6 hidden h-24 w-px bg-slate-200 md:my-0 md:block"></div>
+
+              {/* Right: Contact */}
+              <div className="mt-6 flex flex-col gap-3 md:mt-0 md:w-64 shrink-0">
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <Phone className="size-4" />
+                  </div>
+                  <span className="truncate">{clinic.phone || "+1 (555) 123-4567"}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <Mail className="size-4" />
+                  </div>
+                  <span className="truncate">{clinic.email || "contact@healthcare.com"}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-600">
+                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600">
+                    <Globe className="size-4" />
+                  </div>
+                  <span className="truncate text-blue-600 hover:underline cursor-pointer">{clinic.website || "www.healthcare.com"}</span>
                 </div>
               </div>
+            </div>
+          </div>
+        </Card>
 
-              {/* Field: Phone */}
-              <div className="flex items-start gap-4 border-b border-slate-100 py-4.5 last:border-0">
-                <Phone className="mt-1 size-[16px] text-slate-400 shrink-0" />
-                <div className="w-full min-w-0">
-                  <p className="text-[13px] font-medium text-slate-400">Phone</p>
-                  {isEditing ? (
-                    <Input
-                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
-                      value={draft.phone}
-                      onChange={(e) => setDraft({ ...draft, phone: e.target.value })}
-                    />
-                  ) : (
-                    <p className="mt-1 truncate text-[14px] text-slate-800">
-                      {clinic.phone || "—"}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {/* Field: Description */}
-              <div className="flex items-start gap-4 border-b border-slate-100 py-4.5 last:border-0">
-                <FileText className="mt-1 size-[16px] text-slate-400 shrink-0" />
-                <div className="w-full min-w-0">
-                  <p className="text-[13px] font-medium text-slate-400">Description</p>
-                  {isEditing ? (
-                    <Textarea
-                      className="mt-2 min-h-[80px] w-full bg-slate-50/50 resize-none text-[14px]"
-                      value={draft.description}
-                      onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-                    />
-                  ) : (
-                    <p className="mt-1 text-[14px] text-slate-800 whitespace-pre-wrap leading-relaxed">
-                      {clinic.description || "—"}
-                    </p>
-                  )}
-                </div>
+        {/* Two-Column Layout */}
+        <div className="grid gap-6 lg:grid-cols-2 mb-6">
+          {/* Left: Clinic Info */}
+          <Card className="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-6 py-4">
+              <h3 className="text-base font-semibold text-slate-900">Clinic Information</h3>
+            </div>
+            <div className="p-6">
+              <div className="flex flex-col">
+                {[
+                  { label: "Clinic Name", value: clinic.name || "HealthCare Medical Clinic" },
+                  { label: "Registration Number", value: "REG-2021-99823" },
+                  { label: "Clinic Type", value: "Multi-Specialty Hospital" },
+                  { label: "Established On", value: "15 August 2021" },
+                  { label: "GST Number", value: "22AAAAA0000A1Z5" },
+                  { label: "PAN Number", value: "ABCDE1234F" },
+                  { label: "Email", value: clinic.email || "contact@healthcare.com" },
+                  { label: "Phone", value: clinic.phone || "+1 (555) 123-4567" },
+                  { label: "Alternate Phone", value: "+1 (555) 987-6543" },
+                ].map((item, i) => (
+                  <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 py-3.5 first:pt-0 last:border-0 last:pb-0">
+                    <span className="text-sm text-slate-500 mb-1 sm:mb-0">{item.label}</span>
+                    <span className="text-sm font-medium text-slate-900 text-left sm:text-right">{item.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </Card>
 
-          {/* Right Column: Address & Social */}
-          <Card className="rounded-[16px] border border-slate-200/60 bg-white shadow-sm overflow-hidden">
-            <div className="px-7 py-6 border-b border-slate-100">
-              <h2 className="flex items-center gap-2 text-[17px] font-semibold text-slate-800">
-                <MapPin className="size-[18px] text-slate-600" />
-                Address & Operations
-              </h2>
+          {/* Right: Address */}
+          <Card className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-6 py-4">
+              <h3 className="text-base font-semibold text-slate-900">Clinic Address</h3>
             </div>
-            
-            <div className="flex flex-col px-7 pb-6 pt-5">
-              <p className="text-[12px] font-semibold tracking-wide text-slate-400 uppercase mb-4">
-                LOCATION
-              </p>
+            <div className="flex flex-col flex-1 p-6">
+              <div className="flex flex-col">
+                {[
+                  { label: "Address Line 1", value: clinic.address || "123 Medical Center Blvd" },
+                  { label: "Address Line 2", value: "Suite 400" },
+                  { label: "City", value: "New York" },
+                  { label: "State", value: "NY" },
+                  { label: "Pincode", value: "10001" },
+                  { label: "Country", value: "United States" },
+                ].map((item, i) => (
+                  <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 py-3.5 first:pt-0 last:border-0">
+                    <span className="text-sm text-slate-500 mb-1 sm:mb-0">{item.label}</span>
+                    <span className="text-sm font-medium text-slate-900 text-left sm:text-right">{item.value}</span>
+                  </div>
+                ))}
+              </div>
               
-              <div className="grid gap-x-6 gap-y-5 border-b border-slate-100 pb-7 mb-6">
-                <div className="col-span-2">
-                  <p className="text-[13px] font-medium text-slate-400">Full Address</p>
-                  {isEditing ? (
-                    <Textarea
-                      className="mt-2 min-h-[80px] w-full bg-slate-50/50 resize-none text-[14px]"
-                      value={draft.address}
-                      onChange={(e) => setDraft({ ...draft, address: e.target.value })}
-                    />
-                  ) : (
-                    <div className="mt-1 flex items-start justify-between gap-4">
-                      <p className="text-[14px] text-slate-800 whitespace-pre-wrap leading-relaxed">
-                        {clinic.address || "—"}
-                      </p>
-                      {clinic.address && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => window.open(mapsUrl, "_blank", "noopener,noreferrer")}
-                          className="shrink-0 h-8 text-xs text-[#5E72E4] hover:bg-[#5E72E4]/10 hover:text-[#4E62D4]"
-                        >
-                          <ExternalLink className="mr-1.5 size-3" />
-                          Maps
-                        </Button>
-                      )}
+              {/* Map Preview */}
+              <div className="mt-auto pt-6">
+                <div className="relative h-40 w-full overflow-hidden rounded-lg bg-slate-50 border border-slate-200">
+                  <div className="absolute inset-0 bg-[url('https://maps.gstatic.com/mapfiles/api-3/images/google_gray.svg')] bg-center bg-no-repeat opacity-10"></div>
+                  <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+                  <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
+                    <div className="rounded bg-white px-3 py-1.5 text-xs font-semibold text-slate-900 shadow-sm border border-slate-200">
+                      HealthCare Clinic
                     </div>
-                  )}
-                </div>
-              </div>
-
-              <p className="text-[12px] font-semibold tracking-wide text-slate-400 uppercase mb-4">
-                OPERATIONAL DETAILS
-              </p>
-              
-              <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                <div>
-                  <p className="flex items-center gap-1.5 text-[13px] font-medium text-slate-400">
-                    <Clock className="size-3.5" />
-                    Opening Time
-                  </p>
-                  {isEditing ? (
-                    <Input
-                      type="time"
-                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
-                      value={draft.open}
-                      onChange={(e) => setDraft({ ...draft, open: e.target.value })}
-                    />
-                  ) : (
-                    <p className="mt-1 text-[14px] text-slate-800">{clinic.settings.workingHours.open || "—"}</p>
-                  )}
-                </div>
-                
-                <div>
-                  <p className="flex items-center gap-1.5 text-[13px] font-medium text-slate-400">
-                    <Clock className="size-3.5" />
-                    Closing Time
-                  </p>
-                  {isEditing ? (
-                    <Input
-                      type="time"
-                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
-                      value={draft.close}
-                      onChange={(e) => setDraft({ ...draft, close: e.target.value })}
-                    />
-                  ) : (
-                    <p className="mt-1 text-[14px] text-slate-800">{clinic.settings.workingHours.close || "—"}</p>
-                  )}
-                </div>
-                
-                <div className="col-span-2 pt-2">
-                  <p className="flex items-center gap-1.5 text-[13px] font-medium text-slate-400">
-                    <Globe className="size-3.5" />
-                    Website
-                  </p>
-                  {isEditing ? (
-                    <Input
-                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
-                      value={draft.website}
-                      onChange={(e) => setDraft({ ...draft, website: e.target.value })}
-                      placeholder="https://..."
-                    />
-                  ) : (
-                    <p className="mt-1 text-[14px] text-slate-800">
-                      {clinic.website ? (
-                        <a 
-                          href={clinic.website.startsWith("http") ? clinic.website : `https://${clinic.website}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#5E72E4] hover:underline flex items-center gap-1 w-fit"
-                        >
-                          {clinic.website}
-                          <ExternalLink className="size-3" />
-                        </a>
-                      ) : (
-                        "—"
-                      )}
-                    </p>
-                  )}
+                    <div className="mt-1 h-3 w-0.5 bg-slate-300"></div>
+                    <MapPin className="size-7 text-red-500 fill-white" />
+                  </div>
                 </div>
               </div>
             </div>
           </Card>
         </div>
+
+        {/* Bottom Three Cards */}
+        <div className="grid gap-6 md:grid-cols-3 mb-8">
+          {/* Working Hours */}
+          <Card className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-6 py-4 flex items-center gap-2">
+              <Clock className="size-4 text-blue-600" />
+              <h3 className="text-base font-semibold text-slate-900">Working Hours</h3>
+            </div>
+            <div className="flex flex-col flex-1 p-6">
+              <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-500">Monday – Friday</span>
+                  <span className="text-sm font-medium text-slate-900">{clinic.settings?.workingHours?.open || "09:00 AM"} - {clinic.settings?.workingHours?.close || "08:00 PM"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-500">Saturday</span>
+                  <span className="text-sm font-medium text-slate-900">09:00 AM - 02:00 PM</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-500">Sunday</span>
+                  <span className="text-sm font-medium text-red-600">Closed</span>
+                </div>
+                <div className="flex justify-between items-center pt-3 mt-1 border-t border-slate-100">
+                  <span className="text-sm text-slate-500">Emergency</span>
+                  <span className="text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">24/7 Available</span>
+                </div>
+              </div>
+              <div className="mt-auto pt-6">
+                <Button variant="outline" className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 bg-transparent">
+                  Manage Working Hours
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Specialties */}
+          <Card className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-6 py-4 flex items-center gap-2">
+              <Stethoscope className="size-4 text-blue-600" />
+              <h3 className="text-base font-semibold text-slate-900">Specialties</h3>
+            </div>
+            <div className="flex flex-col flex-1 p-6">
+              <div className="flex flex-col gap-3.5">
+                {[
+                  "General Medicine",
+                  "Pediatrics",
+                  "Dermatology",
+                  "Gynecology",
+                  "Orthopedics",
+                ].map((spec, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="flex size-6 items-center justify-center rounded-full bg-blue-50 text-blue-600 shrink-0">
+                      <CheckCircle className="size-3.5" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700">{spec}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-auto pt-6">
+                <Button variant="outline" className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 bg-transparent">
+                  View All Specialties
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* Clinic Settings */}
+          <Card className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b border-slate-100 px-6 py-4 flex items-center gap-2">
+              <Settings className="size-4 text-blue-600" />
+              <h3 className="text-base font-semibold text-slate-900">Clinic Settings</h3>
+            </div>
+            <div className="flex flex-col flex-1 p-4">
+              <div className="flex flex-col gap-0.5">
+                {[
+                  { label: "Clinic Preferences", icon: Building2 },
+                  { label: "Notification Settings", icon: Bell },
+                  { label: "Billing & Invoice Settings", icon: CreditCard },
+                  { label: "Users & Staff", icon: Users },
+                ].map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <button key={i} className="flex items-center justify-between rounded-lg p-2.5 hover:bg-slate-50 transition-colors text-left group">
+                      <div className="flex items-center gap-3">
+                        <Icon className="size-4 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                        <span className="text-sm font-medium text-slate-700">{item.label}</span>
+                      </div>
+                      <ChevronRight className="size-4 text-slate-300 group-hover:text-slate-400" />
+                    </button>
+                  )
+                })}
+              </div>
+              <div className="mt-auto pt-4 px-2 pb-2">
+                <Button variant="outline" className="w-full text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 bg-transparent">
+                  Manage Settings
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Clinic Overview */}
+        <div className="mt-8">
+          <h3 className="mb-4 text-lg font-bold text-slate-900">Clinic Overview</h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {[
+              { label: "Total Patients", value: "12,450", trend: "+12%", icon: Users },
+              { label: "Appointments", value: "842", trend: "+5%", icon: Clock },
+              { label: "Doctors", value: "24", trend: "0%", icon: Stethoscope },
+              { label: "Staff Members", value: "45", trend: "+2%", icon: ShieldCheck },
+              { label: "Total Revenue", value: "$45.2K", trend: "+18%", icon: Activity },
+            ].map((stat, i) => {
+              const Icon = stat.icon;
+              return (
+                <Card key={i} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                      <h4 className="mt-2 text-2xl font-bold text-slate-900">{stat.value}</h4>
+                    </div>
+                    <div className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600 shrink-0">
+                      <Icon className="size-5" />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-1.5 text-xs">
+                    <span className={stat.trend.startsWith("+") ? "text-emerald-600 font-medium" : "text-slate-500 font-medium"}>
+                      {stat.trend}
+                    </span>
+                    <span className="text-slate-400">vs last month</span>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-12 pb-4 text-center text-sm text-slate-400">
+          © 2024 MyClinic. All rights reserved.
+        </footer>
       </div>
     </div>
   );

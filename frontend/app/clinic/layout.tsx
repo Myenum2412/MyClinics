@@ -45,11 +45,13 @@ export default function ClinicLayout({
       {session.role === "doctor" ? (
         <DoctorSidebar
           clinicName={clinicName}
+          clinicId={session.clinicId ?? ""}
           user={{ name: session.name ?? "User", email: session.email ?? "" }}
         />
       ) : (
         <WorkspaceSidebar
           clinicName={clinicName}
+          clinicId={session.clinicId ?? ""}
           user={{ name: session.name ?? "User", email: session.email ?? "" }}
           role={session.role}
         />
