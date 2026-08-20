@@ -262,24 +262,9 @@ export default function PatientsPage() {
   }
 
   async function handleDelete(patient: Patient) {
-    try {
-      await deletePatient(clinicId, patient.patientId);
-      toast.success("Patient deleted");
-      load();
-    } catch (e) {
-      if (e instanceof Error) {
-        const errorMessage = e.message;
-        // Check if it's a ClinicApiError with status
-        const clinicError = e as { status?: number; code?: string };
-        if (clinicError.status) {
-          toast.error(`Delete failed (${clinicError.status}): ${errorMessage}${clinicError.code ? ` [${clinicError.code}]` : ""}`);
-        } else {
-          toast.error(errorMessage);
-        }
-      } else {
-        toast.error("Failed to delete patient");
-      }
-    }
+    await deletePatient(clinicId, patient.patientId);
+    toast.success("Patient deleted");
+    load();
   }
 
   const canManage = sessionCan(session, "clinic_admin");
@@ -813,7 +798,6 @@ export default function PatientsPage() {
         description="This will permanently delete the patient and their medical records. This action cannot be undone."
         onConfirm={async () => {
           if (deleteTarget) await handleDelete(deleteTarget);
-          setDeleteTarget(null);
         }}
       />
 

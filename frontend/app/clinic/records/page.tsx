@@ -592,23 +592,9 @@ export default function RecordsPage() {
   }
 
   async function handleDelete(record: MedicineRecord) {
-    const patientName = patientLookup[record.patientId] || record.patientId;
-    try {
-      await deleteRecord(clinicId, record.recordId);
-      toast.success("Record deleted");
-      load();
-    } catch (e) {
-      if (e instanceof Error) {
-        const clinicError = e as { status?: number; code?: string };
-        if (clinicError.status) {
-          toast.error(`Delete failed (${clinicError.status}): ${e.message}${clinicError.code ? ` [${clinicError.code}]` : ""}`);
-        } else {
-          toast.error(e.message);
-        }
-      } else {
-        toast.error("Failed to delete record");
-      }
-    }
+    await deleteRecord(clinicId, record.recordId);
+    toast.success("Record deleted");
+    load();
   }
 
   const canManage = sessionCan(session, "clinic_admin");
@@ -1048,7 +1034,6 @@ export default function RecordsPage() {
         }
         onConfirm={async () => {
           if (deleteTarget) await handleDelete(deleteTarget);
-          setDeleteTarget(null);
         }}
       />
     </div>

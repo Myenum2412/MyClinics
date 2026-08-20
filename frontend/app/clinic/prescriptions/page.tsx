@@ -219,28 +219,15 @@ export default function PrescriptionsPage() {
   }
 
   async function handleDelete(p: Prescription) {
-    try {
-      await deletePrescription(clinicId, p.prescriptionId);
-      toast.success("Prescription deleted successfully");
-      // Clean up row selection if deleted
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        next.delete(p.prescriptionId);
-        return next;
-      });
-      load();
-    } catch (e) {
-      if (e instanceof Error) {
-        const clinicError = e as { status?: number; code?: string };
-        if (clinicError.status) {
-          toast.error(`Delete failed (${clinicError.status}): ${e.message}${clinicError.code ? ` [${clinicError.code}]` : ""}`);
-        } else {
-          toast.error(e.message);
-        }
-      } else {
-        toast.error("Failed to delete prescription");
-      }
-    }
+    await deletePrescription(clinicId, p.prescriptionId);
+    toast.success("Prescription deleted successfully");
+    // Clean up row selection if deleted
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(p.prescriptionId);
+      return next;
+    });
+    load();
   }
 
   // Row Selection logic
@@ -1001,7 +988,6 @@ export default function PrescriptionsPage() {
         description="Are you sure you want to delete this prescription? This action cannot be undone."
         onConfirm={async () => {
           if (deleteTarget) await handleDelete(deleteTarget);
-          setDeleteTarget(null);
         }}
       />
       <ConfirmDeleteDialog

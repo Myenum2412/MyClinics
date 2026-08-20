@@ -229,13 +229,9 @@ export default function ReportsPage() {
   }
 
   async function handleDelete(report: Report) {
-    try {
-      await deleteReport(clinicId, report.reportId);
-      toast.success("Report deleted");
-      load();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete report");
-    }
+    await deleteReport(clinicId, report.reportId);
+    toast.success("Report deleted");
+    load();
   }
 
   async function handleDownloadAttachment(report: Report) {
@@ -711,7 +707,6 @@ export default function ReportsPage() {
         description="This will permanently delete the report and its file. This action cannot be undone."
         onConfirm={async () => {
           if (deleteTarget) await handleDelete(deleteTarget);
-          setDeleteTarget(null);
         }}
       />
     </div>

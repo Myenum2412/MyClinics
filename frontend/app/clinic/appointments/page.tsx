@@ -383,16 +383,9 @@ export default function AppointmentsPage() {
   }
 
   async function handleDelete(appointment: Appointment) {
-    const patient = patientMap.get(appointment.patientId);
-    const patientLabel = patient ? patient.fullName : appointment.patientId;
-
-    try {
-      await deleteAppointment(clinicId, appointment.appointmentId);
-      toast.success("Appointment deleted and cancel alerts queued.");
-      loadData();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete appointment");
-    }
+    await deleteAppointment(clinicId, appointment.appointmentId);
+    toast.success("Appointment deleted and cancel alerts queued.");
+    loadData();
   }
 
   // Bulk Actions
@@ -1140,7 +1133,6 @@ export default function AppointmentsPage() {
         }
         onConfirm={async () => {
           if (deleteTarget) await handleDelete(deleteTarget);
-          setDeleteTarget(null);
         }}
       />
       <ConfirmDeleteDialog

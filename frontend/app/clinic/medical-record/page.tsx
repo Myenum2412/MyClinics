@@ -1026,27 +1026,19 @@ export default function MedicalRecordPage() {
 
   const handleDeleteFolder = useCallback(
     async (fo: MedicalRecordFolder) => {
-      try {
-        await deleteMedicalRecordFolder(clinicId, fo.folderId);
-        toast.success(`Folder "${fo.name}" deleted`);
-        if (activeFolderId === fo.folderId) setActiveFolderId(null);
-        void refresh();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to delete folder");
-      }
+      await deleteMedicalRecordFolder(clinicId, fo.folderId);
+      toast.success(`Folder "${fo.name}" deleted`);
+      if (activeFolderId === fo.folderId) setActiveFolderId(null);
+      void refresh();
     },
     [clinicId, activeFolderId, refresh]
   );
 
   const handleDeleteFile = useCallback(
     async (file: MedicalRecordFile) => {
-      try {
-        await deleteMedicalRecordFile(clinicId, file.fileId);
-        toast.success(`"${file.fileName}" deleted`);
-        void refresh();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to delete file");
-      }
+      await deleteMedicalRecordFile(clinicId, file.fileId);
+      toast.success(`"${file.fileName}" deleted`);
+      void refresh();
     },
     [clinicId, refresh]
   );
@@ -1708,9 +1700,8 @@ export default function MedicalRecordPage() {
         onOpenChange={(open) => !open && setDeleteFileTarget(null)}
         title="Delete file?"
         description={`"${deleteFileTarget?.fileName}" will be permanently removed from the records.`}
-        onConfirm={() => {
-          if (deleteFileTarget) void handleDeleteFile(deleteFileTarget);
-          setDeleteFileTarget(null);
+        onConfirm={async () => {
+          if (deleteFileTarget) await handleDeleteFile(deleteFileTarget);
         }}
       />
       <ConfirmDeleteDialog
@@ -1718,9 +1709,8 @@ export default function MedicalRecordPage() {
         onOpenChange={(open) => !open && setDeleteFolderTarget(null)}
         title="Delete folder?"
         description={`"${deleteFolderTarget?.name}" and everything inside it will be permanently deleted.`}
-        onConfirm={() => {
-          if (deleteFolderTarget) void handleDeleteFolder(deleteFolderTarget);
-          setDeleteFolderTarget(null);
+        onConfirm={async () => {
+          if (deleteFolderTarget) await handleDeleteFolder(deleteFolderTarget);
         }}
       />
     </div>

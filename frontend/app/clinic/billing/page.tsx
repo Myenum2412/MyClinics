@@ -254,13 +254,9 @@ export default function BillingPage() {
   }
 
   async function handleVoid(bill: Bill) {
-    try {
-      await voidBill(clinicId, bill.billId);
-      toast.success("Bill voided");
-      load();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to void bill");
-    }
+    await voidBill(clinicId, bill.billId);
+    toast.success("Bill voided");
+    load();
   }
 
   // Row Selection logic
@@ -749,7 +745,6 @@ export default function BillingPage() {
         confirmLabel="Void"
         onConfirm={async () => {
           if (voidTarget) await handleVoid(voidTarget);
-          setVoidTarget(null);
         }}
       />
     </div>

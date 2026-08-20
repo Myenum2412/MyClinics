@@ -40,8 +40,13 @@ export function ConfirmDeleteDialog({
     setError(null);
     try {
       await onConfirm();
+      onOpenChange(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong');
+      const err = e as { status?: number; code?: string };
+      const detail = err.status
+        ? ` (${err.status})${err.code ? ` [${err.code}]` : ""}`
+        : "";
+      setError(`${e instanceof Error ? e.message : "Something went wrong"}${detail}`);
     } finally {
       setBusy(false);
     }

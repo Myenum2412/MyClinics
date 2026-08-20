@@ -366,22 +366,9 @@ export default function DoctorsPage() {
   }
 
   async function handleDelete(doctor: Doctor) {
-    try {
-      await deleteDoctor(clinicId, doctor.doctorId);
-      toast.success("Doctor deleted");
-      load();
-    } catch (e) {
-      if (e instanceof Error) {
-        const clinicError = e as { status?: number; code?: string };
-        if (clinicError.status) {
-          toast.error(`Delete failed (${clinicError.status}): ${e.message}${clinicError.code ? ` [${clinicError.code}]` : ""}`);
-        } else {
-          toast.error(e.message);
-        }
-      } else {
-        toast.error("Failed to delete doctor");
-      }
-    }
+    await deleteDoctor(clinicId, doctor.doctorId);
+    toast.success("Doctor deleted");
+    load();
   }
 
   const canManage = sessionCan(session, "clinic_admin");
@@ -786,7 +773,6 @@ export default function DoctorsPage() {
         description="This will permanently remove the doctor and their clinic user account. This action cannot be undone."
         onConfirm={async () => {
           if (deleteTarget) await handleDelete(deleteTarget);
-          setDeleteTarget(null);
         }}
       />
     </div>
