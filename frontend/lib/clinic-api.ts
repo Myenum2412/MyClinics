@@ -299,6 +299,7 @@ export interface Report {
   title: string;
   description: string | null;
   fileUrl: string | null;
+  fileId: string | null;
   mimeType: string | null;
   status: ReportStatus;
   createdAt: string;

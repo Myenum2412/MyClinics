@@ -8,7 +8,10 @@ export interface ReportDoc extends ClinicDocument {
   type: string;
   title: string;
   description: string | null;
+  /** Legacy: external/legacy file URL (kept for old reports). */
   fileUrl: string | null;
+  /** Medical-record file id — the attachment lives in the patient's drive. */
+  fileId: string | null;
   mimeType: string | null;
   status: "uploaded" | "processing" | "ready" | "failed";
   uploadedBy: string;
@@ -26,6 +29,7 @@ export function reportToPublic(doc: ReportDoc) {
     title: doc.title,
     description: doc.description,
     fileUrl: doc.fileUrl,
+    fileId: doc.fileId ?? null,
     mimeType: doc.mimeType,
     status: doc.status,
     createdAt: doc.createdAt,

@@ -384,6 +384,8 @@ function FileRow({
   return (
     <div
       draggable={draggable}
+      onDoubleClick={() => onDownload(file)}
+      title="Double-click to view"
       onDragStart={(e) => onDragStart(e, file)}
       onDragOver={(e) => {
         if (e.dataTransfer.getData("application/x-mrf-move")) {
@@ -428,7 +430,7 @@ function FileRow({
         } />
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onSelect={() => onDownload(file)}>
-            <Download className="size-4" /> Download
+            <Download className="size-4" /> View / Download
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => onCopy(file)}>
             <Copy className="size-4" /> Copy

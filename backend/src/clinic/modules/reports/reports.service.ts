@@ -39,6 +39,17 @@ export class ReportService {
 
     const doctorId = input.doctorId ?? patient.doctorId ?? null;
 
+    // When the attachment is a medical-record file, verify it exists and
+    // belongs to this patient (files live in the patient's drive).
+    if (input.fileId) {
+      const file = await this.db
+        .collection(CLINIC_COLLECTIONS.medicalRecordFiles)
+        .findOne({ clinicId, fileId: input.fileId, patientId: input.patientId });
+      if (!file) {
+        throw new BadRequestError("The attached file does not exist for this patient");
+      }
+    }
+
     const report = await this.repo(ctx).insert({
       reportId: generateReportId(),
       patientId: input.patientId,
@@ -47,6 +58,7 @@ export class ReportService {
       title: input.title,
       description: input.description ?? null,
       fileUrl: input.fileUrl ?? null,
+      fileId: input.fileId ?? null,
       mimeType: input.mimeType ?? null,
       status: input.status ?? "uploaded",
       uploadedBy: ctx.userId,
@@ -85,8 +97,17 @@ export class ReportService {
     const existing = await repo.findByReportId(reportId);
     if (!existing) throw new NotFoundError("Report not found");
 
+    if (input.fileId && input.fileId !== existing.fileId) {
+      const file = await this.db
+        .collection(CLINIC_COLLECTIONS.medicalRecordFiles)
+        .findOne({ clinicId: requireClinicOf(ctx), fileId: input.fileId, patientId: existing.patientId });
+      if (!file) {
+        throw new BadRequestError("The attached file does not exist for this patient");
+      }
+    }
+
     const patch: Record<string, unknown> = {};
-    for (const key of ["type", "title", "description", "fileUrl", "mimeType", "status", "doctorId"] as const) {
+    for (const key of ["type", "title", "description", "fileUrl", "fileId", "mimeType", "status", "doctorId"] as const) {
       const value = input[key];
       if (value !== undefined) patch[key] = value;
     }

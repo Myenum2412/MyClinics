@@ -10,9 +10,11 @@ import {
   type Patient,
   createReport,
   deleteReport,
+  getMedicalRecordDownloadUrl,
   listReports,
   listPatients,
   updateReport,
+  uploadMedicalRecordFile,
 } from "@/lib/clinic-api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,8 +92,10 @@ interface ReportFormState {
   title: string;
   description: string;
   fileUrl: string;
+  fileId: string | null;
   mimeType: string;
   status: string;
+  attachments: AttachmentFile[];
 }
 
 const EMPTY_FORM: ReportFormState = {
@@ -101,8 +105,10 @@ const EMPTY_FORM: ReportFormState = {
   title: "",
   description: "",
   fileUrl: "",
+  fileId: null,
   mimeType: "",
   status: "uploaded",
+  attachments: [],
 };
 
 
@@ -170,6 +176,30 @@ export default function ReportsPage() {
   async function handleSave(form: ReportFormState) {
     setSaving(true);
     try {
+      let fileId: string | null = form.fileId ?? null;
+      let mimeType: string | null = form.mimeType ?? null;
+
+      // Upload new attachments through the medical-record pipeline: the file
+      // lands in R2, is stored in the patient's drive (Lab Reports folder),
+      // and a copy is sent to the patient's WhatsApp.
+      const pending = (form.attachments ?? []).filter((a) => a.file);
+      for (const a of pending) {
+        try {
+          const uploaded = await uploadMedicalRecordFile(
+            clinicId,
+            form.patientId,
+            a.file!,
+            "lab-reports"
+          );
+          fileId = uploaded.fileId;
+          mimeType = a.file!.type || null;
+        } catch (err) {
+          toast.error(
+            `Failed to upload ${a.file!.name}${err instanceof Error ? `: ${err.message}` : ""}`
+          );
+        }
+      }
+
       const payload: Record<string, unknown> = {
         patientId: form.patientId,
         doctorId: form.doctorId || undefined,
@@ -177,7 +207,8 @@ export default function ReportsPage() {
         title: form.title,
         description: form.description || null,
         fileUrl: form.fileUrl || null,
-        mimeType: form.mimeType || null,
+        fileId,
+        mimeType,
         status: form.status,
       };
       if (editing) {
@@ -204,6 +235,21 @@ export default function ReportsPage() {
       load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to delete report");
+    }
+  }
+
+  async function handleDownloadAttachment(report: Report) {
+    try {
+      if (report.fileId) {
+        const { url } = await getMedicalRecordDownloadUrl(clinicId, report.fileId);
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else if (report.fileUrl) {
+        window.open(report.fileUrl, "_blank", "noopener,noreferrer");
+      } else {
+        toast.error("This report has no attachment");
+      }
+    } catch {
+      toast.error("Failed to prepare download");
     }
   }
 
@@ -369,8 +415,10 @@ export default function ReportsPage() {
                 title: editing.title,
                 description: editing.description ?? "",
                 fileUrl: editing.fileUrl ?? "",
+                fileId: editing.fileId ?? null,
                 mimeType: editing.mimeType ?? "",
                 status: editing.status,
+                attachments: [],
               }}
               saving={saving}
               onSave={async (form) => {
@@ -416,8 +464,10 @@ export default function ReportsPage() {
                 title: viewing.title,
                 description: viewing.description ?? "",
                 fileUrl: viewing.fileUrl ?? "",
+                fileId: viewing.fileId ?? null,
                 mimeType: viewing.mimeType ?? "",
                 status: viewing.status,
+                attachments: [],
               }}
               saving={false}
               readOnly={true}
@@ -619,6 +669,11 @@ export default function ReportsPage() {
                     )}
                     <TableCell className="text-right pr-6 whitespace-nowrap">
                       <Button variant="ghost" size="sm" className="h-8" onClick={() => setViewing(r)}>View</Button>
+                      {(r.fileId || r.fileUrl) && (
+                        <Button variant="ghost" size="sm" className="h-8" onClick={() => handleDownloadAttachment(r)}>
+                          <Download className="size-3.5" /> File
+                        </Button>
+                      )}
                       {!isDoctor && (
                         <Button variant="ghost" size="sm" className="h-8" onClick={() => setEditing(r)}>Edit</Button>
                       )}
@@ -679,8 +734,17 @@ function ReportForm({
   const [form, setForm] = useState<ReportFormState>(initial);
   const { getOptions } = useDropdownOptions(clinicId);
   const reportTypes = getOptions("report_types");
-  const [attachment, setAttachment] = useState<AttachmentFile[]>(() =>
-    initial.fileUrl
+  const [attachment, setAttachment] = useState<AttachmentFile[]>(() => {
+    if (initial.fileId) {
+      return [
+        makeAttachmentFile(null, {
+          name: initial.title || "Attached file",
+          fileId: initial.fileId,
+          mimeType: initial.mimeType || null,
+        }),
+      ];
+    }
+    return initial.fileUrl
       ? [
           makeAttachmentFile(null, {
             name: initial.fileUrl.split("/").pop() ?? initial.fileUrl,
@@ -688,8 +752,8 @@ function ReportForm({
             mimeType: initial.mimeType || null,
           }),
         ]
-      : []
-  );
+      : [];
+  });
   const set = <K extends keyof ReportFormState>(key: K, value: ReportFormState[K] | null) =>
     setForm((f) => ({ ...f, [key]: (value ?? "") as ReportFormState[K] }));
 
@@ -697,6 +761,7 @@ function ReportForm({
     setAttachment(files);
     const first = files[0];
     set("fileUrl", first?.url ?? "");
+    set("fileId", first?.fileId ?? null);
     set("mimeType", first?.file?.type ?? first?.mimeType ?? "");
   }
 

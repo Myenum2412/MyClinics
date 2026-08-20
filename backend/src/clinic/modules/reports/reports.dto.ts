@@ -7,6 +7,7 @@ export const createReportSchema = z.object({
   title: z.string().trim().min(2, "Report title is required").max(300),
   description: z.string().trim().max(2000).nullable().optional(),
   fileUrl: z.string().trim().max(2000).nullable().optional(),
+  fileId: z.string().trim().max(200).nullable().optional(),
   mimeType: z.string().trim().max(120).nullable().optional(),
   status: z.enum(["uploaded", "processing", "ready", "failed"]).optional(),
 });
