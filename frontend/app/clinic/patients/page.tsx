@@ -146,6 +146,7 @@ export default function PatientsPage() {
   const [editing, setEditing] = useState<Patient | null>(null);
   const [viewing, setViewing] = useState<Patient | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Patient | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -325,6 +326,24 @@ export default function PatientsPage() {
     downloadAnchor.click();
     downloadAnchor.remove();
     toast.success(`Exported ${selectedPatients.length} patients to JSON.`);
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      setLoading(true);
+      await Promise.all(
+        Array.from(selectedIds).map((id) => deletePatient(clinicId, id))
+      );
+      toast.success(`Successfully deleted ${selectedIds.size} patients.`);
+      setSelectedIds(new Set());
+      load();
+    } catch (e) {
+      toast.error("Failed to delete selected patients.");
+      load();
+    } finally {
+      setLoading(false);
+      setBulkDeleteOpen(false);
+    }
   };
 
   // Client-side search filtering
@@ -602,6 +621,17 @@ export default function PatientsPage() {
               <Download className="size-3.5 text-muted-foreground" />
               Export Selected
             </Button>
+            {canManage && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setBulkDeleteOpen(true)}
+                className="h-8 gap-1.5 shadow-sm"
+              >
+                <Trash className="size-3.5" />
+                Delete Selected
+              </Button>
+            )}
           </div>
         </div>
       )}
@@ -765,6 +795,17 @@ export default function PatientsPage() {
           if (deleteTarget) await handleDelete(deleteTarget);
           setDeleteTarget(null);
         }}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(open) => {
+          if (!open) setBulkDeleteOpen(false);
+        }}
+        title="Delete selected patients?"
+        description="This will permanently delete all selected patients and their medical records. This action cannot be undone."
+        confirmLabel="Delete All"
+        onConfirm={handleBulkDelete}
       />
     </div>
   );
