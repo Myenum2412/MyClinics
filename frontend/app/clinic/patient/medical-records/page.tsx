@@ -153,18 +153,9 @@ export default function PatientMedicalRecordsPage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
-function folderTitle(folder: string): string {
-  return (
-    folders.find((f) => f.folderId === folder)?.name ??
-    folders.find((f) => f.defaultKey === folder)?.name ??
-    folder
+const orphanFiles = files.filter(
+    (f) => !folders.some((fo) => fo.folderId === f.folder || fo.defaultKey === f.folder)
   );
-}
-
-  const filesByFolder = files.reduce<Record<string, MedicalRecordFile[]>>((acc, f) => {
-    (acc[f.folder] ??= []).push(f);
-    return acc;
-  }, {});
 
   if (loading) {
     return (
@@ -292,7 +283,7 @@ function folderTitle(folder: string): string {
           </div>
         </CardHeader>
         <CardContent className="p-5">
-          {files.length === 0 ? (
+          {folders.length === 0 && files.length === 0 ? (
             <div className="rounded-xl border border-slate-200 bg-white p-10 text-center">
               <Folder className="size-12 text-slate-300 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-slate-900">No files uploaded yet</h3>
@@ -301,18 +292,70 @@ function folderTitle(folder: string): string {
               </p>
             </div>
           ) : (
-            <div className="space-y-6">
-              {Object.entries(filesByFolder).map(([folder, folderFiles]) => (
-                <div key={folder}>
+            <div className="space-y-5">
+              {folders.map((folder) => {
+                const folderFiles = files.filter(
+                  (f) => f.folder === folder.defaultKey || f.folder === folder.folderId
+                );
+                return (
+                  <div key={folder.folderId}>
+                    <div className="mb-2 flex items-center gap-2">
+                      <Folder className="size-4 text-slate-400" />
+                      <h4 className="text-sm font-semibold text-slate-700">{folder.name}</h4>
+                      <span className="text-xs text-slate-400">({folderFiles.length})</span>
+                    </div>
+                    {folderFiles.length === 0 ? (
+                      <p className="rounded-lg border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-400">
+                        No files in this folder yet.
+                      </p>
+                    ) : (
+                      <div className="overflow-x-auto rounded-lg border border-slate-200">
+                        <Table>
+                          <TableBody>
+                            {folderFiles.map((f) => (
+                              <TableRow key={f.fileId} className="hover:bg-slate-50/50">
+                                <TableCell className="min-w-0">
+                                  <div className="flex items-center gap-3">
+                                    <FileText className="size-4 shrink-0 text-blue-500" />
+                                    <div className="min-w-0">
+                                      <p className="truncate text-sm font-medium text-slate-900">{f.fileName}</p>
+                                      <p className="text-xs text-slate-500">
+                                        {formatDate(f.createdAt)} · {formatBytes(f.size)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-1.5"
+                                    onClick={() => handleDownload(f)}
+                                  >
+                                    <Download className="size-4" />
+                                    Open
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {orphanFiles.length > 0 && (
+                <div>
                   <div className="mb-2 flex items-center gap-2">
                     <Folder className="size-4 text-slate-400" />
-                    <h4 className="text-sm font-semibold text-slate-700">{folderTitle(folder)}</h4>
-                    <span className="text-xs text-slate-400">({folderFiles.length})</span>
+                    <h4 className="text-sm font-semibold text-slate-700">Other Documents</h4>
+                    <span className="text-xs text-slate-400">({orphanFiles.length})</span>
                   </div>
                   <div className="overflow-x-auto rounded-lg border border-slate-200">
                     <Table>
                       <TableBody>
-                        {folderFiles.map((f) => (
+                        {orphanFiles.map((f) => (
                           <TableRow key={f.fileId} className="hover:bg-slate-50/50">
                             <TableCell className="min-w-0">
                               <div className="flex items-center gap-3">
@@ -342,7 +385,7 @@ function folderTitle(folder: string): string {
                     </Table>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </CardContent>
