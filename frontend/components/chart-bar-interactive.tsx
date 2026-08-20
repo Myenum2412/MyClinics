@@ -17,26 +17,27 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 
-export const description = "An interactive bar chart"
-
-const chartConfig = {
-  views: {
-    label: "Page Views",
-  },
-  desktop: {
-    label: "Desktop",
-    color: "var(--chart-2)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--chart-1)",
-  },
-} satisfies ChartConfig
-
 export interface ChartBarInteractiveDatum {
   date: string;
-  desktop: number;
-  mobile: number;
+  total: number;
+  paid: number;
+}
+
+const chartConfig = {
+  total: {
+    label: "Total Billed",
+    color: "var(--chart-1)",
+  },
+  paid: {
+    label: "Paid",
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig;
+
+function formatINR(value: number): string {
+  return `₹${(Number.isFinite(value) ? value : 0).toLocaleString("en-IN", {
+    maximumFractionDigits: 0,
+  })}`;
 }
 
 export function ChartBarInteractive({
@@ -49,15 +50,15 @@ export function ChartBarInteractive({
   data: ChartBarInteractiveDatum[];
 }) {
   const [activeChart, setActiveChart] =
-    React.useState<keyof typeof chartConfig>("desktop")
+    React.useState<keyof typeof chartConfig>("total");
 
-  const total = React.useMemo(
+  const totals = React.useMemo(
     () => ({
-      desktop: data.reduce((acc, curr) => acc + curr.desktop, 0),
-      mobile: data.reduce((acc, curr) => acc + curr.mobile, 0),
+      total: data.reduce((acc, curr) => acc + curr.total, 0),
+      paid: data.reduce((acc, curr) => acc + curr.paid, 0),
     }),
     [data]
-  )
+  );
 
   return (
     <Card className="py-0">
@@ -67,12 +68,13 @@ export function ChartBarInteractive({
           <CardDescription>{subtitle}</CardDescription>
         </div>
         <div className="flex">
-          {["desktop", "mobile"].map((key) => {
-            const chart = key as keyof typeof chartConfig
+          {(["total", "paid"] as const).map((key) => {
+            const chart = key;
+            const active = activeChart === chart;
             return (
               <button
                 key={chart}
-                data-active={activeChart === chart}
+                data-active={active}
                 className="relative z-30 flex flex-1 flex-col justify-center gap-1 border-t px-6 py-4 text-left even:border-l data-[active=true]:bg-muted/50 sm:border-t-0 sm:border-l sm:px-8 sm:py-6"
                 onClick={() => setActiveChart(chart)}
               >
@@ -80,10 +82,10 @@ export function ChartBarInteractive({
                   {chartConfig[chart].label}
                 </span>
                 <span className="text-lg leading-none font-bold sm:text-3xl">
-                  {total[key as keyof typeof total].toLocaleString()}
+                  {formatINR(totals[chart])}
                 </span>
               </button>
-            )
+            );
           })}
         </div>
       </CardHeader>
@@ -95,10 +97,7 @@ export function ChartBarInteractive({
           <BarChart
             accessibilityLayer
             data={data}
-            margin={{
-              left: 12,
-              right: 12,
-            }}
+            margin={{ left: 12, right: 12 }}
           >
             <CartesianGrid vertical={false} />
             <XAxis
@@ -108,28 +107,31 @@ export function ChartBarInteractive({
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                const date = new Date(value)
-                if (Number.isNaN(date.getTime())) return String(value)
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return String(value);
                 return date.toLocaleDateString("en-US", {
                   month: "short",
-                  day: "numeric",
-                })
+                  year: "2-digit",
+                });
               }}
             />
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  className="w-[150px]"
-                  nameKey="views"
+                  className="w-[180px]"
+                  nameKey={activeChart}
                   labelFormatter={(value) => {
-                    const date = new Date(String(value))
-                    if (Number.isNaN(date.getTime())) return String(value)
+                    const date = new Date(String(value));
+                    if (Number.isNaN(date.getTime())) return String(value);
                     return date.toLocaleDateString("en-US", {
                       month: "short",
-                      day: "numeric",
                       year: "numeric",
-                    })
+                    });
                   }}
+                  formatter={(value) => [
+                    formatINR(Number(value)),
+                    chartConfig[activeChart].label,
+                  ]}
                 />
               }
             />
@@ -138,5 +140,5 @@ export function ChartBarInteractive({
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

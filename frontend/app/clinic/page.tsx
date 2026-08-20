@@ -83,11 +83,12 @@ export default function ClinicPage() {
   }, [appointments]);
 
   // Last 12 calendar months including the current one, oldest → newest.
-  // Both series (desktop/mobile) carry the same per-month total so the
-  // chart's "Desktop / Mobile" toggle still works against real billing data.
+  // `total` is the invoiced amount per month; `paid` is the collected
+  // portion. Voided bills are excluded from both.
   const monthlyBilling: ChartBarInteractiveDatum[] = useMemo(() => {
     const now = new Date();
     const totalsByKey = new Map<string, number>();
+    const paidByKey = new Map<string, number>();
     for (const bill of bills) {
       if (bill.status === "void") continue;
       const invoice = new Date(bill.invoiceDate);
@@ -96,6 +97,9 @@ export default function ClinicPage() {
         invoice.getMonth() + 1
       ).padStart(2, "0")}-01`;
       totalsByKey.set(key, (totalsByKey.get(key) ?? 0) + bill.total);
+      if (bill.status === "paid") {
+        paidByKey.set(key, (paidByKey.get(key) ?? 0) + bill.total);
+      }
     }
 
     const out: ChartBarInteractiveDatum[] = [];
@@ -105,8 +109,11 @@ export default function ClinicPage() {
         2,
         "0"
       )}-01`;
-      const total = Math.round(totalsByKey.get(key) ?? 0);
-      out.push({ date: key, desktop: total, mobile: total });
+      out.push({
+        date: key,
+        total: Math.round(totalsByKey.get(key) ?? 0),
+        paid: Math.round(paidByKey.get(key) ?? 0),
+      });
     }
     return out;
   }, [bills]);
