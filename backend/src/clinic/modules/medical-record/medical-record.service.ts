@@ -795,7 +795,11 @@ export class MedicalRecordService {
   /** Generate a download URL and record a download audit entry. */
   async getDownloadUrl(ctx: ClinicContext, fileId: string): Promise<{ url: string }> {
     const doc = await this.getFile(ctx, fileId);
-    const url = await getDownloadUrl(doc.r2Key, 3600);
+    const url = await getDownloadUrl(
+      doc.r2Key,
+      3600,
+      doc.mimeType ?? mimeFromName(doc.fileName)
+    );
     const legacy = decodeLegacyFileId(fileId) !== null;
     if (!legacy) {
       await this.collection().updateOne(

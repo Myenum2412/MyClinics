@@ -18,6 +18,7 @@ import {
   type MedicineRecord,
 } from "@/lib/clinic-api";
 import { formatDate, formatTime } from "@/lib/format-time";
+import { openInNewTab } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -140,7 +141,7 @@ export default function PatientMedicalRecordsPage() {
     if (!session?.clinicId) return;
     try {
       const { url } = await getMedicalRecordDownloadUrl(session.clinicId, file.fileId);
-      window.open(url, "_blank", "noopener,noreferrer");
+      openInNewTab(url);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to open file");
     }

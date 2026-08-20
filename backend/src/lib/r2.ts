@@ -88,11 +88,20 @@ export async function objectExists(key: string): Promise<boolean> {
   }
 }
 
-export async function getDownloadUrl(key: string, expiresIn = 3600) {
+export async function getDownloadUrl(
+  key: string,
+  expiresIn = 3600,
+  contentType?: string | null
+) {
   const { bucket } = r2Config();
-  return getSignedUrl(getR2(), new GetObjectCommand({ Bucket: bucket, Key: key }), {
-    expiresIn,
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    ResponseContentDisposition: "inline",
+    ResponseCacheControl: "no-store",
+    ...(contentType ? { ResponseContentType: contentType } : {}),
   });
+  return getSignedUrl(getR2(), command, { expiresIn });
 }
 
 export interface R2ObjectInfo {

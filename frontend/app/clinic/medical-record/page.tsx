@@ -39,6 +39,7 @@ import {
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
+import { openInNewTab } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -614,7 +615,7 @@ function MedicineRecordCard({
                 disabled={!a.fileId && !a.url}
                 onClick={() => {
                   if (a.fileId) onDownload(a.fileId, a.name);
-                  else if (a.url) window.open(a.url, "_blank", "noopener,noreferrer");
+                  else if (a.url) openInNewTab(a.url);
                 }}
                 className="inline-flex items-center gap-1.5 rounded-md bg-slate-50 px-2 py-1 text-xs text-gray-600 ring-1 ring-slate-200 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -1087,7 +1088,7 @@ export default function MedicalRecordPage() {
     async (file: MedicalRecordFile) => {
       try {
         const { url } = await getMedicalRecordDownloadUrl(clinicId, file.fileId);
-        window.open(url, "_blank", "noopener,noreferrer");
+        openInNewTab(url);
       } catch {
         toast.error("Failed to prepare download");
       }
@@ -1099,7 +1100,7 @@ export default function MedicalRecordPage() {
     async (fileId: string, name: string) => {
       try {
         const { url } = await getMedicalRecordDownloadUrl(clinicId, fileId);
-        window.open(url, "_blank", "noopener,noreferrer");
+        openInNewTab(url);
       } catch {
         toast.error(`Failed to prepare download for ${name}`);
       }

@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { UploadCloud, Download, Trash2, FileText, Video, Image } from "lucide-react";
 import { listClinicWelcomeDocuments, uploadClinicWelcomeDocument, getClinicWelcomeDocumentDownloadUrl, deleteClinicWelcomeDocument, type ClinicWelcomeDocument } from "@/lib/clinic-api";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
-import { cn } from "@/lib/utils";
+import { cn, openInNewTab } from "@/lib/utils";
 
 export function ClinicWelcomeDocuments({ clinicId }: { clinicId: string }) {
   const session = useRequireRole("staff");
@@ -100,7 +100,7 @@ export function ClinicWelcomeDocuments({ clinicId }: { clinicId: string }) {
   const handleDownload = async (doc: ClinicWelcomeDocument) => {
     try {
       const res = await getClinicWelcomeDocumentDownloadUrl(clinicId, doc.documentId);
-      window.open(res.url, "_blank", "noopener,noreferrer");
+      openInNewTab(res.url);
     } catch {
       toast.error("Failed to get download URL");
     }

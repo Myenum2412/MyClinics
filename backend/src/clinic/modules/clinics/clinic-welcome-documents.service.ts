@@ -111,7 +111,7 @@ export class ClinicWelcomeDocumentService {
     const doc = await this.collection().findOne({ clinicId, documentId, deletedAt: { $exists: false } });
     if (!doc) throw new NotFoundError("Welcome document not found");
 
-    const url = await getDownloadUrl(doc.r2Key);
+    const url = await getDownloadUrl(doc.r2Key, 3600, doc.mimeType);
 
     await this.collection().updateOne(
       { _id: doc._id },
