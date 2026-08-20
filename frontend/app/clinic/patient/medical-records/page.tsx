@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
+  getMedicalRecordDownloadUrl,
   listDoctors,
   listMedicalRecordFiles,
   listMedicalRecordFolders,
@@ -33,9 +34,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Download,
   Eye,
   FileText,
   Folder,
+  Loader2,
 } from "lucide-react";
 
 const APPT_STATUS_CLASS: Record<string, string> = {
@@ -51,13 +59,15 @@ function doctorName(doctors: Doctor[], id: string): string {
 
 export default function PatientMedicalRecordsPage() {
   const session = useRequireRole("patient");
-  const router = useRouter();
   const [records, setRecords] = useState<MedicineRecord[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [files, setFiles] = useState<MedicalRecordFile[]>([]);
   const [folders, setFolders] = useState<MedicalRecordFolder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewFile, setPreviewFile] = useState<MedicalRecordFile | null>(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const load = useCallback(async () => {
     if (!session?.clinicId) return;
@@ -90,9 +100,29 @@ export default function PatientMedicalRecordsPage() {
     load();
   }, [session?.clinicId, load]);
 
-  function handleOpen(file: MedicalRecordFile) {
-    router.push(`/clinic/patient/medical-records/view/${file.fileId}`);
+  async function handleOpen(file: MedicalRecordFile) {
+    if (!session?.clinicId) return;
+    setPreviewFile(file);
+    setPreviewUrl("");
+    setPreviewLoading(true);
+    try {
+      const { url } = await getMedicalRecordDownloadUrl(session.clinicId, file.fileId);
+      setPreviewUrl(url);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to open file");
+    } finally {
+      setPreviewLoading(false);
+    }
   }
+
+  const isPreviewable = useMemo(() => {
+    if (!previewFile?.mimeType) return false;
+    return (
+      previewFile.mimeType === "application/pdf" ||
+      previewFile.mimeType.startsWith("image/") ||
+      previewFile.mimeType === "text/plain"
+    );
+  }, [previewFile?.mimeType]);
 
   function formatBytes(bytes: number): string {
     if (!bytes) return "—";
@@ -338,6 +368,76 @@ const orphanFiles = files.filter(
           )}
         </CardContent>
       </Card>
+
+      {/* File Preview Dialog */}
+      <Dialog open={previewFile !== null} onOpenChange={(open) => !open && setPreviewFile(null)}>
+        <DialogContent
+          showCloseButton
+          className="max-w-[calc(100%-2rem)] sm:max-w-3xl"
+        >
+          <DialogTitle className="sr-only">{previewFile?.fileName ?? "File preview"}</DialogTitle>
+          {previewFile && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                  <FileText className="size-5" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate text-base font-semibold text-slate-900">
+                    {previewFile.fileName}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {formatDate(previewFile.createdAt)} · {formatBytes(previewFile.size)} ·{" "}
+                    {previewFile.mimeType ?? "Unknown type"}
+                  </p>
+                </div>
+                {previewUrl && (
+                  <a
+                    href={previewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => {
+                      toast.success("Download started");
+                      setPreviewFile(null);
+                    }}
+                  >
+                    <Button variant="outline" className="gap-1.5" size="sm">
+                      <Download className="size-4" />
+                      Download
+                    </Button>
+                  </a>
+                )}
+              </div>
+
+              <div className="flex h-[65vh] items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                {previewLoading ? (
+                  <div className="flex flex-col items-center gap-2 text-slate-500">
+                    <Loader2 className="size-6 animate-spin" />
+                    <p className="text-xs">Loading preview…</p>
+                  </div>
+                ) : isPreviewable && previewUrl ? (
+                  <iframe
+                    src={previewUrl}
+                    title={previewFile.fileName}
+                    className="size-full border-0"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-3 p-10 text-center">
+                    <FileText className="size-12 text-slate-300" />
+                    <p className="text-sm font-medium text-slate-700">
+                      Preview not available for this file type
+                    </p>
+                    <p className="max-w-sm text-xs text-slate-500">
+                      {previewFile.fileName} ({previewFile.mimeType ?? "unknown type"}) cannot be
+                      previewed in the browser. Use Download to save it to your device.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
