@@ -153,7 +153,7 @@ export class BillingController {
       status: bill.status,
       notes: bill.notes,
       generatedBy: ctx.name,
-      currency: clinic?.settings?.currency ?? "Rs.",
+      currency: clinic?.settings?.currency ?? "₹",
     };
 
     const pdf = await generateBillPdf(pdfData, company);
