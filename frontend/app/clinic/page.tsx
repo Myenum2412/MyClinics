@@ -121,7 +121,7 @@ export default function ClinicPage() {
   return (
     <div className="w-full">
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+        <Card className="overflow-hidden border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
@@ -198,7 +198,7 @@ export default function ClinicPage() {
         </Card>
 
         {loading ? (
-          <Card className="overflow-hidden rounded-xl border-border bg-card shadow-sm">
+          <Card className="overflow-hidden border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
               <div className="h-5 w-40 animate-pulse rounded bg-muted" />
             </CardHeader>
