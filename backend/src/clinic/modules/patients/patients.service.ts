@@ -179,6 +179,17 @@ export class PatientService {
       metadata: { fullName: created.fullName, mobile: created.mobile, doctorId: created.doctorId },
     });
 
+    // Provision the patient's default Medical Records drive folders (best-effort).
+    try {
+      const { MedicalRecordService } = await import(
+        "@/clinic/modules/medical-record/medical-record.service"
+      );
+      await new MedicalRecordService(this.db).ensureDefaultFolders(ctx, created.patientId);
+    } catch (error) {
+      // Folder provisioning must never fail patient creation.
+      console.error("[patients] failed to provision default record folders", error);
+    }
+
     // Notify the patient (and the assigned doctor) that the profile was created.
     await notifyPatientRegistered(this.db, created, {
       sendCredentials: input.loginNotification === "whatsapp",

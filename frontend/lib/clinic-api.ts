@@ -1034,7 +1034,16 @@ export function deleteReport(clinicId: string, reportId: string): Promise<{ ok: 
   });
 }
 
-// ── Medical Record (Drive-style folders) ─────────────────────────────────
+// ── Medical Record (Google Drive-style folders) ──────────────────────────
+
+export interface MedicalRecordFileVersion {
+  version: number;
+  fileName: string;
+  mimeType: string | null;
+  size: number;
+  uploadedByName: string | null;
+  createdAt: string;
+}
 
 export interface MedicalRecordFile {
   fileId: string;
@@ -1042,10 +1051,14 @@ export interface MedicalRecordFile {
   patientName: string;
   patientPhone: string | null;
   fileName: string;
-  /** Folder key — "medicine" | "medical" | "prescriptions" or a custom folder id. */
+  /** Folder key — default folder key ("prescriptions", "lab-reports", …) or a custom folder id. */
   folder: string;
   mimeType: string | null;
   size: number;
+  version: number;
+  versions: MedicalRecordFileVersion[];
+  downloadCount: number;
+  lastDownloadedAt: string | null;
   uploadedBy: string;
   uploadedByName: string | null;
   createdAt: string;
@@ -1055,12 +1068,34 @@ export interface MedicalRecordFolder {
   folderId: string;
   patientId: string;
   name: string;
+  isDefault: boolean;
+  defaultKey: string | null;
+  parentFolderId: string | null;
   createdByName: string | null;
   createdAt: string;
 }
 
-export function listMedicalRecordFiles(clinicId: string): Promise<{ files: MedicalRecordFile[] }> {
-  return request(tenantPath(clinicId, "/medical-record"), { cache: "no-store" });
+export interface MedicalRecordListFilter {
+  q?: string;
+  patientId?: string;
+  folder?: string;
+  type?: string;
+  from?: string;
+  to?: string;
+}
+
+export function listMedicalRecordFiles(
+  clinicId: string,
+  filter: MedicalRecordListFilter = {}
+): Promise<{ files: MedicalRecordFile[] }> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filter)) {
+    if (value) params.set(key, value);
+  }
+  const qs = params.toString();
+  return request(tenantPath(clinicId, `/medical-record${qs ? `?${qs}` : ""}`), {
+    cache: "no-store",
+  });
 }
 
 export async function uploadMedicalRecordFile(
@@ -1098,6 +1133,37 @@ export async function uploadMedicalRecordFile(
   return data as MedicalRecordFile;
 }
 
+export async function uploadMedicalRecordFileVersion(
+  clinicId: string,
+  fileId: string,
+  file: File
+): Promise<MedicalRecordFile> {
+  const form = new FormData();
+  form.append("patientId", "");
+  form.append("file", file);
+
+  const headers: Record<string, string> = {};
+  const token = typeof window !== "undefined" ? getStoredToken() : null;
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(
+    `${API_BASE}${tenantPath(clinicId, `/medical-record/files/${fileId}/version`)}`,
+    { method: "POST", headers, body: form, cache: "no-store" }
+  );
+
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  if (!res.ok) {
+    const err = data as { error?: string };
+    throw new ClinicApiError(err.error ?? `Upload failed (${res.status})`, res.status);
+  }
+  return data as MedicalRecordFile;
+}
+
 export function getMedicalRecordDownloadUrl(
   clinicId: string,
   fileId: string
@@ -1114,20 +1180,89 @@ export function deleteMedicalRecordFile(
   return request(tenantPath(clinicId, `/medical-record/${fileId}`), { method: "DELETE" });
 }
 
+export function renameMedicalRecordFile(
+  clinicId: string,
+  fileId: string,
+  fileName: string
+): Promise<MedicalRecordFile> {
+  return request(tenantPath(clinicId, `/medical-record/files/${fileId}`), {
+    method: "PATCH",
+    body: JSON.stringify({ fileName }),
+  });
+}
+
+export function moveMedicalRecordFile(
+  clinicId: string,
+  fileId: string,
+  folder: string
+): Promise<MedicalRecordFile> {
+  return request(tenantPath(clinicId, `/medical-record/files/${fileId}/move`), {
+    method: "POST",
+    body: JSON.stringify({ folder }),
+  });
+}
+
+export function copyMedicalRecordFile(
+  clinicId: string,
+  fileId: string,
+  folder: string
+): Promise<MedicalRecordFile> {
+  return request(tenantPath(clinicId, `/medical-record/files/${fileId}/copy`), {
+    method: "POST",
+    body: JSON.stringify({ folder }),
+  });
+}
+
 export function listMedicalRecordFolders(
-  clinicId: string
+  clinicId: string,
+  patientId?: string
 ): Promise<{ folders: MedicalRecordFolder[] }> {
-  return request(tenantPath(clinicId, "/medical-record/folders"), { cache: "no-store" });
+  const qs = patientId ? `?patientId=${encodeURIComponent(patientId)}` : "";
+  return request(tenantPath(clinicId, `/medical-record/folders${qs}`), { cache: "no-store" });
 }
 
 export function createMedicalRecordFolder(
   clinicId: string,
   patientId: string,
-  name: string
+  name: string,
+  parentFolderId?: string | null
 ): Promise<MedicalRecordFolder> {
   return request(tenantPath(clinicId, "/medical-record/folders"), {
     method: "POST",
-    body: JSON.stringify({ patientId, name }),
+    body: JSON.stringify({ patientId, name, parentFolderId: parentFolderId ?? null }),
+  });
+}
+
+export function renameMedicalRecordFolder(
+  clinicId: string,
+  folderId: string,
+  name: string
+): Promise<MedicalRecordFolder> {
+  return request(tenantPath(clinicId, `/medical-record/folders/${folderId}`), {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  });
+}
+
+export function moveMedicalRecordFolder(
+  clinicId: string,
+  folderId: string,
+  parentFolderId: string | null
+): Promise<MedicalRecordFolder> {
+  return request(tenantPath(clinicId, `/medical-record/folders/${folderId}/move`), {
+    method: "POST",
+    body: JSON.stringify({ parentFolderId }),
+  });
+}
+
+export function copyMedicalRecordFolder(
+  clinicId: string,
+  folderId: string,
+  parentFolderId: string | null
+): Promise<MedicalRecordFolder> {
+  return request(tenantPath(clinicId, `/medical-record/folders/${folderId}/copy`), {
+    method: "POST",
+    body: JSON.stringify({ parentFolderId }),
   });
 }
 

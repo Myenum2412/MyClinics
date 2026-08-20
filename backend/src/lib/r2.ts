@@ -1,4 +1,5 @@
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
   ListObjectsV2Command,
@@ -63,6 +64,18 @@ export async function uploadToR2(key: string, body: Buffer, contentType: string)
 export async function deleteFromR2(key: string) {
   const { bucket } = r2Config();
   await getR2().send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+}
+
+/** Copy an object to a new key within the same bucket. */
+export async function copyObjectInR2(sourceKey: string, targetKey: string) {
+  const { bucket } = r2Config();
+  await getR2().send(
+    new CopyObjectCommand({
+      Bucket: bucket,
+      CopySource: `${bucket}/${sourceKey}`,
+      Key: targetKey,
+    })
+  );
 }
 
 export async function getDownloadUrl(key: string, expiresIn = 3600) {
