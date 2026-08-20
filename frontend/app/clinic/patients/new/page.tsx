@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
-import { createPatient, updatePatient, uploadAvatar } from "@/lib/clinic-api";
+import { createPatient, uploadAvatar } from "@/lib/clinic-api";
 import { PatientForm, PatientFormState, EMPTY_FORM } from "@/components/clinic/patient-form";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
   CheckCircle,
@@ -29,10 +29,7 @@ export default function NewPatientPage() {
   const clinicId = session?.clinicId ?? "";
   const router = useRouter();
 
-  const [mode, setMode] = useState<"create" | "edit" | "view">("create");
   const [saving, setSaving] = useState(false);
-  const [editingPatient, setEditingPatient] = useState<PatientFormState | null>(null);
-  const [viewingPatient, setViewingPatient] = useState<PatientFormState | null>(null);
 
   const [createdPatient, setCreatedPatient] = useState<{
     patientId: string;
@@ -41,24 +38,6 @@ export default function NewPatientPage() {
     password: string;
     loginNotification: string;
   } | null>(null);
-
-  const handleView = (patient: PatientFormState) => {
-    setViewingPatient(patient);
-    setMode("view");
-    setEditingPatient(null);
-  };
-
-  const handleEdit = (patient: PatientFormState) => {
-    setEditingPatient(patient);
-    setMode("edit");
-    setViewingPatient(null);
-  };
-
-  const handleClose = () => {
-    setMode("create");
-    setViewingPatient(null);
-    setEditingPatient(null);
-  };
 
   const handleSave = async (form: PatientFormState) => {
     setSaving(true);
@@ -107,55 +86,34 @@ export default function NewPatientPage() {
         payload.password = form.password;
       }
 
-      if (isEditMode) {
-        await updatePatient(clinicId, editingPatient!.patientId, payload);
-        
-        if (form.profileImage) {
-          try {
-            await uploadAvatar(clinicId, "patient", editingPatient!.patientId, form.profileImage);
-          } catch {
-            toast.warning("Patient updated, but the profile photo could not be uploaded");
-          }
-        }
-        
-        toast.success("Patient updated successfully");
-        setMode("create");
-        setEditingPatient(null);
-        router.push("/clinic/patients");
-      } else {
-        const created = await createPatient(clinicId, payload);
+      const created = await createPatient(clinicId, payload);
 
-        if (form.profileImage) {
-          try {
-            await uploadAvatar(clinicId, "patient", created.patientId, form.profileImage);
-          } catch {
-            toast.warning("Patient saved, but the profile photo could not be uploaded");
-          }
-        }
-
-        if (form.portalAccess === "enable" && created.userId) {
-          setCreatedPatient({
-            patientId: created.patientId,
-            fullName: created.fullName,
-            email: form.email.trim(),
-            password: form.password,
-            loginNotification: form.loginNotification,
-          });
-        } else {
-          toast.success("Patient registered successfully");
-          router.push("/clinic/patients");
+      if (form.profileImage) {
+        try {
+          await uploadAvatar(clinicId, "patient", created.patientId, form.profileImage);
+        } catch {
+          toast.warning("Patient saved, but the profile photo could not be uploaded");
         }
       }
+
+      if (form.portalAccess === "enable" && created.userId) {
+        setCreatedPatient({
+          patientId: created.patientId,
+          fullName: created.fullName,
+          email: form.email.trim(),
+          password: form.password,
+          loginNotification: form.loginNotification,
+        });
+      } else {
+        toast.success("Patient registered successfully");
+        router.push("/clinic/patients");
+      }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : isEditMode ? "Failed to update patient" : "Failed to register patient");
+      toast.error(e instanceof Error ? e.message : "Failed to register patient");
     } finally {
       setSaving(false);
     }
   };
-
-  const isEditMode = mode === "edit";
-  const isViewMode = mode === "view";
-  const formInitialData = isEditMode && editingPatient ? editingPatient : isViewMode && viewingPatient ? viewingPatient : EMPTY_FORM;
 
   return (
     <div className="min-h-screen bg-white">
@@ -170,15 +128,9 @@ export default function NewPatientPage() {
                 <ChevronLeft size={20} className="text-blue-600" />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {isEditMode ? "Edit Patient" : isViewMode ? "View Patient" : "New Patient"}
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-900">New Patient</h1>
                 <p className="text-sm text-gray-600 mt-1">
-                  {isEditMode
-                    ? "Modify patient demographics, contact, medical history, insurance, and notes."
-                    : isViewMode
-                    ? "Complete patient details — demographics, contact, medical history, insurance, and notes."
-                    : "Register a new patient in your clinic"}
+                  Register a new patient in your clinic
                 </p>
               </div>
             </div>
@@ -189,10 +141,10 @@ export default function NewPatientPage() {
       <div className="px-4 py-8 sm:px-6 lg:px-8">
         <PatientForm
           clinicId={clinicId}
-          initialData={formInitialData}
-          mode={mode}
+          initialData={EMPTY_FORM}
+          mode="create"
           onSave={handleSave}
-          onClose={handleClose}
+          onClose={() => router.push("/clinic/patients")}
           saving={saving}
         />
       </div>

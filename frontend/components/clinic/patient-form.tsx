@@ -244,6 +244,7 @@ interface PatientFormProps {
   mode: "create" | "edit" | "view";
   onSave?: (form: PatientFormState) => Promise<void>;
   onClose?: () => void;
+  onEdit?: () => void;
   saving?: boolean;
 }
 
@@ -253,6 +254,7 @@ export function PatientForm({
   mode,
   onSave,
   onClose,
+  onEdit,
   saving = false,
 }: PatientFormProps) {
   const { getOptions } = useDropdownOptions(clinicId);
@@ -502,6 +504,13 @@ export function PatientForm({
         </SectionCard>
 
         <div className="flex gap-3 border-t border-blue-200 pt-8">
+          <Button
+            variant="outline"
+            onClick={onEdit}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Edit Patient
+          </Button>
           <Button
             variant="outline"
             onClick={onClose}
