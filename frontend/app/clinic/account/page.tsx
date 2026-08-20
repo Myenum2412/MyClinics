@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import {
@@ -31,6 +31,7 @@ import {
   Camera,
   ClipboardList,
   Info,
+  Loader2,
   LogOut,
   MapPin,
   Pencil,
@@ -116,6 +117,29 @@ function listToText(list: string[] | null | undefined): string {
   return (list ?? []).join(", ");
 }
 
+const DAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
+/** Convert a 24-hour "HH:mm" value into a 12-hour "h:mm AM/PM" label. */
+function formatTime12h(value: string | null | undefined): string {
+  if (!value) return "—";
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value);
+  if (!match) return value;
+  const hours = Number(match[1]);
+  const minutes = match[2];
+  if (Number.isNaN(hours)) return value;
+  const period = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+  return `${displayHours}:${minutes} ${period}`;
+}
+
 export default function AccountPage() {
   const session = useRequireRole("staff");
   const clinicId = session?.clinicId ?? "";
@@ -128,7 +152,47 @@ export default function AccountPage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormState | null>(null);
 
+  const [pincodeLookingUp, setPincodeLookingUp] = useState(false);
+  const [pincodeMessage, setPincodeMessage] = useState<string | null>(null);
+  const pincodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pincodeSeqRef = useRef(0);
+
   const canManage = sessionCan(session, "clinic_admin");
+
+  useEffect(() => {
+    return () => {
+      if (pincodeTimerRef.current) clearTimeout(pincodeTimerRef.current);
+    };
+  }, []);
+
+  function handlePincodeChange(value: string) {
+    const pincode = value.replace(/\D/g, "").slice(0, 6);
+    setProfile({ pincode: pincode || null });
+    setPincodeMessage(null);
+    if (pincodeTimerRef.current) clearTimeout(pincodeTimerRef.current);
+    if (!/^[1-9]\d{5}$/.test(pincode)) return;
+    pincodeTimerRef.current = setTimeout(async () => {
+      const seq = ++pincodeSeqRef.current;
+      setPincodeLookingUp(true);
+      try {
+        const res = await fetch(`/pincode/${pincode}`);
+        if (seq !== pincodeSeqRef.current) return;
+        if (!res.ok) {
+          const body = (await res.json().catch(() => null)) as { error?: string } | null;
+          setPincodeMessage(body?.error ?? "Could not find this pincode");
+          return;
+        }
+        const body = (await res.json()) as { city: string; state: string };
+        setProfile({ city: body.city, state: body.state, country: "India" });
+        setPincodeMessage("City and State filled from pincode");
+      } catch {
+        if (seq !== pincodeSeqRef.current) return;
+        setPincodeMessage("Pincode lookup failed");
+      } finally {
+        if (seq === pincodeSeqRef.current) setPincodeLookingUp(false);
+      }
+    }, 600);
+  }
 
   const load = useCallback(() => {
     if (!clinicId) return;
@@ -538,11 +602,26 @@ export default function AccountPage() {
               </Field>
               <Field label="Pincode">
                 {editing ? (
-                  <Input
-                    value={form.profile.pincode ?? ""}
-                    onChange={(e) => setProfile({ pincode: e.target.value })}
-                    placeholder="6-digit pincode"
-                  />
+                  <div className="space-y-1">
+                    <div className="relative">
+                      <Input
+                        value={form.profile.pincode ?? ""}
+                        onChange={(e) => handlePincodeChange(e.target.value)}
+                        placeholder="6-digit pincode"
+                        maxLength={6}
+                        inputMode="numeric"
+                      />
+                      {pincodeLookingUp && (
+                        <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-primary" />
+                      )}
+                    </div>
+                    {pincodeMessage && (
+                      <p className="flex items-center gap-1 text-xs text-primary">
+                        <MapPin className="size-3" />
+                        {pincodeMessage}
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   orDash(profile.pincode)
                 )}
@@ -620,11 +699,12 @@ export default function AccountPage() {
                     />
                   </div>
                 ) : (
-                  orDash(
-                    clinic.settings?.workingHours
-                      ? `${clinic.settings.workingHours.open} – ${clinic.settings.workingHours.close}`
-                      : null
-                  )
+                  (() => {
+                    const wh = clinic.settings?.workingHours;
+                    if (!wh) return orDash(null);
+                    const today = DAY_NAMES[new Date().getDay()];
+                    return `${today} • ${formatTime12h(wh.open)} – ${formatTime12h(wh.close)}`;
+                  })()
                 )}
               </Field>
             </FieldGrid>
