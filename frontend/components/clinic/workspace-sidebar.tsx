@@ -65,7 +65,7 @@ const NAV_ITEMS: NavItem[] = [
     title: "Doctors",
     url: "/clinic/doctors",
     icon: <StethoscopeIcon className="size-6" />,
-    roles: ["patient", "doctor", "staff", "clinic_admin"],
+    roles: ["doctor", "staff", "clinic_admin"],
   },
   {
     title: "Medicine",
