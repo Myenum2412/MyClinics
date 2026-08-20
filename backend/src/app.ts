@@ -55,6 +55,23 @@ export function buildServer() {
     limits: { fileSize: MAX_UPLOAD_BYTES },
   });
 
+  // Fastify's default JSON parser rejects an empty body with 400
+  // "Invalid JSON body" even for legitimate empty-body requests (e.g. DELETE).
+  // Treat an empty body as null so DELETE/POST calls without a payload work.
+  app.addContentTypeParser(
+    "application/json",
+    { parseAs: "string" },
+    (_request, body, done) => {
+      const text = String(body).trim();
+      if (text === "") return done(null, null);
+      try {
+        done(null, JSON.parse(text));
+      } catch (err) {
+        done(err as Error, undefined);
+      }
+    }
+  );
+
   void app.register(registerAuth);
 
   // Platform services (WhatsApp assistant, AI, content, public brand info).

@@ -458,11 +458,18 @@ async function request<T>(
   init: RequestInit = {}
 ): Promise<T> {
   const headers: Record<string, string> = {
-    "Content-Type": "application/json",
     ...(init.headers as Record<string, string> | undefined),
   };
   const token = typeof window !== "undefined" ? getStoredToken() : null;
   if (token) headers.Authorization = `Bearer ${token}`;
+
+  // Only set Content-Type for an actual JSON payload. Sending
+  // "application/json" on a bodyless request (e.g. DELETE) makes the server
+  // try to parse an empty body and fail with 400 "Invalid JSON body".
+  const hasBody = init.body != null;
+  if (hasBody && typeof init.body === "string" && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
 
   const url = `${API_BASE}${path}`;
   const method = (init.method ?? "GET").toUpperCase();
