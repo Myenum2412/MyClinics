@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { getOwnClinic } from "@/lib/clinic-api";
 import { DoctorSidebar } from "@/components/clinic/doctor-sidebar";
+import { PatientHeader } from "@/components/clinic/patient-header";
+import { PatientSidebar } from "@/components/clinic/patient-sidebar";
 import { WorkspaceSidebar } from "@/components/clinic/workspace-sidebar";
 import { WorkspaceHeader } from "@/components/clinic/workspace-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -48,6 +50,11 @@ export default function ClinicLayout({
           clinicId={session.clinicId ?? ""}
           user={{ name: session.name ?? "User", email: session.email ?? "" }}
         />
+      ) : session.role === "patient" ? (
+        <PatientSidebar
+          clinicName={clinicName}
+          user={{ name: session.name ?? "User", email: session.email ?? "" }}
+        />
       ) : (
         <WorkspaceSidebar
           clinicName={clinicName}
@@ -57,7 +64,7 @@ export default function ClinicLayout({
         />
       )}
       <SidebarInset>
-        <WorkspaceHeader />
+        {session.role === "patient" ? <PatientHeader /> : <WorkspaceHeader />}
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0 md:p-6">
           {children}
         </div>
