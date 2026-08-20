@@ -40,6 +40,15 @@ export function buildServer() {
   void app.register(cors, {
     origin: true,
     credentials: true,
+    // @fastify/cors only allows GET,HEAD,POST by default — DELETE/PATCH/PUT
+    // must be listed explicitly or browser deletes fail with "Failed to fetch".
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Cron-Secret",
+      "X-Internal-Token",
+    ],
   });
 
   void app.register(multipart, {
