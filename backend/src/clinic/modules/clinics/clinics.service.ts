@@ -12,10 +12,68 @@ import {
   slugify,
 } from "@/clinic/core/ids";
 import { requireClinicOf, type ClinicContext } from "@/clinic/core/context";
-import type { ClinicDoc, UserDoc } from "@/clinic/core/types";
+import type { ClinicDoc, ClinicProfile, UserDoc } from "@/clinic/core/types";
 import type { CreateClinicInput, UpdateClinicInput } from "@/clinic/modules/clinics/clinics.dto";
 import { ClinicOwnRepository, ClinicRepository } from "@/clinic/modules/clinics/clinics.repository";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
+
+/** Merges a partial profile patch into the stored profile (preserves arrays/social links). */
+function mergeProfile(
+  current: ClinicProfile | undefined,
+  patch: UpdateClinicInput["profile"]
+): ClinicProfile {
+  const base: ClinicProfile = {
+    clinicType: current?.clinicType ?? null,
+    registrationNumber: current?.registrationNumber ?? null,
+    establishedYear: current?.establishedYear ?? null,
+    whatsapp: current?.whatsapp ?? null,
+    addressLine1: current?.addressLine1 ?? null,
+    addressLine2: current?.addressLine2 ?? null,
+    city: current?.city ?? null,
+    state: current?.state ?? null,
+    country: current?.country ?? null,
+    pincode: current?.pincode ?? null,
+    specializations: current?.specializations ?? [],
+    services: current?.services ?? [],
+    emergencyContact: current?.emergencyContact ?? null,
+    gstNumber: current?.gstNumber ?? null,
+    taxBusinessId: current?.taxBusinessId ?? null,
+    socialMedia: {
+      facebook: current?.socialMedia?.facebook ?? null,
+      instagram: current?.socialMedia?.instagram ?? null,
+      twitter: current?.socialMedia?.twitter ?? null,
+      linkedin: current?.socialMedia?.linkedin ?? null,
+    },
+  };
+  if (!patch) return base;
+
+  return {
+    clinicType: patch.clinicType !== undefined ? patch.clinicType : base.clinicType,
+    registrationNumber:
+      patch.registrationNumber !== undefined ? patch.registrationNumber : base.registrationNumber,
+    establishedYear:
+      patch.establishedYear !== undefined ? patch.establishedYear : base.establishedYear,
+    whatsapp: patch.whatsapp !== undefined ? patch.whatsapp : base.whatsapp,
+    addressLine1: patch.addressLine1 !== undefined ? patch.addressLine1 : base.addressLine1,
+    addressLine2: patch.addressLine2 !== undefined ? patch.addressLine2 : base.addressLine2,
+    city: patch.city !== undefined ? patch.city : base.city,
+    state: patch.state !== undefined ? patch.state : base.state,
+    country: patch.country !== undefined ? patch.country : base.country,
+    pincode: patch.pincode !== undefined ? patch.pincode : base.pincode,
+    specializations: patch.specializations ?? base.specializations,
+    services: patch.services ?? base.services,
+    emergencyContact:
+      patch.emergencyContact !== undefined ? patch.emergencyContact : base.emergencyContact,
+    gstNumber: patch.gstNumber !== undefined ? patch.gstNumber : base.gstNumber,
+    taxBusinessId: patch.taxBusinessId !== undefined ? patch.taxBusinessId : base.taxBusinessId,
+    socialMedia: {
+      facebook: patch.socialMedia?.facebook !== undefined ? patch.socialMedia.facebook : base.socialMedia.facebook,
+      instagram: patch.socialMedia?.instagram !== undefined ? patch.socialMedia.instagram : base.socialMedia.instagram,
+      twitter: patch.socialMedia?.twitter !== undefined ? patch.socialMedia.twitter : base.socialMedia.twitter,
+      linkedin: patch.socialMedia?.linkedin !== undefined ? patch.socialMedia.linkedin : base.socialMedia.linkedin,
+    },
+  };
+}
 
 export class ClinicService {
   constructor(private readonly db: Db) {}
@@ -135,6 +193,14 @@ export class ClinicService {
         workingHours: input.settings.workingHours ?? current.workingHours,
       };
     }
+    if (input.profile !== undefined) {
+      patch.profile = mergeProfile(existing.profile, input.profile);
+    }
+    if (input.profile?.addressLine1 !== undefined || input.profile?.addressLine2 !== undefined) {
+      const a1 = input.profile.addressLine1 ?? existing.profile?.addressLine1 ?? null;
+      const a2 = input.profile.addressLine2 ?? existing.profile?.addressLine2 ?? null;
+      patch.address = [a1, a2].filter(Boolean).join(", ") || null;
+    }
 
     const clinic = await this.platformRepo().update(clinicId, patch);
     if (!clinic) throw new NotFoundError("Clinic not found");
@@ -187,6 +253,14 @@ export class ClinicService {
         ...input.settings,
         workingHours: input.settings.workingHours ?? current.settings.workingHours,
       };
+    }
+    if (input.profile !== undefined) {
+      patch.profile = mergeProfile(current.profile, input.profile);
+    }
+    if (input.profile?.addressLine1 !== undefined || input.profile?.addressLine2 !== undefined) {
+      const a1 = input.profile.addressLine1 ?? current.profile?.addressLine1 ?? null;
+      const a2 = input.profile.addressLine2 ?? current.profile?.addressLine2 ?? null;
+      patch.address = [a1, a2].filter(Boolean).join(", ") || null;
     }
 
     const clinic = await this.ownRepo(ctx).updateOwn(patch);

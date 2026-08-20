@@ -8,6 +8,30 @@ import type { ClinicDocument } from "@/clinic/core/repository";
  * clinicIds at runtime for all clinic-scoped operations.
  */
 
+export interface ClinicProfile {
+  clinicType: string | null;
+  registrationNumber: string | null;
+  establishedYear: number | null;
+  whatsapp: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  pincode: string | null;
+  specializations: string[];
+  services: string[];
+  emergencyContact: string | null;
+  gstNumber: string | null;
+  taxBusinessId: string | null;
+  socialMedia: {
+    facebook: string | null;
+    instagram: string | null;
+    twitter: string | null;
+    linkedin: string | null;
+  };
+}
+
 export interface ClinicDoc extends ClinicDocument {
   clinicId: string;
   slug: string;
@@ -24,6 +48,7 @@ export interface ClinicDoc extends ClinicDocument {
     currency: string;
     timezone: string;
   };
+  profile?: ClinicProfile;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;
