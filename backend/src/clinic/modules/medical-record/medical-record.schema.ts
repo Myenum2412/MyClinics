@@ -100,7 +100,28 @@ export const DEFAULT_SUBFOLDERS: { key: string; name: string }[] = [
   { key: "insurance", name: "Insurance" },
   { key: "other-documents", name: "Other Documents" },
   { key: "medical-records", name: "Medical Records" },
+  { key: "medicine", name: "Medicine" },
+  { key: "billing", name: "Billing" },
+  { key: "appointments", name: "Appointments" },
+  { key: "patients", name: "Patients" },
 ];
+
+/**
+ * Virtual folders backed by the legacy R2 layout
+ * (`reports/patients/{patientId}/{dir}/`). Files under these prefixes are
+ * listed live from R2 and merged into the drive view.
+ */
+export const VIRTUAL_FOLDER_R2_DIR: Record<string, string> = {
+  medicine: "Medicines",
+  prescriptions: "Prescriptions",
+  billing: "Billing",
+  appointments: "Appointments",
+  patients: "Patients",
+};
+
+export function isVirtualFolderKey(key: string): boolean {
+  return key in VIRTUAL_FOLDER_R2_DIR;
+}
 
 export function defaultFolderKeyToId(patientId: string, key: string): string {
   return `mrfld_${patientId}_${key}`;

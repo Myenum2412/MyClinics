@@ -7,6 +7,7 @@ import { generateFileId, generateFolderId } from "@/clinic/core/ids";
 import {
   deleteFromR2,
   getDownloadUrl,
+  listR2Objects,
   uploadToR2,
   copyObjectInR2,
 } from "@/lib/r2";
@@ -20,6 +21,8 @@ import {
   medicalRecordFileToPublic,
   medicalRecordFolderToPublic,
   DEFAULT_SUBFOLDERS,
+  VIRTUAL_FOLDER_R2_DIR,
+  isVirtualFolderKey,
   defaultFolderKeyToId,
 } from "@/clinic/modules/medical-record/medical-record.schema";
 
@@ -40,12 +43,51 @@ export interface CreateMedicalRecordFolderInput {
 
 export const DEFAULT_FOLDER = "other-documents";
 
-/** Map legacy folder keys ("medicine", "medical") onto the new default set. */
+/** Map legacy folder keys ("medical") onto the new default set. */
 const LEGACY_FOLDER_MAP: Record<string, string> = {
-  medicine: "medical-records",
   medical: "medical-records",
   prescriptions: "prescriptions",
 };
+
+/** Prefix for pseudo fileIds that point at legacy R2 objects. */
+const LEGACY_FILE_ID_PREFIX = "mrl_";
+
+function legacyFileId(r2Key: string): string {
+  return `${LEGACY_FILE_ID_PREFIX}${Buffer.from(r2Key).toString("base64url")}`;
+}
+
+function decodeLegacyFileId(fileId: string): string | null {
+  if (!fileId.startsWith(LEGACY_FILE_ID_PREFIX)) return null;
+  try {
+    return Buffer.from(fileId.slice(LEGACY_FILE_ID_PREFIX.length), "base64url").toString("utf8");
+  } catch {
+    return null;
+  }
+}
+
+function legacyPatientId(r2Key: string): string | null {
+  // reports/patients/{patientId}/...
+  const parts = r2Key.split("/");
+  return parts.length >= 3 && parts[0] === "reports" && parts[1] === "patients"
+    ? parts[2]
+    : null;
+}
+
+function mimeFromName(name: string): string {
+  const ext = name.toLowerCase().slice(name.lastIndexOf("."));
+  const map: Record<string, string> = {
+    ".pdf": "application/pdf",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".tif": "image/tiff",
+    ".tiff": "image/tiff",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ".dcm": "application/dicom",
+  };
+  return map[ext] ?? "application/octet-stream";
+}
 
 function sanitizeFileName(name: string): string {
   const base = name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120);
@@ -217,6 +259,9 @@ export class MedicalRecordService {
     data: Buffer
   ): Promise<MedicalRecordFileDoc> {
     this.assertCanManage(ctx);
+    if (decodeLegacyFileId(fileId)) {
+      throw new BadRequestError("Legacy files cannot be versioned");
+    }
     const doc = await this.getFile(ctx, fileId);
     const newVersion: MedicalRecordFileVersion = {
       version: doc.version,
@@ -270,6 +315,9 @@ export class MedicalRecordService {
   async renameFile(ctx: ClinicContext, fileId: string, newName: string): Promise<MedicalRecordFileDoc> {
     this.assertCanManage(ctx);
     const doc = await this.getFile(ctx, fileId);
+    if (decodeLegacyFileId(fileId)) {
+      throw new BadRequestError("Legacy files cannot be renamed");
+    }
     const name = newName.trim().slice(0, 255);
     if (!name) throw new BadRequestError("File name is required");
     await this.collection().updateOne(
@@ -293,6 +341,9 @@ export class MedicalRecordService {
   ): Promise<MedicalRecordFileDoc> {
     this.assertCanManage(ctx);
     const doc = await this.getFile(ctx, fileId);
+    if (decodeLegacyFileId(fileId)) {
+      throw new BadRequestError("Legacy files cannot be moved");
+    }
     const folder = await this.resolveFolderKey(ctx, doc.patientId, targetFolder);
     await this.collection().updateOne(
       { clinicId: requireClinicOf(ctx), fileId },
@@ -349,6 +400,43 @@ export class MedicalRecordService {
     return copy;
   }
 
+  /** List legacy R2 files (`reports/patients/{patientId}/...`) as pseudo docs. */
+  private async listLegacyFiles(
+    ctx: ClinicContext,
+    patientId: string
+  ): Promise<MedicalRecordFileDoc[]> {
+    const clinicId = requireClinicOf(ctx);
+    const patient = await this.assertPatientAccess(ctx, patientId);
+    const docs: MedicalRecordFileDoc[] = [];
+    for (const [key, dir] of Object.entries(VIRTUAL_FOLDER_R2_DIR)) {
+      const objects = await listR2Objects(`reports/patients/${patientId}/${dir}/`, 1000);
+      for (const obj of objects) {
+        const fileName = obj.key.slice(obj.key.lastIndexOf("/") + 1);
+        if (!fileName || fileName === ".folder" || fileName.endsWith("/.folder")) continue;
+        docs.push({
+          clinicId,
+          fileId: legacyFileId(obj.key),
+          patientId,
+          patientName: patient.fullName,
+          patientPhone: patient.whatsapp ?? patient.mobile ?? null,
+          fileName,
+          r2Key: obj.key,
+          folder: key,
+          mimeType: mimeFromName(fileName),
+          size: obj.size,
+          version: 1,
+          versions: [],
+          downloadCount: 0,
+          lastDownloadedAt: null,
+          uploadedBy: "system",
+          uploadedByName: "Legacy upload",
+          createdAt: obj.lastModified ?? new Date(),
+        });
+      }
+    }
+    return docs;
+  }
+
   async listFiles(
     ctx: ClinicContext,
     filter: {
@@ -400,6 +488,16 @@ export class MedicalRecordService {
       .sort({ createdAt: -1 })
       .limit(Math.min(filter.limit ?? 500, 1000))
       .toArray();
+
+    // Merge legacy R2 files when listing a patient (or a specific virtual folder).
+    if (filter.patientId && (!filter.folder || isVirtualFolderKey(filter.folder))) {
+      const legacy = await this.listLegacyFiles(ctx, filter.patientId);
+      const filteredLegacy = filter.folder
+        ? legacy.filter((f) => f.folder === filter.folder)
+        : legacy;
+      return [...(docs as unknown as MedicalRecordFileDoc[]), ...filteredLegacy];
+    }
+
     return docs as unknown as MedicalRecordFileDoc[];
   }
 
@@ -640,6 +738,35 @@ export class MedicalRecordService {
 
   async getFile(ctx: ClinicContext, fileId: string): Promise<MedicalRecordFileDoc> {
     const clinicId = requireClinicOf(ctx);
+
+    // Legacy R2 pseudo-file.
+    const legacyKey = decodeLegacyFileId(fileId);
+    if (legacyKey) {
+      const patientId = legacyPatientId(legacyKey);
+      if (!patientId) throw new NotFoundError("File not found");
+      const patient = await this.assertPatientAccess(ctx, patientId);
+      const fileName = legacyKey.slice(legacyKey.lastIndexOf("/") + 1) || "file";
+      return {
+        clinicId,
+        fileId,
+        patientId,
+        patientName: patient.fullName,
+        patientPhone: patient.whatsapp ?? patient.mobile ?? null,
+        fileName,
+        r2Key: legacyKey,
+        folder: "other-documents",
+        mimeType: mimeFromName(fileName),
+        size: 0,
+        version: 1,
+        versions: [],
+        downloadCount: 0,
+        lastDownloadedAt: null,
+        uploadedBy: "system",
+        uploadedByName: "Legacy upload",
+        createdAt: new Date(),
+      };
+    }
+
     const doc = await this.collection().findOne({ clinicId, fileId });
     if (!doc) throw new NotFoundError("File not found");
     await this.assertPatientAccess(ctx, doc.patientId);
@@ -650,10 +777,13 @@ export class MedicalRecordService {
   async getDownloadUrl(ctx: ClinicContext, fileId: string): Promise<{ url: string }> {
     const doc = await this.getFile(ctx, fileId);
     const url = await getDownloadUrl(doc.r2Key, 3600);
-    await this.collection().updateOne(
-      { clinicId: requireClinicOf(ctx), fileId },
-      { $inc: { downloadCount: 1 }, $set: { lastDownloadedAt: new Date() } }
-    );
+    const legacy = decodeLegacyFileId(fileId) !== null;
+    if (!legacy) {
+      await this.collection().updateOne(
+        { clinicId: requireClinicOf(ctx), fileId },
+        { $inc: { downloadCount: 1 }, $set: { lastDownloadedAt: new Date() } }
+      );
+    }
     await writeAudit(this.db, ctx, {
       action: "download",
       entity: "medical_record_file",
@@ -667,7 +797,11 @@ export class MedicalRecordService {
     this.assertCanManage(ctx);
     const doc = await this.getFile(ctx, fileId);
     await deleteFromR2(doc.r2Key).catch(() => void 0);
-    await this.collection().deleteOne({ clinicId: requireClinicOf(ctx), fileId });
+
+    const legacy = decodeLegacyFileId(fileId) !== null;
+    if (!legacy) {
+      await this.collection().deleteOne({ clinicId: requireClinicOf(ctx), fileId });
+    }
 
     await writeAudit(this.db, ctx, {
       action: "delete",

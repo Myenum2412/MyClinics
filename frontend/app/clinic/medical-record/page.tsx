@@ -65,6 +65,7 @@ import {
 import {
   ArrowLeft,
   ArrowRight,
+  CalendarDays,
   ClipboardCopy,
   ClipboardList,
   Copy,
@@ -208,6 +209,10 @@ const DEFAULT_FOLDER_KEYS = [
   "insurance",
   "other-documents",
   "medical-records",
+  "medicine",
+  "billing",
+  "appointments",
+  "patients",
 ] as const;
 
 const FOLDER_META: Record<string, { title: string; icon: typeof Folder; tint: string; bg: string; hint: string }> = {
@@ -220,11 +225,15 @@ const FOLDER_META: Record<string, { title: string; icon: typeof Folder; tint: st
   bills: { title: "Bills and Invoices", icon: FileSpreadsheet, tint: "text-orange-600", bg: "bg-orange-100", hint: "Billing and payment records" },
   insurance: { title: "Insurance", icon: ShieldCheck, tint: "text-rose-600", bg: "bg-rose-100", hint: "Insurance documents and claims" },
   "other-documents": { title: "Other Documents", icon: Folder, tint: "text-slate-600", bg: "bg-slate-100", hint: "Miscellaneous documents" },
+  medicine: { title: "Medicine", icon: Pill, tint: "text-blue-600", bg: "bg-blue-100", hint: "Medicines and medication records" },
+  billing: { title: "Billing", icon: FileSpreadsheet, tint: "text-orange-600", bg: "bg-orange-100", hint: "Bills and payment records" },
+  appointments: { title: "Appointments", icon: CalendarDays, tint: "text-fuchsia-600", bg: "bg-fuchsia-100", hint: "Appointment documents" },
+  patients: { title: "Patients", icon: Users, tint: "text-cyan-600", bg: "bg-cyan-100", hint: "Patient documents" },
 };
 
 /** Legacy folder keys on old files map onto the new default set. */
 function displayFolderKey(key: string): string {
-  if (key === "medicine" || key === "medical") return "medical-records";
+  if (key === "medical") return "medical-records";
   return key;
 }
 
@@ -424,7 +433,7 @@ function FileRow({
           <DropdownMenuItem onSelect={() => onCopy(file)}>
             <Copy className="size-4" /> Copy
           </DropdownMenuItem>
-          {canManage && (
+          {canManage && !file.fileId.startsWith("mrl_") && (
             <>
               <DropdownMenuItem onSelect={() => onRename(file)}>
                 <Pencil className="size-4" /> Rename
@@ -435,6 +444,14 @@ function FileRow({
               <DropdownMenuItem onSelect={() => onNewVersion(file)}>
                 <History className="size-4" /> Upload new version
               </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => onDelete(file)} className="text-red-600">
+                <Trash2 className="size-4" /> Delete
+              </DropdownMenuItem>
+            </>
+          )}
+          {canManage && file.fileId.startsWith("mrl_") && (
+            <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => onDelete(file)} className="text-red-600">
                 <Trash2 className="size-4" /> Delete
@@ -648,6 +665,8 @@ export default function MedicalRecordPage() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [files, setFiles] = useState<MedicalRecordFile[]>([]);
+  /** Legacy R2 files (reports/patients/...) fetched per selected patient. */
+  const [legacyFiles, setLegacyFiles] = useState<MedicalRecordFile[]>([]);
   const [folders, setFolders] = useState<MedicalRecordFolder[]>([]);
   const [records, setRecords] = useState<MedicineRecord[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
@@ -712,6 +731,16 @@ export default function MedicalRecordPage() {
     if (selectedPatient) setView("drive");
   }, [selectedPatient]);
 
+  useEffect(() => {
+    if (!clinicId || !selectedPatient) {
+      setLegacyFiles([]);
+      return;
+    }
+    listMedicalRecordFiles(clinicId, { patientId: selectedPatient.patientId })
+      .then((res) => setLegacyFiles(res.files.filter((f) => f.fileId.startsWith("mrl_"))))
+      .catch(() => setLegacyFiles([]));
+  }, [clinicId, selectedPatient, files]);
+
   const doctorName = useCallback(
     (doctorId: string | null): string =>
       doctors.find((d) => d.doctorId === doctorId)?.name ?? "—",
@@ -729,9 +758,12 @@ export default function MedicalRecordPage() {
   const patientFiles = useMemo(
     () =>
       selectedPatient
-        ? files.filter((f) => f.patientId === selectedPatient.patientId)
+        ? [
+            ...files.filter((f) => f.patientId === selectedPatient.patientId),
+            ...legacyFiles.filter((f) => f.patientId === selectedPatient.patientId),
+          ]
         : [],
-    [files, selectedPatient]
+    [files, legacyFiles, selectedPatient]
   );
 
   const patientFolders = useMemo(
@@ -1331,7 +1363,7 @@ export default function MedicalRecordPage() {
                           onNewVersion={(file) => setVersionInput(file)}
                           onDelete={(file) => setDeleteFileTarget(file)}
                           onVersions={(file) => setVersionsFile(file)}
-                          draggable={canManage}
+                          draggable={canManage && !f.fileId.startsWith("mrl_")}
                           onDragStart={(e, file) => onDragStart(e, "file", file.fileId)}
                           onDropMove={(file) => onDropMove("file", file.fileId, file)}
                         />
@@ -1427,7 +1459,7 @@ export default function MedicalRecordPage() {
                             onNewVersion={(file) => setVersionInput(file)}
                             onDelete={(file) => setDeleteFileTarget(file)}
                             onVersions={(file) => setVersionsFile(file)}
-                            draggable={canManage}
+                            draggable={canManage && !f.fileId.startsWith("mrl_")}
                             onDragStart={(e, file) => onDragStart(e, "file", file.fileId)}
                             onDropMove={(file) => onDropMove("file", file.fileId, file)}
                           />
