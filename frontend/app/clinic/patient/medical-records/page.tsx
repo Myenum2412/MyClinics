@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
-  getMedicalRecordDownloadUrl,
   listDoctors,
   listMedicalRecordFiles,
   listMedicalRecordFolders,
@@ -17,7 +16,6 @@ import {
   type MedicineRecord,
 } from "@/lib/clinic-api";
 import { formatDate, formatTime } from "@/lib/format-time";
-import { openInNewTab } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -35,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Download,
+  Eye,
   FileText,
   Folder,
 } from "lucide-react";
@@ -53,6 +51,7 @@ function doctorName(doctors: Doctor[], id: string): string {
 
 export default function PatientMedicalRecordsPage() {
   const session = useRequireRole("patient");
+  const router = useRouter();
   const [records, setRecords] = useState<MedicineRecord[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -91,14 +90,8 @@ export default function PatientMedicalRecordsPage() {
     load();
   }, [session?.clinicId, load]);
 
-  async function handleDownload(file: MedicalRecordFile) {
-    if (!session?.clinicId) return;
-    try {
-      const { url } = await getMedicalRecordDownloadUrl(session.clinicId, file.fileId);
-      openInNewTab(url);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to open file");
-    }
+  function handleOpen(file: MedicalRecordFile) {
+    router.push(`/clinic/patient/medical-records/view/${file.fileId}`);
   }
 
   function formatBytes(bytes: number): string {
@@ -237,10 +230,10 @@ const orphanFiles = files.filter(
                                     variant="outline"
                                     size="sm"
                                     className="gap-1.5"
-                                    onClick={() => handleDownload(f)}
+                                    onClick={() => handleOpen(f)}
                                   >
-                                    <Download className="size-4" />
-                                    Open
+                                    <Eye className="size-4" />
+                                    View
                                   </Button>
                                 </TableCell>
                               </TableRow>
@@ -280,10 +273,10 @@ const orphanFiles = files.filter(
                                 variant="outline"
                                 size="sm"
                                 className="gap-1.5"
-                                onClick={() => handleDownload(f)}
+                                onClick={() => handleOpen(f)}
                               >
-                                <Download className="size-4" />
-                                Open
+                                <Eye className="size-4" />
+                                View
                               </Button>
                             </TableCell>
                           </TableRow>
