@@ -36,7 +36,6 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   Download,
@@ -373,21 +372,21 @@ const orphanFiles = files.filter(
       <Dialog open={previewFile !== null} onOpenChange={(open) => !open && setPreviewFile(null)}>
         <DialogContent
           showCloseButton
-          className="max-w-[calc(100%-2rem)] sm:max-w-3xl"
+          className="gap-0 overflow-hidden p-0 max-w-[calc(100%-2rem)] sm:max-w-4xl"
         >
-          <DialogTitle className="sr-only">{previewFile?.fileName ?? "File preview"}</DialogTitle>
           {previewFile && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            <>
+              {/* Toolbar */}
+              <div className="flex items-center gap-3 border-b border-slate-100 bg-white px-5 py-4">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
                   <FileText className="size-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-base font-semibold text-slate-900">
+                  <h3 className="truncate text-sm font-semibold text-slate-900 sm:text-base">
                     {previewFile.fileName}
                   </h3>
-                  <p className="text-xs text-slate-500">
-                    {formatDate(previewFile.createdAt)} · {formatBytes(previewFile.size)} ·{" "}
+                  <p className="truncate text-xs text-slate-500">
+                    Uploaded {formatDate(previewFile.createdAt)} · {formatBytes(previewFile.size)} ·{" "}
                     {previewFile.mimeType ?? "Unknown type"}
                   </p>
                 </div>
@@ -396,12 +395,12 @@ const orphanFiles = files.filter(
                     href={previewUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => {
-                      toast.success("Download started");
-                      setPreviewFile(null);
-                    }}
+                    onClick={() => toast.success("Download started")}
                   >
-                    <Button variant="outline" className="gap-1.5" size="sm">
+                    <Button
+                      className="gap-1.5 rounded-lg bg-blue-600 px-3 shadow-sm hover:bg-blue-700"
+                      size="sm"
+                    >
                       <Download className="size-4" />
                       Download
                     </Button>
@@ -409,32 +408,50 @@ const orphanFiles = files.filter(
                 )}
               </div>
 
-              <div className="flex h-[65vh] items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+              {/* Preview body */}
+              <div className="h-[70vh] bg-slate-100/70 sm:h-[72vh]">
                 {previewLoading ? (
-                  <div className="flex flex-col items-center gap-2 text-slate-500">
-                    <Loader2 className="size-6 animate-spin" />
-                    <p className="text-xs">Loading preview…</p>
+                  <div className="flex h-full flex-col items-center justify-center gap-3 text-slate-500">
+                    <Loader2 className="size-7 animate-spin text-blue-600" />
+                    <p className="text-sm font-medium">Loading preview…</p>
                   </div>
                 ) : isPreviewable && previewUrl ? (
                   <iframe
                     src={previewUrl}
                     title={previewFile.fileName}
-                    className="size-full border-0"
+                    className="size-full border-0 bg-white"
                   />
                 ) : (
-                  <div className="flex flex-col items-center gap-3 p-10 text-center">
-                    <FileText className="size-12 text-slate-300" />
-                    <p className="text-sm font-medium text-slate-700">
-                      Preview not available for this file type
-                    </p>
-                    <p className="max-w-sm text-xs text-slate-500">
-                      {previewFile.fileName} ({previewFile.mimeType ?? "unknown type"}) cannot be
-                      previewed in the browser. Use Download to save it to your device.
-                    </p>
+                  <div className="flex h-full flex-col items-center justify-center gap-4 p-10 text-center">
+                    <span className="flex size-16 items-center justify-center rounded-2xl bg-white text-slate-300 shadow-sm ring-1 ring-slate-200">
+                      <FileText className="size-8" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">
+                        Preview not available for this file type
+                      </p>
+                      <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
+                        {previewFile.fileName} ({previewFile.mimeType ?? "unknown type"}) can&apos;t be
+                        previewed in the browser. Use Download to save it to your device.
+                      </p>
+                    </div>
+                    {previewUrl && (
+                      <a
+                        href={previewUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => toast.success("Download started")}
+                      >
+                        <Button variant="outline" className="gap-1.5">
+                          <Download className="size-4" />
+                          Download file
+                        </Button>
+                      </a>
+                    )}
                   </div>
                 )}
               </div>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
