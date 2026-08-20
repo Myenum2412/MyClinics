@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
   type Appointment,
@@ -691,9 +692,17 @@ type ClipboardItem = { kind: "file" | "folder"; id: string };
 
 export default function MedicalRecordPage() {
   const session = useRequireRole("patient");
+  const router = useRouter();
   const clinicId = session?.clinicId ?? "";
   /** staff are upload-only; doctors/admins may manage the drive. */
   const canManage = session?.role !== "staff";
+
+  /** Patients use their own portal instead of the clinic patient list. */
+  useEffect(() => {
+    if (session?.role === "patient") {
+      router.replace("/clinic/patient/medical-records");
+    }
+  }, [session?.role, router]);
 
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);

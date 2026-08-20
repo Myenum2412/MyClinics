@@ -159,16 +159,19 @@ export function WorkspaceSidebar({
           </SidebarGroupLabel>
           <SidebarMenu>
             {items.map((item) => {
+              const url = item.url === "/clinic/medical-record" && role === "patient"
+                ? "/clinic/patient/medical-records"
+                : item.url;
               const active =
                 item.match === "exact"
-                  ? pathname === item.url
-                  : pathname.startsWith(`${item.url}/`) || pathname === item.url
+                  ? pathname === url
+                  : pathname.startsWith(`${url}/`) || pathname === url
               return (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton
                     size="lg"
                     tooltip={item.title}
-                    render={<a href={item.url} />}
+                    render={<a href={url} />}
                     data-active={active}
                     className="h-11 rounded-lg text-[13.5px] font-medium group-data-[collapsible=icon]:h-12! data-[active=true]:bg-blue-50 data-[active=true]:text-blue-600 data-[active=true]:[&>svg]:text-blue-600"
                   >
