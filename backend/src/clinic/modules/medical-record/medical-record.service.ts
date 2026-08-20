@@ -551,6 +551,9 @@ export class MedicalRecordService {
     const query: Record<string, unknown> = { clinicId };
     if (patientId) {
       await this.assertPatientAccess(ctx, patientId);
+      // Ensure the patient's default folders exist (pre-existing patients
+      // never had them provisioned at creation time).
+      await this.ensureDefaultFolders(ctx, patientId);
       query.patientId = patientId;
     } else if (ctx.role === "doctor") {
       const patientIds = await this.patients()

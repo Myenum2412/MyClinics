@@ -741,6 +741,20 @@ export default function MedicalRecordPage() {
       .catch(() => setLegacyFiles([]));
   }, [clinicId, selectedPatient, files]);
 
+  // Fetch per-patient folders so pre-existing patients get their default
+  // folders provisioned (backend ensures them when patientId is passed).
+  useEffect(() => {
+    if (!clinicId || !selectedPatient) return;
+    listMedicalRecordFolders(clinicId, selectedPatient.patientId)
+      .then((res) =>
+        setFolders((prev) => [
+          ...prev.filter((fo) => fo.patientId !== selectedPatient.patientId),
+          ...res.folders,
+        ])
+      )
+      .catch(() => void 0);
+  }, [clinicId, selectedPatient]);
+
   const doctorName = useCallback(
     (doctorId: string | null): string =>
       doctors.find((d) => d.doctorId === doctorId)?.name ?? "—",
