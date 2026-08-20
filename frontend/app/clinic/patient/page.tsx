@@ -213,7 +213,7 @@ export default function PatientPortalPage() {
       {/* ── Quick Access ── */}
       <section>
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Quick Access</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
           {QUICK_ACCESS.map((qa) => (
             <Link
               key={qa.title}
