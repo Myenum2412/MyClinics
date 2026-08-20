@@ -171,12 +171,12 @@ export default function ClinicDashboardPage() {
     toast.success(`Exported ${selected.length} appointments to JSON.`);
   };
 
+  const totalPatients = patients.length;
+  const totalApptsToday = appointments.length;
+  const unpaidTotal = bills.reduce((sum, b) => sum + b.total, 0);
+
   // Staff Stats
   const stats = useMemo(() => {
-    const totalPatients = patients.length;
-    const totalApptsToday = appointments.length;
-    const unpaidTotal = bills.reduce((sum, b) => sum + b.total, 0);
-
     return [
       {
         name: "Registered Patients",
