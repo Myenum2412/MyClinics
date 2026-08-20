@@ -267,7 +267,18 @@ export default function PatientsPage() {
       toast.success("Patient deleted");
       load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete patient");
+      if (e instanceof Error) {
+        const errorMessage = e.message;
+        // Check if it's a ClinicApiError with status
+        const clinicError = e as { status?: number; code?: string };
+        if (clinicError.status) {
+          toast.error(`Delete failed (${clinicError.status}): ${errorMessage}${clinicError.code ? ` [${clinicError.code}]` : ""}`);
+        } else {
+          toast.error(errorMessage);
+        }
+      } else {
+        toast.error("Failed to delete patient");
+      }
     }
   }
 
@@ -338,7 +349,16 @@ export default function PatientsPage() {
       setSelectedIds(new Set());
       load();
     } catch (e) {
-      toast.error("Failed to delete selected patients.");
+      if (e instanceof Error) {
+        const clinicError = e as { status?: number; code?: string };
+        if (clinicError.status) {
+          toast.error(`Bulk delete failed (${clinicError.status}): ${e.message}${clinicError.code ? ` [${clinicError.code}]` : ""}`);
+        } else {
+          toast.error(e.message);
+        }
+      } else {
+        toast.error("Failed to delete selected patients.");
+      }
       load();
     } finally {
       setLoading(false);

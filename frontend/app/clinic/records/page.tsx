@@ -598,7 +598,16 @@ export default function RecordsPage() {
       toast.success("Record deleted");
       load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete record");
+      if (e instanceof Error) {
+        const clinicError = e as { status?: number; code?: string };
+        if (clinicError.status) {
+          toast.error(`Delete failed (${clinicError.status}): ${e.message}${clinicError.code ? ` [${clinicError.code}]` : ""}`);
+        } else {
+          toast.error(e.message);
+        }
+      } else {
+        toast.error("Failed to delete record");
+      }
     }
   }
 

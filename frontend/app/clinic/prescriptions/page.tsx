@@ -230,7 +230,16 @@ export default function PrescriptionsPage() {
       });
       load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete prescription");
+      if (e instanceof Error) {
+        const clinicError = e as { status?: number; code?: string };
+        if (clinicError.status) {
+          toast.error(`Delete failed (${clinicError.status}): ${e.message}${clinicError.code ? ` [${clinicError.code}]` : ""}`);
+        } else {
+          toast.error(e.message);
+        }
+      } else {
+        toast.error("Failed to delete prescription");
+      }
     }
   }
 
@@ -279,8 +288,20 @@ export default function PrescriptionsPage() {
       setSelectedIds(new Set());
       load();
     } catch (e) {
-      toast.error("Failed to delete all selected prescriptions.");
+      if (e instanceof Error) {
+        const clinicError = e as { status?: number; code?: string };
+        if (clinicError.status) {
+          toast.error(`Bulk delete failed (${clinicError.status}): ${e.message}${clinicError.code ? ` [${clinicError.code}]` : ""}`);
+        } else {
+          toast.error(e.message);
+        }
+      } else {
+        toast.error("Failed to delete selected prescriptions.");
+      }
       load();
+    } finally {
+      setLoading(false);
+      setBulkDeleteOpen(false);
     }
   };
 
