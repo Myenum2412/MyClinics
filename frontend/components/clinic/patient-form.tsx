@@ -246,6 +246,7 @@ interface PatientFormProps {
   onClose?: () => void;
   onEdit?: () => void;
   saving?: boolean;
+  doctors?: { doctorId: string; name: string }[];
 }
 
 export function PatientForm({
@@ -256,6 +257,7 @@ export function PatientForm({
   onClose,
   onEdit,
   saving = false,
+  doctors = [],
 }: PatientFormProps) {
   const { getOptions } = useDropdownOptions(clinicId);
   const bloodGroups = getOptions("blood_groups");
@@ -461,7 +463,10 @@ export function PatientForm({
 
         <SectionCard title="6. Account & Portal Access">
           <div className="grid gap-4 md:grid-cols-2">
-            {renderViewField("Assigned Doctor", form.doctorId)}
+            {renderViewField(
+              "Assigned Doctor",
+              doctors.find((d) => d.doctorId === form.doctorId)?.name ?? form.doctorId
+            )}
             {renderViewField("Portal Access", form.portalAccess)}
             {renderViewField("Login Notification", form.loginNotification)}
           </div>
@@ -504,20 +509,24 @@ export function PatientForm({
         </SectionCard>
 
         <div className="flex gap-3 border-t border-blue-200 pt-8">
-          <Button
-            variant="outline"
-            onClick={onEdit}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            Edit Patient
-          </Button>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            className="border-blue-300 text-blue-600 hover:bg-blue-50"
-          >
-            Close
-          </Button>
+          {onEdit && (
+            <Button
+              variant="outline"
+              onClick={onEdit}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Edit Patient
+            </Button>
+          )}
+          {onClose && (
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="border-blue-300 text-blue-600 hover:bg-blue-50"
+            >
+              Close
+            </Button>
+          )}
         </div>
       </form>
     );

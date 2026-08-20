@@ -158,7 +158,7 @@ export function PatientSidebar({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => go("/clinic/profile")}>
+            <DropdownMenuItem onClick={() => go("/clinic/patient/profile")}>
               <CircleUser className="size-4" />
               View Profile
             </DropdownMenuItem>
