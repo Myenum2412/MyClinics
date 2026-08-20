@@ -179,6 +179,9 @@ export class MedicalRecordService {
       patientId,
     });
     if (!custom) throw new NotFoundError("Folder not found");
+    // Moving a file onto a default folder (by its id) stores it under the
+    // default key so listings match it.
+    if (custom.isDefault && custom.defaultKey) return custom.defaultKey;
     return key;
   }
 

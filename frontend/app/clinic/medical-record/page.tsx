@@ -790,14 +790,24 @@ export default function MedicalRecordPage() {
 
   /** Folders at the current level (root = parentFolderId null). */
   const levelFolders = useMemo(
-    () =>
-      patientFolders.filter(
-        (f) => (f.parentFolderId ?? null) === (activeFolderId && !isDefaultFolderKey(activeFolderId) ? activeFolderId : null)
-      ),
+    () => patientFolders.filter((f) => (f.parentFolderId ?? null) === activeFolderId),
     [patientFolders, activeFolderId]
   );
 
-  const currentFolderKey = activeFolderId ?? "medical-records";
+  /** The active folder doc, or null when at root. */
+  const activeFolderDoc = useMemo(
+    () => patientFolders.find((f) => f.folderId === activeFolderId) ?? null,
+    [patientFolders, activeFolderId]
+  );
+
+  /** Key used to match files: defaultKey for default folders, folderId for custom ones. */
+  const currentFolderKey = useMemo(
+    () =>
+      activeFolderDoc?.isDefault && activeFolderDoc.defaultKey
+        ? activeFolderDoc.defaultKey
+        : activeFolderId ?? "medical-records",
+    [activeFolderDoc, activeFolderId]
+  );
 
   const levelFiles = useMemo(() => {
     return patientFiles.filter((f) => displayFolderKey(f.folder) === currentFolderKey);
@@ -830,12 +840,21 @@ export default function MedicalRecordPage() {
     (key: string): string => {
       const k = displayFolderKey(key);
       if (isDefaultFolderKey(k)) return FOLDER_META[k]?.title ?? "Folder";
-      return patientFolders.find((f) => f.folderId === k)?.name ?? "Folder";
+      const folder = patientFolders.find((f) => f.folderId === k);
+      if (folder?.isDefault && folder.defaultKey) {
+        return FOLDER_META[displayFolderKey(folder.defaultKey)]?.title ?? folder.name;
+      }
+      return folder?.name ?? "Folder";
     },
     [patientFolders]
   );
 
-  const patientStats = useMemo(() => {
+  /** FolderId of the default folder matching currentFolderKey (for Move dialog preselection). */
+  const currentFolderId = useMemo(
+    () => patientFolders.find((f) => f.isDefault && f.defaultKey === currentFolderKey)?.folderId ?? null,
+    [patientFolders, currentFolderKey]
+  );
+    const patientStats = useMemo(() => {
     const stats = new Map<
       string,
       { files: number; fileSize: number; records: number; prescriptions: number; last: string | null }
@@ -990,8 +1009,7 @@ export default function MedicalRecordPage() {
     }
     setCreatingFolder(true);
     try {
-      const parentFolderId =
-        activeFolderId && !isDefaultFolderKey(activeFolderId) ? activeFolderId : null;
+      const parentFolderId = activeFolderId;
       const created = await createMedicalRecordFolder(clinicId, selectedPatient.patientId, name, parentFolderId);
       setNewFolderOpen(false);
       setNewFolderName("");
@@ -1372,7 +1390,7 @@ export default function MedicalRecordPage() {
                           }}
                           onMove={(file) => {
                             setMoveTarget({ kind: "file", id: file.fileId });
-                            setMoveValue(currentFolderKey);
+                            setMoveValue(currentFolderId ?? currentFolderKey);
                           }}
                           onNewVersion={(file) => setVersionInput(file)}
                           onDelete={(file) => setDeleteFileTarget(file)}
@@ -1403,7 +1421,7 @@ export default function MedicalRecordPage() {
                           folder={fo}
                           count={(subfolderFiles.get(fo.isDefault && fo.defaultKey ? fo.defaultKey : fo.folderId) ?? []).length}
                           canManage={canManage}
-                          onOpen={() => setActiveFolderId(fo.isDefault && fo.defaultKey ? fo.defaultKey : fo.folderId)}
+                          onOpen={() => setActiveFolderId(fo.folderId)}
                           onCopy={(folder) => setClipboard({ kind: "folder", id: folder.folderId })}
                           onRename={(folder) => {
                             setRenameTarget({ kind: "folder", id: folder.folderId, name: folder.name });
@@ -1434,7 +1452,7 @@ export default function MedicalRecordPage() {
                       count={levelFiles.length}
                       countLabel="file"
                       action={
-                        activeFolderId && !isDefaultFolderKey(activeFolderId) ? (
+                        activeFolderId ? (
                           <Button variant="ghost" size="sm" onClick={() => setActiveFolderId(null)}>
                             <FolderUp className="size-4" /> Up to root
                           </Button>
@@ -1468,7 +1486,7 @@ export default function MedicalRecordPage() {
                             }}
                             onMove={(file) => {
                               setMoveTarget({ kind: "file", id: file.fileId });
-                              setMoveValue(currentFolderKey);
+                              setMoveValue(currentFolderId ?? currentFolderKey);
                             }}
                             onNewVersion={(file) => setVersionInput(file)}
                             onDelete={(file) => setDeleteFileTarget(file)}
