@@ -16,6 +16,7 @@ import { registerSettingsRoutes } from "@/clinic/modules/settings/settings.route
 import { registerNotificationRoutes } from "@/clinic/modules/notifications/notifications.routes";
 import { registerAuditLogRoutes } from "@/clinic/modules/audit-logs/audit-logs.routes";
 import { registerPatientPortalRoutes } from "@/clinic/modules/portal/patient-portal.routes";
+import { registerAvatarRoutes } from "@/clinic/modules/avatars/avatars.routes";
 
 /**
  * Clinic (multi-tenant) API entry point.
@@ -56,5 +57,6 @@ export function registerClinicApi(app: FastifyInstance): void {
     registerNotificationRoutes(tenantApi);
     registerAuditLogRoutes(tenantApi);
     registerPatientPortalRoutes(tenantApi);
+    registerAvatarRoutes(tenantApi);
   });
 }

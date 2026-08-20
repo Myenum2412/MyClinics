@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Check, ChevronsUpDown, Search, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PersonAvatar } from "@/components/clinic/person-avatar";
 
 /** Doctor options loader, cached per clinicId. */
 export function useDoctorOptions(clinicId: string) {
@@ -67,14 +68,26 @@ export function DoctorSelect({
     >
       <SelectTrigger>
         <SelectValue placeholder="Select doctor">
-          {selectedDoctor ? selectedDoctor.name : value ? "Loading..." : ""}
+          {selectedDoctor ? (
+            <div className="flex items-center gap-2">
+              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={selectedDoctor.doctorId} name={selectedDoctor.name} size="xs" />
+              <span className="truncate">{selectedDoctor.name}</span>
+            </div>
+          ) : value ? (
+            "Loading..."
+          ) : (
+            ""
+          )}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {allowEmpty && <SelectItem value="">None</SelectItem>}
         {doctors.map((d) => (
           <SelectItem key={d.doctorId} value={d.doctorId}>
-            {d.name}
+            <div className="flex items-center gap-2">
+              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={d.doctorId} name={d.name} size="xs" />
+              <span>{d.name}</span>
+            </div>
           </SelectItem>
         ))}
       </SelectContent>
@@ -147,8 +160,15 @@ export function DoctorComboBox({
           required && !value && "border-blue-200"
         )}
       >
-        <span className={cn("truncate", selected ? "text-gray-900" : "text-gray-400")}>
-          {selected ? selected.name : placeholder}
+        <span className={cn("flex items-center gap-2 truncate", selected ? "text-gray-900" : "text-gray-400")}>
+          {selected ? (
+            <>
+              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={selected.doctorId} name={selected.name} size="xs" />
+              <span className="truncate">{selected.name}</span>
+            </>
+          ) : (
+            placeholder
+          )}
         </span>
         <ChevronsUpDown className="ml-2 size-4 shrink-0 text-gray-400" />
       </button>
@@ -183,9 +203,7 @@ export function DoctorComboBox({
                   d.doctorId === value && "bg-blue-50 text-blue-700"
                 )}
               >
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-                  <User className="size-3.5" />
-                </span>
+                <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={d.doctorId} name={d.name} size="xs" className="shrink-0" />
                 <span className="flex-1 truncate">{d.name}</span>
                 {d.doctorId === value && <Check className="size-4 text-blue-600" />}
               </button>
@@ -215,13 +233,25 @@ export function PatientSelect({
     <Select value={value ?? ""} onValueChange={onChange} required={required}>
       <SelectTrigger>
         <SelectValue placeholder="Select patient">
-          {selectedPatient ? selectedPatient.fullName : value ? "Loading..." : ""}
+          {selectedPatient ? (
+            <div className="flex items-center gap-2">
+              <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={selectedPatient.patientId} name={selectedPatient.fullName} size="xs" />
+              <span className="truncate">{selectedPatient.fullName}</span>
+            </div>
+          ) : value ? (
+            "Loading..."
+          ) : (
+            ""
+          )}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {patients.map((p) => (
           <SelectItem key={p.patientId} value={p.patientId}>
-            {p.fullName}
+            <div className="flex items-center gap-2">
+              <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} size="xs" />
+              <span>{p.fullName}</span>
+            </div>
           </SelectItem>
         ))}
       </SelectContent>

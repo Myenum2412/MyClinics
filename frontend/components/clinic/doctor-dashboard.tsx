@@ -11,7 +11,7 @@ import {
   listPrescriptions,
 } from "@/lib/clinic-api";
 import { formatTime } from "@/lib/format-time";
-import { NameAvatar } from "@/components/clinic/name-avatar";
+import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -207,7 +207,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
-                        <NameAvatar name={patientLookup[a.patientId] ?? a.patientId} />
+                        <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={a.patientId} name={patientLookup[a.patientId] ?? a.patientId} />
                         <span>{patientLookup[a.patientId] ?? a.patientId}</span>
                       </div>
                     </TableCell>
@@ -266,7 +266,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                   >
                     <TableCell>
                       <div className="flex items-center gap-2.5">
-                        <NameAvatar name={p.fullName} />
+                        <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} />
                         <span className="font-medium text-foreground">{p.fullName}</span>
                       </div>
                     </TableCell>
@@ -332,7 +332,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                     <TableCell className="font-medium text-foreground">{pr.visitDate}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
-                        <NameAvatar name={patientLookup[pr.patientId] ?? pr.patientId} />
+                        <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={pr.patientId} name={patientLookup[pr.patientId] ?? pr.patientId} />
                         <span>{patientLookup[pr.patientId] ?? pr.patientId}</span>
                       </div>
                     </TableCell>

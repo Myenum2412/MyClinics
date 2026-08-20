@@ -22,8 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NameAvatar } from "@/components/clinic/name-avatar";
+import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -701,15 +700,6 @@ export default function PrescriptionsPage() {
                     const doctor = doctorMap.get(p.doctorId);
                     const notif = notificationsMap[p.prescriptionId];
 
-                    const initials = patient?.fullName
-                      ? patient.fullName
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .substring(0, 2)
-                          .toUpperCase()
-                      : "P";
-
                     return (
                       <TableRow
                         key={p.prescriptionId}
@@ -735,11 +725,13 @@ export default function PrescriptionsPage() {
                         {visibleColumns.patient && (
                           <TableCell>
                             <div className="flex items-center gap-3">
-                              <Avatar className="size-8 shrink-0 border border-border">
-                                <AvatarFallback className="text-xs font-bold bg-muted text-muted-foreground">
-                                  {initials}
-                                </AvatarFallback>
-                              </Avatar>
+                              <PersonAvatar
+                                clinicId={clinicId}
+                                ownerType="patient"
+                                ownerId={p.patientId}
+                                name={patient?.fullName ?? p.patientId}
+                                className="size-8"
+                              />
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-semibold leading-tight text-foreground">
                                   {patient?.fullName ?? p.patientId}
@@ -755,7 +747,7 @@ export default function PrescriptionsPage() {
                         {visibleColumns.doctor && (
                           <TableCell>
                             <div className="flex items-center gap-2.5">
-                              <NameAvatar name={doctor?.name || "Unknown Doctor"} />
+                              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={p.doctorId} name={doctor?.name || "Unknown Doctor"} />
                               <span className="text-xs text-foreground font-medium">
                                 {doctor?.name ?? "—"}
                               </span>

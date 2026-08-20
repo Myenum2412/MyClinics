@@ -2,6 +2,7 @@ import {
   CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
@@ -76,6 +77,15 @@ export async function copyObjectInR2(sourceKey: string, targetKey: string) {
       Key: targetKey,
     })
   );
+}
+
+export async function objectExists(key: string): Promise<boolean> {
+  try {
+    await getR2().send(new HeadObjectCommand({ Bucket: r2Config().bucket, Key: key }));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function getDownloadUrl(key: string, expiresIn = 3600) {

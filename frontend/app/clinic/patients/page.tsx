@@ -11,7 +11,9 @@ import {
   deletePatient,
   listPatients,
   updatePatient,
+  uploadAvatar,
 } from "@/lib/clinic-api";
+import { bustAvatarCache, PersonAvatar } from "@/components/clinic/person-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +47,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DoctorSelect } from "@/components/clinic/pickers";
-import { NameAvatar } from "@/components/clinic/name-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { useDropdownOptions } from "@/lib/dropdown-options";
@@ -92,6 +93,8 @@ interface PatientFormState {
   notes: string;
   doctorId: string | null;
   password: string;
+  profileImage: File | null;
+  patientId: string;
 }
 
 const EMPTY_FORM: PatientFormState = {
@@ -128,6 +131,8 @@ const EMPTY_FORM: PatientFormState = {
   notes: "",
   doctorId: null,
   password: "",
+  profileImage: null,
+  patientId: "",
 };
 
 export default function PatientsPage() {
@@ -215,9 +220,24 @@ export default function PatientsPage() {
       };
       if (editing) {
         await updatePatient(clinicId, editing.patientId, payload);
+        if (form.profileImage) {
+          try {
+            await uploadAvatar(clinicId, "patient", editing.patientId, form.profileImage);
+            bustAvatarCache(clinicId, "patient", editing.patientId);
+          } catch {
+            toast.warning("Patient updated, but the profile photo could not be uploaded");
+          }
+        }
         toast.success("Patient updated");
       } else {
-        await createPatient(clinicId, { ...payload, password: form.password || undefined });
+        const created = await createPatient(clinicId, { ...payload, password: form.password || undefined });
+        if (form.profileImage) {
+          try {
+            await uploadAvatar(clinicId, "patient", created.patientId, form.profileImage);
+          } catch {
+            toast.warning("Patient created, but the profile photo could not be uploaded");
+          }
+        }
         toast.success("Patient created");
       }
       setEditing(null);
@@ -442,6 +462,8 @@ export default function PatientsPage() {
                 notes: editing.notes ?? "",
                 doctorId: editing.doctorId,
                 password: "",
+                profileImage: null,
+                patientId: editing.patientId,
               }}
               saving={saving}
               onSave={async (form) => {
@@ -515,6 +537,8 @@ export default function PatientsPage() {
                 notes: viewing.notes ?? "",
                 doctorId: viewing.doctorId,
                 password: "",
+                profileImage: null,
+                patientId: viewing.patientId,
               }}
               saving={false}
               readOnly={true}
@@ -663,7 +687,7 @@ export default function PatientsPage() {
                       {visibleColumns.name && (
                         <TableCell>
                           <div className="flex items-center gap-2.5">
-                            <NameAvatar name={p.fullName} />
+                            <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} />
                             <span className="font-medium text-foreground">{p.fullName}</span>
                           </div>
                         </TableCell>
@@ -760,6 +784,7 @@ function PatientForm({
   readOnly?: boolean;
 }) {
   const [form, setForm] = useState<PatientFormState>(initial);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const { getOptions } = useDropdownOptions(clinicId);
   const bloodGroups = getOptions("blood_groups");
   const set = <K extends keyof PatientFormState>(key: K, value: PatientFormState[K] | null) =>
@@ -773,6 +798,60 @@ function PatientForm({
   return (
     <form onSubmit={submit} className="space-y-4">
       <fieldset disabled={readOnly} className="grid gap-3 border-0 p-0 m-0">
+        <div className="flex items-center gap-3">
+          {form.profileImage && previewUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={previewUrl}
+              alt="Patient photo preview"
+              className="size-12 shrink-0 rounded-full border border-border object-cover"
+            />
+          ) : (
+            <PersonAvatar
+              clinicId={clinicId}
+              ownerType="patient"
+              ownerId={form.patientId || "none"}
+              name={form.fullName || "?"}
+              className="size-12 text-sm"
+            />
+          )}
+          <div className="min-w-0 flex-1">
+            <Label>Patient Photo</Label>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              JPG or PNG, max 2MB
+            </p>
+          </div>
+          <input
+            type="file"
+            accept="image/jpeg,image/png"
+            className="hidden"
+            id="patient-photo-input"
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              e.target.value = "";
+              if (!file) return;
+              if (!["image/jpeg", "image/png"].includes(file.type)) {
+                toast.error("Only JPG or PNG images are allowed");
+                return;
+              }
+              if (file.size > 2 * 1024 * 1024) {
+                toast.error("Image must be smaller than 2MB");
+                return;
+              }
+              if (previewUrl) URL.revokeObjectURL(previewUrl);
+              setPreviewUrl(URL.createObjectURL(file));
+              set("profileImage", file);
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => document.getElementById("patient-photo-input")?.click()}
+          >
+            {form.profileImage ? "Change Photo" : "Upload Photo"}
+          </Button>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Full name</Label>

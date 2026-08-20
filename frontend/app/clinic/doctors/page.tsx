@@ -12,7 +12,9 @@ import {
   listDoctors,
   updateDoctor,
   createClinicUser,
+  uploadAvatar,
 } from "@/lib/clinic-api";
+import { bustAvatarCache } from "@/components/clinic/person-avatar";
 import { Button } from "@/components/ui/button";
 import { TimePicker } from "@/components/ui/time-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +59,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
-import { NameAvatar } from "@/components/clinic/name-avatar";
+import { PersonAvatar } from "@/components/clinic/person-avatar";
 
 const DAYS = [
   { value: "Mon", label: "Monday" },
@@ -300,7 +302,6 @@ export default function DoctorsPage() {
         notes: form.notes.trim() || null,
         username: form.username.trim() || null,
         allowLogin: form.allowLogin === "yes",
-        profileImage: form.profileImage ? form.profileImage.name : null,
         scheduleDays: form.schedule
           .filter((s) => s.start && s.end && s.end > s.start)
           .map((s) => s.day),
@@ -311,9 +312,25 @@ export default function DoctorsPage() {
 
       if (editing) {
         await updateDoctor(clinicId, editing.doctorId, payload);
+        if (form.profileImage) {
+          try {
+            await uploadAvatar(clinicId, "doctor", editing.doctorId, form.profileImage);
+            bustAvatarCache(clinicId, "doctor", editing.doctorId);
+          } catch {
+            toast.warning("Doctor updated, but the profile photo could not be uploaded");
+          }
+        }
         toast.success("Doctor updated");
       } else {
         const created = await createDoctor(clinicId, payload);
+
+        if (form.profileImage) {
+          try {
+            await uploadAvatar(clinicId, "doctor", created.doctorId, form.profileImage);
+          } catch {
+            toast.warning("Doctor saved, but the profile photo could not be uploaded");
+          }
+        }
 
         // Create the login account when Allow Login is enabled.
         if (form.allowLogin === "yes" && form.password && form.email.trim()) {
@@ -692,7 +709,7 @@ export default function DoctorsPage() {
                       {visibleColumns.name && (
                           <TableCell>
                             <div className="flex items-center gap-2.5">
-                              <NameAvatar name={d.name} />
+                              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={d.doctorId} name={d.name} />
                               <span className="font-medium text-foreground">{d.name}</span>
                             </div>
                           </TableCell>

@@ -40,7 +40,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PatientSelect } from "@/components/clinic/pickers";
-import { NameAvatar } from "@/components/clinic/name-avatar";
+import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
@@ -648,7 +648,7 @@ export default function BillingPage() {
                     {visibleColumns.patient && (
                       <TableCell>
                         <div className="flex items-center gap-2.5">
-                          <NameAvatar name={patientLookup[b.patientId] || b.patientId} />
+                          <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={b.patientId} name={patientLookup[b.patientId] || b.patientId} />
                           <span className="text-muted-foreground font-medium">
                             {patientLookup[b.patientId] || b.patientId}
                           </span>

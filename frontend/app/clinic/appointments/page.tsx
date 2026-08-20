@@ -63,7 +63,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { DoctorSelect, PatientSelect } from "@/components/clinic/pickers";
-import { NameAvatar } from "@/components/clinic/name-avatar";
+import { PersonAvatar } from "@/components/clinic/person-avatar";
 import StatsAppointments from "@/components/stats-appointments";
 import {
   Calendar,
@@ -879,7 +879,7 @@ export default function AppointmentsPage() {
                         {visibleColumns.patient && (
                           <TableCell>
                             <div className="flex items-center gap-2.5">
-                              <NameAvatar name={patient?.fullName || "Unknown Patient"} />
+                              <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={a.patientId} name={patient?.fullName || "Unknown Patient"} />
                               <div className="flex flex-col">
                                 <span className="text-xs font-semibold text-foreground leading-tight">
                                   {patient?.fullName || "Unknown Patient"}
@@ -896,7 +896,7 @@ export default function AppointmentsPage() {
                         {visibleColumns.doctor && (
                           <TableCell>
                             <div className="flex items-center gap-2.5">
-                              <NameAvatar name={doctor?.name || a.doctorId} />
+                              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={a.doctorId} name={doctor?.name || a.doctorId} />
                               <span className="text-xs font-medium text-foreground">
                                 {dLabel}
                               </span>

@@ -37,7 +37,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Download, Calendar, Pill, Receipt, Clipboard, FileBarChart } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
 import { DoctorDashboard } from "@/components/clinic/doctor-dashboard";
-import { NameAvatar } from "@/components/clinic/name-avatar";
+import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { toast } from "sonner";
 
 function today(): string {
@@ -318,7 +318,7 @@ export default function ClinicDashboardPage() {
                       <TableCell className="font-medium text-foreground">{formatTime(a.time)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2.5">
-                          <NameAvatar name={patientLookup[a.patientId] || a.patientId} />
+                          <PersonAvatar clinicId={session?.clinicId ?? ""} ownerType="patient" ownerId={a.patientId} name={patientLookup[a.patientId] || a.patientId} />
                           <span>{patientLookup[a.patientId] || a.patientId}</span>
                         </div>
                       </TableCell>

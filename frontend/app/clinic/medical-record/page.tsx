@@ -33,7 +33,7 @@ import {
   uploadMedicalRecordFileVersion,
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
-import { NameAvatar } from "@/components/clinic/name-avatar";
+import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1326,7 +1326,7 @@ export default function MedicalRecordPage() {
                       }}
                       className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 text-left transition hover:border-blue-300 hover:shadow-sm"
                     >
-                      <NameAvatar name={p.fullName} className="size-11 text-sm" />
+                      <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-11 text-sm" />
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold text-gray-900 group-hover:text-blue-600">
                           {p.fullName}
@@ -1735,7 +1735,7 @@ export default function MedicalRecordPage() {
         <Card>
           <CardContent className="p-5">
             <div className="flex flex-wrap items-start gap-4">
-              <NameAvatar name={p.fullName} className="size-14 text-base" />
+              <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-14 text-base" />
               <div className="min-w-0 flex-1">
                 <h2 className="text-lg font-bold text-gray-900">{p.fullName}</h2>
                 <p className="mt-0.5 text-sm text-gray-500">

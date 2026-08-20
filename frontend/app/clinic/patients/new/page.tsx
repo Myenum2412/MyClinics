@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
-import { createPatient } from "@/lib/clinic-api";
+import { createPatient, uploadAvatar } from "@/lib/clinic-api";
 import { DoctorComboBox } from "@/components/clinic/pickers";
 import { PincodeLookup } from "@/components/clinic/pincode-lookup";
 import {
@@ -457,6 +457,14 @@ export default function NewPatientPage() {
       }
 
       const created = await createPatient(clinicId, payload);
+
+      if (profileImage) {
+        try {
+          await uploadAvatar(clinicId, "patient", created.patientId, profileImage);
+        } catch {
+          toast.warning("Patient saved, but the profile photo could not be uploaded");
+        }
+      }
 
       if (portalEnabled && created.userId) {
         setCreatedPatient({

@@ -1,41 +1,35 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import {
-  ArrowLeft,
-  Bell,
   Building2,
-  CalendarDays,
-  CheckCircle2,
+  Camera,
   Clock,
   ExternalLink,
+  FileText,
   Globe,
-  LogOut,
   Mail,
   MapPin,
-  MessageCircle,
   Pencil,
   Phone,
   Save,
+  Shield,
+  User,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
-import type { Clinic, WhatsappSession } from "@/lib/clinic-api";
+import type { Clinic } from "@/lib/clinic-api";
 import {
   getOwnClinic,
-  getWhatsappSession,
-  listNotifications,
-  logout,
   updateOwnClinic,
 } from "@/lib/clinic-api";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { PersonAvatar, bustAvatarCache } from "@/components/clinic/person-avatar";
+import { uploadAvatar } from "@/lib/clinic-api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -47,36 +41,40 @@ const ROLE_LABELS: Record<string, string> = {
   patient: "Patient",
 };
 
-function Field({
-  label,
-  value,
-  mono = false,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <div className="min-w-0">
-      <p className="text-xs font-medium text-slate-400">{label}</p>
-      <p className={`mt-0.5 truncate text-sm text-slate-800 ${mono ? "font-mono" : ""}`}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
 export default function AccountPage() {
   const session = useRequireRole("staff");
   const clinicId = session?.clinicId ?? "";
-  const router = useRouter();
-
+  
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [unread, setUnread] = useState(0);
-  const [waSession, setWaSession] = useState<WhatsappSession | null>(null);
+  const [photoRefresh, setPhotoRefresh] = useState(0);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  async function handlePhotoUpload(file: File | null) {
+    if (!file) return;
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      toast.error("Only JPG or PNG images are allowed");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image must be smaller than 2MB");
+      return;
+    }
+    setUploadingPhoto(true);
+    try {
+      await uploadAvatar(clinicId, "clinic", clinicId, file);
+      bustAvatarCache(clinicId, "clinic", clinicId);
+      setPhotoRefresh((n) => n + 1);
+      toast.success("Clinic photo updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update photo");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
 
   const [draft, setDraft] = useState({
     name: "",
@@ -109,41 +107,6 @@ export default function AccountPage() {
       .finally(() => setLoading(false));
   }, [clinicId]);
 
-  useEffect(() => {
-    if (!clinicId) return;
-    listNotifications(clinicId, { limit: 1 })
-      .then((res) => setUnread(res.unread))
-      .catch(() => {});
-    getWhatsappSession()
-      .then(setWaSession)
-      .catch(() => setWaSession(null));
-  }, [clinicId]);
-
-  async function handleLogout() {
-    await logout();
-    router.push("/login");
-    router.refresh();
-  }
-
-  function startEdit() {
-    if (!clinic) return;
-    setDraft({
-      name: clinic.name,
-      description: clinic.description ?? "",
-      website: clinic.website ?? "",
-      phone: clinic.phone ?? "",
-      email: clinic.email ?? "",
-      address: clinic.address ?? "",
-      open: clinic.settings.workingHours.open,
-      close: clinic.settings.workingHours.close,
-    });
-    setIsEditing(true);
-  }
-
-  function cancelEdit() {
-    setIsEditing(false);
-  }
-
   async function saveAll() {
     if (!clinic) return;
     setSaving(true);
@@ -167,296 +130,340 @@ export default function AccountPage() {
     }
   }
 
-  const role = session?.role ?? "staff";
-  const roleLabel = ROLE_LABELS[role] ?? "Member";
-  const initials = (clinic?.name ?? session?.name ?? "?")
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-  const mapsUrl = useMemo(() => {
-    const query = [clinic?.name, clinic?.address].filter(Boolean).join(", ");
-    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
-  }, [clinic?.name, clinic?.address]);
-  const waConnected = waSession?.state?.connected === true;
-
   if (loading || !clinic) {
     return (
-      <div className="mx-auto max-w-3xl space-y-4 px-4 py-6 md:px-8">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="mx-auto max-w-5xl space-y-4 px-4 py-6 md:px-8">
+        <Skeleton className="h-64 w-full rounded-b-3xl" />
+        <Skeleton className="mx-auto -mt-12 h-24 w-24 rounded-full border-4 border-white" />
+        <Skeleton className="mx-auto mt-4 h-6 w-48" />
+        <Skeleton className="mx-auto mt-2 h-4 w-32" />
+        <div className="mt-8 grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-96 w-full rounded-xl" />
+          <Skeleton className="h-96 w-full rounded-xl" />
+        </div>
       </div>
     );
   }
 
+  const role = session?.role ?? "staff";
+  const roleLabel = ROLE_LABELS[role] ?? "Member";
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([clinic.name, clinic.address].filter(Boolean).join(", "))}`;
+
   return (
-    <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 md:px-8">
-      <header className="flex flex-wrap items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push("/clinic")}
-          aria-label="Back to dashboard"
-          className="text-slate-600"
-        >
-          <ArrowLeft className="size-5" />
-        </Button>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-xl font-semibold text-slate-800">My Account</h1>
-          <p className="text-sm text-slate-500">Clinic profile and contact information</p>
-        </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => router.push("/clinic/notifications")}
-          aria-label="Notifications"
-          className="relative text-slate-600"
-        >
-          <Bell className="size-5" />
-          {unread > 0 && (
-            <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-sky-500 text-[10px] font-semibold text-white">
-              {unread > 9 ? "9+" : unread}
-            </span>
-          )}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleLogout}
-          className="gap-1.5 text-red-600 hover:text-red-700"
-        >
-          <LogOut className="size-4" />
-          Log out
-        </Button>
-      </header>
+    <div className="min-h-screen bg-[#F8FAFC] pb-12 font-sans">
+      {/* Top Banner Gradient */}
+      <div className="h-[280px] w-full bg-gradient-to-b from-[#7A8FF2] via-[#94A9F9] to-[#E0E9FA]" />
 
-      <Card className="border-sky-100 shadow-sm">
-        <CardContent className="flex flex-col gap-5 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <Avatar className="size-14 border-2 border-sky-100">
-              <AvatarFallback className="bg-sky-50 text-base text-sky-700">{initials}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="text-lg font-semibold text-slate-800">{clinic.name}</p>
-                <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
-                  {roleLabel}
-                </Badge>
-                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-700">
-                  <CheckCircle2 className="mr-1 size-3" />
-                  Active
-                </Badge>
-              </div>
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-slate-500">
-                <span className="flex min-w-0 items-center gap-1">
-                  <Mail className="size-3.5 shrink-0" />
-                  <span className="truncate">{clinic.email ?? "—"}</span>
-                </span>
-                <span className="flex items-center gap-1">
-                  <Phone className="size-3.5 shrink-0" />
-                  {clinic.phone ?? "—"}
-                </span>
-                <span className="flex items-center gap-1">
-                  <CalendarDays className="size-3.5 shrink-0" />
-                  Since {new Date(clinic.createdAt).toLocaleDateString("en-IN")}
-                </span>
-              </div>
-            </div>
-          </div>
-          {isEditing ? (
-            <div className="flex shrink-0 gap-2">
-              <Button variant="outline" size="sm" onClick={cancelEdit} className="gap-1.5 text-slate-600">
-                <X className="size-3.5" />
-                Cancel
-              </Button>
-              <Button size="sm" onClick={saveAll} disabled={saving} className="gap-1.5">
-                <Save className="size-3.5" />
-                {saving ? "Saving…" : "Save Changes"}
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={startEdit}
-              className="shrink-0 gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-800"
+      <div className="mx-auto max-w-[1100px] px-4 sm:px-6 lg:px-8">
+        {/* Profile Header */}
+        <div className="relative -mt-12 flex flex-col items-center">
+          <div className="relative">
+            <PersonAvatar
+              clinicId={clinicId}
+              ownerType="clinic"
+              ownerId={clinicId}
+              name={clinic.name}
+              refreshKey={photoRefresh}
+              className="size-[104px] border-4 border-white shadow-sm ring-1 ring-slate-900/5 text-3xl font-semibold"
+            />
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              className="absolute bottom-1 right-1 flex size-7 items-center justify-center rounded-full border-2 border-white bg-[#5E72E4] text-white shadow-sm hover:bg-[#4E62D4] transition-colors disabled:opacity-60"
+              aria-label="Upload clinic photo"
             >
-              <Pencil className="size-3.5" />
-              Edit Profile
-            </Button>
-          )}
-        </CardContent>
-      </Card>
+              <Camera className="size-3.5" />
+            </button>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/jpeg,image/png"
+              className="hidden"
+              onChange={(e) => {
+                handlePhotoUpload(e.target.files?.[0] ?? null);
+                e.target.value = "";
+              }}
+            />
+          </div>
+          <h1 className="mt-3 text-[22px] font-bold text-slate-900">{clinic.name}</h1>
+          <p className="text-[15px] text-slate-500">{clinic.email ?? "No email provided"}</p>
 
-      {isEditing ? (
-        <Card className="border-sky-100 shadow-sm">
-          <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label>Clinic Name</Label>
-              <Input
-                value={draft.name}
-                onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-              />
+          <div className="mt-3 flex items-center gap-2">
+            <Badge className="gap-1.5 border-none bg-[#5E72E4] px-3.5 py-1 text-white hover:bg-[#4E62D4] rounded-full font-medium shadow-sm text-xs">
+              <Shield className="size-3" />
+              {roleLabel}
+            </Badge>
+            <Badge
+              variant="outline"
+              className="gap-1.5 rounded-full border-slate-200 bg-white/60 backdrop-blur-sm px-3.5 py-1 text-slate-600 font-medium text-xs shadow-sm"
+            >
+              <Building2 className="size-3 text-slate-400" />
+              {clinic.name}&apos;s Organization
+            </Badge>
+          </div>
+        </div>
+
+        {/* Navigation & Edit Button */}
+        <div className="mt-10 flex flex-wrap items-center justify-between border-b border-slate-200/80 pb-4">
+          <div className="flex gap-2 px-2">
+            <button className="flex items-center gap-2 rounded-md bg-white px-4 py-2 text-[14px] font-medium text-slate-800 shadow-sm border border-slate-200">
+              <User className="size-[16px]" />
+              Profile
+            </button>
+            <button className="flex items-center gap-2 rounded-md px-4 py-2 text-[14px] font-medium text-slate-500 hover:bg-white hover:shadow-sm hover:border hover:border-slate-200 border border-transparent transition-all">
+              <Building2 className="size-[16px]" />
+              Company
+            </button>
+            <button className="flex items-center gap-2 rounded-md px-4 py-2 text-[14px] font-medium text-slate-500 hover:bg-white hover:shadow-sm hover:border hover:border-slate-200 border border-transparent transition-all">
+              <FileText className="size-[16px]" />
+              Terms
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            {isEditing ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(false)}
+                  className="h-9 gap-2 rounded-full border-slate-200 px-4 text-slate-600 shadow-sm hover:bg-slate-50"
+                >
+                  <X className="size-4" />
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={saveAll}
+                  disabled={saving}
+                  className="h-9 gap-2 rounded-full bg-[#5E72E4] px-4 text-white shadow-sm hover:bg-[#4E62D4]"
+                >
+                  <Save className="size-4" />
+                  {saving ? "Saving..." : "Save Changes"}
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+                className="h-9 gap-2 rounded-full border-slate-200 px-4 text-slate-600 shadow-sm hover:bg-slate-50"
+              >
+                <Pencil className="size-4" />
+                Edit Profile
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Content Area */}
+        <div className="mt-8 grid gap-6 md:grid-cols-2">
+          {/* Left Column: Personal Information */}
+          <Card className="rounded-[16px] border border-slate-200/60 bg-white shadow-sm overflow-hidden">
+            <div className="px-7 py-6 border-b border-slate-100">
+              <h2 className="flex items-center gap-2 text-[17px] font-semibold text-slate-800">
+                <User className="size-[18px] text-slate-600" />
+                Clinic Information
+              </h2>
             </div>
-            <div className="grid gap-2">
-              <Label>Phone</Label>
-              <Input
-                value={draft.phone}
-                onChange={(e) => setDraft((d) => ({ ...d, phone: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Email</Label>
-              <Input
-                type="email"
-                value={draft.email}
-                onChange={(e) => setDraft((d) => ({ ...d, email: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Website</Label>
-              <Input
-                value={draft.website}
-                placeholder="https://myclinic.example.com"
-                onChange={(e) => setDraft((d) => ({ ...d, website: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2 sm:col-span-2">
-              <Label>Address</Label>
-              <Textarea
-                rows={2}
-                value={draft.address}
-                placeholder="Door no., street, area, city, district, state, pincode"
-                onChange={(e) => setDraft((d) => ({ ...d, address: e.target.value }))}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Description</Label>
-              <Textarea
-                rows={2}
-                value={draft.description}
-                placeholder="Tell patients what your clinic is about..."
-                onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value }))}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="grid gap-2">
-                <Label>Open</Label>
-                <Input
-                  type="time"
-                  value={draft.open}
-                  onChange={(e) => setDraft((d) => ({ ...d, open: e.target.value }))}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Close</Label>
-                <Input
-                  type="time"
-                  value={draft.close}
-                  onChange={(e) => setDraft((d) => ({ ...d, close: e.target.value }))}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          <Card className="border-sky-100 shadow-sm">
-            <CardContent className="grid gap-x-8 gap-y-4 pt-6 sm:grid-cols-2">
-              <Field label="Clinic Name" value={clinic.name} />
-              <Field label="Description" value={clinic.description ?? "—"} />
-              <Field label="Phone" value={clinic.phone ?? "—"} />
-              <Field label="Email" value={clinic.email ?? "—"} />
-              <Field label="Website" value={clinic.website ?? "—"} />
-              <Field label="Address" value={clinic.address ?? "—"} />
-              {clinic.address && (
-                <div className="sm:col-span-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(mapsUrl, "_blank", "noopener,noreferrer")}
-                    className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50"
-                  >
-                    <MapPin className="size-3.5" />
-                    View on Map
-                  </Button>
+            
+            <div className="flex flex-col px-7 pb-4">
+              {/* Field: Email */}
+              <div className="flex items-start gap-4 border-b border-slate-100 py-4.5 last:border-0">
+                <Mail className="mt-1 size-[16px] text-slate-400 shrink-0" />
+                <div className="w-full min-w-0">
+                  <p className="text-[13px] font-medium text-slate-400">Email</p>
+                  {isEditing ? (
+                    <Input
+                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
+                      value={draft.email}
+                      onChange={(e) => setDraft({ ...draft, email: e.target.value })}
+                    />
+                  ) : (
+                    <p className="mt-1 truncate text-[14px] text-slate-800">
+                      {clinic.email || "—"}
+                    </p>
+                  )}
                 </div>
-              )}
-            </CardContent>
+              </div>
+
+              {/* Field: Full Name */}
+              <div className="flex items-start gap-4 border-b border-slate-100 py-4.5 last:border-0">
+                <Building2 className="mt-1 size-[16px] text-slate-400 shrink-0" />
+                <div className="w-full min-w-0">
+                  <p className="text-[13px] font-medium text-slate-400">Clinic Name</p>
+                  {isEditing ? (
+                    <Input
+                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
+                      value={draft.name}
+                      onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                    />
+                  ) : (
+                    <p className="mt-1 truncate text-[14px] text-slate-800">
+                      {clinic.name || "—"}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Field: Phone */}
+              <div className="flex items-start gap-4 border-b border-slate-100 py-4.5 last:border-0">
+                <Phone className="mt-1 size-[16px] text-slate-400 shrink-0" />
+                <div className="w-full min-w-0">
+                  <p className="text-[13px] font-medium text-slate-400">Phone</p>
+                  {isEditing ? (
+                    <Input
+                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
+                      value={draft.phone}
+                      onChange={(e) => setDraft({ ...draft, phone: e.target.value })}
+                    />
+                  ) : (
+                    <p className="mt-1 truncate text-[14px] text-slate-800">
+                      {clinic.phone || "—"}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Field: Description */}
+              <div className="flex items-start gap-4 border-b border-slate-100 py-4.5 last:border-0">
+                <FileText className="mt-1 size-[16px] text-slate-400 shrink-0" />
+                <div className="w-full min-w-0">
+                  <p className="text-[13px] font-medium text-slate-400">Description</p>
+                  {isEditing ? (
+                    <Textarea
+                      className="mt-2 min-h-[80px] w-full bg-slate-50/50 resize-none text-[14px]"
+                      value={draft.description}
+                      onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                    />
+                  ) : (
+                    <p className="mt-1 text-[14px] text-slate-800 whitespace-pre-wrap leading-relaxed">
+                      {clinic.description || "—"}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </Card>
 
-          <Card className="border-sky-100 shadow-sm">
-            <CardContent className="grid gap-x-8 gap-y-4 pt-6 sm:grid-cols-2">
-              <div>
-                <p className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                  <Clock className="size-3.5" />
-                  Working Hours
-                </p>
-                <p className="mt-0.5 text-sm text-slate-800">
-                  {clinic.settings.workingHours.open} – {clinic.settings.workingHours.close}
-                </p>
+          {/* Right Column: Address & Social */}
+          <Card className="rounded-[16px] border border-slate-200/60 bg-white shadow-sm overflow-hidden">
+            <div className="px-7 py-6 border-b border-slate-100">
+              <h2 className="flex items-center gap-2 text-[17px] font-semibold text-slate-800">
+                <MapPin className="size-[18px] text-slate-600" />
+                Address & Operations
+              </h2>
+            </div>
+            
+            <div className="flex flex-col px-7 pb-6 pt-5">
+              <p className="text-[12px] font-semibold tracking-wide text-slate-400 uppercase mb-4">
+                LOCATION
+              </p>
+              
+              <div className="grid gap-x-6 gap-y-5 border-b border-slate-100 pb-7 mb-6">
+                <div className="col-span-2">
+                  <p className="text-[13px] font-medium text-slate-400">Full Address</p>
+                  {isEditing ? (
+                    <Textarea
+                      className="mt-2 min-h-[80px] w-full bg-slate-50/50 resize-none text-[14px]"
+                      value={draft.address}
+                      onChange={(e) => setDraft({ ...draft, address: e.target.value })}
+                    />
+                  ) : (
+                    <div className="mt-1 flex items-start justify-between gap-4">
+                      <p className="text-[14px] text-slate-800 whitespace-pre-wrap leading-relaxed">
+                        {clinic.address || "—"}
+                      </p>
+                      {clinic.address && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(mapsUrl, "_blank", "noopener,noreferrer")}
+                          className="shrink-0 h-8 text-xs text-[#5E72E4] hover:bg-[#5E72E4]/10 hover:text-[#4E62D4]"
+                        >
+                          <ExternalLink className="mr-1.5 size-3" />
+                          Maps
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div>
-                <p className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                  <MessageCircle className="size-3.5" />
-                  WhatsApp
-                </p>
-                <p className="mt-0.5 flex items-center gap-1.5 text-sm text-slate-800">
-                  <span
-                    className={`size-2 rounded-full ${waConnected ? "bg-emerald-500" : "bg-amber-500"}`}
-                  />
-                  {waConnected ? "Connected" : waSession?.state?.stage ?? "Unavailable"}
-                  {clinic.phone ? ` · ${clinic.phone}` : ""}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.push("/clinic/settings")}
-                    className="h-6 px-1.5 text-xs text-sky-700 hover:bg-sky-50"
-                  >
-                    Manage
-                  </Button>
-                </p>
-              </div>
-              <div>
-                <p className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                  <Building2 className="size-3.5" />
-                  Member Since
-                </p>
-                <p className="mt-0.5 text-sm text-slate-800">
-                  {new Date(clinic.createdAt).toLocaleDateString("en-IN")}
-                </p>
-              </div>
-              {clinic.website && (
+
+              <p className="text-[12px] font-semibold tracking-wide text-slate-400 uppercase mb-4">
+                OPERATIONAL DETAILS
+              </p>
+              
+              <div className="grid grid-cols-2 gap-x-6 gap-y-5">
                 <div>
-                  <p className="flex items-center gap-1.5 text-xs font-medium text-slate-400">
-                    <Globe className="size-3.5" />
-                    Visit Website
+                  <p className="flex items-center gap-1.5 text-[13px] font-medium text-slate-400">
+                    <Clock className="size-3.5" />
+                    Opening Time
                   </p>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="h-6 px-0 text-sm text-sky-700"
-                    onClick={() =>
-                      window.open(
-                        clinic.website!.startsWith("http")
-                          ? clinic.website!
-                          : `https://${clinic.website!}`,
-                        "_blank",
-                        "noopener,noreferrer"
-                      )
-                    }
-                  >
-                    <span className="truncate">{clinic.website}</span>
-                    <ExternalLink className="ml-1 size-3.5 shrink-0" />
-                  </Button>
+                  {isEditing ? (
+                    <Input
+                      type="time"
+                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
+                      value={draft.open}
+                      onChange={(e) => setDraft({ ...draft, open: e.target.value })}
+                    />
+                  ) : (
+                    <p className="mt-1 text-[14px] text-slate-800">{clinic.settings.workingHours.open || "—"}</p>
+                  )}
                 </div>
-              )}
-            </CardContent>
+                
+                <div>
+                  <p className="flex items-center gap-1.5 text-[13px] font-medium text-slate-400">
+                    <Clock className="size-3.5" />
+                    Closing Time
+                  </p>
+                  {isEditing ? (
+                    <Input
+                      type="time"
+                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
+                      value={draft.close}
+                      onChange={(e) => setDraft({ ...draft, close: e.target.value })}
+                    />
+                  ) : (
+                    <p className="mt-1 text-[14px] text-slate-800">{clinic.settings.workingHours.close || "—"}</p>
+                  )}
+                </div>
+                
+                <div className="col-span-2 pt-2">
+                  <p className="flex items-center gap-1.5 text-[13px] font-medium text-slate-400">
+                    <Globe className="size-3.5" />
+                    Website
+                  </p>
+                  {isEditing ? (
+                    <Input
+                      className="mt-2 h-9 w-full bg-slate-50/50 text-[14px]"
+                      value={draft.website}
+                      onChange={(e) => setDraft({ ...draft, website: e.target.value })}
+                      placeholder="https://..."
+                    />
+                  ) : (
+                    <p className="mt-1 text-[14px] text-slate-800">
+                      {clinic.website ? (
+                        <a 
+                          href={clinic.website.startsWith("http") ? clinic.website : `https://${clinic.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#5E72E4] hover:underline flex items-center gap-1 w-fit"
+                        >
+                          {clinic.website}
+                          <ExternalLink className="size-3" />
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
           </Card>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

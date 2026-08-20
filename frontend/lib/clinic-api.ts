@@ -1181,6 +1181,59 @@ export function deleteMedicalRecordFile(
   return request(tenantPath(clinicId, `/medical-record/${fileId}`), { method: "DELETE" });
 }
 
+export type AvatarOwnerType = "patient" | "doctor" | "clinic";
+
+export function avatarPath(
+  clinicId: string,
+  ownerType: AvatarOwnerType,
+  ownerId: string
+): string {
+  return tenantPath(clinicId, `/avatars/${ownerType}/${encodeURIComponent(ownerId)}`);
+}
+
+export function getAvatarUrl(
+  clinicId: string,
+  ownerType: AvatarOwnerType,
+  ownerId: string
+): Promise<{ url: string | null }> {
+  return request(avatarPath(clinicId, ownerType, ownerId), { cache: "no-store" });
+}
+
+export async function uploadAvatar(
+  clinicId: string,
+  ownerType: AvatarOwnerType,
+  ownerId: string,
+  file: File
+): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("ownerType", ownerType);
+  form.append("ownerId", ownerId);
+  form.append("file", file);
+
+  const headers: Record<string, string> = {};
+  const token = typeof window !== "undefined" ? getStoredToken() : null;
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}${avatarPath(clinicId, ownerType, ownerId)}`, {
+    method: "POST",
+    headers,
+    body: form,
+    cache: "no-store",
+  });
+
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  if (!res.ok) {
+    const err = data as { error?: string };
+    throw new ClinicApiError(err.error ?? `Avatar upload failed (${res.status})`, res.status);
+  }
+  return data as { url: string };
+}
+
 export function renameMedicalRecordFile(
   clinicId: string,
   fileId: string,
