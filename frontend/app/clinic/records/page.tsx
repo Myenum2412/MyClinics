@@ -301,7 +301,7 @@ function MedicineNameInput({
   onChange: (value: string) => void;
   placeholder?: string;
 }) {
-  const session = useRequireRole("doctor");
+  const session = useRequireRole("patient");
   const { getOptions } = useDropdownOptions(session?.clinicId ?? "");
   const medicines = getOptions("medicines");
   const [open, setOpen] = useState(false);
@@ -376,7 +376,7 @@ function MedicineNameInput({
 }
 
 export default function RecordsPage() {
-  const session = useRequireRole("doctor");
+  const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
   const searchParams = useSearchParams();
   const appointmentParam = searchParams.get("appointmentId");

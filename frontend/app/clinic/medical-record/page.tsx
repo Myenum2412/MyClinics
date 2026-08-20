@@ -659,7 +659,7 @@ function PrescriptionCard({
 type ClipboardItem = { kind: "file" | "folder"; id: string };
 
 export default function MedicalRecordPage() {
-  const session = useRequireRole("staff");
+  const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
   /** staff are upload-only; doctors/admins may manage the drive. */
   const canManage = session?.role !== "staff";

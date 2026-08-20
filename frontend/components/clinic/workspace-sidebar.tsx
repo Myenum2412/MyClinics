@@ -39,8 +39,7 @@ interface NavItem {
   url: string
   icon?: React.ReactNode
   match?: "exact" | "prefix"
-  /** Minimum role required to see the item (backend route guards). */
-  minRole?: ClinicRole
+  roles: ClinicRole[]
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -49,73 +48,73 @@ const NAV_ITEMS: NavItem[] = [
     url: "/clinic",
     icon: <LayoutDashboardIcon className="size-6" />,
     match: "exact",
-    minRole: "patient",
+    roles: ["patient", "doctor", "staff", "clinic_admin"],
   },
   {
     title: "Appointments",
     url: "/clinic/appointments",
     icon: <CalendarDaysIcon className="size-6" />,
-    minRole: "doctor",
+    roles: ["patient", "doctor", "staff", "clinic_admin"],
   },
   {
     title: "Patients",
     url: "/clinic/patients",
     icon: <UsersIcon className="size-6" />,
-    minRole: "doctor",
+    roles: ["doctor", "staff", "clinic_admin"],
   },
   {
     title: "Doctors",
     url: "/clinic/doctors",
     icon: <StethoscopeIcon className="size-6" />,
-    minRole: "doctor",
+    roles: ["patient", "doctor", "staff", "clinic_admin"],
   },
   {
     title: "Medicine",
     url: "/clinic/records",
     icon: <RecordsIcon className="size-6" />,
-    minRole: "doctor",
+    roles: ["patient", "doctor", "staff", "clinic_admin"],
   },
   {
     title: "Medical Record",
     url: "/clinic/medical-record",
     icon: <FolderOpenIcon className="size-6" />,
-    minRole: "doctor",
+    roles: ["patient", "doctor", "staff", "clinic_admin"],
   },
   {
     title: "Prescriptions",
     url: "/clinic/prescriptions",
     icon: <PillIcon className="size-6" />,
-    minRole: "doctor",
+    roles: ["patient", "doctor", "staff", "clinic_admin"],
   },
   {
     title: "Billing",
     url: "/clinic/billing",
     icon: <ReceiptTextIcon className="size-6" />,
-    minRole: "staff",
+    roles: ["patient", "doctor", "staff", "clinic_admin"],
   },
   {
     title: "Reports",
     url: "/clinic/reports",
     icon: <FileTextIcon className="size-6" />,
-    minRole: "staff",
+    roles: ["staff", "clinic_admin"],
   },
   {
     title: "Audit Logs",
     url: "/clinic/audit-logs",
     icon: <ClipboardListIcon className="size-6" />,
-    minRole: "clinic_admin",
+    roles: ["clinic_admin"],
   },
   {
     title: "Notifications",
     url: "/clinic/notifications",
     icon: <BellIcon className="size-6" />,
-    minRole: "patient",
+    roles: ["doctor", "staff", "clinic_admin"],
   },
   {
     title: "Settings",
     url: "/clinic/settings",
     icon: <Settings2Icon className="size-6" />,
-    minRole: "staff",
+    roles: ["staff", "clinic_admin"],
   },
 ]
 
@@ -135,7 +134,7 @@ export function WorkspaceSidebar({
   clinicId: string
 }) {
   const pathname = usePathname()
-  const items = NAV_ITEMS.filter((item) => can(role, item.minRole ?? "patient"))
+  const items = NAV_ITEMS.filter((item) => item.roles.includes(role))
 
   return (
     <Sidebar collapsible="icon" {...props}>

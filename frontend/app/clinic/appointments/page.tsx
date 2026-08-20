@@ -173,7 +173,7 @@ function appointmentToForm(appt: Appointment): AppointmentFormState {
 }
 
 export default function AppointmentsPage() {
-  const session = useRequireRole("doctor");
+  const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
   const { getOptions } = useDropdownOptions(clinicId);
   const canManage = sessionCan(session, "clinic_admin");

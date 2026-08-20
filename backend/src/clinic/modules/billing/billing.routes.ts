@@ -27,19 +27,19 @@ export function registerBillingRoutes(app: FastifyInstance): void {
 
   app.get(
     "/api/clinics/:clinicId/billing",
-    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    { preHandler: [requireClinicAccess, requireRoles("patient")] },
     async (request, reply) => controller.list(request, reply)
   );
 
   app.get(
     "/api/clinics/:clinicId/billing/:billId",
-    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    { preHandler: [requireClinicAccess, requireRoles("patient")] },
     async (request, reply) => controller.getById(request, reply)
   );
 
   app.get(
     "/api/clinics/:clinicId/billing/:billId/pdf",
-    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    { preHandler: [requireClinicAccess, requireRoles("patient")] },
     async (request, reply) => controller.downloadPdf(request, reply)
   );
 

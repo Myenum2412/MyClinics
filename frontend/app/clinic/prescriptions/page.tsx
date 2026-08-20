@@ -109,7 +109,7 @@ const EMPTY_MEDICINE: MedicineEntry = {
 
 
 export default function PrescriptionsPage() {
-  const session = useRequireRole("doctor");
+  const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
 
   // Core data states

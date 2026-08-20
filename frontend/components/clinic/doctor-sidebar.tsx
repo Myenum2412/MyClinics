@@ -22,6 +22,7 @@ import {
   DocumentTextIcon as FileTextIcon,
   Squares2X2Icon as LayoutDashboardIcon,
   BeakerIcon as PillIcon,
+  ReceiptPercentIcon as ReceiptTextIcon,
   IdentificationIcon as StethoscopeIcon,
   UsersIcon,
   BellIcon,
@@ -80,9 +81,9 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     icon: <PillIcon className="size-6" />,
   },
   {
-    title: "Reports",
-    url: "/clinic/reports",
-    icon: <FileTextIcon className="size-6" />,
+    title: "Billing",
+    url: "/clinic/billing",
+    icon: <ReceiptTextIcon className="size-6" />,
   },
   {
     title: "Notifications",

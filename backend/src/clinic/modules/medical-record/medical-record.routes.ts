@@ -26,89 +26,90 @@ import { requireClinicAccess, requireRoles } from "@/clinic/core/scope";
  */
 export function registerMedicalRecordRoutes(app: FastifyInstance): void {
   const controller = new MedicalRecordController();
-  const gate = [requireClinicAccess, requireRoles("staff")];
+  const manageGate = [requireClinicAccess, requireRoles("staff")];
+  const readGate = [requireClinicAccess, requireRoles("patient")];
 
   app.post(
     "/api/clinics/:clinicId/medical-record/upload",
-    { preHandler: gate },
+    { preHandler: readGate },
     async (request, reply) => controller.upload(request, reply)
   );
 
   app.post(
     "/api/clinics/:clinicId/medical-record/files/:fileId/version",
-    { preHandler: gate },
+    { preHandler: manageGate },
     async (request, reply) => controller.uploadVersion(request, reply)
   );
 
   app.get(
     "/api/clinics/:clinicId/medical-record",
-    { preHandler: gate },
+    { preHandler: readGate },
     async (request, reply) => controller.list(request, reply)
   );
 
   app.post(
     "/api/clinics/:clinicId/medical-record/folders",
-    { preHandler: gate },
+    { preHandler: manageGate },
     async (request, reply) => controller.createFolder(request, reply)
   );
 
   app.get(
     "/api/clinics/:clinicId/medical-record/folders",
-    { preHandler: gate },
+    { preHandler: readGate },
     async (request, reply) => controller.listFolders(request, reply)
   );
 
   app.delete(
     "/api/clinics/:clinicId/medical-record/folders/:folderId",
-    { preHandler: gate },
+    { preHandler: manageGate },
     async (request, reply) => controller.removeFolder(request, reply)
   );
 
   app.patch(
     "/api/clinics/:clinicId/medical-record/folders/:folderId",
-    { preHandler: gate },
+    { preHandler: manageGate },
     async (request, reply) => controller.renameFolder(request, reply)
   );
 
   app.post(
     "/api/clinics/:clinicId/medical-record/folders/:folderId/move",
-    { preHandler: gate },
+    { preHandler: manageGate },
     async (request, reply) => controller.moveFolder(request, reply)
   );
 
   app.post(
     "/api/clinics/:clinicId/medical-record/folders/:folderId/copy",
-    { preHandler: gate },
+    { preHandler: manageGate },
     async (request, reply) => controller.copyFolder(request, reply)
   );
 
   app.patch(
     "/api/clinics/:clinicId/medical-record/files/:fileId",
-    { preHandler: gate },
+    { preHandler: manageGate },
     async (request, reply) => controller.renameFile(request, reply)
   );
 
   app.post(
     "/api/clinics/:clinicId/medical-record/files/:fileId/move",
-    { preHandler: gate },
+    { preHandler: manageGate },
     async (request, reply) => controller.moveFile(request, reply)
   );
 
   app.post(
     "/api/clinics/:clinicId/medical-record/files/:fileId/copy",
-    { preHandler: gate },
+    { preHandler: manageGate },
     async (request, reply) => controller.copyFile(request, reply)
   );
 
   app.get(
     "/api/clinics/:clinicId/medical-record/:fileId/download",
-    { preHandler: gate },
+    { preHandler: readGate },
     async (request, reply) => controller.download(request, reply)
   );
 
   app.delete(
     "/api/clinics/:clinicId/medical-record/:fileId",
-    { preHandler: gate },
+    { preHandler: manageGate },
     async (request, reply) => controller.remove(request, reply)
   );
 }

@@ -125,6 +125,9 @@ export class MedicalRecordService {
     if (ctx.role === "doctor" && patient.doctorId !== ctx.doctorId) {
       throw new ForbiddenError("You can only access records of patients assigned to you");
     }
+    if (ctx.role === "patient" && patient.patientId !== ctx.patientId) {
+      throw new ForbiddenError("You can only access your own records");
+    }
     return patient as unknown as WithId<PatientDoc>;
   }
 
@@ -462,6 +465,11 @@ export class MedicalRecordService {
       query.patientId = { $in: patientIds.map((p) => p.patientId) };
       if (filter.patientId && !(query.patientId as { $in: string[] }).$in.includes(filter.patientId)) {
         throw new ForbiddenError("You can only access records of patients assigned to you");
+      }
+    } else if (ctx.role === "patient") {
+      query.patientId = ctx.patientId;
+      if (filter.patientId && filter.patientId !== ctx.patientId) {
+        throw new ForbiddenError("You can only access your own records");
       }
     }
 

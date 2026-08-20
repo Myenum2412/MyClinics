@@ -220,7 +220,7 @@ function RequiredStar() {
 }
 
 export default function DoctorsPage() {
-  const session = useRequireRole("doctor");
+  const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
   const { getOptions } = useDropdownOptions(clinicId);
   const nationalities = getOptions("nationalities");
@@ -798,7 +798,7 @@ function DoctorForm({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const session = useRequireRole("doctor");
+  const session = useRequireRole("patient");
   const { getOptions } = useDropdownOptions(session?.clinicId ?? "");
   const nationalities = getOptions("nationalities");
   const departments = getOptions("doctor_departments");

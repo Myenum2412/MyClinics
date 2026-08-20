@@ -106,7 +106,7 @@ function todayISO(): string {
 }
 
 export default function BillingPage() {
-  const session = useRequireRole("staff");
+  const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
 
   // Core States
