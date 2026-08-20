@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils"
 import { useRequireRole } from "@/hooks/use-clinic-session"
 import { useDropdownOptions } from "@/lib/dropdown-options"
 import { Check, FileText, Plus, UploadCloud, X } from "lucide-react"
+import { VideoPreview } from "@/components/ui/video-preview"
 
 export interface AttachmentFile {
   id: string
@@ -73,6 +74,7 @@ export function AttachmentUploader({
   documentTypes,
   accept = [
     "image/*",
+    "video/*",
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -271,11 +273,35 @@ export function AttachmentUploader({
             {files.map((item) => (
               <li key={item.id} className="flex flex-col gap-2">
                 <Attachment state={item.file ? "done" : "idle"} size="sm" className="w-full">
-                  <AttachmentMedia>
+                  <AttachmentMedia variant={item.mimeType?.startsWith("video/") ? "video" : "icon"}>
                     {item.file ? (
-                      <Check className="text-primary" aria-hidden="true" />
+                      <>
+                        {item.mimeType?.startsWith("video/") ? (
+                          <VideoPreview
+                            src={URL.createObjectURL(item.file)}
+                            title={item.file.name}
+                            className="max-h-32"
+                            controls={true}
+                            muted={true}
+                          />
+                        ) : (
+                          <Check className="text-primary" aria-hidden="true" />
+                        )}
+                      </>
                     ) : (
-                      <FileText aria-hidden="true" />
+                      <>
+                        {item.mimeType?.startsWith("video/") && item.url ? (
+                          <VideoPreview
+                            src={item.url}
+                            title={item.name}
+                            className="max-h-32"
+                            controls={true}
+                            muted={true}
+                          />
+                        ) : (
+                          <FileText aria-hidden="true" />
+                        )}
+                      </>
                     )}
                   </AttachmentMedia>
                   <AttachmentContent>

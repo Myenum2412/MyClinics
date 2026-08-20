@@ -1377,6 +1377,88 @@ export function updateClinicSettings(
   });
 }
 
+// ── Clinic Welcome Documents ────────────────────────────────────────────────
+
+export interface ClinicWelcomeDocument {
+  documentId: string;
+  fileName: string;
+  mimeType: string | null;
+  size: number;
+  version: number;
+  versions: Array<{
+    version: number;
+    fileName: string;
+    mimeType: string | null;
+    size: number;
+    uploadedByName: string | null;
+    createdAt: string;
+  }>;
+  downloadCount: number;
+  lastDownloadedAt: string | null;
+  uploadedBy: string;
+  uploadedByName: string | null;
+  createdAt: string;
+}
+
+export interface ClinicWelcomeDocumentsList {
+  documents: ClinicWelcomeDocument[];
+}
+
+export function listClinicWelcomeDocuments(
+  clinicId: string,
+  query: { q?: string } = {}
+): Promise<ClinicWelcomeDocumentsList> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  const qs = params.toString();
+  return request(tenantPath(clinicId, `/welcome-documents${qs ? `?${qs}` : ""}`), { cache: "no-store" });
+}
+
+export function uploadClinicWelcomeDocument(
+  clinicId: string,
+  file: File
+): Promise<ClinicWelcomeDocument> {
+  const form = new FormData();
+  form.append("file", file);
+
+  const headers: Record<string, string> = {};
+  const token = typeof window !== "undefined" ? getStoredToken() : null;
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  return fetch(`${API_BASE}${tenantPath(clinicId, "/welcome-documents")}`, {
+    method: "POST",
+    headers,
+    body: form,
+    cache: "no-store",
+  }).then(async (res) => {
+    let data: unknown;
+    try {
+      data = await res.json();
+    } catch {
+      data = {};
+    }
+    if (!res.ok) {
+      const err = data as { error?: string };
+      throw new ClinicApiError(err.error ?? `Upload failed (${res.status})`, res.status);
+    }
+    return data as ClinicWelcomeDocument;
+  });
+}
+
+export function getClinicWelcomeDocumentDownloadUrl(
+  clinicId: string,
+  documentId: string
+): Promise<{ url: string; fileName: string; mimeType: string | null }> {
+  return request(tenantPath(clinicId, `/welcome-documents/${documentId}/download`), { cache: "no-store" });
+}
+
+export function deleteClinicWelcomeDocument(
+  clinicId: string,
+  documentId: string
+): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/welcome-documents/${documentId}`), { method: "DELETE" });
+}
+
 // ── Platform services (WhatsApp + soul.md) ───────────────────────────────
 
 export interface SoulRecord {

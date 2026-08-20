@@ -195,6 +195,7 @@ export class PatientService {
       sendCredentials: input.loginNotification === "whatsapp",
       portalUsername: input.email ?? null,
       password: input.password ?? null,
+      clinicId: clinicId,
     });
     if (assignedDoctor) {
       await notifyDoctorOfNewPatient(this.db, assignedDoctor, created.fullName);

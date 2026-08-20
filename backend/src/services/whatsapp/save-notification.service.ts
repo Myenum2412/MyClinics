@@ -2,6 +2,8 @@ import type { Db } from "mongodb";
 import { logger } from "@/lib/logger";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { enqueueNotification } from "@/services/whatsapp/notification.service";
+import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
+import { getDownloadUrl } from "@/lib/r2";
 
 export interface Notifyable {
   fullName?: string | null;
@@ -9,6 +11,37 @@ export interface Notifyable {
   mobile?: string;
   phone?: string | null;
   whatsapp?: string | null;
+}
+
+export interface ClinicDetails {
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  website?: string | null;
+  description?: string | null;
+  profile?: {
+    clinicType?: string | null;
+    registrationNumber?: string | null;
+    establishedYear?: number | null;
+    whatsapp?: string | null;
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    country?: string | null;
+    pincode?: string | null;
+    specializations?: string[];
+    services?: string[];
+    emergencyContact?: string | null;
+  };
+  welcomeDocuments?: Array<{
+    documentId: string;
+    fileName: string;
+    mimeType: string | null;
+    size: number;
+    downloadUrl: string;
+  }>;
 }
 
 /** Prefers the dedicated WhatsApp number, falling back to the primary phone. */
@@ -23,15 +56,51 @@ function firstName(p: Notifyable): string {
   return first || "there";
 }
 
+async function fetchClinicDetails(db: Db, clinicId: string): Promise<ClinicDetails | null> {
+  const clinic = await db.collection(CLINIC_COLLECTIONS.clinics).findOne({ clinicId });
+  if (!clinic) return null;
+
+  // Fetch welcome documents
+  const welcomeDocs = await db
+    .collection(CLINIC_COLLECTIONS.clinicWelcomeDocuments)
+    .find({ clinicId, deletedAt: { $exists: false } })
+    .toArray();
+
+  const documentsWithUrls = await Promise.all(
+    welcomeDocs.map(async (doc) => {
+      const downloadUrl = await getDownloadUrl(doc.r2Key);
+      return {
+        documentId: doc.documentId,
+        fileName: doc.fileName,
+        mimeType: doc.mimeType,
+        size: doc.size,
+        downloadUrl,
+      };
+    })
+  );
+
+  return {
+    name: clinic.name,
+    phone: clinic.phone,
+    email: clinic.email,
+    address: clinic.address,
+    website: clinic.website,
+    description: clinic.description,
+    profile: clinic.profile,
+    welcomeDocuments: documentsWithUrls,
+  };
+}
+
 async function queue(
   db: Db,
   phone: string,
   message: string,
-  type: string
+  type: string,
+  media?: { filename: string; mimetype: string; data: string }
 ): Promise<void> {
   try {
     const org = await ensureDefaultOrganization(db);
-    await enqueueNotification(db, org.id, phone, message, type);
+    await enqueueNotification(db, org.id, phone, message, type, media);
   } catch (err) {
     // The save already succeeded — a failed notification must not break it.
     logger.warn("save notification could not be queued", {
@@ -39,6 +108,71 @@ async function queue(
       error: err instanceof Error ? err.message : String(err),
     });
   }
+}
+
+async function sendWelcomeMessageWithDocuments(
+  db: Db,
+  phone: string,
+  patientName: string,
+  clinicDetails: ClinicDetails,
+  credentials?: { username: string; password: string }
+): Promise<void> {
+  const lines = [
+    `Hi ${patientName}, welcome to ${clinicDetails.name}!`,
+    `Your patient profile has been registered successfully.`,
+    "",
+    "📍 *Clinic Details:*",
+    `Name: ${clinicDetails.name}`,
+  ];
+
+  if (clinicDetails.phone) lines.push(`Phone: ${clinicDetails.phone}`);
+  if (clinicDetails.email) lines.push(`Email: ${clinicDetails.email}`);
+  if (clinicDetails.address) lines.push(`Address: ${clinicDetails.address}`);
+  if (clinicDetails.website) lines.push(`Website: ${clinicDetails.website}`);
+
+  if (clinicDetails.profile) {
+    const p = clinicDetails.profile;
+    if (p.clinicType) lines.push(`Type: ${p.clinicType}`);
+    if (p.registrationNumber) lines.push(`Registration: ${p.registrationNumber}`);
+    if (p.establishedYear) lines.push(`Established: ${p.establishedYear}`);
+    if (p.city || p.state || p.country) {
+      const addr = [p.city, p.state, p.country].filter(Boolean).join(", ");
+      if (addr) lines.push(`Location: ${addr}`);
+    }
+    if (p.specializations?.length) lines.push(`Specializations: ${p.specializations.join(", ")}`);
+    if (p.services?.length) lines.push(`Services: ${p.services.join(", ")}`);
+    if (p.emergencyContact) lines.push(`Emergency: ${p.emergencyContact}`);
+  }
+
+  if (credentials) {
+    lines.push("", "🔐 *Portal Login:*", `Username: ${credentials.username}`, `Password: ${credentials.password}`);
+  }
+
+  if (clinicDetails.welcomeDocuments?.length) {
+    lines.push("", "📎 *Welcome Documents:*");
+    for (const doc of clinicDetails.welcomeDocuments) {
+      lines.push(`• ${doc.fileName} (${formatFileSize(doc.size)})`);
+    }
+  }
+
+  const message = lines.join("\n");
+
+  // Send the first welcome document as media if it's an image/video
+  let media: { filename: string; mimetype: string; data: string } | undefined;
+  const firstDoc = clinicDetails.welcomeDocuments?.[0];
+  if (firstDoc && (firstDoc.mimeType?.startsWith("image/") || firstDoc.mimeType?.startsWith("video/"))) {
+    // For now, we'll send the download URL in the message
+    // In a full implementation, you'd download the file and convert to base64
+    lines.push(`\n📥 Download: ${firstDoc.downloadUrl}`);
+  }
+
+  await queue(db, phone, message, "patient_registered_welcome", media);
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 /** Sent to the patient after their profile is created (incl. portal credentials when opted in). */
@@ -49,10 +183,29 @@ export async function notifyPatientRegistered(
     sendCredentials: boolean;
     portalUsername?: string | null;
     password?: string | null;
-  } = { sendCredentials: false }
+    clinicId: string;
+  } = { sendCredentials: false, clinicId: "" }
 ): Promise<void> {
   const phone = pickNotifyPhone(patient);
   if (!phone) return;
+
+  // Fetch clinic details and welcome documents
+  const clinicDetails = opts.clinicId ? await fetchClinicDetails(db, opts.clinicId) : null;
+
+  if (clinicDetails) {
+    await sendWelcomeMessageWithDocuments(
+      db,
+      phone,
+      firstName(patient),
+      clinicDetails,
+      opts.sendCredentials && opts.portalUsername && opts.password
+        ? { username: opts.portalUsername, password: opts.password! }
+        : undefined
+    );
+    return;
+  }
+
+  // Fallback to simple message if clinic details not found
   const org = await ensureDefaultOrganization(db);
   const lines = [
     `Hi ${firstName(patient)}, welcome to ${org.name}! Your patient profile has been registered successfully.`,

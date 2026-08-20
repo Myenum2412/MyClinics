@@ -24,6 +24,7 @@ export const CLINIC_COLLECTIONS = {
   auditLogs: "clc_audit_logs",
   prescriptionNotifications: "clc_prescription_notifications",
   appointmentNotifications: "clc_appointment_notifications",
+  clinicWelcomeDocuments: "clc_clinic_welcome_documents",
 } as const;
 
 export type ClinicCollectionName =

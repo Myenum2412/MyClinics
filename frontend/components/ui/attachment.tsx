@@ -54,6 +54,7 @@ const attachmentMediaVariants = cva(
         icon: "",
         image:
           "opacity-60 group-data-[state=done]/attachment:opacity-100 group-data-[state=idle]/attachment:opacity-100 *:[img]:aspect-square *:[img]:w-full *:[img]:object-cover",
+        video: "aspect-video w-full min-h-[120px]",
       },
     },
     defaultVariants: {

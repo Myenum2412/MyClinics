@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { ClinicController } from "@/clinic/modules/clinics/clinics.controller";
+import { registerClinicWelcomeDocumentsRoutes } from "@/clinic/modules/clinics/clinic-welcome-documents.routes";
 import {
   requireClinicAccess,
   requireRoles,
@@ -60,4 +61,6 @@ export function registerClinicRoutes(app: FastifyInstance): void {
     { preHandler: requireRoles("clinic_admin") },
     async (request, reply) => controller.updateOwn(request, reply)
   );
+
+  registerClinicWelcomeDocumentsRoutes(app);
 }
