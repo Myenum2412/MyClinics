@@ -53,7 +53,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil } from "lucide-react";
+import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
 import { sessionCan } from "@/hooks/use-clinic-session";
 
@@ -445,24 +445,31 @@ export default function PatientsPage() {
   if (editing) {
     return (
       <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEditing(null)}
-            className="h-9 gap-1.5"
-          >
-            <ChevronLeft className="size-4" />
-            Back to Patients
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Edit Patient</h1>
-            <p className="text-sm text-muted-foreground">Modify patient demographics, status, or notes.</p>
-          </div>
-        </div>
-        <Card className="border-border shadow-sm max-w-2xl">
+        <Card className="border-border shadow-sm">
           <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-            <CardTitle className="text-lg font-semibold">Patient Information</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setEditing(null)}
+                  aria-label="Back to patients"
+                  className="size-8"
+                >
+                  <ChevronLeft className="size-4" />
+                </Button>
+                <CardTitle className="text-lg font-semibold">Patient Information</CardTitle>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() => setViewing(editing)}
+              >
+                <Eye className="size-4" />
+                View
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-6">
             <PatientForm
