@@ -153,9 +153,13 @@ export default function PatientMedicalRecordsPage() {
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
-  function folderTitle(folder: string): string {
-    return folders.find((f) => f.folderId === folder)?.name ?? folder;
-  }
+function folderTitle(folder: string): string {
+  return (
+    folders.find((f) => f.folderId === folder)?.name ??
+    folders.find((f) => f.defaultKey === folder)?.name ??
+    folder
+  );
+}
 
   const filesByFolder = files.reduce<Record<string, MedicalRecordFile[]>>((acc, f) => {
     (acc[f.folder] ??= []).push(f);

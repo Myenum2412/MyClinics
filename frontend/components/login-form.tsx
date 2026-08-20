@@ -50,7 +50,7 @@ export function LoginForm({
       storeSessionToken(googleToken, expires);
       const session = getSession();
       const destination =
-        session?.role === "platform_admin" ? "/admin" : "/clinic";
+        session?.role === "platform_admin" ? "/admin" : session?.role === "patient" ? "/clinic/patient" : "/clinic";
       router.replace(destination);
       router.refresh();
       return;
@@ -72,7 +72,7 @@ export function LoginForm({
     try {
       const result = await login({ email, password });
       const destination =
-        result.role === "platform_admin" ? "/admin" : "/clinic";
+        result.role === "platform_admin" ? "/admin" : result.role === "patient" ? "/clinic/patient" : "/clinic";
       router.push(callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : destination);
       router.refresh();
     } catch (err) {
