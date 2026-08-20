@@ -22,12 +22,10 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import {
-  ArrowLeftEndOnRectangleIcon as LogOutIcon,
   BellIcon as NotificationsActiveIcon,
   ChevronUpDownIcon as ChevronsUpDownIcon,
   UserCircleIcon as BadgeCheckIcon,
 } from "@heroicons/react/24/outline";
-import { logout } from "@/lib/clinic-api";
 
 export function NavUser({
   user,
@@ -40,12 +38,6 @@ export function NavUser({
 }) {
   const { isMobile, setOpenMobile } = useSidebar()
   const router = useRouter()
-
-  async function handleLogout() {
-    await logout()
-    router.push("/login")
-    router.refresh()
-  }
 
   const go = (href: string) => {
     if (isMobile) setOpenMobile(false)
@@ -129,14 +121,6 @@ export function NavUser({
             <DropdownMenuSeparator />
           </DropdownMenuContent>
         </DropdownMenu>
-        <SidebarMenuButton
-          size="sm"
-          onClick={handleLogout}
-          className="mt-1 flex items-center gap-2 text-muted-foreground hover:text-destructive"
-        >
-          <LogOutIcon className="size-4" />
-          <span>Log out</span>
-        </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarMenu>
   )
