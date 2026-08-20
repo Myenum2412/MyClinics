@@ -104,6 +104,7 @@ export class UsersService {
         name: input.name,
         role: input.role,
         phone: doc.phone,
+        whatsapp: input.whatsapp ?? null,
         email,
         password: input.password,
       });

@@ -143,7 +143,7 @@ export class DoctorService {
     const saved = updated ?? existing;
 
     // Notify the doctor that their profile changed.
-    await notifyDoctorUpdated(this.db, saved, Object.keys(patch));
+    await notifyDoctorUpdated(this.db, saved);
 
     return saved;
   }

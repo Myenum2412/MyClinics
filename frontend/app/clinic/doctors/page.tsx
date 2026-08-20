@@ -341,6 +341,7 @@ export default function DoctorsPage() {
               password: form.password,
               role: "doctor",
               phone: form.phone.trim() || null,
+              whatsapp: form.whatsapp.trim() || null,
               doctorId: created.doctorId,
             });
             toast.success("Doctor added with login access");

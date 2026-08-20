@@ -21,6 +21,7 @@ export const createUserSchema = z
       .max(200),
     role: z.enum(["doctor", "staff", "patient"]),
     phone: z.string().trim().max(PHONE_MAX).nullable().optional(),
+    whatsapp: z.string().trim().max(PHONE_MAX).nullable().optional(),
     /** Existing profile id to link (must exist in this clinic). */
     doctorId: z.string().startsWith("doc_").optional(),
     staffId: z.string().startsWith("stf_").optional(),

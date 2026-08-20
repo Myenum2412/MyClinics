@@ -788,6 +788,7 @@ export function createClinicUser(
     password: string;
     role: "doctor" | "staff" | "patient";
     phone?: string | null;
+    whatsapp?: string | null;
     doctorId?: string;
     staffId?: string;
     patientId?: string;

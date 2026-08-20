@@ -321,17 +321,15 @@ export async function notifyDoctorRegistered(
 /** Sent to the doctor after their profile is updated. */
 export async function notifyDoctorUpdated(
   db: Db,
-  doctor: Notifyable,
-  fields: string[]
+  doctor: Notifyable
 ): Promise<void> {
   const phone = pickNotifyPhone(doctor);
   if (!phone) return;
   const org = await ensureDefaultOrganization(db);
-  const detail = fields.length ? ` (updated: ${fields.join(", ")})` : "";
   await queue(
     db,
     phone,
-    `Hi ${firstName(doctor)}, your profile at ${org.name} has been updated successfully${detail}.`,
+    `Hi ${firstName(doctor)}, your profile at ${org.name} has been updated successfully.`,
     "doctor_updated"
   );
 }
@@ -343,6 +341,7 @@ export async function notifyUserLoginDetails(
     name: string;
     role: string;
     phone?: string | null;
+    whatsapp?: string | null;
     email: string;
     password: string;
   }
