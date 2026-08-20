@@ -11,7 +11,7 @@ import {
   updateOwnClinic,
   uploadAvatar,
 } from "@/lib/clinic-api";
-import { AttachmentUploader, type AttachmentFile } from "@/components/clinic/attachment-uploader";
+
 import { ClinicWelcomeDocuments } from "@/components/clinic/clinic-welcome-documents";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -154,7 +154,7 @@ export default function AccountPage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<FormState | null>(null);
-  const [attachments, setAttachments] = useState<AttachmentFile[]>([]);
+
 
   const [pincodeLookingUp, setPincodeLookingUp] = useState(false);
   const [pincodeMessage, setPincodeMessage] = useState<string | null>(null);
@@ -793,42 +793,6 @@ export default function AccountPage() {
             icon={<ClipboardList className="size-4 text-primary" />}
             title="Attachments"
             description="Upload and manage clinic documents, videos, and other files."
-          >
-            <AttachmentUploader
-              files={attachments}
-              onChange={setAttachments}
-              accept={[
-                "image/*",
-                "video/*",
-                "application/pdf",
-                "application/msword",
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                ".doc",
-                ".docx",
-                ".rtf",
-                ".odt",
-                ".txt",
-                "application/vnd.ms-excel",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                ".xls",
-                ".xlsx",
-                ".csv",
-                ".ods",
-                "application/vnd.ms-powerpoint",
-                "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                ".ppt",
-                ".pptx",
-                ".odp",
-              ]}
-              maxSizeMB={50}
-              description="Drag & drop files or click to browse. Supports images, videos, PDFs, and Office documents."
-            />
-          </Section>
-
-          <Section
-            icon={<FileText className="size-4 text-primary" />}
-            title="Welcome Documents"
-            description="Documents sent to new patients via WhatsApp when they register."
           >
             <ClinicWelcomeDocuments clinicId={clinicId} />
           </Section>

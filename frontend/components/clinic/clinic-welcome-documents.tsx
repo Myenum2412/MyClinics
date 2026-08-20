@@ -24,7 +24,7 @@ export function ClinicWelcomeDocuments({ clinicId }: { clinicId: string }) {
       const res = await listClinicWelcomeDocuments(clinicId);
       return res.documents;
     } catch {
-      toast.error("Failed to load welcome documents");
+      toast.error("Failed to load attachments");
       return [] as ClinicWelcomeDocument[];
     }
   }, [clinicId]);
@@ -66,7 +66,7 @@ export function ClinicWelcomeDocuments({ clinicId }: { clinicId: string }) {
     try {
       const doc = await uploadClinicWelcomeDocument(clinicId, file);
       setDocuments((prev) => [doc, ...prev]);
-      toast.success("Welcome document uploaded");
+      toast.success("Attachment uploaded");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to upload document");
     } finally {
@@ -136,7 +136,7 @@ export function ClinicWelcomeDocuments({ clinicId }: { clinicId: string }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="size-5" />
-            Welcome Documents
+            Attachments
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -156,7 +156,7 @@ export function ClinicWelcomeDocuments({ clinicId }: { clinicId: string }) {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <CardTitle className="flex items-center gap-2">
             <FileText className="size-5" />
-            Welcome Documents
+            Attachments
           </CardTitle>
           {canManage && (
             <div className="flex items-center gap-2">
@@ -188,10 +188,10 @@ export function ClinicWelcomeDocuments({ clinicId }: { clinicId: string }) {
         {documents.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center px-6">
             <FileText className="size-12 text-muted-foreground/50 mb-3" />
-            <p className="text-muted-foreground">No welcome documents uploaded yet.</p>
+            <p className="text-muted-foreground">No attachments uploaded yet.</p>
             {canManage && (
               <p className="text-sm text-muted-foreground mt-1">
-                Upload PDFs, images, or videos to send to new patients via WhatsApp.
+                Upload PDFs, images, or videos to store them here.
               </p>
             )}
           </div>
