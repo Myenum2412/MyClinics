@@ -1,138 +1,136 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
-  getMedicalRecordDownloadUrl,
   listMedicalRecordFiles,
+  listMedicalRecordFolders,
   type MedicalRecordFile,
+  type MedicalRecordFolder,
 } from "@/lib/clinic-api";
-import { formatDate } from "@/lib/format-time";
-import { openInNewTab } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, FileText, Folder } from "lucide-react";
-
-const RECENT_LIMIT = 10;
+import { FileText, Folder, FolderOpen } from "lucide-react";
 
 export default function PatientPortalPage() {
   const session = useRequireRole("patient");
   const [files, setFiles] = useState<MedicalRecordFile[]>([]);
+  const [folders, setFolders] = useState<MedicalRecordFolder[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!session?.clinicId) return;
     try {
-      const { files: allFiles } = await listMedicalRecordFiles(session.clinicId);
-      setFiles(allFiles.slice(0, RECENT_LIMIT));
+      const [filesRes, foldersRes] = await Promise.all([
+        listMedicalRecordFiles(session.clinicId),
+        session.patientId
+          ? listMedicalRecordFolders(session.clinicId, session.patientId)
+          : Promise.resolve({ folders: [] }),
+      ]);
+      setFiles(filesRes.files);
+      setFolders(foldersRes.folders);
     } catch {
       // leave the empty state visible
     } finally {
       setLoading(false);
     }
-  }, [session?.clinicId]);
+  }, [session?.clinicId, session?.patientId]);
 
   useEffect(() => {
     if (!session?.clinicId) return;
     load();
   }, [session?.clinicId, load]);
 
-  async function handleDownload(file: MedicalRecordFile) {
-    if (!session?.clinicId) return;
-    try {
-      const { url } = await getMedicalRecordDownloadUrl(session.clinicId, file.fileId);
-      openInNewTab(url);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to open file");
+  const folderCards = useMemo(() => {
+    const cards: { key: string; name: string; count: number }[] = folders.map((folder) => ({
+      key: folder.folderId,
+      name: folder.name,
+      count: files.filter(
+        (f) => f.folder === folder.defaultKey || f.folder === folder.folderId
+      ).length,
+    }));
+    const orphanCount = files.filter(
+      (f) => !folders.some((fo) => fo.folderId === f.folder || fo.defaultKey === f.folder)
+    ).length;
+    if (orphanCount > 0) {
+      cards.push({ key: "orphan", name: "Other Documents", count: orphanCount });
     }
-  }
+    return cards;
+  }, [folders, files]);
+
+  const firstName = useMemo(
+    () => (session?.name ?? "there").trim().split(/\s+/)[0],
+    [session?.name]
+  );
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold text-slate-900">Medical Records</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/clinic/profile">
-            <Button variant="ghost" size="sm" className="gap-1.5">
-              Profile
-            </Button>
-          </Link>
+      {/* Welcome card */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+        <div className="mx-auto max-w-[1400px] w-full px-4 py-8 md:px-6">
+          <h1 className="text-2xl font-bold md:text-3xl">Welcome, {firstName}</h1>
+          <p className="mt-1 text-sm text-blue-100">
+            Your medical files and documents are organized in the folders below.
+          </p>
         </div>
       </div>
 
-      <div className="p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto w-full">
-        <Card>
-          <CardHeader className="border-b border-slate-100 px-5 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-blue-600">
-                  <Folder className="size-4" />
-                </span>
-                <CardTitle className="text-sm font-semibold text-gray-800">
-                  Recently Uploaded Files
-                </CardTitle>
-              </div>
-              <Badge variant="outline" className="text-xs">{files.length}</Badge>
+      <div className="mx-auto max-w-[1400px] w-full p-4 md:p-6 lg:p-8">
+        {/* Folder grid */}
+        <Card className="border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+            <div className="flex items-center gap-2">
+              <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-blue-600">
+                <Folder className="size-4" />
+              </span>
+              <h2 className="text-sm font-semibold text-slate-900">My Files & Documents</h2>
             </div>
-          </CardHeader>
-          <CardContent className="p-5">
+          </div>
+          <div className="p-5">
             {loading ? (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-14 w-full rounded-lg" />
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-24 w-full rounded-xl" />
                 ))}
               </div>
-            ) : files.length === 0 ? (
+            ) : folderCards.length === 0 ? (
               <div className="rounded-xl border border-slate-200 bg-white p-10 text-center">
-                <FileText className="size-12 text-slate-300 mx-auto mb-4" />
+                <FolderOpen className="size-12 text-slate-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-slate-900">No files uploaded yet</h3>
                 <p className="text-slate-500 mt-2">
                   Files uploaded to your medical record by the clinic will appear here.
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {files.map((f) => (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {folderCards.map((f) => (
                   <div
-                    key={f.fileId}
-                    className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3"
+                    key={f.key}
+                    className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-blue-200 hover:bg-blue-50/40"
                   >
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                      <FileText className="size-5" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-900">{f.fileName}</p>
-                      <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
-                        <Folder className="size-3" />
-                        <span className="truncate capitalize">{f.folder?.replace(/-/g, " ") ?? "Medical Records"}</span>
-                        <span>· {formatDate(f.createdAt)}</span>
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                        <FileText className="size-5" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{f.name}</p>
+                        <p className="text-xs text-slate-500">
+                          {f.count} {f.count === 1 ? "file" : "files"}
+                        </p>
+                      </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="gap-1.5 shrink-0"
-                      onClick={() => handleDownload(f)}
-                    >
-                      <Download className="size-4" />
-                      Open
-                    </Button>
                   </div>
                 ))}
               </div>
             )}
-          </CardContent>
+          </div>
         </Card>
 
         <div className="mt-4 flex justify-end">
           <Link href="/clinic/patient/medical-records">
-            <Button variant="ghost" size="sm" className="gap-1.5 text-blue-600">
+            <Button variant="ghost" size="sm" className="text-blue-600">
               View all medical records
             </Button>
           </Link>
