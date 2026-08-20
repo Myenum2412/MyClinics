@@ -571,6 +571,11 @@ export class MedicalRecordService {
         .find({ clinicId, doctorId: ctx.doctorId, status: { $ne: "deleted" } }, { projection: { patientId: 1 } })
         .toArray();
       query.patientId = { $in: patientIds.map((p) => p.patientId) };
+    } else if (ctx.role === "patient") {
+      query.patientId = ctx.patientId;
+      if (patientId && patientId !== ctx.patientId) {
+        throw new ForbiddenError("You can only access your own records");
+      }
     }
     const docs = await this.folderCollection().find(query as never).sort({ isDefault: -1, createdAt: 1 }).toArray();
     return docs as unknown as MedicalRecordFolderDoc[];

@@ -1503,6 +1503,22 @@ export function myAppointments(clinicId: string, query: { status?: string; limit
   return request(tenantPath(clinicId, `/me/appointments?${params}`));
 }
 
+export function bookAppointment(
+  clinicId: string,
+  input: {
+    doctorId: string;
+    date: string;
+    time: string;
+    reason?: string | null;
+    notes?: string | null;
+  }
+): Promise<Appointment> {
+  return request(tenantPath(clinicId, "/me/appointments"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export function myRecords(clinicId: string, query: { limit?: number } = {}): Promise<PageResult<MedicineRecord>> {
   const params = new URLSearchParams();
   params.set("limit", String(query.limit ?? 50));

@@ -27,6 +27,12 @@ export function registerPatientPortalRoutes(app: FastifyInstance): void {
     async (request, reply) => appointments.getMine(request, reply)
   );
 
+  app.post(
+    "/api/clinics/:clinicId/me/appointments",
+    { preHandler: requireClinicAccess },
+    async (request, reply) => appointments.createMine(request, reply)
+  );
+
   app.get(
     "/api/clinics/:clinicId/me/records",
     { preHandler: requireClinicAccess },

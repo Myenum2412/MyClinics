@@ -92,4 +92,21 @@ export class AppointmentController {
     const result = await this.service(db).listAppointments(ctx, { skip, limit });
     return reply.send({ items: result.items.map(appointmentToPublic), total: result.total });
   }
+
+  /** Patient portal: books an appointment for the caller's OWN profile. */
+  async createMine(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (!ctx) throw new UnauthorizedError();
+    if (!ctx.patientId) throw new NotFoundError("Patient account not found");
+    const parsed = appointmentSchema.safeParse({
+      ...(request.body as Record<string, unknown>),
+      patientId: ctx.patientId,
+    });
+    if (!parsed.success) {
+      throw new BadRequestError(parsed.error.issues[0]?.message ?? "Invalid appointment data");
+    }
+    const db = await getDb();
+    const appointment = await this.service(db).createAppointment(ctx, parsed.data);
+    return reply.code(201).send(appointmentToPublic(appointment));
+  }
 }
