@@ -175,6 +175,7 @@ function SearchableSelect({
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [dropUp, setDropUp] = useState(false);
   const [query, setQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -201,6 +202,15 @@ function SearchableSelect({
 
   const toggleOpen = () => {
     if (!open) {
+      // Flip the panel upward when there is no room below (e.g. fields near a
+      // card's bottom edge, where overflow-hidden would clip the list).
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (rect) {
+        const spaceBelow = window.innerHeight - rect.bottom;
+        setDropUp(spaceBelow < 280 && rect.top > 280);
+      } else {
+        setDropUp(false);
+      }
       setQuery("");
       setOpen(true);
       requestAnimationFrame(() => searchRef.current?.focus());
@@ -238,7 +248,11 @@ function SearchableSelect({
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-border bg-background shadow-lg">
+        <div
+          className={`absolute left-0 right-0 z-50 overflow-hidden rounded-xl border border-border bg-background shadow-lg ${
+            dropUp ? "bottom-full mb-1" : "top-full mt-1"
+          }`}
+        >
           <div className="border-b border-border p-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -305,6 +319,7 @@ function MedicineNameInput({
   const { getOptions } = useDropdownOptions(session?.clinicId ?? "");
   const medicines = getOptions("medicines");
   const [open, setOpen] = useState(false);
+  const [dropUp, setDropUp] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -334,14 +349,24 @@ function MedicineNameInput({
         value={value}
         onChange={(e) => {
           onChange(e.target.value);
+          const rect = containerRef.current?.getBoundingClientRect();
+          setDropUp(Boolean(rect) && window.innerHeight - (rect as DOMRect).bottom < 280 && (rect as DOMRect).top > 280);
           setOpen(true);
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          const rect = containerRef.current?.getBoundingClientRect();
+          setDropUp(Boolean(rect) && window.innerHeight - (rect as DOMRect).bottom < 280 && (rect as DOMRect).top > 280);
+          setOpen(true);
+        }}
         placeholder={placeholder || "Search medicine..."}
         className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
       />
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-border bg-background shadow-lg">
+        <div
+          className={`absolute left-0 right-0 z-50 overflow-hidden rounded-xl border border-border bg-background shadow-lg ${
+            dropUp ? "bottom-full mb-1" : "top-full mt-1"
+          }`}
+        >
           {suggestions.length > 0 && (
             <div className="max-h-56 overflow-y-auto p-1">
               {suggestions.map((m) => (
