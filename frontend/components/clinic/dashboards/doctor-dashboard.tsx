@@ -27,10 +27,6 @@ import {
   ChartBarInteractive,
   type ChartBarInteractiveDatum,
 } from "@/components/chart-bar-interactive";
-import {
-  ChartAppointmentAnalytics,
-  type ChartAppointmentAnalyticsDatum,
-} from "@/components/chart-appointment-analytics";
 
 import { type ClinicSession } from "@/lib/clinic-api";
 
@@ -250,32 +246,6 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     return out;
   }, [bills]);
 
-  const monthlyAppointments: ChartAppointmentAnalyticsDatum[] = useMemo(() => {
-    const now = new Date();
-    const totalsByKey = new Map<string, number>();
-    const completedByKey = new Map<string, number>();
-    for (const appt of appointments) {
-      const d = new Date(`${appt.date}T00:00:00`);
-      if (Number.isNaN(d.getTime())) continue;
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-      totalsByKey.set(key, (totalsByKey.get(key) ?? 0) + 1);
-      if (appt.status === "completed") {
-        completedByKey.set(key, (completedByKey.get(key) ?? 0) + 1);
-      }
-    }
-    const out: ChartAppointmentAnalyticsDatum[] = [];
-    for (let offset = 11; offset >= 0; offset--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - offset, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-      out.push({
-        date: key,
-        total: totalsByKey.get(key) ?? 0,
-        completed: completedByKey.get(key) ?? 0,
-      });
-    }
-    return out;
-  }, [appointments]);
-
   return (
     <div className="w-full flex flex-col gap-6">
       {/* Greeting banner */}
@@ -378,23 +348,6 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           />
         )}
       </div>
-
-      {loading ? (
-        <Card className="overflow-hidden rounded-none border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-            <div className="h-5 w-40 animate-pulse rounded-none bg-muted" />
-          </CardHeader>
-          <CardContent className="p-6">
-            <Skeleton className="h-[250px] w-full rounded-none" />
-          </CardContent>
-        </Card>
-      ) : (
-        <ChartAppointmentAnalytics
-          title="Appointment Analytics"
-          subtitle="Appointments per month over the last 12 months."
-          data={monthlyAppointments}
-        />
-      )}
     </div>
   );
 }
