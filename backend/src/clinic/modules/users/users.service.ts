@@ -98,8 +98,8 @@ export class UsersService {
       metadata: { email, role: input.role, linkedId: Object.values(linkField)[0] },
     });
 
-    // Send login details over WhatsApp when the profile has a phone number.
-    if (doc.phone && input.role !== "patient") {
+    // Send login details over WhatsApp when the profile has a phone/WhatsApp number.
+    if ((doc.phone || input.whatsapp) && input.role !== "patient") {
       await notifyUserLoginDetails(this.db, {
         name: input.name,
         role: input.role,

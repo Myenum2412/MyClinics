@@ -129,19 +129,12 @@ async function queue(
   }
 }
 
-async function sendWelcomeMessageWithDocuments(
-  db: Db,
-  phone: string,
-  patientName: string,
-  clinicDetails: ClinicDetails,
-  credentials?: { username: string; password: string },
-  patientDocuments?: Array<{ fileName: string; size: number; downloadUrl: string }> | null,
-  clinicId?: string | null
-): Promise<void> {
-  const lines: string[] = [
-    `👋 Hi ${patientName}, welcome to *${clinicDetails.name}*!`,
-    `Your patient profile has been registered successfully. ✅`,
-  ];
+/**
+ * Builds the full clinic information block (about, contact, location, hours,
+ * socials) shared by the patient welcome and staff/doctor login messages.
+ */
+function buildClinicInfoLines(clinicDetails: ClinicDetails): string[] {
+  const lines: string[] = [];
 
   // ── About the clinic ──────────────────────────────────────────────────────
   if (clinicDetails.description) {
@@ -220,6 +213,25 @@ async function sendWelcomeMessageWithDocuments(
     lines.push(``, `📲 *Follow Us:*`);
     socialLinks.forEach((l) => lines.push(`  ${l}`));
   }
+
+  return lines;
+}
+
+async function sendWelcomeMessageWithDocuments(
+  db: Db,
+  phone: string,
+  patientName: string,
+  clinicDetails: ClinicDetails,
+  credentials?: { username: string; password: string },
+  patientDocuments?: Array<{ fileName: string; size: number; downloadUrl: string }> | null,
+  clinicId?: string | null
+): Promise<void> {
+  const lines: string[] = [
+    `👋 Hi ${patientName}, welcome to *${clinicDetails.name}*!`,
+    `Your patient profile has been registered successfully. ✅`,
+  ];
+
+  lines.push(...buildClinicInfoLines(clinicDetails));
 
   // ── Portal credentials ────────────────────────────────────────────────────
   if (credentials) {
@@ -497,17 +509,22 @@ export async function notifyUserLoginDetails(
 ): Promise<void> {
   const phone = pickNotifyPhone(user);
   if (!phone) return;
-  const org = await ensureDefaultOrganization(db);
-  await queue(
-    db,
-    phone,
-    [
-      `Hi ${firstName(user)}, your ${user.role} login for ${org.name} has been created.`,
-      `Email: ${user.email}`,
-      `Password: ${user.password}`,
-    ].join("\n"),
-    "login_details",
-    undefined,
-    clinicId
-  );
+
+  const clinicDetails = clinicId ? await fetchClinicDetails(db, clinicId) : null;
+  const org = clinicDetails ? null : await ensureDefaultOrganization(db);
+  const clinicName = clinicDetails?.name ?? org?.name ?? "";
+
+  const lines: string[] = [
+    `👋 Hi ${firstName(user)}, your ${user.role} login for *${clinicName}* has been created.`,
+    ``,
+    `🔐 *Login Details:*`,
+    `  ✉️  Email: ${user.email}`,
+    `  🔑 Password: ${user.password}`,
+  ];
+
+  if (clinicDetails) {
+    lines.push(``, `━━━━━━━━━━━━━━━━━━━━`, ...buildClinicInfoLines(clinicDetails));
+  }
+
+  await queue(db, phone, lines.join("\n"), "login_details", undefined, clinicId);
 }
