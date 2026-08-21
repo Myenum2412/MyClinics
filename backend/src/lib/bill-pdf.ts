@@ -37,8 +37,6 @@ const BUSINESS = {
   gstin: "33LEFPK7682L1ZR",
   udyam: "UDYAM-TN-20-0172636",
   email: "myenumam@gmail.com",
-  bankAccount: "925020035722362",
-  ifsc: "UTIB0004598",
   placeOfSupply: "Tamil Nadu (33)",
   paymentTerms: "Due on Receipt",
   notes: "Thanks for your business.",
@@ -84,8 +82,6 @@ export interface Bill {
   placeOfSupply?: string | null;
   gstin?: string | null;
   udyam?: string | null;
-  bankAccount?: string | null;
-  ifsc?: string | null;
   items?: BillItem[];
   subtotal?: number;
   discount?: number;
@@ -123,7 +119,9 @@ const C = {
 
 function symbolOf(currency: string | null | undefined): string {
   const c = (currency ?? "").trim();
-  return c && c !== "Rs." && c !== "Rs" ? c : "₹";
+  // Indian rupee is always rendered with the ₹ symbol, never the ISO code.
+  if (!c || c === "INR" || c === "Rs." || c === "Rs" || c === "₹") return "₹";
+  return c;
 }
 
 function money(value: number, symbol = "₹"): string {
@@ -296,10 +294,10 @@ function drawInvoiceDetails(
     ["Place of Supply", bill.placeOfSupply ?? BUSINESS.placeOfSupply],
   ];
   const colW = (contentWidth - 1) / 2;
-  const rowH = 28;
+  const rowH = 34;
   const leftCells = cells.slice(0, 3);
   const rightCells = cells.slice(3);
-  const h = Math.max(leftCells.length, rightCells.length) * rowH + 12;
+  const h = Math.max(leftCells.length, rightCells.length) * rowH + 18;
   const top = y;
 
   box(doc, MARGIN, top, contentWidth, h);
@@ -308,15 +306,15 @@ function drawInvoiceDetails(
 
   const drawCol = (rows: [string, string][], x: number) => {
     rows.forEach(([label, value], i) => {
-      const cy = top + 10 + i * rowH;
+      const cy = top + 14 + i * rowH;
       doc.font("regular").fontSize(6.5).fillColor(C.faint).text(label.toUpperCase(), x, cy);
-      doc.font("regular").fontSize(9.5).fillColor(C.ink).text(value, x, cy + 9, {
-        width: colW - 20,
+      doc.font("regular").fontSize(10).fillColor(C.ink).text(value, x, cy + 10, {
+        width: colW - 24,
       });
     });
   };
-  drawCol(leftCells, MARGIN + 12);
-  drawCol(rightCells, MARGIN + colW + 12);
+  drawCol(leftCells, MARGIN + 14);
+  drawCol(rightCells, MARGIN + colW + 14);
 
   return top + h;
 }
@@ -324,31 +322,31 @@ function drawInvoiceDetails(
 /** Full-width BILL TO section. */
 function drawBillTo(doc: PDFKit.PDFDocument, y: number, bill: Bill): number {
   const top = y;
-  const h = 66;
+  const h = 80;
   box(doc, MARGIN, top, contentWidth, h);
 
-  doc.font("bold").fontSize(7.5).fillColor(C.navy).text("BILL TO", MARGIN + 12, top + 9);
+  doc.font("bold").fontSize(7.5).fillColor(C.navy).text("BILL TO", MARGIN + 14, top + 11);
 
   const gstinValue = bill.patientGstin ?? "N/A";
-  doc.font("regular").fontSize(8).fillColor(C.faint).text("GSTIN:", MARGIN + 12, top + 22, {
+  doc.font("regular").fontSize(8).fillColor(C.faint).text("GSTIN:", MARGIN + 14, top + 26, {
     width: 90,
   });
-  doc.font("bold").fontSize(9).fillColor(C.ink).text(gstinValue, MARGIN + 12 + 90, top + 22, {
+  doc.font("bold").fontSize(9).fillColor(C.ink).text(gstinValue, MARGIN + 14 + 90, top + 26, {
     width: contentWidth - 120,
   });
 
-  const nameY = top + 24;
-  doc.font("bold").fontSize(11).fillColor(C.ink).text(bill.patientName || "—", MARGIN + 12, nameY, {
-    width: contentWidth - 24,
+  const nameY = top + 28;
+  doc.font("bold").fontSize(11.5).fillColor(C.ink).text(bill.patientName || "—", MARGIN + 14, nameY, {
+    width: contentWidth - 28,
   });
-  const addrY = nameY + 15;
+  const addrY = nameY + 17;
   if (bill.patientAddress) {
-    const lines = Math.max(1, cellLines(doc, String(bill.patientAddress), contentWidth - 24));
+    const lines = Math.max(1, cellLines(doc, String(bill.patientAddress), contentWidth - 28));
     doc.font("regular").fontSize(8.5).fillColor(C.muted).text(
       String(bill.patientAddress),
-      MARGIN + 12,
+      MARGIN + 14,
       addrY,
-      { width: contentWidth - 24 }
+      { width: contentWidth - 28 }
     );
     return top + h + (lines > 1 ? (lines - 1) * 10 : 0);
   }
@@ -365,7 +363,7 @@ function drawItemsTable(
 ): number {
   const headers = ["#", "ITEM & DESCRIPTION", "HSN/SAC", "QTY", "RATE", "CGST", "SGST", "AMOUNT"];
   const colWidths = [20, 207, 46, 36, 56, 62, 62, 58];
-  const headerH = 20;
+  const headerH = 24;
   const rightCols = new Set([3, 4, 5, 6, 7]);
   let y = startY;
 
@@ -401,7 +399,7 @@ function drawItemsTable(
     headers.forEach((h, i) => {
       if (colWidths[i] <= 0) return;
       doc.font("bold").fontSize(6.5).fillColor(C.white);
-      doc.text(h, x + 5, y + 6.5, { width: colWidths[i] - 10, align: rightCols.has(i) ? "right" : "left" });
+      doc.text(h, x + 6, y + 8.5, { width: colWidths[i] - 12, align: rightCols.has(i) ? "right" : "left" });
       x += colWidths[i];
     });
     y += headerH;
@@ -412,7 +410,7 @@ function drawItemsTable(
     const lines = row.cells.map((cell, i) =>
       Math.max(1, cellLines(doc, cell, colWidths[i] - 10))
     );
-    return Math.max(19, Math.max(...lines) * 10 + 6);
+    return Math.max(24, Math.max(...lines) * 10 + 10);
   };
 
   drawHeader();
@@ -428,10 +426,10 @@ function drawItemsTable(
     let x = MARGIN;
     row.cells.forEach((cell, i) => {
       const align = rightCols.has(i) ? "right" : "left";
-      const pad = i === 0 ? 5 : 3;
+      const pad = i === 0 ? 6 : 4;
       if (i === 5 || i === 6) doc.font("regular").fontSize(7);
       else doc.font("regular").fontSize(8);
-      doc.text(cell, x + pad, y + 5, { width: colWidths[i] - pad * 2, align });
+      doc.text(cell, x + pad, y + 7, { width: colWidths[i] - pad * 2, align });
       x += colWidths[i];
     });
     y += rh;
@@ -450,8 +448,8 @@ function drawItemsTable(
     taxTotal > 0 ? money(sgstTotal, symbol) : "—",
     taxTotal > 0 ? money(taxTotal, symbol) : "—",
   ];
-  if (y + 22 > 720) {
-    ensureSpace(headerH + 22 + 6);
+  if (y + 26 > 720) {
+    ensureSpace(headerH + 26 + 6);
     y += 6;
     drawHeader();
   }
@@ -460,11 +458,11 @@ function drawItemsTable(
   let x = MARGIN;
   totalsCells.forEach((cell, i) => {
     const align = rightCols.has(i) ? "right" : "left";
-    const pad = i === 0 ? 5 : 3;
-    doc.text(cell, x + pad, y + 6, { width: colWidths[i] - pad * 2, align });
+    const pad = i === 0 ? 6 : 4;
+    doc.text(cell, x + pad, y + 8, { width: colWidths[i] - pad * 2, align });
     x += colWidths[i];
   });
-  y += 22;
+  y += 26;
   doc.moveTo(MARGIN, y).lineTo(MARGIN + contentWidth, y).lineWidth(0.75).strokeColor(C.border).stroke();
 
   return y;
@@ -499,13 +497,13 @@ function drawTotals(
     rows.push([`SGST ${halfRate}%`, money(sgst, symbol), false]);
   }
 
-  const rowH = 19;
-  const padX = 12;
-  const h = 14 + rows.length * rowH + 18 + 24 + 4;
+  const rowH = 22;
+  const padX = 14;
+  const h = 18 + rows.length * rowH + 20 + 26 + 6;
 
   box(doc, x, y, w, h);
   rows.forEach(([label, value], i) => {
-    const ry = y + 14 + i * rowH;
+    const ry = y + 18 + i * rowH;
     doc.font("regular").fontSize(8.5).fillColor(C.muted).text(label, x + padX, ry, { width: w - padX * 2 - 110 });
     doc.font("bold").fontSize(8.5).fillColor(C.ink).text(value, x + padX + (w - padX * 2 - 110), ry, {
       width: 110 - 6,
@@ -513,20 +511,20 @@ function drawTotals(
     });
   });
 
-  const totalY = y + 14 + rows.length * rowH + 4;
-  doc.rect(x + 8, totalY, w - 16, 18).fill(C.band);
+  const totalY = y + 18 + rows.length * rowH + 6;
+  doc.rect(x + 8, totalY, w - 16, 20).fill(C.band);
   doc.moveTo(x, totalY).lineTo(x + w, totalY).lineWidth(0.75).strokeColor(C.border).stroke();
-  doc.font("bold").fontSize(11).fillColor(C.navy).text("Total", x + padX, totalY + 4.5, { width: 90 });
-  doc.font("bold").fontSize(11).fillColor(C.navy).text(money(bill.total ?? 0, symbol), x + w - padX - 110, totalY + 4.5, {
+  doc.font("bold").fontSize(11).fillColor(C.navy).text("Total", x + padX, totalY + 5.5, { width: 90 });
+  doc.font("bold").fontSize(11).fillColor(C.navy).text(money(bill.total ?? 0, symbol), x + w - padX - 110, totalY + 5.5, {
     width: 110,
     align: "right",
   });
 
-  const dueY = totalY + 18 + 6;
-  doc.rect(x + 8, dueY, w - 16, 18).fill(C.band);
+  const dueY = totalY + 20 + 8;
+  doc.rect(x + 8, dueY, w - 16, 20).fill(C.band);
   doc.moveTo(x, dueY).lineTo(x + w, dueY).lineWidth(0.75).strokeColor(C.border).stroke();
-  doc.font("bold").fontSize(11).fillColor(C.navy).text("Balance Due", x + padX, dueY + 4.5, { width: 120 });
-  doc.font("bold").fontSize(11).fillColor(C.navy).text(money(balanceDue, symbol), x + w - padX - 110, dueY + 4.5, {
+  doc.font("bold").fontSize(11).fillColor(C.navy).text("Balance Due", x + padX, dueY + 5.5, { width: 120 });
+  doc.font("bold").fontSize(11).fillColor(C.navy).text(money(balanceDue, symbol), x + w - padX - 110, dueY + 5.5, {
     width: 110,
     align: "right",
   });
@@ -556,22 +554,20 @@ function drawLeftDetails(
   for (const [label, value] of rows) {
     doc.font("bold").fontSize(7).fillColor(C.navy).text(label.toUpperCase(), x, cy);
     const lines = Math.max(1, cellLines(doc, value, w));
-    doc.font("regular").fontSize(8.5).fillColor(C.ink).text(value, x, cy + 10, { width: w });
-    cy += 10 + lines * 11 + 6;
+    doc.font("regular").fontSize(8.5).fillColor(C.ink).text(value, x, cy + 11, { width: w });
+    cy += 11 + lines * 12 + 10;
   }
 
   return cy;
 }
 
 /**
- * Page 2 — PAYMENT DETAILS: payment summary, bank transfer details,
- * UPI ID + QR code, and the numbered terms & conditions.
+ * Page 2 — PAYMENT DETAILS: payment summary, UPI ID + QR code,
+ * and the numbered terms & conditions.
  */
 function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, bill: Bill): void {
   const symbol = symbolOf(bill.currency);
   const companyName = company.name || "My Clinic";
-  const accountNo = bill.bankAccount ?? BUSINESS.bankAccount;
-  const ifsc = bill.ifsc ?? BUSINESS.ifsc;
   const balanceDue = bill.balanceDue ?? Math.max(0, (bill.total ?? 0) - (bill.amountPaid ?? 0));
   const terms = bill.terms
     ? String(bill.terms).split(/\r?\n/).map((t) => t.trim()).filter(Boolean)
@@ -607,31 +603,10 @@ function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, b
   });
   y += sumH + 12;
 
-  // ── Bank transfer + UPI side by side ─────────────────────────────────────
-  const halfW = (contentWidth - 12) / 2;
-
-  // Bank details (left)
-  const bankRows: [string, string][] = [
-    ["Account Name", companyName],
-    ["Account No.", accountNo],
-    ["IFSC Code", ifsc],
-  ];
-  if (bill.upiId) bankRows.push(["UPI ID", bill.upiId]);
-  const bankH = 26 + bankRows.length * 22 + 10;
-  box(doc, MARGIN, y, halfW, bankH);
-  doc.font("bold").fontSize(8).fillColor(C.navy).text("BANK TRANSFER DETAILS", MARGIN + 12, y + 8);
-  bankRows.forEach(([label, value], i) => {
-    const cy = y + 28 + i * 22;
-    doc.font("regular").fontSize(7).fillColor(C.faint).text(label.toUpperCase(), MARGIN + 12, cy);
-    doc.font("bold").fontSize(9.5).fillColor(C.ink).text(value, MARGIN + 12, cy + 9, {
-      width: halfW - 24,
-    });
-  });
-
-  // UPI QR (right)
-  const upiX = MARGIN + halfW + 12;
-  box(doc, upiX, y, halfW, bankH);
-  doc.font("bold").fontSize(8).fillColor(C.navy).text("SCAN TO PAY (UPI)", upiX + 12, y + 8);
+  // ── UPI payment (full width) ─────────────────────────────────────────────
+  const upiH = 118;
+  box(doc, MARGIN, y, contentWidth, upiH);
+  doc.font("bold").fontSize(8).fillColor(C.navy).text("SCAN TO PAY (UPI)", MARGIN + 12, y + 8);
   let qrDrawn = false;
   if (bill.qrCodeUrl) {
     try {
@@ -643,22 +618,37 @@ function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, b
         qrBuffer = Buffer.from(bill.qrCodeUrl, "base64");
       }
       if (qrBuffer) {
-        doc.image(qrBuffer, upiX + 12, y + 26, { width: 84, height: 84 });
+        doc.image(qrBuffer, MARGIN + 12, y + 26, { width: 80, height: 80 });
         qrDrawn = true;
       }
     } catch (e) {
       console.error("Failed to render QR Code in PDF:", e);
     }
   }
-  doc.font("regular").fontSize(8).fillColor(C.muted).text(
-    qrDrawn
-      ? "Scan this QR with any UPI app to pay."
-      : "No UPI QR code configured. Pay via bank transfer using the details on the left.",
-    upiX + (qrDrawn ? 108 : 12),
-    y + 30,
-    { width: halfW - (qrDrawn ? 120 : 24) }
-  );
-  y += bankH + 12;
+  if (qrDrawn) {
+    if (bill.upiId) {
+      doc.font("regular").fontSize(7).fillColor(C.faint).text("UPI ID", MARGIN + 108, y + 30);
+      doc.font("bold").fontSize(10.5).fillColor(C.ink).text(bill.upiId, MARGIN + 108, y + 40, {
+        width: contentWidth - 130,
+      });
+    }
+    doc.font("regular").fontSize(8).fillColor(C.muted).text(
+      "Scan this QR with any UPI app to pay.",
+      MARGIN + 108,
+      y + (bill.upiId ? 62 : 34),
+      { width: contentWidth - 130 }
+    );
+  } else {
+    doc.font("regular").fontSize(8).fillColor(C.muted).text(
+      bill.upiId
+        ? `Pay to UPI ID: ${bill.upiId} using any UPI app.`
+        : "No UPI payment details configured.",
+      MARGIN + 12,
+      y + 30,
+      { width: contentWidth - 24 }
+    );
+  }
+  y += upiH + 12;
 
   // ── Terms & conditions ───────────────────────────────────────────────────
   box(doc, MARGIN, y, contentWidth, 26);
@@ -723,22 +713,22 @@ export async function generateBillPdf(
   decoratePage(doc, 1, company, bill);
 
   // ── Page 1 — BILLING / INVOICE ──────────────────────────────────────────
-  y = 96;
-  y = drawInvoiceDetails(doc, y, bill) + 12;
+  y = 106;
+  y = drawInvoiceDetails(doc, y, bill) + 18;
 
   // ── Bill To ─────────────────────────────────────────────────────────────
-  y = drawBillTo(doc, y, bill) + 12;
+  y = drawBillTo(doc, y, bill) + 18;
 
   // ── Items table ─────────────────────────────────────────────────────────
-  const tableH = 20 + Math.max(1, (bill.items ?? []).length) * 19 + 22;
+  const tableH = 24 + Math.max(1, (bill.items ?? []).length) * 24 + 26;
   ensureSpace(tableH + 8);
-  y = drawItemsTable(doc, bill, symbol, y, ensureSpace) + 12;
+  y = drawItemsTable(doc, bill, symbol, y, ensureSpace) + 18;
 
   // ── Totals panel + words/notes ──────────────────────────────────────────
   const leftW = 300;
   const rightW = contentWidth - leftW - 12;
-  const totalsH = 14 + 4 * 19 + 18 + 24 + 4;
-  ensureSpace(Math.max(totalsH, 140));
+  const totalsH = 18 + 4 * 22 + 20 + 26 + 6;
+  ensureSpace(Math.max(totalsH, 150));
   drawTotals(doc, MARGIN + leftW + 12, y, rightW, bill, symbol);
   drawLeftDetails(doc, MARGIN, y, leftW, bill, company);
 
