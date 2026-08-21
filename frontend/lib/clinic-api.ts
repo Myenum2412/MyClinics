@@ -333,6 +333,11 @@ export interface ClinicSettings {
   smsEnabled: boolean;
   emailNotifications: boolean;
   lookups?: Record<string, string[]>;
+  gstin?: string | null;
+  udyam?: string | null;
+  termsAndConditions?: string | null;
+  upiId?: string | null;
+  qrCodeUrl?: string | null;
   updatedAt: string;
 }
 
@@ -1375,16 +1380,18 @@ export function listClinicWelcomeDocuments(
   clinicId: string,
   query: { q?: string } = {}
 ): Promise<ClinicWelcomeDocumentsList> {
+  tenantPath(clinicId, "");
   const params = new URLSearchParams();
   if (query.q) params.set("q", query.q);
   const qs = params.toString();
-  return request(tenantPath(clinicId, `/welcome-documents${qs ? `?${qs}` : ""}`), { cache: "no-store" });
+  return request(`/api/clinics/me/welcome-documents${qs ? `?${qs}` : ""}`, { cache: "no-store" });
 }
 
 export function uploadClinicWelcomeDocument(
   clinicId: string,
   file: File
 ): Promise<ClinicWelcomeDocument> {
+  tenantPath(clinicId, "");
   const form = new FormData();
   form.append("file", file);
 
@@ -1392,7 +1399,7 @@ export function uploadClinicWelcomeDocument(
   const token = typeof window !== "undefined" ? getStoredToken() : null;
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  return fetch(`${API_BASE}${tenantPath(clinicId, "/welcome-documents")}`, {
+  return fetch(`${API_BASE}/api/clinics/me/welcome-documents`, {
     method: "POST",
     headers,
     body: form,
@@ -1416,14 +1423,16 @@ export function getClinicWelcomeDocumentDownloadUrl(
   clinicId: string,
   documentId: string
 ): Promise<{ url: string; fileName: string; mimeType: string | null }> {
-  return request(tenantPath(clinicId, `/welcome-documents/${documentId}/download`), { cache: "no-store" });
+  tenantPath(clinicId, "");
+  return request(`/api/clinics/me/welcome-documents/${documentId}/download`, { cache: "no-store" });
 }
 
 export function deleteClinicWelcomeDocument(
   clinicId: string,
   documentId: string
 ): Promise<{ ok: true }> {
-  return request(tenantPath(clinicId, `/welcome-documents/${documentId}`), { method: "DELETE" });
+  tenantPath(clinicId, "");
+  return request(`/api/clinics/me/welcome-documents/${documentId}`, { method: "DELETE" });
 }
 
 // ── Platform services (WhatsApp + soul.md) ───────────────────────────────

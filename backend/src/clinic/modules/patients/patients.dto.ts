@@ -50,6 +50,8 @@ export const createPatientSchema = z.object({
   referredBy: optionalString(120),
   howDidYouHear: optionalString(120),
   notes: optionalString(1000),
+  /** Lifecycle status of the patient record. */
+  status: z.enum(["active", "inactive"]).optional(),
   /** Assigns the patient to a doctor (must exist in this clinic). */
   doctorId: z.string().startsWith("doc_").nullable().optional(),
   /** When set, a patient portal account is created with this password. */

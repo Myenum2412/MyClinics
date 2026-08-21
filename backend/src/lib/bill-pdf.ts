@@ -99,6 +99,8 @@ export interface Bill {
   status?: string | null;
   notes?: string | null;
   terms?: string | null;
+  upiId?: string | null;
+  qrCodeUrl?: string | null;
   generatedBy?: string | null;
   currency?: string | null;
 }
@@ -557,6 +559,10 @@ function drawLeftDetails(
     ["IFSC Code", ifsc],
   ];
 
+  if (bill.upiId) {
+    rows.push(["UPI ID", bill.upiId]);
+  }
+
   let cy = y;
   for (const [label, value] of rows) {
     doc.font("bold").fontSize(7).fillColor(C.navy).text(label.toUpperCase(), x, cy);
@@ -564,6 +570,26 @@ function drawLeftDetails(
     const lines = Math.max(1, cellLines(doc, text, w));
     doc.font("regular").fontSize(8.5).fillColor(C.ink).text(text, x, cy + 10, { width: w });
     cy += 10 + lines * 11 + 6;
+  }
+
+  if (bill.qrCodeUrl) {
+    doc.font("bold").fontSize(7).fillColor(C.navy).text("SCAN TO PAY (UPI)", x, cy);
+    cy += 10;
+    try {
+      let qrBuffer: Buffer | null = null;
+      if (bill.qrCodeUrl.startsWith("data:image/")) {
+        const base64Data = bill.qrCodeUrl.split(",")[1];
+        if (base64Data) qrBuffer = Buffer.from(base64Data, "base64");
+      } else {
+        qrBuffer = Buffer.from(bill.qrCodeUrl, "base64");
+      }
+      if (qrBuffer) {
+        doc.image(qrBuffer, x, cy, { width: 70, height: 70 });
+        cy += 70 + 8;
+      }
+    } catch (e) {
+      console.error("Failed to render QR Code in PDF:", e);
+    }
   }
 
   doc.font("bold").fontSize(7).fillColor(C.navy).text("TERMS & CONDITIONS", x, cy);
@@ -627,7 +653,8 @@ export async function generateBillPdf(
   const leftW = 300;
   const rightW = contentWidth - leftW - 12;
   const totalsH = 14 + 4 * 19 + 18 + 24 + 4;
-  ensureSpace(Math.max(totalsH, 120));
+  const minLeftH = bill.qrCodeUrl ? 240 : 160;
+  ensureSpace(Math.max(totalsH, minLeftH));
   drawTotals(doc, MARGIN + leftW + 12, y, rightW, bill, symbol);
   drawLeftDetails(doc, MARGIN, y, leftW, bill, company);
 

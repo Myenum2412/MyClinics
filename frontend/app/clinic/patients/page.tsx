@@ -95,6 +95,7 @@ interface PatientFormState {
   referredBy: string;
   howDidYouHear: string;
   notes: string;
+  status: string;
   doctorId: string | null;
   password: string;
   profileImage: File | null;
@@ -133,6 +134,7 @@ const EMPTY_FORM: PatientFormState = {
   referredBy: "",
   howDidYouHear: "",
   notes: "",
+  status: "active",
   doctorId: null,
   password: "",
   profileImage: null,
@@ -231,6 +233,7 @@ export default function PatientsPage() {
         doctorId: form.doctorId || null,
       };
       if (editing) {
+        payload.status = form.status === "inactive" ? "inactive" : "active";
         await updatePatient(clinicId, editing.patientId, payload);
         if (form.profileImage) {
           try {
@@ -517,6 +520,7 @@ export default function PatientsPage() {
                 referredBy: editing.referredBy ?? "",
                 howDidYouHear: editing.howDidYouHear ?? "",
                 notes: editing.notes ?? "",
+                status: editing.status ?? "active",
                 doctorId: editing.doctorId,
                 password: "",
                 profileImage: null,
@@ -598,6 +602,7 @@ export default function PatientsPage() {
                 referredBy: viewing.referredBy ?? "",
                 howDidYouHear: viewing.howDidYouHear ?? "",
                 notes: viewing.notes ?? "",
+                status: viewing.status ?? "active",
                 doctorId: viewing.doctorId,
                 password: "",
                 profileImage: null,
@@ -1094,6 +1099,21 @@ function PatientForm({
               </SelectContent>
             </Select>
           </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-2">
+            <Label>Record status</Label>
+            <Select value={form.status} onValueChange={(v) => set("status", v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div />
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="grid gap-2">

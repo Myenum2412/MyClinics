@@ -19,6 +19,11 @@ export const updateSettingsSchema = z.object({
       z.array(z.string().trim().min(1).max(80)).max(500)
     )
     .optional(),
+  gstin: z.string().trim().max(15).nullable().optional(),
+  udyam: z.string().trim().max(30).nullable().optional(),
+  termsAndConditions: z.string().trim().max(1000).nullable().optional(),
+  upiId: z.string().trim().max(100).nullable().optional(),
+  qrCodeUrl: z.string().trim().max(200000).nullable().optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
@@ -32,4 +37,9 @@ export const DEFAULT_SETTINGS = {
   smsEnabled: false,
   emailNotifications: false,
   lookups: {} as Record<string, string[]>,
+  gstin: null,
+  udyam: null,
+  termsAndConditions: null,
+  upiId: null,
+  qrCodeUrl: null,
 } as const;

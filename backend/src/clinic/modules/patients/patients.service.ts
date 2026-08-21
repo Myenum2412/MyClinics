@@ -271,6 +271,7 @@ export class PatientService {
       "referredBy",
       "howDidYouHear",
       "notes",
+      "status",
     ] as const) {
       const value = input[key];
       if (value !== undefined) patch[key] = value;

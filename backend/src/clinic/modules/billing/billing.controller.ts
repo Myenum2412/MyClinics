@@ -101,6 +101,10 @@ export class BillingController {
       .collection(CLINIC_COLLECTIONS.clinics)
       .findOne({ clinicId, status: { $ne: "deleted" } });
 
+    const settings = await db
+      .collection(CLINIC_COLLECTIONS.settings)
+      .findOne({ clinicId });
+
     const company: OrganizationRecord = {
       id: clinicId,
       name: clinic?.name ?? "My Clinic",
@@ -133,6 +137,11 @@ export class BillingController {
       dueDate: bill.dueDate ? bill.dueDate.toISOString() : null,
       paidAt: bill.paidAt ? bill.paidAt.toISOString() : null,
       reference: bill.reference,
+      gstin: settings?.gstin ?? clinic?.profile?.gstNumber ?? null,
+      udyam: settings?.udyam ?? clinic?.profile?.taxBusinessId ?? null,
+      terms: settings?.termsAndConditions ?? null,
+      upiId: settings?.upiId ?? null,
+      qrCodeUrl: settings?.qrCodeUrl ?? null,
       items: bill.items.map((item) => ({
         name: item.description,
         qty: item.quantity,

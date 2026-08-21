@@ -29,6 +29,11 @@ export class SettingsService {
     if (input.smsEnabled !== undefined) patch.smsEnabled = input.smsEnabled;
     if (input.emailNotifications !== undefined) patch.emailNotifications = input.emailNotifications;
     if (input.lookups !== undefined) patch.lookups = input.lookups;
+    if (input.gstin !== undefined) patch.gstin = input.gstin;
+    if (input.udyam !== undefined) patch.udyam = input.udyam;
+    if (input.termsAndConditions !== undefined) patch.termsAndConditions = input.termsAndConditions;
+    if (input.upiId !== undefined) patch.upiId = input.upiId;
+    if (input.qrCodeUrl !== undefined) patch.qrCodeUrl = input.qrCodeUrl;
 
     const updated = await this.repo(ctx).update(patch);
     if (!updated) {

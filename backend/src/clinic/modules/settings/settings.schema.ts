@@ -10,6 +10,11 @@ export interface ClinicSettingsDoc extends ClinicDocument {
   smsEnabled: boolean;
   emailNotifications: boolean;
   lookups: Record<string, string[]>;
+  gstin?: string | null;
+  udyam?: string | null;
+  termsAndConditions?: string | null;
+  upiId?: string | null;
+  qrCodeUrl?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,6 +29,11 @@ export function settingsToPublic(doc: ClinicSettingsDoc) {
     smsEnabled: doc.smsEnabled,
     emailNotifications: doc.emailNotifications,
     lookups: doc.lookups ?? {},
+    gstin: doc.gstin ?? null,
+    udyam: doc.udyam ?? null,
+    termsAndConditions: doc.termsAndConditions ?? null,
+    upiId: doc.upiId ?? null,
+    qrCodeUrl: doc.qrCodeUrl ?? null,
     updatedAt: doc.updatedAt,
   };
 }

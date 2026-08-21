@@ -149,7 +149,21 @@ export class BillingService {
     const existing = await repo.findByBillId(billId);
     if (!existing) throw new NotFoundError("Bill not found");
     if (existing.status === "paid") {
-      throw new ConflictError("Paid bills cannot be modified");
+      // Paid bills are financially frozen, but metadata/status transitions
+      // (e.g. voiding a paid bill) must remain possible.
+      const FINANCIAL_FIELDS = [
+        "items",
+        "discount",
+        "taxPercent",
+        "amountPaid",
+        "invoiceDate",
+        "dueDate",
+        "paymentType",
+      ] as const;
+      const attemptedFinancial = FINANCIAL_FIELDS.some((f) => input[f] !== undefined);
+      if (attemptedFinancial) {
+        throw new ConflictError("Paid bills cannot be modified. Void the bill instead.");
+      }
     }
 
     const items = input.items ?? existing.items;
