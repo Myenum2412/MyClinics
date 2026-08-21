@@ -1499,6 +1499,51 @@ export function getWhatsappSession(): Promise<WhatsappSession> {
   return request("/api/whatsapp/session", { cache: "no-store" });
 }
 
+// ── Per-clinic WhatsApp connection ─────────────────────────────────────────
+
+export type ClinicWhatsappStage =
+  | "unconfigured"
+  | "idle"
+  | "qr"
+  | "authenticated"
+  | "ready"
+  | "disconnected"
+  | "error";
+
+export interface ClinicWhatsappSession {
+  stage: ClinicWhatsappStage;
+  connected: boolean;
+  updatedAt: string | null;
+  phone: string | null;
+  enabled: boolean;
+  lastConnectedAt: string | null;
+  qr: { dataUrl: string; generatedAt: string } | null;
+}
+
+/** This clinic's own WhatsApp Web connection state (QR pairing, etc.). */
+export function getClinicWhatsappSession(clinicId: string): Promise<ClinicWhatsappSession> {
+  return request(tenantPath(clinicId, "/whatsapp/session"), { cache: "no-store" });
+}
+
+/** Starts (or re-pairs) this clinic's WhatsApp connection — the QR appears within a few seconds. */
+export function connectClinicWhatsapp(clinicId: string): Promise<{ ok: true; status: string }> {
+  return request(tenantPath(clinicId, "/whatsapp/session/connect"), { method: "POST" });
+}
+
+/**
+ * Stops this clinic's WhatsApp connection. With `logout` the paired device is
+ * unlinked and the session wiped — the next connect requires a fresh QR scan.
+ */
+export function disconnectClinicWhatsapp(
+  clinicId: string,
+  logout = false
+): Promise<{ ok: true; status: string }> {
+  return request(tenantPath(clinicId, "/whatsapp/session/disconnect"), {
+    method: "POST",
+    body: JSON.stringify({ logout }),
+  });
+}
+
 // ── Notifications ──────────────────────────────────────────────────────────
 
 export function listNotifications(

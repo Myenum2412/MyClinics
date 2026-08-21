@@ -139,12 +139,14 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
       const actionText = notification.action === "created" ? "issued" : "updated";
       const message = `Hi ${patient.fullName},\n\nYour prescription has been ${actionText} by Dr. ${doctorName} on ${prescription.visitDate}.\n\nPlease log in to the Patient Portal to securely view your prescription details.\n\nBest regards,\nClinic Team`;
 
-      // 5. Enqueue notification
+      // 5. Enqueue notification through the owning clinic's connection
       const result = await enqueueClinicNotification(
         db,
         phone,
         message,
-        "prescription_notification"
+        "prescription_notification",
+        undefined,
+        notification.clinicId
       );
 
       let waNotificationId: ObjectId | null = null;
@@ -156,6 +158,7 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
               remoteId: result.remoteId,
               message,
               type: "prescription_notification",
+              clinicId: notification.clinicId,
             },
             { sort: { createdAt: -1 } }
           );

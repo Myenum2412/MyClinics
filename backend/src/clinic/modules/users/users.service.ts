@@ -107,7 +107,7 @@ export class UsersService {
         whatsapp: input.whatsapp ?? null,
         email,
         password: input.password,
-      });
+      }, clinicId);
     }
 
     return doc as unknown as WithId<UserDoc>;
@@ -178,7 +178,7 @@ export class UsersService {
           whatsapp,
           email: user.email,
           password: input.password,
-        });
+        }, clinicId);
       }
     }
 

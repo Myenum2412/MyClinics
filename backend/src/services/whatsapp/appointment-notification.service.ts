@@ -270,12 +270,14 @@ export async function processAppointmentNotifications(db: Db): Promise<void> {
           continue;
         }
 
-        // Enqueue the WhatsApp message
+        // Enqueue the WhatsApp message through the owning clinic's connection
         const result = await enqueueClinicNotification(
           db,
           phone,
           notification.message || "",
-          "appointment_notification"
+          "appointment_notification",
+          undefined,
+          notification.clinicId
         );
 
         let waNotificationId: ObjectId | null = null;
@@ -287,6 +289,7 @@ export async function processAppointmentNotifications(db: Db): Promise<void> {
                 remoteId: result.remoteId,
                 message: notification.message,
                 type: "appointment_notification",
+                clinicId: notification.clinicId,
               },
               { sort: { createdAt: -1 } }
             );

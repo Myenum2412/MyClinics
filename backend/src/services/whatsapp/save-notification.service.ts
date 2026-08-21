@@ -110,9 +110,14 @@ async function queue(
   phone: string,
   message: string,
   type: string,
-  media?: { filename: string; mimetype: string; data: string }
+  media?: { filename: string; mimetype: string; data: string },
+  clinicId?: string | null
 ): Promise<void> {
   try {
+    if (clinicId) {
+      await enqueueNotification(db, clinicId, phone, message, type, media, clinicId);
+      return;
+    }
     const org = await ensureDefaultOrganization(db);
     await enqueueNotification(db, org.id, phone, message, type, media);
   } catch (err) {
@@ -130,7 +135,8 @@ async function sendWelcomeMessageWithDocuments(
   patientName: string,
   clinicDetails: ClinicDetails,
   credentials?: { username: string; password: string },
-  patientDocuments?: Array<{ fileName: string; size: number; downloadUrl: string }> | null
+  patientDocuments?: Array<{ fileName: string; size: number; downloadUrl: string }> | null,
+  clinicId?: string | null
 ): Promise<void> {
   const lines: string[] = [
     `👋 Hi ${patientName}, welcome to *${clinicDetails.name}*!`,
@@ -244,7 +250,7 @@ async function sendWelcomeMessageWithDocuments(
   }
 
   const message = lines.join("\n");
-  await queue(db, phone, message, "patient_registered_welcome");
+  await queue(db, phone, message, "patient_registered_welcome", undefined, clinicId);
 }
 
 function formatFileSize(bytes: number): string {
@@ -280,7 +286,8 @@ export async function notifyPatientRegistered(
       opts.sendCredentials && opts.portalUsername && opts.password
         ? { username: opts.portalUsername, password: opts.password! }
         : undefined,
-      opts.patientDocuments
+      opts.patientDocuments,
+      opts.clinicId
     );
     return;
   }
@@ -293,7 +300,7 @@ export async function notifyPatientRegistered(
   if (opts.sendCredentials && opts.portalUsername && opts.password) {
     lines.push("Portal login:", `Username: ${opts.portalUsername}`, `Password: ${opts.password}`);
   }
-  await queue(db, phone, lines.join("\n"), "patient_registered");
+  await queue(db, phone, lines.join("\n"), "patient_registered", undefined, opts.clinicId);
 }
 
 /** Sent to a patient when their portal credentials are reset/resent. */
@@ -332,7 +339,9 @@ export async function notifyPatientCredentials(
       `Email: ${user.email}`,
       `Password: ${user.password}`,
     ].join("\n"),
-    "patient_credentials"
+    "patient_credentials",
+    undefined,
+    user.clinicId
   );
 }
 
@@ -340,7 +349,8 @@ export async function notifyPatientCredentials(
 export async function notifyPatientUpdated(
   db: Db,
   patient: Notifyable,
-  fields: string[]
+  fields: string[],
+  clinicId?: string | null
 ): Promise<void> {
   const phone = pickNotifyPhone(patient);
   if (!phone) return;
@@ -350,7 +360,9 @@ export async function notifyPatientUpdated(
     db,
     phone,
     `Hi ${firstName(patient)}, your profile at ${org.name} has been updated successfully${detail}.`,
-    "patient_updated"
+    "patient_updated",
+    undefined,
+    clinicId
   );
 }
 
@@ -358,7 +370,8 @@ export async function notifyPatientUpdated(
 export async function notifyDoctorOfNewPatient(
   db: Db,
   doctor: Notifyable,
-  patientName: string
+  patientName: string,
+  clinicId?: string | null
 ): Promise<void> {
   const phone = pickNotifyPhone(doctor);
   if (!phone) return;
@@ -367,7 +380,9 @@ export async function notifyDoctorOfNewPatient(
     db,
     phone,
     `A new patient has been registered at ${org.name}: ${patientName}. Please review their profile.`,
-    "doctor_new_patient"
+    "doctor_new_patient",
+    undefined,
+    clinicId
   );
 }
 
@@ -376,7 +391,8 @@ export async function notifyDoctorOfPatientUpdate(
   db: Db,
   doctor: Notifyable,
   patientName: string,
-  fields: string[]
+  fields: string[],
+  clinicId?: string | null
 ): Promise<void> {
   const phone = pickNotifyPhone(doctor);
   if (!phone) return;
@@ -386,7 +402,9 @@ export async function notifyDoctorOfPatientUpdate(
     db,
     phone,
     `Patient profile updated at ${org.name}: ${patientName}${detail}.`,
-    "doctor_patient_updated"
+    "doctor_patient_updated",
+    undefined,
+    clinicId
   );
 }
 
@@ -394,7 +412,8 @@ export async function notifyDoctorOfPatientUpdate(
 export async function notifyPatientAssigned(
   db: Db,
   patient: Notifyable,
-  doctorName: string | null
+  doctorName: string | null,
+  clinicId?: string | null
 ): Promise<void> {
   const phone = pickNotifyPhone(patient);
   if (!phone) return;
@@ -402,14 +421,15 @@ export async function notifyPatientAssigned(
   const message = doctorName
     ? `Hi ${firstName(patient)}, you have been assigned to Dr. ${doctorName} at ${org.name}.`
     : `Hi ${firstName(patient)}, you are no longer assigned to a doctor at ${org.name}.`;
-  await queue(db, phone, message, "patient_assigned");
+  await queue(db, phone, message, "patient_assigned", undefined, clinicId);
 }
 
 /** Sent to the doctor when a patient is assigned to them. */
 export async function notifyDoctorOfAssignment(
   db: Db,
   doctor: Notifyable,
-  patientName: string
+  patientName: string,
+  clinicId?: string | null
 ): Promise<void> {
   const phone = pickNotifyPhone(doctor);
   if (!phone) return;
@@ -418,14 +438,17 @@ export async function notifyDoctorOfAssignment(
     db,
     phone,
     `Patient ${patientName} has been assigned to you at ${org.name}.`,
-    "doctor_patient_assigned"
+    "doctor_patient_assigned",
+    undefined,
+    clinicId
   );
 }
 
 /** Sent to the doctor after their profile is created. */
 export async function notifyDoctorRegistered(
   db: Db,
-  doctor: Notifyable
+  doctor: Notifyable,
+  clinicId?: string | null
 ): Promise<void> {
   const phone = pickNotifyPhone(doctor);
   if (!phone) return;
@@ -434,14 +457,17 @@ export async function notifyDoctorRegistered(
     db,
     phone,
     `Hi ${firstName(doctor)}, welcome to ${org.name}! Your doctor profile has been registered successfully.`,
-    "doctor_registered"
+    "doctor_registered",
+    undefined,
+    clinicId
   );
 }
 
 /** Sent to the doctor after their profile is updated. */
 export async function notifyDoctorUpdated(
   db: Db,
-  doctor: Notifyable
+  doctor: Notifyable,
+  clinicId?: string | null
 ): Promise<void> {
   const phone = pickNotifyPhone(doctor);
   if (!phone) return;
@@ -450,7 +476,9 @@ export async function notifyDoctorUpdated(
     db,
     phone,
     `Hi ${firstName(doctor)}, your profile at ${org.name} has been updated successfully.`,
-    "doctor_updated"
+    "doctor_updated",
+    undefined,
+    clinicId
   );
 }
 
@@ -464,7 +492,8 @@ export async function notifyUserLoginDetails(
     whatsapp?: string | null;
     email: string;
     password: string;
-  }
+  },
+  clinicId?: string | null
 ): Promise<void> {
   const phone = pickNotifyPhone(user);
   if (!phone) return;
@@ -477,6 +506,8 @@ export async function notifyUserLoginDetails(
       `Email: ${user.email}`,
       `Password: ${user.password}`,
     ].join("\n"),
-    "login_details"
+    "login_details",
+    undefined,
+    clinicId
   );
 }

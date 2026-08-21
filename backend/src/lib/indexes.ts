@@ -20,6 +20,8 @@ export async function ensureIndexes(db: Db): Promise<void> {
   const waMemories = db.collection("wa_memories");
   const waNotifications = db.collection("wa_notifications");
   const reminders = db.collection("reminders");
+  const waSessionCommands = db.collection("wa_session_commands");
+  const waClinicSessions = db.collection("wa_clinic_sessions");
 
   await Promise.all([
     appointments.createIndex({ date: 1, status: 1, time: 1 }),
@@ -53,8 +55,12 @@ export async function ensureIndexes(db: Db): Promise<void> {
     waConversations.createIndex({ organizationId: 1, customerId: 1, createdAt: -1 }),
     waMemories.createIndex({ organizationId: 1, customerId: 1 }),
     waNotifications.createIndex({ organizationId: 1, status: 1, createdAt: 1 }),
+    waNotifications.createIndex({ clinicId: 1, status: 1, createdAt: 1 }),
     waNotifications.createIndex({ appointmentId: 1 }, { unique: true, sparse: true }),
     reminders.createIndex({ appointmentId: 1 }, { unique: true }),
     reminders.createIndex({ organizationId: 1, status: 1, createdAt: 1 }),
+    // Per-clinic WhatsApp Web connections
+    waSessionCommands.createIndex({ status: 1, createdAt: 1 }),
+    waClinicSessions.createIndex({ clinicId: 1 }, { unique: true }),
   ]);
 }

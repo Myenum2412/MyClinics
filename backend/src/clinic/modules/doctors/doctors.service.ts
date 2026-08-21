@@ -62,7 +62,7 @@ export class DoctorService {
     });
 
     // Notify the doctor that their profile was created.
-    await notifyDoctorRegistered(this.db, doctor);
+    await notifyDoctorRegistered(this.db, doctor, requireClinicOf(ctx));
 
     return doctor;
   }
@@ -143,7 +143,7 @@ export class DoctorService {
     const saved = updated ?? existing;
 
     // Notify the doctor that their profile changed.
-    await notifyDoctorUpdated(this.db, saved);
+    await notifyDoctorUpdated(this.db, saved, requireClinicOf(ctx));
 
     return saved;
   }

@@ -9,9 +9,12 @@ import { todayDateString } from "@/lib/stats";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { getNextQueuedAppointment } from "@/services/queue.service";
 import { sendWithTimeout } from "@/services/whatsapp/send.utils";
+import { LEGACY_SESSION_KEY } from "@/services/whatsapp/whatsapp.session";
 
 export const NOTIFICATIONS_COLLECTION = "wa_notifications";
 const MAX_ATTEMPTS = 3;
+/** Upper bound per processing tick across all connections. */
+const BATCH_LIMIT = 60;
 
 export type NotificationStatus = "queued" | "sent" | "failed";
 
@@ -22,8 +25,14 @@ export interface NotificationMedia {
 }
 
 export interface NotificationDoc {
+  _id?: ObjectId;
   type: string;
   organizationId: string;
+  /**
+   * When set, the message is delivered through THAT clinic's own WhatsApp
+   * connection. When null the legacy central connection sends it.
+   */
+  clinicId?: string | null;
   remoteId: string | null;
   message: string;
   status: NotificationStatus;
@@ -36,14 +45,15 @@ export interface NotificationDoc {
   mediaData?: string;
 }
 
-/** Queues a WhatsApp message (optionally with a media attachment) that the worker sends as soon as it is ready. */
+/** Queues a WhatsApp message (optionally with a media attachment) that the worker sends as soon as a matching connection is ready. */
 export async function enqueueNotification(
   db: Db,
   organizationId: string,
   phone: string,
   message: string,
   type: string,
-  media?: NotificationMedia
+  media?: NotificationMedia,
+  clinicId?: string | null
 ): Promise<{ queued: boolean; remoteId: string | null }> {
   const remoteId = toWhatsAppRemoteId(phone);
   if (!remoteId) return { queued: false, remoteId: null };
@@ -51,6 +61,7 @@ export async function enqueueNotification(
   await db.collection(NOTIFICATIONS_COLLECTION).insertOne({
     type,
     organizationId,
+    clinicId: clinicId ?? null,
     remoteId,
     message,
     status: "queued",
@@ -69,6 +80,7 @@ export async function enqueueNotification(
 /**
  * Called after a patient is marked completed. Alerts the next patient in
  * today's queue that their turn has arrived. No-op for other dates.
+ * (Legacy platform flow — always uses the central connection.)
  */
 export async function enqueueTurnAlertForNextPatient(
   db: Db,
@@ -94,34 +106,37 @@ export async function enqueueTurnAlertForNextPatient(
 }
 
 /**
- * Queues a WhatsApp message to a patient, resolving the default organization
- * internally. Returns a no-op result when the phone number can't be used.
+ * Queues a WhatsApp message to a patient. When `clinicId` is provided the
+ * message goes out through that clinic's own WhatsApp number; otherwise it
+ * falls back to the default (central) connection. Returns a no-op result when
+ * the phone number can't be used.
  */
 export async function enqueueClinicNotification(
   db: Db,
   phone: string,
   message: string,
   type: string,
-  media?: NotificationMedia
+  media?: NotificationMedia,
+  clinicId?: string | null
 ): Promise<{ queued: boolean; remoteId: string | null }> {
+  if (clinicId) {
+    return enqueueNotification(db, clinicId, phone, message, type, media, clinicId);
+  }
   const org = await ensureDefaultOrganization(db);
   return enqueueNotification(db, org.id, phone, message, type, media);
 }
 
-/** Sends queued notifications through the connected WhatsApp client. */
-export async function processDueNotifications(
+interface BatchResult {
+  sent: number;
+  failed: number;
+}
+
+/** Sends one connection's batch of queued notifications and records the outcomes. */
+async function sendBatch(
   client: Client,
   db: Db,
-  organizationId: string
-): Promise<{ sent: number; failed: number; pending: number }> {
-  if (!client.info) return { sent: 0, failed: 0, pending: 0 };
-
-  const queued = await db
-    .collection<NotificationDoc>(NOTIFICATIONS_COLLECTION)
-    .find({ organizationId, status: "queued" })
-    .limit(20)
-    .toArray();
-
+  batch: NotificationDoc[]
+): Promise<BatchResult> {
   let sent = 0;
   let failed = 0;
   const updates: {
@@ -129,10 +144,13 @@ export async function processDueNotifications(
     update: Record<string, unknown>;
   }[] = [];
 
-  for (const notification of queued) {
+  for (const notification of batch) {
+    // Docs come from Mongo so _id is always present; guard for typing only.
+    const notificationId = notification._id;
+    if (!notificationId) continue;
     if (!notification.remoteId) {
       updates.push({
-        filter: { _id: notification._id },
+        filter: { _id: notificationId },
         update: {
           $set: { status: "failed", attempts: notification.attempts + 1 },
         },
@@ -158,13 +176,14 @@ export async function processDueNotifications(
         await sendWithTimeout(client, notification.remoteId, notification.message);
       }
       updates.push({
-        filter: { _id: notification._id },
+        filter: { _id: notificationId },
         update: {
           $set: { status: "sent", sentAt: new Date(), lastError: null },
         },
       });
       logger.info("whatsapp notification sent", {
-        organizationId,
+        clinicId: notification.clinicId ?? null,
+        organizationId: notification.organizationId,
         type: notification.type,
       });
       sent += 1;
@@ -172,7 +191,7 @@ export async function processDueNotifications(
       const attempts = notification.attempts + 1;
       const lastError = err instanceof Error ? err.message : String(err);
       updates.push({
-        filter: { _id: notification._id },
+        filter: { _id: notificationId },
         update: {
           $set: {
             attempts,
@@ -182,7 +201,8 @@ export async function processDueNotifications(
         },
       });
       logger.warn("whatsapp notification send failed", {
-        organizationId,
+        clinicId: notification.clinicId ?? null,
+        organizationId: notification.organizationId,
         type: notification.type,
         attempts,
       });
@@ -199,5 +219,50 @@ export async function processDueNotifications(
     );
   }
 
-  return { sent, failed, pending: queued.length - sent - failed };
+  return { sent, failed };
+}
+
+/**
+ * Drains queued notifications across every connected WhatsApp connection.
+ *
+ * `clientsByRoute` maps a routing key to that connection's client:
+ * - `LEGACY_SESSION_KEY` → the central bot connection (legacy notifications).
+ * - any clinicId → that clinic's own connection.
+ * Batches whose connection isn't currently connected stay queued.
+ */
+export async function processDueNotificationsForClients(
+  db: Db,
+  clientsByRoute: Map<string, Client>
+): Promise<{ sent: number; failed: number; skipped: number }> {
+  const queued = await db
+    .collection<NotificationDoc>(NOTIFICATIONS_COLLECTION)
+    .find({ status: "queued" })
+    .sort({ createdAt: 1 })
+    .limit(BATCH_LIMIT)
+    .toArray();
+
+  const groups = new Map<string, NotificationDoc[]>();
+  for (const doc of queued) {
+    const route = doc.clinicId || LEGACY_SESSION_KEY;
+    const group = groups.get(route);
+    if (group) group.push(doc);
+    else groups.set(route, [doc]);
+  }
+
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const [route, batch] of groups) {
+    const client = clientsByRoute.get(route);
+    if (!client?.info) {
+      skipped += batch.length;
+      continue;
+    }
+    const result = await sendBatch(client, db, batch);
+    sent += result.sent;
+    failed += result.failed;
+  }
+
+  return { sent, failed, skipped };
 }

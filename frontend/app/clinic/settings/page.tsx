@@ -6,11 +6,17 @@ import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import {
   getSoul,
   updateSoul,
-  getWhatsappSession,
+  getClinicWhatsappSession,
+  connectClinicWhatsapp,
+  disconnectClinicWhatsapp,
   getClinicSettings,
   updateClinicSettings,
 } from "@/lib/clinic-api";
-import type { SoulRecord, WhatsappSession, ClinicSettings } from "@/lib/clinic-api";
+import type {
+  SoulRecord,
+  ClinicWhatsappSession,
+  ClinicSettings,
+} from "@/lib/clinic-api";
 import { DROPDOWN_OPTION_DEFS, useDropdownOptions } from "@/lib/dropdown-options";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,12 +39,13 @@ import {
 const WHATSAPP_POLL_MS = 5_000;
 
 const STAGE_LABEL: Record<string, string> = {
+  unconfigured: "Not connected yet — link this clinic's WhatsApp number",
   idle: "Starting…",
   qr: "Scan the QR below to connect WhatsApp",
   authenticated: "Authenticated — preparing…",
   ready: "Connected — notifications are active",
-  disconnected: "Disconnected — reconnecting…",
-  error: "Connection error — check the WhatsApp worker logs",
+  disconnected: "Disconnected — press Connect to go back online",
+  error: "Connection error — try connecting again or check the server logs",
 };
 
 export default function SettingsPage() {
@@ -52,8 +59,9 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [savingSoul, setSavingSoul] = useState(false);
 
-  const [waSession, setWaSession] = useState<WhatsappSession | null>(null);
+  const [waSession, setWaSession] = useState<ClinicWhatsappSession | null>(null);
   const [waLoading, setWaLoading] = useState(true);
+  const [waAction, setWaAction] = useState<"connect" | "disconnect" | "logout" | null>(null);
 
   // General settings state
   const [settings, setSettings] = useState<ClinicSettings | null>(null);
@@ -94,9 +102,9 @@ export default function SettingsPage() {
       .finally(() => setLoading(false));
   }, [session?.clinicId]);
 
-  const pollWhatsapp = useCallback(async () => {
+  const pollWhatsapp = useCallback(async (clinicId: string) => {
     try {
-      const res = await getWhatsappSession();
+      const res = await getClinicWhatsappSession(clinicId);
       setWaSession(res);
     } catch {
       setWaSession(null);
@@ -106,10 +114,46 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    queueMicrotask(() => void pollWhatsapp());
-    const timer = setInterval(pollWhatsapp, WHATSAPP_POLL_MS);
+    const clinicId = session?.clinicId;
+    if (!clinicId) return;
+    queueMicrotask(() => void pollWhatsapp(clinicId));
+    const timer = setInterval(() => {
+      void pollWhatsapp(clinicId);
+    }, WHATSAPP_POLL_MS);
     return () => clearInterval(timer);
-  }, [pollWhatsapp]);
+  }, [pollWhatsapp, session?.clinicId]);
+
+  async function handleConnect() {
+    if (!session?.clinicId) return;
+    setWaAction("connect");
+    try {
+      await connectClinicWhatsapp(session.clinicId);
+      toast.success("Connecting… scan the QR with your phone in a few seconds.");
+      await pollWhatsapp(session.clinicId);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start connection");
+    } finally {
+      setWaAction(null);
+    }
+  }
+
+  async function handleDisconnect(logout: boolean) {
+    if (!session?.clinicId) return;
+    setWaAction(logout ? "logout" : "disconnect");
+    try {
+      await disconnectClinicWhatsapp(session.clinicId, logout);
+      toast.success(
+        logout
+          ? "WhatsApp disconnected and unlinked. Connect again to re-pair."
+          : "WhatsApp disconnected."
+      );
+      await pollWhatsapp(session.clinicId);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to disconnect");
+    } finally {
+      setWaAction(null);
+    }
+  }
 
   async function saveSoulMd(e: React.FormEvent) {
     e.preventDefault();
@@ -165,8 +209,8 @@ export default function SettingsPage() {
     reader.readAsDataURL(file);
   };
 
-  const stage = waSession?.state?.stage ?? (waLoading ? "idle" : "idle");
-  const connected = waSession?.state?.connected === true;
+  const stage = waSession?.stage ?? "unconfigured";
+  const connected = waSession?.connected === true;
 
   const {
     getOptions,
@@ -276,15 +320,45 @@ export default function SettingsPage() {
                 {waLoading ? (
                   <Skeleton className="h-64 w-64" />
                 ) : connected ? (
-                  <div className="flex flex-col items-center gap-3 py-8">
-                    <span className="flex size-14 items-center justify-center rounded-full bg-success/10 text-2xl">
-                      ✅
-                    </span>
-                    <p className="font-medium text-success">WhatsApp connected</p>
-                    <p className="max-w-sm text-sm text-muted-foreground">
-                      Appointment reminders and notifications are active and being delivered through the WhatsApp service.
-                    </p>
-                  </div>
+                  <>
+                    <div className="flex flex-col items-center gap-3 py-8">
+                      <span className="flex size-14 items-center justify-center rounded-full bg-success/10 text-2xl">
+                        ✅
+                      </span>
+                      <p className="font-medium text-success">WhatsApp connected</p>
+                      {waSession?.phone && (
+                        <p className="text-sm font-mono text-muted-foreground">
+                          +{waSession.phone}
+                        </p>
+                      )}
+                      <p className="max-w-sm text-sm text-muted-foreground">
+                        Appointment reminders, prescriptions and clinic notifications for YOUR
+                        patients are sent from this number.
+                      </p>
+                    </div>
+                    {canEdit && (
+                      <div className="flex flex-wrap justify-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={waAction !== null}
+                          onClick={() => void handleDisconnect(false)}
+                        >
+                          {waAction === "disconnect" ? "Disconnecting…" : "Disconnect"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          disabled={waAction !== null}
+                          onClick={() => void handleDisconnect(true)}
+                        >
+                          {waAction === "logout"
+                            ? "Removing…"
+                            : "Remove & unlink device"}
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 ) : waSession?.qr ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -296,9 +370,20 @@ export default function SettingsPage() {
                       className="rounded-lg border border-border bg-background p-2"
                     />
                     <p className="max-w-sm text-sm font-medium text-primary">
-                      Open WhatsApp on your phone → Settings → Linked devices → Link a device, then
-                      scan this QR. QR refreshes every few seconds.
+                      Open WhatsApp on your phone → Settings → Linked devices → Link a device,
+                      then scan this QR with THIS clinic&apos;s phone. QR refreshes every few
+                      seconds.
                     </p>
+                    {canEdit && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={waAction !== null}
+                        onClick={() => void handleConnect()}
+                      >
+                        Generate a new QR
+                      </Button>
+                    )}
                   </>
                 ) : (
                   <div className="flex flex-col items-center gap-3 py-8">
@@ -311,15 +396,23 @@ export default function SettingsPage() {
                     <p className="max-w-sm text-sm text-muted-foreground">
                       {waSession === null
                         ? "The status service is not reachable right now. The WhatsApp worker may be down — check pm2 status on the server (myclinic-whatsapp), then reload this page."
-                        : "Make sure the WhatsApp worker is running on the server (pm2: myclinic-whatsapp) and a Chromium browser is available."}
+                        : stage === "unconfigured" || stage === "disconnected" || stage === "error"
+                          ? "Link this clinic's own WhatsApp number to send appointment reminders and patient notifications from it. Each clinic connects its own number separately."
+                          : "Make sure the WhatsApp worker is running on the server (pm2: myclinic-whatsapp) and a Chromium browser is available."}
                     </p>
+                    {canEdit &&
+                      (stage === "unconfigured" ||
+                        stage === "disconnected" ||
+                        stage === "error") && (
+                        <Button type="button" disabled={waAction !== null} onClick={() => void handleConnect()}>
+                          {waAction === "connect" ? "Starting…" : "Connect WhatsApp"}
+                        </Button>
+                      )}
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">
                   Powered by WhatsApp Integration · last update{" "}
-                  {waSession?.state?.updatedAt
-                    ? new Date(waSession.state.updatedAt).toLocaleTimeString("en-IN")
-                    : "—"}
+                  {waSession?.updatedAt ? new Date(waSession.updatedAt).toLocaleTimeString("en-IN") : "—"}
                 </p>
               </CardContent>
             </Card>

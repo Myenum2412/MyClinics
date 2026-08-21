@@ -205,7 +205,7 @@ export class PatientService {
       });
     }
     if (assignedDoctor) {
-      await notifyDoctorOfNewPatient(this.db, assignedDoctor, created.fullName);
+      await notifyDoctorOfNewPatient(this.db, assignedDoctor, created.fullName, clinicId);
     }
 
     return created;
@@ -314,7 +314,7 @@ export class PatientService {
     const saved = updated ?? patient;
 
     // Notify the patient and their assigned doctor that the profile changed.
-    await notifyPatientUpdated(this.db, saved, Object.keys(patch));
+    await notifyPatientUpdated(this.db, saved, Object.keys(patch), requireClinicOf(ctx));
     if (saved.doctorId) {
       const doctor = await this.db
         .collection(CLINIC_COLLECTIONS.doctors)
@@ -324,7 +324,7 @@ export class PatientService {
           status: { $ne: "deleted" },
         });
       if (doctor) {
-        await notifyDoctorOfPatientUpdate(this.db, doctor as unknown as Notifyable, saved.fullName, Object.keys(patch));
+        await notifyDoctorOfPatientUpdate(this.db, doctor as unknown as Notifyable, saved.fullName, Object.keys(patch), requireClinicOf(ctx));
       }
     }
 
@@ -370,9 +370,9 @@ export class PatientService {
     const doctorName = newDoctor
       ? ((newDoctor.name ?? newDoctor.fullName) as string | undefined)
       : undefined;
-    await notifyPatientAssigned(this.db, saved, doctorName ?? null);
+    await notifyPatientAssigned(this.db, saved, doctorName ?? null, clinicId);
     if (newDoctor) {
-      await notifyDoctorOfAssignment(this.db, newDoctor, saved.fullName);
+      await notifyDoctorOfAssignment(this.db, newDoctor, saved.fullName, clinicId);
     }
 
     return saved;
