@@ -6,10 +6,11 @@ export function searchParams(request: FastifyRequest): URLSearchParams {
   return new URLSearchParams(raw);
 }
 
-/** Logs the error and replies with the standard 500 payload. */
+/** Logs the error and replies with the standard 500 payload (incl. detail). */
 export function handleError(reply: FastifyReply, error: unknown, context: string): void {
   console.error(`${context} error`, error);
-  reply.code(500).send({ error: "Something went wrong. Please try again." });
+  const detail = error instanceof Error ? error.message : String(error);
+  reply.code(500).send({ error: `Something went wrong. Please try again. (${detail})` });
 }
 
 /** Reads and JSON-parses the request body safely. */

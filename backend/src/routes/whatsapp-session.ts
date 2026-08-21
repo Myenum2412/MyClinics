@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+﻿import type { FastifyInstance } from "fastify";
 import QRCode from "qrcode";
 import { requireAuth } from "@/plugins/auth";
 import {
@@ -35,9 +35,9 @@ export function registerWhatsappSessionRoutes(app: FastifyInstance): void {
       }
 
       return reply.send({ state, qr });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });

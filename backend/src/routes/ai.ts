@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+﻿import type { FastifyInstance } from "fastify";
 import { getDb } from "@/lib/db";
 import { DB_COLLECTIONS } from "@/lib/constants";
 import {
@@ -73,9 +73,9 @@ export function registerAiRoutes(app: FastifyInstance): void {
       await reassignCounters(db, parsed.data.date);
 
       return reply.code(201).send({ appointment: result.appointment });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });
@@ -109,9 +109,9 @@ export function registerAiRoutes(app: FastifyInstance): void {
       }
 
       return reply.send({ available: result.available, doctor: result.doctor });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });
@@ -137,9 +137,9 @@ export function registerAiRoutes(app: FastifyInstance): void {
       }
 
       return reply.send({ appointment: result.appointment });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });
@@ -169,9 +169,9 @@ export function registerAiRoutes(app: FastifyInstance): void {
       }
 
       return reply.send({ appointment: result.appointment });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });
@@ -199,9 +199,9 @@ export function registerAiRoutes(app: FastifyInstance): void {
         parsed.data.customerPhone
       );
       return reply.send({ appointments });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });
@@ -242,9 +242,9 @@ export function registerAiRoutes(app: FastifyInstance): void {
         todayISO: todayISO(),
         workingHours: org.settings,
       });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });

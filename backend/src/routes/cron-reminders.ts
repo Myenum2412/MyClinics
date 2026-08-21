@@ -116,7 +116,7 @@ export function registerCronRoutes(app: FastifyInstance): void {
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error("Cron-job.org sync error", { error: errorMessage });
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${errorMessage})`,
       });
     }
   });

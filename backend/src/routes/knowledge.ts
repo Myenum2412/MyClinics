@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+﻿import type { FastifyInstance } from "fastify";
 import { getDb } from "@/lib/db";
 import { requireAuth } from "@/plugins/auth";
 import {
@@ -34,9 +34,9 @@ export function registerKnowledgeRoutes(app: FastifyInstance): void {
         () => listKnowledgeDocuments(db, org.id)
       );
       return reply.send({ documents: documents.map(mapDoc) });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });
@@ -83,9 +83,9 @@ export function registerKnowledgeRoutes(app: FastifyInstance): void {
       invalidateCache(knowledgeCacheKey(org.id));
 
       return reply.send({ document: mapDoc(document) });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });
@@ -128,9 +128,9 @@ export function registerKnowledgeRoutes(app: FastifyInstance): void {
       invalidateCache(knowledgeCacheKey(org.id));
 
       return reply.send({ document: mapDoc(document) });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });
@@ -149,9 +149,9 @@ export function registerKnowledgeRoutes(app: FastifyInstance): void {
       invalidateCache(knowledgeCacheKey(org.id));
 
       return reply.send({ ok: true });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });

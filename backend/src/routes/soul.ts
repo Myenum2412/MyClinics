@@ -1,4 +1,4 @@
-import type { FastifyInstance } from "fastify";
+﻿import type { FastifyInstance } from "fastify";
 import { getDb } from "@/lib/db";
 import { requireAuth } from "@/plugins/auth";
 import { getSoul, updateSoul } from "@/services/ai/soul.service";
@@ -27,9 +27,9 @@ export function registerSoulRoutes(app: FastifyInstance): void {
           version: soul.version,
         },
       });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });
@@ -70,9 +70,9 @@ export function registerSoulRoutes(app: FastifyInstance): void {
           version: soul.version,
         },
       });
-    } catch {
+    } catch (err) {
       return reply.code(500).send({
-        error: "Something went wrong. Please try again.",
+        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
       });
     }
   });
