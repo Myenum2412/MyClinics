@@ -338,7 +338,8 @@ export function AppointmentForm({
                         <button
                           key={p.patientId}
                           type="button"
-                          onClick={() => {
+                          onMouseDown={(e) => {
+                            e.preventDefault();
                             setPatientId(p.patientId);
                             setPatientQuery(p.fullName);
                             setShowPatientDropdown(false);
@@ -391,7 +392,8 @@ export function AppointmentForm({
                         <button
                           key={d.doctorId}
                           type="button"
-                          onClick={() => {
+                          onMouseDown={(e) => {
+                            e.preventDefault();
                             setDoctorId(d.doctorId);
                             setDoctorQuery(d.name);
                             setShowDoctorDropdown(false);

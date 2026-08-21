@@ -27,7 +27,7 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
 
   app.get(
     "/api/clinics/:clinicId/appointments",
-    { preHandler: [requireClinicAccess, requireRoles("patient")] },
+    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
     async (request, reply) => controller.list(request, reply)
   );
 
@@ -62,7 +62,7 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
 
   app.get(
     "/api/clinics/:clinicId/appointments/:appointmentId",
-    { preHandler: [requireClinicAccess, requireRoles("patient")] },
+    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
     async (request, reply) => controller.getById(request, reply)
   );
 
