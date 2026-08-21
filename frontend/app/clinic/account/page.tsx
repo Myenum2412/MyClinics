@@ -6,6 +6,7 @@ import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import {
   type Clinic,
   type ClinicProfile,
+  type WeeklyScheduleDay,
   getAvatarUrl,
   getOwnClinic,
   updateOwnClinic,
@@ -85,7 +86,7 @@ interface FormState {
   description: string;
   openTime: string;
   closeTime: string;
-  workingDays: string;
+  weeklySchedule: WeeklyScheduleDay[];
   profile: ClinicProfile;
 }
 
@@ -99,6 +100,23 @@ function profileOf(clinic: Clinic): ClinicProfile {
   };
 }
 
+function getInitialWeeklySchedule(clinic: Clinic): WeeklyScheduleDay[] {
+  if (clinic.settings?.weeklySchedule && clinic.settings.weeklySchedule.length > 0) {
+    return clinic.settings.weeklySchedule;
+  }
+  const open = clinic.settings?.workingHours?.open ?? "09:00";
+  const close = clinic.settings?.workingHours?.close ?? "18:00";
+  return [
+    { day: "Monday", open, close, closed: false },
+    { day: "Tuesday", open, close, closed: false },
+    { day: "Wednesday", open, close, closed: false },
+    { day: "Thursday", open, close, closed: false },
+    { day: "Friday", open, close, closed: false },
+    { day: "Saturday", open, close, closed: false },
+    { day: "Sunday", open, close, closed: true },
+  ];
+}
+
 function formOf(clinic: Clinic): FormState {
   return {
     name: clinic.name ?? "",
@@ -108,7 +126,7 @@ function formOf(clinic: Clinic): FormState {
     description: clinic.description ?? "",
     openTime: clinic.settings?.workingHours?.open ?? "09:00",
     closeTime: clinic.settings?.workingHours?.close ?? "18:00",
-    workingDays: clinic.settings?.workingHours?.days ?? "Monday - Saturday",
+    weeklySchedule: getInitialWeeklySchedule(clinic),
     profile: profileOf(clinic),
   };
 }
@@ -284,10 +302,10 @@ export default function AccountPage() {
         description: form.description || null,
         settings: {
           workingHours: {
-            open: form.openTime,
-            close: form.closeTime,
-            days: form.workingDays || null,
+            open: form.weeklySchedule.find((d) => !d.closed)?.open ?? "09:00",
+            close: form.weeklySchedule.find((d) => !d.closed)?.close ?? "18:00",
           },
+          weeklySchedule: form.weeklySchedule,
         },
         profile: {
           clinicType: form.profile.clinicType || null,
@@ -695,32 +713,68 @@ export default function AccountPage() {
               </Field>
               <Field label="Working Hours" className="col-span-2">
                 {editing ? (
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="time"
-                        value={form.openTime}
-                        onChange={(e) => set("openTime", e.target.value)}
-                      />
-                      <span className="text-sm text-muted-foreground">to</span>
-                      <Input
-                        type="time"
-                        value={form.closeTime}
-                        onChange={(e) => set("closeTime", e.target.value)}
-                      />
-                    </div>
-                    <Input
-                      value={form.workingDays}
-                      onChange={(e) => set("workingDays", e.target.value)}
-                      placeholder="e.g. Monday - Saturday"
-                    />
+                  <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-4">
+                    {form.weeklySchedule.map((sched, idx) => (
+                      <div key={sched.day} className="flex items-center justify-between gap-4 py-1.5 border-b border-border/50 last:border-0">
+                        <span className="w-24 text-sm font-medium">{sched.day}</span>
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={!sched.closed}
+                              onChange={(e) => {
+                                const next = [...form.weeklySchedule];
+                                next[idx] = { ...sched, closed: !e.target.checked };
+                                set("weeklySchedule", next);
+                              }}
+                              className="rounded border-input text-primary focus:ring-ring"
+                            />
+                            <span className="text-xs text-muted-foreground">Open</span>
+                          </label>
+                          {!sched.closed ? (
+                            <div className="flex items-center gap-1.5">
+                              <Input
+                                type="time"
+                                value={sched.open}
+                                onChange={(e) => {
+                                  const next = [...form.weeklySchedule];
+                                  next[idx] = { ...sched, open: e.target.value };
+                                  set("weeklySchedule", next);
+                                }}
+                                className="h-8 w-24 px-2 py-1 text-xs"
+                              />
+                              <span className="text-xs text-muted-foreground">to</span>
+                              <Input
+                                type="time"
+                                value={sched.close}
+                                onChange={(e) => {
+                                  const next = [...form.weeklySchedule];
+                                  next[idx] = { ...sched, close: e.target.value };
+                                  set("weeklySchedule", next);
+                                }}
+                                className="h-8 w-24 px-2 py-1 text-xs"
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground w-56 text-right pr-6 font-semibold">Closed</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  (() => {
-                    const wh = clinic.settings?.workingHours;
-                    if (!wh) return orDash(null);
-                    return `${wh.days || "Monday - Saturday"} • ${formatTime12h(wh.open)} – ${formatTime12h(wh.close)}`;
-                  })()
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-sm text-muted-foreground">
+                    {getInitialWeeklySchedule(clinic).map((sched) => (
+                      <div key={sched.day} className="flex justify-between py-0.5 border-b border-border/30 last:border-0 sm:border-b-0">
+                        <span className="font-medium text-foreground">{sched.day}</span>
+                        <span>
+                          {sched.closed
+                            ? "Closed"
+                            : `${formatTime12h(sched.open)} – ${formatTime12h(sched.close)}`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </Field>
             </FieldGrid>

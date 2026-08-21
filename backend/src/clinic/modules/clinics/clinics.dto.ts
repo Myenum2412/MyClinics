@@ -67,6 +67,13 @@ export const clinicProfileSchema = z.object({
     .optional(),
 });
 
+export const weeklyScheduleDaySchema = z.object({
+  day: z.string().trim().min(1).max(20),
+  open: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid open time"),
+  close: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid close time"),
+  closed: z.boolean(),
+});
+
 export const updateClinicSchema = z.object({
   name: z.string().trim().min(2).max(NAME_MAX).optional(),
   phone: optionalString(PHONE_MAX),
@@ -87,6 +94,7 @@ export const updateClinicSchema = z.object({
       slotMinutes: z.number().int().min(5).max(240).optional(),
       currency: z.string().trim().min(3).max(8).optional(),
       timezone: z.string().trim().min(1).max(60).optional(),
+      weeklySchedule: z.array(weeklyScheduleDaySchema).max(7).optional(),
     })
     .optional(),
   profile: clinicProfileSchema.optional(),

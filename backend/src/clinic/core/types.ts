@@ -32,6 +32,13 @@ export interface ClinicProfile {
   };
 }
 
+export interface WeeklyScheduleDay {
+  day: string;
+  open: string;
+  close: string;
+  closed: boolean;
+}
+
 export interface ClinicDoc extends ClinicDocument {
   clinicId: string;
   slug: string;
@@ -47,6 +54,7 @@ export interface ClinicDoc extends ClinicDocument {
     slotMinutes: number;
     currency: string;
     timezone: string;
+    weeklySchedule?: WeeklyScheduleDay[];
   };
   profile?: ClinicProfile;
   createdAt: Date;

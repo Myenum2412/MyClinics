@@ -95,6 +95,13 @@ export interface ClinicProfile {
   };
 }
 
+export interface WeeklyScheduleDay {
+  day: string;
+  open: string;
+  close: string;
+  closed: boolean;
+}
+
 export interface Clinic {
   clinicId: string;
   slug: string;
@@ -110,6 +117,7 @@ export interface Clinic {
     slotMinutes: number;
     currency: string;
     timezone: string;
+    weeklySchedule?: WeeklyScheduleDay[];
   };
   profile?: ClinicProfile;
   createdAt: string;
@@ -329,6 +337,7 @@ export interface ClinicSettings {
   slotMinutes: number;
   currency: string;
   timezone: string;
+  weeklySchedule?: WeeklyScheduleDay[];
   receiptFooter: string | null;
   smsEnabled: boolean;
   emailNotifications: boolean;
