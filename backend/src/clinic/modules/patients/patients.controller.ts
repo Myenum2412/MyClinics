@@ -100,6 +100,19 @@ export class PatientController {
     return reply.send(result);
   }
 
+  async sendWelcome(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (!ctx) throw new UnauthorizedError();
+    const { patientId } = request.params as { patientId: string };
+    const body = request.body as { sendCredentials?: boolean; password?: string | null };
+    const db = await getDb();
+    await this.service(db).sendWelcomeMessage(ctx, patientId, {
+      sendCredentials: body.sendCredentials ?? false,
+      password: body.password ?? null,
+    });
+    return reply.send({ ok: true });
+  }
+
   async getSelf(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
-import { createPatient, uploadAvatar } from "@/lib/clinic-api";
+import { createPatient, uploadAvatar, uploadMedicalRecordFile, sendPatientWelcome } from "@/lib/clinic-api";
 import { PatientForm, PatientFormState, EMPTY_FORM } from "@/components/clinic/patient-form";
 import {
   Dialog,
@@ -95,6 +95,7 @@ export default function NewPatientPage() {
         portalAccess: form.portalAccess,
         loginNotification: form.loginNotification,
         doctorId: form.doctorId || null,
+        skipNotification: true,
       };
 
       if (form.portalAccess === "enable") {
@@ -109,6 +110,29 @@ export default function NewPatientPage() {
         } catch {
           toast.warning("Patient saved, but the profile photo could not be uploaded");
         }
+      }
+
+      // Upload patient registration attachments
+      if (form.attachments && form.attachments.length > 0) {
+        for (const a of form.attachments) {
+          if (a.file) {
+            try {
+              await uploadMedicalRecordFile(clinicId, created.patientId, a.file, "other-documents");
+            } catch {
+              toast.warning(`Patient saved, but attachment "${a.file.name}" could not be uploaded`);
+            }
+          }
+        }
+      }
+
+      // Now send the welcome notification (this fetches S3 URLs for welcome docs + uploaded files)
+      try {
+        await sendPatientWelcome(clinicId, created.patientId, {
+          sendCredentials: form.loginNotification === "whatsapp" || form.loginNotification === "email",
+          password: form.password || null,
+        });
+      } catch (err) {
+        toast.warning("Welcome notification could not be delivered");
       }
 
       if (form.portalAccess === "enable" && created.userId) {

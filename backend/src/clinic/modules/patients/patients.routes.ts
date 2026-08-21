@@ -61,6 +61,12 @@ export function registerPatientRoutes(app: FastifyInstance): void {
     { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => controller.resendCredentials(request, reply)
   );
+
+  app.post(
+    "/api/clinics/:clinicId/patients/:patientId/send-welcome",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.sendWelcome(request, reply)
+  );
 }
 
 /**

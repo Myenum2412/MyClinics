@@ -682,6 +682,17 @@ export function resendPatientCredentials(
   });
 }
 
+export function sendPatientWelcome(
+  clinicId: string,
+  patientId: string,
+  input: { sendCredentials?: boolean; password?: string | null }
+): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/patients/${patientId}/send-welcome`), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 export function getMyPatient(clinicId: string): Promise<Patient | null> {
   return request(tenantPath(clinicId, "/me/patient"));
 }

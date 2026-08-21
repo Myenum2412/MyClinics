@@ -60,6 +60,8 @@ export const createPatientSchema = z.object({
   portalAccess: z.enum(["enable", "disable"]).optional(),
   /** How login details are delivered after registration (WhatsApp supported today). */
   loginNotification: z.enum(["whatsapp", "email", "none"]).optional(),
+  /** When true, skips triggering the patient registration/welcome notification immediately. */
+  skipNotification: z.boolean().optional(),
 });
 
 export type CreatePatientInput = z.infer<typeof createPatientSchema>;

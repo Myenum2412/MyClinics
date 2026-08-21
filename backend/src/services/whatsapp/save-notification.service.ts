@@ -129,7 +129,8 @@ async function sendWelcomeMessageWithDocuments(
   phone: string,
   patientName: string,
   clinicDetails: ClinicDetails,
-  credentials?: { username: string; password: string }
+  credentials?: { username: string; password: string },
+  patientDocuments?: Array<{ fileName: string; size: number; downloadUrl: string }> | null
 ): Promise<void> {
   const lines: string[] = [
     `👋 Hi ${patientName}, welcome to *${clinicDetails.name}*!`,
@@ -233,6 +234,15 @@ async function sendWelcomeMessageWithDocuments(
     }
   }
 
+  // ── Patient registration documents ────────────────────────────────────────
+  if (patientDocuments?.length) {
+    lines.push(``, `📎 *Uploaded Registration Files:*`);
+    for (const doc of patientDocuments) {
+      lines.push(`  • ${doc.fileName} (${formatFileSize(doc.size)})`);
+      lines.push(`    📥 ${doc.downloadUrl}`);
+    }
+  }
+
   const message = lines.join("\n");
   await queue(db, phone, message, "patient_registered_welcome");
 }
@@ -252,6 +262,7 @@ export async function notifyPatientRegistered(
     portalUsername?: string | null;
     password?: string | null;
     clinicId: string;
+    patientDocuments?: Array<{ fileName: string; size: number; downloadUrl: string }> | null;
   } = { sendCredentials: false, clinicId: "" }
 ): Promise<void> {
   const phone = pickNotifyPhone(patient);
@@ -268,7 +279,8 @@ export async function notifyPatientRegistered(
       clinicDetails,
       opts.sendCredentials && opts.portalUsername && opts.password
         ? { username: opts.portalUsername, password: opts.password! }
-        : undefined
+        : undefined,
+      opts.patientDocuments
     );
     return;
   }
