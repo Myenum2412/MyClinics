@@ -5,10 +5,12 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
+  type Appointment,
   type Patient,
   assignPatient,
   createPatient,
   deletePatient,
+  listAppointments,
   listPatients,
   resendPatientCredentials,
   updatePatient,
@@ -143,6 +145,7 @@ export default function PatientsPage() {
   const { getOptions } = useDropdownOptions(clinicId);
   const bloodGroups = getOptions("blood_groups");
   const [items, setItems] = useState<Patient[]>([]);
+  const [apptItems, setApptItems] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<Patient | null>(null);
@@ -169,13 +172,17 @@ export default function PatientsPage() {
 
   const load = useCallback(() => {
     if (!clinicId) return;
-    listPatients(clinicId, { limit: 500 })
-      .then((res) => {
-        setItems(res.items);
+    Promise.allSettled([
+      listPatients(clinicId, { limit: 500 }),
+      listAppointments(clinicId, { limit: 500 }),
+    ])
+      .then(([patientRes, apptRes]) => {
+        if (patientRes.status === "fulfilled") setItems(patientRes.value.items);
+        else toast.error("Failed to load patients");
+        if (apptRes.status === "fulfilled") setApptItems(apptRes.value.items);
         setCurrentPage(1);
         setSelectedIds(new Set());
       })
-      .catch(() => toast.error("Failed to load patients"))
       .finally(() => setLoading(false));
   }, [clinicId]);
 
@@ -290,7 +297,10 @@ export default function PatientsPage() {
   const totalPatients = items.length;
   const activePatients = items.filter((p) => p.status === "active").length;
   const femalePatients = items.filter((p) => p.gender === "female").length;
-  const emailPatients = items.filter((p) => p.email).length;
+  const today = new Date().toISOString().slice(0, 10);
+  const upcomingAppointments = apptItems.filter(
+    (a) => a.status === "scheduled" && a.date >= today
+  ).length;
 
   const patientStats = useMemo(() => [
     {
@@ -318,14 +328,14 @@ export default function PatientsPage() {
       fill: "var(--chart-3)",
     },
     {
-      name: "Email Coverage",
-      percentage: totalPatients ? Math.round((emailPatients / totalPatients) * 100) : 0,
-      current: emailPatients,
+      name: "Upcoming Appointments",
+      percentage: totalPatients ? Math.min(100, Math.round((upcomingAppointments / totalPatients) * 100)) : 0,
+      current: upcomingAppointments,
       allowed: totalPatients,
-      allowedLabel: "registered",
+      allowedLabel: "patients",
       fill: "var(--chart-4)",
     },
-  ], [totalPatients, activePatients, femalePatients, emailPatients]);
+  ], [totalPatients, activePatients, femalePatients, upcomingAppointments]);
 
   // Bulk actions helper
   const handleBulkExport = () => {

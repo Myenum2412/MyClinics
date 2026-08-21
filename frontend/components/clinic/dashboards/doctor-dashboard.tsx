@@ -122,7 +122,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   return (
     <div className="w-full">
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="overflow-hidden border-border bg-card shadow-sm">
+        <Card className="overflow-hidden rounded-none border-border bg-card shadow-sm">
           <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
@@ -135,7 +135,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
               </div>
               <Link
                 href="/clinic/appointments"
-                className="inline-flex h-7 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+                className="inline-flex h-7 items-center justify-center gap-1.5 rounded-none border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
               >
                 View all
               </Link>
@@ -144,7 +144,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           <CardContent className="p-0">
             {loading ? (
               <div className="space-y-2 p-6">
-                <Skeleton className="h-9 w-full rounded-md" />
+                <Skeleton className="h-9 w-full rounded-none" />
               </div>
             ) : !recentAppointment ? (
               <p className="px-6 py-10 text-center text-sm text-muted-foreground">
@@ -199,12 +199,12 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
         </Card>
 
         {loading ? (
-          <Card className="overflow-hidden border-border bg-card shadow-sm">
+          <Card className="overflow-hidden rounded-none border-border bg-card shadow-sm">
             <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-              <div className="h-5 w-40 animate-pulse rounded bg-muted" />
+              <div className="h-5 w-40 animate-pulse rounded-none bg-muted" />
             </CardHeader>
             <CardContent className="p-6">
-              <Skeleton className="h-[250px] w-full rounded-lg" />
+              <Skeleton className="h-[250px] w-full rounded-none" />
             </CardContent>
           </Card>
         ) : (

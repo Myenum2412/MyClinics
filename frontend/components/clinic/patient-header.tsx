@@ -15,7 +15,7 @@ export function PatientHeader() {
       <h1 className="text-lg font-semibold text-foreground">Patient</h1>
       <div className="ml-auto flex items-center gap-3">
         <ThemeToggle />
-        <Link href="/clinic/patient/book-appointment">
+        <Link href="/clinic/appointments">
           <Button className="gap-2 rounded-lg px-4 shadow-sm">
             <CalendarPlus className="size-4" />
             Book Appointment

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { toast } from "sonner";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
@@ -16,7 +17,6 @@ import {
   type Prescription,
   copyMedicalRecordFile,
   copyMedicalRecordFolder,
-  createAppointment,
   createMedicalRecordFolder,
   deleteAppointment,
   deleteMedicalRecordFile,
@@ -45,7 +45,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { TimePicker } from "@/components/ui/time-picker";
 import { formatTime } from "@/lib/format-time";
 import {
   Table,
@@ -81,7 +80,6 @@ import {
 import {
   ArrowLeft,
   ArrowRight,
-  CalendarClock,
   CalendarDays,
   ClipboardCopy,
   ClipboardList,
@@ -1762,11 +1760,6 @@ export default function MedicalRecordPage() {
   function AppointmentsPanel() {
     if (!selectedPatient) return null;
     const p = selectedPatient;
-    const [doctorId, setDoctorId] = useState("");
-    const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-    const [time, setTime] = useState("10:00");
-    const [reason, setReason] = useState("");
-    const [saving, setSaving] = useState(false);
 
     const patientAppointments = useMemo(
       () =>
@@ -1775,31 +1768,6 @@ export default function MedicalRecordPage() {
           .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time)),
       [appointments.items, p.patientId]
     );
-
-    async function handleCreate(e: React.FormEvent) {
-      e.preventDefault();
-      if (!doctorId || !date || !time) {
-        toast.error("Doctor, date and time are required.");
-        return;
-      }
-      setSaving(true);
-      try {
-        await createAppointment(clinicId, {
-          patientId: p.patientId,
-          doctorId,
-          date,
-          time,
-          reason: reason.trim() || null,
-        });
-        toast.success("Appointment booked. WhatsApp alerts queued!");
-        setReason("");
-        refresh();
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to book appointment");
-      } finally {
-        setSaving(false);
-      }
-    }
 
     async function handleStatusChange(a: Appointment, status: AppointmentStatus) {
       try {
@@ -1825,59 +1793,21 @@ export default function MedicalRecordPage() {
       <div className="mt-4 space-y-4">
         <Card>
           <CardContent className="p-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-full bg-muted text-fuchsia-600">
-                <CalendarClock className="size-4" />
-              </span>
-              <h2 className="text-sm font-semibold text-foreground">Book Appointment</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <SectionHeading
+                Icon={CalendarDays}
+                tint="text-fuchsia-600"
+                title="Appointments"
+                count={patientAppointments.length}
+                countLabel="appointment"
+              />
+              <Link
+                href="/clinic/appointments"
+                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+              >
+                Book Appointment
+              </Link>
             </div>
-            <form onSubmit={handleCreate} className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Patient</Label>
-                <Input value={p.fullName} disabled />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Doctor *</Label>
-                <Select value={doctorId} onValueChange={(v) => setDoctorId(v ?? "")}>
-                  <SelectTrigger><SelectValue placeholder="Select doctor" /></SelectTrigger>
-                  <SelectContent>
-                    {doctors.map((d) => (
-                      <SelectItem key={d.doctorId} value={d.doctorId}>{d.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Date *</Label>
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Time *</Label>
-                <TimePicker value={time} onChange={setTime} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">Reason</Label>
-                <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Follow-up" />
-              </div>
-              <div className="flex justify-end md:col-span-2 lg:col-span-5">
-                <Button type="submit" disabled={saving}>
-                  {saving ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-                  {saving ? "Booking…" : "Book Appointment"}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-5">
-            <SectionHeading
-              Icon={CalendarDays}
-              tint="text-fuchsia-600"
-              title="Appointments"
-              count={patientAppointments.length}
-              countLabel="appointment"
-            />
             {patientAppointments.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">No appointments for this patient yet.</p>
             ) : (

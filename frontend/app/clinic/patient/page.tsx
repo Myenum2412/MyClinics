@@ -183,7 +183,7 @@ export default function PatientPortalPage() {
           <p className="mt-2 text-sm text-muted-foreground md:text-base">
             Here&apos;s an overview of your health information and recent activity.
           </p>
-          <Link href="/clinic/patient/book-appointment">
+          <Link href="/clinic/appointments">
             <Button className="mt-5 gap-2 rounded-lg px-5 shadow-sm">
               <CalendarPlus className="size-4" />
               Book Appointment
