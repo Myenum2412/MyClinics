@@ -825,7 +825,7 @@ function BillForm({
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [internalNotes, setInternalNotes] = useState(initial?.internalNotes ?? "");
   const [reference, setReference] = useState(initial?.reference ?? "");
-  const [sendMethod, setSendMethod] = useState<"whatsapp" | "email" | "none">(initial?.sendMethod ?? "none");
+  const [sendMethod, setSendMethod] = useState<"whatsapp" | "email" | "none">(initial?.sendMethod ?? "whatsapp");
   const [amountPaid, setAmountPaid] = useState(initial ? String(initial.amountPaid ?? 0) : "0");
   const [attachName, setAttachName] = useState("");
   const [errors, setErrors] = useState<{ patient?: string; items?: Record<number, string> }>({});
