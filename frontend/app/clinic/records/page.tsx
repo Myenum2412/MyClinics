@@ -1277,7 +1277,7 @@ function RecordForm({
       <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
 
       {/* 1. VISIT INFORMATION */}
-      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent overflow-visible">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-foreground">
             1. Visit Information
@@ -1374,7 +1374,7 @@ function RecordForm({
       </Card>
 
       {/* 2. CLINICAL INFORMATION */}
-      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent overflow-visible">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-foreground">
             2. Clinical Information
@@ -1425,7 +1425,7 @@ function RecordForm({
       </Card>
 
       {/* 3. MEDICINES */}
-      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent overflow-visible">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-base font-semibold text-foreground">
@@ -1538,7 +1538,7 @@ function RecordForm({
       </Card>
 
       {/* 4. TREATMENT & ADVICE */}
-      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent overflow-visible">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-foreground">
             4. Treatment & Advice
@@ -1589,7 +1589,7 @@ function RecordForm({
       </Card>
 
       {/* 5. ADDITIONAL INFORMATION */}
-      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent overflow-visible">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-foreground">
             5. Additional Information (Optional)
@@ -1664,7 +1664,7 @@ function RecordForm({
       </Card>
 
       {/* 6. ATTACHMENTS */}
-      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent overflow-visible">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-foreground">
             6. Attachments (Optional)
@@ -1680,7 +1680,7 @@ function RecordForm({
       </Card>
 
       {/* SUMMARY */}
-      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent overflow-visible">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-foreground">
             7. Summary
