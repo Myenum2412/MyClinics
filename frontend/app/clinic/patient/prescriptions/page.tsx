@@ -58,7 +58,7 @@ export default function PatientPrescriptionsPage() {
           <p className="text-muted-foreground mt-2">Your prescribed medications will appear here.</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-background shadow-sm overflow-hidden">
+        <div className="border border-border bg-background shadow-sm overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-border bg-muted/50">

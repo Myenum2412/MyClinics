@@ -238,7 +238,7 @@ const orphanFiles = files.filter(
                         No files in this folder yet.
                       </p>
                     ) : (
-                      <div className="overflow-x-auto rounded-lg border border-border">
+                      <div className="overflow-x-auto border border-border">
                         <Table>
                           <TableBody>
                             {folderFiles.map((f) => (
@@ -281,7 +281,7 @@ const orphanFiles = files.filter(
                     <h4 className="text-sm font-semibold text-foreground">Other Documents</h4>
                     <span className="text-xs text-muted-foreground">({orphanFiles.length})</span>
                   </div>
-                  <div className="overflow-x-auto rounded-lg border border-border">
+                  <div className="overflow-x-auto border border-border">
                     <Table>
                       <TableBody>
                         {orphanFiles.map((f) => (

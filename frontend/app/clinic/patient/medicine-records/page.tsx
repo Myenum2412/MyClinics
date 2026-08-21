@@ -57,7 +57,7 @@ export default function PatientMedicineRecordsPage() {
           <p className="text-muted-foreground mt-2">Your pharmacy and medicine records will appear here.</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-background shadow-sm overflow-hidden">
+        <div className="border border-border bg-background shadow-sm overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-border bg-muted/50">
