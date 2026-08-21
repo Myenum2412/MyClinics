@@ -6,6 +6,7 @@ import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
   getMyPatient,
   listDoctors,
+  updatePatient,
   type Patient,
 } from "@/lib/clinic-api";
 import { PatientForm, type PatientFormState } from "@/components/clinic/patient-form";
@@ -13,6 +14,7 @@ import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, CalendarDays, Phone, Mail, UserRound } from "lucide-react";
+import { toast } from "sonner";
 
 function patientToForm(p: Patient): PatientFormState {
   return {
@@ -71,6 +73,8 @@ export default function PatientProfilePage() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [doctors, setDoctors] = useState<{ doctorId: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState<"view" | "edit">("view");
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     if (!session?.clinicId) return;
@@ -92,6 +96,58 @@ export default function PatientProfilePage() {
     if (!session?.clinicId) return;
     load();
   }, [session?.clinicId, load]);
+
+  async function handleSave(form: PatientFormState) {
+    if (!session?.clinicId || !patient) return;
+    setSaving(true);
+    try {
+      const payload: Record<string, any> = {
+        fullName: form.fullName,
+        mobile: form.mobile,
+        whatsapp: form.whatsapp || null,
+        email: form.email || null,
+        gender: form.gender || null,
+        dateOfBirth: form.dateOfBirth || null,
+        bloodGroup: form.bloodGroup || null,
+        height: form.height || null,
+        weight: form.weight || null,
+        maritalStatus: form.maritalStatus || null,
+        occupation: form.occupation || null,
+        address: form.address || null,
+        city: form.city || null,
+        state: form.state || null,
+        pincode: form.pincode || null,
+        emergencyContactName: form.emergencyContactName || null,
+        emergencyContactRelationship: form.emergencyContactRelationship || null,
+        emergencyContactMobile: form.emergencyContactMobile || null,
+        allergies: form.allergies ? form.allergies.split(",").map(a => a.trim()).filter(Boolean) : [],
+        medicalConditions: form.medicalConditions || null,
+        previousSurgeries: form.previousSurgeries || null,
+        currentMedications: form.currentMedications || null,
+        idType: form.idType || null,
+        idNumber: form.idNumber || null,
+        insuranceProvider: form.insuranceProvider || null,
+        insurancePolicyNumber: form.insurancePolicyNumber || null,
+        insurancePolicyHolderName: form.insurancePolicyHolderName || null,
+        insuranceValidTill: form.insuranceValidTill || null,
+        referredBy: form.referredBy || null,
+        howDidYouHear: form.howDidYouHear || null,
+        notes: form.notes || null,
+      };
+      if (form.password) {
+        payload.password = form.password;
+      }
+      
+      const updated = await updatePatient(session.clinicId, patient.patientId, payload);
+      setPatient(updated);
+      setMode("view");
+      toast.success("Profile updated successfully!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -126,7 +182,13 @@ export default function PatientProfilePage() {
         <div className="px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex items-start gap-4">
             <button
-              onClick={() => router.push("/clinic/patient")}
+              onClick={() => {
+                if (mode === "edit") {
+                  setMode("view");
+                } else {
+                  router.push("/clinic/patient");
+                }
+              }}
               className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
             >
               <ChevronLeft size={20} className="text-muted-foreground" />
@@ -184,13 +246,22 @@ export default function PatientProfilePage() {
           </div>
         </div>
 
-        {/* Reuse the New Patient form in view mode */}
+        {/* Reuse the Patient form in view/edit mode */}
         <PatientForm
           clinicId={session?.clinicId ?? ""}
           initialData={patientToForm(patient)}
-          mode="view"
+          mode={mode}
           doctors={doctors}
-          onClose={() => router.push("/clinic/patient")}
+          onClose={() => {
+            if (mode === "edit") {
+              setMode("view");
+            } else {
+              router.push("/clinic/patient");
+            }
+          }}
+          onEdit={() => setMode("edit")}
+          onSave={handleSave}
+          saving={saving}
         />
       </div>
     </div>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
   getMyPatient,
@@ -29,6 +30,7 @@ import {
   HeartPulse,
   ReceiptText,
   ShieldCheck,
+  LogOut,
 } from "lucide-react";
 
 const QUICK_ACCESS = [
@@ -88,10 +90,17 @@ function doctorName(doctors: Doctor[], id: string): string {
 
 export default function PatientPortalPage() {
   const session = useRequireRole("patient");
+  const router = useRouter();
   const [firstName, setFirstName] = useState(
     () => (session?.name ?? "there").trim().split(/\s+/)[0]
   );
   const [loading, setLoading] = useState(true);
+
+  const handleLogout = () => {
+    localStorage.removeItem("clinic_token");
+    document.cookie = "clinic_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    router.push("/login");
+  };
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [files, setFiles] = useState<MedicalRecordFile[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
@@ -183,12 +192,14 @@ export default function PatientPortalPage() {
           <p className="mt-2 text-sm text-muted-foreground md:text-base">
             Here&apos;s an overview of your health information and recent activity.
           </p>
-          <Link href="/clinic/appointments">
-            <Button className="mt-5 gap-2 rounded-lg px-5 shadow-sm">
-              <CalendarPlus className="size-4" />
-              Book Appointment
-            </Button>
-          </Link>
+          <Button
+            variant="outline"
+            className="mt-5 gap-2 rounded-lg px-5 shadow-sm border-destructive/20 text-destructive hover:bg-destructive/10"
+            onClick={handleLogout}
+          >
+            <LogOut className="size-4" />
+            Logout
+          </Button>
         </div>
 
         {/* Soft decorative illustration */}
