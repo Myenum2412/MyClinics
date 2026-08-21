@@ -672,12 +672,6 @@ function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, b
     sigY + 5,
     { width: 180, align: "center" }
   );
-  doc.font("regular").fontSize(7).fillColor(C.faint).text(
-    "Authorised Signatory",
-    MARGIN + contentWidth - 180,
-    sigY + 17,
-    { width: 180, align: "center" }
-  );
 }
 
 export async function generateBillPdf(
