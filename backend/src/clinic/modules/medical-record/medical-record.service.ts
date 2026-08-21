@@ -85,6 +85,9 @@ function mimeFromName(name: string): string {
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ".dcm": "application/dicom",
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
   };
   return map[ext] ?? "application/octet-stream";
 }

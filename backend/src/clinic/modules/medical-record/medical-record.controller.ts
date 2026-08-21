@@ -45,7 +45,7 @@ export class MedicalRecordController {
     if (!data || data.length === 0) throw new BadRequestError("A file is required");
     if (!isAllowedUpload(fileName, mimeType)) {
       throw new BadRequestError(
-        "Unsupported file type. Only PDF, DOCX, XLSX, JPG, PNG, TIFF and DICOM files are allowed."
+        "Unsupported file type. Only PDF, DOCX, XLSX, JPG, PNG, TIFF, DICOM and video files (MP4, WebM, QuickTime) are allowed."
       );
     }
 

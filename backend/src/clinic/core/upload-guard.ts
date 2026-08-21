@@ -17,6 +17,11 @@ const ALLOWED_EXTENSIONS = new Set([
   ".tif",
   ".tiff",
   ".dcm",
+  ".mp4",
+  ".webm",
+  ".mov",
+  ".avi",
+  ".mkv",
 ]);
 
 const ALLOWED_MIME_EXACT = new Set([
@@ -41,6 +46,7 @@ export function isAllowedUpload(fileName: string, mimeType: string | null): bool
   }
   const mime = (mimeType ?? "").toLowerCase();
   if (mime) {
+    if (mime.startsWith("video/")) return true;
     if (ALLOWED_MIME_EXACT.has(mime)) return true;
     if (ALLOWED_MIME_PREFIXES.some((prefix) => mime.startsWith(prefix))) return true;
     return false;
