@@ -540,6 +540,78 @@ export async function notifyDoctorUpdated(
   );
 }
 
+/**
+ * Sent to the patient when a medicine record is created or updated.
+ * Includes the FULL record: doctor, visit date, diagnosis, symptoms,
+ * treatment and notes.
+ */
+export async function notifyMedicineRecord(
+  db: Db,
+  patient: Notifyable & { fullName?: string | null },
+  opts: {
+    patientName: string;
+    doctorName: string | null;
+    action: "created" | "updated";
+    clinicId?: string | null;
+    record: {
+      diagnosis: string;
+      symptoms?: string | null;
+      treatment?: string | null;
+      notes?: string | null;
+      visitDate: string;
+    };
+  }
+): Promise<void> {
+  const phone = pickNotifyPhone(patient);
+  if (!phone) return;
+
+  const org = await ensureDefaultOrganization(db);
+  const d = new Date(`${opts.record.visitDate}T00:00:00`);
+  const visitDate = Number.isNaN(d.getTime())
+    ? opts.record.visitDate
+    : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
+  // The records UI stores extended fields (nextReviewDate, advice, …) as JSON
+  // inside `notes`. Extract them for the message; fall back to plain notes.
+  let meta: Record<string, unknown> = {};
+  let plainNotes = opts.record.notes ?? null;
+  if (plainNotes && plainNotes.trim().startsWith("{")) {
+    try {
+      const parsed = JSON.parse(plainNotes) as unknown;
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        meta = parsed as Record<string, unknown>;
+        plainNotes = typeof meta.internalNotes === "string" && meta.internalNotes.trim() ? meta.internalNotes : null;
+      }
+    } catch {
+      // plain-text notes — keep as-is
+    }
+  }
+  const fmtDate = (v: unknown): string | null => {
+    if (typeof v !== "string" || !v.trim()) return null;
+    const dt = new Date(`${v}T00:00:00`);
+    return Number.isNaN(dt.getTime())
+      ? v
+      : dt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+  };
+  const nextReview = fmtDate(meta.nextReviewDate);
+
+  const lines: string[] = [
+    `💊 Hi ${opts.patientName}, your medicine record at *${org.name}* has been ${opts.action === "created" ? "added" : "updated"}.`,
+    ``,
+    `📋 *Record Details:*`,
+    `👨‍⚕️ Doctor: ${opts.doctorName ? `Dr. ${opts.doctorName}` : "—"}`,
+    `📅 Visit Date: ${visitDate}`,
+    `🏥 Diagnosis: ${opts.record.diagnosis}`,
+  ];
+  if (opts.record.symptoms) lines.push(`🌡️ Symptoms: ${opts.record.symptoms}`);
+  if (opts.record.treatment) lines.push(`💉 Treatment: ${opts.record.treatment}`);
+  if (typeof meta.advice === "string" && meta.advice.trim()) lines.push(`💡 Advice: ${meta.advice}`);
+  if (nextReview) lines.push(`🔄 *Next Review Date:* ${nextReview}`);
+  if (plainNotes) lines.push(`📝 Notes: ${plainNotes}`);
+
+  await queue(db, phone, lines.join("\n"), "medicine_record", undefined, opts.clinicId);
+}
+
 /** Sent to a doctor/staff member when their login account is created. */
 export async function notifyUserLoginDetails(
   db: Db,

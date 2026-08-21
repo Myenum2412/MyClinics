@@ -11,6 +11,8 @@ import { generateRecordId } from "@/clinic/core/ids";
 import type { CreateMedicineRecordInput, UpdateMedicineRecordInput } from "@/clinic/modules/medicine/medicine.dto";
 import { MedicineRepository } from "@/clinic/modules/medicine/medicine.repository";
 import type { MedicineRecordDoc } from "@/clinic/modules/medicine/medicine.schema";
+import type { PatientDoc } from "@/clinic/modules/patients/patients.schema";
+import { notifyMedicineRecord } from "@/services/whatsapp/save-notification.service";
 
 export class MedicineService {
   constructor(private readonly db: Db) {}
@@ -29,7 +31,7 @@ export class MedicineService {
   ): Promise<WithId<MedicineRecordDoc>> {
     const clinicId = requireClinicOf(ctx);
     const patient = await this.db
-      .collection(CLINIC_COLLECTIONS.patients)
+      .collection<PatientDoc>(CLINIC_COLLECTIONS.patients)
       .findOne({ clinicId, patientId: input.patientId, status: { $ne: "deleted" } });
     if (!patient) {
       throw new BadRequestError("The patient does not exist in this clinic");
@@ -42,6 +44,7 @@ export class MedicineService {
 
     // DoctorId defaults to the authoring doctor (or stays null for staff).
     const doctorId = input.doctorId ?? (ctx.role === "doctor" ? ctx.doctorId : null);
+    let doctorName: string | null = null;
     if (doctorId) {
       const doctor = await this.db
         .collection(CLINIC_COLLECTIONS.doctors)
@@ -49,6 +52,7 @@ export class MedicineService {
       if (!doctor) {
         throw new BadRequestError("The doctor does not exist in this clinic");
       }
+      doctorName = doctor.name;
     }
     if (!doctorId) {
       throw new BadRequestError("A doctor must be associated with the record");
@@ -72,6 +76,21 @@ export class MedicineService {
       entity: "medicine_record",
       entityId: record.recordId,
       metadata: { patientId: input.patientId, doctorId, visitDate: input.visitDate },
+    });
+
+    // Notify the patient with the FULL medicine record.
+    await notifyMedicineRecord(this.db, patient, {
+      patientName: patient.fullName,
+      doctorName,
+      action: "created",
+      clinicId,
+      record: {
+        diagnosis: record.diagnosis,
+        symptoms: record.symptoms,
+        treatment: record.treatment,
+        notes: record.notes,
+        visitDate: record.visitDate,
+      },
     });
 
     return record;
@@ -126,7 +145,35 @@ export class MedicineService {
     });
 
     const updated = await repo.findByRecordId(recordId);
-    return updated ?? existing;
+    const saved = updated ?? existing;
+
+    // Notify the patient with the FULL updated medicine record.
+    if (ctx.role !== "patient") {
+      const clinicId = requireClinicOf(ctx);
+      const patient = await this.db
+        .collection<PatientDoc>(CLINIC_COLLECTIONS.patients)
+        .findOne({ clinicId, patientId: saved.patientId });
+      const doctor = await this.db
+        .collection(CLINIC_COLLECTIONS.doctors)
+        .findOne({ clinicId, doctorId: saved.doctorId });
+      if (patient) {
+        await notifyMedicineRecord(this.db, patient, {
+          patientName: patient.fullName,
+          doctorName: doctor?.name ?? null,
+          action: "updated",
+          clinicId,
+          record: {
+            diagnosis: saved.diagnosis,
+            symptoms: saved.symptoms,
+            treatment: saved.treatment,
+            notes: saved.notes,
+            visitDate: saved.visitDate,
+          },
+        });
+      }
+    }
+
+    return saved;
   }
 
   async deleteRecord(ctx: ClinicContext, recordId: string): Promise<void> {
