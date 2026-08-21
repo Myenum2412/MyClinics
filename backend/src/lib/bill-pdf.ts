@@ -101,8 +101,12 @@ export interface Bill {
   currency?: string | null;
 }
 
-const MARGIN = 24;
+const MARGIN = 40;
 const contentWidth = 595.28 - MARGIN * 2;
+/** Body content must end above this — the footer strip sits below it. */
+const CONTENT_BOTTOM = 750;
+/** Inset of the very subtle page outline drawn on every page. */
+const OUTLINE_INSET = 24;
 
 // Clean corporate palette — white, navy/blue accents, thin blue borders
 const C = {
@@ -215,9 +219,18 @@ function box(doc: PDFKit.PDFDocument, x: number, y: number, w: number, h: number
   doc.rect(x, y, w, h).lineWidth(0.75).strokeColor(C.border).stroke();
 }
 
+/** Very subtle full-page outline — keeps a clean print frame on every page. */
+function drawPageOutline(doc: PDFKit.PDFDocument) {
+  doc
+    .rect(OUTLINE_INSET, OUTLINE_INSET, 595.28 - OUTLINE_INSET * 2, 841.89 - OUTLINE_INSET * 2)
+    .lineWidth(0.75)
+    .strokeColor(C.rule)
+    .stroke();
+}
+
 /**
  * Header — logo + business identity left, TAX INVOICE + number right,
- * thin blue rule underneath. Continuation pages get a compact version.
+ * thin divider underneath. Continuation pages get a compact version.
  */
 function decoratePage(
   doc: PDFKit.PDFDocument,
@@ -231,6 +244,8 @@ function decoratePage(
   const udyam = bill.udyam ?? BUSINESS.udyam;
   const email = company.email ?? BUSINESS.email;
   const billNo = bill.billNumber || "—";
+
+  drawPageOutline(doc);
 
   if (pageNumber > 1) {
     doc.font("bold").fontSize(10).fillColor(C.navy).text(companyName, MARGIN, 20);
@@ -255,29 +270,28 @@ function decoratePage(
 
   if (logo) {
     try {
-      doc.rect(MARGIN, 26, 44, 44).lineWidth(0.75).strokeColor(C.border).stroke();
-      doc.image(logo, MARGIN + 2, 28, { width: 40, height: 40 });
-      textX = MARGIN + 56;
+      doc.image(logo, MARGIN, 52, { width: 46, height: 46 });
+      textX = MARGIN + 58;
     } catch {
       textX = MARGIN;
     }
   }
 
-  doc.font("bold").fontSize(13).fillColor(C.navy).text(companyName.toUpperCase(), textX, 27);
-  doc.font("regular").fontSize(8).fillColor(C.muted).text(email, textX, 45);
-  doc.font("regular").fontSize(8).fillColor(C.muted).text(`GSTIN: ${gstin}`, textX, 57);
-  doc.font("regular").fontSize(8).fillColor(C.muted).text(`UDYAM: ${udyam}`, textX, 69);
+  doc.font("bold").fontSize(16).fillColor(C.navy).text(companyName.toUpperCase(), textX, 54);
+  doc.font("regular").fontSize(8).fillColor(C.muted).text(email, textX, 78);
+  doc.font("regular").fontSize(8).fillColor(C.muted).text(`GSTIN: ${gstin}`, textX, 90);
+  doc.font("regular").fontSize(8).fillColor(C.muted).text(`UDYAM: ${udyam}`, textX, 102);
 
-  doc.font("bold").fontSize(22).fillColor(C.navy).text("TAX INVOICE", MARGIN, 27, {
+  doc.font("bold").fontSize(24).fillColor(C.navy).text("TAX INVOICE", MARGIN, 54, {
     width: contentWidth,
     align: "right",
   });
-  doc.font("bold").fontSize(10.5).fillColor(C.blue).text(billNo, MARGIN, 55, {
+  doc.font("bold").fontSize(10).fillColor(C.blue).text(billNo, MARGIN, 88, {
     width: contentWidth,
     align: "right",
   });
 
-  doc.moveTo(MARGIN, 86).lineTo(MARGIN + contentWidth, 86).lineWidth(0.75).strokeColor(C.border).stroke();
+  doc.moveTo(MARGIN, 120).lineTo(MARGIN + contentWidth, 120).lineWidth(0.75).strokeColor(C.border).stroke();
 }
 
 /** Bordered two-column invoice-details section. */
@@ -294,10 +308,10 @@ function drawInvoiceDetails(
     ["Place of Supply", bill.placeOfSupply ?? BUSINESS.placeOfSupply],
   ];
   const colW = (contentWidth - 1) / 2;
-  const rowH = 34;
+  const rowH = 32;
   const leftCells = cells.slice(0, 3);
   const rightCells = cells.slice(3);
-  const h = Math.max(leftCells.length, rightCells.length) * rowH + 18;
+  const h = leftCells.length * rowH + 20;
   const top = y;
 
   box(doc, MARGIN, top, contentWidth, h);
@@ -306,51 +320,52 @@ function drawInvoiceDetails(
 
   const drawCol = (rows: [string, string][], x: number) => {
     rows.forEach(([label, value], i) => {
-      const cy = top + 14 + i * rowH;
+      const cy = top + 16 + i * rowH;
       doc.font("regular").fontSize(6.5).fillColor(C.faint).text(label.toUpperCase(), x, cy);
-      doc.font("regular").fontSize(10).fillColor(C.ink).text(value, x, cy + 10, {
-        width: colW - 24,
+      doc.font("regular").fontSize(10).fillColor(C.ink).text(value, x, cy + 11, {
+        width: colW - 28,
       });
     });
   };
-  drawCol(leftCells, MARGIN + 14);
-  drawCol(rightCells, MARGIN + colW + 14);
+  drawCol(leftCells, MARGIN + 16);
+  drawCol(rightCells, MARGIN + colW + 16);
 
   return top + h;
 }
 
-/** Full-width BILL TO section. */
+/** Full-width BILL TO card — name prominent, address underneath. */
 function drawBillTo(doc: PDFKit.PDFDocument, y: number, bill: Bill): number {
   const top = y;
-  const h = 80;
+  const h = 84;
   box(doc, MARGIN, top, contentWidth, h);
 
-  doc.font("bold").fontSize(7.5).fillColor(C.navy).text("BILL TO", MARGIN + 14, top + 11);
+  doc.font("bold").fontSize(7.5).fillColor(C.navy).text("BILL TO", MARGIN + 16, top + 12);
 
-  const gstinValue = bill.patientGstin ?? "N/A";
-  doc.font("regular").fontSize(8).fillColor(C.faint).text("GSTIN:", MARGIN + 14, top + 26, {
-    width: 90,
-  });
-  doc.font("bold").fontSize(9).fillColor(C.ink).text(gstinValue, MARGIN + 14 + 90, top + 26, {
-    width: contentWidth - 120,
+  if (bill.patientGstin) {
+    doc.font("regular").fontSize(7.5).fillColor(C.faint).text(
+      `GSTIN: ${bill.patientGstin}`,
+      MARGIN,
+      top + 33,
+      { width: contentWidth - 16, align: "right" }
+    );
+  }
+
+  doc.font("bold").fontSize(12).fillColor(C.ink).text(bill.patientName || "—", MARGIN + 16, top + 30, {
+    width: contentWidth - 32,
   });
 
-  const nameY = top + 28;
-  doc.font("bold").fontSize(11.5).fillColor(C.ink).text(bill.patientName || "—", MARGIN + 14, nameY, {
-    width: contentWidth - 28,
-  });
-  const addrY = nameY + 17;
+  let extra = 0;
   if (bill.patientAddress) {
-    const lines = Math.max(1, cellLines(doc, String(bill.patientAddress), contentWidth - 28));
+    const lines = Math.max(1, cellLines(doc, String(bill.patientAddress), contentWidth - 32));
     doc.font("regular").fontSize(8.5).fillColor(C.muted).text(
       String(bill.patientAddress),
-      MARGIN + 14,
-      addrY,
-      { width: contentWidth - 28 }
+      MARGIN + 16,
+      top + 52,
+      { width: contentWidth - 32 }
     );
-    return top + h + (lines > 1 ? (lines - 1) * 10 : 0);
+    extra = (lines - 1) * 10;
   }
-  return top + h;
+  return top + h + extra;
 }
 
 /** Items table — navy header, thin rules, per-item CGST/SGST + totals row. */
@@ -362,8 +377,10 @@ function drawItemsTable(
   ensureSpace: (n: number) => void
 ): number {
   const headers = ["#", "ITEM & DESCRIPTION", "HSN/SAC", "QTY", "RATE", "CGST", "SGST", "AMOUNT"];
-  const colWidths = [20, 207, 46, 36, 56, 62, 62, 58];
-  const headerH = 24;
+  const fracs = [0.036, 0.36, 0.085, 0.065, 0.12, 0.112, 0.112, 0.11];
+  const colWidths = fracs.map((f) => Math.round(f * contentWidth));
+  colWidths[colWidths.length - 1] += contentWidth - colWidths.reduce((a, b) => a + b, 0);
+  const headerH = 26;
   const rightCols = new Set([3, 4, 5, 6, 7]);
   let y = startY;
 
@@ -385,8 +402,8 @@ function drawItemsTable(
         item.hsnSac ?? "—",
         String((item.qty ?? 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })),
         money(item.price ?? 0, symbol),
-        taxPct > 0 ? `${half}% — ${money(cgstAmt, symbol)}` : "—",
-        taxPct > 0 ? `${half}% — ${money(sgstAmt, symbol)}` : "—",
+        taxPct > 0 ? `${half}% ${money(cgstAmt, symbol)}` : "—",
+        taxPct > 0 ? `${half}% ${money(sgstAmt, symbol)}` : "—",
         money(item.amount ?? (item.qty ?? 0) * (item.price ?? 0), symbol),
       ],
       height: 0,
@@ -399,7 +416,7 @@ function drawItemsTable(
     headers.forEach((h, i) => {
       if (colWidths[i] <= 0) return;
       doc.font("bold").fontSize(6.5).fillColor(C.white);
-      doc.text(h, x + 6, y + 8.5, { width: colWidths[i] - 12, align: rightCols.has(i) ? "right" : "left" });
+      doc.text(h, x + 6, y + 9.5, { width: colWidths[i] - 12, align: rightCols.has(i) ? "right" : "left" });
       x += colWidths[i];
     });
     y += headerH;
@@ -410,13 +427,13 @@ function drawItemsTable(
     const lines = row.cells.map((cell, i) =>
       Math.max(1, cellLines(doc, cell, colWidths[i] - 10))
     );
-    return Math.max(24, Math.max(...lines) * 10 + 10);
+    return Math.max(26, Math.max(...lines) * 10 + 12);
   };
 
   drawHeader();
   rows.forEach((row) => {
     const rh = rowHeight(row);
-    if (y + rh > 720) {
+    if (y + rh > CONTENT_BOTTOM) {
       ensureSpace(headerH + rh + 6);
       y += 6;
       drawHeader();
@@ -429,7 +446,7 @@ function drawItemsTable(
       const pad = i === 0 ? 6 : 4;
       if (i === 5 || i === 6) doc.font("regular").fontSize(7);
       else doc.font("regular").fontSize(8);
-      doc.text(cell, x + pad, y + 7, { width: colWidths[i] - pad * 2, align });
+      doc.text(cell, x + pad, y + 8, { width: colWidths[i] - pad * 2, align });
       x += colWidths[i];
     });
     y += rh;
@@ -448,27 +465,28 @@ function drawItemsTable(
     taxTotal > 0 ? money(sgstTotal, symbol) : "—",
     taxTotal > 0 ? money(taxTotal, symbol) : "—",
   ];
-  if (y + 26 > 720) {
-    ensureSpace(headerH + 26 + 6);
+  const totalsRowH = 28;
+  if (y + totalsRowH > CONTENT_BOTTOM) {
+    ensureSpace(headerH + totalsRowH + 6);
     y += 6;
     drawHeader();
   }
+  doc.rect(MARGIN, y, contentWidth, totalsRowH).fill(C.band);
   doc.moveTo(MARGIN, y).lineTo(MARGIN + contentWidth, y).lineWidth(1).strokeColor(C.navy).stroke();
-  doc.font("bold").fontSize(8).fillColor(C.ink);
+  doc.font("bold").fontSize(9).fillColor(C.navy);
   let x = MARGIN;
   totalsCells.forEach((cell, i) => {
     const align = rightCols.has(i) ? "right" : "left";
     const pad = i === 0 ? 6 : 4;
-    doc.text(cell, x + pad, y + 8, { width: colWidths[i] - pad * 2, align });
+    doc.text(cell, x + pad, y + 9, { width: colWidths[i] - pad * 2, align });
     x += colWidths[i];
   });
-  y += 26;
-  doc.moveTo(MARGIN, y).lineTo(MARGIN + contentWidth, y).lineWidth(0.75).strokeColor(C.border).stroke();
+  y += totalsRowH;
 
   return y;
 }
 
-/** Right-side totals panel with prominent Total and Balance Due. */
+/** Right-side totals panel — compact thin box, navy Total and Balance Due. */
 function drawTotals(
   doc: PDFKit.PDFDocument,
   x: number,
@@ -485,54 +503,56 @@ function drawTotals(
   const taxable = (bill.subtotal ?? 0) - (bill.discount ?? 0);
   const balanceDue = bill.balanceDue ?? Math.max(0, (bill.total ?? 0) - (bill.amountPaid ?? 0));
 
-  const rows: [string, string, boolean][] = [
-    ["Sub Total", money(bill.subtotal ?? 0, symbol), false],
-    ["Total Taxable Amount", money(taxable, symbol), false],
+  const rows: [string, string][] = [
+    ["Sub Total", money(bill.subtotal ?? 0, symbol)],
+    ["Total Taxable Amount", money(taxable, symbol)],
   ];
   if ((bill.discount ?? 0) > 0) {
-    rows.push(["Discount", `- ${money(bill.discount ?? 0, symbol)}`, false]);
+    rows.push(["Discount", `- ${money(bill.discount ?? 0, symbol)}`]);
   }
   if (tax > 0) {
-    rows.push([`CGST ${halfRate}%`, money(cgst, symbol), false]);
-    rows.push([`SGST ${halfRate}%`, money(sgst, symbol), false]);
+    rows.push([`CGST ${halfRate}%`, money(cgst, symbol)]);
+    rows.push([`SGST ${halfRate}%`, money(sgst, symbol)]);
   }
 
-  const rowH = 22;
+  const rowH = 21;
   const padX = 14;
-  const h = 18 + rows.length * rowH + 20 + 26 + 6;
+  const valueW = 95;
+  const rowsTop = y + 16;
+  const totalRuleY = rowsTop + rows.length * rowH + 4;
+  const totalTextY = totalRuleY + 8;
+  const dueBandY = totalTextY + 26;
+  const h = dueBandY + 26 + 8 - y;
 
   box(doc, x, y, w, h);
   rows.forEach(([label, value], i) => {
-    const ry = y + 18 + i * rowH;
-    doc.font("regular").fontSize(8.5).fillColor(C.muted).text(label, x + padX, ry, { width: w - padX * 2 - 110 });
-    doc.font("bold").fontSize(8.5).fillColor(C.ink).text(value, x + padX + (w - padX * 2 - 110), ry, {
-      width: 110 - 6,
+    const ry = rowsTop + i * rowH;
+    doc.font("regular").fontSize(8.5).fillColor(C.muted).text(label, x + padX, ry, { width: w - padX * 2 - valueW });
+    doc.font("regular").fontSize(8.5).fillColor(C.ink).text(value, x + w - padX - valueW, ry, {
+      width: valueW,
       align: "right",
     });
   });
 
-  const totalY = y + 18 + rows.length * rowH + 6;
-  doc.rect(x + 8, totalY, w - 16, 20).fill(C.band);
-  doc.moveTo(x, totalY).lineTo(x + w, totalY).lineWidth(0.75).strokeColor(C.border).stroke();
-  doc.font("bold").fontSize(11).fillColor(C.navy).text("Total", x + padX, totalY + 5.5, { width: 90 });
-  doc.font("bold").fontSize(11).fillColor(C.navy).text(money(bill.total ?? 0, symbol), x + w - padX - 110, totalY + 5.5, {
-    width: 110,
+  doc.moveTo(x, totalRuleY).lineTo(x + w, totalRuleY).lineWidth(1).strokeColor(C.navy).stroke();
+  doc.font("bold").fontSize(11).fillColor(C.navy).text("Total", x + padX, totalTextY);
+  doc.font("bold").fontSize(11).fillColor(C.navy).text(money(bill.total ?? 0, symbol), x + w - padX - valueW, totalTextY, {
+    width: valueW,
     align: "right",
   });
 
-  const dueY = totalY + 20 + 8;
-  doc.rect(x + 8, dueY, w - 16, 20).fill(C.band);
-  doc.moveTo(x, dueY).lineTo(x + w, dueY).lineWidth(0.75).strokeColor(C.border).stroke();
-  doc.font("bold").fontSize(11).fillColor(C.navy).text("Balance Due", x + padX, dueY + 5.5, { width: 120 });
-  doc.font("bold").fontSize(11).fillColor(C.navy).text(money(balanceDue, symbol), x + w - padX - 110, dueY + 5.5, {
-    width: 110,
+  doc.rect(x + 1, dueBandY, w - 2, 26).fill(C.band);
+  doc.moveTo(x, dueBandY).lineTo(x + w, dueBandY).lineWidth(0.75).strokeColor(C.border).stroke();
+  doc.font("bold").fontSize(11).fillColor(C.navy).text("Balance Due", x + padX, dueBandY + 7);
+  doc.font("bold").fontSize(11).fillColor(C.navy).text(money(balanceDue, symbol), x + w - padX - valueW, dueBandY + 7, {
+    width: valueW,
     align: "right",
   });
 
   return y + h;
 }
 
-/** Left column on the invoice page — amount in words and notes. */
+/** Left column on the invoice page — amount in words, notes, billed by. */
 function drawLeftDetails(
   doc: PDFKit.PDFDocument,
   x: number,
@@ -545,17 +565,17 @@ function drawLeftDetails(
   const notes = bill.notes ?? BUSINESS.notes;
 
   const rows: [string, string][] = [
-    ["Total in Words", amountInWords(bill.total ?? 0)],
-    ["Notes", notes],
-    ["Billed By", companyName],
+    ["TOTAL IN WORDS", amountInWords(bill.total ?? 0)],
+    ["NOTES", notes],
+    ["BILLED BY", companyName],
   ];
 
-  let cy = y;
+  let cy = y + 4;
   for (const [label, value] of rows) {
-    doc.font("bold").fontSize(7).fillColor(C.navy).text(label.toUpperCase(), x, cy);
+    doc.font("bold").fontSize(7).fillColor(C.navy).text(label, x, cy);
     const lines = Math.max(1, cellLines(doc, value, w));
-    doc.font("regular").fontSize(8.5).fillColor(C.ink).text(value, x, cy + 11, { width: w });
-    cy += 11 + lines * 12 + 10;
+    doc.font("regular").fontSize(8.5).fillColor(C.ink).text(value, x, cy + 12, { width: w });
+    cy += 12 + lines * 12 + 16;
   }
 
   return cy;
@@ -584,21 +604,21 @@ function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, b
     ["Amount Paid", money(bill.amountPaid ?? 0, symbol)],
     ["Balance Due", money(balanceDue, symbol)],
   ];
-  const sumRowH = 24;
+  const sumRowH = 32;
   const sumCols = 2;
   const sumRowsPerCol = Math.ceil(summaryRows.length / sumCols);
-  const sumH = sumRowsPerCol * sumRowH + 14;
+  const sumH = sumRowsPerCol * sumRowH + 24;
   box(doc, MARGIN, y, contentWidth, sumH);
-  doc.font("bold").fontSize(8).fillColor(C.navy).text("PAYMENT SUMMARY", MARGIN + 12, y + 8);
-  const colW = (contentWidth - 24) / 2;
+  doc.font("bold").fontSize(8).fillColor(C.navy).text("PAYMENT SUMMARY", MARGIN + 14, y + 10);
+  const colW = (contentWidth - 28) / 2;
   summaryRows.forEach(([label, value], i) => {
     const col = Math.floor(i / sumRowsPerCol);
     const row = i % sumRowsPerCol;
-    const cx = MARGIN + 12 + col * colW;
-    const cy = y + 26 + row * sumRowH;
+    const cx = MARGIN + 14 + col * colW;
+    const cy = y + 34 + row * sumRowH;
     doc.font("regular").fontSize(7).fillColor(C.faint).text(label.toUpperCase(), cx, cy);
-    doc.font("bold").fontSize(10).fillColor(label === "Balance Due" ? C.navy : C.ink).text(value, cx, cy + 9, {
-      width: colW - 16,
+    doc.font("bold").fontSize(10).fillColor(label === "Balance Due" ? C.navy : C.ink).text(value, cx, cy + 11, {
+      width: colW - 20,
     });
   });
   y += sumH + 12;
@@ -661,17 +681,6 @@ function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, b
     });
     y += lines * 11 + 4;
   });
-
-  // ── Signature line ───────────────────────────────────────────────────────
-  const sigY = Math.max(y + 24, 700);
-  doc.moveTo(MARGIN + contentWidth - 180, sigY).lineTo(MARGIN + contentWidth, sigY)
-    .lineWidth(0.75).strokeColor(C.border).stroke();
-  doc.font("bold").fontSize(8).fillColor(C.muted).text(
-    `For ${companyName}`,
-    MARGIN + contentWidth - 180,
-    sigY + 5,
-    { width: 180, align: "center" }
-  );
 }
 
 export async function generateBillPdf(
@@ -697,33 +706,33 @@ export async function generateBillPdf(
   let y = 0;
 
   function ensureSpace(needed: number) {
-    if (y + needed <= 745) return;
+    if (y + needed <= CONTENT_BOTTOM) return;
     doc.addPage();
     pageNo += 1;
     decoratePage(doc, pageNo, company, bill);
-    y = 56;
+    y = 68;
   }
 
   decoratePage(doc, 1, company, bill);
 
   // ── Page 1 — BILLING / INVOICE ──────────────────────────────────────────
-  y = 106;
+  y = 138;
   y = drawInvoiceDetails(doc, y, bill) + 18;
 
   // ── Bill To ─────────────────────────────────────────────────────────────
   y = drawBillTo(doc, y, bill) + 18;
 
   // ── Items table ─────────────────────────────────────────────────────────
-  const tableH = 24 + Math.max(1, (bill.items ?? []).length) * 24 + 26;
+  const tableH = 26 + Math.max(1, (bill.items ?? []).length) * 26 + 28;
   ensureSpace(tableH + 8);
   y = drawItemsTable(doc, bill, symbol, y, ensureSpace) + 18;
 
   // ── Totals panel + words/notes ──────────────────────────────────────────
-  const leftW = 300;
-  const rightW = contentWidth - leftW - 12;
-  const totalsH = 18 + 4 * 22 + 20 + 26 + 6;
-  ensureSpace(Math.max(totalsH, 150));
-  drawTotals(doc, MARGIN + leftW + 12, y, rightW, bill, symbol);
+  const leftW = 270;
+  const rightW = contentWidth - leftW - 16;
+  const totalsH = 16 + 5 * 21 + 4 + 8 + 26 + 26 + 8;
+  ensureSpace(Math.max(totalsH, 170));
+  drawTotals(doc, MARGIN + leftW + 16, y, rightW, bill, symbol);
   drawLeftDetails(doc, MARGIN, y, leftW, bill, company);
 
   // ── Page 2 — PAYMENT DETAILS ────────────────────────────────────────────
@@ -732,16 +741,26 @@ export async function generateBillPdf(
   decoratePage(doc, pageNo, company, bill, "PAYMENT DETAILS");
   drawPaymentPage(doc, company, bill);
 
-  // ── Footer — subtle page number ─────────────────────────────────────────
+  // ── Footer — thin divider, thank-you note, page numbers ────────────────
+  // NOTE: must stay above doc.maxY (page height - bottom margin) or pdfkit
+  // silently adds extra pages.
   const range = doc.bufferedPageRange();
   const totalPages = range.count;
   for (let i = 0; i < totalPages; i++) {
     doc.switchToPage(i);
+    doc.moveTo(MARGIN, 780).lineTo(MARGIN + contentWidth, 780)
+      .lineWidth(0.75).strokeColor(C.rule).stroke();
+    doc.font("regular").fontSize(7.5).fillColor(C.faint).text(
+      "Thank you for your business!",
+      MARGIN,
+      788,
+      { width: contentWidth, align: "center", lineBreak: false }
+    );
     doc.font("regular").fontSize(7).fillColor(C.faint).text(
       `Page ${i + 1} of ${totalPages}`,
       MARGIN,
-      804,
-      { width: contentWidth, align: "right" }
+      789,
+      { width: contentWidth, align: "right", lineBreak: false }
     );
   }
 
