@@ -193,7 +193,8 @@ export class PatientService {
 
     // Notify the patient (and the assigned doctor) that the profile was created.
     await notifyPatientRegistered(this.db, created, {
-      sendCredentials: input.loginNotification === "whatsapp",
+      sendCredentials:
+        input.loginNotification === "whatsapp" || input.loginNotification === "email",
       portalUsername: input.email ?? null,
       password: input.password ?? null,
       clinicId: clinicId,

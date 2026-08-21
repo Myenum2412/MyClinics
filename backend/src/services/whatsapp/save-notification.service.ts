@@ -20,6 +20,11 @@ export interface ClinicDetails {
   address?: string | null;
   website?: string | null;
   description?: string | null;
+  settings?: {
+    workingHours?: { open: string; close: string; days?: string | null } | null;
+    weeklySchedule?: Array<{ day: string; open: string; close: string; closed: boolean }> | null;
+    timezone?: string | null;
+  } | null;
   profile?: {
     clinicType?: string | null;
     registrationNumber?: string | null;
@@ -34,7 +39,15 @@ export interface ClinicDetails {
     specializations?: string[];
     services?: string[];
     emergencyContact?: string | null;
-  };
+    gstNumber?: string | null;
+    taxBusinessId?: string | null;
+    socialMedia?: {
+      facebook?: string | null;
+      instagram?: string | null;
+      twitter?: string | null;
+      linkedin?: string | null;
+    } | null;
+  } | null;
   welcomeDocuments?: Array<{
     documentId: string;
     fileName: string;
@@ -86,7 +99,8 @@ async function fetchClinicDetails(db: Db, clinicId: string): Promise<ClinicDetai
     address: clinic.address,
     website: clinic.website,
     description: clinic.description,
-    profile: clinic.profile,
+    settings: clinic.settings ?? null,
+    profile: clinic.profile ?? null,
     welcomeDocuments: documentsWithUrls,
   };
 }
@@ -117,56 +131,110 @@ async function sendWelcomeMessageWithDocuments(
   clinicDetails: ClinicDetails,
   credentials?: { username: string; password: string }
 ): Promise<void> {
-  const lines = [
-    `Hi ${patientName}, welcome to ${clinicDetails.name}!`,
-    `Your patient profile has been registered successfully.`,
-    "",
-    "📍 *Clinic Details:*",
-    `Name: ${clinicDetails.name}`,
+  const lines: string[] = [
+    `👋 Hi ${patientName}, welcome to *${clinicDetails.name}*!`,
+    `Your patient profile has been registered successfully. ✅`,
   ];
 
-  if (clinicDetails.phone) lines.push(`Phone: ${clinicDetails.phone}`);
-  if (clinicDetails.email) lines.push(`Email: ${clinicDetails.email}`);
-  if (clinicDetails.address) lines.push(`Address: ${clinicDetails.address}`);
-  if (clinicDetails.website) lines.push(`Website: ${clinicDetails.website}`);
+  // ── About the clinic ──────────────────────────────────────────────────────
+  if (clinicDetails.description) {
+    lines.push(``, `📋 *About Us:*`, clinicDetails.description);
+  }
 
-  if (clinicDetails.profile) {
-    const p = clinicDetails.profile;
-    if (p.clinicType) lines.push(`Type: ${p.clinicType}`);
-    if (p.registrationNumber) lines.push(`Registration: ${p.registrationNumber}`);
-    if (p.establishedYear) lines.push(`Established: ${p.establishedYear}`);
-    if (p.city || p.state || p.country) {
-      const addr = [p.city, p.state, p.country].filter(Boolean).join(", ");
-      if (addr) lines.push(`Location: ${addr}`);
+  // ── Clinic contact & location ──────────────────────────────────────────────
+  lines.push(``, `📍 *Clinic Details:*`);
+  lines.push(`🏥 *${clinicDetails.name}*`);
+
+  const p = clinicDetails.profile;
+
+  // Build full address from profile address lines first, fall back to top-level address
+  const addrParts: string[] = [];
+  if (p?.addressLine1) addrParts.push(p.addressLine1);
+  if (p?.addressLine2) addrParts.push(p.addressLine2);
+  const cityStateCountry = [p?.city, p?.state, p?.country].filter(Boolean).join(", ");
+  if (cityStateCountry) addrParts.push(cityStateCountry);
+  if (p?.pincode) addrParts.push(`PIN: ${p.pincode}`);
+  if (addrParts.length) {
+    lines.push(`📌 ${addrParts.join(", ")}`);
+  } else if (clinicDetails.address) {
+    lines.push(`📌 ${clinicDetails.address}`);
+  }
+
+  // Contact numbers
+  if (clinicDetails.phone) lines.push(`📞 ${clinicDetails.phone}`);
+  if (p?.whatsapp && p.whatsapp !== clinicDetails.phone) lines.push(`💬 WhatsApp: ${p.whatsapp}`);
+
+  // Email & website
+  if (clinicDetails.email) lines.push(`✉️  ${clinicDetails.email}`);
+  if (clinicDetails.website) lines.push(`🌐 ${clinicDetails.website}`);
+
+  // ── Clinic profile details ────────────────────────────────────────────────
+  if (p) {
+    if (p.clinicType) lines.push(`🏷️  Type: ${p.clinicType}`);
+    if (p.registrationNumber) lines.push(`📄 Reg. No.: ${p.registrationNumber}`);
+    if (p.gstNumber) lines.push(`🧾 GST: ${p.gstNumber}`);
+    if (p.taxBusinessId) lines.push(`🧾 Tax ID: ${p.taxBusinessId}`);
+    if (p.establishedYear) lines.push(`📅 Est. ${p.establishedYear}`);
+    if (p.specializations?.length) lines.push(`🩺 Specializations: ${p.specializations.join(", ")}`);
+    if (p.services?.length) lines.push(`💊 Services: ${p.services.join(", ")}`);
+    if (p.emergencyContact) lines.push(`🚨 Emergency: ${p.emergencyContact}`);
+  }
+
+  // ── Working hours ─────────────────────────────────────────────────────────
+  const tz = clinicDetails.settings?.timezone;
+  const weekly = clinicDetails.settings?.weeklySchedule;
+  const simple = clinicDetails.settings?.workingHours;
+
+  if (weekly?.length) {
+    lines.push(``, `🕐 *Working Hours:*`);
+    for (const day of weekly) {
+      if (day.closed) {
+        lines.push(`  ${day.day}: Closed`);
+      } else {
+        lines.push(`  ${day.day}: ${day.open} – ${day.close}`);
+      }
     }
-    if (p.specializations?.length) lines.push(`Specializations: ${p.specializations.join(", ")}`);
-    if (p.services?.length) lines.push(`Services: ${p.services.join(", ")}`);
-    if (p.emergencyContact) lines.push(`Emergency: ${p.emergencyContact}`);
+    if (tz) lines.push(`  (timezone: ${tz})`);
+  } else if (simple?.open && simple?.close) {
+    const dayInfo = simple.days ? ` (${simple.days})` : "";
+    lines.push(``, `🕐 *Working Hours:* ${simple.open} – ${simple.close}${dayInfo}`);
+    if (tz) lines.push(`  (timezone: ${tz})`);
   }
 
+  // ── Social media ──────────────────────────────────────────────────────────
+  const sm = p?.socialMedia;
+  const socialLinks = [
+    sm?.facebook ? `Facebook: ${sm.facebook}` : null,
+    sm?.instagram ? `Instagram: ${sm.instagram}` : null,
+    sm?.twitter ? `Twitter/X: ${sm.twitter}` : null,
+    sm?.linkedin ? `LinkedIn: ${sm.linkedin}` : null,
+  ].filter(Boolean);
+  if (socialLinks.length) {
+    lines.push(``, `📲 *Follow Us:*`);
+    socialLinks.forEach((l) => lines.push(`  ${l}`));
+  }
+
+  // ── Portal credentials ────────────────────────────────────────────────────
   if (credentials) {
-    lines.push("", "🔐 *Portal Login:*", `Username: ${credentials.username}`, `Password: ${credentials.password}`);
+    lines.push(
+      ``,
+      `🔐 *Patient Portal Login:*`,
+      `  👤 Username: ${credentials.username}`,
+      `  🔑 Password: ${credentials.password}`
+    );
   }
 
+  // ── Welcome documents ─────────────────────────────────────────────────────
   if (clinicDetails.welcomeDocuments?.length) {
-    lines.push("", "📎 *Welcome Documents:*");
+    lines.push(``, `📎 *Welcome Documents:*`);
     for (const doc of clinicDetails.welcomeDocuments) {
-      lines.push(`• ${doc.fileName} (${formatFileSize(doc.size)})`);
+      lines.push(`  • ${doc.fileName} (${formatFileSize(doc.size)})`);
+      lines.push(`    📥 ${doc.downloadUrl}`);
     }
   }
 
   const message = lines.join("\n");
-
-  // Send the first welcome document as media if it's an image/video
-  let media: { filename: string; mimetype: string; data: string } | undefined;
-  const firstDoc = clinicDetails.welcomeDocuments?.[0];
-  if (firstDoc && (firstDoc.mimeType?.startsWith("image/") || firstDoc.mimeType?.startsWith("video/"))) {
-    // For now, we'll send the download URL in the message
-    // In a full implementation, you'd download the file and convert to base64
-    lines.push(`\n📥 Download: ${firstDoc.downloadUrl}`);
-  }
-
-  await queue(db, phone, message, "patient_registered_welcome", media);
+  await queue(db, phone, message, "patient_registered_welcome");
 }
 
 function formatFileSize(bytes: number): string {

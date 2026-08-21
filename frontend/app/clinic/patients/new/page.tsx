@@ -22,6 +22,9 @@ import {
   KeyRound,
   Mail,
   AlertCircle,
+  Copy,
+  Check,
+  MessageCircle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -40,6 +43,15 @@ export default function NewPatientPage() {
     password: string;
     loginNotification: string;
   } | null>(null);
+
+  const [passwordCopied, setPasswordCopied] = useState(false);
+
+  const copyPassword = (pw: string) => {
+    navigator.clipboard.writeText(pw).then(() => {
+      setPasswordCopied(true);
+      setTimeout(() => setPasswordCopied(false), 2000);
+    });
+  };
 
   const handleSave = async (form: PatientFormState) => {
     setSaving(true);
@@ -201,6 +213,7 @@ export default function NewPatientPage() {
 
           {createdPatient && (
             <div className="rounded-xl border border-border bg-accent/50 p-4 space-y-3">
+              {/* Email row */}
               <div className="flex items-center gap-3">
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
                   <Mail className="size-4" />
@@ -212,26 +225,46 @@ export default function NewPatientPage() {
                   </p>
                 </div>
               </div>
+
+              {/* Password row with copy button */}
               <div className="flex items-center gap-3">
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
                   <KeyRound className="size-4" />
                 </span>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-xs text-muted-foreground">Password</p>
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-sm font-mono font-semibold text-foreground tracking-wide">
                     {createdPatient.password}
                   </p>
                 </div>
+                <button
+                  type="button"
+                  title="Copy password"
+                  onClick={() => copyPassword(createdPatient.password)}
+                  className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border bg-background hover:bg-accent transition-colors"
+                >
+                  {passwordCopied ? (
+                    <Check className="size-3.5 text-success" />
+                  ) : (
+                    <Copy className="size-3.5 text-muted-foreground" />
+                  )}
+                </button>
               </div>
-              {createdPatient.loginNotification === "whatsapp" && (
-                <p className="text-xs text-primary flex items-center gap-1">
-                  Login details sent via WhatsApp
-                </p>
-              )}
-              {createdPatient.loginNotification === "email" && (
-                <p className="text-xs text-primary flex items-center gap-1">
-                  Login details sent via Email
-                </p>
+
+              {/* Notification channel badge */}
+              {createdPatient.loginNotification !== "none" && (
+                <div className="flex items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1.5">
+                  {createdPatient.loginNotification === "whatsapp" ? (
+                    <MessageCircle className="size-3.5 text-primary" />
+                  ) : (
+                    <Mail className="size-3.5 text-primary" />
+                  )}
+                  <p className="text-xs font-medium text-primary">
+                    {createdPatient.loginNotification === "whatsapp"
+                      ? "Login details sent to patient via WhatsApp"
+                      : "Login details sent to patient via WhatsApp (email notification queued)"}
+                  </p>
+                </div>
               )}
             </div>
           )}
