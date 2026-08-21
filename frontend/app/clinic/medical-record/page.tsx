@@ -127,7 +127,32 @@ const APPT_STATUS_CLASS: Record<AppointmentStatus, string> = {
 
 // ── Strict medical-document allowlist (mirrors backend upload-guard) ──────
 
-const ALLOWED_EXTENSIONS = [".pdf", ".docx", ".xlsx", ".jpg", ".jpeg", ".png", ".tif", ".tiff", ".dcm"];
+const ALLOWED_EXTENSIONS = [
+  ".pdf",
+  ".docx",
+  ".xlsx",
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".tif",
+  ".tiff",
+  ".dcm",
+  ".mp4",
+  ".m4v",
+  ".mov",
+  ".webm",
+  ".avi",
+  ".mkv",
+  ".wmv",
+  ".flv",
+  ".ogv",
+  ".3gp",
+  ".3g2",
+  ".mpeg",
+  ".mpg",
+  ".ts",
+  ".m2ts",
+];
 
 const ACCEPT = [
   "application/pdf",
@@ -137,6 +162,7 @@ const ACCEPT = [
   "image/png",
   "image/tiff",
   "application/dicom",
+  "video/*",
   ...ALLOWED_EXTENSIONS,
 ].join(",");
 
@@ -153,6 +179,7 @@ function isAllowedFile(file: File): boolean {
       mime === "image/jpeg" ||
       mime === "image/png" ||
       mime === "image/tiff" ||
+      mime.startsWith("video/") ||
       mime.includes("openxmlformats-officedocument.wordprocessingml") ||
       mime.includes("openxmlformats-officedocument.spreadsheetml")
     );

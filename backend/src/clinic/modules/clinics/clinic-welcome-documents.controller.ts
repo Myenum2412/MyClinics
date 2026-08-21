@@ -12,10 +12,9 @@ const ALLOWED_MIME_TYPES = [
   "image/jpeg",
   "image/png",
   "image/webp",
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
 ];
+
+const ALLOWED_MIME_PREFIXES = ["video/"];
 
 export class ClinicWelcomeDocumentsController {
   private service(db: Db): ClinicWelcomeDocumentService {
@@ -43,9 +42,10 @@ export class ClinicWelcomeDocumentsController {
 
     if (!data || data.length === 0) throw new BadRequestError("A file is required");
 
-    if (!ALLOWED_MIME_TYPES.includes(mimeType ?? "")) {
+    const mime = (mimeType ?? "").toLowerCase();
+    if (!ALLOWED_MIME_TYPES.includes(mime) && !ALLOWED_MIME_PREFIXES.some((p) => mime.startsWith(p))) {
       throw new BadRequestError(
-        "Unsupported file type. Only PDF, images (JPG, PNG, WebP), and videos (MP4, WebM, MOV) are allowed."
+        "Unsupported file type. Only PDF, images (JPG, PNG, WebP), and videos are allowed."
       );
     }
 

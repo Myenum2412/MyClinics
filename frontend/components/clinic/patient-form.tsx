@@ -1149,8 +1149,18 @@ export function PatientForm({
           <AttachmentUploader
             files={form.attachments}
             onChange={(files) => setForm((f) => ({ ...f, attachments: files }))}
-            description="Upload ID proofs, reports, or documents (JPG, PNG, PDF up to 25 MB)."
-            accept={["image/jpeg", "image/png", "application/pdf"]}
+            description="Upload ID proofs, reports, videos, or documents (JPG, PNG, PDF, MP4, MOV, WEBM up to 25 MB)."
+            accept={[
+              "image/jpeg",
+              "image/png",
+              "application/pdf",
+              "video/*",
+              ".mp4",
+              ".mov",
+              ".webm",
+              ".avi",
+              ".mkv",
+            ]}
           />
         )}
       </SectionCard>

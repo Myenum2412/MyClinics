@@ -59,10 +59,46 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+/** Video extensions used to classify files when the browser reports no MIME type. */
+const VIDEO_EXTENSIONS = [
+  ".mp4",
+  ".m4v",
+  ".mov",
+  ".webm",
+  ".avi",
+  ".mkv",
+  ".wmv",
+  ".flv",
+  ".ogv",
+  ".3gp",
+  ".3g2",
+  ".mpeg",
+  ".mpg",
+  ".ts",
+  ".m2ts",
+]
+
+const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".svg", ".heic", ".avif"]
+
+function mimeCategoryFromExtension(name: string): string | null {
+  const lower = name.toLowerCase()
+  const dot = lower.lastIndexOf(".")
+  const ext = dot > -1 ? lower.slice(dot) : ""
+  if (!ext) return null
+  if (VIDEO_EXTENSIONS.includes(ext)) return "video/"
+  if (IMAGE_EXTENSIONS.includes(ext)) return "image/"
+  return null
+}
+
 function matchesAccept(file: File, accept: string[]): boolean {
   if (accept.length === 0) return true
   return accept.some((a) => {
-    if (a.endsWith("/*")) return file.type.startsWith(a.slice(0, -1))
+    if (a.endsWith("/*")) {
+      const prefix = a.slice(0, -1)
+      if (file.type.startsWith(prefix)) return true
+      // Browser reported no MIME type — fall back to the file extension.
+      return file.type === "" && mimeCategoryFromExtension(file.name) === prefix
+    }
     if (a.startsWith(".")) return file.name.toLowerCase().endsWith(a.toLowerCase())
     return file.type === a
   })

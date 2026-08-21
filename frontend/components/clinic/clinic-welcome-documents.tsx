@@ -44,17 +44,10 @@ export function ClinicWelcomeDocuments({ clinicId }: { clinicId: string }) {
 
   const handleUpload = async (file: File) => {
     if (!clinicId) return;
-    const allowedTypes = [
-      "application/pdf",
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "video/mp4",
-      "video/webm",
-      "video/quicktime",
-    ];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Only PDF, images (JPG, PNG, WebP), and videos (MP4, WebM, MOV) are allowed");
+    const allowedImageTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    const isAllowed = allowedImageTypes.includes(file.type) || file.type.startsWith("video/");
+    if (!isAllowed) {
+      toast.error("Only PDF, images (JPG, PNG, WebP), and videos are allowed");
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
@@ -174,7 +167,7 @@ export function ClinicWelcomeDocuments({ clinicId }: { clinicId: string }) {
                 <span className="text-sm font-medium">Upload Document</span>
                 <input
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp,video/*,.mp4,.m4v,.mov,.webm,.avi,.mkv,.wmv,.flv,.ogv,.3gp,.3g2,.mpeg,.mpg,.ts,.m2ts"
                   className="sr-only"
                   onChange={handleFileSelect}
                   disabled={uploading}

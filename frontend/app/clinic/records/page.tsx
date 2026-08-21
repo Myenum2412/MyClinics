@@ -1649,7 +1649,7 @@ function RecordForm({
           <AttachmentUploader
             files={form.attachments}
             onChange={(files) => setForm((f) => ({ ...f, attachments: files }))}
-            description="Upload medical reports, lab reports, images, or PDF documents. Supports PDF, PNG, JPG up to 25 MB."
+            description="Upload medical reports, lab reports, images, videos, or PDF documents. Supports PDF, PNG, JPG, MP4, MOV, WEBM up to 25 MB."
           />
         </CardContent>
       </Card>
