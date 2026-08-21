@@ -19,7 +19,7 @@ export function registerAvatarRoutes(app: FastifyInstance): void {
 
   app.get(
     "/api/clinics/:clinicId/avatars/:ownerType/:ownerId",
-    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    { preHandler: [requireClinicAccess, requireRoles("patient")] },
     async (request, reply) => controller.getUrl(request, reply)
   );
 }

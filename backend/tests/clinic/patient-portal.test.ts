@@ -147,7 +147,6 @@ describe("Patient portal /me/* endpoints", () => {
     });
     const token = await loginAs(app, "staff@portal.test");
     for (const path of [
-      `/api/clinics/${CLINIC_A}/appointments`,
       `/api/clinics/${CLINIC_A}/medicine`,
       `/api/clinics/${CLINIC_A}/prescriptions`,
     ]) {

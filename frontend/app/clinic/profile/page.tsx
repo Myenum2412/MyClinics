@@ -238,7 +238,7 @@ export default function ClinicProfilePage() {
     }
   }
 
-  const workingHours = clinic?.settings.workingHours;
+  const workingHours = clinic?.settings?.workingHours;
   const hoursRange = workingHours
     ? `${formatTime(workingHours.open)} – ${formatTime(workingHours.close)}`
     : "9:00 AM – 6:00 PM";

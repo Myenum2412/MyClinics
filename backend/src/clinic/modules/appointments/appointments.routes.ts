@@ -21,19 +21,19 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
 
   app.post(
     "/api/clinics/:clinicId/appointments",
-    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => controller.create(request, reply)
   );
 
   app.get(
     "/api/clinics/:clinicId/appointments",
-    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => controller.list(request, reply)
   );
 
   app.get(
     "/api/clinics/:clinicId/appointments/notifications",
-    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => {
       const { clinicId } = request.params as { clinicId: string };
       const db = await getDb();
@@ -48,7 +48,7 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
 
   app.get(
     "/api/clinics/:clinicId/appointments/:appointmentId/notifications",
-    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => {
       const { clinicId, appointmentId } = request.params as { clinicId: string; appointmentId: string };
       const db = await getDb();
@@ -62,19 +62,19 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
 
   app.get(
     "/api/clinics/:clinicId/appointments/:appointmentId",
-    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => controller.getById(request, reply)
   );
 
   app.patch(
     "/api/clinics/:clinicId/appointments/:appointmentId",
-    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => controller.updateById(request, reply)
   );
 
   app.delete(
     "/api/clinics/:clinicId/appointments/:appointmentId",
-    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => controller.delete(request, reply)
   );
 }
