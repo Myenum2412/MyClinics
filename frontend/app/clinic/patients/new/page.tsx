@@ -21,6 +21,7 @@ import {
   ExternalLink,
   KeyRound,
   Mail,
+  AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -30,6 +31,7 @@ export default function NewPatientPage() {
   const router = useRouter();
 
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const [createdPatient, setCreatedPatient] = useState<{
     patientId: string;
@@ -41,6 +43,7 @@ export default function NewPatientPage() {
 
   const handleSave = async (form: PatientFormState) => {
     setSaving(true);
+    setSaveError(null);
     try {
       const payload: Record<string, unknown> = {
         fullName: form.fullName.trim(),
@@ -109,7 +112,9 @@ export default function NewPatientPage() {
         router.push("/clinic/patients");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to register patient");
+      const msg = e instanceof Error ? e.message : "Failed to register patient";
+      setSaveError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -137,6 +142,24 @@ export default function NewPatientPage() {
           </div>
         </div>
       </div>
+
+      {saveError && (
+        <div className="px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="flex items-start gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" />
+            <div>
+              <p className="font-semibold">Could not save patient</p>
+              <p className="mt-0.5 text-destructive/80">{saveError}</p>
+            </div>
+            <button
+              className="ml-auto text-destructive/60 hover:text-destructive"
+              onClick={() => setSaveError(null)}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="px-4 py-8 sm:px-6 lg:px-8">
         <PatientForm
