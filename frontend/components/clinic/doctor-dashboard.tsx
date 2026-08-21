@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar, ClipboardList, Stethoscope, Users } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
+import StatsAppointments from "@/components/stats-appointments";
 import { appointmentStatusTone } from "@/lib/status-styles";
 
 function today(): string {
@@ -53,6 +54,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
@@ -61,11 +63,13 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
       listPatients(clinicId, { limit: 500 }),
       listAppointments(clinicId, { date: today(), limit: 100 }),
       listPrescriptions(clinicId, { limit: 100 }),
+      listAppointments(clinicId, { limit: 1000 }),
     ])
-      .then(([p, a, pr]) => {
+      .then(([p, a, pr, allA]) => {
         setPatients(p.items);
         setAppointments(a.items);
         setPrescriptions(pr.items);
+        setAllAppointments(allA.items);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -154,6 +158,11 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
           description="Real-time analytics scoped to your own patients, appointments, and prescriptions."
           items={stats}
         />
+      </div>
+
+      {/* Appointment Analytics Stats Card */}
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <StatsAppointments appointments={allAppointments} />
       </div>
 
       {/* Today's appointments */}
