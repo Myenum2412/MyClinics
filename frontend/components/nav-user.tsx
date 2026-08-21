@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/sidebar"
 import {
   BellIcon as NotificationsActiveIcon,
-  ChevronUpDownIcon as ChevronsUpDownIcon,
   UserCircleIcon as BadgeCheckIcon,
 } from "@heroicons/react/24/outline";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
@@ -73,32 +72,20 @@ export function NavUser({
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <div className="flex items-center">
-            <SidebarMenuButton
-              size="lg"
-              render={
-                <a href="/clinic/account" onClick={() => isMobile && setOpenMobile(false)} />
-              }
-              className="flex-1"
-            >
-              {avatar}
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
-              </div>
-            </SidebarMenuButton>
-            <DropdownMenuTrigger
-              render={
-                <button
-                  type="button"
-                  aria-label="Open account menu"
-                  className="mr-2 flex size-6 shrink-0 items-center justify-center rounded-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                />
-              }
-            >
-              <ChevronsUpDownIcon className="size-4" />
-            </DropdownMenuTrigger>
-          </div>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                size="lg"
+                className="w-full text-left"
+              />
+            }
+          >
+            {avatar}
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">{user.name}</span>
+              <span className="truncate text-xs">{user.email}</span>
+            </div>
+          </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-fit"
             side={isMobile ? "bottom" : "right"}
