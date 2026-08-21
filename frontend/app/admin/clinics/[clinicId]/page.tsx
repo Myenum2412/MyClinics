@@ -101,10 +101,10 @@ export default function AdminClinicDetailPage() {
                 <Badge
                   className={
                     clinic.status === "active"
-                      ? "bg-green-100 text-green-700"
+                      ? "bg-success/10 text-success"
                       : clinic.status === "suspended"
-                        ? "bg-amber-100 text-amber-700"
-                        : "bg-slate-200 text-slate-600"
+                        ? "bg-warning/10 text-warning"
+                        : "bg-muted text-muted-foreground"
                   }
                 >
                   {clinic.status}
@@ -211,8 +211,8 @@ export default function AdminClinicDetailPage() {
                       <Badge
                         className={
                           p.status === "active"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-slate-200 text-slate-600"
+                            ? "bg-success/10 text-success"
+                            : "bg-muted text-muted-foreground"
                         }
                       >
                         {p.status}

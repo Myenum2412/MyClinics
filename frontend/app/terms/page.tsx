@@ -33,12 +33,12 @@ export default function TermsPage() {
     <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden p-6 md:p-10">
       <CloudShader
         className="absolute inset-0"
-        skyTopColor="#0D47A1"
-        skyBottomColor="#90CAF9"
-        cloudColor="#E3F2FD"
+        skyTopColor="#312E81"
+        skyBottomColor="#A5B4FC"
+        cloudColor="#E0E7FF"
       />
-      <div className="relative z-10 w-full max-w-3xl rounded-2xl border border-white/40 bg-white/85 p-6 shadow-2xl shadow-[#0D47A1]/30 backdrop-blur-xl sm:p-10">
-        <div className="flex items-start gap-4 border-b border-gray-200 pb-5">
+      <div className="relative z-10 w-full max-w-3xl rounded-2xl border border-white/40 bg-white/85 p-6 shadow-2xl shadow-[#312E81]/30 backdrop-blur-xl sm:p-10">
+        <div className="flex items-start gap-4 border-b border-border pb-5">
           <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-primary/5">
             <Image
               src="/logo.png"
@@ -52,7 +52,7 @@ export default function TermsPage() {
             <h1 className="text-2xl font-bold tracking-tight text-black">
               Terms of Service
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Last updated: 16 August 2026
             </p>
           </div>
@@ -66,7 +66,7 @@ export default function TermsPage() {
               &quot;Service&quot;), you agree to these Terms of Service and our{" "}
               <Link
                 href="/privacy"
-                className="font-medium text-blue-700 underline underline-offset-4 hover:text-blue-900"
+                className="font-medium text-primary underline underline-offset-4 hover:text-primary"
               >
                 Privacy Policy
               </Link>
@@ -230,10 +230,10 @@ export default function TermsPage() {
           </Section>
         </div>
 
-        <div className="border-t border-gray-200 pt-5">
+        <div className="border-t border-border pt-5">
           <Link
             href="/"
-            className="text-sm font-medium text-blue-700 underline underline-offset-4 hover:text-blue-900"
+            className="text-sm font-medium text-primary underline underline-offset-4 hover:text-primary"
           >
             ← Back to Home
           </Link>

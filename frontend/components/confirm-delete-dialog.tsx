@@ -56,8 +56,8 @@ export function ConfirmDeleteDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <div className="flex items-start space-x-4">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
-            <AlertTriangleIcon className="h-6 w-6 text-red-600" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+            <AlertTriangleIcon className="h-6 w-6 text-destructive" />
           </div>
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
@@ -65,7 +65,7 @@ export function ConfirmDeleteDialog({
           </DialogHeader>
         </div>
         {error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
           </p>
         )}

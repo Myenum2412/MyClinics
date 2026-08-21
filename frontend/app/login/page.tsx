@@ -22,11 +22,11 @@ export default async function LoginPage({
     <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden p-6 md:p-10">
       <CloudShader
         className="absolute inset-0"
-        skyTopColor="#0D47A1"
-        skyBottomColor="#90CAF9"
-        cloudColor="#E3F2FD"
+        skyTopColor="#312E81"
+        skyBottomColor="#A5B4FC"
+        cloudColor="#E0E7FF"
       />
-      <div className="auth-card relative z-10 w-full max-w-sm rounded-2xl border border-white/40 bg-white/70 p-6 shadow-2xl shadow-[#0D47A1]/30 backdrop-blur-xl sm:p-8">
+      <div className="auth-card relative z-10 w-full max-w-sm rounded-2xl border border-white/40 bg-white/70 p-6 shadow-2xl shadow-[#312E81]/30 backdrop-blur-xl sm:p-8">
         <Suspense>
           <LoginForm
             callbackUrl={callbackUrl ?? "/clinic"}

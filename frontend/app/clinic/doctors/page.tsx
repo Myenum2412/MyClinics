@@ -209,7 +209,7 @@ function doctorToForm(doctor: Doctor): DoctorFormState {
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return (
-    <div className="flex items-center gap-1.5 text-sm text-red-600">
+    <div className="flex items-center gap-1.5 text-sm text-destructive">
       <AlertCircle size={16} />
       {message}
     </div>
@@ -217,7 +217,7 @@ function FieldError({ message }: { message?: string }) {
 }
 
 function RequiredStar() {
-  return <span className="text-red-500">*</span>;
+  return <span className="text-destructive">*</span>;
 }
 
 export default function DoctorsPage() {
@@ -497,19 +497,19 @@ export default function DoctorsPage() {
 
   if (creating) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setCreating(false)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Add Doctor</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Add Doctor</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Register a new doctor at this clinic
                 </p>
               </div>
@@ -536,19 +536,19 @@ export default function DoctorsPage() {
 
   if (editing) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setEditing(null)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Edit Doctor</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Edit Doctor</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Modify doctor details, fee, and schedule
                 </p>
               </div>
@@ -575,19 +575,19 @@ export default function DoctorsPage() {
 
   if (viewing) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setViewing(null)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">View Doctor</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">View Doctor</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Doctor details, fee, and schedule
                 </p>
               </div>
@@ -751,8 +751,8 @@ export default function DoctorsPage() {
                           <Badge
                             className={
                               d.status === "active"
-                                ? "bg-green-50 text-green-700 hover:bg-green-50 border-green-200"
-                                : "bg-slate-50 text-slate-700 hover:bg-slate-50 border-slate-200"
+                                ? "bg-success/10 text-success border-success/25 hover:bg-success/10"
+                                : "bg-muted text-muted-foreground border-border hover:bg-muted"
                             }
                             variant="outline"
                           >
@@ -961,16 +961,16 @@ function DoctorForm({
 
   const inputBase = (key: string) =>
     `border ${
-      errors[key] ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
+      errors[key] ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
     }`;
 
   return (
     <form onSubmit={submit} noValidate className="space-y-6">
       <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
       {/* 1. PERSONAL INFORMATION */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             1. Personal Information
           </CardTitle>
         </CardHeader>
@@ -981,26 +981,26 @@ function DoctorForm({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             aria-label="Upload profile photo"
-            className="relative shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+            className="relative shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             {previewUrl ? (
               <img
                 src={previewUrl}
                 alt="Profile preview"
-                className="size-20 rounded-full border border-blue-200 object-cover"
+                className="size-20 rounded-full border border-border object-cover"
               />
             ) : (
-              <span className="flex size-20 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600">
+              <span className="flex size-20 items-center justify-center rounded-full border border-border bg-accent text-primary">
                 <User className="size-9" />
               </span>
             )}
-            <span className="absolute -bottom-0.5 -right-0.5 flex size-7 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-600 shadow-sm">
+            <span className="absolute -bottom-0.5 -right-0.5 flex size-7 items-center justify-center rounded-full border border-border bg-background text-primary shadow-sm">
               <Camera className="size-3.5" />
             </span>
           </button>
           <div>
-            <p className="text-sm font-medium text-gray-700">Doctor Photo</p>
-            <p className="mt-0.5 text-xs text-gray-500">
+            <p className="text-sm font-medium text-foreground">Doctor Photo</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Click the avatar to upload a profile photo (JPG, PNG — Max 2MB)
             </p>
           </div>
@@ -1018,7 +1018,7 @@ function DoctorForm({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2 md:col-span-2">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium text-foreground">
               Full Name <RequiredStar />
             </Label>
             <Input
@@ -1031,7 +1031,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium text-foreground">
               Gender <RequiredStar />
             </Label>
             <Select value={form.gender} onValueChange={(v) => set("gender", v ?? "")}>
@@ -1048,7 +1048,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Date of Birth</Label>
+            <Label className="text-sm font-medium text-foreground">Date of Birth</Label>
             <Input
               type="date"
               value={form.dateOfBirth}
@@ -1059,7 +1059,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium text-foreground">
               Phone Number <RequiredStar />
             </Label>
             <Input
@@ -1073,7 +1073,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">WhatsApp Number</Label>
+            <Label className="text-sm font-medium text-foreground">WhatsApp Number</Label>
             <WhatsAppInput
               id="whatsapp"
               value={form.whatsapp}
@@ -1084,7 +1084,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium text-foreground">
               Email <RequiredStar />
             </Label>
             <Input
@@ -1098,7 +1098,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Nationality</Label>
+            <Label className="text-sm font-medium text-foreground">Nationality</Label>
             <Select value={form.nationality} onValueChange={(v) => set("nationality", v ?? "")}>
               <SelectTrigger className={`${inputBase("nationality")} w-full`}>
                 <SelectValue placeholder="Select nationality" />
@@ -1127,7 +1127,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2 md:col-span-2">
-            <Label className="text-sm font-medium text-gray-700">Address</Label>
+            <Label className="text-sm font-medium text-foreground">Address</Label>
             <Input
               value={form.address}
               onChange={(e) => set("address", e.target.value)}
@@ -1141,9 +1141,9 @@ function DoctorForm({
       </Card>
 
       {/* 2. PROFESSIONAL INFORMATION */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             2. Professional Information
           </CardTitle>
         </CardHeader>
@@ -1151,7 +1151,7 @@ function DoctorForm({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium text-foreground">
               Specialization <RequiredStar />
             </Label>
             <Input
@@ -1164,7 +1164,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium text-foreground">
               Qualification <RequiredStar />
             </Label>
             <Input
@@ -1177,7 +1177,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Experience (Years)</Label>
+            <Label className="text-sm font-medium text-foreground">Experience (Years)</Label>
             <Input
               type="number"
               min="0"
@@ -1191,7 +1191,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">License Number</Label>
+            <Label className="text-sm font-medium text-foreground">License Number</Label>
             <Input
               value={form.licenseNo}
               onChange={(e) => set("licenseNo", e.target.value)}
@@ -1202,7 +1202,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Registration Number</Label>
+            <Label className="text-sm font-medium text-foreground">Registration Number</Label>
             <Input
               value={form.registrationNo}
               onChange={(e) => set("registrationNo", e.target.value)}
@@ -1213,7 +1213,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Issuing Authority</Label>
+            <Label className="text-sm font-medium text-foreground">Issuing Authority</Label>
             <Input
               value={form.issuingAuthority}
               onChange={(e) => set("issuingAuthority", e.target.value)}
@@ -1224,7 +1224,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Consultation Fee (₹)</Label>
+            <Label className="text-sm font-medium text-foreground">Consultation Fee (₹)</Label>
             <Input
               type="number"
               min="0"
@@ -1237,7 +1237,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Department</Label>
+            <Label className="text-sm font-medium text-foreground">Department</Label>
             <Select value={form.department} onValueChange={(v) => set("department", v ?? "")}>
               <SelectTrigger className={`${inputBase("department")} w-full`}>
                 <SelectValue placeholder="Select department" />
@@ -1257,9 +1257,9 @@ function DoctorForm({
       </Card>
 
       {/* 3. ACCOUNT & ACCESS */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             3. Account & Access
           </CardTitle>
         </CardHeader>
@@ -1267,7 +1267,7 @@ function DoctorForm({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium text-foreground">
               Username <RequiredStar />
             </Label>
             <Input
@@ -1280,7 +1280,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium text-foreground">
               Password <RequiredStar />
             </Label>
             <div className="relative">
@@ -1295,7 +1295,7 @@ function DoctorForm({
                 type="button"
                 onClick={() => setShowPassword((s) => !s)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
               >
                 {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
@@ -1304,7 +1304,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium text-foreground">
               Confirm Password <RequiredStar />
             </Label>
             <div className="relative">
@@ -1319,7 +1319,7 @@ function DoctorForm({
                 type="button"
                 onClick={() => setShowConfirmPassword((s) => !s)}
                 aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
               >
                 {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
               </button>
@@ -1328,7 +1328,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Role</Label>
+            <Label className="text-sm font-medium text-foreground">Role</Label>
             <Select value={form.role} onValueChange={(v) => set("role", v ?? "Doctor")}>
               <SelectTrigger className={`${inputBase("role")} w-full`}>
                 <SelectValue />
@@ -1340,7 +1340,7 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Status</Label>
+            <Label className="text-sm font-medium text-foreground">Status</Label>
             <Select value={form.status} onValueChange={(v) => set("status", v ?? "active")}>
               <SelectTrigger className={`${inputBase("status")} w-full`}>
                 <SelectValue />
@@ -1353,12 +1353,12 @@ function DoctorForm({
           </div>
 
           <div className="grid gap-2 md:col-span-2">
-            <Label className="text-sm font-medium text-gray-700">Allow Login</Label>
+            <Label className="text-sm font-medium text-foreground">Allow Login</Label>
             <div className="mt-3 space-y-2">
               {(["yes", "no"] as const).map((option) => (
                 <label
                   key={option}
-                  className="flex items-center gap-3 rounded-lg p-3 hover:bg-blue-50"
+                  className="flex items-center gap-3 rounded-lg p-3 hover:bg-accent"
                 >
                   <input
                     type="radio"
@@ -1366,15 +1366,15 @@ function DoctorForm({
                     value={option}
                     checked={form.allowLogin === option}
                     onChange={() => set("allowLogin", option)}
-                    className="h-4 w-4 border-blue-300 text-blue-600"
+                    className="h-4 w-4 border-primary/30 text-primary"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-foreground">
                     {option === "yes" ? "Yes, create login account" : "No, access only"}
                   </span>
                 </label>
               ))}
             </div>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               A login account is created with the doctor&apos;s email and password.
             </p>
           </div>
@@ -1383,16 +1383,16 @@ function DoctorForm({
       </Card>
 
       {/* 4. CONSULTATION SCHEDULE */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             4. Consultation Schedule
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
 
-        <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-4">
-          <Label className="mb-3 block text-sm font-medium text-slate-700">
+        <div className="rounded-lg border border-border bg-accent/40 p-4">
+          <Label className="mb-3 block text-sm font-medium text-foreground">
             Consultation Schedule
           </Label>
           <div className="space-y-2">
@@ -1402,11 +1402,11 @@ function DoctorForm({
               return (
                 <div
                   key={day.value}
-                  className={`flex flex-wrap items-center gap-3 rounded-lg border bg-white px-3 py-2 transition-colors ${
-                    selected ? "border-blue-200" : "border-slate-200 opacity-70"
+                  className={`flex flex-wrap items-center gap-3 rounded-lg border bg-background px-3 py-2 transition-colors ${
+                    selected ? "border-border" : "border-border opacity-70"
                   }`}
                 >
-                  <label className="flex min-w-[150px] cursor-pointer items-center gap-2 text-sm font-medium text-slate-700">
+                  <label className="flex min-w-[150px] cursor-pointer items-center gap-2 text-sm font-medium text-foreground">
                     <Checkbox
                       checked={selected}
                       onCheckedChange={(checked) => toggleDay(day.value, !!checked)}
@@ -1417,15 +1417,15 @@ function DoctorForm({
                     <>
                       <div className="flex items-end gap-2">
                         <div className="grid gap-1">
-                          <Label className="text-xs text-gray-500">Start time</Label>
+                          <Label className="text-xs text-muted-foreground">Start time</Label>
                           <TimePicker
                             value={slot.start}
                             onChange={(v) => setDaySlot(day.value, { start: v })}
                           />
                         </div>
-                        <span className="pb-2.5 text-sm text-slate-500">to</span>
+                        <span className="pb-2.5 text-sm text-muted-foreground">to</span>
                         <div className="grid gap-1">
-                          <Label className="text-xs text-gray-500">End time</Label>
+                          <Label className="text-xs text-muted-foreground">End time</Label>
                           <TimePicker
                             value={slot.end}
                             onChange={(v) => setDaySlot(day.value, { end: v })}
@@ -1438,7 +1438,7 @@ function DoctorForm({
                       </div>
                     </>
                   ) : (
-                    <span className="text-xs text-slate-400">Unavailable</span>
+                    <span className="text-xs text-muted-foreground">Unavailable</span>
                   )}
                 </div>
               );
@@ -1450,9 +1450,9 @@ function DoctorForm({
       </Card>
 
       {/* 5. ADDITIONAL INFORMATION */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             5. Additional Information (Optional)
           </CardTitle>
         </CardHeader>
@@ -1460,37 +1460,37 @@ function DoctorForm({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">About Doctor</Label>
+            <Label className="text-sm font-medium text-foreground">About Doctor</Label>
             <textarea
               value={form.about}
               onChange={(e) => set("about", e.target.value)}
               placeholder="Briefly about the doctor"
               rows={4}
-              className="w-full resize-none rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-100"
+              className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
             />
             <FieldError message={errors.about} />
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Languages Known</Label>
+            <Label className="text-sm font-medium text-foreground">Languages Known</Label>
             <textarea
               value={form.languages}
               onChange={(e) => set("languages", e.target.value)}
               placeholder="e.g. English, Hindi, Tamil"
               rows={4}
-              className="w-full resize-none rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-100"
+              className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
             />
             <FieldError message={errors.languages} />
           </div>
 
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Notes</Label>
+            <Label className="text-sm font-medium text-foreground">Notes</Label>
             <textarea
               value={form.notes}
               onChange={(e) => set("notes", e.target.value)}
               placeholder="Any additional notes"
               rows={4}
-              className="w-full resize-none rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-400 focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-100"
+              className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
             />
             <FieldError message={errors.notes} />
           </div>
@@ -1501,13 +1501,13 @@ function DoctorForm({
 
       {/* BOTTOM ACTIONS */}
       {!readOnly && (
-        <div className="flex gap-3 border-t border-blue-200 pt-8">
+        <div className="flex gap-3 border-t border-border pt-8">
           <Button
             type="button"
             variant="outline"
             onClick={resetForm}
             disabled={saving}
-            className="border-blue-300 text-blue-600 hover:bg-blue-50"
+            className="border-primary/30 text-primary hover:bg-accent"
           >
             Reset
           </Button>
@@ -1516,7 +1516,6 @@ function DoctorForm({
             type="submit"
             onClick={submit}
             disabled={saving}
-            className="bg-blue-600 text-white hover:bg-blue-700"
             size="lg"
           >
             {saving ? "Saving..." : "Save Doctor"}

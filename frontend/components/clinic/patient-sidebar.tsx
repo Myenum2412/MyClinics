@@ -68,12 +68,11 @@ export function PatientSidebar({
   return (
     <Sidebar
       collapsible="icon"
-      className="border-r border-slate-100 bg-white"
       {...props}
     >
-      <SidebarHeader className="h-16 shrink-0 justify-center border-b border-slate-100 bg-white">
+      <SidebarHeader className="h-16 shrink-0 justify-center border-b border-sidebar-border bg-sidebar group-data-[collapsible=icon]:h-16 group-data-[collapsible=icon]:justify-center">
         <div className="flex items-center gap-2.5 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-xl ring-1 ring-slate-200 shadow-sm">
+          <div className="relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-xl ring-1 ring-sidebar-border shadow-sm">
             <Image
               src="/logo.png"
               alt="My Clinic Logo"
@@ -83,17 +82,17 @@ export function PatientSidebar({
             />
           </div>
           <div className="grid min-w-0 group-data-[collapsible=icon]:hidden">
-            <span className="truncate text-[15px] font-semibold leading-tight tracking-tight text-slate-900">
+            <span className="truncate text-[15px] font-semibold leading-tight tracking-tight text-sidebar-foreground">
               {clinicName}
             </span>
-            <span className="truncate text-xs font-medium leading-tight text-slate-500">
+            <span className="truncate text-xs font-medium leading-tight text-muted-foreground">
               Patient Portal
             </span>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-white">
+      <SidebarContent>
         <SidebarMenu>
           {NAV_ITEMS.map((item) => {
             const active =
@@ -107,7 +106,7 @@ export function PatientSidebar({
                   tooltip={item.title}
                   render={<a href={item.url} />}
                   data-active={active}
-                  className="relative h-11 rounded-lg text-[13.5px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 group-data-[collapsible=icon]:h-12! data-[active=true]:bg-blue-50 data-[active=true]:text-blue-600 data-[active=true]:[&>svg]:text-blue-600 data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:h-5 data-[active=true]:before:w-[3px] data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:rounded-r-full data-[active=true]:before:bg-blue-600"
+                  className="relative h-11 rounded-lg text-[13.5px] font-medium text-sidebar-foreground group-data-[collapsible=icon]:h-12! data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground data-[active=true]:before:absolute data-[active=true]:before:left-0 data-[active=true]:before:top-1/2 data-[active=true]:before:h-5 data-[active=true]:before:w-[3px] data-[active=true]:before:-translate-y-1/2 data-[active=true]:before:rounded-r-full data-[active=true]:before:bg-sidebar-accent-foreground/60"
                 >
                   {item.icon}
                   <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
@@ -118,27 +117,27 @@ export function PatientSidebar({
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-slate-100 bg-white p-2">
+      <SidebarFooter className="border-t border-sidebar-border bg-sidebar p-2">
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
               <button
                 type="button"
                 aria-label="Open profile menu"
-                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors hover:bg-slate-50"
+                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition-colors hover:bg-sidebar-accent"
               />
             }
           >
             <Avatar className="size-9">
-              <AvatarFallback className="bg-blue-100 text-sm font-bold text-blue-700">
+              <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary">
                 {initials(user.name)}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1 text-left group-data-[collapsible=icon]:hidden">
-              <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
-              <p className="truncate text-xs text-blue-600">View Profile</p>
+              <p className="truncate text-sm font-semibold text-sidebar-foreground">{user.name}</p>
+              <p className="truncate text-xs text-primary">View Profile</p>
             </div>
-            <ChevronDown className="size-4 shrink-0 text-slate-400 group-data-[collapsible=icon]:hidden" />
+            <ChevronDown className="size-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-56"
@@ -148,13 +147,13 @@ export function PatientSidebar({
           >
             <DropdownMenuLabel className="flex items-center gap-2 px-2 py-1.5">
               <Avatar className="size-8">
-                <AvatarFallback className="bg-blue-100 text-xs font-bold text-blue-700">
+                <AvatarFallback className="bg-primary/10 text-xs font-bold text-primary">
                   {initials(user.name)}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">{user.name}</p>
-                <p className="truncate text-xs text-slate-500">{user.email}</p>
+                <p className="truncate text-xs text-muted-foreground">{user.email}</p>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

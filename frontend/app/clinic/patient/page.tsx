@@ -15,6 +15,7 @@ import {
   type Prescription,
 } from "@/lib/clinic-api";
 import { formatDate } from "@/lib/format-time";
+import { appointmentStatusTone } from "@/lib/status-styles";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,10 +65,10 @@ const QUICK_ACCESS = [
 ];
 
 const STATUS_CLASS: Record<string, string> = {
-  scheduled: "bg-blue-100 text-blue-700",
-  completed: "bg-emerald-100 text-emerald-700",
-  cancelled: "bg-rose-100 text-rose-700",
-  no_show: "bg-slate-100 text-slate-600",
+  scheduled: appointmentStatusTone("scheduled"),
+  completed: appointmentStatusTone("completed"),
+  cancelled: appointmentStatusTone("cancelled"),
+  no_show: appointmentStatusTone("no_show"),
 };
 
 interface Activity {
@@ -134,9 +135,9 @@ export default function PatientPortalPage() {
         description: `${latestAppt.reason || "Consultation"} with Dr. ${doctorName(doctors, latestAppt.doctorId)}`,
         date: formatDate(latestAppt.date),
         badge: latestAppt.status.replace("_", " "),
-        badgeClass: STATUS_CLASS[latestAppt.status] ?? "bg-slate-100 text-slate-600",
+        badgeClass: STATUS_CLASS[latestAppt.status] ?? "bg-muted text-muted-foreground",
         href: "/clinic/patient/appointments",
-        tint: "bg-blue-50 text-blue-600",
+        tint: "bg-primary/10 text-primary",
       });
     }
 
@@ -148,9 +149,9 @@ export default function PatientPortalPage() {
         description: latestFile.fileName,
         date: formatDate(latestFile.createdAt),
         badge: "Completed",
-        badgeClass: "bg-emerald-100 text-emerald-700",
+        badgeClass: "bg-success/10 text-success",
         href: "/clinic/patient/medical-records",
-        tint: "bg-violet-50 text-violet-600",
+        tint: "bg-info/10 text-info",
       });
     }
 
@@ -162,9 +163,9 @@ export default function PatientPortalPage() {
         description: `Dr. ${doctorName(doctors, latestPres.doctorId)}`,
         date: formatDate(latestPres.createdAt),
         badge: "View",
-        badgeClass: "bg-blue-100 text-blue-700",
+        badgeClass: "bg-primary/10 text-primary",
         href: "/clinic/patient/prescriptions",
-        tint: "bg-emerald-50 text-emerald-600",
+        tint: "bg-success/10 text-success",
       });
     }
 
@@ -174,16 +175,16 @@ export default function PatientPortalPage() {
   return (
     <div className="mx-auto w-full max-w-[1200px] space-y-8">
       {/* ── Welcome card ── */}
-      <section className="relative overflow-hidden rounded-2xl border border-blue-100 bg-blue-50 p-6 md:p-8">
+      <section className="relative overflow-hidden rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 via-primary/5 to-background p-6 md:p-8">
         <div className="relative z-10 max-w-xl">
-          <h1 className="text-2xl font-bold text-slate-900 md:text-3xl">
+          <h1 className="text-2xl font-bold text-foreground md:text-3xl">
             Welcome, {firstName} <span className="inline-block">👋</span>
           </h1>
-          <p className="mt-2 text-sm text-slate-600 md:text-base">
+          <p className="mt-2 text-sm text-muted-foreground md:text-base">
             Here&apos;s an overview of your health information and recent activity.
           </p>
           <Link href="/clinic/patient/book-appointment">
-            <Button className="mt-5 gap-2 rounded-lg bg-blue-600 px-5 shadow-sm hover:bg-blue-700">
+            <Button className="mt-5 gap-2 rounded-lg px-5 shadow-sm">
               <CalendarPlus className="size-4" />
               Book Appointment
             </Button>
@@ -195,37 +196,37 @@ export default function PatientPortalPage() {
           aria-hidden
           className="pointer-events-none absolute inset-y-0 right-0 hidden items-center justify-end gap-3 pr-10 lg:flex"
         >
-          <div className="relative flex size-36 items-center justify-center rounded-3xl bg-white shadow-sm ring-1 ring-blue-100 rotate-6">
-            <FileText className="size-14 text-blue-500" />
+          <div className="relative flex size-36 items-center justify-center rounded-3xl bg-background shadow-sm ring-1 ring-primary/15 rotate-6">
+            <FileText className="size-14 text-primary" />
           </div>
-          <div className="relative flex size-28 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-blue-100 -rotate-6 -translate-y-3">
-            <ClipboardList className="size-12 text-indigo-500" />
+          <div className="relative flex size-28 items-center justify-center rounded-2xl bg-background shadow-sm ring-1 ring-primary/15 -rotate-6 -translate-y-3">
+            <ClipboardList className="size-12 text-primary" />
           </div>
-          <div className="absolute right-20 top-4 flex size-16 items-center justify-center rounded-full bg-blue-600 text-white shadow-md">
+          <div className="absolute right-20 top-4 flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md">
             <ShieldCheck className="size-8" />
           </div>
-          <div className="absolute bottom-6 right-40 size-4 rounded-full bg-blue-300" />
-          <div className="absolute bottom-2 right-24 size-6 rounded-full bg-indigo-200" />
-          <div className="absolute right-60 top-10 size-3 rounded-full bg-blue-200" />
+          <div className="absolute bottom-6 right-40 size-4 rounded-full bg-primary/30" />
+          <div className="absolute bottom-2 right-24 size-6 rounded-full bg-primary/20" />
+          <div className="absolute right-60 top-10 size-3 rounded-full bg-primary/25" />
         </div>
       </section>
 
       {/* ── Quick Access ── */}
       <section>
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">Quick Access</h2>
+        <h2 className="mb-4 text-lg font-semibold text-foreground">Quick Access</h2>
         <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
           {QUICK_ACCESS.map((qa) => (
             <Link
               key={qa.title}
               href={qa.href}
-              className="group rounded-xl border border-blue-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+              className="group rounded-xl border border-primary/15 bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-border hover:shadow-md"
             >
-              <span className="flex size-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <span className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 {qa.icon}
               </span>
-              <h3 className="mt-4 text-base font-semibold text-slate-900">{qa.title}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-slate-500">{qa.description}</p>
-              <span className="mt-3 flex items-center justify-end text-blue-600">
+              <h3 className="mt-4 text-base font-semibold text-foreground">{qa.title}</h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{qa.description}</p>
+              <span className="mt-3 flex items-center justify-end text-primary">
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
               </span>
             </Link>
@@ -236,17 +237,17 @@ export default function PatientPortalPage() {
       {/* ── Recent Activity ── */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">Recent Activity</h2>
+          <h2 className="text-lg font-semibold text-foreground">Recent Activity</h2>
           <Link
             href="/clinic/patient/medical-records"
-            className="group flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
+            className="group flex items-center gap-1 text-sm font-medium text-primary hover:text-primary"
           >
             View All
             <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="rounded-xl border border-border bg-card shadow-sm">
           {loading ? (
             <div className="space-y-3 p-5">
               {[...Array(3)].map((_, i) => (
@@ -255,25 +256,25 @@ export default function PatientPortalPage() {
             </div>
           ) : activities.length === 0 ? (
             <div className="p-12 text-center">
-              <HeartPulse className="mx-auto mb-4 size-12 text-slate-300" />
-              <h3 className="text-lg font-medium text-slate-900">No recent activity</h3>
-              <p className="mt-2 text-sm text-slate-500">
+              <HeartPulse className="mx-auto mb-4 size-12 text-muted-foreground/40" />
+              <h3 className="text-lg font-medium text-foreground">No recent activity</h3>
+              <p className="mt-2 text-sm text-muted-foreground">
                 Your appointments, reports and prescriptions will appear here.
               </p>
             </div>
           ) : (
             <ul>
               {activities.map((a, i) => (
-                <li key={a.title} className={i > 0 ? "border-t border-slate-100" : ""}>
-                  <Link href={a.href} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50/60">
+                <li key={a.title} className={i > 0 ? "border-t border-border" : ""}>
+                  <Link href={a.href} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-accent/60">
                     <span className={`flex size-10 shrink-0 items-center justify-center rounded-full ${a.tint}`}>
                       {a.icon}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-slate-900">{a.title}</p>
-                      <p className="mt-0.5 truncate text-xs text-slate-500">{a.description}</p>
+                      <p className="text-sm font-semibold text-foreground">{a.title}</p>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">{a.description}</p>
                     </div>
-                    <div className="hidden shrink-0 text-xs text-slate-400 sm:block">{a.date}</div>
+                    <div className="hidden shrink-0 text-xs text-muted-foreground sm:block">{a.date}</div>
                     <Badge className={`${a.badgeClass} shrink-0`} variant="outline">
                       {a.badge}
                     </Badge>

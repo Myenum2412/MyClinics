@@ -133,7 +133,7 @@ export default function NotificationsPage() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2">
         {unread > 0 && (
-          <Badge className="bg-blue-100 text-blue-700">{unread} unread</Badge>
+          <Badge className="bg-primary/10 text-primary">{unread} unread</Badge>
         )}
         <div className="flex-1" />
         <Button variant="outline" size="sm" onClick={handleReadAll}>
@@ -188,9 +188,9 @@ export default function NotificationsPage() {
                   </div>
                   {n.body && <p className="mt-1 text-sm text-muted-foreground">{n.body}</p>}
                   <div className="mt-1 flex items-center gap-2">
-                    <Badge className="bg-slate-100 text-slate-600">{n.type}</Badge>
+                    <Badge className="bg-muted text-muted-foreground">{n.type}</Badge>
                     {!n.readAt && (
-                      <span className="text-xs font-medium text-blue-600">unread</span>
+                      <span className="text-xs font-medium text-primary">unread</span>
                     )}
                   </div>
                 </button>

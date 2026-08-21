@@ -26,6 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar, ClipboardList, Stethoscope, Users } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
+import { appointmentStatusTone } from "@/lib/status-styles";
 
 function today(): string {
   const d = new Date();
@@ -35,14 +36,8 @@ function today(): string {
 }
 
 function ApptStatus({ status }: { status: string }) {
-  const classes: Record<string, string> = {
-    scheduled: "bg-blue-100 text-blue-700 hover:bg-blue-100 border-0",
-    completed: "bg-green-100 text-green-700 hover:bg-green-100 border-0",
-    cancelled: "bg-red-100 text-red-700 hover:bg-red-100 border-0",
-    no_show: "bg-slate-200 text-slate-600 hover:bg-slate-200 border-0",
-  };
   return (
-    <Badge className={classes[status] ?? "bg-slate-100 text-slate-600 hover:bg-slate-100 border-0"}>
+    <Badge className={appointmentStatusTone(status)}>
       {status.replace("_", " ")}
     </Badge>
   );
@@ -276,8 +271,8 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                       <Badge
                         className={
                           p.status === "active"
-                            ? "bg-green-50 text-green-700 hover:bg-green-50 border-green-200"
-                            : "bg-slate-50 text-slate-700 hover:bg-slate-50 border-slate-200"
+                            ? "bg-success/10 text-success hover:bg-success/10 border-success/25"
+                            : "bg-muted text-muted-foreground hover:bg-muted border-border"
                         }
                         variant="outline"
                       >

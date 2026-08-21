@@ -79,19 +79,19 @@ export default function BookAppointmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-10 border-b border-border bg-background">
         <div className="px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex items-start gap-4">
             <button
               onClick={() => router.back()}
-              className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
             >
-              <ChevronLeft size={20} className="text-blue-600" />
+              <ChevronLeft size={20} className="text-muted-foreground" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Book Appointment</h1>
-              <p className="mt-1 text-sm text-gray-600">
+              <h1 className="text-2xl font-bold text-foreground">Book Appointment</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Schedule your visit. Automated WhatsApp alerts will be instantly queued for you and the doctor.
               </p>
             </div>
@@ -107,10 +107,10 @@ export default function BookAppointmentPage() {
             <Skeleton className="h-40 w-full rounded-xl" />
           </div>
         ) : patients.length === 0 ? (
-          <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-12 text-center">
-            <CalendarPlus className="mx-auto mb-4 size-12 text-blue-300" />
-            <h3 className="text-lg font-medium text-gray-900">Patient profile not found</h3>
-            <p className="mt-2 text-sm text-gray-600">
+          <div className="rounded-xl border border-border bg-accent/40 p-12 text-center">
+            <CalendarPlus className="mx-auto mb-4 size-12 text-primary/40" />
+            <h3 className="text-lg font-medium text-foreground">Patient profile not found</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
               We couldn&apos;t find your patient profile. Please contact the clinic.
             </p>
           </div>

@@ -95,8 +95,8 @@ export default function PatientProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <Skeleton className="h-8 w-48" />
             <Skeleton className="mt-2 h-4 w-64" />
@@ -113,27 +113,27 @@ export default function PatientProfilePage() {
   if (!patient) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-center">
-        <UserRound className="size-12 text-slate-300" />
-        <p className="text-sm text-slate-500">We couldn&apos;t find your patient profile.</p>
-        <p className="text-xs text-slate-400">Please contact your clinic for assistance.</p>
+        <UserRound className="size-12 text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">We couldn&apos;t find your patient profile.</p>
+        <p className="text-xs text-muted-foreground">Please contact your clinic for assistance.</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-10 border-b border-border bg-background">
         <div className="px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex items-start gap-4">
             <button
               onClick={() => router.push("/clinic/patient")}
-              className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+              className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
             >
-              <ChevronLeft size={20} className="text-blue-600" />
+              <ChevronLeft size={20} className="text-muted-foreground" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
-              <p className="mt-1 text-sm text-gray-600">
+              <h1 className="text-2xl font-bold text-foreground">My Profile</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Your personal and medical details as registered with the clinic.
               </p>
             </div>
@@ -143,7 +143,7 @@ export default function PatientProfilePage() {
 
       <div className="px-4 py-8 sm:px-6 lg:px-8">
         {/* Profile summary card */}
-        <div className="mb-8 overflow-hidden rounded-xl border border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+        <div className="mb-8 overflow-hidden rounded-xl border border-border bg-gradient-to-b from-muted/50 to-background">
           <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center md:p-8">
             <PersonAvatar
               clinicId={session?.clinicId ?? ""}
@@ -155,28 +155,28 @@ export default function PatientProfilePage() {
             />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl font-bold text-gray-900">{patient.fullName}</h2>
+                <h2 className="text-xl font-bold text-foreground">{patient.fullName}</h2>
                 <Badge
                   variant="outline"
-                  className="border-green-200 bg-green-50 text-green-700"
+                  className="border-success/25 bg-success/10 text-success"
                 >
                   Active
                 </Badge>
               </div>
-              <p className="mt-1 font-mono text-xs text-gray-500">ID: {patient.patientId}</p>
-              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-600">
+              <p className="mt-1 font-mono text-xs text-muted-foreground">ID: {patient.patientId}</p>
+              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5">
-                  <Phone className="size-3.5 text-blue-600" />
+                  <Phone className="size-3.5 text-muted-foreground" />
                   {patient.mobile || "—"}
                 </span>
                 {patient.email && (
                   <span className="flex items-center gap-1.5">
-                    <Mail className="size-3.5 text-blue-600" />
+                    <Mail className="size-3.5 text-muted-foreground" />
                     {patient.email}
                   </span>
                 )}
                 <span className="flex items-center gap-1.5">
-                  <CalendarDays className="size-3.5 text-blue-600" />
+                  <CalendarDays className="size-3.5 text-muted-foreground" />
                   Member since {memberSince(patient.createdAt)}
                 </span>
               </div>

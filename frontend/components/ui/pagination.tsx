@@ -53,13 +53,13 @@ export function Pagination({
   const pageNumbers = getPageNumbers(page, totalPages);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-4 py-3">
-      <p className="text-sm text-slate-500">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3">
+      <p className="text-sm text-muted-foreground">
         Showing{" "}
-        <span className="font-medium text-slate-800">
+        <span className="font-medium text-foreground">
           {start}–{end}
         </span>{" "}
-        of <span className="font-medium text-slate-800">{totalItems}</span> {itemLabel}
+        of <span className="font-medium text-foreground">{totalItems}</span> {itemLabel}
       </p>
       <div className="flex items-center gap-2">
         {pageSizeOptions && onPageSizeChange && (
@@ -92,7 +92,7 @@ export function Pagination({
           </Button>
           {pageNumbers.map((num, i) =>
             num === "ellipsis" ? (
-              <span key={`e-${i}`} className="px-1 text-sm text-slate-400">
+              <span key={`e-${i}`} className="px-1 text-sm text-muted-foreground">
                 …
               </span>
             ) : (

@@ -33,10 +33,10 @@ export function WhatsAppInput({
     <div className="space-y-2">
       <div className="flex">
         <span
-          className={`inline-flex items-center rounded-l-lg border border-r-0 px-3 text-sm font-medium text-gray-700 ${
+          className={`inline-flex items-center rounded-l-lg border border-r-0 px-3 text-sm font-medium text-foreground ${
             error
-              ? "border-red-500 bg-red-50"
-              : "border-blue-200 bg-blue-50 text-blue-700"
+              ? "border-destructive bg-destructive/10"
+              : "border-border bg-accent text-primary"
           }`}
         >
           {INDIAN_COUNTRY_CODE}
@@ -54,19 +54,19 @@ export function WhatsAppInput({
           disabled={disabled}
           className={`rounded-l-none border ${
             error
-              ? "border-red-500 focus:ring-red-500"
-              : "border-blue-200 focus:ring-blue-400"
+              ? "border-destructive focus:ring-destructive"
+              : "border-border focus:ring-ring"
           }`}
         />
       </div>
       {error && (
-        <div className="flex items-center gap-1.5 text-sm text-red-600">
+        <div className="flex items-center gap-1.5 text-sm text-destructive">
           <AlertCircle size={16} />
           {error}
         </div>
       )}
       {helperText && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           {INDIAN_COUNTRY_CODE} {helperText}
         </p>
       )}

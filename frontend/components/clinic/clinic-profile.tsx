@@ -138,48 +138,48 @@ export function ClinicProfile({
             )}
             </form>
 
-            <div className="mt-6 border-t border-gray-100 pt-4">
-              <p className="mb-3 text-sm font-medium text-gray-700">Clinic details</p>
+            <div className="mt-6 border-t border-border pt-4">
+              <p className="mb-3 text-sm font-medium text-foreground">Clinic details</p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-3 md:grid-cols-3">
                 <div>
                   <p className="text-xs text-muted-foreground">Slug</p>
-                  <p className="truncate font-mono text-sm text-gray-800">{clinic.slug}</p>
+                  <p className="truncate font-mono text-sm text-foreground">{clinic.slug}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Clinic ID</p>
-                  <p className="truncate font-mono text-sm text-gray-800">{clinic.clinicId}</p>
+                  <p className="truncate font-mono text-sm text-foreground">{clinic.clinicId}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Status</p>
-                  <p className="text-sm capitalize text-gray-800">{clinic.status}</p>
+                  <p className="text-sm capitalize text-foreground">{clinic.status}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Working hours</p>
-                  <p className="text-sm text-gray-800">
+                  <p className="text-sm text-foreground">
                     {clinic.settings.workingHours.open} – {clinic.settings.workingHours.close}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Slot duration</p>
-                  <p className="text-sm text-gray-800">{clinic.settings.slotMinutes} min</p>
+                  <p className="text-sm text-foreground">{clinic.settings.slotMinutes} min</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Currency</p>
-                  <p className="text-sm text-gray-800">{clinic.settings.currency}</p>
+                  <p className="text-sm text-foreground">{clinic.settings.currency}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Timezone</p>
-                  <p className="text-sm text-gray-800">{clinic.settings.timezone}</p>
+                  <p className="text-sm text-foreground">{clinic.settings.timezone}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Created</p>
-                  <p className="text-sm text-gray-800">
+                  <p className="text-sm text-foreground">
                     {new Date(clinic.createdAt).toLocaleDateString("en-IN")}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Last updated</p>
-                  <p className="text-sm text-gray-800">
+                  <p className="text-sm text-foreground">
                     {new Date(clinic.updatedAt).toLocaleDateString("en-IN")}
                   </p>
                 </div>

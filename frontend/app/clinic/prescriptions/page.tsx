@@ -375,19 +375,19 @@ export default function PrescriptionsPage() {
 
   if (creating) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setCreating(false)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-muted-foreground" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Create Prescription</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold text-foreground">Create Prescription</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Write diagnosis and prescribe medication. Respective patients will receive secure automated WhatsApp alerts.
                 </p>
               </div>
@@ -397,9 +397,9 @@ export default function PrescriptionsPage() {
 
         <div className="px-4 py-8 sm:px-6 lg:px-8">
           <div className="space-y-6">
-            <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+            <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold text-gray-800">
+                <CardTitle className="text-base font-semibold text-foreground">
                   Prescription Details
                 </CardTitle>
               </CardHeader>
@@ -423,19 +423,19 @@ export default function PrescriptionsPage() {
 
   if (editing) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setEditing(null)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-muted-foreground" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Edit Prescription</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold text-foreground">Edit Prescription</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Modify the prescription details. Respective patients will receive secure automated WhatsApp alerts on update.
                 </p>
               </div>
@@ -445,9 +445,9 @@ export default function PrescriptionsPage() {
 
         <div className="px-4 py-8 sm:px-6 lg:px-8">
           <div className="space-y-6">
-            <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+            <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold text-gray-800">
+                <CardTitle className="text-base font-semibold text-foreground">
                   Prescription Details
                 </CardTitle>
               </CardHeader>
@@ -480,19 +480,19 @@ export default function PrescriptionsPage() {
 
   if (viewing) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setViewing(null)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-muted-foreground" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">View Prescription</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold text-foreground">View Prescription</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Read-only view of the prescription details.
                 </p>
               </div>
@@ -502,9 +502,9 @@ export default function PrescriptionsPage() {
 
         <div className="px-4 py-8 sm:px-6 lg:px-8">
           <div className="space-y-6">
-            <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+            <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold text-gray-800">
+                <CardTitle className="text-base font-semibold text-foreground">
                   Prescription Details
                 </CardTitle>
               </CardHeader>
@@ -793,14 +793,14 @@ export default function PrescriptionsPage() {
                               <div className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium border border-current shadow-sm">
                                 {notif.status === "sent" && (
                                   <>
-                                    <CheckCircle className="size-3 text-green-500" />
-                                    <span className="text-green-700 capitalize">Sent</span>
+                                    <CheckCircle className="size-3 text-success" />
+                                    <span className="text-success capitalize">Sent</span>
                                   </>
                                 )}
                                 {notif.status === "failed" && (
                                   <>
-                                    <XCircle className="size-3 text-red-500" />
-                                    <span className="text-red-700 capitalize">Failed</span>
+                                    <XCircle className="size-3 text-destructive" />
+                                    <span className="text-destructive capitalize">Failed</span>
                                   </>
                                 )}
                                 {notif.status === "enqueued" && (
@@ -811,8 +811,8 @@ export default function PrescriptionsPage() {
                                 )}
                                 {notif.status === "pending" && (
                                   <>
-                                    <AlertCircle className="size-3 text-blue-500" />
-                                    <span className="text-blue-700 capitalize">Pending</span>
+                                    <AlertCircle className="size-3 text-warning" />
+                                    <span className="text-warning capitalize">Pending</span>
                                   </>
                                 )}
                               </div>
@@ -923,10 +923,10 @@ export default function PrescriptionsPage() {
                   <div className="space-y-3 max-h-60 overflow-y-auto">
                     {logs.map((log) => {
                       const badgeColors: Record<string, string> = {
-                        sent: "bg-green-100 text-green-800 border-green-200",
-                        failed: "bg-red-100 text-red-800 border-red-200",
+                        sent: "bg-success/10 text-success border-success/25",
+                        failed: "bg-destructive/10 text-destructive border-destructive/25",
                         enqueued: "bg-yellow-100 text-yellow-800 border-yellow-200",
-                        pending: "bg-blue-100 text-blue-800 border-blue-200",
+                        pending: "bg-primary/10 text-primary border-border",
                       };
 
                       return (
@@ -959,7 +959,7 @@ export default function PrescriptionsPage() {
                             </p>
                           )}
                           {log.lastError && (
-                            <p className="text-[10px] text-red-600 font-medium">
+                            <p className="text-[10px] text-destructive font-medium">
                               Error: {log.lastError}
                             </p>
                           )}
@@ -1064,42 +1064,42 @@ function PrescriptionForm({
     <form onSubmit={submit} className="space-y-6">
       <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
       {/* 1. PATIENT & DIAGNOSIS */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             1. Patient &amp; Diagnosis
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Patient <span className="ml-1 text-red-500">*</span>
+              <Label className="text-sm font-medium text-foreground">
+                Patient <span className="ml-1 text-destructive">*</span>
               </Label>
               <PatientSelect clinicId={clinicId} value={form.patientId} onChange={(v) => set("patientId", v)} required />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Visit date <span className="ml-1 text-red-500">*</span>
+              <Label className="text-sm font-medium text-foreground">
+                Visit date <span className="ml-1 text-destructive">*</span>
               </Label>
-              <Input type="date" value={form.visitDate} onChange={(e) => set("visitDate", e.target.value)} required className="border border-blue-200 focus:ring-blue-400" />
+              <Input type="date" value={form.visitDate} onChange={(e) => set("visitDate", e.target.value)} required className="border border-border focus:ring-ring" />
             </div>
           </div>
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">Diagnosis</Label>
-            <Input value={form.diagnosis} onChange={(e) => set("diagnosis", e.target.value)} placeholder="Diagnosis details..." className="border border-blue-200 focus:ring-blue-400" />
+            <Label className="text-sm font-medium text-foreground">Diagnosis</Label>
+            <Input value={form.diagnosis} onChange={(e) => set("diagnosis", e.target.value)} placeholder="Diagnosis details..." className="border border-border focus:ring-ring" />
           </div>
         </CardContent>
       </Card>
 
       {/* 2. MEDICINES */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-base font-semibold text-gray-800">
+            <CardTitle className="text-base font-semibold text-foreground">
               2. Medicines List
             </CardTitle>
-            <Button type="button" variant="outline" size="sm" onClick={addMedicine} className="h-8 border-blue-300 text-blue-600 hover:bg-blue-50">
+            <Button type="button" variant="outline" size="sm" onClick={addMedicine} className="h-8 border-primary/30 text-primary hover:bg-accent">
               <Plus className="size-3.5" />
               Add Medicine Entry
             </Button>
@@ -1108,27 +1108,27 @@ function PrescriptionForm({
         <CardContent className="space-y-4">
           <div className="space-y-3">
             {form.medicines.map((m, i) => (
-              <div key={i} className="space-y-2 rounded-lg border border-blue-100 bg-white p-3">
+              <div key={i} className="space-y-2 rounded-lg border border-border bg-background p-3">
                 <div className="grid grid-cols-[1fr_auto] gap-2 items-center">
                   <Input
                     placeholder="Medicine name"
                     value={m.name}
                     onChange={(e) => setMedicine(i, { name: e.target.value })}
                     required
-                    className="border border-blue-200 focus:ring-blue-400"
+                    className="border border-border focus:ring-ring"
                   />
                   {form.medicines.length > 1 && (
-                    <Button type="button" variant="ghost" size="sm" onClick={() => removeMedicine(i)} className="h-8 text-xs text-red-600 hover:bg-red-50 hover:text-red-700">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeMedicine(i)} className="h-8 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive">
                       Remove
                     </Button>
                   )}
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <Input placeholder="Dosage" value={m.dosage ?? ""} onChange={(e) => setMedicine(i, { dosage: e.target.value })} className="border border-blue-200 focus:ring-blue-400" />
-                  <Input placeholder="Frequency" value={m.frequency ?? ""} onChange={(e) => setMedicine(i, { frequency: e.target.value })} className="border border-blue-200 focus:ring-blue-400" />
-                  <Input placeholder="Duration" value={m.duration ?? ""} onChange={(e) => setMedicine(i, { duration: e.target.value })} className="border border-blue-200 focus:ring-blue-400" />
+                  <Input placeholder="Dosage" value={m.dosage ?? ""} onChange={(e) => setMedicine(i, { dosage: e.target.value })} className="border border-border focus:ring-ring" />
+                  <Input placeholder="Frequency" value={m.frequency ?? ""} onChange={(e) => setMedicine(i, { frequency: e.target.value })} className="border border-border focus:ring-ring" />
+                  <Input placeholder="Duration" value={m.duration ?? ""} onChange={(e) => setMedicine(i, { duration: e.target.value })} className="border border-border focus:ring-ring" />
                 </div>
-                <Input placeholder="Instructions (e.g. before food)" value={m.instructions ?? ""} onChange={(e) => setMedicine(i, { instructions: e.target.value })} className="border border-blue-200 focus:ring-blue-400" />
+                <Input placeholder="Instructions (e.g. before food)" value={m.instructions ?? ""} onChange={(e) => setMedicine(i, { instructions: e.target.value })} className="border border-border focus:ring-ring" />
               </div>
             ))}
           </div>
@@ -1136,25 +1136,25 @@ function PrescriptionForm({
       </Card>
 
       {/* 3. NOTES */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             3. Notes / Instructions
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} placeholder="Add doctor instructions..." className="border border-blue-200 focus:ring-blue-400" />
+          <Textarea value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={2} placeholder="Add doctor instructions..." className="border border-border focus:ring-ring" />
         </CardContent>
       </Card>
       </fieldset>
 
       {!readOnly && (
-        <div className="flex gap-3 border-t border-blue-200 pt-8">
-          <Button type="button" variant="outline" onClick={() => setForm(initial || { patientId: "", doctorId, visitDate: today(), diagnosis: "", medicines: [{ ...EMPTY_MEDICINE }], notes: "" })} className="border-blue-300 text-blue-600 hover:bg-blue-50">
+        <div className="flex gap-3 border-t border-border pt-8">
+          <Button type="button" variant="outline" onClick={() => setForm(initial || { patientId: "", doctorId, visitDate: today(), diagnosis: "", medicines: [{ ...EMPTY_MEDICINE }], notes: "" })} className="border-primary/30 text-primary hover:bg-accent">
             Reset
           </Button>
           <div className="flex-1" />
-          <Button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700" size="lg">
+          <Button type="submit" disabled={saving} size="lg">
             {saving ? "Saving Prescription..." : isEdit ? "Save Changes" : "Save & Queue WhatsApp Alert"}
           </Button>
         </div>

@@ -56,6 +56,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
 import { sessionCan } from "@/hooks/use-clinic-session";
+import { patientStatusTone } from "@/lib/status-styles";
 
 
 const GENDERS = ["male", "female", "other"];
@@ -770,11 +771,7 @@ export default function PatientsPage() {
                       {visibleColumns.status && (
                         <TableCell>
                           <Badge
-                            className={
-                              p.status === "active"
-                                ? "bg-green-50 text-green-700 hover:bg-green-50 border-green-200"
-                                : "bg-slate-50 text-slate-700 hover:bg-slate-50 border-slate-200"
-                            }
+                            className={patientStatusTone(p.status)}
                             variant="outline"
                           >
                             {p.status}
@@ -858,8 +855,8 @@ export default function PatientsPage() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-green-100">
-              <KeyRound className="size-7 text-green-600" />
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success/10">
+              <KeyRound className="size-7 text-success" />
             </div>
             <DialogTitle className="text-center text-lg">Credentials Sent</DialogTitle>
             <DialogDescription className="text-center">
@@ -868,33 +865,30 @@ export default function PatientsPage() {
           </DialogHeader>
 
           {credentials && (
-            <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 space-y-3">
+            <div className="rounded-xl border bg-accent/40 p-4 space-y-3">
               <div className="flex items-center gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
                   <Mail className="size-4" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-500">Portal Login (Email)</p>
-                  <p className="truncate text-sm font-medium text-gray-800">{credentials.email}</p>
+                  <p className="text-xs text-muted-foreground">Portal Login (Email)</p>
+                  <p className="truncate text-sm font-medium text-foreground">{credentials.email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
                   <KeyRound className="size-4" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-500">New Password</p>
-                  <p className="text-sm font-medium text-gray-800">{credentials.password}</p>
+                  <p className="text-xs text-muted-foreground">New Password</p>
+                  <p className="text-sm font-medium text-foreground">{credentials.password}</p>
                 </div>
               </div>
             </div>
           )}
 
           <DialogFooter>
-            <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white w-full"
-              onClick={() => setCredentials(null)}
-            >
+            <Button className="w-full" onClick={() => setCredentials(null)}>
               Done
             </Button>
           </DialogFooter>

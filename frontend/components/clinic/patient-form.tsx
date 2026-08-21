@@ -182,9 +182,9 @@ function FormField({
 }) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={name} className="text-sm font-medium text-gray-700">
+      <Label htmlFor={name} className="text-sm font-medium text-foreground">
         {label}
-        {required && <span className="ml-1 text-red-500">*</span>}
+        {required && <span className="ml-1 text-destructive">*</span>}
       </Label>
       {children || (
         <Input
@@ -198,18 +198,18 @@ function FormField({
           disabled={disabled}
           className={`border ${
             error
-              ? "border-red-500 focus:ring-red-500"
-              : "border-blue-200 focus:ring-blue-400"
+              ? "border-destructive focus:ring-destructive"
+              : "border-border focus:ring-ring"
           }`}
         />
       )}
       {error && (
-        <div className="flex items-center gap-1.5 text-sm text-red-600">
+        <div className="flex items-center gap-1.5 text-sm text-destructive">
           <AlertCircle size={16} />
           {error}
         </div>
       )}
-      {helperText && <p className="text-xs text-gray-500">{helperText}</p>}
+      {helperText && <p className="text-xs text-muted-foreground">{helperText}</p>}
     </div>
   );
 }
@@ -224,13 +224,13 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+    <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold text-gray-800">
+        <CardTitle className="text-base font-semibold text-foreground">
           {title}
         </CardTitle>
         {description && (
-          <p className="mt-1 text-sm text-gray-600">{description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         )}
       </CardHeader>
       <CardContent className="space-y-4">{children}</CardContent>
@@ -404,8 +404,8 @@ export function PatientForm({
 
   const renderViewField = (label: string, value: string | undefined | null) => (
     <div className="space-y-2">
-      <Label className="text-sm font-medium text-gray-700">{label}</Label>
-      <div className="text-gray-900">{value || "—"}</div>
+      <Label className="text-sm font-medium text-foreground">{label}</Label>
+      <div className="text-foreground">{value || "—"}</div>
     </div>
   );
 
@@ -487,20 +487,20 @@ export function PatientForm({
             {renderViewField("How Did You Hear About Us?", form.howDidYouHear)}
           </div>
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">Internal Notes</Label>
-            <div className="text-gray-900">{form.notes || "—"}</div>
+            <Label className="text-sm font-medium text-foreground">Internal Notes</Label>
+            <div className="text-foreground">{form.notes || "—"}</div>
           </div>
         </SectionCard>
 
         <SectionCard title="9. Attachments">
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">Uploaded Documents</Label>
-            <div className="text-gray-900">
+            <Label className="text-sm font-medium text-foreground">Uploaded Documents</Label>
+            <div className="text-foreground">
               {form.attachments && form.attachments.length > 0
                 ? form.attachments.map((a, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <span>{a.name}</span>
-                      <span className="text-xs text-gray-500">({(a.size / 1024).toFixed(1)} KB)</span>
+                      <span className="text-xs text-muted-foreground">({(a.size / 1024).toFixed(1)} KB)</span>
                     </div>
                   ))
                 : "—"}
@@ -508,12 +508,11 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <div className="flex gap-3 border-t border-blue-200 pt-8">
+        <div className="flex gap-3 border-t border-border pt-8">
           {onEdit && (
             <Button
               variant="outline"
               onClick={onEdit}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Edit Patient
             </Button>
@@ -522,7 +521,7 @@ export function PatientForm({
             <Button
               variant="outline"
               onClick={onClose}
-              className="border-blue-300 text-blue-600 hover:bg-blue-50"
+              className="border-primary/30 text-primary hover:bg-accent"
             >
               Close
             </Button>
@@ -540,34 +539,34 @@ export function PatientForm({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             aria-label="Upload patient photo"
-            className="relative shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2"
+            className="relative shrink-0 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             disabled={isViewMode}
           >
             {previewUrl ? (
               <img
                 src={previewUrl}
                 alt="Patient photo preview"
-                className="size-20 rounded-full border border-blue-200 object-cover"
+                className="size-20 rounded-full border border-border object-cover"
               />
             ) : (
-              <span className="flex size-20 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-600">
+              <span className="flex size-20 items-center justify-center rounded-full border border-border bg-accent text-primary">
                 <User className="size-9" />
               </span>
             )}
-            <span className="absolute -bottom-0.5 -right-0.5 flex size-7 items-center justify-center rounded-full border border-blue-200 bg-white text-blue-600 shadow-sm">
+            <span className="absolute -bottom-0.5 -right-0.5 flex size-7 items-center justify-center rounded-full border border-border bg-background text-primary shadow-sm">
               <Camera className="size-3.5" />
             </span>
           </button>
           <div>
-            <p className="text-sm font-medium text-gray-700">Patient Photo</p>
-            <p className="mt-0.5 text-xs text-gray-500">
+            <p className="text-sm font-medium text-foreground">Patient Photo</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
               Click the avatar to upload a profile photo (JPG, PNG — Max 2MB)
             </p>
             {profileImage && (
-              <p className="mt-1 truncate text-xs text-blue-600">{profileImage.name}</p>
+              <p className="mt-1 truncate text-xs text-primary">{profileImage.name}</p>
             )}
             {errors.profileImage && (
-              <p className="mt-1 text-xs text-red-600">{errors.profileImage}</p>
+              <p className="mt-1 text-xs text-destructive">{errors.profileImage}</p>
             )}
           </div>
           <input
@@ -608,7 +607,7 @@ export function PatientForm({
           <div className="space-y-2">
             <Label
               htmlFor="whatsapp"
-              className="text-sm font-medium text-gray-700"
+              className="text-sm font-medium text-foreground"
             >
               WhatsApp Number
             </Label>
@@ -644,7 +643,7 @@ export function PatientForm({
             disabled={isViewMode}
           >
             <Select value={form.gender} onValueChange={(v) => handleChange("gender", v)} disabled={isViewMode}>
-              <SelectTrigger className={`border ${errors.gender ? 'border-red-500' : 'border-blue-200'}`}>
+              <SelectTrigger className={`border ${errors.gender ? 'border-destructive' : 'border-border'}`}>
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
               <SelectContent>
@@ -681,7 +680,7 @@ export function PatientForm({
             disabled={isViewMode}
           >
             <Select value={form.bloodGroup} onValueChange={(v) => handleChange("bloodGroup", v)} disabled={isViewMode}>
-              <SelectTrigger className="border-blue-200">
+              <SelectTrigger className="border-border">
                 <SelectValue placeholder="Select blood group" />
               </SelectTrigger>
               <SelectContent>
@@ -718,7 +717,7 @@ export function PatientForm({
             disabled={isViewMode}
           >
             <Select value={form.maritalStatus} onValueChange={(v) => handleChange("maritalStatus", v)} disabled={isViewMode}>
-              <SelectTrigger className="border-blue-200">
+              <SelectTrigger className="border-border">
                 <SelectValue placeholder="Select marital status" />
               </SelectTrigger>
               <SelectContent>
@@ -769,8 +768,8 @@ export function PatientForm({
             rows={3}
             className={`border ${
               errors.address
-                ? "border-red-500 focus:ring-red-500"
-                : "border-blue-200 focus:ring-blue-400"
+                ? "border-destructive focus:ring-destructive"
+                : "border-border focus:ring-ring"
             }`}
             disabled={isViewMode}
           />
@@ -846,7 +845,7 @@ export function PatientForm({
             onChange={(e) => handleChange("previousSurgeries", e.target.value)}
             placeholder="Describe any previous surgeries or hospitalizations"
             rows={2}
-            className="border-blue-200"
+            className="border-border"
             disabled={isViewMode}
           />
         </FormField>
@@ -863,7 +862,7 @@ export function PatientForm({
             onChange={(e) => handleChange("currentMedications", e.target.value)}
             placeholder="List current medications with dosages"
             rows={2}
-            className="border-blue-200"
+            className="border-border"
             disabled={isViewMode}
           />
         </FormField>
@@ -876,7 +875,7 @@ export function PatientForm({
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="ID Proof Type" name="idType" error={errors.idType} disabled={isViewMode}>
             <Select value={form.idType} onValueChange={(v) => handleChange("idType", v)} disabled={isViewMode}>
-              <SelectTrigger className="border-blue-200">
+              <SelectTrigger className="border-border">
                 <SelectValue placeholder="Select ID proof type" />
               </SelectTrigger>
               <SelectContent>
@@ -911,7 +910,7 @@ export function PatientForm({
             error={errors.doctorId}
           >
             {isViewMode ? (
-              <div className="border border-gray-300 rounded-md px-3 py-2 text-gray-900 bg-gray-50">
+              <div className="border border-border rounded-md px-3 py-2 text-foreground bg-muted">
                 {form.doctorId || "—"}
               </div>
             ) : (
@@ -949,16 +948,16 @@ export function PatientForm({
           />
         </div>
 
-        <div className="space-y-4 border-t border-blue-200 pt-4">
+        <div className="space-y-4 border-t border-border pt-4">
           <div>
-            <Label className="text-sm font-medium text-gray-700">
+            <Label className="text-sm font-medium text-foreground">
               Patient Portal Access
             </Label>
             <div className="mt-3 space-y-2">
               {(["enable", "disable"] as const).map((option) => (
                 <label
                   key={option}
-                  className="flex items-center gap-3 rounded-lg p-3 hover:bg-blue-50"
+                  className="flex items-center gap-3 rounded-lg p-3 hover:bg-accent"
                 >
                   <input
                     type="radio"
@@ -977,10 +976,10 @@ export function PatientForm({
                         }));
                       }
                     }}
-                    className="h-4 w-4 border-blue-300 text-blue-600"
+                    className="h-4 w-4 border-primary/30 text-primary"
                     disabled={isViewMode}
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-foreground">
                     {option === "enable" ? "Enable Access" : "Disable Access"}
                   </span>
                 </label>
@@ -990,17 +989,17 @@ export function PatientForm({
 
           {portalEnabled && (
             <div>
-              <Label className="text-sm font-medium text-gray-700">
+              <Label className="text-sm font-medium text-foreground">
                 Send Login Details Via
               </Label>
-              <p className="mt-0.5 text-xs text-gray-500">
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 The patient receives login credentials only through the selected method
               </p>
               <div className="mt-3 space-y-2">
                 {(["whatsapp", "email", "none"] as const).map((option) => (
                   <label
                     key={option}
-                    className="flex items-center gap-3 rounded-lg p-3 hover:bg-blue-50"
+                    className="flex items-center gap-3 rounded-lg p-3 hover:bg-accent"
                   >
                     <input
                       type="radio"
@@ -1013,10 +1012,10 @@ export function PatientForm({
                           e.target.value as "whatsapp" | "email" | "none"
                         )
                       }
-                      className="h-4 w-4 border-blue-300 text-blue-600"
+                      className="h-4 w-4 border-primary/30 text-primary"
                       disabled={isViewMode}
                     />
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-foreground">
                       {option === "whatsapp"
                         ? "Send login details via WhatsApp"
                         : option === "email"
@@ -1092,7 +1091,7 @@ export function PatientForm({
               onValueChange={(v) => handleChange("howDidYouHear", v)}
               disabled={isViewMode}
             >
-              <SelectTrigger className="border-blue-200">
+              <SelectTrigger className="border-border">
                 <SelectValue placeholder="Select option" />
               </SelectTrigger>
               <SelectContent>
@@ -1118,10 +1117,10 @@ export function PatientForm({
             onChange={(e) => handleChange("notes", e.target.value)}
             placeholder="Internal notes — visible only to authorized clinic staff"
             rows={3}
-            className="border-blue-200"
+            className="border-border"
             disabled={isViewMode}
           />
-          <p className="text-xs text-amber-600 flex items-center gap-1">
+          <p className="text-xs text-warning flex items-center gap-1">
             <ShieldCheck className="size-3.5" />
             Visible only to authorized clinic staff, never to the patient
           </p>
@@ -1134,13 +1133,13 @@ export function PatientForm({
       >
         {isViewMode ? (
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-gray-700">Uploaded Documents</Label>
-            <div className="text-gray-900">
+            <Label className="text-sm font-medium text-foreground">Uploaded Documents</Label>
+            <div className="text-foreground">
               {form.attachments && form.attachments.length > 0
                 ? form.attachments.map((a, i) => (
                     <div key={i} className="flex items-center gap-2">
                       <span>{a.name}</span>
-                      <span className="text-xs text-gray-500">({(a.size / 1024).toFixed(1)} KB)</span>
+                      <span className="text-xs text-muted-foreground">({(a.size / 1024).toFixed(1)} KB)</span>
                     </div>
                   ))
                 : "—"}
@@ -1156,12 +1155,12 @@ export function PatientForm({
         )}
       </SectionCard>
 
-      <div className="flex gap-3 border-t border-blue-200 pt-8">
+      <div className="flex gap-3 border-t border-border pt-8">
         <Button
           variant="outline"
           onClick={onClose}
           disabled={saving}
-          className="border-blue-300 text-blue-600 hover:bg-blue-50"
+          className="border-primary/30 text-primary hover:bg-accent"
         >
           {isViewMode ? "Close" : "Cancel"}
         </Button>
@@ -1170,7 +1169,6 @@ export function PatientForm({
           <Button
             type="submit"
             disabled={saving}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
             size="lg"
           >
             {saving ? "Saving..." : isCreateMode ? "Save Patient" : "Update Patient"}

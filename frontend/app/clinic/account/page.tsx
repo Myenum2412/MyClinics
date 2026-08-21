@@ -376,9 +376,9 @@ export default function AccountPage() {
                 <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm">
                   <Badge
                     variant="outline"
-                    className="bg-emerald-50 text-emerald-700 border-emerald-200"
+                    className="bg-success/10 text-success border-success/25"
                   >
-                    <span className="mr-1.5 size-1.5 rounded-full bg-emerald-500" />
+                    <span className="mr-1.5 size-1.5 rounded-full bg-success" />
                     {clinic.status}
                   </Badge>
                   <span className="text-muted-foreground">

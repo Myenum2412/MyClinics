@@ -45,6 +45,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import StatsBilling from "@/components/stats-billing";
+import { billStatusTone } from "@/lib/status-styles";
 import {
   ArrowUp,
   ArrowDown,
@@ -62,10 +63,10 @@ import {
 } from "lucide-react";
 
 const STATUS_CLASS: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-700 border-slate-200",
-  issued: "bg-blue-50 text-blue-700 border-blue-200",
-  paid: "bg-green-50 text-green-700 border-green-200",
-  void: "bg-red-50 text-red-700 border-red-200",
+  draft: billStatusTone("draft"),
+  issued: billStatusTone("issued"),
+  paid: billStatusTone("paid"),
+  void: billStatusTone("void"),
 };
 
 const PAYMENT_TYPE_OPTIONS: { value: PaymentType; label: string }[] = [
@@ -1324,7 +1325,7 @@ function SummaryRow({
       <div
         className={`flex h-9 items-center rounded-md border border-border bg-muted/40 px-3 text-sm tabular-nums ${
           strong ? "font-bold" : ""
-        } ${tone === "success" ? "text-green-700" : "text-foreground"}`}
+        } ${tone === "success" ? "text-success" : "text-foreground"}`}
       >
         {value}
       </div>

@@ -124,15 +124,15 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
   return (
     <form
       onSubmit={handleSubmit}
-      className={`mx-auto w-full max-w-4xl rounded-3xl border border-white/50 bg-white/60 p-8 shadow-2xl shadow-[#0D47A1]/20 backdrop-blur-xl ${className ?? ""}`}
+      className={`mx-auto w-full max-w-4xl rounded-3xl border border-white/50 bg-background/60 p-8 shadow-2xl shadow-primary/20 backdrop-blur-xl ${className ?? ""}`}
     >
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-full bg-[#0D47A1]/10">
-          <Stethoscope className="size-5 text-[#0D47A1]" aria-hidden="true" />
+        <div className="flex size-10 items-center justify-center rounded-full bg-primary/10">
+          <Stethoscope className="size-5 text-primary" aria-hidden="true" />
         </div>
         <div className="text-left">
-          <h2 className="text-lg font-bold text-gray-900">Book an appointment</h2>
-          <p className="text-sm text-gray-600">
+          <h2 className="text-lg font-bold text-foreground">Book an appointment</h2>
+          <p className="text-sm text-muted-foreground">
             Pick your city and state — we&apos;ll create your patient account and
             send your login details on WhatsApp.
           </p>
@@ -142,7 +142,7 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
       <div className="grid gap-4 sm:grid-cols-2">
         {/* State */}
         <div ref={stateRef} className="relative">
-          <Label htmlFor="appt-state" className="mb-1.5 block text-sm font-medium text-gray-700">
+          <Label htmlFor="appt-state" className="mb-1.5 block text-sm font-medium text-foreground">
             State
           </Label>
           <button
@@ -153,41 +153,41 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
               setStateOpen((v) => !v);
             }}
             aria-expanded={stateOpen}
-            className={`flex h-11 w-full items-center justify-between gap-2 rounded-xl border bg-white px-3 text-left text-sm transition-colors outline-none focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-200 ${
-              state ? "border-blue-300 text-gray-900" : "border-blue-200 text-gray-400"
+            className={`flex h-11 w-full items-center justify-between gap-2 rounded-xl border bg-background px-3 text-left text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 ${
+              state ? "border-primary/40 text-foreground" : "border-border text-muted-foreground"
             }`}
           >
             <span className="truncate">{state || "Select state"}</span>
-            <Search className="size-4 shrink-0 text-gray-400" aria-hidden="true" />
+            <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           </button>
           {stateOpen && (
-            <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-blue-200 bg-white shadow-lg">
-              <div className="border-b border-blue-100 p-2">
+            <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-border bg-background shadow-lg">
+              <div className="border-b border-border p-2">
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                   <Input
                     value={stateQuery}
                     onChange={(e) => setStateQuery(e.target.value)}
                     placeholder="Search state..."
-                    className="h-9 rounded-lg border-blue-200 bg-blue-50/40 pl-8 text-sm"
+                    className="h-9 rounded-lg border-border bg-accent/50 pl-8 text-sm"
                     autoFocus
                   />
                 </div>
               </div>
               <div role="listbox" className="max-h-56 overflow-y-auto p-1">
                 {filteredStates.length === 0 && (
-                  <div className="px-2.5 py-4 text-center text-sm text-gray-400">No states found</div>
+                  <div className="px-2.5 py-4 text-center text-sm text-muted-foreground">No states found</div>
                 )}
                 {filteredStates.map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => pickState(s)}
-                    className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-blue-50 ${
-                      s === state ? "bg-blue-50 font-medium text-gray-800" : "text-gray-700"
+                    className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-accent ${
+                      s === state ? "bg-accent font-medium text-foreground" : "text-foreground"
                     }`}
                   >
-                    <MapPin className="size-3.5 shrink-0 text-blue-400" aria-hidden="true" />
+                    <MapPin className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
                     <span className="truncate">{s}</span>
                   </button>
                 ))}
@@ -198,7 +198,7 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
 
         {/* City */}
         <div ref={cityRef} className="relative">
-          <Label htmlFor="appt-city" className="mb-1.5 block text-sm font-medium text-gray-700">
+          <Label htmlFor="appt-city" className="mb-1.5 block text-sm font-medium text-foreground">
             City
           </Label>
           <button
@@ -210,41 +210,41 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
               setCityOpen((v) => !v);
             }}
             aria-expanded={cityOpen}
-            className={`flex h-11 w-full items-center justify-between gap-2 rounded-xl border bg-white px-3 text-left text-sm transition-colors outline-none focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60 ${
-              city ? "border-blue-300 text-gray-900" : "border-blue-200 text-gray-400"
+            className={`flex h-11 w-full items-center justify-between gap-2 rounded-xl border bg-background px-3 text-left text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-60 ${
+              city ? "border-primary/40 text-foreground" : "border-border text-muted-foreground"
             }`}
           >
             <span className="truncate">{city || (state ? "Select city" : "Select state first")}</span>
-            <Search className="size-4 shrink-0 text-gray-400" aria-hidden="true" />
+            <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           </button>
           {cityOpen && (
-            <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-blue-200 bg-white shadow-lg">
-              <div className="border-b border-blue-100 p-2">
+            <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-border bg-background shadow-lg">
+              <div className="border-b border-border p-2">
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+                  <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
                   <Input
                     value={cityQuery}
                     onChange={(e) => setCityQuery(e.target.value)}
                     placeholder="Search city..."
-                    className="h-9 rounded-lg border-blue-200 bg-blue-50/40 pl-8 text-sm"
+                    className="h-9 rounded-lg border-border bg-accent/50 pl-8 text-sm"
                     autoFocus
                   />
                 </div>
               </div>
               <div role="listbox" className="max-h-56 overflow-y-auto p-1">
                 {filteredCities.length === 0 && (
-                  <div className="px-2.5 py-4 text-center text-sm text-gray-400">No cities found</div>
+                  <div className="px-2.5 py-4 text-center text-sm text-muted-foreground">No cities found</div>
                 )}
                 {filteredCities.map((c) => (
                   <button
                     key={c}
                     type="button"
                     onClick={() => pickCity(c)}
-                    className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-blue-50 ${
-                      c === city ? "bg-blue-50 font-medium text-gray-800" : "text-gray-700"
+                    className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-accent ${
+                      c === city ? "bg-accent font-medium text-foreground" : "text-foreground"
                     }`}
                   >
-                    <MapPin className="size-3.5 shrink-0 text-blue-400" aria-hidden="true" />
+                    <MapPin className="size-3.5 shrink-0 text-primary" aria-hidden="true" />
                     <span className="truncate">{c}</span>
                   </button>
                 ))}
@@ -254,7 +254,7 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="appt-name" className="text-sm font-medium text-gray-700">
+          <Label htmlFor="appt-name" className="text-sm font-medium text-foreground">
             Full name
           </Label>
           <Input
@@ -263,12 +263,12 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Your full name"
             required
-            className="h-11 rounded-xl border-blue-200 bg-white text-sm"
+            className="h-11 rounded-xl border-border bg-background text-sm"
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="appt-mobile" className="text-sm font-medium text-gray-700">
+          <Label htmlFor="appt-mobile" className="text-sm font-medium text-foreground">
             WhatsApp number
           </Label>
           <Input
@@ -279,23 +279,23 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
             onChange={(e) => setMobile(e.target.value.replace(/[^\d+]/g, "").slice(0, 15))}
             placeholder="+91 98765 43210"
             required
-            className="h-11 rounded-xl border-blue-200 bg-white text-sm"
+            className="h-11 rounded-xl border-border bg-background text-sm"
           />
         </div>
       </div>
 
       {error && (
-        <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p className="mt-4 rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
       )}
       {done && (
-        <p className="mt-4 flex items-start gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+        <p className="mt-4 flex items-start gap-2 rounded-lg bg-success/10 px-3 py-2 text-sm text-success">
           <span className="mt-0.5">✓</span>
           {done}
         </p>
       )}
 
       <div className="mt-6 flex flex-col items-center gap-2 sm:flex-row sm:justify-between">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           Your login credentials are sent securely to your WhatsApp number.
         </p>
         <Button type="submit" disabled={loading} size="lg" className="w-full sm:w-auto sm:px-8">

@@ -61,6 +61,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 import StatsAppointments from "@/components/stats-appointments";
+import { appointmentStatusTone } from "@/lib/status-styles";
 import {
   AppointmentForm,
   appointmentToForm,
@@ -101,10 +102,10 @@ const STATUS_LABELS: Record<AppointmentStatus, string> = {
 };
 
 const STATUS_CLASS: Record<AppointmentStatus, string> = {
-  scheduled: "bg-blue-500/10 text-blue-500 border border-blue-500/20",
-  completed: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
-  cancelled: "bg-rose-500/10 text-rose-500 border border-rose-500/20",
-  no_show: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+  scheduled: appointmentStatusTone("scheduled"),
+  completed: appointmentStatusTone("completed"),
+  cancelled: appointmentStatusTone("cancelled"),
+  no_show: appointmentStatusTone("no_show"),
 };
 
 
@@ -451,19 +452,19 @@ export default function AppointmentsPage() {
 
   if (creating) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setCreating(false)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 transition-colors hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-muted-foreground" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">New Appointment</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">New Appointment</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Schedule a patient visit. Automated WhatsApp alerts will be instantly queued for both patient and doctor.
                 </p>
               </div>
@@ -493,19 +494,19 @@ export default function AppointmentsPage() {
 
   if (editingAppt) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setEditingAppt(null)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 transition-colors hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-muted-foreground" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Edit Appointment</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Edit Appointment</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Modify appointment details, patient, doctor, date, and time.
                 </p>
               </div>
@@ -536,19 +537,19 @@ export default function AppointmentsPage() {
 
   if (viewing && selectedAppt) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setViewing(false)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 transition-colors hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-muted-foreground" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">View Appointment</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">View Appointment</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Appointment details, patient, doctor, and status.
                 </p>
               </div>
@@ -958,25 +959,25 @@ export default function AppointmentsPage() {
                       </div>
                       <div className="flex items-center gap-1">
                         {log.status === "sent" && (
-                          <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-500">
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-success">
                             <CheckCircle2 className="size-3.5" />
                             Sent
                           </span>
                         )}
                         {log.status === "enqueued" && (
-                          <span className="flex items-center gap-1 text-[11px] font-bold text-blue-500">
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-info">
                             <Loader2 className="size-3.5 animate-spin" />
                             Enqueued
                           </span>
                         )}
                         {log.status === "pending" && (
-                          <span className="flex items-center gap-1 text-[11px] font-bold text-amber-500">
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-warning">
                             <Clock className="size-3.5" />
                             Scheduled
                           </span>
                         )}
                         {log.status === "failed" && (
-                          <span className="flex items-center gap-1 text-[11px] font-bold text-rose-500">
+                          <span className="flex items-center gap-1 text-[11px] font-bold text-destructive">
                             <XCircle className="size-3.5" />
                             Failed
                           </span>
@@ -999,7 +1000,7 @@ export default function AppointmentsPage() {
                         <span>Recipient:</span> {log.phone || "No phone registered"}
                       </div>
                       {log.lastError && (
-                        <div className="col-span-2 text-rose-500 flex items-start gap-1 mt-1 font-sans">
+                        <div className="col-span-2 text-destructive flex items-start gap-1 mt-1 font-sans">
                           <AlertCircle className="size-3.5 shrink-0 mt-0.5" />
                           <span>Error: {log.lastError}</span>
                         </div>

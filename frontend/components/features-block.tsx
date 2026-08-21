@@ -18,13 +18,13 @@ const schedule = [
 
 const statusPill: Record<string, string> = {
   Confirmed: "bg-primary/10 text-primary",
-  Completed: "bg-emerald-500/10 text-emerald-600",
-  Waiting: "bg-amber-500/10 text-amber-600",
+  Completed: "bg-success/10 text-success",
+  Waiting: "bg-warning/10 text-warning",
 }
 
 export default function FeaturesBlock() {
   return (
-    <section className="flex w-full items-center justify-center bg-white px-6 py-20 text-foreground">
+    <section className="flex w-full items-center justify-center bg-background px-6 py-20 text-foreground">
       <div className="mx-auto grid w-full max-w-5xl grid-cols-1 items-center gap-12 lg:grid-cols-2">
         <div className="flex flex-col items-start gap-6">
           <Badge variant="secondary">For Clinics</Badge>

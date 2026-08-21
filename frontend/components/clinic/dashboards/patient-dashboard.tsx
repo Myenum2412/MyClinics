@@ -68,7 +68,7 @@ export function PatientDashboard({ session }: { session: ClinicSession }) {
                       <span className="font-medium text-foreground">{formatDate(appt.date)}</span>
                       <span className="text-sm text-muted-foreground">{formatTime(appt.time)}</span>
                     </div>
-                    <span className="text-sm text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full font-medium">
+                    <span className="text-sm text-primary bg-primary/10 px-2.5 py-1 rounded-full font-medium">
                       {appt.reason || "Visit"}
                     </span>
                   </div>
@@ -76,7 +76,7 @@ export function PatientDashboard({ session }: { session: ClinicSession }) {
               </div>
             )}
             <div className="border-t border-border bg-muted/10 p-4">
-              <Link href="/clinic/appointments" className="text-sm text-blue-600 hover:underline font-medium">
+              <Link href="/clinic/appointments" className="text-sm text-primary hover:underline font-medium">
                 View all appointments &rarr;
               </Link>
             </div>

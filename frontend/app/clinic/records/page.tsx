@@ -229,25 +229,25 @@ function SearchableSelect({
         disabled={disabled}
         onClick={toggleOpen}
         aria-expanded={open}
-        className={`flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-blue-200 bg-white px-3 text-left text-sm outline-none transition-colors focus-visible:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-200 disabled:cursor-not-allowed disabled:opacity-60 ${
-          displayLabel ? "text-gray-900" : "text-gray-400"
+        className={`flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 text-left text-sm outline-none transition-colors focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-60 ${
+          displayLabel ? "text-foreground" : "text-muted-foreground"
         }`}
       >
         <span className="truncate">{displayLabel || placeholder || "Select..."}</span>
-        <ChevronDown className={`size-4 shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown className={`size-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-blue-200 bg-white shadow-lg">
-          <div className="border-b border-blue-100 p-2">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-border bg-background shadow-lg">
+          <div className="border-b border-border p-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
                 ref={searchRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={searchPlaceholder || "Search..."}
-                className="h-9 rounded-lg border-blue-200 bg-blue-50/40 pl-8 text-sm"
+                className="h-9 rounded-lg border-border bg-accent/50 pl-8 text-sm"
               />
             </div>
           </div>
@@ -259,13 +259,13 @@ function SearchableSelect({
                   onChange(null);
                   setOpen(false);
                 }}
-                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-gray-500 hover:bg-blue-50"
+                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-muted-foreground hover:bg-accent"
               >
                 {emptyLabel || "None"}
               </button>
             )}
             {filtered.length === 0 && (
-              <div className="px-2.5 py-4 text-center text-sm text-gray-400">
+              <div className="px-2.5 py-4 text-center text-sm text-muted-foreground">
                 No matches found
               </div>
             )}
@@ -277,8 +277,8 @@ function SearchableSelect({
                   onChange(o.value);
                   setOpen(false);
                 }}
-                className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-blue-50 ${
-                  o.value === value ? "bg-blue-50 font-medium text-gray-800" : "text-gray-700"
+                className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-accent ${
+                  o.value === value ? "bg-accent font-medium text-foreground" : "text-foreground"
                 }`}
               >
                 <span className="truncate">{o.label}</span>
@@ -338,10 +338,10 @@ function MedicineNameInput({
         }}
         onFocus={() => setOpen(true)}
         placeholder={placeholder || "Search medicine..."}
-        className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+        className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
       />
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-blue-200 bg-white shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-border bg-background shadow-lg">
           {suggestions.length > 0 && (
             <div className="max-h-56 overflow-y-auto p-1">
               {suggestions.map((m) => (
@@ -353,10 +353,10 @@ function MedicineNameInput({
                     onChange(m);
                     setOpen(false);
                   }}
-                  className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-blue-50 ${
+                  className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-accent ${
                     m.toLowerCase() === value.trim().toLowerCase()
-                      ? "bg-blue-50 font-medium text-gray-800"
-                      : "text-gray-700"
+                      ? "bg-accent font-medium text-foreground"
+                      : "text-foreground"
                   }`}
                 >
                   <span className="truncate">{m}</span>
@@ -365,7 +365,7 @@ function MedicineNameInput({
             </div>
           )}
           {!exactMatch && value.trim() && (
-            <div className="border-t border-blue-100 px-2.5 py-2 text-xs text-gray-400">
+            <div className="border-t border-border px-2.5 py-2 text-xs text-muted-foreground">
               {`"${value.trim()}" will be saved as a new medicine name.`}
             </div>
           )}
@@ -703,19 +703,19 @@ export default function RecordsPage() {
 
   if (creating) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setCreating(false)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">New Medicine Record</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold text-foreground">New Medicine Record</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Record a patient visit with diagnosis and medicines in one place
                 </p>
               </div>
@@ -743,19 +743,19 @@ export default function RecordsPage() {
 
   if (editing) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setEditing(null)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Medicine Record</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold text-foreground">Medicine Record</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Saved record details — review or update the visit information
                 </p>
               </div>
@@ -784,19 +784,19 @@ export default function RecordsPage() {
 
   if (viewing) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+      <div className="min-h-screen bg-background">
+        <div className="sticky top-0 z-10 border-b border-border bg-background">
           <div className="px-4 py-6 sm:px-6 lg:px-8">
             <div className="flex items-start gap-4">
               <button
                 onClick={() => setViewing(null)}
-                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100"
+                className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">View Medicine Record</h1>
-                <p className="mt-1 text-sm text-gray-600">
+                <h1 className="text-2xl font-bold text-foreground">View Medicine Record</h1>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Read-only view of the visit information
                 </p>
               </div>
@@ -1252,16 +1252,16 @@ function RecordForm({
       <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
 
       {/* 1. VISIT INFORMATION */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             1. Visit Information
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="grid gap-2 md:col-span-2">
-            <Label className="text-sm font-medium text-gray-700">Patient *</Label>
+            <Label className="text-sm font-medium text-foreground">Patient *</Label>
             <SearchableSelect
               value={form.patientId || null}
               onChange={(v) => set("patientId", v)}
@@ -1275,23 +1275,23 @@ function RecordForm({
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Visit date *</Label>
+            <Label className="text-sm font-medium text-foreground">Visit date *</Label>
             <Input
               type="date"
               value={form.visitDate}
               onChange={(e) => set("visitDate", e.target.value)}
-              className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+              className="h-11 rounded-xl border border-border bg-background focus:ring-ring"
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Visit time</Label>
+            <Label className="text-sm font-medium text-foreground">Visit time</Label>
             <TimePicker
               value={form.visitTime}
               onChange={(v) => set("visitTime", v)}
             />
           </div>
           <div className="grid gap-2 md:col-span-2">
-            <Label className="text-sm font-medium text-gray-700">Doctor *</Label>
+            <Label className="text-sm font-medium text-foreground">Doctor *</Label>
             <SearchableSelect
               value={form.doctorId || null}
               onChange={(v) => set("doctorId", v)}
@@ -1305,7 +1305,7 @@ function RecordForm({
             />
           </div>
           <div className="grid gap-2 md:col-span-2">
-            <Label className="text-sm font-medium text-gray-700">Appointment</Label>
+            <Label className="text-sm font-medium text-foreground">Appointment</Label>
             <SearchableSelect
               value={form.appointmentId}
               onChange={(v) => {
@@ -1324,9 +1324,9 @@ function RecordForm({
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Visit type *</Label>
+            <Label className="text-sm font-medium text-foreground">Visit type *</Label>
             <Select value={form.visitType} onValueChange={(v) => set("visitType", v as "new" | "followup")}>
-              <SelectTrigger className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400">
+              <SelectTrigger className="h-11 rounded-xl border border-border bg-background focus:ring-ring">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1336,12 +1336,12 @@ function RecordForm({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Follow-up date</Label>
+            <Label className="text-sm font-medium text-foreground">Follow-up date</Label>
             <Input
               type="date"
               value={form.followUpDate}
               onChange={(e) => set("followUpDate", e.target.value)}
-              className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+              className="h-11 rounded-xl border border-border bg-background focus:ring-ring"
             />
           </div>
         </div>
@@ -1349,48 +1349,48 @@ function RecordForm({
       </Card>
 
       {/* 2. CLINICAL INFORMATION */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             2. Clinical Information
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
         <div className="space-y-3">
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Chief complaint / Reason for visit *</Label>
+            <Label className="text-sm font-medium text-foreground">Chief complaint / Reason for visit *</Label>
             <Textarea
               value={form.chiefComplaint}
               onChange={(e) => set("chiefComplaint", e.target.value)}
-              className="min-h-20 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+              className="min-h-20 rounded-xl border border-border bg-background focus:ring-ring"
               placeholder="Describe the chief complaint..."
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Symptoms</Label>
+            <Label className="text-sm font-medium text-foreground">Symptoms</Label>
             <Textarea
               value={form.symptoms}
               onChange={(e) => set("symptoms", e.target.value)}
-              className="min-h-20 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+              className="min-h-20 rounded-xl border border-border bg-background focus:ring-ring"
               placeholder="Document observed symptoms..."
             />
           </div>
           <div className="grid gap-2 md:grid-cols-2">
             <div className="grid gap-2">
-              <Label className="text-sm font-medium text-gray-700">Diagnosis *</Label>
+              <Label className="text-sm font-medium text-foreground">Diagnosis *</Label>
               <Input
                 value={form.diagnosis}
                 onChange={(e) => set("diagnosis", e.target.value)}
-                className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+                className="h-11 rounded-xl border border-border bg-background focus:ring-ring"
                 placeholder="Primary diagnosis"
               />
             </div>
             <div className="grid gap-2">
-              <Label className="text-sm font-medium text-gray-700">ICD Code</Label>
+              <Label className="text-sm font-medium text-foreground">ICD Code</Label>
               <Input
                 value={form.icdCode}
                 onChange={(e) => set("icdCode", e.target.value)}
-                className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+                className="h-11 rounded-xl border border-border bg-background focus:ring-ring"
                 placeholder="e.g., I10"
               />
             </div>
@@ -1400,10 +1400,10 @@ function RecordForm({
       </Card>
 
       {/* 3. MEDICINES */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-base font-semibold text-gray-800">
+            <CardTitle className="text-base font-semibold text-foreground">
               3. Medicines *
             </CardTitle>
             <Button
@@ -1411,7 +1411,7 @@ function RecordForm({
               variant="outline"
               size="sm"
               onClick={addMedicine}
-              className="h-8 border-blue-300 text-blue-600 hover:bg-blue-50"
+              className="h-8 border-primary/30 text-primary hover:bg-accent"
             >
               <Plus className="size-3.5" />
               Add Another Medicine
@@ -1421,8 +1421,8 @@ function RecordForm({
         <CardContent className="space-y-4">
         <div className="space-y-3">
           {form.medicines.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-blue-200 px-4 py-6 text-center">
-              <p className="text-sm text-gray-600">
+            <div className="rounded-xl border border-dashed border-border px-4 py-6 text-center">
+              <p className="text-sm text-muted-foreground">
                 No medicines added yet. At least one medicine is required.
               </p>
               <Button
@@ -1430,7 +1430,7 @@ function RecordForm({
                 variant="outline"
                 size="sm"
                 onClick={addMedicine}
-                className="mt-3 h-9 rounded-lg border-blue-300 text-blue-600 hover:bg-blue-50"
+                className="mt-3 h-9 rounded-lg border-primary/30 text-primary hover:bg-accent"
               >
                 <Plus className="size-4" />
                 Add Medicine
@@ -1438,10 +1438,10 @@ function RecordForm({
             </div>
           ) : (
             form.medicines.map((medicine, i) => (
-              <div key={i} className="space-y-2 rounded-lg border border-blue-100 bg-white p-3">
+              <div key={i} className="space-y-2 rounded-lg border border-border bg-background p-3">
                 <div className="grid gap-3 md:grid-cols-3">
                   <div className="grid gap-2 md:col-span-3">
-                    <Label className="text-xs uppercase tracking-wide text-gray-500">
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">
                       Medicine name *
                     </Label>
                     <MedicineNameInput
@@ -1451,39 +1451,39 @@ function RecordForm({
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label className="text-xs uppercase tracking-wide text-gray-500">Dosage *</Label>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Dosage *</Label>
                     <Input
                       value={medicine.dosage}
                       onChange={(e) => setMedicine(i, { dosage: e.target.value })}
-                      className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                       placeholder="e.g., 500mg"
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label className="text-xs uppercase tracking-wide text-gray-500">Frequency *</Label>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Frequency *</Label>
                     <Input
                       value={medicine.frequency}
                       onChange={(e) => setMedicine(i, { frequency: e.target.value })}
-                      className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                       placeholder="e.g., Twice daily"
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label className="text-xs uppercase tracking-wide text-gray-500">Duration *</Label>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Duration *</Label>
                     <Input
                       value={medicine.duration}
                       onChange={(e) => setMedicine(i, { duration: e.target.value })}
-                      className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                       placeholder="e.g., 7 days"
                     />
                   </div>
                   <div className="grid gap-2 md:col-span-2">
-                    <Label className="text-xs uppercase tracking-wide text-gray-500">Instructions</Label>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Instructions</Label>
                     <Input
                       value={medicine.instructions}
                       onChange={(e) => setMedicine(i, { instructions: e.target.value })}
                       list="medicine-instruction-suggestions"
-                      className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                       placeholder="e.g., Before food"
                     />
                     <datalist id="medicine-instruction-suggestions">
@@ -1498,7 +1498,7 @@ function RecordForm({
                       size="sm"
                       variant="ghost"
                       onClick={() => removeMedicine(i)}
-                      className="h-10 text-red-600 hover:bg-red-50 hover:text-red-700"
+                      className="h-10 text-destructive hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="size-4" />
                       Delete
@@ -1513,48 +1513,48 @@ function RecordForm({
       </Card>
 
       {/* 4. TREATMENT & ADVICE */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             4. Treatment & Advice
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
         <div className="space-y-3">
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Treatment / Procedures</Label>
+            <Label className="text-sm font-medium text-foreground">Treatment / Procedures</Label>
             <Textarea
               value={form.treatment}
               onChange={(e) => set("treatment", e.target.value)}
-              className="min-h-20 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+              className="min-h-20 rounded-xl border border-border bg-background focus:ring-ring"
               placeholder="Describe treatment procedures..."
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Advice to patient</Label>
+            <Label className="text-sm font-medium text-foreground">Advice to patient</Label>
             <Textarea
               value={form.advice}
               onChange={(e) => set("advice", e.target.value)}
-              className="min-h-20 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+              className="min-h-20 rounded-xl border border-border bg-background focus:ring-ring"
               placeholder="Lifestyle advice, precautions, etc."
             />
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             <div className="grid gap-2">
-              <Label className="text-sm font-medium text-gray-700">Next review date</Label>
+              <Label className="text-sm font-medium text-foreground">Next review date</Label>
               <Input
                 type="date"
                 value={form.nextReviewDate}
                 onChange={(e) => set("nextReviewDate", e.target.value)}
-                className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+                className="h-11 rounded-xl border border-border bg-background focus:ring-ring"
               />
             </div>
             <div className="grid gap-2">
-              <Label className="text-sm font-medium text-gray-700">Referral</Label>
+              <Label className="text-sm font-medium text-foreground">Referral</Label>
               <Input
                 value={form.referral}
                 onChange={(e) => set("referral", e.target.value)}
-                className="h-11 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+                className="h-11 rounded-xl border border-border bg-background focus:ring-ring"
                 placeholder="Referred to specialist..."
               />
             </div>
@@ -1564,74 +1564,74 @@ function RecordForm({
       </Card>
 
       {/* 5. ADDITIONAL INFORMATION */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             5. Additional Information (Optional)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label className="mb-2 block text-sm font-medium text-gray-700">Vitals</Label>
+            <Label className="mb-2 block text-sm font-medium text-foreground">Vitals</Label>
             <div className="grid gap-3 md:grid-cols-3">
               <div className="grid gap-2">
-                <Label className="text-xs text-gray-600">BP (mmHg)</Label>
+                <Label className="text-xs text-muted-foreground">BP (mmHg)</Label>
                 <Input
                   value={form.vitals.bp}
                   onChange={(e) => setVital("bp", e.target.value)}
-                  className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+                  className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                   placeholder="120/80"
                 />
               </div>
               <div className="grid gap-2">
-                <Label className="text-xs text-gray-600">Temperature (°C)</Label>
+                <Label className="text-xs text-muted-foreground">Temperature (°C)</Label>
                 <Input
                   value={form.vitals.temperature}
                   onChange={(e) => setVital("temperature", e.target.value)}
-                  className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+                  className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                   placeholder="98.6"
                 />
               </div>
               <div className="grid gap-2">
-                <Label className="text-xs text-gray-600">Pulse (bpm)</Label>
+                <Label className="text-xs text-muted-foreground">Pulse (bpm)</Label>
                 <Input
                   value={form.vitals.pulse}
                   onChange={(e) => setVital("pulse", e.target.value)}
-                  className="h-10 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+                  className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                   placeholder="72"
                 />
               </div>
             </div>
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Allergies</Label>
+            <Label className="text-sm font-medium text-foreground">Allergies</Label>
             <Textarea
               value={form.allergies}
               onChange={(e) => set("allergies", e.target.value)}
-              className="min-h-16 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+              className="min-h-16 rounded-xl border border-border bg-background focus:ring-ring"
               placeholder="Known allergies..."
             />
           </div>
           <div className="grid gap-2">
-            <Label className="text-sm font-medium text-gray-700">Lab tests</Label>
+            <Label className="text-sm font-medium text-foreground">Lab tests</Label>
             <Textarea
               value={form.labTests}
               onChange={(e) => set("labTests", e.target.value)}
-              className="min-h-16 rounded-xl border border-blue-200 bg-white focus:ring-blue-400"
+              className="min-h-16 rounded-xl border border-border bg-background focus:ring-ring"
               placeholder="Blood tests, X-rays, etc."
             />
           </div>
           <div className="grid gap-2">
-            <Label className="mb-1 flex items-center gap-2 text-sm font-medium text-gray-700">
+            <Label className="mb-1 flex items-center gap-2 text-sm font-medium text-foreground">
               Internal notes
-              <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
+              <span className="inline-flex rounded-full border border-warning/25 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
                 Visible only to authorized clinic staff
               </span>
             </Label>
             <Textarea
               value={form.internalNotes}
               onChange={(e) => set("internalNotes", e.target.value)}
-              className="min-h-16 rounded-xl border-rose-200 bg-rose-50/20"
+              className="min-h-16 rounded-xl border-warning/25 bg-warning/5"
               placeholder="Internal observations..."
             />
           </div>
@@ -1639,9 +1639,9 @@ function RecordForm({
       </Card>
 
       {/* 6. ATTACHMENTS */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             6. Attachments (Optional)
           </CardTitle>
         </CardHeader>
@@ -1655,42 +1655,42 @@ function RecordForm({
       </Card>
 
       {/* SUMMARY */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             7. Summary
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
         <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-5">
           <div>
-            <p className="text-xs text-gray-500">Patient</p>
-            <p className="mt-0.5 truncate font-medium text-gray-900">
+            <p className="text-xs text-muted-foreground">Patient</p>
+            <p className="mt-0.5 truncate font-medium text-foreground">
               {selectedPatient?.fullName || "—"}
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Doctor</p>
-            <p className="mt-0.5 truncate font-medium text-gray-900">
+            <p className="text-xs text-muted-foreground">Doctor</p>
+            <p className="mt-0.5 truncate font-medium text-foreground">
               {selectedDoctor?.name || "—"}
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Visit date</p>
-            <p className="mt-0.5 font-medium text-gray-900">
+            <p className="text-xs text-muted-foreground">Visit date</p>
+            <p className="mt-0.5 font-medium text-foreground">
               {form.visitDate ? formatDate(form.visitDate) : "—"}
               {form.visitTime ? `, ${formatTime(form.visitTime)}` : ""}
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Visit type</p>
-            <p className="mt-0.5 font-medium capitalize text-gray-900">
+            <p className="text-xs text-muted-foreground">Visit type</p>
+            <p className="mt-0.5 font-medium capitalize text-foreground">
               {form.visitType === "new" ? "New Visit" : "Follow-up"}
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">Total medicines</p>
-            <p className="mt-0.5 font-semibold text-gray-900">{form.medicines.length}</p>
+            <p className="text-xs text-muted-foreground">Total medicines</p>
+            <p className="mt-0.5 font-semibold text-foreground">{form.medicines.length}</p>
           </div>
         </div>
       </CardContent>
@@ -1699,13 +1699,13 @@ function RecordForm({
 
       {/* ACTIONS */}
       {!readOnly && (
-        <div className="flex gap-3 border-t border-blue-200 pt-8">
+        <div className="flex gap-3 border-t border-border pt-8">
           <Button
             type="button"
             variant="outline"
             onClick={resetForm}
             disabled={saving}
-            className="border-blue-300 text-blue-600 hover:bg-blue-50"
+            className="border-primary/30 text-primary hover:bg-accent"
           >
             Reset
           </Button>
@@ -1714,7 +1714,6 @@ function RecordForm({
             type="submit"
             onClick={submit}
             disabled={saving}
-            className="bg-blue-600 text-white hover:bg-blue-700"
             size="lg"
           >
             {saving ? "Saving..." : "Save Record"}

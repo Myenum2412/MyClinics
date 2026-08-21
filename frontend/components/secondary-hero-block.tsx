@@ -9,9 +9,9 @@ export default function SecondaryHeroBlock() {
     <section className="relative flex w-full flex-col items-center overflow-hidden px-6 py-20 text-foreground">
       <CloudShader
         className="absolute inset-0"
-        skyTopColor="#0D47A1"
-        skyBottomColor="#90CAF9"
-        cloudColor="#E3F2FD"
+        skyTopColor="#312E81"
+        skyBottomColor="#A5B4FC"
+        cloudColor="#E0E7FF"
       />
 
       <div className="relative z-10 flex w-full max-w-3xl flex-col items-center text-center">
@@ -46,7 +46,7 @@ export default function SecondaryHeroBlock() {
         </div>
       </div>
 
-      <div className="relative z-10 mt-14 w-full max-w-4xl rounded-2xl border border-white/50 bg-white/90 p-5 shadow-2xl shadow-[#0D47A1]/30 backdrop-blur-xl">
+      <div className="relative z-10 mt-14 w-full max-w-4xl rounded-2xl border border-white/50 bg-white/90 p-5 shadow-2xl shadow-[#312E81]/30 backdrop-blur-xl">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-4">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -62,7 +62,7 @@ export default function SecondaryHeroBlock() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600">
+            <span className="rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
               Confirmed
             </span>
             <span className="text-xs text-muted-foreground">

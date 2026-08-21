@@ -116,20 +116,20 @@ export default function NewPatientPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="sticky top-0 z-10 border-b border-blue-200 bg-white">
+    <div className="min-h-screen bg-background">
+      <div className="sticky top-0 z-10 border-b border-border bg-background">
         <div className="px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-start gap-4">
               <Link
                 href="/clinic/patients"
-                className="inline-flex items-center justify-center rounded-lg p-2 hover:bg-blue-100 mt-1"
+                className="inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted mt-1"
               >
-                <ChevronLeft size={20} className="text-blue-600" />
+                <ChevronLeft size={20} className="text-muted-foreground" />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">New Patient</h1>
-                <p className="text-sm text-gray-600 mt-1">
+                <h1 className="text-2xl font-bold text-foreground">New Patient</h1>
+                <p className="text-sm text-muted-foreground mt-1">
                   Register a new patient in your clinic
                 </p>
               </div>
@@ -160,8 +160,8 @@ export default function NewPatientPage() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-green-100">
-              <CheckCircle className="size-7 text-green-600" />
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-success/10">
+              <CheckCircle className="size-7 text-success" />
             </div>
             <DialogTitle className="text-center text-lg">
               Patient Registered Successfully
@@ -169,7 +169,7 @@ export default function NewPatientPage() {
             <DialogDescription className="text-center">
               {createdPatient?.fullName} has been added to your clinic with
               patient ID{" "}
-              <span className="font-semibold text-gray-800">
+              <span className="font-semibold text-foreground">
                 {createdPatient?.patientId}
               </span>
               .
@@ -177,36 +177,36 @@ export default function NewPatientPage() {
           </DialogHeader>
 
           {createdPatient && (
-            <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 space-y-3">
+            <div className="rounded-xl border border-border bg-accent/50 p-4 space-y-3">
               <div className="flex items-center gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
                   <Mail className="size-4" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-500">Portal Login (Email)</p>
-                  <p className="truncate text-sm font-medium text-gray-800">
+                  <p className="text-xs text-muted-foreground">Portal Login (Email)</p>
+                  <p className="truncate text-sm font-medium text-foreground">
                     {createdPatient.email}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
                   <KeyRound className="size-4" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs text-gray-500">Password</p>
-                  <p className="text-sm font-medium text-gray-800">
+                  <p className="text-xs text-muted-foreground">Password</p>
+                  <p className="text-sm font-medium text-foreground">
                     {createdPatient.password}
                   </p>
                 </div>
               </div>
               {createdPatient.loginNotification === "whatsapp" && (
-                <p className="text-xs text-blue-700 flex items-center gap-1">
+                <p className="text-xs text-primary flex items-center gap-1">
                   Login details sent via WhatsApp
                 </p>
               )}
               {createdPatient.loginNotification === "email" && (
-                <p className="text-xs text-blue-700 flex items-center gap-1">
+                <p className="text-xs text-primary flex items-center gap-1">
                   Login details sent via Email
                 </p>
               )}
@@ -216,7 +216,7 @@ export default function NewPatientPage() {
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
-              className="border-blue-300 text-blue-600 hover:bg-blue-50 flex-1"
+              className="border-primary/30 text-primary hover:bg-accent flex-1"
               onClick={() => {
                 setCreatedPatient(null);
                 router.push("/clinic/patients");
@@ -225,7 +225,7 @@ export default function NewPatientPage() {
               Go to Patients
             </Button>
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white flex-1 gap-1.5"
+              className="flex-1 gap-1.5"
               onClick={() => {
                 window.open("/login?callbackUrl=/clinic", "_blank");
               }}

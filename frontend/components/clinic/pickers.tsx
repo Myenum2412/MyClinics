@@ -155,12 +155,12 @@ export function DoctorComboBox({
           requestAnimationFrame(() => searchRef.current?.focus());
         }}
         className={cn(
-          "flex h-10 w-full items-center justify-between rounded-xl border bg-white px-3 text-left text-sm",
-          open ? "border-blue-400 ring-2 ring-blue-200" : "border-blue-200",
-          required && !value && "border-blue-200"
+          "flex h-10 w-full items-center justify-between rounded-xl border bg-background px-3 text-left text-sm",
+          open ? "border-ring ring-2 ring-ring/30" : "border-border",
+          required && !value && "border-border"
         )}
       >
-        <span className={cn("flex items-center gap-2 truncate", selected ? "text-gray-900" : "text-gray-400")}>
+        <span className={cn("flex items-center gap-2 truncate", selected ? "text-foreground" : "text-muted-foreground")}>
           {selected ? (
             <>
               <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={selected.doctorId} name={selected.name} size="xs" />
@@ -170,12 +170,12 @@ export function DoctorComboBox({
             placeholder
           )}
         </span>
-        <ChevronsUpDown className="ml-2 size-4 shrink-0 text-gray-400" />
+        <ChevronsUpDown className="ml-2 size-4 shrink-0 text-muted-foreground" />
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-blue-200 bg-white shadow-lg">
-          <div className="relative border-b border-blue-100">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+        <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-xl border border-border bg-background shadow-lg">
+          <div className="relative border-b border-border">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               ref={searchRef}
               value={query}
@@ -186,7 +186,7 @@ export function DoctorComboBox({
           </div>
           <div className="max-h-56 overflow-y-auto p-1">
             {filtered.length === 0 && (
-              <p className="px-3 py-4 text-center text-sm text-gray-500">
+              <p className="px-3 py-4 text-center text-sm text-muted-foreground">
                 No doctors found
               </p>
             )}
@@ -199,13 +199,13 @@ export function DoctorComboBox({
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-blue-50",
-                  d.doctorId === value && "bg-blue-50 text-blue-700"
+                  "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm hover:bg-accent",
+                  d.doctorId === value && "bg-accent text-primary"
                 )}
               >
                 <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={d.doctorId} name={d.name} size="xs" className="shrink-0" />
                 <span className="flex-1 truncate">{d.name}</span>
-                {d.doctorId === value && <Check className="size-4 text-blue-600" />}
+                {d.doctorId === value && <Check className="size-4 text-primary" />}
               </button>
             ))}
           </div>

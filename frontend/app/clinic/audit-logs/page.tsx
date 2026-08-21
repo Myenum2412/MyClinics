@@ -279,7 +279,7 @@ export default function AuditLogsPage() {
                     )}
                     {visibleColumns.action && (
                       <TableCell>
-                        <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200">
+                        <Badge variant="outline" className="bg-muted text-foreground border-border">
                           {a.action}
                         </Badge>
                       </TableCell>

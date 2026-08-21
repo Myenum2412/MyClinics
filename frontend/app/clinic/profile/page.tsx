@@ -358,8 +358,8 @@ export default function ClinicProfilePage() {
                 <CalendarDays className="size-3.5" />
                 Member since {memberSince(clinic?.createdAt)}
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700">
-                <span className="size-1.5 rounded-full bg-emerald-500" />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-success/25 bg-success/10 px-2.5 py-0.5 text-xs font-medium text-success">
+                <span className="size-1.5 rounded-full bg-success" />
                 Active
               </span>
             </div>
@@ -449,8 +449,8 @@ export default function ClinicProfilePage() {
             </div>
             <div className="flex items-center justify-between py-3">
               <span className="text-sm text-muted-foreground">Emergency availability</span>
-              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600">
-                <span className="size-1.5 rounded-full bg-emerald-500" />
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-success">
+                <span className="size-1.5 rounded-full bg-success" />
                 24/7 Available
               </span>
             </div>

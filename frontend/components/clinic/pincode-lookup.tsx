@@ -77,14 +77,14 @@ export function PincodeLookup({
 
   const errorBox = (err?: string) =>
     `border ${
-      err ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
+      err ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
     }`;
 
   return (
     <div className="space-y-2">
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700">Pincode</Label>
+          <Label className="text-sm font-medium text-foreground">Pincode</Label>
           <div className="relative">
             <Input
               value={pincode}
@@ -95,17 +95,17 @@ export function PincodeLookup({
               className={errorBox(pincodeError)}
             />
             {lookingUp && (
-              <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-blue-500" />
+              <Loader2 className="absolute right-3 top-1/2 size-4 -translate-y-1/2 animate-spin text-primary" />
             )}
           </div>
           {pincodeError ? (
-            <p className="text-xs text-red-600">{pincodeError}</p>
+            <p className="text-xs text-destructive">{pincodeError}</p>
           ) : (
-            <p className="text-xs text-gray-500">6-digit Indian pincode</p>
+            <p className="text-xs text-muted-foreground">6-digit Indian pincode</p>
           )}
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700">City</Label>
+          <Label className="text-sm font-medium text-foreground">City</Label>
           <Input
             value={city}
             onChange={(e) => onCityChange(e.target.value)}
@@ -115,7 +115,7 @@ export function PincodeLookup({
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-700">State</Label>
+          <Label className="text-sm font-medium text-foreground">State</Label>
           <Input
             value={state}
             onChange={(e) => onStateChange(e.target.value)}
@@ -126,7 +126,7 @@ export function PincodeLookup({
         </div>
       </div>
       {message && (
-        <p className="flex items-center gap-1.5 text-xs text-blue-600">
+        <p className="flex items-center gap-1.5 text-xs text-primary">
           <MapPin className="size-3.5" />
           {message}
         </p>

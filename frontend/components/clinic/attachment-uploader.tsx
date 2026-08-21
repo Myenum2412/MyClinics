@@ -202,7 +202,7 @@ export function AttachmentUploader({
         }}
         onDrop={onDrop}
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-blue-200 bg-blue-50/40 px-6 py-8 text-center transition-colors outline-none",
+          "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-accent/40 px-6 py-8 text-center transition-colors outline-none",
           "focus-visible:ring-[3px] focus-visible:ring-ring/50",
           isDragging && "border-primary bg-primary/5"
         )}
@@ -223,7 +223,7 @@ export function AttachmentUploader({
             "flex size-12 items-center justify-center rounded-xl border transition-colors",
             isDragging
               ? "border-primary bg-background text-primary"
-              : "border-blue-200 bg-white text-blue-600"
+              : "border-border bg-background text-primary"
           )}
         >
           <UploadCloud className="size-6" aria-hidden="true" />
@@ -238,7 +238,7 @@ export function AttachmentUploader({
           type="button"
           variant="outline"
           size="sm"
-          className="gap-1.5 border-blue-200 bg-white text-blue-700 hover:bg-blue-50"
+          className="gap-1.5 border-border bg-background text-primary hover:bg-accent"
           onClick={(event) => {
             event.stopPropagation()
             inputRef.current?.click()
@@ -324,12 +324,12 @@ export function AttachmentUploader({
 
                 <div className="grid gap-2 pl-2 md:grid-cols-2">
                   <div className="grid gap-1.5">
-                    <Label className="text-xs uppercase tracking-wide text-gray-500">Document type</Label>
+                    <Label className="text-xs uppercase tracking-wide text-muted-foreground">Document type</Label>
                     <Select
                       value={item.documentType}
                       onValueChange={(v) => updateFile(item.id, { documentType: v ?? "" })}
                     >
-                      <SelectTrigger className="h-9 rounded-lg border-blue-200 bg-white focus:ring-blue-400">
+                      <SelectTrigger className="h-9 rounded-lg border-border bg-background focus:ring-ring">
                         <SelectValue placeholder="Select type..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -343,21 +343,21 @@ export function AttachmentUploader({
                   </div>
                   {allowDescription ? (
                     <div className="grid gap-1.5">
-                      <Label className="text-xs uppercase tracking-wide text-gray-500">Description</Label>
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">Description</Label>
                       <Input
                         value={item.description}
                         onChange={(e) => updateFile(item.id, { description: e.target.value })}
-                        className="h-9 rounded-lg border-blue-200 bg-white focus:ring-blue-400"
+                        className="h-9 rounded-lg border-border bg-background focus:ring-ring"
                         placeholder="e.g., CBC report from Aug 2026"
                       />
                     </div>
                   ) : allowUrl ? (
                     <div className="grid gap-1.5">
-                      <Label className="text-xs uppercase tracking-wide text-gray-500">File URL</Label>
+                      <Label className="text-xs uppercase tracking-wide text-muted-foreground">File URL</Label>
                       <Input
                         value={item.url ?? ""}
                         onChange={(e) => updateFile(item.id, { url: e.target.value || null })}
-                        className="h-9 rounded-lg border-blue-200 bg-white focus:ring-blue-400"
+                        className="h-9 rounded-lg border-border bg-background focus:ring-ring"
                         placeholder="https://..."
                       />
                     </div>
@@ -375,7 +375,7 @@ export function AttachmentUploader({
           variant="outline"
           size="sm"
           onClick={() => inputRef.current?.click()}
-          className="h-9 gap-1.5 self-start rounded-lg border-blue-300 text-blue-600 hover:bg-blue-50"
+          className="h-9 gap-1.5 self-start rounded-lg border-primary/30 text-primary hover:bg-accent"
         >
           <Plus className="size-3.5" />
           Add Attachment

@@ -143,10 +143,10 @@ export default function SettingsPage() {
             <Skeleton className="h-64 w-64" />
           ) : connected ? (
             <div className="flex flex-col items-center gap-3 py-8">
-              <span className="flex size-14 items-center justify-center rounded-full bg-green-100 text-2xl">
+              <span className="flex size-14 items-center justify-center rounded-full bg-success/10 text-2xl">
                 ✅
               </span>
-              <p className="font-medium text-green-700">WhatsApp connected</p>
+              <p className="font-medium text-success">WhatsApp connected</p>
               <p className="max-w-sm text-sm text-muted-foreground">
                 Appointment reminders and notifications are being delivered through the
                 wwebjs.dev (whatsapp-web.js) worker.
@@ -160,19 +160,19 @@ export default function SettingsPage() {
                 alt="WhatsApp Web QR code"
                 width={264}
                 height={264}
-                className="rounded-lg border border-blue-200 bg-white p-2"
+                className="rounded-lg border border-border bg-background p-2"
               />
-              <p className="max-w-sm text-sm font-medium text-blue-700">
+              <p className="max-w-sm text-sm font-medium text-primary">
                 Open WhatsApp on your phone → Settings → Linked devices → Link a device, then
                 scan this QR. QR refreshes every few seconds.
               </p>
             </>
           ) : (
             <div className="flex flex-col items-center gap-3 py-8">
-              <span className="flex size-14 items-center justify-center rounded-full bg-amber-100 text-2xl">
+              <span className="flex size-14 items-center justify-center rounded-full bg-warning/10 text-2xl">
                 ⚠️
               </span>
-              <p className="font-medium text-amber-700">
+              <p className="font-medium text-warning">
                 {STAGE_LABEL[stage] ?? "WhatsApp unavailable"}
               </p>
               <p className="max-w-sm text-sm text-muted-foreground">
@@ -182,7 +182,7 @@ export default function SettingsPage() {
               </p>
             </div>
           )}
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             Powered by wwebjs.dev (whatsapp-web.js) · last update{" "}
             {waSession?.state?.updatedAt
               ? new Date(waSession.state.updatedAt).toLocaleTimeString("en-IN")
@@ -202,7 +202,7 @@ export default function SettingsPage() {
               assistant uses this file to answer patients in your clinic&apos;s voice.
             </p>
             <div className="grid gap-2">
-              <Label htmlFor="soul" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="soul" className="text-sm font-medium text-foreground">
                 soul.md content
               </Label>
               <Textarea
@@ -216,7 +216,7 @@ export default function SettingsPage() {
               />
             </div>
             {soul && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Version {soul.version} · fallback reply: “{soul.fallbackReply}”
               </p>
             )}
@@ -233,7 +233,7 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <ListPlus className="size-4.5 text-blue-600" />
+            <ListPlus className="size-4.5 text-primary" />
             Dropdown Options
           </CardTitle>
         </CardHeader>
@@ -254,15 +254,15 @@ export default function SettingsPage() {
                 const values = getOptions(def.key);
                 const saving = dropdownSaving[def.key];
                 return (
-                  <div key={def.key} className="rounded-xl border border-slate-100 p-4">
+                  <div key={def.key} className="rounded-xl border border-border p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
-                        <p className="text-sm font-medium text-slate-800">{def.label}</p>
+                        <p className="text-sm font-medium text-foreground">{def.label}</p>
                         {def.description && (
-                          <p className="text-xs text-slate-400">{def.description}</p>
+                          <p className="text-xs text-muted-foreground">{def.description}</p>
                         )}
                       </div>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-muted-foreground">
                         {values.length} option{values.length === 1 ? "" : "s"}
                       </span>
                     </div>
@@ -278,7 +278,7 @@ export default function SettingsPage() {
                             disabled={saving}
                             onClick={() => handleRemoveOption(def.key, value)}
                             aria-label={`Remove ${value}`}
-                            className="text-sky-400 transition hover:text-red-500"
+                            className="text-primary transition hover:text-destructive"
                           >
                             <X className="size-3" />
                           </button>

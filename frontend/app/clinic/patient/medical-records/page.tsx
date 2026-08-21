@@ -46,10 +46,10 @@ import {
 } from "lucide-react";
 
 const APPT_STATUS_CLASS: Record<string, string> = {
-  scheduled: "bg-blue-100 text-blue-700",
-  completed: "bg-green-100 text-green-700",
-  cancelled: "bg-red-100 text-red-700",
-  no_show: "bg-slate-200 text-slate-600",
+  scheduled: "bg-primary/10 text-primary",
+  completed: "bg-success/10 text-success",
+  cancelled: "bg-destructive/10 text-destructive",
+  no_show: "bg-muted text-muted-foreground",
 };
 
 function doctorName(doctors: Doctor[], id: string): string {
@@ -137,9 +137,9 @@ const orphanFiles = files.filter(
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="h-8 bg-slate-200 rounded w-1/4 animate-pulse" />
+        <div className="h-8 bg-muted rounded w-1/4 animate-pulse" />
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 bg-slate-100 rounded animate-pulse" />
+          <div key={i} className="h-16 bg-muted rounded animate-pulse" />
         ))}
       </div>
     );
@@ -148,23 +148,23 @@ const orphanFiles = files.filter(
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">My Medical Records</h2>
-        <p className="text-slate-500 mt-1">
+        <h2 className="text-2xl font-bold text-foreground">My Medical Records</h2>
+        <p className="text-muted-foreground mt-1">
           Access your appointments and medical history.
         </p>
       </div>
 
       {/* My Appointments */}
       <Card>
-        <CardHeader className="border-b border-slate-100 px-5 py-4">
+        <CardHeader className="border-b border-border px-5 py-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold text-gray-800">My Appointments</CardTitle>
+            <CardTitle className="text-sm font-semibold text-foreground">My Appointments</CardTitle>
             <Badge variant="outline" className="text-xs">{appointments.length}</Badge>
           </div>
         </CardHeader>
         <CardContent className="p-5">
           {appointments.length === 0 ? (
-            <p className="text-sm text-gray-500">No appointments yet.</p>
+            <p className="text-sm text-muted-foreground">No appointments yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -181,11 +181,11 @@ const orphanFiles = files.filter(
                   {appointments.map((a) => (
                     <TableRow key={a.appointmentId}>
                       <TableCell className="text-sm whitespace-nowrap">{formatDate(a.date)}</TableCell>
-                      <TableCell className="text-sm text-gray-600 whitespace-nowrap">{formatTime(a.time)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{formatTime(a.time)}</TableCell>
                       <TableCell className="text-sm">{doctorName(doctors, a.doctorId)}</TableCell>
-                      <TableCell className="text-sm text-gray-600">{a.reason || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{a.reason || "—"}</TableCell>
                       <TableCell>
-                        <Badge className={APPT_STATUS_CLASS[a.status] ?? "bg-slate-100 text-slate-600"} variant="outline">
+                        <Badge className={APPT_STATUS_CLASS[a.status] ?? "bg-muted text-muted-foreground"} variant="outline">
                           {a.status.replace("_", " ")}
                         </Badge>
                       </TableCell>
@@ -200,23 +200,23 @@ const orphanFiles = files.filter(
 
       {/* My Files & Documents */}
       <Card>
-        <CardHeader className="border-b border-slate-100 px-5 py-4">
+        <CardHeader className="border-b border-border px-5 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-blue-600">
+              <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
                 <Folder className="size-4" />
               </span>
-              <CardTitle className="text-sm font-semibold text-gray-800">My Files & Documents</CardTitle>
+              <CardTitle className="text-sm font-semibold text-foreground">My Files & Documents</CardTitle>
             </div>
             <Badge variant="outline" className="text-xs">{files.length}</Badge>
           </div>
         </CardHeader>
         <CardContent className="p-5">
           {folders.length === 0 && files.length === 0 ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-10 text-center">
-              <Folder className="size-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900">No files uploaded yet</h3>
-              <p className="text-slate-500 mt-2">
+            <div className="rounded-xl border border-border bg-background p-10 text-center">
+              <Folder className="size-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground">No files uploaded yet</h3>
+              <p className="text-muted-foreground mt-2">
                 Files uploaded to your medical record by the clinic will appear here.
               </p>
             </div>
@@ -229,26 +229,26 @@ const orphanFiles = files.filter(
                 return (
                   <div key={folder.folderId}>
                     <div className="mb-2 flex items-center gap-2">
-                      <Folder className="size-4 text-slate-400" />
-                      <h4 className="text-sm font-semibold text-slate-700">{folder.name}</h4>
-                      <span className="text-xs text-slate-400">({folderFiles.length})</span>
+                      <Folder className="size-4 text-muted-foreground" />
+                      <h4 className="text-sm font-semibold text-foreground">{folder.name}</h4>
+                      <span className="text-xs text-muted-foreground">({folderFiles.length})</span>
                     </div>
                     {folderFiles.length === 0 ? (
-                      <p className="rounded-lg border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-400">
+                      <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
                         No files in this folder yet.
                       </p>
                     ) : (
-                      <div className="overflow-x-auto rounded-lg border border-slate-200">
+                      <div className="overflow-x-auto rounded-lg border border-border">
                         <Table>
                           <TableBody>
                             {folderFiles.map((f) => (
-                              <TableRow key={f.fileId} className="hover:bg-slate-50/50">
+                              <TableRow key={f.fileId} className="hover:bg-muted/50">
                                 <TableCell className="min-w-0">
                                   <div className="flex items-center gap-3">
-                                    <FileText className="size-4 shrink-0 text-blue-500" />
+                                    <FileText className="size-4 shrink-0 text-primary" />
                                     <div className="min-w-0">
-                                      <p className="truncate text-sm font-medium text-slate-900">{f.fileName}</p>
-                                      <p className="text-xs text-slate-500">
+                                      <p className="truncate text-sm font-medium text-foreground">{f.fileName}</p>
+                                      <p className="text-xs text-muted-foreground">
                                         {formatDate(f.createdAt)} · {formatBytes(f.size)}
                                       </p>
                                     </div>
@@ -277,21 +277,21 @@ const orphanFiles = files.filter(
               {orphanFiles.length > 0 && (
                 <div>
                   <div className="mb-2 flex items-center gap-2">
-                    <Folder className="size-4 text-slate-400" />
-                    <h4 className="text-sm font-semibold text-slate-700">Other Documents</h4>
-                    <span className="text-xs text-slate-400">({orphanFiles.length})</span>
+                    <Folder className="size-4 text-muted-foreground" />
+                    <h4 className="text-sm font-semibold text-foreground">Other Documents</h4>
+                    <span className="text-xs text-muted-foreground">({orphanFiles.length})</span>
                   </div>
-                  <div className="overflow-x-auto rounded-lg border border-slate-200">
+                  <div className="overflow-x-auto rounded-lg border border-border">
                     <Table>
                       <TableBody>
                         {orphanFiles.map((f) => (
-                          <TableRow key={f.fileId} className="hover:bg-slate-50/50">
+                          <TableRow key={f.fileId} className="hover:bg-muted/50">
                             <TableCell className="min-w-0">
                               <div className="flex items-center gap-3">
-                                <FileText className="size-4 shrink-0 text-blue-500" />
+                                <FileText className="size-4 shrink-0 text-primary" />
                                 <div className="min-w-0">
-                                  <p className="truncate text-sm font-medium text-slate-900">{f.fileName}</p>
-                                  <p className="text-xs text-slate-500">
+                                  <p className="truncate text-sm font-medium text-foreground">{f.fileName}</p>
+                                  <p className="text-xs text-muted-foreground">
                                     {formatDate(f.createdAt)} · {formatBytes(f.size)}
                                   </p>
                                 </div>
@@ -322,20 +322,20 @@ const orphanFiles = files.filter(
 
       {/* Medical Records */}
       <Card>
-        <CardHeader className="border-b border-slate-100 px-5 py-4">
+        <CardHeader className="border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
-            <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-blue-600">
+            <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
               <FileText className="size-4" />
             </span>
-            <CardTitle className="text-sm font-semibold text-gray-800">Medical Records</CardTitle>
+            <CardTitle className="text-sm font-semibold text-foreground">Medical Records</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="p-5">
           {records.length === 0 ? (
-            <div className="rounded-xl border border-slate-200 bg-white p-12 text-center">
-              <FileText className="size-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900">No medical records yet</h3>
-              <p className="text-slate-500 mt-2">Your medical records will appear here.</p>
+            <div className="rounded-xl border border-border bg-background p-12 text-center">
+              <FileText className="size-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-foreground">No medical records yet</h3>
+              <p className="text-muted-foreground mt-2">Your medical records will appear here.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -354,11 +354,11 @@ const orphanFiles = files.filter(
                     <TableRow key={record.recordId}>
                       <TableCell className="text-sm whitespace-nowrap">{formatDate(record.visitDate)}</TableCell>
                       <TableCell className="text-sm">
-                        <p className="font-medium text-slate-900">Dr. {record.doctorId?.slice(0, 8) || "Unknown"}</p>
+                        <p className="font-medium text-foreground">Dr. {record.doctorId?.slice(0, 8) || "Unknown"}</p>
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600 max-w-xs truncate">{record.diagnosis || "—"}</TableCell>
-                      <TableCell className="text-sm text-gray-600 max-w-xs truncate">{record.symptoms || "—"}</TableCell>
-                      <TableCell className="text-sm text-gray-600 max-w-xs truncate">{record.treatment || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{record.diagnosis || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{record.symptoms || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{record.treatment || "—"}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -377,15 +377,15 @@ const orphanFiles = files.filter(
           {previewFile && (
             <>
               {/* Toolbar */}
-              <div className="flex items-center gap-3 border-b border-slate-100 bg-white px-5 py-4">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+              <div className="flex items-center gap-3 border-b border-border bg-background px-5 py-4">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
                   <FileText className="size-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="truncate text-sm font-semibold text-slate-900 sm:text-base">
+                  <h3 className="truncate text-sm font-semibold text-foreground sm:text-base">
                     {previewFile.fileName}
                   </h3>
-                  <p className="truncate text-xs text-slate-500">
+                  <p className="truncate text-xs text-muted-foreground">
                     Uploaded {formatDate(previewFile.createdAt)} · {formatBytes(previewFile.size)} ·{" "}
                     {previewFile.mimeType ?? "Unknown type"}
                   </p>
@@ -398,7 +398,7 @@ const orphanFiles = files.filter(
                     onClick={() => toast.success("Download started")}
                   >
                     <Button
-                      className="gap-1.5 rounded-lg bg-blue-600 px-3 shadow-sm hover:bg-blue-700"
+                      className="gap-1.5 rounded-lg px-3 shadow-sm"
                       size="sm"
                     >
                       <Download className="size-4" />
@@ -409,28 +409,28 @@ const orphanFiles = files.filter(
               </div>
 
               {/* Preview body */}
-              <div className="h-[70vh] bg-slate-100/70 sm:h-[72vh]">
+              <div className="h-[70vh] bg-muted/70 sm:h-[72vh]">
                 {previewLoading ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-3 text-slate-500">
-                    <Loader2 className="size-7 animate-spin text-blue-600" />
+                  <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
+                    <Loader2 className="size-7 animate-spin text-primary" />
                     <p className="text-sm font-medium">Loading preview…</p>
                   </div>
                 ) : isPreviewable && previewUrl ? (
                   <iframe
                     src={previewUrl}
                     title={previewFile.fileName}
-                    className="size-full border-0 bg-white"
+                    className="size-full border-0 bg-background"
                   />
                 ) : (
                   <div className="flex h-full flex-col items-center justify-center gap-4 p-10 text-center">
-                    <span className="flex size-16 items-center justify-center rounded-2xl bg-white text-slate-300 shadow-sm ring-1 ring-slate-200">
+                    <span className="flex size-16 items-center justify-center rounded-2xl bg-background text-muted-foreground shadow-sm ring-1 ring-border">
                       <FileText className="size-8" />
                     </span>
                     <div>
-                      <p className="text-sm font-semibold text-slate-800">
+                      <p className="text-sm font-semibold text-foreground">
                         Preview not available for this file type
                       </p>
-                      <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
+                      <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
                         {previewFile.fileName} ({previewFile.mimeType ?? "unknown type"}) can&apos;t be
                         previewed in the browser. Use Download to save it to your device.
                       </p>

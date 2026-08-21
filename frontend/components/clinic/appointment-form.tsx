@@ -290,20 +290,20 @@ export function AppointmentForm({
     <form onSubmit={submit} className="space-y-6">
       <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
       {/* 1. PATIENT & DOCTOR */}
-      <Card className="overflow-visible border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="overflow-visible border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             1. Patient &amp; Doctor
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Patient <span className="ml-1 text-red-500">*</span>
+              <Label className="text-sm font-medium text-foreground">
+                Patient <span className="ml-1 text-destructive">*</span>
               </Label>
               {lockPatient ? (
-                <div className="rounded-lg border border-blue-200 bg-blue-50/40 px-3 py-2.5 text-sm font-medium text-blue-700">
+                <div className="rounded-lg border border-border bg-accent/50 px-3 py-2.5 text-sm font-medium text-primary">
                   {selectedPatient?.fullName ?? patientQuery}
                 </div>
               ) : (
@@ -322,13 +322,13 @@ export function AppointmentForm({
                   onBlur={() => setTimeout(() => setShowPatientDropdown(false), 150)}
                   placeholder="Search patient"
                   className={`border ${
-                    error && !patientId ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
+                    error && !patientId ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
                   }`}
                 />
                 {showPatientDropdown && (
-                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
+                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-border bg-background p-1 shadow-xl">
                     {filteredPatients.length === 0 ? (
-                      <div className="px-2 py-2 text-xs text-gray-500">
+                      <div className="px-2 py-2 text-xs text-muted-foreground">
                         {patients.length === 0
                           ? "No patients found. Add patients first."
                           : "No matching patients"}
@@ -343,10 +343,10 @@ export function AppointmentForm({
                             setPatientQuery(p.fullName);
                             setShowPatientDropdown(false);
                           }}
-                          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
+                          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-accent"
                         >
-                          <span className="font-medium text-gray-700">{p.fullName}</span>
-                          <span className="text-gray-500">{p.mobile}</span>
+                          <span className="font-medium text-foreground">{p.fullName}</span>
+                          <span className="text-muted-foreground">{p.mobile}</span>
                         </button>
                       ))
                     )}
@@ -357,8 +357,8 @@ export function AppointmentForm({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Doctor <span className="ml-1 text-red-500">*</span>
+              <Label className="text-sm font-medium text-foreground">
+                Doctor <span className="ml-1 text-destructive">*</span>
               </Label>
               <div className="relative">
                 <Input
@@ -375,13 +375,13 @@ export function AppointmentForm({
                   onBlur={() => setTimeout(() => setShowDoctorDropdown(false), 150)}
                   placeholder="Search doctor"
                   className={`border ${
-                    error && !doctorId ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
+                    error && !doctorId ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
                   }`}
                 />
                 {showDoctorDropdown && (
-                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-blue-200 bg-white p-1 shadow-xl">
+                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-border bg-background p-1 shadow-xl">
                     {filteredDoctors.length === 0 ? (
-                      <div className="px-2 py-2 text-xs text-gray-500">
+                      <div className="px-2 py-2 text-xs text-muted-foreground">
                         {doctors.length === 0
                           ? "No doctors found. Add doctors first."
                           : "No matching doctors"}
@@ -396,10 +396,10 @@ export function AppointmentForm({
                             setDoctorQuery(d.name);
                             setShowDoctorDropdown(false);
                           }}
-                          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-blue-50"
+                          className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-left text-xs transition hover:bg-accent"
                         >
-                          <span className="font-medium text-gray-700">{d.name}</span>
-                          <span className="text-gray-500">{d.specialization || "General"}</span>
+                          <span className="font-medium text-foreground">{d.name}</span>
+                          <span className="text-muted-foreground">{d.specialization || "General"}</span>
                         </button>
                       ))
                     )}
@@ -412,28 +412,28 @@ export function AppointmentForm({
       </Card>
 
       {/* 2. VISIT DETAILS */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             2. Visit Details
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">Department</Label>
+              <Label className="text-sm font-medium text-foreground">Department</Label>
               <Input
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
                 placeholder="Optional"
-                className="border border-blue-200 focus:ring-blue-400"
+                className="border border-border focus:ring-ring"
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">Visit Type</Label>
+              <Label className="text-sm font-medium text-foreground">Visit Type</Label>
               <Select value={visitType} onValueChange={(value) => setVisitType(value ?? "New Visit")}>
-                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                <SelectTrigger className="border border-border focus:ring-ring">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -445,8 +445,8 @@ export function AppointmentForm({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Date <span className="ml-1 text-red-500">*</span>
+              <Label className="text-sm font-medium text-foreground">
+                Date <span className="ml-1 text-destructive">*</span>
               </Label>
               <Input
                 type="date"
@@ -454,14 +454,14 @@ export function AppointmentForm({
                 onChange={(e) => setDate(e.target.value)}
                 required
                 className={`border ${
-                  error && !date ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
+                  error && !date ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
                 }`}
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Time <span className="ml-1 text-red-500">*</span>
+              <Label className="text-sm font-medium text-foreground">
+                Time <span className="ml-1 text-destructive">*</span>
               </Label>
               <TimePicker
                 value={time}
@@ -470,9 +470,9 @@ export function AppointmentForm({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">Duration</Label>
+              <Label className="text-sm font-medium text-foreground">Duration</Label>
               <Select value={String(duration)} onValueChange={(v) => setDuration(Number(v))}>
-                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                <SelectTrigger className="border border-border focus:ring-ring">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -484,8 +484,8 @@ export function AppointmentForm({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">
-                Reason for Visit <span className="ml-1 text-red-500">*</span>
+              <Label className="text-sm font-medium text-foreground">
+                Reason for Visit <span className="ml-1 text-destructive">*</span>
               </Label>
               <Input
                 value={reason}
@@ -493,15 +493,15 @@ export function AppointmentForm({
                 placeholder="Fever, checkup, follow-up..."
                 required
                 className={`border ${
-                  error && !reason.trim() ? "border-red-500 focus:ring-red-500" : "border-blue-200 focus:ring-blue-400"
+                  error && !reason.trim() ? "border-destructive focus:ring-destructive" : "border-border focus:ring-ring"
                 }`}
               />
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">Priority</Label>
+              <Label className="text-sm font-medium text-foreground">Priority</Label>
               <Select value={priority} onValueChange={(value) => setPriority(value ?? "Normal")}>
-                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                <SelectTrigger className="border border-border focus:ring-ring">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -513,18 +513,18 @@ export function AppointmentForm({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">End Time</Label>
-              <div className="rounded-lg border border-blue-200 bg-blue-50/40 px-3 py-2.5 text-sm text-blue-700">
+              <Label className="text-sm font-medium text-foreground">End Time</Label>
+              <div className="rounded-lg border border-border bg-accent/50 px-3 py-2.5 text-sm text-primary">
                 {endTime}
               </div>
             </div>
           </div>
 
           {doctorId && date && (
-            <div className="rounded-lg border border-blue-200 bg-blue-50/40 p-3">
+            <div className="rounded-lg border border-border bg-accent/50 p-3">
               <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-xs font-semibold text-gray-700">Doctor schedule</p>
-                <span className="text-[10px] uppercase tracking-wide text-gray-500">Available / occupied</span>
+                <p className="text-xs font-semibold text-foreground">Doctor schedule</p>
+                <span className="text-[10px] uppercase tracking-wide text-muted-foreground">Available / occupied</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00"].map((slot) => {
@@ -537,10 +537,10 @@ export function AppointmentForm({
                       onClick={() => setTime(slot)}
                       className={`rounded-full border px-2 py-1 text-[10px] font-medium transition ${
                         selected
-                          ? "border-blue-600 bg-blue-600 text-white"
+                          ? "border-primary bg-primary text-primary-foreground"
                           : busy
-                            ? "border-red-200 bg-red-50 text-red-600"
-                            : "border-blue-200 bg-white text-blue-700 hover:bg-blue-100"
+                            ? "border-destructive/25 bg-destructive/10 text-destructive"
+                            : "border-border bg-background text-primary hover:bg-muted"
                       }`}
                     >
 {formatTime(slot)}
@@ -554,13 +554,13 @@ export function AppointmentForm({
       </Card>
 
       {/* 3. ADDITIONAL INFORMATION */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-base font-semibold text-gray-800">
+            <CardTitle className="text-base font-semibold text-foreground">
               3. Additional Information (Optional)
             </CardTitle>
-            <span className="rounded-full border border-blue-200 bg-white px-2 py-0.5 text-[10px] text-blue-700">
+            <span className="rounded-full border border-border bg-background px-2 py-0.5 text-[10px] text-primary">
               {showOptionalInfo ? "Hide" : "Show"}
             </span>
           </div>
@@ -569,7 +569,7 @@ export function AppointmentForm({
           <button
             type="button"
             onClick={() => setShowOptionalInfo((v) => !v)}
-            className="w-full rounded-lg border border-blue-200 bg-blue-50/40 px-3 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-blue-100"
+            className="w-full rounded-lg border border-border bg-accent/50 px-3 py-2 text-left text-xs font-semibold text-foreground hover:bg-muted"
           >
             {showOptionalInfo ? "Hide optional fields" : "Show optional fields"}
           </button>
@@ -577,16 +577,16 @@ export function AppointmentForm({
           {showOptionalInfo && (
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
-                <Label className="text-sm font-medium text-gray-700">Symptoms</Label>
-                <Textarea value={symptoms} onChange={(e) => setSymptoms(e.target.value)} rows={2} className="border border-blue-200 focus:ring-blue-400" placeholder="Brief symptoms or complaints" />
+                <Label className="text-sm font-medium text-foreground">Symptoms</Label>
+                <Textarea value={symptoms} onChange={(e) => setSymptoms(e.target.value)} rows={2} className="border border-border focus:ring-ring" placeholder="Brief symptoms or complaints" />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">Previous Visit</Label>
-                <Input value={previousVisit} onChange={(e) => setPreviousVisit(e.target.value)} placeholder="Optional" className="border border-blue-200 focus:ring-blue-400" />
+                <Label className="text-sm font-medium text-foreground">Previous Visit</Label>
+                <Input value={previousVisit} onChange={(e) => setPreviousVisit(e.target.value)} placeholder="Optional" className="border border-border focus:ring-ring" />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">Internal Notes</Label>
-                <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Staff notes" className="border border-blue-200 focus:ring-blue-400" />
+                <Label className="text-sm font-medium text-foreground">Internal Notes</Label>
+                <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Staff notes" className="border border-border focus:ring-ring" />
               </div>
             </div>
           )}
@@ -594,18 +594,18 @@ export function AppointmentForm({
       </Card>
 
       {/* 4. NOTIFICATIONS */}
-      <Card className="border-blue-200 bg-gradient-to-b from-blue-50/50 to-white">
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold text-gray-800">
+          <CardTitle className="text-base font-semibold text-foreground">
             4. Notifications
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">Patient Reminder</Label>
+              <Label className="text-sm font-medium text-foreground">Patient Reminder</Label>
               <Select value={reminder} onValueChange={(value) => setReminder(value ?? "Same Day")}>
-                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                <SelectTrigger className="border border-border focus:ring-ring">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -617,9 +617,9 @@ export function AppointmentForm({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">WhatsApp Alert</Label>
+              <Label className="text-sm font-medium text-foreground">WhatsApp Alert</Label>
               <Select value={whatsappAlert ? "Yes" : "No"} onValueChange={(v) => setWhatsappAlert(v === "Yes")}>
-                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                <SelectTrigger className="border border-border focus:ring-ring">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -630,9 +630,9 @@ export function AppointmentForm({
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-gray-700">Doctor Notification</Label>
+              <Label className="text-sm font-medium text-foreground">Doctor Notification</Label>
               <Select value={doctorNotification ? "Yes" : "No"} onValueChange={(v) => setDoctorNotification(v === "Yes")}>
-                <SelectTrigger className="border border-blue-200 focus:ring-blue-400">
+                <SelectTrigger className="border border-border focus:ring-ring">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -643,7 +643,7 @@ export function AppointmentForm({
             </div>
           </div>
 
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             {whatsappAlert || doctorNotification
               ? "Patient and staff notifications will be sent based on the selected reminder and alert preferences."
               : "No notifications will be sent for this appointment."}
@@ -653,19 +653,19 @@ export function AppointmentForm({
       </fieldset>
 
       {error && (
-        <div className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+        <div className="flex items-center gap-1.5 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           <AlertCircle size={16} />
           {error}
         </div>
       )}
 
       {!readOnly && (
-        <div className="flex gap-3 border-t border-blue-200 pt-8">
-          <Button type="button" variant="outline" onClick={resetForm} className="border-blue-300 text-blue-600 hover:bg-blue-50">
+        <div className="flex gap-3 border-t border-border pt-8">
+          <Button type="button" variant="outline" onClick={resetForm} className="border-primary/30 text-primary hover:bg-accent">
             Reset
           </Button>
           <div className="flex-1" />
-          <Button type="submit" disabled={saving} className="bg-blue-600 text-white hover:bg-blue-700" size="lg">
+          <Button type="submit" disabled={saving} size="lg">
             {saving ? "Saving..." : "Save Appointment"}
           </Button>
         </div>

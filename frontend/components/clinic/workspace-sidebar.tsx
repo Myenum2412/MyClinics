@@ -173,7 +173,7 @@ export function WorkspaceSidebar({
                     tooltip={item.title}
                     render={<a href={url} />}
                     data-active={active}
-                    className="h-11 rounded-lg text-[13.5px] font-medium group-data-[collapsible=icon]:h-12! data-[active=true]:bg-blue-50 data-[active=true]:text-blue-600 data-[active=true]:[&>svg]:text-blue-600"
+                    className="h-11 rounded-lg text-[13.5px] font-medium group-data-[collapsible=icon]:h-12! data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground"
                   >
                     {item.icon}
                     <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>

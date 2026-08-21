@@ -9,9 +9,9 @@ export default function CloudShaderHeroDemo() {
     <div className="relative min-h-[50rem] w-full overflow-hidden">
       <CloudShader
         className="absolute inset-0"
-        skyTopColor="#0D47A1"
-        skyBottomColor="#90CAF9"
-        cloudColor="#E3F2FD"
+        skyTopColor="#312E81"
+        skyBottomColor="#A5B4FC"
+        cloudColor="#E0E7FF"
       />
 
       {/* navbar */}
