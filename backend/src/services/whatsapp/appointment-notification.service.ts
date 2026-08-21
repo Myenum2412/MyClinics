@@ -82,7 +82,7 @@ export async function queueAppointmentNotifications(
     const patientName = patient.fullName;
     const doctorName = doctor.name;
     const patientPhone = patient.whatsapp ?? patient.mobile;
-    const doctorPhone = doctor.phone;
+    const doctorPhone = doctor.whatsapp ?? doctor.phone;
 
     const now = new Date();
 
