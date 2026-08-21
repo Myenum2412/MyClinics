@@ -30,13 +30,19 @@ export class UsersService {
   /**
    * Creates a clinic user account. The target profile (doctor/staff/patient)
    * must already exist in the SAME clinic — foreign-reference validation.
+   * A soft-deleted account with the same email is reactivated and relinked
+   * instead of blocking creation.
    */
   async createUser(ctx: ClinicContext, input: CreateUserInput): Promise<WithId<UserDoc>> {
     const clinicId = requireClinicOf(ctx);
     const email = normalizeEmail(input.email);
 
     const existing = await this.collection().findOne({ email });
-    if (existing) {
+    if (
+      existing &&
+      !(existing.status === "deleted" && existing.clinicId === clinicId) &&
+      !(existing.clinicId === clinicId && (await this.hasDeletedProfile(clinicId, existing)))
+    ) {
       throw new ConflictError("An account with this email already exists");
     }
 
@@ -58,7 +64,7 @@ export class UsersService {
     const now = new Date();
     const doc: UserDoc = {
       clinicId,
-      userId: generateUserId(),
+      userId: existing?.userId ?? generateUserId(),
       name: input.name,
       email,
       passwordHash,
@@ -69,12 +75,17 @@ export class UsersService {
       patientId: input.role === "patient" ? input.patientId ?? null : null,
       phone: input.phone ?? null,
       status: "active",
-      lastLoginAt: null,
-      createdAt: now,
+      lastLoginAt: existing?.lastLoginAt ?? null,
+      createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     };
 
-    await this.collection().insertOne(doc as never);
+    if (existing) {
+      // Reactivate the soft-deleted account with fresh credentials + relink.
+      await this.collection().replaceOne({ _id: existing._id }, doc as never);
+    } else {
+      await this.collection().insertOne(doc as never);
+    }
 
     // Bidirectional link: stamp the profile with the userId.
     if (input.role === "doctor") {
@@ -92,10 +103,15 @@ export class UsersService {
     }
 
     await writeAudit(this.db, ctx, {
-      action: "create",
+      action: existing ? "update" : "create",
       entity: "user",
       entityId: doc.userId,
-      metadata: { email, role: input.role, linkedId: Object.values(linkField)[0] },
+      metadata: {
+        email,
+        role: input.role,
+        linkedId: Object.values(linkField)[0],
+        reactivated: Boolean(existing),
+      },
     });
 
     // Send login details over WhatsApp when the profile has a phone/WhatsApp number.
@@ -225,6 +241,24 @@ export class UsersService {
     const field = role === "doctor" ? "doctorId" : role === "staff" ? "staffId" : "patientId";
     const doc = await this.db.collection(collection).findOne({ clinicId, [field]: targetId });
     return doc !== null;
+  }
+
+  /**
+   * True when the account's linked profile was soft-deleted (e.g. the doctor
+   * was removed before login cleanup existed) — the email can be taken over.
+   */
+  private async hasDeletedProfile(clinicId: string, user: UserDoc): Promise<boolean> {
+    const targetId = user.doctorId ?? user.staffId ?? user.patientId;
+    if (!targetId) return false;
+    const collection =
+      user.role === "doctor"
+        ? CLINIC_COLLECTIONS.doctors
+        : user.role === "staff"
+          ? CLINIC_COLLECTIONS.staff
+          : CLINIC_COLLECTIONS.patients;
+    const field = user.role === "doctor" ? "doctorId" : user.role === "staff" ? "staffId" : "patientId";
+    const profile = await this.db.collection(collection).findOne({ clinicId, [field]: targetId });
+    return profile?.status === "deleted";
   }
 }
 

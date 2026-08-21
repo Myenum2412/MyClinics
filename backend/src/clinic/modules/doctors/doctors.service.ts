@@ -1,5 +1,6 @@
 import type { Db, WithId } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
+import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import { requireClinicOf, type ClinicContext } from "@/clinic/core/context";
 import { ForbiddenError, NotFoundError } from "@/clinic/core/errors";
 import { generateDoctorId } from "@/clinic/core/ids";
@@ -152,10 +153,20 @@ export class DoctorService {
     if (ctx.role !== "clinic_admin") {
       throw new ForbiddenError("Only the clinic admin can remove doctors");
     }
+    const clinicId = requireClinicOf(ctx);
     const existing = await this.repo(ctx).findByDoctorId(doctorId);
     if (!existing) throw new NotFoundError("Doctor not found");
 
     await this.repo(ctx).softDelete(doctorId);
+
+    // Deactivate the doctor's login account so it can no longer sign in and
+    // its email is freed for reuse when the doctor is re-created.
+    await this.db
+      .collection(CLINIC_COLLECTIONS.users)
+      .updateMany(
+        { clinicId, role: "doctor", doctorId },
+        { $set: { status: "deleted", deletedAt: new Date(), updatedAt: new Date() } }
+      );
 
     await writeAudit(this.db, ctx, {
       action: "delete",
