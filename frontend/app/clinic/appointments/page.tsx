@@ -47,15 +47,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
@@ -81,7 +72,6 @@ import {
   XCircle,
   AlertCircle,
   Loader2,
-  Ellipsis,
   Plus,
   Trash2,
   Download,
@@ -740,7 +730,7 @@ export default function AppointmentsPage() {
                     {visibleColumns.status && <TableHead className="w-[140px]">Status</TableHead>}
                     {visibleColumns.alerts && <TableHead className="w-[150px]">WhatsApp Alerts</TableHead>}
 
-                    <TableHead className="w-16 pr-4 text-right">Actions</TableHead>
+                    <TableHead className="w-36 pr-4 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 
@@ -834,58 +824,51 @@ export default function AppointmentsPage() {
                           </TableCell>
                         )}
 
-                        <TableCell className="pr-4 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger render={
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="size-7"
-                              >
-                                <Ellipsis className="size-4" />
-                              </Button>
-                            } />
-                            <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              
-                              <DropdownMenuItem
-                                className="text-xs gap-1.5 cursor-pointer"
-                                onClick={() => {
-                                  setSelectedAppt(a);
-                                  setViewing(true);
-                                }}
-                              >
-                                <Eye className="size-3.5" />
-                                View Details
-                              </DropdownMenuItem>
+                        <TableCell className="pr-4">
+                          <div className="flex items-center justify-end gap-0.5">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-muted-foreground hover:text-foreground"
+                              aria-label="View details"
+                              onClick={() => {
+                                setSelectedAppt(a);
+                                setViewing(true);
+                              }}
+                            >
+                              <Eye className="size-3.5" />
+                            </Button>
 
-                              <DropdownMenuItem
-                                className="text-xs gap-1.5 cursor-pointer"
-                                onClick={() => setEditingAppt(a)}
-                              >
-                                <Pencil className="size-3.5 text-primary" />
-                                Edit
-                              </DropdownMenuItem>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-primary hover:text-primary"
+                              aria-label="Edit appointment"
+                              onClick={() => setEditingAppt(a)}
+                            >
+                              <Pencil className="size-3.5" />
+                            </Button>
 
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                className="text-xs gap-1.5 text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
-                                onClick={() => setDeleteTarget(a)}
-                              >
-                                <Trash2 className="size-3.5" />
-                                Delete
-                              </DropdownMenuItem>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              aria-label="Delete appointment"
+                              onClick={() => setDeleteTarget(a)}
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
 
-                              <DropdownMenuItem
-                                className="text-xs gap-1.5 cursor-pointer"
-                                onClick={() => fetchNotificationLogs(a)}
-                              >
-                                <Bell className="size-3.5 text-primary" />
-                                WhatsApp Logs
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7 text-muted-foreground hover:text-primary"
+                              aria-label="WhatsApp logs"
+                              onClick={() => fetchNotificationLogs(a)}
+                            >
+                              <Bell className="size-3.5" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
