@@ -1,9 +1,9 @@
 import type { Db } from "mongodb";
 import { logger } from "@/lib/logger";
+import { downloadFromR2, getDownloadUrl } from "@/lib/r2";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { enqueueNotification } from "@/services/whatsapp/notification.service";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
-import { getDownloadUrl } from "@/lib/r2";
 
 export interface Notifyable {
   fullName?: string | null;
@@ -53,6 +53,7 @@ export interface ClinicDetails {
     fileName: string;
     mimeType: string | null;
     size: number;
+    r2Key: string;
     downloadUrl: string;
   }>;
 }
@@ -87,6 +88,7 @@ async function fetchClinicDetails(db: Db, clinicId: string): Promise<ClinicDetai
         fileName: doc.fileName,
         mimeType: doc.mimeType,
         size: doc.size,
+        r2Key: doc.r2Key,
         downloadUrl,
       };
     })
@@ -271,6 +273,48 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+/**
+ * Raw files above this size are NOT attached inline — the WhatsApp notification
+ * document stores base64 in MongoDB (16MB doc limit), so ~10MB is the safe cap.
+ * Larger files keep their download link in the welcome text instead.
+ */
+const MAX_INLINE_MEDIA_BYTES = 10 * 1024 * 1024;
+
+/** Queues each clinic welcome document as an actual file attachment to the patient. */
+async function queueWelcomeDocumentFiles(
+  db: Db,
+  phone: string,
+  patientName: string,
+  clinicDetails: ClinicDetails,
+  clinicId?: string | null
+): Promise<void> {
+  const docs = clinicDetails.welcomeDocuments ?? [];
+  for (const doc of docs) {
+    try {
+      if (!doc.r2Key || doc.size > MAX_INLINE_MEDIA_BYTES) continue;
+      const data = await downloadFromR2(doc.r2Key);
+      await queue(
+        db,
+        phone,
+        `📎 Hi ${patientName}, here is "${doc.fileName}" from ${clinicDetails.name}.`,
+        "patient_welcome_document",
+        {
+          filename: doc.fileName,
+          mimetype: doc.mimeType ?? "application/octet-stream",
+          data: data.toString("base64"),
+        },
+        clinicId
+      );
+    } catch (err) {
+      logger.warn("welcome document could not be attached", {
+        documentId: doc.documentId,
+        fileName: doc.fileName,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+}
+
 /** Sent to the patient after their profile is created (incl. portal credentials when opted in). */
 export async function notifyPatientRegistered(
   db: Db,
@@ -301,6 +345,8 @@ export async function notifyPatientRegistered(
       opts.patientDocuments,
       opts.clinicId
     );
+    // Attach the clinic's welcome files as real documents.
+    await queueWelcomeDocumentFiles(db, phone, firstName(patient), clinicDetails, opts.clinicId);
     return;
   }
 

@@ -104,6 +104,15 @@ export async function getDownloadUrl(
   return getSignedUrl(getR2(), command, { expiresIn });
 }
 
+/** Downloads an object's full contents as a Buffer. */
+export async function downloadFromR2(key: string): Promise<Buffer> {
+  const { bucket } = r2Config();
+  const result = await getR2().send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  const bytes = await result.Body?.transformToByteArray();
+  if (!bytes) throw new Error(`R2 object is empty: ${key}`);
+  return Buffer.from(bytes);
+}
+
 export interface R2ObjectInfo {
   key: string;
   size: number;
