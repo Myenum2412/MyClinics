@@ -16,6 +16,7 @@ import {
   derivePaymentStatus,
   type BillDoc,
 } from "@/clinic/modules/billing/billing.schema";
+import { queueBillWhatsAppNotification } from "@/services/whatsapp/bill-notification.service";
 
 export class BillingService {
   constructor(private readonly db: Db) {}
@@ -122,6 +123,12 @@ export class BillingService {
         status: bill.status,
       },
     });
+
+    // Fire-and-forget WhatsApp delivery when the bill asked for it
+    // (sendMethod: "whatsapp"). Never throws.
+    if ((input.sendMethod ?? "none") === "whatsapp") {
+      await queueBillWhatsAppNotification(this.db, { clinicId, bill, patient });
+    }
 
     return bill;
   }
