@@ -261,7 +261,7 @@ function decoratePage(
       width: contentWidth,
       align: "right",
     });
-    doc.moveTo(MARGIN, 48).lineTo(MARGIN + contentWidth, 48).lineWidth(0.75).strokeColor(C.border).stroke();
+    doc.moveTo(MARGIN, 48).lineTo(MARGIN + contentWidth, 48).lineWidth(0.75).strokeColor(C.navy).stroke();
     return;
   }
 
@@ -581,13 +581,55 @@ function drawLeftDetails(
   return cy;
 }
 
+/** Decodes a stored QR/UPI image (data URL or raw base64) into a Buffer. */
+function decodeQrImage(qrCodeUrl: string): Buffer | null {
+  try {
+    if (qrCodeUrl.startsWith("data:image/")) {
+      const base64Data = qrCodeUrl.split(",")[1];
+      return base64Data ? Buffer.from(base64Data, "base64") : null;
+    }
+    return Buffer.from(qrCodeUrl, "base64");
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Draws an image "object-fit: contain" inside a fixed area — natural aspect
+ * ratio is preserved, never stretched or cropped, and it is centered both
+ * ways. Returns the drawn width/height, or null when undrawable.
+ */
+function drawContainedImage(
+  doc: PDFKit.PDFDocument,
+  imgBuffer: Buffer,
+  x: number,
+  y: number,
+  maxW: number,
+  maxH: number
+): { width: number; height: number } | null {
+  try {
+    // openImage parses natural dimensions without embedding; typings omit it.
+    const openImage = (doc as unknown as { openImage(src: Buffer): { width: number; height: number } })
+      .openImage.bind(doc);
+    const { width: naturalW, height: naturalH } = openImage(imgBuffer);
+    const scale = Math.min(maxW / naturalW, maxH / naturalH);
+    const w = naturalW * scale;
+    const h = naturalH * scale;
+    doc.image(imgBuffer, x + (maxW - w) / 2, y + (maxH - h) / 2, { width: w, height: h });
+    return { width: w, height: h };
+  } catch (e) {
+    console.error("Failed to render QR Code in PDF:", e);
+    return null;
+  }
+}
+
 /**
  * Page 2 — PAYMENT DETAILS: payment summary, UPI ID + QR code,
  * and the numbered terms & conditions.
  */
 function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, bill: Bill): void {
+  void company;
   const symbol = symbolOf(bill.currency);
-  const companyName = company.name || "My Clinic";
   const balanceDue = bill.balanceDue ?? Math.max(0, (bill.total ?? 0) - (bill.amountPaid ?? 0));
   const terms = bill.terms
     ? String(bill.terms).split(/\r?\n/).map((t) => t.trim()).filter(Boolean)
@@ -596,88 +638,97 @@ function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, b
   let y = 64;
 
   // ── Payment summary ───────────────────────────────────────────────────────
-  const summaryRows: [string, string][] = [
+  const leftRows: [string, string][] = [
     ["Payment Status", (bill.paymentStatus ?? bill.status ?? "—").toUpperCase()],
     ["Payment Method", bill.paymentMethod ?? "—"],
     ["Payment Date", formatDate(bill.paidAt)],
+  ];
+  const rightRows: [string, string][] = [
     ["Invoice Total", money(bill.total ?? 0, symbol)],
     ["Amount Paid", money(bill.amountPaid ?? 0, symbol)],
     ["Balance Due", money(balanceDue, symbol)],
   ];
-  const sumRowH = 32;
-  const sumCols = 2;
-  const sumRowsPerCol = Math.ceil(summaryRows.length / sumCols);
-  const sumH = sumRowsPerCol * sumRowH + 24;
+  const sumRowH = 34;
+  const sumH = 44 + leftRows.length * sumRowH + 8;
   box(doc, MARGIN, y, contentWidth, sumH);
-  doc.font("bold").fontSize(8).fillColor(C.navy).text("PAYMENT SUMMARY", MARGIN + 14, y + 10);
-  const colW = (contentWidth - 28) / 2;
-  summaryRows.forEach(([label, value], i) => {
-    const col = Math.floor(i / sumRowsPerCol);
-    const row = i % sumRowsPerCol;
-    const cx = MARGIN + 14 + col * colW;
-    const cy = y + 34 + row * sumRowH;
-    doc.font("regular").fontSize(7).fillColor(C.faint).text(label.toUpperCase(), cx, cy);
-    doc.font("bold").fontSize(10).fillColor(label === "Balance Due" ? C.navy : C.ink).text(value, cx, cy + 11, {
-      width: colW - 20,
+  doc.font("bold").fontSize(8).fillColor(C.navy).text("PAYMENT SUMMARY", MARGIN + 16, y + 12);
+  const sumColW = contentWidth / 2;
+  doc.moveTo(MARGIN + sumColW, y + 14).lineTo(MARGIN + sumColW, y + sumH - 14)
+    .lineWidth(0.75).strokeColor(C.rule).stroke();
+  const drawSummaryCol = (
+    rows: [string, string][], x: number, navyValue: (label: string) => boolean
+  ) => {
+    rows.forEach(([label, value], i) => {
+      const cy = y + 44 + i * sumRowH;
+      doc.font("regular").fontSize(6.5).fillColor(C.faint).text(label.toUpperCase(), x, cy);
+      doc.font("bold").fontSize(10).fillColor(navyValue(label) ? C.navy : C.ink).text(value, x, cy + 11);
     });
-  });
-  y += sumH + 12;
+  };
+  drawSummaryCol(leftRows, MARGIN + 16, () => false);
+  drawSummaryCol(rightRows, MARGIN + sumColW + 16, (label) => label === "Balance Due");
+  y += sumH + 14;
 
-  // ── UPI payment (full width) ─────────────────────────────────────────────
-  const upiH = 150;
+  // ── Scan to pay (UPI) ─────────────────────────────────────────────────────
+  const qrAreaSize = 132;
+  const upiBoxInnerPad = 8;
+  const upiContentH = qrAreaSize + upiBoxInnerPad * 2;
+  const upiH = 40 + upiContentH + 14;
   box(doc, MARGIN, y, contentWidth, upiH);
-  doc.font("bold").fontSize(8).fillColor(C.navy).text("SCAN TO PAY (UPI)", MARGIN + 14, y + 10);
+  doc.font("bold").fontSize(8).fillColor(C.navy).text("SCAN TO PAY (UPI)", MARGIN + 16, y + 12);
+
+  const imgBuffer = bill.qrCodeUrl ? decodeQrImage(bill.qrCodeUrl) : null;
   let qrDrawn = false;
-  if (bill.qrCodeUrl) {
-    try {
-      let qrBuffer: Buffer | null = null;
-      if (bill.qrCodeUrl.startsWith("data:image/")) {
-        const base64Data = bill.qrCodeUrl.split(",")[1];
-        if (base64Data) qrBuffer = Buffer.from(base64Data, "base64");
-      } else {
-        qrBuffer = Buffer.from(bill.qrCodeUrl, "base64");
-      }
-      if (qrBuffer) {
-        doc.image(qrBuffer, MARGIN + 16, y + 32, { width: 96, height: 96 });
-        qrDrawn = true;
-      }
-    } catch (e) {
-      console.error("Failed to render QR Code in PDF:", e);
-    }
+  if (imgBuffer) {
+    // Designated square frame with whitespace around the image; the image is
+    // auto-scaled to fit and centered regardless of its natural dimensions.
+    const frameX = MARGIN + 16;
+    const frameY = y + 40;
+    doc.rect(frameX, frameY, qrAreaSize, qrAreaSize)
+      .lineWidth(0.75).strokeColor(C.rule).stroke();
+    qrDrawn = drawContainedImage(
+      doc,
+      imgBuffer,
+      frameX + upiBoxInnerPad,
+      frameY + upiBoxInnerPad,
+      qrAreaSize - upiBoxInnerPad * 2,
+      qrAreaSize - upiBoxInnerPad * 2
+    ) !== null;
   }
+  const textX = MARGIN + 16 + qrAreaSize + 28;
+  const textW = contentWidth - (textX - MARGIN) - 16;
   if (qrDrawn) {
     if (bill.upiId) {
-      doc.font("regular").fontSize(7).fillColor(C.faint).text("UPI ID", MARGIN + 136, y + 40);
-      doc.font("bold").fontSize(11).fillColor(C.ink).text(bill.upiId, MARGIN + 136, y + 51, {
-        width: contentWidth - 160,
+      doc.font("regular").fontSize(6.5).fillColor(C.faint).text("UPI ID", textX, y + 56);
+      doc.font("bold").fontSize(11).fillColor(C.ink).text(bill.upiId!, textX, y + 68, {
+        width: textW,
       });
     }
     doc.font("regular").fontSize(8.5).fillColor(C.muted).text(
       "Scan this QR with any UPI app to pay.",
-      MARGIN + 136,
-      y + (bill.upiId ? 76 : 44),
-      { width: contentWidth - 160 }
+      textX,
+      y + (bill.upiId ? 96 : 64),
+      { width: textW }
     );
   } else {
-    doc.font("regular").fontSize(8).fillColor(C.muted).text(
+    doc.font("regular").fontSize(8.5).fillColor(C.muted).text(
       bill.upiId
         ? `Pay to UPI ID: ${bill.upiId} using any UPI app.`
         : "No UPI payment details configured.",
-      MARGIN + 14,
-      y + 34,
-      { width: contentWidth - 28 }
+      MARGIN + 16,
+      y + 48,
+      { width: contentWidth - 32 }
     );
   }
-  y += upiH + 12;
+  y += upiH + 14;
 
   // ── Terms & conditions ───────────────────────────────────────────────────
   box(doc, MARGIN, y, contentWidth, 26);
-  doc.font("bold").fontSize(8).fillColor(C.navy).text("TERMS & CONDITIONS", MARGIN + 12, y + 9);
+  doc.font("bold").fontSize(8).fillColor(C.navy).text("TERMS & CONDITIONS", MARGIN + 16, y + 9);
   y += 32;
   terms.forEach((t, i) => {
-    const lines = Math.max(1, cellLines(doc, t, contentWidth - 40));
-    doc.font("regular").fontSize(8).fillColor(C.muted).text(`${i + 1}.  ${t}`, MARGIN + 12, y, {
-      width: contentWidth - 24,
+    const lines = Math.max(1, cellLines(doc, t, contentWidth - 44));
+    doc.font("regular").fontSize(8).fillColor(C.muted).text(`${i + 1}.  ${t}`, MARGIN + 16, y, {
+      width: contentWidth - 32,
     });
     y += lines * 11 + 4;
   });
