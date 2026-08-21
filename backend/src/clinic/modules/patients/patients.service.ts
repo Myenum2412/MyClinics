@@ -27,6 +27,7 @@ import {
   notifyPatientUpdated,
   type Notifyable,
 } from "@/services/whatsapp/save-notification.service";
+import { deleteFromR2, listR2Objects } from "@/lib/r2";
 
 export class PatientService {
   constructor(private readonly db: Db) {}
@@ -382,16 +383,95 @@ export class PatientService {
     const patient = await repo.findByPatientId(patientId);
     if (!patient) throw new NotFoundError("Patient not found");
 
+    const clinicId = requireClinicOf(ctx);
+
+    // 1. Delete avatars from R2
+    await Promise.all([
+      deleteFromR2(`avatars/${clinicId}/patient/${patientId}.jpg`).catch(() => void 0),
+      deleteFromR2(`avatars/${clinicId}/patient/${patientId}.png`).catch(() => void 0),
+    ]);
+
+    // 2. Query and delete custom uploaded medical record files from R2
+    const customFiles = await this.db
+      .collection(CLINIC_COLLECTIONS.medicalRecordFiles)
+      .find({ clinicId, patientId })
+      .toArray();
+
+    if (customFiles.length > 0) {
+      await Promise.all(
+        customFiles.map((file: any) => deleteFromR2(file.r2Key).catch(() => void 0))
+      );
+    }
+
+    // 3. Delete legacy files from R2 (prefix reports/patients/${patientId}/)
+    const legacyPrefix = `reports/patients/${patientId}/`;
+    try {
+      const legacyObjects = await listR2Objects(legacyPrefix, 1000);
+      if (legacyObjects.length > 0) {
+        await Promise.all(
+          legacyObjects.map((obj) => deleteFromR2(obj.key).catch(() => void 0))
+        );
+      }
+    } catch {
+      // ignore R2 listing failures
+    }
+
+    // 4. Delete medical records folders & files in DB
+    await Promise.all([
+      this.db.collection(CLINIC_COLLECTIONS.medicalRecordFiles).deleteMany({ clinicId, patientId }),
+      this.db.collection(CLINIC_COLLECTIONS.medicalRecordFolders).deleteMany({ clinicId, patientId }),
+    ]);
+
+    // 5. Soft-delete appointments
+    await this.db
+      .collection(CLINIC_COLLECTIONS.appointments)
+      .updateMany(
+        { clinicId, patientId, status: { $ne: "cancelled" } },
+        { $set: { status: "cancelled", deletedAt: new Date(), updatedAt: new Date() } }
+      );
+
+    // 6. Soft-delete prescriptions
+    await this.db
+      .collection(CLINIC_COLLECTIONS.prescriptions)
+      .updateMany(
+        { clinicId, patientId, status: { $ne: "deleted" } },
+        { $set: { status: "deleted", deletedAt: new Date(), updatedAt: new Date() } }
+      );
+
+    // 7. Soft-delete medical records (medicine)
+    await this.db
+      .collection(CLINIC_COLLECTIONS.medicalRecords)
+      .updateMany(
+        { clinicId, patientId, status: { $ne: "deleted" } },
+        { $set: { status: "deleted", deletedAt: new Date(), updatedAt: new Date() } }
+      );
+
+    // 8. Soft-delete bills
+    await this.db
+      .collection(CLINIC_COLLECTIONS.bills)
+      .updateMany(
+        { clinicId, patientId, status: { $ne: "void" } },
+        { $set: { status: "void", deletedAt: new Date(), updatedAt: new Date() } }
+      );
+
+    // 9. Hard-delete notifications
+    await Promise.all([
+      this.db.collection(CLINIC_COLLECTIONS.appointmentNotifications).deleteMany({ recipientId: patientId }),
+      this.db.collection(CLINIC_COLLECTIONS.prescriptionNotifications).deleteMany({ patientId }),
+    ]);
+
+    // 10. Perform patient soft-delete in repository
     await repo.softDelete(patientId);
 
     // Deactivate the linked portal account, if any.
     if (patient.userId) {
-      await this.db
-        .collection(CLINIC_COLLECTIONS.users)
-        .updateOne(
-          { clinicId: requireClinicOf(ctx), userId: patient.userId },
+      await Promise.all([
+        this.db.collection(CLINIC_COLLECTIONS.users).updateOne(
+          { clinicId, userId: patient.userId },
           { $set: { status: "deleted", deletedAt: new Date() } }
-        );
+        ),
+        this.db.collection(CLINIC_COLLECTIONS.notifications).deleteMany({ clinicId, recipientUserId: patient.userId }),
+      ]);
     }
 
     await writeAudit(this.db, ctx, {

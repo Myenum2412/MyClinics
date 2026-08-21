@@ -199,6 +199,13 @@ export function createFakeDb(seed: Record<string, any[]> = {}): { db: Db; dump: 
           }
           return { matchedCount: 0, modifiedCount: 0, upsertedCount: 0 };
         },
+        async updateMany(filter: Filter, update: Record<string, any>) {
+          const matched = docs.filter((d) => matches(d, filter));
+          for (const target of matched) {
+            applyUpdate(target, update);
+          }
+          return { matchedCount: matched.length, modifiedCount: matched.length };
+        },
         async findOneAndUpdate(
           filter: Filter,
           update: Record<string, any>,
@@ -215,6 +222,16 @@ export function createFakeDb(seed: Record<string, any[]> = {}): { db: Db; dump: 
           if (index === -1) return { deletedCount: 0 };
           docs.splice(index, 1);
           return { deletedCount: 1 };
+        },
+        async deleteMany(filter: Filter = {}) {
+          let count = 0;
+          for (let i = docs.length - 1; i >= 0; i--) {
+            if (matches(docs[i], filter)) {
+              docs.splice(i, 1);
+              count++;
+            }
+          }
+          return { deletedCount: count };
         },
         async countDocuments(filter: Filter = {}) {
           return docs.filter((d) => matches(d, filter)).length;
