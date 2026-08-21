@@ -30,9 +30,40 @@ const registerSchema = z.object({
     .nullable(),
   city: z.string().trim().min(1, "City is required").max(120),
   state: z.string().trim().min(1, "State is required").max(120),
+  clinicId: z.string().trim().min(1).optional().nullable(),
 });
 
 export function registerPublicAppointmentRoutes(app: FastifyInstance): void {
+  app.get("/api/public/clinics", async (request, reply) => {
+    try {
+      const db = await getDb();
+      const query = request.query as { state?: string; city?: string };
+      const filter: Record<string, any> = { status: "active" };
+      if (query.state) {
+        filter["profile.state"] = { $regex: new RegExp(`^${query.state}$`, "i") };
+      }
+      if (query.city) {
+        filter["profile.city"] = { $regex: new RegExp(`^${query.city}$`, "i") };
+      }
+      const clinics = await db
+        .collection(CLINIC_COLLECTIONS.clinics)
+        .find<{ clinicId: string; name: string; address: string | null; profile?: { city?: string | null; state?: string | null } }>(
+          filter,
+          { projection: { clinicId: 1, name: 1, address: 1, "profile.city": 1, "profile.state": 1 } }
+        )
+        .toArray();
+      return clinics.map((c) => ({
+        clinicId: c.clinicId,
+        name: c.name,
+        address: c.address,
+        city: c.profile?.city ?? null,
+        state: c.profile?.state ?? null,
+      }));
+    } catch (error) {
+      reply.code(500).send({ error: "Failed to fetch clinics" });
+    }
+  });
+
   app.post("/api/public/appointments/register", async (request, reply) => {
     const parsed = registerSchema.safeParse(request.body);
     if (!parsed.success) {
@@ -45,18 +76,29 @@ export function registerPublicAppointmentRoutes(app: FastifyInstance): void {
     try {
       const db = await getDb();
 
-      // The clinic the patient is registering with. Clinics carry free-text
-      // addresses (no separate city/state fields), so the first active clinic
-      // is used as the target tenant.
-      const clinic = await db
-        .collection(CLINIC_COLLECTIONS.clinics)
-        .findOne<{ clinicId: string; name: string }>({ status: "active" });
-      if (!clinic) {
-        return reply
-          .code(400)
-          .send({ error: "No clinic is available yet. Please try again later." });
+      let clinicId = input.clinicId;
+      let clinicName = "";
+
+      if (clinicId) {
+        const clinicDoc = await db
+          .collection(CLINIC_COLLECTIONS.clinics)
+          .findOne<{ clinicId: string; name: string }>({ clinicId, status: "active" });
+        if (!clinicDoc) {
+          return reply.code(400).send({ error: "Selected clinic not found or inactive." });
+        }
+        clinicName = clinicDoc.name;
+      } else {
+        const clinicDoc = await db
+          .collection(CLINIC_COLLECTIONS.clinics)
+          .findOne<{ clinicId: string; name: string }>({ status: "active" });
+        if (!clinicDoc) {
+          return reply
+            .code(400)
+            .send({ error: "No clinic is available yet. Please try again later." });
+        }
+        clinicId = clinicDoc.clinicId;
+        clinicName = clinicDoc.name;
       }
-      const clinicId = clinic.clinicId;
 
       // Auto-generated portal login: patients sign in with email + password,
       // so derive an email from the mobile number when none was provided.
@@ -82,7 +124,7 @@ export function registerPublicAppointmentRoutes(app: FastifyInstance): void {
       return reply.code(201).send({
         ok: true,
         patientId: patient.patientId,
-        clinicName: clinic.name,
+        clinicName,
         message:
           "Your patient account was created. Your login details were sent to your WhatsApp number.",
       });

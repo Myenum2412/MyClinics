@@ -41,10 +41,46 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
   const stateRef = useRef<HTMLDivElement>(null);
   const cityRef = useRef<HTMLDivElement>(null);
 
+  const [clinics, setClinics] = useState<Array<{ clinicId: string; name: string; address: string | null }>>([]);
+  const [clinicId, setClinicId] = useState("");
+  const [clinicName, setClinicName] = useState("");
+  const [clinicOpen, setClinicOpen] = useState(false);
+  const [clinicQuery, setClinicQuery] = useState("");
+  const clinicPickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!state || !city) {
+      setClinics([]);
+      setClinicId("");
+      setClinicName("");
+      return;
+    }
+    setClinics([]);
+    setClinicId("");
+    setClinicName("");
+    const loadClinics = async () => {
+      try {
+        const res = await fetch(`/api/public/clinics?state=${encodeURIComponent(state)}&city=${encodeURIComponent(city)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setClinics(data);
+          if (data.length === 1) {
+            setClinicId(data[0].clinicId);
+            setClinicName(data[0].name);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load clinics", err);
+      }
+    };
+    loadClinics();
+  }, [state, city]);
+
   useEffect(() => {
     const close = (e: MouseEvent) => {
       if (stateRef.current && !stateRef.current.contains(e.target as Node)) setStateOpen(false);
       if (cityRef.current && !cityRef.current.contains(e.target as Node)) setCityOpen(false);
+      if (clinicPickerRef.current && !clinicPickerRef.current.contains(e.target as Node)) setClinicOpen(false);
     };
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
@@ -59,6 +95,11 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
     const q = cityQuery.trim().toLowerCase();
     return q ? cities.filter((c) => c.toLowerCase().includes(q)) : cities;
   }, [cities, cityQuery]);
+
+  const filteredClinics = useMemo(() => {
+    const q = clinicQuery.trim().toLowerCase();
+    return q ? clinics.filter((c) => c.name.toLowerCase().includes(q)) : clinics;
+  }, [clinics, clinicQuery]);
 
   function pickState(value: string) {
     setState(value);
@@ -85,6 +126,10 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
       setError("Please select your city");
       return;
     }
+    if (clinics.length > 0 && !clinicId) {
+      setError("Please select a clinic");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -96,6 +141,7 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
           mobile: mobile.trim(),
           city,
           state,
+          clinicId: clinicId || null,
         }),
       });
       const body = (await res.json().catch(() => ({}))) as {
@@ -252,6 +298,70 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
             </div>
           )}
         </div>
+
+        {/* Clinic selection */}
+        {state && city && (
+          <div ref={clinicPickerRef} className="relative col-span-2">
+            <Label htmlFor="appt-clinic" className="mb-1.5 block text-sm font-medium text-foreground">
+              Clinic
+            </Label>
+            <button
+              type="button"
+              id="appt-clinic"
+              onClick={() => {
+                setClinicQuery("");
+                setClinicOpen((v) => !v);
+              }}
+              aria-expanded={clinicOpen}
+              className={`flex h-11 w-full items-center justify-between gap-2 rounded-xl border bg-background px-3 text-left text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 ${
+                clinicId ? "border-primary/40 text-foreground" : "border-border text-muted-foreground"
+              }`}
+            >
+              <span className="truncate">{clinicName || (clinics.length === 0 ? "No clinics found in this location" : "Select clinic")}</span>
+              <Search className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </button>
+            {clinicOpen && clinics.length > 0 && (
+              <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-xl border border-border bg-background shadow-lg">
+                <div className="border-b border-border p-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                    <Input
+                      value={clinicQuery}
+                      onChange={(e) => setClinicQuery(e.target.value)}
+                      placeholder="Search clinic..."
+                      className="h-9 rounded-lg border-border bg-accent/50 pl-8 text-sm"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+                <div role="listbox" className="max-h-56 overflow-y-auto p-1">
+                  {filteredClinics.length === 0 && (
+                    <div className="px-2.5 py-4 text-center text-sm text-muted-foreground">No matching clinics found</div>
+                  )}
+                  {filteredClinics.map((c) => (
+                    <button
+                      key={c.clinicId}
+                      type="button"
+                      onClick={() => {
+                        setClinicId(c.clinicId);
+                        setClinicName(c.name);
+                        setClinicOpen(false);
+                      }}
+                      className={`flex w-full flex-col gap-0.5 rounded-lg px-2.5 py-2 text-left hover:bg-accent ${
+                        c.clinicId === clinicId ? "bg-accent font-medium" : ""
+                      }`}
+                    >
+                      <span className="text-sm text-foreground">{c.name}</span>
+                      {c.address && (
+                        <span className="text-xs text-muted-foreground truncate">{c.address}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="space-y-1.5">
           <Label htmlFor="appt-name" className="text-sm font-medium text-foreground">
