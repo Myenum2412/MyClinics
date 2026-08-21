@@ -282,8 +282,7 @@ export default function SettingsPage() {
                     </span>
                     <p className="font-medium text-success">WhatsApp connected</p>
                     <p className="max-w-sm text-sm text-muted-foreground">
-                      Appointment reminders and notifications are being delivered through the
-                      wwebjs.dev (whatsapp-web.js) worker.
+                      Appointment reminders and notifications are active and being delivered through the WhatsApp service.
                     </p>
                   </div>
                 ) : waSession?.qr ? (
@@ -317,7 +316,7 @@ export default function SettingsPage() {
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">
-                  Powered by wwebjs.dev (whatsapp-web.js) · last update{" "}
+                  Powered by WhatsApp Integration · last update{" "}
                   {waSession?.state?.updatedAt
                     ? new Date(waSession.state.updatedAt).toLocaleTimeString("en-IN")
                     : "—"}
