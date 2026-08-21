@@ -16,7 +16,7 @@ export function registerSettingsRoutes(app: FastifyInstance): void {
 
   app.get(
     "/api/clinics/:clinicId/settings",
-    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    { preHandler: [requireClinicAccess, requireRoles("patient")] },
     async (request, reply) => controller.get(request, reply)
   );
 
