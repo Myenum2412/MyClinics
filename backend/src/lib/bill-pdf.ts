@@ -225,7 +225,8 @@ function decoratePage(
   doc: PDFKit.PDFDocument,
   pageNumber: number,
   company: OrganizationRecord,
-  bill: Bill
+  bill: Bill,
+  title = "TAX INVOICE"
 ) {
   const companyName = company.name || "My Clinic";
   const gstin = bill.gstin ?? BUSINESS.gstin;
@@ -239,7 +240,7 @@ function decoratePage(
       `GSTIN: ${gstin}  ·  UDYAM: ${udyam}`,
       MARGIN, 33
     );
-    doc.font("bold").fontSize(12).fillColor(C.navy).text("TAX INVOICE", MARGIN, 22, {
+    doc.font("bold").fontSize(12).fillColor(C.navy).text(title, MARGIN, 22, {
       width: contentWidth,
       align: "right",
     });
@@ -533,7 +534,7 @@ function drawTotals(
   return y + h;
 }
 
-/** Left column — words, notes, bank details and numbered terms & conditions. */
+/** Left column on the invoice page — amount in words and notes. */
 function drawLeftDetails(
   doc: PDFKit.PDFDocument,
   x: number,
@@ -542,39 +543,97 @@ function drawLeftDetails(
   bill: Bill,
   company: OrganizationRecord
 ): number {
-  const symbol = symbolOf(bill.currency);
   const companyName = company.name || "My Clinic";
   const notes = bill.notes ?? BUSINESS.notes;
-  const accountNo = bill.bankAccount ?? BUSINESS.bankAccount;
-  const ifsc = bill.ifsc ?? BUSINESS.ifsc;
-  const terms = bill.terms
-    ? String(bill.terms).split(/\r?\n/).map((t) => t.trim()).filter(Boolean)
-    : BUSINESS.terms;
 
-  const rows: [string, string | string[]][] = [
+  const rows: [string, string][] = [
     ["Total in Words", amountInWords(bill.total ?? 0)],
     ["Notes", notes],
-    ["Name", companyName],
-    ["Account No.", accountNo],
-    ["IFSC Code", ifsc],
+    ["Billed By", companyName],
   ];
-
-  if (bill.upiId) {
-    rows.push(["UPI ID", bill.upiId]);
-  }
 
   let cy = y;
   for (const [label, value] of rows) {
     doc.font("bold").fontSize(7).fillColor(C.navy).text(label.toUpperCase(), x, cy);
-    const text = Array.isArray(value) ? value.join(", ") : value;
-    const lines = Math.max(1, cellLines(doc, text, w));
-    doc.font("regular").fontSize(8.5).fillColor(C.ink).text(text, x, cy + 10, { width: w });
+    const lines = Math.max(1, cellLines(doc, value, w));
+    doc.font("regular").fontSize(8.5).fillColor(C.ink).text(value, x, cy + 10, { width: w });
     cy += 10 + lines * 11 + 6;
   }
 
+  return cy;
+}
+
+/**
+ * Page 2 — PAYMENT DETAILS: payment summary, bank transfer details,
+ * UPI ID + QR code, and the numbered terms & conditions.
+ */
+function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, bill: Bill): void {
+  const symbol = symbolOf(bill.currency);
+  const companyName = company.name || "My Clinic";
+  const accountNo = bill.bankAccount ?? BUSINESS.bankAccount;
+  const ifsc = bill.ifsc ?? BUSINESS.ifsc;
+  const balanceDue = bill.balanceDue ?? Math.max(0, (bill.total ?? 0) - (bill.amountPaid ?? 0));
+  const terms = bill.terms
+    ? String(bill.terms).split(/\r?\n/).map((t) => t.trim()).filter(Boolean)
+    : BUSINESS.terms;
+
+  let y = 64;
+
+  // ── Payment summary ───────────────────────────────────────────────────────
+  const summaryRows: [string, string][] = [
+    ["Payment Status", (bill.paymentStatus ?? bill.status ?? "—").toUpperCase()],
+    ["Payment Method", bill.paymentMethod ?? "—"],
+    ["Payment Date", formatDate(bill.paidAt)],
+    ["Invoice Total", money(bill.total ?? 0, symbol)],
+    ["Amount Paid", money(bill.amountPaid ?? 0, symbol)],
+    ["Balance Due", money(balanceDue, symbol)],
+  ];
+  const sumRowH = 24;
+  const sumCols = 2;
+  const sumRowsPerCol = Math.ceil(summaryRows.length / sumCols);
+  const sumH = sumRowsPerCol * sumRowH + 14;
+  box(doc, MARGIN, y, contentWidth, sumH);
+  doc.font("bold").fontSize(8).fillColor(C.navy).text("PAYMENT SUMMARY", MARGIN + 12, y + 8);
+  const colW = (contentWidth - 24) / 2;
+  summaryRows.forEach(([label, value], i) => {
+    const col = Math.floor(i / sumRowsPerCol);
+    const row = i % sumRowsPerCol;
+    const cx = MARGIN + 12 + col * colW;
+    const cy = y + 26 + row * sumRowH;
+    doc.font("regular").fontSize(7).fillColor(C.faint).text(label.toUpperCase(), cx, cy);
+    doc.font("bold").fontSize(10).fillColor(label === "Balance Due" ? C.navy : C.ink).text(value, cx, cy + 9, {
+      width: colW - 16,
+    });
+  });
+  y += sumH + 12;
+
+  // ── Bank transfer + UPI side by side ─────────────────────────────────────
+  const halfW = (contentWidth - 12) / 2;
+
+  // Bank details (left)
+  const bankRows: [string, string][] = [
+    ["Account Name", companyName],
+    ["Account No.", accountNo],
+    ["IFSC Code", ifsc],
+  ];
+  if (bill.upiId) bankRows.push(["UPI ID", bill.upiId]);
+  const bankH = 26 + bankRows.length * 22 + 10;
+  box(doc, MARGIN, y, halfW, bankH);
+  doc.font("bold").fontSize(8).fillColor(C.navy).text("BANK TRANSFER DETAILS", MARGIN + 12, y + 8);
+  bankRows.forEach(([label, value], i) => {
+    const cy = y + 28 + i * 22;
+    doc.font("regular").fontSize(7).fillColor(C.faint).text(label.toUpperCase(), MARGIN + 12, cy);
+    doc.font("bold").fontSize(9.5).fillColor(C.ink).text(value, MARGIN + 12, cy + 9, {
+      width: halfW - 24,
+    });
+  });
+
+  // UPI QR (right)
+  const upiX = MARGIN + halfW + 12;
+  box(doc, upiX, y, halfW, bankH);
+  doc.font("bold").fontSize(8).fillColor(C.navy).text("SCAN TO PAY (UPI)", upiX + 12, y + 8);
+  let qrDrawn = false;
   if (bill.qrCodeUrl) {
-    doc.font("bold").fontSize(7).fillColor(C.navy).text("SCAN TO PAY (UPI)", x, cy);
-    cy += 10;
     try {
       let qrBuffer: Buffer | null = null;
       if (bill.qrCodeUrl.startsWith("data:image/")) {
@@ -584,25 +643,51 @@ function drawLeftDetails(
         qrBuffer = Buffer.from(bill.qrCodeUrl, "base64");
       }
       if (qrBuffer) {
-        doc.image(qrBuffer, x, cy, { width: 70, height: 70 });
-        cy += 70 + 8;
+        doc.image(qrBuffer, upiX + 12, y + 26, { width: 84, height: 84 });
+        qrDrawn = true;
       }
     } catch (e) {
       console.error("Failed to render QR Code in PDF:", e);
     }
   }
+  doc.font("regular").fontSize(8).fillColor(C.muted).text(
+    qrDrawn
+      ? "Scan this QR with any UPI app to pay."
+      : "No UPI QR code configured. Pay via bank transfer using the details on the left.",
+    upiX + (qrDrawn ? 108 : 12),
+    y + 30,
+    { width: halfW - (qrDrawn ? 120 : 24) }
+  );
+  y += bankH + 12;
 
-  doc.font("bold").fontSize(7).fillColor(C.navy).text("TERMS & CONDITIONS", x, cy);
-  cy += 11;
+  // ── Terms & conditions ───────────────────────────────────────────────────
+  box(doc, MARGIN, y, contentWidth, 26);
+  doc.font("bold").fontSize(8).fillColor(C.navy).text("TERMS & CONDITIONS", MARGIN + 12, y + 9);
+  y += 32;
   terms.forEach((t, i) => {
-    const lines = Math.max(1, cellLines(doc, t, w - 14));
-    doc.font("regular").fontSize(7.5).fillColor(C.muted).text(`${i + 1}.  ${t}`, x, cy, {
-      width: w - 14,
+    const lines = Math.max(1, cellLines(doc, t, contentWidth - 40));
+    doc.font("regular").fontSize(8).fillColor(C.muted).text(`${i + 1}.  ${t}`, MARGIN + 12, y, {
+      width: contentWidth - 24,
     });
-    cy += lines * 10 + 3;
+    y += lines * 11 + 4;
   });
 
-  return cy;
+  // ── Signature line ───────────────────────────────────────────────────────
+  const sigY = Math.max(y + 24, 700);
+  doc.moveTo(MARGIN + contentWidth - 180, sigY).lineTo(MARGIN + contentWidth, sigY)
+    .lineWidth(0.75).strokeColor(C.border).stroke();
+  doc.font("bold").fontSize(8).fillColor(C.muted).text(
+    `For ${companyName}`,
+    MARGIN + contentWidth - 180,
+    sigY + 5,
+    { width: 180, align: "center" }
+  );
+  doc.font("regular").fontSize(7).fillColor(C.faint).text(
+    "Authorised Signatory",
+    MARGIN + contentWidth - 180,
+    sigY + 17,
+    { width: 180, align: "center" }
+  );
 }
 
 export async function generateBillPdf(
@@ -637,7 +722,7 @@ export async function generateBillPdf(
 
   decoratePage(doc, 1, company, bill);
 
-  // ── Invoice details ─────────────────────────────────────────────────────
+  // ── Page 1 — BILLING / INVOICE ──────────────────────────────────────────
   y = 96;
   y = drawInvoiceDetails(doc, y, bill) + 12;
 
@@ -649,14 +734,19 @@ export async function generateBillPdf(
   ensureSpace(tableH + 8);
   y = drawItemsTable(doc, bill, symbol, y, ensureSpace) + 12;
 
-  // ── Amount & notes ──────────────────────────────────────────────────────
+  // ── Totals panel + words/notes ──────────────────────────────────────────
   const leftW = 300;
   const rightW = contentWidth - leftW - 12;
   const totalsH = 14 + 4 * 19 + 18 + 24 + 4;
-  const minLeftH = bill.qrCodeUrl ? 240 : 160;
-  ensureSpace(Math.max(totalsH, minLeftH));
+  ensureSpace(Math.max(totalsH, 140));
   drawTotals(doc, MARGIN + leftW + 12, y, rightW, bill, symbol);
   drawLeftDetails(doc, MARGIN, y, leftW, bill, company);
+
+  // ── Page 2 — PAYMENT DETAILS ────────────────────────────────────────────
+  doc.addPage();
+  pageNo += 1;
+  decoratePage(doc, pageNo, company, bill, "PAYMENT DETAILS");
+  drawPaymentPage(doc, company, bill);
 
   // ── Footer — subtle page number ─────────────────────────────────────────
   const range = doc.bufferedPageRange();
