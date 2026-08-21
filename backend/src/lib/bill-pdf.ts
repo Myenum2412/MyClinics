@@ -604,9 +604,9 @@ function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, b
   y += sumH + 12;
 
   // ── UPI payment (full width) ─────────────────────────────────────────────
-  const upiH = 118;
+  const upiH = 150;
   box(doc, MARGIN, y, contentWidth, upiH);
-  doc.font("bold").fontSize(8).fillColor(C.navy).text("SCAN TO PAY (UPI)", MARGIN + 12, y + 8);
+  doc.font("bold").fontSize(8).fillColor(C.navy).text("SCAN TO PAY (UPI)", MARGIN + 14, y + 10);
   let qrDrawn = false;
   if (bill.qrCodeUrl) {
     try {
@@ -618,7 +618,7 @@ function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, b
         qrBuffer = Buffer.from(bill.qrCodeUrl, "base64");
       }
       if (qrBuffer) {
-        doc.image(qrBuffer, MARGIN + 12, y + 26, { width: 80, height: 80 });
+        doc.image(qrBuffer, MARGIN + 16, y + 32, { width: 96, height: 96 });
         qrDrawn = true;
       }
     } catch (e) {
@@ -627,25 +627,25 @@ function drawPaymentPage(doc: PDFKit.PDFDocument, company: OrganizationRecord, b
   }
   if (qrDrawn) {
     if (bill.upiId) {
-      doc.font("regular").fontSize(7).fillColor(C.faint).text("UPI ID", MARGIN + 108, y + 30);
-      doc.font("bold").fontSize(10.5).fillColor(C.ink).text(bill.upiId, MARGIN + 108, y + 40, {
-        width: contentWidth - 130,
+      doc.font("regular").fontSize(7).fillColor(C.faint).text("UPI ID", MARGIN + 136, y + 40);
+      doc.font("bold").fontSize(11).fillColor(C.ink).text(bill.upiId, MARGIN + 136, y + 51, {
+        width: contentWidth - 160,
       });
     }
-    doc.font("regular").fontSize(8).fillColor(C.muted).text(
+    doc.font("regular").fontSize(8.5).fillColor(C.muted).text(
       "Scan this QR with any UPI app to pay.",
-      MARGIN + 108,
-      y + (bill.upiId ? 62 : 34),
-      { width: contentWidth - 130 }
+      MARGIN + 136,
+      y + (bill.upiId ? 76 : 44),
+      { width: contentWidth - 160 }
     );
   } else {
     doc.font("regular").fontSize(8).fillColor(C.muted).text(
       bill.upiId
         ? `Pay to UPI ID: ${bill.upiId} using any UPI app.`
         : "No UPI payment details configured.",
-      MARGIN + 12,
-      y + 30,
-      { width: contentWidth - 24 }
+      MARGIN + 14,
+      y + 34,
+      { width: contentWidth - 28 }
     );
   }
   y += upiH + 12;

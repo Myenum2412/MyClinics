@@ -19,13 +19,14 @@ import type {
 } from "@/lib/clinic-api";
 import { DROPDOWN_OPTION_DEFS, useDropdownOptions } from "@/lib/dropdown-options";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ListPlus,
+  Pencil,
   Plus,
   Trash2,
   X,
@@ -37,6 +38,17 @@ import {
 } from "lucide-react";
 
 const WHATSAPP_POLL_MS = 5_000;
+
+/** Deep links that open the saved UPI ID in the user's payment app. */
+function upiAppLinks(upiId: string): { label: string; href: string }[] {
+  const query = `pa=${encodeURIComponent(upiId)}&cu=INR`;
+  return [
+    { label: "Any UPI App", href: `upi://pay?${query}` },
+    { label: "Google Pay", href: `tez://upi/pay?${query}` },
+    { label: "PhonePe", href: `phonepe://pay?${query}` },
+    { label: "Paytm", href: `paytmmp://pay?${query}` },
+  ];
+}
 
 const STAGE_LABEL: Record<string, string> = {
   unconfigured: "Not connected yet — link this clinic's WhatsApp number",
@@ -71,6 +83,10 @@ export default function SettingsPage() {
   const [termsDraft, setTermsDraft] = useState("");
   const [qrCodeDraft, setQrCodeDraft] = useState("");
   const [savingBilling, setSavingBilling] = useState(false);
+  /** Toggled by clicking the "UPI Payment QR Code" heading — reveals app deep links. */
+  const [showUpiAppLinks, setShowUpiAppLinks] = useState(false);
+  /** false = read-only view of the saved details; true = editable form. */
+  const [billingEditing, setBillingEditing] = useState(false);
 
   useEffect(() => {
     if (!session?.clinicId) return;
@@ -97,6 +113,10 @@ export default function SettingsPage() {
           setUpiIdDraft(settingsRes.upiId ?? "");
           setTermsDraft(settingsRes.termsAndConditions ?? "");
           setQrCodeDraft(settingsRes.qrCodeUrl ?? "");
+          setBillingEditing(false);
+        } else {
+          // Nothing saved yet — start straight in edit mode.
+          setBillingEditing(true);
         }
       })
       .finally(() => setLoading(false));
@@ -184,6 +204,7 @@ export default function SettingsPage() {
       });
       setSettings(updated);
       toast.success("Billing settings saved successfully");
+      setBillingEditing(false);
     } catch (err) {
       console.error("Failed to save billing settings", err);
       const detail =
@@ -466,9 +487,99 @@ export default function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Billing & Invoice Settings</CardTitle>
+              {canEdit && settings && !billingEditing && (
+                <CardAction>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => setBillingEditing(true)}
+                  >
+                    <Pencil className="size-3.5" />
+                    Edit
+                  </Button>
+                </CardAction>
+              )}
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSaveBilling} className="space-y-6">
+              {!billingEditing && settings ? (
+                /* ── VIEW MODE — saved details ── */
+                <div className="space-y-5">
+                  <p className="text-sm text-muted-foreground">
+                    These details are printed on every generated invoice PDF.
+                  </p>
+                  <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                    <div>
+                      <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">GSTIN</dt>
+                      <dd className="mt-0.5 text-sm font-medium text-foreground">{settings.gstin || "Not set"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Udyam Registration No.</dt>
+                      <dd className="mt-0.5 text-sm font-medium text-foreground">{settings.udyam || "Not set"}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">UPI ID (for payments)</dt>
+                      <dd className="mt-0.5 text-sm font-medium text-foreground">{settings.upiId || "Not set"}</dd>
+                    </div>
+                    <div>
+                      <dt>
+                        {settings.qrCodeUrl && settings.upiId ? (
+                          <button
+                            type="button"
+                            onClick={() => setShowUpiAppLinks((v) => !v)}
+                            title="Click to show payment app links"
+                            className="text-xs font-medium uppercase tracking-wide text-muted-foreground underline decoration-dotted underline-offset-4 transition hover:text-primary"
+                          >
+                            UPI Payment QR Code
+                          </button>
+                        ) : (
+                          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                            UPI Payment QR Code
+                          </span>
+                        )}
+                      </dt>
+                      <dd className="mt-1">
+                        {settings.qrCodeUrl ? (
+                          <div className="flex flex-col items-start gap-3">
+                            <div className="flex min-h-48 min-w-48 items-center justify-center rounded-lg border border-border bg-background p-3">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={settings.qrCodeUrl}
+                                alt="UPI QR code"
+                                className="size-40 object-contain"
+                              />
+                            </div>
+                            {showUpiAppLinks && settings.upiId && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {upiAppLinks(settings.upiId).map((link) => (
+                                  <a
+                                    key={link.label}
+                                    href={link.href}
+                                    className="inline-flex items-center rounded-full border border-border bg-background px-2.5 py-1 text-xs font-medium text-primary transition hover:bg-accent"
+                                  >
+                                    {link.label}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">Not uploaded</span>
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
+                  <div>
+                    <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Invoice Terms &amp; Conditions</dt>
+                    <dd className="mt-1 whitespace-pre-wrap rounded-lg border border-border bg-muted/20 p-3 text-sm text-foreground">
+                      {settings.termsAndConditions || "Not set"}
+                    </dd>
+                  </div>
+                </div>
+              ) : (
+                /* ── EDIT MODE ── */
+                <form onSubmit={handleSaveBilling} className="space-y-6">
                 <p className="text-sm text-muted-foreground">
                   Configure the billing and payment details for this clinic. These values are printed on the generated invoice PDFs.
                 </p>
@@ -578,11 +689,24 @@ export default function SettingsPage() {
                 </div>
 
                 {canEdit && (
-                  <Button type="submit" disabled={savingBilling}>
-                    {savingBilling ? "Saving..." : "Save Billing Settings"}
-                  </Button>
+                  <div className="flex gap-2">
+                    {settings && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={savingBilling}
+                        onClick={() => setBillingEditing(false)}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                    <Button type="submit" disabled={savingBilling}>
+                      {savingBilling ? "Saving..." : "Save Billing Settings"}
+                    </Button>
+                  </div>
                 )}
               </form>
+            )}
             </CardContent>
           </Card>
         )}
