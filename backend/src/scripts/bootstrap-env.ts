@@ -13,6 +13,10 @@ const candidates = [
   "../.env.local",
   "../frontend/.env.local",
   "../../.env.local",
+  ".env",
+  "../.env",
+  "../frontend/.env",
+  "../../.env",
 ];
 
 for (const path of candidates) {
