@@ -81,6 +81,7 @@ export const updateClinicSchema = z.object({
         .object({
           open: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid open time"),
           close: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Invalid close time"),
+          days: z.string().trim().max(100).nullable().optional(),
         })
         .optional(),
       slotMinutes: z.number().int().min(5).max(240).optional(),

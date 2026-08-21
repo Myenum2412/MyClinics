@@ -85,6 +85,7 @@ interface FormState {
   description: string;
   openTime: string;
   closeTime: string;
+  workingDays: string;
   profile: ClinicProfile;
 }
 
@@ -107,6 +108,7 @@ function formOf(clinic: Clinic): FormState {
     description: clinic.description ?? "",
     openTime: clinic.settings?.workingHours?.open ?? "09:00",
     closeTime: clinic.settings?.workingHours?.close ?? "18:00",
+    workingDays: clinic.settings?.workingHours?.days ?? "Monday - Saturday",
     profile: profileOf(clinic),
   };
 }
@@ -281,7 +283,11 @@ export default function AccountPage() {
         website: form.website || null,
         description: form.description || null,
         settings: {
-          workingHours: { open: form.openTime, close: form.closeTime },
+          workingHours: {
+            open: form.openTime,
+            close: form.closeTime,
+            days: form.workingDays || null,
+          },
         },
         profile: {
           clinicType: form.profile.clinicType || null,
@@ -687,27 +693,33 @@ export default function AccountPage() {
                   orDash(listToText(profile.services))
                 )}
               </Field>
-              <Field label="Working Hours">
+              <Field label="Working Hours" className="col-span-2">
                 {editing ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="time"
+                        value={form.openTime}
+                        onChange={(e) => set("openTime", e.target.value)}
+                      />
+                      <span className="text-sm text-muted-foreground">to</span>
+                      <Input
+                        type="time"
+                        value={form.closeTime}
+                        onChange={(e) => set("closeTime", e.target.value)}
+                      />
+                    </div>
                     <Input
-                      type="time"
-                      value={form.openTime}
-                      onChange={(e) => set("openTime", e.target.value)}
-                    />
-                    <span className="text-sm text-muted-foreground">to</span>
-                    <Input
-                      type="time"
-                      value={form.closeTime}
-                      onChange={(e) => set("closeTime", e.target.value)}
+                      value={form.workingDays}
+                      onChange={(e) => set("workingDays", e.target.value)}
+                      placeholder="e.g. Monday - Saturday"
                     />
                   </div>
                 ) : (
                   (() => {
                     const wh = clinic.settings?.workingHours;
                     if (!wh) return orDash(null);
-                    const today = DAY_NAMES[new Date().getDay()];
-                    return `${today} • ${formatTime12h(wh.open)} – ${formatTime12h(wh.close)}`;
+                    return `${wh.days || "Monday - Saturday"} • ${formatTime12h(wh.open)} – ${formatTime12h(wh.close)}`;
                   })()
                 )}
               </Field>

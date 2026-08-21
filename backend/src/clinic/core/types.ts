@@ -43,7 +43,7 @@ export interface ClinicDoc extends ClinicDocument {
   description: string | null;
   status: "active" | "suspended" | "deleted";
   settings: {
-    workingHours: { open: string; close: string };
+    workingHours: { open: string; close: string; days?: string | null };
     slotMinutes: number;
     currency: string;
     timezone: string;

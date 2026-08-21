@@ -35,7 +35,7 @@ export class ClinicRepository {
     await this.collection().insertOne({
       ...doc,
       settings: doc.settings ?? {
-        workingHours: { open: "09:00", close: "18:00" },
+        workingHours: { open: "09:00", close: "18:00", days: "Monday - Saturday" },
         slotMinutes: 30,
         currency: "INR",
         timezone: "Asia/Kolkata",
