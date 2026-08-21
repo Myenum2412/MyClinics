@@ -417,9 +417,9 @@ export default function AccountPage() {
             title="Basic Details"
             description="Clinic identity and registration information."
           >
-            <FieldGrid cols={3}>
+            <FieldGrid cols={4}>
               {editing ? (
-                <Field label="Clinic Name" className="col-span-3">
+                <Field label="Clinic Name">
                   <Input
                     value={form.name}
                     onChange={(e) => set("name", e.target.value)}
@@ -428,7 +428,7 @@ export default function AccountPage() {
                   />
                 </Field>
               ) : (
-                <Field label="Clinic Name" value={clinic.name} className="col-span-3" />
+                <Field label="Clinic Name" value={clinic.name} />
               )}
               <Field label="Clinic Type">
                 {editing ? (
@@ -858,13 +858,13 @@ function FieldGrid({
   cols,
   children,
 }: {
-  cols: 1 | 2 | 3;
+  cols: 1 | 2 | 3 | 4;
   children: React.ReactNode;
 }) {
   return (
     <div
       className={`grid gap-4 ${
-        cols === 3 ? "sm:grid-cols-2 lg:grid-cols-3" : cols === 2 ? "sm:grid-cols-2" : ""
+        cols === 4 ? "sm:grid-cols-2 lg:grid-cols-4" : cols === 3 ? "sm:grid-cols-2 lg:grid-cols-3" : cols === 2 ? "sm:grid-cols-2" : ""
       }`}
     >
       {children}
