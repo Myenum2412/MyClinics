@@ -802,7 +802,7 @@ export async function generateBillPdf(
     doc.moveTo(MARGIN, 780).lineTo(MARGIN + contentWidth, 780)
       .lineWidth(0.75).strokeColor(C.rule).stroke();
     doc.font("regular").fontSize(7.5).fillColor(C.faint).text(
-      "Thank you for your business!",
+      "Thank you for your business!   ·   © myclinic.myenum.in",
       MARGIN,
       788,
       { width: contentWidth, align: "center", lineBreak: false }
