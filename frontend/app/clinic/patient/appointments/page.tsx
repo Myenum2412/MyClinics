@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, ChevronRight, ChevronLeft, CalendarPlus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   AppointmentForm,
   buildNotes,
@@ -42,6 +44,28 @@ export default function PatientAppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [booking, setBooking] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === appointments.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(appointments.map((a) => a.appointmentId)));
+    }
+  };
+
 
   const loadData = useCallback(async () => {
     if (!clinicId) return;
@@ -182,10 +206,16 @@ export default function PatientAppointmentsPage() {
           <p className="text-muted-foreground mt-2">Your upcoming appointments will appear here.</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-background shadow-sm overflow-hidden">
+        <div className="border border-border bg-background shadow-sm overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="border-b border-border bg-muted/50">
+                <TableHead className="w-12 pl-4">
+                  <Checkbox
+                    checked={selectedIds.size === appointments.length && appointments.length > 0}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
                 <TableHead className="font-medium text-muted-foreground">Date & Time</TableHead>
                 <TableHead className="font-medium text-muted-foreground">Doctor</TableHead>
                 <TableHead className="font-medium text-muted-foreground">Reason</TableHead>
@@ -199,6 +229,12 @@ export default function PatientAppointmentsPage() {
                 const docName = doc ? doc.name : appt.doctorId?.slice(0, 8) || "Unknown";
                 return (
                   <TableRow key={appt.appointmentId} className="border-b border-border hover:bg-muted/50">
+                    <TableCell className="pl-4">
+                      <Checkbox
+                        checked={selectedIds.has(appt.appointmentId)}
+                        onCheckedChange={() => toggleSelect(appt.appointmentId)}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium text-foreground whitespace-nowrap">
                       <div className="flex items-center gap-2 text-sm">
                         <Calendar className="size-4 text-muted-foreground" />
