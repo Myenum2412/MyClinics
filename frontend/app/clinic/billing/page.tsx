@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
@@ -109,6 +110,16 @@ function todayISO(): string {
 export default function BillingPage() {
   const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
+  const router = useRouter();
+
+  // Doctors do not have access to billing — redirect them to the dashboard.
+  useEffect(() => {
+    if (session?.role === "doctor") {
+      router.replace("/clinic");
+    }
+  }, [session?.role, router]);
+
+  if (session?.role === "doctor") return null;
 
   // Core States
   const [items, setItems] = useState<Bill[]>([]);

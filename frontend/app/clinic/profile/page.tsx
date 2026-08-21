@@ -58,10 +58,10 @@ const DEFAULT_SPECIALTIES = [
   "Orthopedics",
 ];
 
-const SETTINGS_ROWS = [
+const ALL_SETTINGS_ROWS = [
   { label: "Clinic Preferences", icon: Settings2, href: "/clinic/settings" },
   { label: "Notification Settings", icon: Bell, href: "/clinic/notifications" },
-  { label: "Billing & Invoice Settings", icon: ReceiptText, href: "/clinic/billing" },
+  { label: "Billing & Invoice Settings", icon: ReceiptText, href: "/clinic/billing", doctorHidden: true },
   { label: "Users & Staff", icon: UserCog, href: "/clinic/settings" },
 ];
 
@@ -160,8 +160,10 @@ const MAP_TILE =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><path d='M40 0H0V40' fill='none' stroke='%23e2e8f0' stroke-width='1'/></svg>";
 
 export default function ClinicProfilePage() {
-  const session = useRequireRole("staff");
+  const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
+  const isDoctor = session?.role === "doctor";
+  const SETTINGS_ROWS = ALL_SETTINGS_ROWS.filter((r) => !(isDoctor && r.doctorHidden));
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [stats, setStats] = useState<{
     patients: number;
@@ -180,13 +182,16 @@ export default function ClinicProfilePage() {
   useEffect(() => {
     if (!clinicId) return;
     let active = true;
+    const billsPromise = isDoctor
+      ? Promise.resolve({ items: [], total: 0 })
+      : listBills(clinicId, { limit: 100 });
     Promise.all([
       getOwnClinic(clinicId),
       listPatients(clinicId, { limit: 1 }),
       listAppointments(clinicId, { date: localDateString(), limit: 1 }),
       listDoctors(clinicId, { limit: 100 }),
       listStaff(clinicId, { limit: 1 }),
-      listBills(clinicId, { limit: 100 }),
+      billsPromise,
     ])
       .then(([c, p, a, d, s, b]) => {
         if (!active) return;
@@ -217,7 +222,7 @@ export default function ClinicProfilePage() {
     return () => {
       active = false;
     };
-  }, [clinicId]);
+  }, [clinicId, isDoctor]);
 
   async function handleCoverUpload(file: File | null) {
     if (!file) return;
@@ -556,12 +561,14 @@ export default function ClinicProfilePage() {
             subtext="Team members"
             icon={UserCog}
           />
-          <StatCard
-            label="Total Revenue"
-            value={`₹${(stats?.revenue ?? 0).toLocaleString("en-IN")}`}
-            subtext={`From ${stats?.invoices ?? 0} invoices`}
-            icon={IndianRupee}
-          />
+          {!isDoctor && (
+            <StatCard
+              label="Total Revenue"
+              value={`₹${(stats?.revenue ?? 0).toLocaleString("en-IN")}`}
+              subtext={`From ${stats?.invoices ?? 0} invoices`}
+              icon={IndianRupee}
+            />
+          )}
         </div>
       </Card>
 
