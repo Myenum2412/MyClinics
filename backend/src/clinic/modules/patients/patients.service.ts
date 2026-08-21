@@ -445,6 +445,7 @@ export class PatientService {
       whatsapp: patient.whatsapp ?? null,
       email: user.email,
       password,
+      clinicId,
     });
 
     return { email: user.email, password };

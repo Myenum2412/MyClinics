@@ -306,16 +306,29 @@ export async function notifyPatientCredentials(
     whatsapp?: string | null;
     email: string;
     password: string;
+    clinicId?: string;
   }
 ): Promise<void> {
   const phone = pickNotifyPhone(user);
   if (!phone) return;
-  const org = await ensureDefaultOrganization(db);
+
+  let clinicName = "";
+  if (user.clinicId) {
+    const clinic = await db.collection(CLINIC_COLLECTIONS.clinics).findOne({ clinicId: user.clinicId });
+    if (clinic) {
+      clinicName = clinic.name;
+    }
+  }
+  if (!clinicName) {
+    const org = await ensureDefaultOrganization(db);
+    clinicName = org.name;
+  }
+
   await queue(
     db,
     phone,
     [
-      `Hi ${firstName(user)}, your patient portal login for ${org.name} has been reset.`,
+      `Hi ${firstName(user)}, your patient portal login for *${clinicName}* has been reset.`,
       `Email: ${user.email}`,
       `Password: ${user.password}`,
     ].join("\n"),
