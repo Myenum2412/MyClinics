@@ -116,9 +116,9 @@ export function buildServer() {
         return reply.code(error.statusCode).send({ error: error.message });
       }
       console.error("Unhandled server error", error);
-      return reply
-        .code(500)
-        .send({ error: "Something went wrong. Please try again." });
+      return reply.code(500).send({
+        error: `Something went wrong. Please try again. (${error.message})`,
+      });
     }
   );
 

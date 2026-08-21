@@ -185,7 +185,12 @@ export default function SettingsPage() {
       setSettings(updated);
       toast.success("Billing settings saved successfully");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save billing settings");
+      console.error("Failed to save billing settings", err);
+      const detail =
+        err instanceof Error && err.message
+          ? err.message
+          : "Failed to save billing settings";
+      toast.error(`Billing settings could not be saved: ${detail}`);
     } finally {
       setSavingBilling(false);
     }
