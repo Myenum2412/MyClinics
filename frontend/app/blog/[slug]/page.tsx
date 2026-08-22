@@ -11,6 +11,7 @@ import {
   resolveCatalogArticle,
   type ResolvedArticle,
 } from "@/lib/blog-content";
+import { readBlogFileArticle } from "@/lib/blog-fs";
 import { ARTICLES } from "@/lib/blog-posts";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3456";
@@ -30,9 +31,10 @@ function resolveArticle(slug: string): ResolvedArticle | null {
       faqs: [],
     };
   }
-  const entry = findCatalogEntry(slug);
-  if (entry) return resolveCatalogArticle(entry);
-  return null;
+  return readBlogFileArticle(slug) ?? (() => {
+    const entry = findCatalogEntry(slug);
+    return entry ? resolveCatalogArticle(entry) : null;
+  })();
 }
 
 export async function generateMetadata({
