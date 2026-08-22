@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type DragEvent } from "react";
+import { forwardRef, useImperativeHandle, useCallback, useEffect, useRef, useState, type DragEvent } from "react";
 import { toast } from "sonner";
 import { uploadMedicalRecordFile, type MedicalRecordFile } from "@/lib/clinic-api";
 import { Button } from "@/components/ui/button";
@@ -119,6 +119,11 @@ function generateScreenshotName(mimeType: string): string {
   return `Screenshot_${timestamp}.${ext}`;
 }
 
+export interface FileUploadSystemHandle {
+  openFilePicker: () => void;
+  openFolderPicker: () => void;
+}
+
 export interface FileUploadSystemProps {
   clinicId: string;
   patientId: string;
@@ -127,13 +132,17 @@ export interface FileUploadSystemProps {
   disabled?: boolean;
 }
 
-export function FileUploadSystem({
-  clinicId,
-  patientId,
-  currentFolderKey = "medical-records",
-  onUploadSuccess,
-  disabled = false,
-}: FileUploadSystemProps) {
+export const FileUploadSystem = forwardRef<FileUploadSystemHandle, FileUploadSystemProps>(
+  function FileUploadSystem(
+    {
+      clinicId,
+      patientId,
+      currentFolderKey = "medical-records",
+      onUploadSuccess,
+      disabled = false,
+    },
+    ref
+  ) {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -141,6 +150,11 @@ export function FileUploadSystem({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    openFilePicker: () => fileInputRef.current?.click(),
+    openFolderPicker: () => folderInputRef.current?.click(),
+  }));
 
   const queueRef = useRef(queue);
   queueRef.current = queue;
@@ -704,4 +718,4 @@ export function FileUploadSystem({
       )}
     </div>
   );
-}
+});

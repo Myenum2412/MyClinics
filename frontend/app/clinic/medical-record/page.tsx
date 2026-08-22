@@ -39,7 +39,7 @@ import {
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
-import { FileUploadSystem } from "@/components/clinic/file-upload-system";
+import { FileUploadSystem, type FileUploadSystemHandle } from "@/components/clinic/file-upload-system";
 import { openInNewTab } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -767,6 +767,7 @@ export default function MedicalRecordPage() {
   const [versionsFile, setVersionsFile] = useState<MedicalRecordFile | null>(null);
   const [versionInput, setVersionInput] = useState<MedicalRecordFile | null>(null);
   const [clipboard, setClipboard] = useState<ClipboardItem | null>(null);
+  const uploadSystemRef = useRef<FileUploadSystemHandle>(null);
 
   const refresh = useCallback(() => {
     if (!clinicId) return;
@@ -1320,9 +1321,13 @@ export default function MedicalRecordPage() {
                 <ClipboardCopy className="size-4" /> Paste
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={!selectedPatient || uploading}>
-              {uploading ? <Loader2 className="size-4 animate-spin" /> : <UploadCloud className="size-4" />}
-              {uploading ? "Uploading…" : "Upload"}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => uploadSystemRef.current?.openFilePicker()}
+              disabled={!selectedPatient}
+            >
+              <UploadCloud className="size-4" /> Upload
             </Button>
             {canManage && selectedPatient && (
               <Button variant="outline" size="sm" onClick={() => setNewFolderOpen(true)}>
@@ -1431,6 +1436,7 @@ export default function MedicalRecordPage() {
               <>
                 <div className="mt-4">
                   <FileUploadSystem
+                    ref={uploadSystemRef}
                     clinicId={clinicId}
                     patientId={selectedPatient.patientId}
                     currentFolderKey={currentFolderKey}
@@ -1513,7 +1519,7 @@ export default function MedicalRecordPage() {
                 )}
 
                 {/* Files at this level */}
-                {!search.trim() && (
+                {!search.trim() && (levelFiles.length > 0 || activeFolderId) && (
                   <div className="mt-5">
                     <SectionHeading
                       Icon={activeFolderId ? FolderUp : File}
@@ -1529,19 +1535,7 @@ export default function MedicalRecordPage() {
                         ) : undefined
                       }
                     />
-                    {levelFiles.length === 0 ? (
-                      <Card className="mt-3">
-                        <CardContent className="flex flex-col items-center gap-2 p-8 text-center">
-                          <UploadCloud className="size-8 text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground">
-                            No files in {activeFolderId ? folderName(activeFolderId) : "this patient's records"} yet.
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Drag files anywhere to upload, or click Upload.
-                          </p>
-                        </CardContent>
-                      </Card>
-                    ) : (
+                    {levelFiles.length > 0 && (
                       <div className="mt-3 space-y-1.5">
                         {levelFiles.map((f) => (
                           <FileRow
