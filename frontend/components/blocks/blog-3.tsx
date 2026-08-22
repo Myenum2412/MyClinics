@@ -233,23 +233,34 @@ export default function BlogBlock() {
               <CardContent className="flex-1 px-5">
                 <p className="text-sm text-muted-foreground">{post.excerpt}</p>
               </CardContent>
-              <CardFooter className="items-center gap-3 px-5 pb-5">
-                <Avatar className="size-8 border border-border">
-                  <AvatarImage
-                    src={`https://i.pravatar.cc/150?img=${post.author.img}`}
-                    alt={post.author.name}
-                    className="grayscale"
-                  />
-                  <AvatarFallback className="text-xs">
-                    {post.author.initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 text-xs">
-                  <p className="truncate font-medium text-foreground">
-                    {post.author.name}
-                  </p>
-                  <p className="text-muted-foreground">{post.date}</p>
+              <CardFooter className="items-center justify-between gap-3 px-5 pb-5">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar className="size-8 border border-border">
+                    <AvatarImage
+                      src={`https://i.pravatar.cc/150?img=${post.author.img}`}
+                      alt={post.author.name}
+                      className="grayscale"
+                    />
+                    <AvatarFallback className="text-xs">
+                      {post.author.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 text-xs">
+                    <p className="truncate font-medium text-foreground">
+                      {post.author.name}
+                    </p>
+                    <p className="text-muted-foreground">{post.date}</p>
+                  </div>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  render={<a href={articleHref(post.title)} />}
+                  nativeButton={false}
+                >
+                  Read Article
+                  <ArrowRight data-icon="inline-end" />
+                </Button>
               </CardFooter>
             </Card>
           ))}
