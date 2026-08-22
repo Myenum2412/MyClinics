@@ -4,50 +4,23 @@ import * as React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { ARTICLES } from "@/lib/blog-posts"
 import { Clock } from "lucide-react"
 
-type Section = { id: string; title: string; body: string[] }
+export default function ArticleBlock({ slug }: { slug?: string }) {
+  const article =
+    (slug
+      ? ARTICLES.find(
+          (a) => a.slug === slug || slug.endsWith(`/${a.slug}`)
+        )
+      : undefined) ?? ARTICLES[0]
+  const sections = article.sections
 
-const sections: Section[] = [
-  {
-    id: "overview",
-    title: "Overview",
-    body: [
-      "Design tokens are the single source of truth for the visual language of a product. Instead of hard-coding colors and spacing in components, you reference named values that can change in one place.",
-      "This guide walks through how we structure tokens, how they map to themes, and how to adopt them without a disruptive migration.",
-    ],
-  },
-  {
-    id: "structure",
-    title: "Token structure",
-    body: [
-      "We split tokens into three tiers: primitives, semantic tokens, and component tokens. Primitives are raw values, semantic tokens describe intent, and component tokens bind intent to a specific part.",
-      "Keeping these tiers separate means a rebrand touches primitives only, while component code keeps referring to the same semantic names.",
-    ],
-  },
-  {
-    id: "theming",
-    title: "Theming",
-    body: [
-      "Each theme remaps the semantic tier. A dark theme overrides background and foreground tokens, and every component that reads those names updates automatically with no per-component work.",
-      "Because the contract is the token name, you can ship a new theme without touching a single component file.",
-    ],
-  },
-  {
-    id: "adoption",
-    title: "Adoption",
-    body: [
-      "Roll out tokens incrementally. Start with color, then spacing, then typography, shipping each tier behind the same review process you already use.",
-      "Within a few sprints the hard-coded values are gone and every surface speaks the same visual language.",
-    ],
-  },
-]
-
-export default function ArticleBlock() {
   const [active, setActive] = React.useState(sections[0].id)
   const scrollRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
+    setActive(sections[0].id)
     const root = scrollRef.current
     if (!root) return
 
@@ -69,34 +42,35 @@ export default function ArticleBlock() {
     update()
     root.addEventListener("scroll", update, { passive: true })
     return () => root.removeEventListener("scroll", update)
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [article.slug])
 
   return (
     <section className="flex min-h-svh w-full justify-center bg-background px-6 py-16 text-foreground">
       <div className="mx-auto w-full max-w-4xl">
         <div className="max-w-2xl">
           <Badge variant="secondary" className="mb-4">
-            Guide
+            {article.category}
           </Badge>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-balance">
-            A practical guide to design tokens
+            {article.title}
           </h1>
           <div className="mt-5 flex items-center gap-3">
             <Avatar className="size-9">
               <AvatarImage
-                src="https://i.pravatar.cc/80?img=32"
-                alt="Priya Nair"
+                src={`https://i.pravatar.cc/80?img=${article.author.img}`}
+                alt={article.author.name}
                 className="grayscale"
               />
-              <AvatarFallback>PN</AvatarFallback>
+              <AvatarFallback>{article.author.initials}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">Priya Nair</span>
+              <span className="text-sm font-medium">{article.author.name}</span>
               <span className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="tabular-nums">Jun 12, 2026</span>
+                <span className="tabular-nums">{article.date}</span>
                 <span className="flex items-center gap-1">
                   <Clock className="size-3.5" aria-hidden="true" />
-                  8 Min Read
+                  {article.readTime}
                 </span>
               </span>
             </div>

@@ -1,20 +1,19 @@
-import type { Metadata } from "next";
+"use client";
+
+import { useParams } from "next/navigation";
 
 import ArticleBlock from "@/components/blocks/article-2";
 import FooterBlock from "@/components/footer-block";
 import SiteHeader from "@/components/site-header";
 
-export const metadata: Metadata = {
-  title: "Article",
-  description: "Articles and stories from My Clinics.",
-};
-
 export default function BlogArticlePage() {
+  const { slug } = useParams<{ slug: string }>();
+
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
       <main className="flex-1">
-        <ArticleBlock />
+        <ArticleBlock slug={slug} />
       </main>
       <FooterBlock />
     </div>
