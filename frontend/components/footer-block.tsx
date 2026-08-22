@@ -14,7 +14,7 @@ export default function FooterBlock() {
   return (
     <section className="flex w-full flex-col items-stretch bg-background text-foreground">
       <Separator />
-      <footer className="w-full px-6 py-6">
+      <footer className="mx-auto w-full max-w-7xl px-4 py-6 md:px-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <img
