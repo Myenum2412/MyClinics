@@ -34,6 +34,13 @@ const categories = [
   "Company",
 ] as const
 
+function articleHref(title: string) {
+  return `/blog/${title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}`
+}
+
 const posts = [
   {
     category: "Design",
@@ -159,7 +166,10 @@ export default function BlogBlock() {
               </div>
             </div>
             <div>
-              <Button render={<a href="#" />} nativeButton={false}>
+              <Button
+                render={<a href={articleHref(featured.title)} />}
+                nativeButton={false}
+              >
                 Read Article
                 <ArrowRight data-icon="inline-end" />
               </Button>
@@ -212,7 +222,7 @@ export default function BlogBlock() {
                 </Badge>
                 <CardTitle className="text-lg leading-snug">
                   <a
-                    href="#"
+                    href={articleHref(post.title)}
                     className="transition-colors group-hover:text-primary"
                   >
                     {post.title}
