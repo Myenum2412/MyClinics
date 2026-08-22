@@ -15,12 +15,12 @@ import { cn } from "@/lib/utils"
 import { Bookmark, Clock, ArrowRight } from "lucide-react"
 
 const featured = {
-  category: "Engineering",
-  title: "How we cut API latency by 60% with edge caching",
+  category: "Security",
+  title: "One clinic, one tenant: how My Clinics isolates your data",
   image:
     "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80",
   excerpt:
-    "Our monolith was fast enough, until it wasn't. We traced the bottleneck to cold database reads on every request and rearchitected the caching layer in three weeks.",
+    "Your patients' records should never mix with anyone else's. Here's how our multi-tenant architecture enforces strict data isolation across appointments, prescriptions and billing.",
   author: { name: "Lena Park", initials: "LP", img: 47 },
   date: "Jun 9, 2026",
   readTime: "7 Min Read",
@@ -28,10 +28,10 @@ const featured = {
 
 const categories = [
   "All",
-  "Engineering",
-  "Design",
   "Product",
-  "Company",
+  "Engineering",
+  "Security",
+  "Telehealth",
 ] as const
 
 function articleHref(title: string) {
@@ -43,67 +43,67 @@ function articleHref(title: string) {
 
 const posts = [
   {
-    category: "Design",
-    title: "Building a token system that survives a rebrand",
+    category: "Product",
+    title: "WhatsApp booking your patients actually finish",
     image:
       "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80",
     excerpt:
-      "Semantic tokens feel abstract until your brand color changes overnight.",
+      "No apps to install. Patients book, reschedule and get reminders right inside the chat app they already use.",
     author: { name: "Marcus Webb", initials: "MW", img: 12 },
     date: "May 28, 2026",
     readTime: "5 Min Read",
   },
   {
-    category: "Product",
-    title: "What 1,200 user interviews taught us about onboarding",
+    category: "Engineering",
+    title: "Designing a multi-tenant MongoDB layer for health records",
     image:
       "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&q=80",
     excerpt:
-      "Drop-off at step two had nothing to do with the UI, it was a mental model gap.",
+      "Every query is scoped to a clinicId. A look at the patterns that keep one clinic's data invisible to another.",
     author: { name: "Sofia Andrade", initials: "SA", img: 45 },
     date: "May 14, 2026",
     readTime: "9 Min Read",
   },
   {
-    category: "Engineering",
-    title: "Shipping a type-safe API layer without a build step",
+    category: "Telehealth",
+    title: "From walk-ins to online bookings: a clinic's first 30 days",
     image:
       "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=800&q=80",
     excerpt:
-      "We replaced our codegen pipeline with inferred types and never looked back.",
+      "How a single-location clinic moved scheduling, records and billing onto My Clinics without missing a beat.",
     author: { name: "Devon Ross", initials: "DR", img: 13 },
     date: "May 2, 2026",
     readTime: "6 Min Read",
   },
   {
-    category: "Company",
-    title: "Why Acme is going remote-first in 2026",
+    category: "Security",
+    title: "Encrypting patient data in transit and at rest",
     image:
       "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
     excerpt:
-      "Three years of hybrid taught us where collaboration actually happens.",
+      "What we encrypt, how we rotate keys, and why passwords are hashed and never readable — even by us.",
     author: { name: "Priya Nair", initials: "PN", img: 44 },
     date: "Apr 19, 2026",
     readTime: "4 Min Read",
   },
   {
-    category: "Design",
-    title: "A practical guide to accessible color contrast",
+    category: "Product",
+    title: "Prescriptions, reports and bills in one patient timeline",
     image:
       "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?w=800&q=80",
     excerpt:
-      "Pass WCAG without sacrificing the palette your brand team fought for.",
+      "Staff shouldn't dig through five screens. Here's how we unified the patient journey into a single view.",
     author: { name: "Theo Lambert", initials: "TL", img: 15 },
     date: "Apr 5, 2026",
     readTime: "8 Min Read",
   },
   {
-    category: "Product",
-    title: "Pricing experiments that doubled our trial conversion",
+    category: "Telehealth",
+    title: "An AI assistant that finds the right doctor for you",
     image:
       "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80",
     excerpt:
-      "Small framing changes on the pricing page moved the needle more than discounts.",
+      "Ask in plain language, get matched with the right specialist and book instantly. Inside our AI chat assistant.",
     author: { name: "Hana Kim", initials: "HK", img: 41 },
     date: "Mar 22, 2026",
     readTime: "5 Min Read",
@@ -122,14 +122,15 @@ export default function BlogBlock() {
         <div className="mb-10 flex flex-col gap-3">
           <Badge variant="secondary" className="w-fit">
             <Bookmark data-icon="inline-start" />
-            The Acme Blog
+            The My Clinics Blog
           </Badge>
           <h1 className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-            Stories from the team building Acme
+            Insights on running a modern clinic
           </h1>
           <p className="max-w-2xl text-muted-foreground">
-            Engineering deep dives, design notes, and the product decisions
-            behind the work we ship.
+            Product updates, engineering deep dives, and practical guides on
+            appointments, records, prescriptions and billing — from the team
+            building My Clinics.
           </p>
         </div>
 
