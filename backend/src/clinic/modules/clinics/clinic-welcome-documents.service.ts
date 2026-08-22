@@ -42,7 +42,8 @@ export class ClinicWelcomeDocumentService {
 
     await uploadToR2(r2Key, input.data, input.mimeType ?? "application/octet-stream");
 
-    const doc: Omit<ClinicWelcomeDocumentDoc, "clinicId"> = {
+    const doc: ClinicWelcomeDocumentDoc = {
+      clinicId,
       documentId,
       fileName: input.fileName,
       r2Key,
@@ -57,14 +58,14 @@ export class ClinicWelcomeDocumentService {
           mimeType: input.mimeType,
           size: input.data.length,
           uploadedBy: ctx.userId,
-          uploadedByName: null,
+          uploadedByName: ctx.name ?? null,
           createdAt: now,
         },
       ],
       downloadCount: 0,
       lastDownloadedAt: null,
       uploadedBy: ctx.userId,
-      uploadedByName: null,
+      uploadedByName: ctx.name ?? null,
       createdAt: now,
     };
 
