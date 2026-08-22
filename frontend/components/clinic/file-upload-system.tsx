@@ -333,6 +333,52 @@ export const FileUploadSystem = forwardRef<FileUploadSystemHandle, FileUploadSys
     return () => window.removeEventListener("paste", handlePaste);
   }, [disabled, patientId, addFilesToQueue]);
 
+  // Window-level Drag & Drop listener (shows dropzone overlay when files are dragged anywhere onto page)
+  useEffect(() => {
+    if (disabled || !patientId) return;
+
+    const handleWindowDragEnter = (e: globalThis.DragEvent) => {
+      if (!e.dataTransfer?.types.includes("Files")) return;
+      e.preventDefault();
+      dragDepth.current += 1;
+      setIsDragging(true);
+    };
+
+    const handleWindowDragOver = (e: globalThis.DragEvent) => {
+      if (!e.dataTransfer?.types.includes("Files")) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    };
+
+    const handleWindowDragLeave = (e: globalThis.DragEvent) => {
+      e.preventDefault();
+      dragDepth.current = Math.max(0, dragDepth.current - 1);
+      if (dragDepth.current <= 0) {
+        dragDepth.current = 0;
+        setIsDragging(false);
+      }
+    };
+
+    const handleWindowDrop = (e: globalThis.DragEvent) => {
+      if (!e.dataTransfer?.types.includes("Files")) return;
+      e.preventDefault();
+      dragDepth.current = 0;
+      setIsDragging(false);
+    };
+
+    window.addEventListener("dragenter", handleWindowDragEnter);
+    window.addEventListener("dragover", handleWindowDragOver);
+    window.addEventListener("dragleave", handleWindowDragLeave);
+    window.addEventListener("drop", handleWindowDrop);
+
+    return () => {
+      window.removeEventListener("dragenter", handleWindowDragEnter);
+      window.removeEventListener("dragover", handleWindowDragOver);
+      window.removeEventListener("dragleave", handleWindowDragLeave);
+      window.removeEventListener("drop", handleWindowDrop);
+    };
+  }, [disabled, patientId]);
+
   // Drag & Drop handlers
   const handleDragEnter = useCallback((e: DragEvent) => {
     if (!e.dataTransfer.types.includes("Files")) return;
@@ -486,70 +532,32 @@ export const FileUploadSystem = forwardRef<FileUploadSystemHandle, FileUploadSys
         disabled={disabled}
       />
 
-      {/* Main Files Upload Area Dropzone */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={() => !disabled && fileInputRef.current?.click()}
-        onKeyDown={(e) => {
-          if ((e.key === "Enter" || e.key === " ") && !disabled) {
-            e.preventDefault();
-            fileInputRef.current?.click();
-          }
-        }}
-        onDragEnter={handleDragEnter}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`group relative flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-all ${
-          isDragging
-            ? "border-primary bg-primary/10 ring-4 ring-primary/20 scale-[1.01]"
-            : "border-border bg-gradient-to-b from-muted/30 to-background hover:border-primary/50 hover:bg-muted/40"
-        } ${disabled ? "pointer-events-none opacity-60" : ""}`}
-      >
-        <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary transition group-hover:scale-110">
-          <UploadCloud className="size-7" />
+      {/* Full-Screen Drag & Drop Overlay (only shown when dragging files onto screen) */}
+      {isDragging && (
+        <div
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md transition-all"
+        >
+          <div className="flex flex-col items-center justify-center gap-4 rounded-3xl border-4 border-dashed border-primary bg-card p-12 text-center shadow-2xl scale-105 animate-in fade-in zoom-in-95 max-w-lg">
+            <div className="flex size-20 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <UploadCloud className="size-10 animate-bounce" />
+            </div>
+            <div>
+              <p className="text-xl font-bold text-foreground">
+                Drop files here to upload
+              </p>
+              <p className="text-sm font-medium text-primary mt-1">
+                Supports PDF, DOCX, XLSX, JPG, PNG, TIFF, DICOM & Video files up to 25MB
+              </p>
+              <p className="text-xs text-muted-foreground mt-3">
+                Pasting with <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] font-semibold text-foreground ring-1 ring-border">Ctrl + V</kbd> is also supported anytime
+              </p>
+            </div>
+          </div>
         </div>
-
-        <div className="mt-4 space-y-1">
-          <p className="text-base font-semibold text-foreground">
-            Drag & Drop files here
-          </p>
-          <p className="text-sm font-medium text-primary">
-            or <span className="underline underline-offset-4">Click to Upload</span>
-          </p>
-          <p className="text-xs text-muted-foreground pt-1">
-            or Paste files/images with <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] font-semibold text-foreground ring-1 ring-border">Ctrl + V</kbd>
-          </p>
-        </div>
-
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
-          <Button
-            type="button"
-            variant="default"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={disabled}
-            className="gap-2"
-          >
-            <UploadCloud className="size-4" /> Upload Files
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => folderInputRef.current?.click()}
-            disabled={disabled}
-            className="gap-2"
-          >
-            <FolderUp className="size-4 text-violet-500" /> Upload Folder
-          </Button>
-        </div>
-
-        <p className="mt-4 text-[11px] text-muted-foreground">
-          Supports PDF, DOCX, XLSX, JPG, PNG, TIFF, DICOM & Video files up to 25MB
-        </p>
-      </div>
+      )}
 
       {/* Upload Queue Panel / Drawer */}
       {queue.length > 0 && (
