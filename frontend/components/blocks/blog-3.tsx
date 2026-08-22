@@ -13,14 +13,40 @@ import {
 } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import { articleHref, ARTICLES } from "@/lib/blog-posts"
+import { CATALOG } from "@/lib/blog-catalog"
+import { resolveCatalogArticle } from "@/lib/blog-content"
 import { Bookmark, Clock, ArrowRight } from "lucide-react"
 
 const featured = ARTICLES[0]
-const posts = ARTICLES.slice(1)
+const posts = [
+  ...ARTICLES.slice(1).map((a) => ({ ...a })),
+  ...CATALOG.map((c) => {
+    const r = resolveCatalogArticle(c)
+    return {
+      category: c.cluster,
+      title: c.title,
+      excerpt: c.excerpt,
+      image: `/blog/cover/${c.slug}`,
+      author: r.author,
+      date: r.date,
+      readTime: r.readTime,
+    }
+  }),
+]
 
 const categories = [
   "All",
   "Guides",
+  "Clinic Software",
+  "Appointments",
+  "Records",
+  "Prescriptions",
+  "Billing",
+  "WhatsApp",
+  "AI",
+  "Growth",
+  "Specialties",
+  "Buying Guide",
   "Product",
   "Engineering",
   "Security",
