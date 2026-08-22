@@ -1,5 +1,5 @@
 import "./bootstrap-env";
-import { getDb } from "@/lib/db";
+import { getDb } from "@/lib/db-pools";
 
 async function main() {
   const db = await getDb();

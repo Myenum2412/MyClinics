@@ -631,7 +631,7 @@ export function listPatients(
   if (query.q) params.set("q", query.q);
   if (query.doctorId) params.set("doctorId", query.doctorId);
   if (query.status) params.set("status", query.status);
-  params.set("limit", String(query.limit ?? 100));
+  params.set("limit", String(query.limit ?? 50));
   return request(tenantPath(clinicId, `/patients?${params}`));
 }
 
@@ -718,7 +718,7 @@ export function listAppointments(
   if (query.status) params.set("status", query.status);
   if (query.doctorId) params.set("doctorId", query.doctorId);
   if (query.patientId) params.set("patientId", query.patientId);
-  params.set("limit", String(query.limit ?? 100));
+  params.set("limit", String(query.limit ?? 50));
   return request(tenantPath(clinicId, `/appointments?${params}`));
 }
 
@@ -769,7 +769,7 @@ export function listDoctors(
   if (query.q) params.set("q", query.q);
   if (query.specialization) params.set("specialization", query.specialization);
   if (query.status) params.set("status", query.status);
-  params.set("limit", String(query.limit ?? 100));
+  params.set("limit", String(query.limit ?? 50));
   return request(tenantPath(clinicId, `/doctors?${params}`));
 }
 
@@ -861,7 +861,7 @@ export function listStaff(
   if (query.q) params.set("q", query.q);
   if (query.position) params.set("position", query.position);
   if (query.status) params.set("status", query.status);
-  params.set("limit", String(query.limit ?? 100));
+  params.set("limit", String(query.limit ?? 50));
   return request(tenantPath(clinicId, `/staff?${params}`));
 }
 
@@ -904,7 +904,7 @@ export function listRecords(
   if (query.patientId) params.set("patientId", query.patientId);
   if (query.from) params.set("from", query.from);
   if (query.to) params.set("to", query.to);
-  params.set("limit", String(query.limit ?? 100));
+  params.set("limit", String(query.limit ?? 50));
   return request(tenantPath(clinicId, `/medicine?${params}`));
 }
 
@@ -946,7 +946,7 @@ export function listPrescriptions(
   if (query.doctorId) params.set("doctorId", query.doctorId);
   if (query.from) params.set("from", query.from);
   if (query.to) params.set("to", query.to);
-  params.set("limit", String(query.limit ?? 100));
+  params.set("limit", String(query.limit ?? 50));
   return request(tenantPath(clinicId, `/prescriptions?${params}`));
 }
 
@@ -991,7 +991,7 @@ export function listBills(
   if (query.status) params.set("status", query.status);
   if (query.from) params.set("from", query.from);
   if (query.to) params.set("to", query.to);
-  params.set("limit", String(query.limit ?? 100));
+  params.set("limit", String(query.limit ?? 50));
   return request(tenantPath(clinicId, `/billing?${params}`));
 }
 
@@ -1627,7 +1627,7 @@ export function listAuditLogs(
   if (query.actorId) params.set("actorId", query.actorId);
   if (query.from) params.set("from", query.from);
   if (query.to) params.set("to", query.to);
-  params.set("limit", String(query.limit ?? 100));
+  params.set("limit", String(query.limit ?? 50));
   return request(tenantPath(clinicId, `/audit-logs?${params}`));
 }
 
@@ -1682,7 +1682,7 @@ export function listAllClinics(
   const params = new URLSearchParams();
   if (query.status) params.set("status", query.status);
   if (query.q) params.set("q", query.q);
-  params.set("limit", String(query.limit ?? 100));
+  params.set("limit", String(query.limit ?? 50));
   return request(`/api/clinics?${params}`);
 }
 

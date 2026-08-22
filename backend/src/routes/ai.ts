@@ -1,5 +1,5 @@
 ﻿import type { FastifyInstance } from "fastify";
-import { getDb } from "@/lib/db";
+import { getDb } from "@/lib/db-pools";
 import { DB_COLLECTIONS } from "@/lib/constants";
 import {
   getOrganization,

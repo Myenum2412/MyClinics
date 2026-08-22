@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Db } from "mongodb";
-import { getDb } from "@/lib/db";
+import { getDb } from "@/lib/db-pools";
 import { BadRequestError, UnauthorizedError } from "@/clinic/core/errors";
 import { ClinicWelcomeDocumentService } from "@/clinic/modules/clinics/clinic-welcome-documents.service";
 import { clinicWelcomeDocumentToPublic } from "@/clinic/modules/clinics/clinic-welcome-documents.schema";

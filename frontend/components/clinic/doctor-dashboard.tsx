@@ -60,10 +60,10 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
   const load = useCallback(() => {
     if (!clinicId) return;
     return Promise.all([
-      listPatients(clinicId, { limit: 500 }),
+      listPatients(clinicId, { limit: 50 }),
       listAppointments(clinicId, { date: today(), limit: 100 }),
       listPrescriptions(clinicId, { limit: 100 }),
-      listAppointments(clinicId, { limit: 1000 }),
+      listAppointments(clinicId, { limit: 50 }),
     ])
       .then(([p, a, pr, allA]) => {
         setPatients(p.items);

@@ -1,0 +1,386 @@
+
+> @myclinics/backend@0.1.0 dev
+> tsx watch src/index.ts
+
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T11:49:21.921Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T11:49:23.147Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T11:49:25.713Z","level":"info","message":"cron-job.org job updated","jobId":8278969}
+{"ts":"2026-08-21T11:49:25.714Z","level":"info","message":"[cron-job.org] scheduler job updated","jobId":8278969}
+Unhandled server error MongoServerError: E11000 duplicate key error collection: myclinic.clc_clinics index: slug_1 dup key: { slug: "crash-doctor-clinic" }
+    at InsertOneOperation.handleOk (C:\Users\amarn\MyClinics\node_modules\mongodb\src\operations\insert.ts:79:13)
+    at tryOperation (C:\Users\amarn\MyClinics\node_modules\mongodb\src\operations\execute_operation.ts:290:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async executeOperation (C:\Users\amarn\MyClinics\node_modules\mongodb\src\operations\execute_operation.ts:119:12)
+    at async Collection.insertOne (C:\Users\amarn\MyClinics\node_modules\mongodb\src\collection.ts:294:12)
+    at async AuthService.signup (C:\Users\amarn\MyClinics\backend\src\clinic\modules\auth\auth.service.ts:48:20)
+    at async AuthController.signup (C:\Users\amarn\MyClinics\backend\src\clinic\modules\auth\auth.controller.ts:37:20) {
+  errorLabelSet: Set(0) {},
+  errorResponse: {
+    index: 0,
+    code: 11000,
+    errmsg: 'E11000 duplicate key error collection: myclinic.clc_clinics index: slug_1 dup key: { slug: "crash-doctor-clinic" }',
+    keyPattern: { slug: 1 },
+    keyValue: { slug: 'crash-doctor-clinic' }
+  },
+  index: 0,
+  code: 11000,
+  keyPattern: { slug: 1 },
+  keyValue: { slug: 'crash-doctor-clinic' }
+}
+10:07:40 PM [tsx] change in ./src\services\whatsapp\save-notification.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+10:07:51 PM [tsx] change in ./src\services\whatsapp\save-notification.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+10:07:57 PM [tsx] change in ./src\clinic\modules\users\users.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"ts":"2026-08-21T16:38:11.881Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T16:38:14.721Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T16:38:16.113Z","level":"info","message":"cron-job.org job updated","jobId":8278969}
+{"ts":"2026-08-21T16:38:16.113Z","level":"info","message":"[cron-job.org] scheduler job updated","jobId":8278969}
+10:16:57 PM [tsx] change in ./src\clinic\modules\users\users.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T16:47:06.112Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T16:47:06.480Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+10:17:08 PM [tsx] change in ./src\clinic\modules\doctors\doctors.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+10:17:15 PM [tsx] change in ./src\clinic\modules\doctors\doctors.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌁ auth for agents [www.vestauth.com]
+{"ts":"2026-08-21T16:47:21.140Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T16:47:21.540Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T16:47:22.733Z","level":"info","message":"cron-job.org job updated","jobId":8278969}
+{"ts":"2026-08-21T16:47:22.733Z","level":"info","message":"[cron-job.org] scheduler job updated","jobId":8278969}
+10:18:39 PM [tsx] change in ./src\clinic\modules\users\users.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌁ auth for agents [www.vestauth.com]
+{"ts":"2026-08-21T16:48:45.070Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T16:48:45.535Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T16:48:46.731Z","level":"info","message":"cron-job.org job updated","jobId":8278969}
+{"ts":"2026-08-21T16:48:46.732Z","level":"info","message":"[cron-job.org] scheduler job updated","jobId":8278969}
+10:18:55 PM [tsx] change in ./src\clinic\modules\users\users.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T16:49:00.466Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T16:49:00.888Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T16:49:01.978Z","level":"info","message":"cron-job.org job updated","jobId":8278969}
+{"ts":"2026-08-21T16:49:01.978Z","level":"info","message":"[cron-job.org] scheduler job updated","jobId":8278969}
+10:25:46 PM [tsx] change in ./src\clinic\modules\clinics\clinic-welcome-documents.controller.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+10:25:52 PM [tsx] change in ./src\clinic\modules\clinics\clinic-welcome-documents.controller.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ enable debugging { debug: true }
+{"ts":"2026-08-21T16:56:01.720Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T16:56:02.091Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+10:27:54 PM [tsx] unlink in ./src\clinic\modules\users\users.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+10:27:59 PM [tsx] unlink in ./src\clinic\modules\users\users.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+{"ts":"2026-08-21T16:58:05.154Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T16:58:05.519Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T16:58:07.225Z","level":"info","message":"cron-job.org job updated","jobId":8278969}
+{"ts":"2026-08-21T16:58:07.225Z","level":"info","message":"[cron-job.org] scheduler job updated","jobId":8278969}
+10:28:43 PM [tsx] unlink in ./src\clinic\modules\users\users.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+10:28:48 PM [tsx] unlink in ./src\clinic\modules\users\users.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+{"ts":"2026-08-21T16:58:58.823Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T16:58:59.199Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+10:30:25 PM [tsx] change in ./src\lib\r2.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T17:00:32.907Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:00:33.264Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+10:30:40 PM [tsx] change in ./src\services\whatsapp\save-notification.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+{"ts":"2026-08-21T17:00:47.108Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:00:47.467Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+10:30:50 PM [tsx] change in ./src\services\whatsapp\save-notification.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+10:30:56 PM [tsx] change in ./src\services\whatsapp\save-notification.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"ts":"2026-08-21T17:01:02.028Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:01:02.395Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T17:01:03.779Z","level":"info","message":"cron-job.org job updated","jobId":8278969}
+{"ts":"2026-08-21T17:01:03.779Z","level":"info","message":"[cron-job.org] scheduler job updated","jobId":8278969}
+10:31:09 PM [tsx] change in ./src\services\whatsapp\save-notification.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T17:01:15.973Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:01:16.334Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+10:31:17 PM [tsx] change in ./src\services\whatsapp\save-notification.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌁ auth for agents [www.vestauth.com]
+{"ts":"2026-08-21T17:01:24.747Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:01:25.152Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+10:45:08 PM [tsx] change in ./src\services\whatsapp\appointment-notification.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"ts":"2026-08-21T17:15:19.799Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:15:20.198Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+10:56:58 PM [tsx] change in ./src\services\whatsapp\save-notification.service.ts Rerunning...
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+Error: Transform failed with 1 error:
+C:\Users\amarn\MyClinics\backend\src\services\whatsapp\save-notification.service.ts:545:6: ERROR: Expected ";" but found ":"
+    at failureErrorWithLog (C:\Users\amarn\MyClinics\node_modules\esbuild\lib\main.js:1752:15)
+    at C:\Users\amarn\MyClinics\node_modules\esbuild\lib\main.js:1019:50
+    at responseCallbacks.<computed> (C:\Users\amarn\MyClinics\node_modules\esbuild\lib\main.js:886:9)
+    at handleIncomingPacket (C:\Users\amarn\MyClinics\node_modules\esbuild\lib\main.js:941:12)
+    at Socket.readFromStdout (C:\Users\amarn\MyClinics\node_modules\esbuild\lib\main.js:864:7)
+    at Socket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23) {
+  name: 'TransformError'
+}
+
+Node.js v24.15.0
+10:57:23 PM [tsx] change in ./src\services\whatsapp\save-notification.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌁ auth for agents [www.vestauth.com]
+10:57:35 PM [tsx] change in ./src\clinic\modules\medicine\medicine.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌁ auth for agents [www.vestauth.com]
+10:57:43 PM [tsx] change in ./src\clinic\modules\medicine\medicine.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+10:57:51 PM [tsx] change in ./src\clinic\modules\medicine\medicine.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"ts":"2026-08-21T17:27:58.095Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:27:59.088Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+10:57:59 PM [tsx] change in ./src\clinic\modules\medicine\medicine.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+{"ts":"2026-08-21T17:28:05.058Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:28:05.453Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T17:28:06.002Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+10:58:28 PM [tsx] change in ./src\clinic\modules\medicine\medicine.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+10:58:33 PM [tsx] change in ./src\clinic\modules\medicine\medicine.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+{"ts":"2026-08-21T17:28:42.327Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:28:42.692Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+10:58:54 PM [tsx] change in ./src\clinic\modules\medicine\medicine.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"ts":"2026-08-21T17:29:00.618Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:29:01.062Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T17:29:01.638Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:00:57 PM [tsx] change in ./src\services\whatsapp\save-notification.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ enable debugging { debug: true }
+{"ts":"2026-08-21T17:31:15.190Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:31:15.623Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T17:31:16.295Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:24:21 PM [tsx] change in ./src\clinic\modules\settings\settings.repository.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+{"ts":"2026-08-21T17:54:35.228Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:54:36.418Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+11:25:04 PM [tsx] change in ./src\app.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+{"ts":"2026-08-21T17:55:17.267Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:55:18.339Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+11:29:17 PM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+11:29:18 PM [tsx] change in ./src\clinic\modules\doctors\doctors.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+{"ts":"2026-08-21T17:59:26.890Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T17:59:27.952Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+11:30:03 PM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ enable debugging { debug: true }
+{"ts":"2026-08-21T18:00:11.533Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:00:12.583Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:00:13.143Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:30:20 PM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"ts":"2026-08-21T18:00:29.857Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:00:31.018Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+11:30:37 PM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"ts":"2026-08-21T18:00:47.856Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:00:48.901Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+11:35:06 PM [tsx] change in ./src\lib\http.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"ts":"2026-08-21T18:05:16.664Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:05:18.199Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:05:18.839Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:35:50 PM [tsx] change in ./src\routes\whatsapp-session.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌁ auth for agents [www.vestauth.com]
+{"ts":"2026-08-21T18:06:00.343Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:06:01.672Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:06:02.275Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:36:11 PM [tsx] change in ./src\routes\cron-reminders.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"ts":"2026-08-21T18:06:20.406Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:06:21.428Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:06:22.071Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:46:07 PM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T18:16:16.489Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:16:17.596Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:16:18.152Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:46:22 PM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ enable debugging { debug: true }
+{"ts":"2026-08-21T18:16:30.189Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:16:31.082Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:16:31.676Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:47:10 PM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌁ auth for agents [www.vestauth.com]
+{"ts":"2026-08-21T18:17:17.859Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:17:18.756Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:17:19.346Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:47:32 PM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ suppress logs { quiet: true }
+{"ts":"2026-08-21T18:17:39.818Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:17:40.723Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:17:41.279Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:47:41 PM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+{"ts":"2026-08-21T18:17:51.309Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:17:52.253Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+11:50:03 PM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"ts":"2026-08-21T18:20:13.350Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:20:14.221Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+11:50:14 PM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+{"ts":"2026-08-21T18:20:22.229Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:20:23.127Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:20:23.741Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:50:34 PM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"ts":"2026-08-21T18:20:42.830Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:20:43.765Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:20:44.364Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:50:59 PM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+{"ts":"2026-08-21T18:21:07.770Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:21:08.759Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:21:09.455Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:51:20 PM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"ts":"2026-08-21T18:21:28.938Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:21:29.901Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+11:51:33 PM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌁ auth for agents [www.vestauth.com]
+{"ts":"2026-08-21T18:21:42.049Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:21:42.968Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+11:51:52 PM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+{"ts":"2026-08-21T18:22:02.835Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:22:03.764Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:22:04.382Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+11:55:18 PM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+{"ts":"2026-08-21T18:25:35.838Z","level":"error","message":"Failed to initialize database","error":{"errorLabelSet":{},"address":"ac-drq3z4h-shard-00-02.wjlyxvi.mongodb.net:27017"}}
+11:57:32 PM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ enable debugging { debug: true }
+{"ts":"2026-08-21T18:27:43.195Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:27:44.253Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:27:44.823Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+12:04:37 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌁ auth for agents [www.vestauth.com]
+{"ts":"2026-08-21T18:34:46.441Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:34:47.599Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:34:48.283Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+12:10:08 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"ts":"2026-08-21T18:40:19.328Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:40:20.596Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:40:21.214Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+12:10:40 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+{"ts":"2026-08-21T18:40:49.368Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:40:50.393Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:40:50.982Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+12:11:17 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+{"ts":"2026-08-21T18:41:25.902Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:41:27.074Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+12:11:27 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T18:41:38.237Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:41:39.202Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+12:12:04 AM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+{"ts":"2026-08-21T18:42:13.736Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:42:14.739Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+12:12:33 AM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ suppress logs { quiet: true }
+12:12:43 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T18:42:51.288Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:42:52.379Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:42:53.006Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+12:13:00 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ enable debugging { debug: true }
+{"ts":"2026-08-21T18:43:09.063Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:43:10.157Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:43:11.051Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+12:16:32 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ secrets for agents [www.dotenvx.com]
+12:16:41 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+12:16:49 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ suppress logs { quiet: true }
+{"ts":"2026-08-21T18:46:57.808Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:46:58.843Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+12:16:58 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ enable debugging { debug: true }
+{"ts":"2026-08-21T18:47:08.798Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:47:09.830Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+12:17:11 AM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"ts":"2026-08-21T18:47:19.611Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:47:20.701Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:47:21.269Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+12:28:02 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"ts":"2026-08-21T18:58:09.856Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:58:10.448Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:58:11.007Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+12:28:19 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ enable debugging { debug: true }
+{"ts":"2026-08-21T18:58:25.905Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:58:26.282Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+12:28:33 AM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T18:58:38.328Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:58:38.712Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:58:39.226Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+12:29:48 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T18:59:52.956Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T18:59:53.336Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T18:59:53.876Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+12:29:56 AM [tsx] change in ./src\lib\bill-pdf.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+{"ts":"2026-08-21T19:00:03.342Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T19:00:03.783Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+12:30:25 AM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+{"ts":"2026-08-21T19:00:32.457Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T19:00:32.896Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+12:51:37 AM [tsx] change in ./src\routes\whatsapp-session.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+{"ts":"2026-08-21T19:21:45.597Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T19:21:45.984Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+1:00:36 AM [tsx] change in ./src\clinic\modules\billing\billing.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ suppress logs { quiet: true }
+{"ts":"2026-08-21T19:30:46.129Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T19:30:46.528Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+1:00:53 AM [tsx] change in ./src\clinic\modules\billing\billing.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+{"ts":"2026-08-21T19:31:00.063Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T19:31:00.477Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+1:01:34 AM [tsx] change in ./src\services\whatsapp\bill-notification.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ override existing { override: true }
+{"ts":"2026-08-21T19:31:41.101Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T19:31:41.484Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+1:01:49 AM [tsx] change in ./src\services\whatsapp\bill-notification.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T19:31:58.835Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T19:31:59.219Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T19:31:59.810Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}
+1:02:16 AM [tsx] change in ./src\services\whatsapp\bill-notification.service.ts Restarting...
+◇ injected env (27) from ..\frontend\.env // tip: ⌘ enable debugging { debug: true }
+{"ts":"2026-08-21T19:32:23.987Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T19:32:24.365Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+1:02:53 AM [tsx] change in ./src\services\whatsapp\bill-notification.service.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ◈ encrypted .env [www.dotenvx.com]
+{"ts":"2026-08-21T19:33:00.917Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T19:33:01.332Z","level":"error","message":"Failed to start server","error":{"code":"EADDRINUSE","errno":-4091,"syscall":"listen","address":"0.0.0.0","port":3100}}
+1:09:11 AM [tsx] change in ./src\lib\bill-pdf.ts Rerunning...
+◇ injected env (27) from ..\frontend\.env // tip: ⌁ auth for agents [www.vestauth.com]
+{"ts":"2026-08-21T19:39:18.470Z","level":"info","message":"Database initialization complete"}
+{"ts":"2026-08-21T19:39:18.855Z","level":"info","message":"API server listening on http://0.0.0.0:3100"}
+{"ts":"2026-08-21T19:39:19.392Z","level":"error","message":"[cron-job.org] scheduler sync failed","error":{}}

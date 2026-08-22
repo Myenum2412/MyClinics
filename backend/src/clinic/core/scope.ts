@@ -3,7 +3,7 @@ import type {
   FastifyReply,
   FastifyRequest,
 } from "fastify";
-import { getDb } from "@/lib/db";
+import { getDb } from "@/lib/db-pools";
 import { cached, invalidateCache } from "@/lib/cache";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import {

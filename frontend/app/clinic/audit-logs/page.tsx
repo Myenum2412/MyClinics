@@ -71,7 +71,7 @@ export default function AuditLogsPage() {
     listAuditLogs(clinicId, {
       entity: entity || undefined,
       action: action || undefined,
-      limit: 500,
+      limit: 50,
     })
       .then((res) => {
         setItems(res.items);

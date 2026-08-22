@@ -4,7 +4,7 @@ import {
   requireClinicAccess,
   requireRoles,
 } from "@/clinic/core/scope";
-import { getDb } from "@/lib/db";
+import { getDb } from "@/lib/db-pools";
 
 /**
  * Prescription routes — scoped to the URL clinic AND to the caller's

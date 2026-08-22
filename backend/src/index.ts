@@ -1,6 +1,6 @@
 import "./scripts/bootstrap-env";
 import { buildServer } from "@/app";
-import { getDb } from "@/lib/db";
+import { getDb, closeAllPools } from "@/lib/db-pools";
 import { ensureIndexes } from "@/lib/indexes";
 import { ensureClinicIndexes } from "@/clinic/indexes";
 import { ensurePlatformAdmin } from "@/clinic/seed";
@@ -34,6 +34,7 @@ async function main() {
     logger.info(`${signal} received, shutting down gracefully`);
     try {
       await app.close();
+      await closeAllPools();
       logger.info("Server closed successfully");
       process.exit(0);
     } catch (error) {

@@ -784,13 +784,13 @@ export default function MedicalRecordPage() {
   const refresh = useCallback(() => {
     if (!clinicId) return;
     Promise.all([
-      listPatients(clinicId, { limit: 500 }),
-      listDoctors(clinicId, { limit: 100 }),
+      listPatients(clinicId, { limit: 50 }),
+      listDoctors(clinicId, { limit: 50 }),
       listMedicalRecordFiles(clinicId),
       listMedicalRecordFolders(clinicId),
-      listRecords(clinicId, { limit: 500 }),
-      listPrescriptions(clinicId, { limit: 500 }),
-      listAppointments(clinicId, { limit: 500 }),
+      listRecords(clinicId, { limit: 50 }),
+      listPrescriptions(clinicId, { limit: 50 }),
+      listAppointments(clinicId, { limit: 50 }),
     ])
       .then(([p, d, f, fo, r, pr, ap]) => {
         setPatients(p.items);

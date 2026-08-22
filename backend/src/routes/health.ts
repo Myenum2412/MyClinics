@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { getDb } from "@/lib/db";
+import { getDb } from "@/lib/db-pools";
 
 export function registerHealthRoutes(app: FastifyInstance): void {
   app.get("/health", async () => {

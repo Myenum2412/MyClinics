@@ -1,7 +1,7 @@
 import "../../scripts/bootstrap-env";
 import type { Client } from "whatsapp-web.js";
 import { logger } from "@/lib/logger";
-import { getDb } from "@/lib/db";
+import { getWhatsAppDb } from "@/lib/db-pools";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { createWhatsAppClient } from "@/services/whatsapp/whatsapp.client";
 import {
@@ -38,7 +38,7 @@ const COMMAND_POLL_MS = 5_000;
 const STUCK_AFTER_AUTH_MS = 90_000;
 const MAX_RECONNECT_ATTEMPTS = 10;
 
-let db: Awaited<ReturnType<typeof getDb>> | null = null;
+let db: Awaited<ReturnType<typeof getWhatsAppDb>> | null = null;
 let legacyClient: Client | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let reconnectAttempts = 0;
@@ -154,7 +154,7 @@ async function startLegacyClient(): Promise<void> {
 
 // ── Background loops ─────────────────────────────────────────────────────────
 
-function startReminderLoop(db: Awaited<ReturnType<typeof getDb>>): void {
+function startReminderLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void {
   if (reminderTimer) return;
   reminderTimer = setInterval(async () => {
     try {
@@ -180,7 +180,7 @@ function startReminderLoop(db: Awaited<ReturnType<typeof getDb>>): void {
   }, REMINDER_POLL_MS);
 }
 
-function startCommandLoop(db: Awaited<ReturnType<typeof getDb>>): void {
+function startCommandLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void {
   if (commandTimer) return;
   commandTimer = setInterval(async () => {
     try {
@@ -197,7 +197,7 @@ function startCommandLoop(db: Awaited<ReturnType<typeof getDb>>): void {
 
 async function main(): Promise<void> {
   logger.info("whatsapp worker starting");
-  db = await getDb();
+  db = await getWhatsAppDb();
   await ensureDefaultOrganization(db);
   await startLegacyClient();
 

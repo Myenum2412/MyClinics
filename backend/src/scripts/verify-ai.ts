@@ -1,5 +1,5 @@
 import "./bootstrap-env";
-import { getDb } from "@/lib/db";
+import { getDb } from "@/lib/db-pools";
 import { getSoul } from "@/services/ai/soul.service";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import {

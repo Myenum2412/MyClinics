@@ -1,0 +1,143 @@
+import { MongoClient, Db, ServerApiVersion } from "mongodb";
+
+const uri = process.env.MONGODB_URI ?? "";
+if (!uri) {
+  throw new Error("MONGODB_URI is required");
+}
+
+interface PoolConfig {
+  name: string;
+  maxPoolSize: number;
+  minPoolSize: number;
+}
+
+const POOL_CONFIGS: Record<string, PoolConfig> = {
+  // Main API pool - handles most requests
+  default: { name: "default", maxPoolSize: 50, minPoolSize: 5 },
+  // Medical records - heavy read/write, needs dedicated pool
+  medicalRecords: { name: "medicalRecords", maxPoolSize: 30, minPoolSize: 3 },
+  // Appointments - high frequency, needs dedicated pool
+  appointments: { name: "appointments", maxPoolSize: 30, minPoolSize: 3 },
+  // WhatsApp worker - long-running, separate pool
+  whatsapp: { name: "whatsapp", maxPoolSize: 20, minPoolSize: 2 },
+  // Cron jobs - burst traffic, small pool
+  cron: { name: "cron", maxPoolSize: 10, minPoolSize: 1 },
+  // AI services - occasional heavy queries
+  ai: { name: "ai", maxPoolSize: 15, minPoolSize: 2 },
+};
+
+const BASE_OPTIONS = {
+  serverApi: { version: ServerApiVersion.v1 },
+  maxIdleTimeMS: 60_000,
+  waitQueueTimeoutMS: 10_000,
+  serverSelectionTimeoutMS: 10_000,
+  connectTimeoutMS: 10_000,
+  socketTimeoutMS: 60_000,
+};
+
+class PoolManager {
+  private pools = new Map<string, { client: MongoClient; db: Db; promise: Promise<MongoClient> }>();
+  private initializing = new Set<string>();
+
+  async getPool(poolName: keyof typeof POOL_CONFIGS = "default"): Promise<Db> {
+    const config = POOL_CONFIGS[poolName] ?? POOL_CONFIGS.default;
+
+    if (this.pools.has(poolName)) {
+      const pool = this.pools.get(poolName)!;
+      try {
+        // Verify connection is alive
+        await pool.client.db().command({ ping: 1 });
+        return pool.db;
+      } catch {
+        // Connection dead, recreate
+        this.pools.delete(poolName);
+      }
+    }
+
+    if (this.initializing.has(poolName)) {
+      // Wait for existing initialization
+      while (this.initializing.has(poolName)) {
+        await new Promise((r) => setTimeout(r, 50));
+      }
+      return this.getPool(poolName);
+    }
+
+    this.initializing.add(poolName);
+
+    try {
+      const client = new MongoClient(uri, {
+        ...BASE_OPTIONS,
+        maxPoolSize: config.maxPoolSize,
+        minPoolSize: config.minPoolSize,
+      });
+
+      const connectPromise = client.connect();
+      const db = client.db("myclinic");
+
+      this.pools.set(poolName, { client, db, promise: connectPromise });
+      await connectPromise;
+
+      // Verify connection
+      await db.command({ ping: 1 });
+
+      return db;
+    } finally {
+      this.initializing.delete(poolName);
+    }
+  }
+
+  async closeAll(): Promise<void> {
+    await Promise.all(
+      Array.from(this.pools.values()).map(({ client }) => client.close())
+    );
+    this.pools.clear();
+  }
+
+  getPoolStats(): Record<string, { poolSize: number; available: number }> {
+    const stats: Record<string, { poolSize: number; available: number }> = {};
+    for (const [name, { client }] of this.pools) {
+      // Access internal pool state (MongoDB driver 6.x)
+      const pool = (client as any).s?.pool;
+      if (pool) {
+        stats[name] = {
+          poolSize: pool.size ?? 0,
+          available: pool.available ?? 0,
+        };
+      }
+    }
+    return stats;
+  }
+}
+
+export const poolManager = new PoolManager();
+
+export const DB_NAME = "myclinic";
+
+/** Get the default database connection (backward compatible) */
+export async function getDb(): Promise<Db> {
+  return poolManager.getPool("default");
+}
+
+/** Get a named pool for specific service */
+export async function getPoolDb(poolName: keyof typeof POOL_CONFIGS): Promise<Db> {
+  return poolManager.getPool(poolName);
+}
+
+/** Get pool statistics for monitoring */
+export function getPoolStats() {
+  return poolManager.getPoolStats();
+}
+
+/** Close all pools (for graceful shutdown) */
+export async function closeAllPools() {
+  await poolManager.closeAll();
+}
+
+// Named pool getters for convenience
+export const getMedicalRecordsDb = () => getPoolDb("medicalRecords");
+export const getAppointmentsDb = () => getPoolDb("appointments");
+export const getWhatsAppDb = () => getPoolDb("whatsapp");
+export const getCronDb = () => getPoolDb("cron");
+export const getAIDb = () => getPoolDb("ai");
+
+export default poolManager;

@@ -4,7 +4,7 @@ import {
   requireClinicAccess,
   requireRoles,
 } from "@/clinic/core/scope";
-import { getDb } from "@/lib/db";
+import { getAppointmentsDb } from "@/lib/db-pools";
 
 /**
  * Appointment routes — scoped to the URL clinic AND to the caller's
@@ -36,7 +36,7 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
     { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => {
       const { clinicId } = request.params as { clinicId: string };
-      const db = await getDb();
+      const db = await getAppointmentsDb();
       const notifications = await db.collection("clc_appointment_notifications")
         .find({ clinicId })
         .sort({ createdAt: -1 })
@@ -51,7 +51,7 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
     { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => {
       const { clinicId, appointmentId } = request.params as { clinicId: string; appointmentId: string };
-      const db = await getDb();
+      const db = await getAppointmentsDb();
       const notifications = await db.collection("clc_appointment_notifications")
         .find({ clinicId, appointmentId })
         .sort({ createdAt: -1 })

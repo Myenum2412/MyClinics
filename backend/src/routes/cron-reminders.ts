@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { getDb } from "@/lib/db";
+import { getCronDb } from "@/lib/db-pools";
 import { scanAndQueueReminders } from "@/services/reminder/reminder.service";
 import { syncCronJobs } from "@/services/cronjob/cronjob.service";
 import { requireCronSecret } from "@/plugins/auth";
@@ -65,7 +65,7 @@ export function registerCronRoutes(app: FastifyInstance): void {
     const startTime = Date.now();
     try {
       // Bound the DB connection so the request can never hang past the proxy timeout.
-      const db = await withTimeout(getDb(), 8_000, "getDb");
+      const db = await withTimeout(getCronDb(), 8_000, "getCronDb");
 
       const [scan, prescription, appointment] = await Promise.all([
         runStep(9_000, "scanAndQueueReminders", async () => {

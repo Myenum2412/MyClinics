@@ -14,7 +14,7 @@ export function useDoctorOptions(clinicId: string) {
   useEffect(() => {
     if (!clinicId) return;
     let active = true;
-    listDoctors(clinicId, { status: "active", limit: 200 })
+    listDoctors(clinicId, { status: "active", limit: 50 })
       .then((res) => {
         if (active) setDoctors(res.items.map((d) => ({ doctorId: d.doctorId, name: d.name })));
       })
@@ -32,7 +32,7 @@ export function usePatientOptions(clinicId: string) {
   useEffect(() => {
     if (!clinicId) return;
     let active = true;
-    listPatients(clinicId, { status: "active", limit: 200 })
+    listPatients(clinicId, { status: "active", limit: 50 })
       .then((res) => {
         if (active) setPatients(res.items.map((p) => ({ patientId: p.patientId, fullName: p.fullName })));
       })

@@ -178,10 +178,10 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     let active = true;
     setLoading(true);
     Promise.allSettled([
-      listAppointments(clinicId, { limit: 100 }),
-      listAppointments(clinicId, { date: todayISO(), limit: 100 }),
-      listPatients(clinicId, { limit: 100 }),
-      listBills(clinicId, { limit: 200 }),
+      listAppointments(clinicId, { limit: 50 }),
+      listAppointments(clinicId, { date: todayISO(), limit: 50 }),
+      listPatients(clinicId, { limit: 50 }),
+      listBills(clinicId, { limit: 50 }),
     ])
       .then(([apptRes, todayRes, patientRes, billRes]) => {
         if (!active) return;

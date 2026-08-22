@@ -1,6 +1,6 @@
 import type { Client, Message } from "whatsapp-web.js";
 import type { Db } from "mongodb";
-import { getDb } from "@/lib/db";
+import { getWhatsAppDb } from "@/lib/db-pools";
 import { logger } from "@/lib/logger";
 import { createRateLimiter } from "@/lib/rate-limiter";
 import { getSoul } from "@/services/ai/soul.service";
@@ -211,7 +211,7 @@ async function saveTurn(
   customer: WaCustomer,
   incoming: { messageId: string; message: string; reply: AgentReply; aiResponse: string; sentText: string }
 ): Promise<void> {
-  const db = await getDb();
+  const db = await getWhatsAppDb();
   const now = new Date();
   await saveConversation(db, {
     organizationId,
@@ -247,7 +247,7 @@ export async function handleIncomingMessage(client: Client, message: Message): P
     return;
   }
 
-  const db = await getDb();
+  const db = await getWhatsAppDb();
 
   try {
     const botNumber = client.info?.me?.user ?? null;

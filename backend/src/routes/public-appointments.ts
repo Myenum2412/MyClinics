@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { getDb } from "@/lib/db";
+import { getDb } from "@/lib/db-pools";
 import { AppError } from "@/clinic/core/errors";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import { randomToken, systemContext } from "@/clinic/core/ids";

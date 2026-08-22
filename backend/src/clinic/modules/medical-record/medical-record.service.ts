@@ -409,7 +409,7 @@ export class MedicalRecordService {
     return copy;
   }
 
-  /** List legacy R2 files (`reports/patients/{patientId}/...`) as pseudo docs. */
+  /** Batch fetch legacy R2 files for a patient with a single R2 call per folder. */
   private async listLegacyFiles(
     ctx: ClinicContext,
     patientId: string
@@ -417,31 +417,39 @@ export class MedicalRecordService {
     const clinicId = requireClinicOf(ctx);
     const patient = await this.assertPatientAccess(ctx, patientId);
     const docs: MedicalRecordFileDoc[] = [];
-    for (const [key, dir] of Object.entries(VIRTUAL_FOLDER_R2_DIR)) {
-      const objects = await listR2Objects(`reports/patients/${patientId}/${dir}/`, 1000);
-      for (const obj of objects) {
-        const fileName = obj.key.slice(obj.key.lastIndexOf("/") + 1);
-        if (!fileName || fileName === ".folder" || fileName.endsWith("/.folder")) continue;
-        docs.push({
-          clinicId,
-          fileId: legacyFileId(obj.key),
-          patientId,
-          patientName: patient.fullName,
-          patientPhone: patient.whatsapp ?? patient.mobile ?? null,
-          fileName,
-          r2Key: obj.key,
-          folder: key,
-          mimeType: mimeFromName(fileName),
-          size: obj.size,
-          version: 1,
-          versions: [],
-          downloadCount: 0,
-          lastDownloadedAt: null,
-          uploadedBy: "system",
-          uploadedByName: "Legacy upload",
-          createdAt: obj.lastModified ?? new Date(),
+
+    // Batch all folder listings in parallel instead of sequential
+    const folderKeys = Object.entries(VIRTUAL_FOLDER_R2_DIR);
+    const results = await Promise.all(
+      folderKeys.map(async ([key, dir]) => {
+        const objects = await listR2Objects(`reports/patients/${patientId}/${dir}/`, 1000);
+        return objects.map((obj) => {
+          const fileName = obj.key.slice(obj.key.lastIndexOf("/") + 1);
+          return {
+            clinicId,
+            fileId: legacyFileId(obj.key),
+            patientId,
+            patientName: patient.fullName,
+            patientPhone: patient.whatsapp ?? patient.mobile ?? null,
+            fileName,
+            r2Key: obj.key,
+            folder: key,
+            mimeType: mimeFromName(fileName),
+            size: obj.size,
+            version: 1,
+            versions: [],
+            downloadCount: 0,
+            lastDownloadedAt: null,
+            uploadedBy: "system",
+            uploadedByName: "Legacy upload",
+            createdAt: obj.lastModified ?? new Date(),
+          };
         });
-      }
+      })
+    );
+
+    for (const folderDocs of results) {
+      docs.push(...folderDocs.filter((f) => f.fileName && f.fileName !== ".folder" && !f.fileName.endsWith("/.folder")));
     }
     return docs;
   }
@@ -459,27 +467,23 @@ export class MedicalRecordService {
     } = {}
   ): Promise<MedicalRecordFileDoc[]> {
     const clinicId = requireClinicOf(ctx);
-    const query: Record<string, unknown> = { clinicId };
+    const limit = Math.min(filter.limit ?? 50, 100);
 
+    // Build the base match query
+    const matchQuery: Record<string, unknown> = { clinicId };
+
+    // Handle role-based scoping
     if (ctx.role === "doctor") {
-      const patientIds = await this.patients()
-        .find({ clinicId, doctorId: ctx.doctorId, status: { $ne: "deleted" } }, { projection: { patientId: 1 } })
-        .toArray();
-      query.patientId = { $in: patientIds.map((p) => p.patientId) };
-      if (filter.patientId && !(query.patientId as { $in: string[] }).$in.includes(filter.patientId)) {
-        throw new ForbiddenError("You can only access records of patients assigned to you");
-      }
+      matchQuery.doctorId = ctx.doctorId;
     } else if (ctx.role === "patient") {
-      query.patientId = ctx.patientId;
-      if (filter.patientId && filter.patientId !== ctx.patientId) {
-        throw new ForbiddenError("You can only access your own records");
-      }
+      matchQuery.patientId = ctx.patientId;
     }
 
-    if (filter.patientId) query.patientId = filter.patientId;
-    if (filter.folder) query.folder = filter.folder;
+    // Apply filters
+    if (filter.patientId) matchQuery.patientId = filter.patientId;
+    if (filter.folder) matchQuery.folder = filter.folder;
     if (filter.q) {
-      query.fileName = { $regex: filter.q, $options: "i" };
+      matchQuery.fileName = { $regex: filter.q, $options: "i" };
     }
     if (filter.type) {
       const t = filter.type.toLowerCase();
@@ -488,20 +492,47 @@ export class MedicalRecordService {
       if (!t.startsWith(".")) {
         or.push({ mimeType: { $regex: `^${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, $options: "i" } });
       }
-      query.$or = or;
+      matchQuery.$or = or;
     }
     if (filter.from || filter.to) {
-      query.createdAt = {
+      matchQuery.createdAt = {
         ...(filter.from ? { $gte: new Date(`${filter.from}T00:00:00.000Z`) } : {}),
         ...(filter.to ? { $lte: new Date(`${filter.to}T23:59:59.999Z`) } : {}),
       };
     }
 
-    const docs = await this.collection()
-      .find(query as never)
-      .sort({ createdAt: -1 })
-      .limit(Math.min(filter.limit ?? 500, 1000))
-      .toArray();
+    // Use aggregation pipeline to join with patients collection in a single query
+    // This eliminates the N+1 query pattern where we first fetched patient IDs then files
+    const pipeline: any[] = [
+      { $match: matchQuery },
+      {
+        $lookup: {
+          from: CLINIC_COLLECTIONS.patients,
+          localField: "patientId",
+          foreignField: "patientId",
+          as: "patient",
+        },
+      },
+      { $unwind: { path: "$patient", preserveNullAndEmptyArrays: true } },
+      // Apply doctor/patient scope after the join
+      ...(ctx.role === "doctor"
+        ? [{ $match: { "patient.doctorId": ctx.doctorId, "patient.status": { $ne: "deleted" } } }]
+        : ctx.role === "patient"
+        ? [{ $match: { "patient.patientId": ctx.patientId, "patient.status": { $ne: "deleted" } } }]
+        : []),
+      { $sort: { createdAt: -1 } },
+      { $limit: limit },
+    ];
+
+    const docs = await this.collection().aggregate(pipeline).toArray();
+
+    // Transform aggregated results back to expected format
+    const transformed = docs.map((doc) => ({
+      ...doc,
+      patientName: doc.patient?.fullName,
+      // Remove the patient object from the result
+      patient: undefined,
+    })) as unknown as MedicalRecordFileDoc[];
 
     // Merge legacy R2 files when listing a patient (or a specific virtual folder).
     if (filter.patientId && (!filter.folder || isVirtualFolderKey(filter.folder))) {
@@ -509,10 +540,10 @@ export class MedicalRecordService {
       const filteredLegacy = filter.folder
         ? legacy.filter((f) => f.folder === filter.folder)
         : legacy;
-      return [...(docs as unknown as MedicalRecordFileDoc[]), ...filteredLegacy];
+      return [...transformed, ...filteredLegacy];
     }
 
-    return docs as unknown as MedicalRecordFileDoc[];
+    return transformed;
   }
 
   async createFolder(

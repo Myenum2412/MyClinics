@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Db } from "mongodb";
-import { getDb } from "@/lib/db";
+import { getDb } from "@/lib/db-pools";
 import {
   BadRequestError,
   NotFoundError,

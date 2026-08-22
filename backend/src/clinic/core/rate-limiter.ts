@@ -12,11 +12,17 @@ interface Bucket {
  */
 export class SlidingWindowLimiter {
   private readonly buckets = new Map<string, Bucket>();
+  private readonly cleanupInterval: ReturnType<typeof setInterval>;
 
   constructor(
     private readonly windowMs: number,
     private readonly maxHits: number
-  ) {}
+  ) {
+    // Periodic cleanup every 5 minutes to prevent memory leak from expired buckets
+    this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    // Don't prevent process exit
+    this.cleanupInterval.unref?.();
+  }
 
   /** Registers a hit; returns true when the hit is within the limit. */
   hit(key: string, now = Date.now()): boolean {
@@ -46,6 +52,29 @@ export class SlidingWindowLimiter {
   clear(key?: string): void {
     if (key) this.buckets.delete(key);
     else this.buckets.clear();
+  }
+
+  /** Remove expired buckets and prune old hits from active buckets. */
+  private cleanup(now = Date.now()): void {
+    const cutoff = now - this.windowMs;
+    for (const [key, bucket] of this.buckets) {
+      if (bucket.resetAt <= now) {
+        this.buckets.delete(key);
+      } else {
+        // Prune stale hits within the bucket
+        const alive = bucket.hits.filter((t) => t > cutoff);
+        if (alive.length === 0) {
+          this.buckets.delete(key);
+        } else {
+          bucket.hits = alive;
+        }
+      }
+    }
+  }
+
+  /** For testing: get current bucket count */
+  getBucketCount(): number {
+    return this.buckets.size;
   }
 }
 

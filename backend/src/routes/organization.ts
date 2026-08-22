@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { getDb } from "@/lib/db";
+import { getDb } from "@/lib/db-pools";
 import { requireAuth } from "@/plugins/auth";
 import {
   ensureDefaultOrganization,

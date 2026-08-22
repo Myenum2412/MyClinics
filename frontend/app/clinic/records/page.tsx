@@ -423,8 +423,8 @@ export default function RecordsPage() {
   const load = useCallback(() => {
     if (!clinicId) return;
     Promise.all([
-      listPatients(clinicId, { limit: 500 }),
-      listRecords(clinicId, { limit: 200 }),
+      listPatients(clinicId, { limit: 50 }),
+      listRecords(clinicId, { limit: 50 }),
     ])
       .then(([patientRes, recordRes]) => {
         const map: Record<string, string> = {};
@@ -1148,9 +1148,9 @@ function RecordForm({
       setLoadingMasters(true);
       try {
         const [pRes, dRes, aRes] = await Promise.all([
-          listPatients(clinicId, { limit: 500 }),
-          listDoctors(clinicId, { limit: 100 }),
-          listAppointments(clinicId, { limit: 200 }),
+          listPatients(clinicId, { limit: 50 }),
+          listDoctors(clinicId, { limit: 50 }),
+          listAppointments(clinicId, { limit: 50 }),
         ]);
         setPatients(pRes.items);
         setDoctors(dRes.items);

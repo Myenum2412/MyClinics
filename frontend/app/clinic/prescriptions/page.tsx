@@ -164,9 +164,9 @@ export default function PrescriptionsPage() {
   const load = useCallback(() => {
     if (!clinicId) return;
     Promise.all([
-      listPrescriptions(clinicId, { limit: 500 }),
-      listPatients(clinicId, { limit: 500 }),
-      listDoctors(clinicId, { limit: 100 }),
+      listPrescriptions(clinicId, { limit: 50 }),
+      listPatients(clinicId, { limit: 50 }),
+      listDoctors(clinicId, { limit: 50 }),
     ])
       .then(([prescRes, patientRes, docRes]) => {
         setItems(prescRes.items);

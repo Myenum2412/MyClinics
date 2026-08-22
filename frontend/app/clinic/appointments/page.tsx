@@ -166,9 +166,9 @@ export default function AppointmentsPage() {
   const loadData = useCallback(() => {
     if (!clinicId) return;
     Promise.allSettled([
-      listAppointments(clinicId, { limit: 1000 }),
-      listPatients(clinicId, { limit: 1000 }),
-      listDoctors(clinicId, { limit: 100 }),
+      listAppointments(clinicId, { limit: 50 }),
+      listPatients(clinicId, { limit: 50 }),
+      listDoctors(clinicId, { limit: 50 }),
     ]).then(([apptsRes, patientsRes, doctorsRes]) => {
       if (apptsRes.status === "fulfilled") {
         setAppointments(apptsRes.value.items);

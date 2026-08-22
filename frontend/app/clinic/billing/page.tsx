@@ -154,8 +154,8 @@ export default function BillingPage() {
   const load = useCallback(() => {
     if (!clinicId) return;
     Promise.all([
-      listBills(clinicId, { limit: 500 }),
-      listPatients(clinicId, { limit: 500 }),
+      listBills(clinicId, { limit: 50 }),
+      listPatients(clinicId, { limit: 50 }),
     ])
       .then(([billsRes, patientsRes]) => {
         const map: Record<string, string> = {};

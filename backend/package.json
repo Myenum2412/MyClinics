@@ -9,7 +9,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "whatsapp": "tsx src/services/whatsapp/whatsapp.worker.ts"
+    "whatsapp": "tsx src/services/whatsapp/whatsapp.worker.ts",
+    "db:indexes:medical-records": "tsx src/scripts/add-medical-record-indexes.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1106.0",

@@ -73,8 +73,8 @@ export default function PatientMedicalRecordsPage() {
     try {
       const [recordsRes, apptRes, docsRes, filesRes, foldersRes] = await Promise.all([
         myRecords(session.clinicId),
-        myAppointments(session.clinicId, { limit: 100 }),
-        listDoctors(session.clinicId, { status: "active", limit: 100 }),
+        myAppointments(session.clinicId, { limit: 50 }),
+        listDoctors(session.clinicId, { status: "active", limit: 50 }),
         listMedicalRecordFiles(session.clinicId),
         session.patientId
           ? listMedicalRecordFolders(session.clinicId, session.patientId)
