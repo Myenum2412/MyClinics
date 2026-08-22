@@ -506,7 +506,13 @@ function FileRow({
                 <History className="size-4" /> Upload new version
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => onDelete(file)} className="text-destructive">
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  onDelete(file);
+                }}
+                className="text-destructive"
+              >
                 <Trash2 className="size-4" /> Delete
               </DropdownMenuItem>
             </>
@@ -514,7 +520,13 @@ function FileRow({
           {canManage && file.fileId.startsWith("mrl_") && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => onDelete(file)} className="text-destructive">
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  onDelete(file);
+                }}
+                className="text-destructive"
+              >
                 <Trash2 className="size-4" /> Delete
               </DropdownMenuItem>
             </>
@@ -1094,19 +1106,35 @@ export default function MedicalRecordPage() {
 
   const handleDeleteFolder = useCallback(
     async (fo: MedicalRecordFolder) => {
-      await deleteMedicalRecordFolder(clinicId, fo.folderId);
-      toast.success(`Folder "${fo.name}" deleted`);
-      if (activeFolderId === fo.folderId) setActiveFolderId(null);
-      void refresh();
+      try {
+        await deleteMedicalRecordFolder(clinicId, fo.folderId);
+        setFolders((prev) => prev.filter((f) => f.folderId !== fo.folderId));
+        setFiles((prev) => prev.filter((f) => f.folder !== fo.folderId));
+        toast.success(`Folder "${fo.name}" deleted`);
+        if (activeFolderId === fo.folderId) setActiveFolderId(null);
+        void refresh();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Failed to delete folder";
+        toast.error(msg);
+        throw err;
+      }
     },
     [clinicId, activeFolderId, refresh]
   );
 
   const handleDeleteFile = useCallback(
     async (file: MedicalRecordFile) => {
-      await deleteMedicalRecordFile(clinicId, file.fileId);
-      toast.success(`"${file.fileName}" deleted`);
-      void refresh();
+      try {
+        await deleteMedicalRecordFile(clinicId, file.fileId);
+        setFiles((prev) => prev.filter((f) => f.fileId !== file.fileId));
+        setLegacyFiles((prev) => prev.filter((f) => f.fileId !== file.fileId));
+        toast.success(`"${file.fileName}" deleted`);
+        void refresh();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Failed to delete file";
+        toast.error(msg);
+        throw err;
+      }
     },
     [clinicId, refresh]
   );
