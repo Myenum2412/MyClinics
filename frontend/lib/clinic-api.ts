@@ -1123,39 +1123,76 @@ export function listMedicalRecordFiles(
   });
 }
 
-export async function uploadMedicalRecordFile(
+export interface UploadOptions {
+  onProgress?: (progress: number, loaded: number, total: number, speed: number) => void;
+  onXhrCreated?: (xhr: XMLHttpRequest) => void;
+}
+
+export function uploadMedicalRecordFile(
   clinicId: string,
   patientId: string,
   file: File,
-  folder?: string
+  folder?: string,
+  options?: UploadOptions
 ): Promise<MedicalRecordFile> {
-  const form = new FormData();
-  form.append("patientId", patientId);
-  if (folder) form.append("folder", folder);
-  form.append("file", file);
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append("patientId", patientId);
+    if (folder) form.append("folder", folder);
+    form.append("file", file);
 
-  const headers: Record<string, string> = {};
-  const token = typeof window !== "undefined" ? getStoredToken() : null;
-  if (token) headers.Authorization = `Bearer ${token}`;
+    const xhr = new XMLHttpRequest();
+    if (options?.onXhrCreated) {
+      options.onXhrCreated(xhr);
+    }
 
-  const res = await fetch(`${API_BASE}${tenantPath(clinicId, "/medical-record/upload")}`, {
-    method: "POST",
-    headers,
-    body: form,
-    cache: "no-store",
+    let startTime = Date.now();
+    let startLoaded = 0;
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && options?.onProgress) {
+        const now = Date.now();
+        const timeDiff = (now - startTime) / 1000;
+        const loaded = event.loaded;
+        const total = event.total;
+        const progress = Math.min(100, Math.round((loaded / total) * 100));
+        const speed = timeDiff > 0 ? (loaded - startLoaded) / timeDiff : 0;
+        options.onProgress(progress, loaded, total, speed);
+      }
+    };
+
+    xhr.onload = () => {
+      let data: unknown = {};
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        data = {};
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(data as MedicalRecordFile);
+      } else {
+        const err = data as { error?: string };
+        reject(new ClinicApiError(err.error ?? `Upload failed (${xhr.status})`, xhr.status));
+      }
+    };
+
+    xhr.onerror = () => {
+      reject(new ClinicApiError("Network error during upload", 0));
+    };
+
+    xhr.onabort = () => {
+      reject(new ClinicApiError("Upload cancelled", 0));
+    };
+
+    xhr.open("POST", `${API_BASE}${tenantPath(clinicId, "/medical-record/upload")}`);
+
+    const token = typeof window !== "undefined" ? getStoredToken() : null;
+    if (token) {
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    }
+
+    xhr.send(form);
   });
-
-  let data: unknown;
-  try {
-    data = await res.json();
-  } catch {
-    data = {};
-  }
-  if (!res.ok) {
-    const err = data as { error?: string };
-    throw new ClinicApiError(err.error ?? `Upload failed (${res.status})`, res.status);
-  }
-  return data as MedicalRecordFile;
 }
 
 export async function uploadMedicalRecordFileVersion(

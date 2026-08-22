@@ -39,6 +39,7 @@ import {
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
+import { FileUploadSystem } from "@/components/clinic/file-upload-system";
 import { openInNewTab } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -1428,6 +1429,15 @@ export default function MedicalRecordPage() {
 
             {view === "drive" ? (
               <>
+                <div className="mt-4">
+                  <FileUploadSystem
+                    clinicId={clinicId}
+                    patientId={selectedPatient.patientId}
+                    currentFolderKey={currentFolderKey}
+                    onUploadSuccess={() => void refresh()}
+                  />
+                </div>
+
                 {/* Search results */}
                 {search.trim() && (
                   <div className="mt-4 space-y-2">
