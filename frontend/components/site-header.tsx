@@ -17,23 +17,10 @@ export default function SiteHeader({
     >
       <Link href="/" className="flex items-center gap-2">
         <img
-          src="/logo.png"
+          src="/logobg.png"
           alt="My Clinics logo"
-          className={cn(
-            "h-8 w-8 rounded-md object-contain",
-            hero
-              ? "bg-white shadow-sm"
-              : "bg-muted ring-border size-8 ring-1"
-          )}
+          className="size-10 rounded-md object-contain"
         />
-        <span
-          className={cn(
-            "text-lg font-semibold tracking-tight",
-            hero ? "text-white drop-shadow-sm" : "text-foreground"
-          )}
-        >
-          My Clinics
-        </span>
       </Link>
       <div
         className={cn(

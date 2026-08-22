@@ -18,16 +18,13 @@ export default function FooterBlock() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <img
-              src="/logo.png"
+              src="/logobg.png"
               alt="My Clinics logo"
-              className="size-7 shrink-0 object-contain"
+              className="size-8 shrink-0 object-contain"
             />
-            <div className="flex flex-col leading-none">
-              <span className="text-sm font-bold tracking-tight">My Clinics</span>
-              <span className="text-xs text-muted-foreground">
-                Healthcare above the clouds.
-              </span>
-            </div>
+            <span className="text-xs text-muted-foreground">
+              Healthcare above the clouds.
+            </span>
           </div>
 
           <nav
