@@ -27,6 +27,9 @@ export default function CloudShaderHeroDemo() {
           </span>
         </Link>
         <div className="hidden items-center gap-8 text-sm font-medium text-white/90 md:flex">
+          <Link href="/blog" className="transition hover:text-white">
+            Blog
+          </Link>
           <a href="/login" className="transition hover:text-white">
             Login
           </a>
