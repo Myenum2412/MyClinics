@@ -1,102 +1,62 @@
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+import { ArrowUpRightIcon } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { ArrowRightIcon, PhoneCallIcon } from "lucide-react";
 
 export function HeroSection() {
 	return (
-		<section className="mx-auto w-full max-w-5xl overflow-hidden pt-16">
-			{/* Shades */}
+		<section className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-6xl flex-col justify-center overflow-hidden">
+			{/* Blueprint vertical rules */}
 			<div
 				aria-hidden="true"
-				className="absolute inset-0 size-full overflow-hidden"
-			>
-				<div
-					className={cn(
-						"absolute inset-0 isolate -z-10",
-						"bg-[radial-gradient(20%_80%_at_20%_0%,--theme(--color-foreground/.1),transparent)]"
-					)}
-				/>
-			</div>
-			<div className="relative z-10 flex max-w-2xl flex-col gap-5 px-4">
+				className="absolute inset-y-0 left-8 hidden w-px bg-linear-to-b from-transparent via-border to-transparent md:block"
+			/>
+			<div
+				aria-hidden="true"
+				className="absolute inset-y-0 right-8 hidden w-px bg-linear-to-b from-transparent via-border to-transparent md:block"
+			/>
+
+			{/* Radial glow */}
+			<div
+				aria-hidden="true"
+				className="pointer-events-none absolute inset-x-0 top-1/4 rounded-full bg-[radial-gradient(ellipse_at_center,--theme(--color-foreground/.08),transparent)] blur-[25px]"
+			/>
+
+			<div className="relative z-10 mx-auto flex w-full max-w-xl flex-col items-center gap-5 px-4 py-20 md:py-28">
 				<a
-					className={cn(
-						"group flex w-fit items-center gap-3 rounded-sm border bg-card p-1 shadow-xs",
-						"fade-in slide-in-from-bottom-10 animate-in fill-mode-backwards transition-all delay-500 duration-500 ease-out"
-					)}
-					href="#link"
+					className="group flex h-7 shrink-0 items-center gap-2 rounded-full border bg-card px-2.5 text-xs shadow-xs dark:bg-card/50"
+					href="#features"
 				>
-					<div className="rounded-xs border bg-card px-1.5 py-0.5 shadow-sm">
-						<p className="font-mono text-xs">NOW</p>
-					</div>
-
-					<span className="text-xs">accepting new client projects</span>
-					<span className="block h-5 border-l" />
-
-					<div className="pr-1">
-						<ArrowRightIcon className="size-3 -translate-x-0.5 duration-150 ease-out group-hover:translate-x-0.5" />
-					</div>
+					<span className="border-r pr-2 font-medium">New</span>
+					<span className="text-primary group-hover:underline">
+						WhatsApp booking is live
+					</span>
+					<ArrowUpRightIcon className="size-3 transition-transform ease-out group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
 				</a>
 
-				<h1
-					className={cn(
-						"text-balance font-medium text-4xl text-foreground leading-tight md:text-5xl",
-						"fade-in slide-in-from-bottom-10 animate-in fill-mode-backwards delay-100 duration-500 ease-out"
-					)}
-				>
-					Building Digital Experiences That Drive Growth
+				<h1 className="relative bg-linear-to-br from-foreground via-foreground/60 to-foreground bg-clip-text text-center font-heading text-transparent">
+					<span className="block font-medium text-xl md:text-3xl lg:text-4xl">
+						Run your clinic without
+					</span>
+					<span className="block font-bold text-3xl md:text-4xl lg:text-5xl">
+						paper, phones or chaos.
+					</span>
 				</h1>
 
-				<p
-					className={cn(
-						"text-muted-foreground text-sm tracking-wider sm:text-lg md:text-xl",
-						"fade-in slide-in-from-bottom-10 animate-in fill-mode-backwards delay-200 duration-500 ease-out"
-					)}
-				>
-					We help brands scale faster through design, development <br /> and
-					strategic execution.
+				<p className="text-balance text-center text-foreground/80 text-xs md:text-base">
+					My Clinics bundles appointments, health records, prescriptions,
+					billing and reports into one secure dashboard — while a WhatsApp
+					assistant books your patients around the clock.
 				</p>
 
-				<div className="fade-in slide-in-from-bottom-10 flex w-fit animate-in items-center justify-center gap-3 fill-mode-backwards pt-2 delay-300 duration-500 ease-out">
-					<Button variant="outline">
-						<PhoneCallIcon data-icon="inline-start" />{" "}
-						Book a Call
+				<div className="flex items-center gap-2 pt-1">
+					<Button variant="outline" render={<Link href="/login" />} nativeButton={false}>
+						Sign in
 					</Button>
-					<Button>
-						Get started{" "}
-						<ArrowRightIcon data-icon="inline-end" />
+					<Button render={<Link href="/signup/clinic" />} nativeButton={false}>
+						Get started
+						<ArrowUpRightIcon data-icon="inline-end" />
 					</Button>
-				</div>
-			</div>
-			<div className="relative">
-				<div
-					className={cn(
-						"absolute -inset-x-20 inset-y-0 -translate-y-1/3 scale-120 rounded-full",
-						"bg-[radial-gradient(ellipse_at_center,theme(--color-foreground/.1),transparent,transparent)]",
-						"blur-[50px]"
-					)}
-				/>
-				<div
-					className={cn(
-						"mask-b-from-60% relative mt-8 -mr-56 overflow-hidden px-2 sm:mt-12 sm:mr-0 md:mt-20",
-						"fade-in slide-in-from-bottom-5 animate-in fill-mode-backwards delay-100 duration-1000 ease-out"
-					)}
-				>
-					<div className="relative inset-shadow-2xs inset-shadow-foreground/10 mx-auto max-w-5xl overflow-hidden rounded-lg border bg-background p-2 shadow-xl ring-1 ring-card dark:inset-shadow-foreground/20 dark:inset-shadow-xs">
-						<img
-							alt="app screen"
-							className="z-2 aspect-video rounded-lg border dark:hidden"
-							height="1080"
-							src="https://storage.efferd.com/screen/dashboard-light.webp"
-							width="1920"
-						/>
-						<img
-							alt="app screen"
-							className="hidden aspect-video rounded-lg bg-background dark:block"
-							height="1080"
-							src="https://storage.efferd.com/screen/dashboard-dark.webp"
-							width="1920"
-						/>
-					</div>
 				</div>
 			</div>
 		</section>

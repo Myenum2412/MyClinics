@@ -1,7 +1,10 @@
+import { CtaSection } from "@/components/cta-section";
+import { FaqSection } from "@/components/faq-section";
+import { FeatureSection } from "@/components/feature-section";
+import { HairlineDivider } from "@/components/hairline-divider";
 import { Header } from "@/components/header";
 import { HeroSection } from "@/components/hero";
 import { LogoCloud } from "@/components/logo-cloud";
-import { FeatureSection } from "@/components/feature-section";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -16,11 +19,18 @@ export default function Home() {
   return (
     <>
       <Header />
-      <HeroSection />
-      <LogoCloud />
-      <div id="features">
-        <FeatureSection />
-      </div>
+      <main className="flex flex-col">
+        <HeroSection />
+        <HairlineDivider crosshairs />
+        <LogoCloud />
+        <div id="features" className="py-10 md:py-16">
+          <FeatureSection />
+        </div>
+        <HairlineDivider crosshairs />
+        <FaqSection />
+        <HairlineDivider crosshairs />
+        <CtaSection />
+      </main>
     </>
   );
 }
