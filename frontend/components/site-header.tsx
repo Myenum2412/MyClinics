@@ -2,6 +2,14 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
+const NAV_LINKS = [
+  { label: "Home", href: "/" },
+  { label: "Features", href: "/#features" },
+  { label: "Pricing", href: "/#pricing" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/#contact" },
+];
+
 export default function SiteHeader({
   variant = "default",
 }: {
@@ -28,24 +36,18 @@ export default function SiteHeader({
           hero ? "text-white/90" : "text-muted-foreground"
         )}
       >
-        <Link
-          href="/blog"
-          className={cn(
-            "transition",
-            hero ? "hover:text-white" : "hover:text-foreground"
-          )}
-        >
-          Blog
-        </Link>
-        <a
-          href="/login"
-          className={cn(
-            "transition",
-            hero ? "hover:text-white" : "hover:text-foreground"
-          )}
-        >
-          Login
-        </a>
+        {NAV_LINKS.map((link) => (
+          <Link
+            key={link.label}
+            href={link.href}
+            className={cn(
+              "transition",
+              hero ? "hover:text-white" : "hover:text-foreground"
+            )}
+          >
+            {link.label}
+          </Link>
+        ))}
       </div>
       <div className="flex items-center gap-3">
         <Link

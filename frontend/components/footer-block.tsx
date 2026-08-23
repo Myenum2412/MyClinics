@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
+import { Label } from "recharts";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
-  { label: "Book Appointment", href: "/#book" },
-  { label: "Login", href: "/login" },
-  { label: "Create Account", href: "/signup" },
-  { label: "Privacy", href: "/privacy" },
+  { label: "About Us", href: "/#about" },
+  { label: "Features", href: "/#features" },
+  { label: "Pricing", href: "/#pricing" },
+  { label: "Blog", href: "/blog" },
+  { label: "Privacy Policy", href: "/privacy" },
   { label: "Terms", href: "/terms" },
 ];
 
@@ -20,11 +22,8 @@ export default function FooterBlock() {
             <img
               src="/logobg.png"
               alt="My Clinics logo"
-              className="size-8 shrink-0 object-contain"
+              className="size-25 shrink-0 object-contain p-[2px]"
             />
-            <span className="text-xs text-muted-foreground">
-              Healthcare above the clouds.
-            </span>
           </div>
 
           <nav
