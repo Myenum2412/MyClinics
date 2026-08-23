@@ -113,41 +113,56 @@ export async function queueAppointmentNotifications(
         ? `Dear Dr. ${doctorName},\n\nYour appointment with patient ${patientName} has been rescheduled to ${formatDate(appointment.date)} at ${appointment.time}.\n\nBest regards,\nClinic Team`
         : `Dear Dr. ${doctorName},\n\nYour appointment with patient ${patientName} scheduled for ${formatDate(appointment.date)} at ${appointment.time} has been cancelled.\n\nBest regards,\nClinic Team`;
 
-    // Queue Event for Patient
-    notificationsToInsert.push({
-      appointmentId,
-      clinicId,
-      recipientRole: "patient",
-      recipientId: appointment.patientId,
-      type: "event",
-      action,
-      status: "pending",
-      phone: patientPhone || "",
-      message: patientEventMsg,
-      scheduledTime: now,
-      attempts: 0,
-      lastError: patientPhone ? null : "Patient has no mobile number",
-      createdAt: now,
-      updatedAt: now,
-    });
+    // Queue Event for Patient (skip when unreachable — a queued row with no
+    // phone can only ever fail its retry budget, so log once instead).
+    if (patientPhone) {
+      notificationsToInsert.push({
+        appointmentId,
+        clinicId,
+        recipientRole: "patient",
+        recipientId: appointment.patientId,
+        type: "event",
+        action,
+        status: "pending",
+        phone: patientPhone,
+        message: patientEventMsg,
+        scheduledTime: now,
+        attempts: 0,
+        lastError: null,
+        createdAt: now,
+        updatedAt: now,
+      });
+    } else {
+      logger.warn(
+        "Patient has no mobile number — skipping appointment event notification",
+        { appointmentId, clinicId, patientId: appointment.patientId }
+      );
+    }
 
-    // Queue Event for Doctor
-    notificationsToInsert.push({
-      appointmentId,
-      clinicId,
-      recipientRole: "doctor",
-      recipientId: appointment.doctorId,
-      type: "event",
-      action,
-      status: "pending",
-      phone: doctorPhone || "",
-      message: doctorEventMsg,
-      scheduledTime: now,
-      attempts: 0,
-      lastError: doctorPhone ? null : "Doctor has no mobile number",
-      createdAt: now,
-      updatedAt: now,
-    });
+    // Queue Event for Doctor (same skip-when-unreachable rule).
+    if (doctorPhone) {
+      notificationsToInsert.push({
+        appointmentId,
+        clinicId,
+        recipientRole: "doctor",
+        recipientId: appointment.doctorId,
+        type: "event",
+        action,
+        status: "pending",
+        phone: doctorPhone,
+        message: doctorEventMsg,
+        scheduledTime: now,
+        attempts: 0,
+        lastError: null,
+        createdAt: now,
+        updatedAt: now,
+      });
+    } else {
+      logger.warn(
+        "Doctor has no mobile number — skipping appointment event notification",
+        { appointmentId, clinicId, doctorId: appointment.doctorId }
+      );
+    }
 
     // Queue Reminders (only if appointment is scheduled/confirmed and NOT cancelled)
     if (action !== "cancelled" && appointment.status !== "cancelled") {
@@ -158,42 +173,63 @@ export async function queueAppointmentNotifications(
         const patientReminderMsg = `Hi ${patientName},\n\nThis is a reminder that your appointment today with Dr. ${doctorName} is in 1 hour (at ${appointment.time}). Please arrive 10 minutes early.\n\nBest regards,\nClinic Team`;
         const doctorReminderMsg = `Dear Dr. ${doctorName},\n\nThis is a reminder that you have an appointment with patient ${patientName} in 1 hour (at ${appointment.time}).\n\nBest regards,\nClinic Team`;
 
-        notificationsToInsert.push({
-          appointmentId,
-          clinicId,
-          recipientRole: "patient",
-          recipientId: appointment.patientId,
-          type: "reminder",
-          action: "reminder",
-          status: "pending",
-          phone: patientPhone || "",
-          message: patientReminderMsg,
-          scheduledTime,
-          attempts: 0,
-          lastError: patientPhone ? null : "Patient has no mobile number",
-          createdAt: now,
-          updatedAt: now,
-        });
+        if (patientPhone) {
+          notificationsToInsert.push({
+            appointmentId,
+            clinicId,
+            recipientRole: "patient",
+            recipientId: appointment.patientId,
+            type: "reminder",
+            action: "reminder",
+            status: "pending",
+            phone: patientPhone,
+            message: patientReminderMsg,
+            scheduledTime,
+            attempts: 0,
+            lastError: null,
+            createdAt: now,
+            updatedAt: now,
+          });
+        } else {
+          logger.warn(
+            "Patient has no mobile number — skipping 1-hour reminder",
+            { appointmentId, clinicId, patientId: appointment.patientId }
+          );
+        }
 
-        notificationsToInsert.push({
-          appointmentId,
-          clinicId,
-          recipientRole: "doctor",
-          recipientId: appointment.doctorId,
-          type: "reminder",
-          action: "reminder",
-          status: "pending",
-          phone: doctorPhone || "",
-          message: doctorReminderMsg,
-          scheduledTime,
-          attempts: 0,
-          lastError: doctorPhone ? null : "Doctor has no mobile number",
-          createdAt: now,
-          updatedAt: now,
-        });
+        if (doctorPhone) {
+          notificationsToInsert.push({
+            appointmentId,
+            clinicId,
+            recipientRole: "doctor",
+            recipientId: appointment.doctorId,
+            type: "reminder",
+            action: "reminder",
+            status: "pending",
+            phone: doctorPhone,
+            message: doctorReminderMsg,
+            scheduledTime,
+            attempts: 0,
+            lastError: null,
+            createdAt: now,
+            updatedAt: now,
+          });
+        } else {
+          logger.warn(
+            "Doctor has no mobile number — skipping 1-hour reminder",
+            { appointmentId, clinicId, doctorId: appointment.doctorId }
+          );
+        }
       }
     }
 
+    if (!notificationsToInsert.length) {
+      logger.warn("No reachable recipients for appointment notifications", {
+        appointmentId,
+        clinicId,
+      });
+      return;
+    }
     await db.collection("clc_appointment_notifications").insertMany(notificationsToInsert);
     logger.info("Successfully queued appointment notifications", { appointmentId, count: notificationsToInsert.length });
   } catch (err) {

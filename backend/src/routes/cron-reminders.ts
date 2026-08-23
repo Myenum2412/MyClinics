@@ -1,6 +1,5 @@
 import type { FastifyInstance } from "fastify";
 import { getCronDb } from "@/lib/db-pools";
-import { scanAndQueueReminders } from "@/services/reminder/reminder.service";
 import { syncCronJobs } from "@/services/cronjob/cronjob.service";
 import { requireCronSecret } from "@/plugins/auth";
 import { processPrescriptionNotifications } from "@/services/whatsapp/prescription-notification.service";
@@ -46,8 +45,8 @@ async function runStep<T>(ms: number, label: string, fn: () => Promise<T>): Prom
 
 /**
  * Entry point for the appointment reminder scheduler (cron-job.org pings this
- * every minute). Scans for appointments inside the reminder window and queues
- * WhatsApp reminders that the worker then sends ~30 minutes before each slot.
+ * every minute). Drains the tenant notification queues (prescriptions and
+ * appointment events/1-hour reminders) that the WhatsApp worker then delivers.
  *
  * Design notes:
  *  - All streams run CONCURRENTLY with individual budgets. The previous
@@ -67,11 +66,7 @@ export function registerCronRoutes(app: FastifyInstance): void {
       // Bound the DB connection so the request can never hang past the proxy timeout.
       const db = await withTimeout(getCronDb(), 8_000, "getCronDb");
 
-      const [scan, prescription, appointment] = await Promise.all([
-        runStep(9_000, "scanAndQueueReminders", async () => {
-          const result = await scanAndQueueReminders(db, new Date());
-          return { checked: result.checked, queued: result.queued, skipped: result.skipped };
-        }),
+      const [prescription, appointment] = await Promise.all([
         runStep(8_000, "processPrescriptionNotifications", () =>
           processPrescriptionNotifications(db).then(() => ({}))
         ),
@@ -83,18 +78,13 @@ export function registerCronRoutes(app: FastifyInstance): void {
       const duration = Date.now() - startTime;
       logger.info("Cron reminders completed", {
         durationMs: duration,
-        checked: scan.data?.checked ?? 0,
-        queued: scan.data?.queued ?? 0,
-        skipped: scan.data?.skipped ?? 0,
-        scan: scan.status,
         prescriptions: prescription.status,
         appointments: appointment.status,
       });
       return reply.send({
         ok: true,
-        checked: scan.data?.checked ?? 0,
-        queued: scan.data?.queued ?? 0,
-        skipped: scan.data?.skipped ?? 0,
+        prescriptions: prescription.status,
+        appointments: appointment.status,
         durationMs: duration,
       });
     } catch (error) {
