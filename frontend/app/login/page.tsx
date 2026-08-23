@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { LoginForm } from "@/components/login-form";
 import { getClinicName } from "@/lib/clinic-name";
-import { CloudShader } from "@/components/ui/cloud-shader";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -19,14 +18,32 @@ export default async function LoginPage({
   const clinicName = await getClinicName();
 
   return (
-    <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden p-6 md:p-10">
-      <CloudShader
-        className="absolute inset-0"
-        skyTopColor="#312E81"
-        skyBottomColor="#A5B4FC"
-        cloudColor="#E0E7FF"
+    <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden p-6 md:p-10 bg-slate-50">
+      {/* Top 20% background color */}
+      <div
+        className="absolute top-0 inset-x-0 h-[20%] pointer-events-none"
+        style={{ backgroundColor: "#90CAF9" }}
       />
-      <div className="auth-card relative z-10 w-full max-w-sm rounded-2xl border border-white/40 bg-white/70 p-6 shadow-2xl shadow-[#312E81]/30 backdrop-blur-xl sm:p-8">
+
+      {/* Bottom 30% background color */}
+      <div
+        className="absolute bottom-0 inset-x-0 h-[30%] pointer-events-none"
+        style={{ backgroundColor: "#E3F2FD" }}
+      />
+
+      {/* Center line with 100% blur */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div
+          className="w-full h-16 bg-[#90CAF9]/80 rounded-full"
+          style={{ filter: "blur(100px)" }}
+        />
+      </div>
+
+      {/* 100% backdrop blur overlay across the center line blend */}
+      <div className="absolute inset-0 backdrop-blur-[100px] pointer-events-none" />
+
+      {/* Form Container without card border/shadow/bg */}
+      <div className="relative z-10 w-full max-w-sm">
         <Suspense>
           <LoginForm
             callbackUrl={callbackUrl ?? "/clinic"}
@@ -37,3 +54,7 @@ export default async function LoginPage({
     </div>
   );
 }
+
+
+
+
