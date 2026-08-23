@@ -14,7 +14,7 @@ import {
 import { readBlogFileArticle } from "@/lib/blog-fs";
 import { ARTICLES } from "@/lib/blog-posts";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3456";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myclinic.myenum.in";
 
 function resolveArticle(slug: string): ResolvedArticle | null {
   const curated = ARTICLES.find((a) => a.slug === slug);

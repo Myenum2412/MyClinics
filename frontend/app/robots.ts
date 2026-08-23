@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3456";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myclinic.myenum.in";
 
 const AI_CRAWLERS = [
   "GPTBot",

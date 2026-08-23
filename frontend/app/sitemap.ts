@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 import { CATALOG } from "@/lib/blog-catalog";
 import { ARTICLES } from "@/lib/blog-posts";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3456";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myclinic.myenum.in";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
