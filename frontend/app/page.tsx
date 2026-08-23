@@ -5,6 +5,8 @@ import { HairlineDivider } from "@/components/hairline-divider";
 import { Header } from "@/components/header";
 import { HeroSection } from "@/components/hero";
 import { LogoCloud } from "@/components/logo-cloud";
+import { SiteFooter } from "@/components/site-footer";
+import { TestimonialsSection } from "@/components/testimonials-section";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -27,9 +29,12 @@ export default function Home() {
           <FeatureSection />
         </div>
         <HairlineDivider crosshairs />
+        <TestimonialsSection />
+        <HairlineDivider crosshairs />
         <FaqSection />
         <HairlineDivider crosshairs />
         <CtaSection />
+        <SiteFooter />
       </main>
     </>
   );

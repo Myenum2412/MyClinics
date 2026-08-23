@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import ArticleBlock from "@/components/blocks/article-2";
-import FooterBlock from "@/components/footer-block";
-import SiteHeader from "@/components/site-header";
+import { Header } from "@/components/header";
+import { SiteFooter } from "@/components/site-footer";
 import { findCatalogEntry } from "@/lib/blog-catalog";
 import {
   relatedCatalogArticles,
@@ -132,7 +132,7 @@ export default async function BlogArticlePage({
 
   return (
     <div className="flex min-h-svh flex-col">
-      <SiteHeader />
+      <Header />
       <main className="flex-1">
         <ArticleBlock article={article} />
 
@@ -163,7 +163,7 @@ export default async function BlogArticlePage({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </main>
-      <FooterBlock />
+      <SiteFooter />
     </div>
   );
 }

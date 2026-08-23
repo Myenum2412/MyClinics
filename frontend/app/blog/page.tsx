@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 import BlogBlock from "@/components/blocks/blog-3";
-import FooterBlock from "@/components/footer-block";
-import SiteHeader from "@/components/site-header";
+import { Header } from "@/components/header";
+import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -12,11 +12,11 @@ export const metadata: Metadata = {
 export default function BlogPage() {
   return (
     <div className="flex min-h-svh flex-col">
-      <SiteHeader />
+      <Header />
       <main className="flex-1">
         <BlogBlock />
       </main>
-      <FooterBlock />
+      <SiteFooter />
     </div>
   );
 }
