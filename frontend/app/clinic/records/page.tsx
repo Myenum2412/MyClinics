@@ -58,7 +58,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
-import StatsGeneric from "@/components/stats-generic";
+import dynamic from "next/dynamic";
+
+const StatsGeneric = dynamic(() => import("@/components/stats-generic"), {
+  loading: () => <div className="h-[270px]" aria-hidden="true" />,
+});
 import {
   AttachmentUploader,
   makeAttachmentFile,

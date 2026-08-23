@@ -51,8 +51,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
-import StatsAppointments from "@/components/stats-appointments";
+import dynamic from "next/dynamic";
 import { appointmentStatusTone } from "@/lib/status-styles";
+
+const StatsAppointments = dynamic(
+  () => import("@/components/stats-appointments"),
+  { loading: () => <div className="h-[270px]" aria-hidden="true" /> }
+);
 import {
   AppointmentForm,
   appointmentToForm,

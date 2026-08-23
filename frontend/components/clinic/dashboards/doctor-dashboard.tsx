@@ -24,10 +24,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import dynamic from "next/dynamic";
 import {
-  ChartBarInteractive,
   type ChartBarInteractiveDatum,
 } from "@/components/chart-bar-interactive";
+
+const ChartBarInteractive = dynamic(
+  () =>
+    import("@/components/chart-bar-interactive").then(
+      (m) => m.ChartBarInteractive
+    ),
+  { loading: () => <Skeleton className="h-[300px] w-full" /> }
+);
 
 import { type ClinicSession } from "@/lib/clinic-api";
 

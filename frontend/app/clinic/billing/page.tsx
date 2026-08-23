@@ -45,8 +45,12 @@ import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
-import StatsBilling from "@/components/stats-billing";
+import dynamic from "next/dynamic";
 import { billStatusTone } from "@/lib/status-styles";
+
+const StatsBilling = dynamic(() => import("@/components/stats-billing"), {
+  loading: () => <div className="h-[270px]" aria-hidden="true" />,
+});
 import {
   ArrowUp,
   ArrowDown,

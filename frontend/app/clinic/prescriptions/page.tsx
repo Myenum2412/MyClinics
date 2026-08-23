@@ -54,7 +54,11 @@ import { PatientSelect } from "@/components/clinic/pickers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
-import Stats07 from "@/components/stats-07";
+import dynamic from "next/dynamic";
+
+const Stats07 = dynamic(() => import("@/components/stats-07"), {
+  loading: () => <div className="h-[270px]" aria-hidden="true" />,
+});
 import {
   ArrowUp,
   ArrowDown,

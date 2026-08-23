@@ -40,7 +40,11 @@ import {
   Camera,
   AlertCircle,
 } from "lucide-react";
-import StatsGeneric from "@/components/stats-generic";
+import dynamic from "next/dynamic";
+
+const StatsGeneric = dynamic(() => import("@/components/stats-generic"), {
+  loading: () => <div className="h-[270px]" aria-hidden="true" />,
+});
 
 import {
   Select,

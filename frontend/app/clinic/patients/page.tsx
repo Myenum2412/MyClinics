@@ -56,9 +56,13 @@ import { useDropdownOptions } from "@/lib/dropdown-options";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye } from "lucide-react";
-import StatsGeneric from "@/components/stats-generic";
+import dynamic from "next/dynamic";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import { patientStatusTone } from "@/lib/status-styles";
+
+const StatsGeneric = dynamic(() => import("@/components/stats-generic"), {
+  loading: () => <div className="h-[270px]" aria-hidden="true" />,
+});
 
 
 const GENDERS = ["male", "female", "other"];
