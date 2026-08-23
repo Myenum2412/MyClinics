@@ -6,7 +6,7 @@ export type Cluster =
   | "Billing"
   | "WhatsApp"
   | "AI"
-  | "Growth"
+  | "Organic Social"
   | "Specialties"
   | "Buying Guide";
 
@@ -109,17 +109,17 @@ const TITLES: Record<Cluster, string[]> = {
     "10 Practical Ways AI Can Improve Clinic Operations",
     "The Future of AI-Powered Clinic Management",
   ],
-  Growth: [
-    "How to Get More Patients for Your Clinic",
-    "How to Get Your Clinic Found on Google",
-    "Local SEO for Doctors: How to Attract Nearby Patients",
-    "How to Create a Google Business Profile for Your Clinic",
-    "How to Get More Google Reviews for Your Clinic",
-    "How to Build a High-Converting Website for Your Clinic",
-    "15 Digital Marketing Strategies Every Clinic Should Try",
-    "How Doctors Can Grow Their Clinic Through Social Media",
-    "How SEO Can Bring Consistent Patients to Your Clinic",
-    "The Complete Digital Marketing Guide for Doctors and Clinics",
+  "Organic Social": [
+    "How Clinics Can Grow With Organic Social Media",
+    "How to Plan a Month of Clinic Social Posts Without Paid Ads",
+    "How Doctors Can Build Trust on Instagram Organically",
+    "Organic Social vs Paid Ads for Clinics: Which Should You Choose?",
+    "How to Turn Patient Questions Into Endless Social Content",
+    "How Often Should Your Clinic Post on Social Media?",
+    "Best Reel Ideas for Clinics That Need No Budget",
+    "How to Handle Patient Comments on Social Media the Right Way",
+    "How to Build a Content Calendar for Your Clinic's Social Media",
+    "The Complete Guide to Organic Social Media for Clinics",
   ],
   Specialties: [
     "Best Clinic Management Software for Dental Clinics",
@@ -178,9 +178,9 @@ function excerptFor(cluster: Cluster, title: string) {
       `Your front desk, always on. This guide explains ${short} and where an AI assistant like the one built into My Clinics fits best.`,
       `Practical, non-hyped answers on ${short} — with concrete ways My Clinics puts AI to work on bookings and patient queries.`,
     ],
-    Growth: [
-      `More of the right patients, sustainably. A doctor-focused playbook covering ${short}, with digital foundations built into My Clinics.`,
-      `Simple, repeatable tactics for ${short} — and how a professional online presence powered by My Clinics supports each one.`,
+    "Organic Social": [
+      `Grow without an ad budget. A doctor-focused playbook covering ${short} — organic social only, on foundations My Clinics already gives you.`,
+      `Simple, repeatable organic-social tactics for ${short}, powered by the booking and follow-up systems inside My Clinics.`,
     ],
     Specialties: [
       `Not all clinics work the same way. See what matters most in ${short.toLowerCase()}, and how My Clinics adapts to the specialty.`,

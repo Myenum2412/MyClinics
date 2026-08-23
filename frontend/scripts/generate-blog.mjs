@@ -115,17 +115,17 @@ const TITLES = {
     "10 Practical Ways AI Can Improve Clinic Operations",
     "The Future of AI-Powered Clinic Management",
   ],
-  Growth: [
-    "How to Get More Patients for Your Clinic",
-    "How to Get Your Clinic Found on Google",
-    "Local SEO for Doctors: How to Attract Nearby Patients",
-    "How to Create a Google Business Profile for Your Clinic",
-    "How to Get More Google Reviews for Your Clinic",
-    "How to Build a High-Converting Website for Your Clinic",
-    "15 Digital Marketing Strategies Every Clinic Should Try",
-    "How Doctors Can Grow Their Clinic Through Social Media",
-    "How SEO Can Bring Consistent Patients to Your Clinic",
-    "The Complete Digital Marketing Guide for Doctors and Clinics",
+  "Organic Social": [
+    "How Clinics Can Grow With Organic Social Media",
+    "How to Plan a Month of Clinic Social Posts Without Paid Ads",
+    "How Doctors Can Build Trust on Instagram Organically",
+    "Organic Social vs Paid Ads for Clinics: Which Should You Choose?",
+    "How to Turn Patient Questions Into Endless Social Content",
+    "How Often Should Your Clinic Post on Social Media?",
+    "Best Reel Ideas for Clinics That Need No Budget",
+    "How to Handle Patient Comments on Social Media the Right Way",
+    "How to Build a Content Calendar for Your Clinic's Social Media",
+    "The Complete Guide to Organic Social Media for Clinics",
   ],
   Specialties: [
     "Best Clinic Management Software for Dental Clinics",
@@ -356,34 +356,33 @@ const CORE = {
       `My Clinics packages exactly this loop — AI chat booking, automated reminders, staff oversight dashboard — so clinics adopt gradually without integration projects.`,
     ]},
   ],
-  Growth: [
-    { t: "Be findable before being persuasive", p: [
-      `Growth begins in search results, not brochures. An accurate, complete Google profile — hours, services, photos, directions — converts nearby searches into first visits.`,
-      `Reviews are the visible trust layer. Steady, recent, authentic feedback outweighs any slogan a clinic could write about itself.`,
-      `Your website has one primary job locally: make contacting or booking effortless within seconds of arrival. Everything else is decoration.`,
+  "Organic Social": [
+    { t: "Organic beats paid when the basics exist", p: [
+      "{S} succeeds without ad spend because organic social rewards what clinics already own: genuine expertise and real stories. Platforms push content that earns saves, shares and replies — not content that merely pays.",
+      "The trade is patience for permanence. A reel answering a common patient question keeps collecting views months later; an ad stops the moment the budget does. That permanence is why organic compounds while paid resets monthly.",
+      "It also ages well for local search. Patients type these exact questions into Google, and helpful posts answer before competitors appear anywhere.",
     ]},
-    { t: "Turn searches into bookings", p: [
-      `Every profile and listing should link directly into online booking, not a contact page that hopes someone calls during office hours.`,
-      `Response speed matters: enquiries answered in minutes convert several times better than the same enquiry answered next morning.`,
-      `Track the funnel monthly — profile views, website visits, bookings made — so effort follows evidence rather than habit.`,
+    { t: "Pick two platforms, not five", p: [
+      "Spreading thin kills organic reach before consistency ever gets a chance. Instagram plus one more channel — WhatsApp status or YouTube Shorts — covers how most patients actually discover local clinics.",
+      "Choose by where your patients already are, not by trend cycles. A quiet, consistent presence on two platforms outperforms sporadic bursts across five every time.",
+      "Write down who posts, when and what. Ownership turns social from a maybe into a system.",
     ]},
-    { t: "Retention: the quiet growth engine", p: [
-      `Acquiring a new patient costs multiples of retaining one. Automated follow-ups and effortless rebooking quietly compound retention month after month.`,
-      `Recall systems bring due patients back proactively — vaccinations, reviews, repeat courses — scheduled care instead of remembered care.`,
-      `Happy retained patients refer. Word-of-mouth driven by good operations outperforms paid campaigns precisely because it arrives pre-trusted.`,
+    { t: "Four content pillars end blank-page panic", p: [
+      "Educate: myths, preparation steps, aftercare explained simply. Humanise: clinic life, team introductions, small behind-the-scenes moments. Prove: reviews reshared, milestones, before-and-after stories where consent allows. Convert: services, timings, booking links stated plainly.",
+      "Rotate pillars on a weekly rhythm so followers know what to expect and the month plans itself.",
+      "Batch creation helps too — one afternoon of filming feeds two weeks of posting without daily scramble.",
     ]},
-    { t: "Local SEO essentials for doctors", p: [
-      `Consistency wins local search: identical name, address and phone across Google, directories and your site tells algorithms you are real and stable.`,
-      `Service pages phrased the way patients search — symptom-first, area-specific — collect long-tail traffic bigger clinics ignore.`,
-      `Publish helpful content steadily. Articles answering genuine patient questions earn rankings and demonstrate competence before the first visit.`,
+    { t: "Patient questions are your content calendar", p: [
+      "Every question asked twice at the desk deserves a post. Keep a running log at reception; each entry becomes a reel script, a carousel or a story poll with real demand behind it.",
+      "These perform because they answer genuine intent — the same phrasing patients type into search bars late at night.",
+      "Invite the team to log questions they hear; front-desk staff are your best content researchers.",
     ]},
-    { t: "A realistic first-quarter plan", p: [
-      `Weeks one and two: fix profiles, add booking links, set up review requests after positive visits. Weeks three and four: publish the first two helpful articles.`,
-      `Month two: automate follow-ups and recalls. Month three: review funnel numbers and double down on whatever moved bookings.`,
-      `None of it requires agencies or ad budgets — just routines, kept.`,
+    { t: "Engagement is half the work", p: [
+      "Reply to comments and DMs within a day. Thoughtful responses signal both algorithms and humans that the account is alive, cared for and worth following.",
+      "Fifteen minutes of daily engagement compounds into community faster than any posting volume ever will.",
+      "Reshare patient reviews to stories and thank people publicly (with permission) — proof beats promises in healthcare.",
     ]},
-  ],
-  Specialties: [
+  ],  Specialties: [
     { t: "Workflow rhythms unique to the specialty", p: [
       `Every specialty repeats certain shapes of day: procedure-heavy blocks, counselling-length consultations, rapid review visits. Software must bend to those rhythms, not flatten them.`,
       `Appointment types with different durations and prices should configure in minutes, letting the calendar mirror clinical reality.`,
@@ -492,13 +491,16 @@ const STEPS = {
     ["Baseline before launch", "Record current call volume and no-show rate so the pilot's effect is provable, not anecdotal."],
     ["Expand on evidence", "After four weeks, extend to FAQs or follow-ups only where the numbers justify it."],
   ],
-  Growth: [
-    ["Repair your Google profile", "Complete every field, upload real photos, verify hours, and link direct booking — the foundation of findability."],
-    ["Systematise review requests", "Ask after positive visits via an automatic message; steady fresh reviews outrank everything else locally."],
-    ["Make everything bookable", "Point profile, website and social bios at online booking so interest never dead-ends in a phone queue."],
-    ["Publish helpful articles", "Answer real patient questions in writing monthly; helpfulness compounds into search visibility."],
-    ["Automate retention", "Switch on follow-ups and recall reminders so existing-patient revenue grows without campaigns."],
+  "Organic Social": [
+    ["Audit your profiles today", "Fix bios, hours, links and booking CTAs on every platform you own; organic reach starts with a complete, trustworthy profile."],
+    ["Choose two platforms", "Instagram plus WhatsApp status or YouTube Shorts — go where your patients already are and commit there fully."],
+    ["Define four content pillars", "Educate, humanise, prove, convert — rotating these removes blank-page panic and gives followers a rhythm to expect."],
+    ["Batch-create monthly", "One afternoon of filming and writing feeds two weeks of posts; consistency beats daily improvisation."],
+    ["Engage fifteen minutes daily", "Reply to comments and DMs thoughtfully; responsiveness signals life to algorithms and patients alike."],
+    ["Review monthly numbers", "Track saves, shares, profile visits and booking-link clicks; double down next month on what moved."],
   ],
+
+
   Specialties: [
     ["Model your visit types", "List consultation, procedure and review categories with realistic durations and prices for the calendar."],
     ["Template the documentation", "Create note structures per visit reason so consistency survives busy days and multiple doctors."],
@@ -565,13 +567,15 @@ const MISTAKES = {
     "Feeding sloppy calendars — assistants amplify whatever availability truth they inherit.",
     "Chasing novelty use-cases — booking and reminders first; gimmicks later, if ever.",
   ],
-  Growth: [
-    "Incomplete profiles — missing hours or photos quietly divert patients to competitors who filled theirs.",
-    "Review requests at random moments — ask after positive visits, when goodwill peaks naturally.",
-    "Websites that bury booking — every extra click halves conversion; link directly to slots.",
-    "Campaign-first thinking — retention systems outperform ads until basics like reminders exist.",
-    "Never checking the funnel — profile views versus bookings reveals exactly where patients leak.",
+  "Organic Social": [
+    "Buying followers or engagement — audiences and algorithms both notice; credibility never recovers cheaply.",
+    "Posting promotions only — feeds reward value; educate and humanise before you sell.",
+    "Ignoring comments and DMs — unanswered messages tell patients the clinic does not listen.",
+    "Chasing every platform — two done consistently beat five done occasionally.",
+    "Deleting negative comments — address calmly instead; visible professionalism wins the watchers.",
   ],
+
+
   Specialties: [
     "Forcing generic durations — procedure blocks need their own slot lengths or the day unravels.",
     "Generic note templates — specialty-specific structure saves minutes per visit, hundreds monthly.",
@@ -596,7 +600,7 @@ const CHECKLIST = {
   Billing: ["Price list frozen","Invoice-from-visit enabled","Same-day posting habit","Pending ageing view on","Automated dues nudges","Digital receipts live","Monthly report reviewed","Discount logging agreed"],
   WhatsApp: ["Verified number connected","Booking flow drafted","Reminder cadence set","Templates reviewed for tone","Opt-out honoured","Inbox owner named","Escalation rule defined","Threads logged to records"],
   AI: ["Use case narrowed","Calendar truth ensured","Baselines recorded","Handoff rules written","Trial window fixed","Deflection measured","No-show delta checked","Expansion decided on evidence"],
-  Growth: ["Profile completeness fixed","Booking links everywhere","Review request automated","First article published","Follow-ups automated","Recalls switched on","Funnel dashboard watched","Quarterly plan revisited"],
+  "Organic Social": ["Bio complete with booking link","Two platforms chosen","Four pillars defined","Month batched ahead","Stories three times weekly","Reel weekly","Comments replied within 24h","Reviews reshared","Analytics reviewed monthly","Patient-question log kept"],
   Specialties: ["Visit types modelled","Durations priced realistically","Note templates built","Recall cycles configured","Signature scenarios tested","Pilot doctor chosen","Friction list collected","Full rollout tuned"],
   "Buying Guide": ["Scorecard circulated","Realistic trial secured","TCO computed","Security in writing","Export rights confirmed","Training included","Phased contract agreed","30-day review booked"],
 }
@@ -609,7 +613,7 @@ const FAQ = {
   Billing: [["Can we offer partial payments?","Yes, splits post against the invoice with balance and ageing tracked automatically."],["What do patients receive?","Professional digital receipts itemised by service, retrievable from their portal anytime."],["Does it support different payment modes?","Cash and digital modes record distinctly, feeding the daily collection summary automatically."],["How are discounts handled?","Applied as deliberate, logged adjustments against standard prices — consistency with accountability."],["Can we see yesterday's collections?","Any day's summary is one view away; daily totals post in real time as payments record."]],
   WhatsApp: [["Does this use my personal number?","No, the clinic connects its official business number through verified setup inside My Clinics."],["What if two patients message simultaneously?","The assistant handles concurrency naturally — queues exist for humans, not software."],["Can staff take over a chat mid-conversation?","Yes, authorised staff join with full context, and the assistant steps aside gracefully."],["Are message templates customisable?","Fully — wording, timing and language match your clinic's voice rather than vendor defaults."],["What happens to chat history?","Conversations log against patient records, preserving context across staff and shifts."]],
   AI: [["Which languages does the assistant understand?","It handles everyday mixed-language patient phrasing, including Hinglish patterns common in Indian clinics."],["Can it handle rude or confused messages?","Gracefully — unclear intent triggers clarifying questions or a polite handoff to staff with context."],["Does AI increase our costs significantly?","Within My Clinics the booking-and-reminder loop is bundled, so pilots cost attention, not add-on fees."],["How do we stop it saying something wrong?","Answers draw only from clinic-configured facts; unknown territory escalates rather than improvises."],["Can we turn it off temporarily?","Instantly — toggles exist per feature, and human channels resume unaffected."]],
-  Growth: [["How soon do Google improvements show?","Profile fixes reflect within days; review velocity and content compound over months."],["Should we run paid ads?","Only after organic basics exist — reminders, reviews, booking links — otherwise spend leaks a leaking bucket."],["What content should a clinic publish?","Answers to real patient questions: preparation, recovery, costs, myths — helpfulness ranks."],["How many reviews do we need?","Velocity matters more than vanity totals; a steady monthly stream beats a stale pile."],["Can software help with marketing?","Operationally, yes — online booking converts, reminders retain, records impress; marketing promises kept."]],
+  "Organic Social": [["Which platform is best for clinics?","Instagram for reach and trust, WhatsApp status for existing patients — start there before adding anything else."],["How often should a clinic post?","Three to four quality posts weekly beats daily filler; consistency trains algorithms and audiences alike."],["What if we cannot show patient faces?","Educational reels, myth-busters and team introductions work without exposing any patient."],["Does organic social really bring patients?","Yes over months — familiarity plus easy booking paths convert local attention into visits."],["Are hashtags still useful?","Locally relevant ones help modestly; saves and shares matter far more now."]],
   Specialties: [["Can slot lengths differ per procedure?","Yes, appointment types carry their own duration and pricing across the calendar."],["How are procedure packages billed?","Composite items build from components, invoiced as packages while reporting stays granular."],["Can reports attach to specific visits?","Every upload binds to its encounter, keeping evidence beside the decision it supported."],["Do templates constrain doctors?","They structure defaults without restricting additions — consistency plus personal style coexist."],["What about multi-doctor specialty clinics?","Doctor-wise calendars, shared patients and role-based views are designed in from the start."]],
   "Buying Guide": [["Is free software viable for clinics?","For very small practices, sometimes — verify export freedom and isolation before committing either way."],["Annual or monthly billing?","Monthly until proven, annual once convinced; negotiate training inclusion rather than deeper discounts."],["What one feature predicts satisfaction?","Reminder automation — its effects show in weeks and touch revenue directly."],["How many vendors should we trial?","Three maximum with identical scenarios; more options create analysis paralysis, not insight."],["When should we sign the contract?","After a realistic trial, written security answers and an export clause — in that order."]],
 }
@@ -649,7 +653,7 @@ function excerptFor(cluster, title) {
     Billing: `Fewer errors, faster payments — ${s}, and how clinics automate it end to end with My Clinics billing.`,
     WhatsApp: `Meet patients where they already are: ${s}, powered by the WhatsApp assistant built into My Clinics.`,
     AI: `Practical, non-hyped guidance on ${s}, including where the AI assistant in My Clinics fits best.`,
-    Growth: `More of the right patients, sustainably — ${s}, supported by the digital foundations built into My Clinics.`,
+    "Organic Social": `Grow without an ad budget — ${s}, the organic-social playbook clinics run on My Clinics' digital foundations.`,
     Specialties: `Feature checklists and real workflows for ${s.toLowerCase()} evaluated through running your practice on My Clinics.`,
     "Buying Guide": `Budgets, features and contracts: a confident framework for ${s.toLowerCase()}, and where My Clinics stands.`,
   }[cluster]

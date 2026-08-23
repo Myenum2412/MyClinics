@@ -44,7 +44,7 @@ const categories = [
   "Billing",
   "WhatsApp",
   "AI",
-  "Growth",
+  "Organic Social",
   "Specialties",
   "Buying Guide",
   "Product",

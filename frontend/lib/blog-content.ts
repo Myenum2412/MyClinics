@@ -156,18 +156,26 @@ const CLUSTER_SECTIONS: Record<Cluster, Blueprint[]> = {
       `My Clinics bundles exactly this loop â€” AI booking over chat, automatic confirmations, staff dashboard oversight â€” so control stays with the clinic throughout.`,
     ]},
   ],
-  Growth: [
-    { t: s => `Growth starts with being findable`, p: s => [
-      `${s} begins before the patient ever calls: a complete Google profile, accurate directions, real opening hours and recent reviews decide whether a search turns into a visit.`,
-      `Most patients choose from the top few local results. Being present, accurate and responsive there is the cheapest marketing a clinic can do.`,
+  "Organic Social": [
+    { t: s => `Organic beats paid when the basics exist`, p: s => [
+      `${s} succeeds without ad spend because organic social rewards two things clinics already own: genuine expertise and real patient stories. Platforms distribute content that earns saves, shares and replies — not content that simply pays.`,
+      `The trade is patience for permanence. A reel that answers a common patient question keeps collecting views months later, while an ad stops the moment the budget does.`,
     ]},
-    { t: () => `Turn one good visit into the next`, p: () => [
-      `Retention compounds. Automated follow-ups, WhatsApp check-ins and easy rebooking make returning frictionless â€” and returning patients refer friends.`,
-      `Asking for a review right after a positive visit, when goodwill peaks, steadily builds the social proof that convinces strangers to try you.`,
+    { t: () => `Pick two platforms, not five`, p: () => [
+      `Spreading thin kills organic reach. Instagram plus one more channel — WhatsApp status or YouTube Shorts — covers how most patients discover local clinics.`,
+      `Consistency on two platforms outperforms sporadic posting everywhere. Choose based on where your actual patients spend time, not on trends.`,
     ]},
-    { t: s => `Systems, not campaigns`, p: (s) => [
-      `Sustainable ${s.toLowerCase()} comes from routines: profile refreshed monthly, reviews requested weekly, follow-ups automated always.`,
-      `My Clinics supports the operational half â€” online booking that converts, reminders that retain, records that impress â€” so marketing promises are kept at the front desk.`,
+    { t: () => `Content pillars keep posting effortless`, p: () => [
+      `Four repeating pillars remove daily blank-page panic: educate (myths, prep, aftercare), humanise (clinic life, team), prove (reviews, results stories) and convert (services, timings, booking links).`,
+      `Rotate them in a simple rhythm so followers know what to expect and you never run dry mid-month.`,
+    ]},
+    { t: () => `Patient questions are your content calendar`, p: () => [
+      `Every question asked twice at the desk deserves a post. Keep a running log; each entry becomes a reel script, carousel or story poll.`,
+      `This content ranks in local search too — patients literally type these questions into Google, and helpful posts answer before competitors do.`,
+    ]},
+    { t: () => `Engagement is half the work`, p: () => [
+      `Replying to comments and DMs within a day signals both algorithms and humans that the account is alive and cared for.`,
+      `Fifteen minutes of daily engagement — thoughtful replies, resharing patient reviews to stories — compounds into community faster than any posting volume.`,
     ]},
   ],
   Specialties: [
@@ -270,11 +278,14 @@ const FAQ_BANK: Record<Cluster, [string, string][]> = {
     ["Can AI book outside working hours?", "Yes, that is precisely its strength â€” capturing bookings at midnight that would otherwise be lost."],
     ["Is patient data shared with the AI?", "No. Within My Clinics, AI operates strictly inside your clinic's isolated tenant boundary."],
   ],
-  Growth: [
-    ["How soon does local SEO show results?", "Expect profile improvements within weeks; steady review growth compounds over months."],
-    ["Do I need a big budget for clinic marketing?", "No. Accurate listings, prompt reviews and automated follow-ups cost time discipline, not ad spend."],
-    ["Which channel brings most patients?", "Consistently: Google search for discovery, WhatsApp word-of-mouth for conversion."],
-    ["Can software help retention?", "Automated follow-ups and effortless rebooking measurably raise return-visit rates."],
+  "Organic Social": [
+    ["Which platform is best for clinics?","Instagram for reach and trust, WhatsApp status for your existing patients — start there before adding anything else."],
+    ["How often should a clinic post?","Three to four quality posts a week beats daily filler; consistency trains both algorithms and audience."],
+    ["What if we can't show patient faces?","Educational reels, myth-busters, desk-side tips and team introductions work without exposing any patient."],
+    ["Does organic social really bring patients?","Yes over months — it builds familiarity and trust so local searches convert; pair it with online booking to capture intent."],
+    ["Are hashtags still useful?","Locally relevant ones help discovery modestly; content quality and saves matter far more now."],
+    ["How do we handle a negative comment?","Respond calmly, move details to DMs, resolve genuinely — visible professionalism wins the audience watching."],
+    ["How do followers become bookings?","Every post carries a booking path — link in bio, WhatsApp CTA — so interest has somewhere to go instantly."],
   ],
   Specialties: [
     ["Can software handle procedure-based appointments?", "Yes â€” slot lengths and pricing can differ per procedure type in My Clinics."],
