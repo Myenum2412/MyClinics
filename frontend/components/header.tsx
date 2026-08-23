@@ -1,35 +1,77 @@
 "use client";
-
 import { cn } from "@/lib/utils";
-import { Logo } from "@/components/logo";
+import Link from "next/link";
 import { useScroll } from "@/hooks/use-scroll";
 import { Button } from "@/components/ui/button";
-import { DesktopNav } from "@/components/desktop-nav";
 import { MobileNav } from "@/components/mobile-nav";
+
+export const navLinks = [
+	{
+		label: "Home",
+		href: "/",
+	},
+	{
+		label: "Features",
+		href: "/#features",
+	},
+	{
+		label: "Pricing",
+		href: "/#pricing",
+	},
+	{
+		label: "Blog",
+		href: "/blog",
+	},
+	{
+		label: "Contact",
+		href: "/#contact",
+	},
+];
 
 export function Header() {
 	const scrolled = useScroll(10);
 
 	return (
 		<header
-			className={cn("sticky top-0 z-50 w-full border-transparent border-b", {
-				"border-border bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/50":
-					scrolled,
-			})}
+			className={cn(
+				"sticky top-0 z-50 mx-auto w-full max-w-4xl border-transparent border-b md:rounded-md md:border md:transition-all md:ease-out",
+				{
+					"border-border bg-background/95 backdrop-blur-sm supports-backdrop-filter:bg-background/50 md:top-2 md:max-w-3xl md:shadow":
+						scrolled,
+				}
+			)}
 		>
-			<nav className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4">
-				<div className="flex items-center gap-5">
-					<a
-						className="rounded-lg px-3 py-2.5 hover:bg-muted dark:hover:bg-muted/50"
-						href="#"
-					>
-						<Logo className="h-4" />
-					</a>
-					<DesktopNav />
-				</div>
+			<nav
+				className={cn(
+					"flex h-16 w-full items-center justify-between px-4 md:transition-all md:ease-out",
+					{
+						"md:px-2": scrolled,
+					}
+				)}
+			>
+				<Link
+					className="rounded-md p-2 hover:bg-muted dark:hover:bg-muted/50"
+					href="/"
+				>
+					{/* eslint-disable-next-line @next/next/no-img-element */}
+					<img
+						src="/logobg.png"
+						alt="My Clinics logo"
+						className="size-10 object-contain"
+					/>
+				</Link>
 				<div className="hidden items-center gap-2 md:flex">
-					<Button variant="outline">Sign In</Button>
-					<Button>Get Started</Button>
+					<div>
+						{navLinks.map((link) => (
+							<Button key={link.label} size="sm" variant="ghost" render={<Link href={link.href} />} nativeButton={false}>{link.label}</Button>
+						))}
+					</div>
+					<Button size="sm" variant="outline" render={<Link href="/login" />} nativeButton={false}>
+						Sign In
+					</Button>
+					<Button size="sm" render={<Link href="/signup/clinic" />} nativeButton={false}>
+						Get Started
+					</Button>
 				</div>
 				<MobileNav />
 			</nav>

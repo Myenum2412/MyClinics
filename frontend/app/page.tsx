@@ -1,5 +1,8 @@
 import FooterBlock from "@/components/footer-block";
+import { Header } from "@/components/header";
 import { HeroSection } from "@/components/hero";
+import { LogoCloud } from "@/components/logo-cloud";
+import { FeatureSection } from "@/components/feature-section";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +16,12 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <>
+      <Header />
       <HeroSection />
+      <LogoCloud />
+      <div id="features">
+        <FeatureSection />
+      </div>
       <FooterBlock />
     </>
   );

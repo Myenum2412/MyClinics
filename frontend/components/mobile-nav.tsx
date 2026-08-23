@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 import React from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Portal, PortalBackdrop } from "@/components/portal";
-import { companyLinks, companyLinks2, productLinks } from "@/components/nav-links";
-import { LinkItem } from "@/components/sheard";
+import { navLinks } from "@/components/header";
 import { XIcon, MenuIcon } from "lucide-react";
 
 export function MobileNav() {
@@ -20,65 +20,34 @@ export function MobileNav() {
 				size="icon"
 				variant="outline"
 			>
-				<div
-					className={cn(
-						"transition-all",
-						open ? "scale-100 opacity-100" : "scale-0 opacity-0"
-					)}
-				>
-					<XIcon
-					/>
-				</div>
-				<div
-					className={cn(
-						"absolute transition-all",
-						open ? "scale-0 opacity-0" : "scale-100 opacity-100"
-					)}
-				>
-					<MenuIcon
-					/>
-				</div>
+				{open ? (
+					<XIcon className="size-4.5" />
+				) : (
+					<MenuIcon className="size-4.5" />
+				)}
 			</Button>
 			{open && (
-				<Portal className="top-14">
+				<Portal className="top-14" id="mobile-menu">
 					<PortalBackdrop />
 					<div
 						className={cn(
-							"size-full overflow-y-auto p-4",
-							"data-[slot=open]:zoom-in-97 ease-out data-[slot=open]:animate-in"
+							"data-[slot=open]:zoom-in-97 ease-out data-[slot=open]:animate-in",
+							"size-full p-4"
 						)}
 						data-slot={open ? "open" : "closed"}
 					>
-						<div className="flex w-full flex-col gap-y-2">
-							<span className="text-sm">Product</span>
-							{productLinks.map((link) => (
-								<LinkItem
-									className="rounded-lg p-2 active:bg-muted dark:active:bg-muted/50"
-									key={`product-${link.label}`}
-									{...link}
-								/>
-							))}
-							<span className="text-sm">Company</span>
-							{companyLinks.map((link) => (
-								<LinkItem
-									className="rounded-lg p-2 active:bg-muted dark:active:bg-muted/50"
-									key={`company-${link.label}`}
-									{...link}
-								/>
-							))}
-							{companyLinks2.map((link) => (
-								<LinkItem
-									className="rounded-lg p-2 active:bg-muted dark:active:bg-muted/50"
-									key={`company-${link.label}`}
-									{...link}
-								/>
+						<div className="grid gap-y-2">
+							{navLinks.map((link) => (
+								<Button className="justify-start" key={link.label} variant="ghost" render={<Link href={link.href} />} nativeButton={false}>{link.label}</Button>
 							))}
 						</div>
-						<div className="mt-5 flex flex-col gap-2">
-							<Button className="w-full" variant="outline">
+						<div className="mt-12 flex flex-col gap-2">
+							<Button className="w-full" variant="outline" render={<Link href="/login" />} nativeButton={false}>
 								Sign In
 							</Button>
-							<Button className="w-full">Get Started</Button>
+							<Button className="w-full" render={<Link href="/signup/clinic" />} nativeButton={false}>
+								Get Started
+							</Button>
 						</div>
 					</div>
 				</Portal>
