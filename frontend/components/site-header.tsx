@@ -19,7 +19,7 @@ export default function SiteHeader({
         <img
           src="/logobg.png"
           alt="My Clinics logo"
-          className="size-10 rounded-md object-contain"
+          className="size-14 object-contain"
         />
       </Link>
       <div
