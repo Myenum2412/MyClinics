@@ -1,4 +1,3 @@
-import FooterBlock from "@/components/footer-block";
 import { Header } from "@/components/header";
 import { HeroSection } from "@/components/hero";
 import { LogoCloud } from "@/components/logo-cloud";
@@ -22,7 +21,6 @@ export default function Home() {
       <div id="features">
         <FeatureSection />
       </div>
-      <FooterBlock />
     </>
   );
 }
