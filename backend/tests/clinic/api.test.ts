@@ -11,6 +11,18 @@ vi.mock("@/lib/db", () => ({
   getDb: async () => mockDbHolder.db,
 }));
 
+// The tenant data layer reads through the pooled client (not @/lib/db), so
+// every pool getter must resolve to the same fake DB.
+vi.mock("@/lib/db-pools", () => ({
+  getDb: async () => mockDbHolder.db,
+  getPoolDb: async () => mockDbHolder.db,
+  getMedicalRecordsDb: async () => mockDbHolder.db,
+  getAppointmentsDb: async () => mockDbHolder.db,
+  getWhatsAppDb: async () => mockDbHolder.db,
+  getCronDb: async () => mockDbHolder.db,
+  getAIDb: async () => mockDbHolder.db,
+}));
+
 import { buildServer } from "@/app";
 
 const t = new Date("2026-01-01T00:00:00Z");

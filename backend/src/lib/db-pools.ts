@@ -1,10 +1,5 @@
 import { MongoClient, Db, ServerApiVersion } from "mongodb";
 
-const uri = process.env.MONGODB_URI ?? "";
-if (!uri) {
-  throw new Error("MONGODB_URI is required");
-}
-
 interface PoolConfig {
   name: string;
   maxPoolSize: number;
@@ -63,6 +58,16 @@ class PoolManager {
     }
 
     this.initializing.add(poolName);
+
+    // Read the env var lazily: importing this module must never require
+    // MONGODB_URI to be set (unit tests import the service layer with fake
+    // DBs, and tooling may load it before dotenv has run). Mirrors the
+    // deferred-error pattern used in lib/db.ts.
+    const uri = process.env.MONGODB_URI ?? "";
+    if (!uri) {
+      this.initializing.delete(poolName);
+      throw new Error("MONGODB_URI is required");
+    }
 
     try {
       const client = new MongoClient(uri, {
