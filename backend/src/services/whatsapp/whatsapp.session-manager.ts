@@ -34,7 +34,7 @@ const RECONNECT_BASE_DELAY_MS = 5_000;
 const RECONNECT_MAX_DELAY_MS = 30_000;
 /** If a client authenticates but never becomes ready, recycle just that client. */
 const STUCK_AFTER_AUTH_MS = 90_000;
-const DESTROY_TIMEOUT_MS = 15_000;
+const DESTROY_TIMEOUT_MS = 5_000;
 const BOOT_START_STAGGER_MS = 2_000;
 
 function maxClinicSessions(): number {

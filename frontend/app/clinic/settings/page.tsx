@@ -37,7 +37,7 @@ import {
   QrCode,
 } from "lucide-react";
 
-const WHATSAPP_POLL_MS = 5_000;
+const WHATSAPP_POLL_MS = 2_000;
 
 /** Deep links that open the saved UPI ID in the user's payment app. */
 function upiAppLinks(upiId: string): { label: string; href: string }[] {
@@ -414,7 +414,7 @@ export default function SettingsPage() {
                 ) : (
                   <div className="flex flex-col items-center gap-3 py-8">
                     <span className="flex size-14 items-center justify-center rounded-full bg-warning/10 text-2xl">
-                      ⚠️
+                      {stage === "idle" || stage === "authenticated" ? "⏳" : "⚠️"}
                     </span>
                     <p className="font-medium text-warning">
                       {STAGE_LABEL[stage] ?? "WhatsApp unavailable"}
@@ -424,14 +424,25 @@ export default function SettingsPage() {
                         ? "The status service is not reachable right now. The WhatsApp worker may be down — check pm2 status on the server (myclinic-whatsapp), then reload this page."
                         : stage === "unconfigured" || stage === "disconnected" || stage === "error"
                           ? "Link this clinic's own WhatsApp number to send appointment reminders and patient notifications from it. Each clinic connects its own number separately."
-                          : "Make sure the WhatsApp worker is running on the server (pm2: myclinic-whatsapp) and a Chromium browser is available."}
+                          : stage === "idle"
+                            ? "Starting WhatsApp… QR will appear in a few seconds (up to 20s). Please wait — polling every 2s."
+                            : stage === "authenticated"
+                              ? "Authenticated — preparing WhatsApp, QR will refresh shortly…"
+                              : "Make sure the WhatsApp worker is running on the server (pm2: myclinic-whatsapp) and a Chromium browser is available."}
                     </p>
+                    {(stage === "idle" || stage === "authenticated") && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className="size-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary inline-block" />
+                        Waiting for QR…
+                      </div>
+                    )}
                     {canEdit &&
                       (stage === "unconfigured" ||
                         stage === "disconnected" ||
-                        stage === "error") && (
+                        stage === "error" ||
+                        stage === "idle") && (
                         <Button type="button" disabled={waAction !== null} onClick={() => void handleConnect()}>
-                          {waAction === "connect" ? "Starting…" : "Connect WhatsApp"}
+                          {waAction === "connect" ? "Starting…" : stage === "idle" ? "Retry Connect" : "Connect WhatsApp"}
                         </Button>
                       )}
                   </div>

@@ -33,7 +33,7 @@ import { processAppointmentNotifications } from "@/services/whatsapp/appointment
  */
 
 const REMINDER_POLL_MS = 30_000;
-const COMMAND_POLL_MS = 5_000;
+const COMMAND_POLL_MS = 2_000;
 /** If the legacy client authenticates but never becomes ready, recycle it. */
 const STUCK_AFTER_AUTH_MS = 90_000;
 const MAX_RECONNECT_ATTEMPTS = 10;
