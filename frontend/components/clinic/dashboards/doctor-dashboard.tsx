@@ -72,7 +72,7 @@ function getGreeting(): Greeting {
   if (h >= 17 && h < 21) {
     return {
       text: "Good Evening",
-      emoji: "<ctrl42>",
+      emoji: "🌙",
       gradientFrom: "from-violet-500/15",
       gradientTo: "to-purple-400/5",
       accentColor: "text-violet-600 dark:text-violet-400",
