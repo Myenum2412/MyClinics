@@ -84,6 +84,11 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     url: "/clinic/notifications",
     icon: <BellIcon className="size-6" />,
   },
+  {
+    title: "My Profile",
+    url: "/clinic/doctor/profile",
+    icon: <StethoscopeIcon className="size-6" />,
+  },
 ]
 
 export function DoctorSidebar({

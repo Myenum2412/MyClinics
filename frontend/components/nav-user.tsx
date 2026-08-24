@@ -103,7 +103,7 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem onClick={() => go("/clinic/account")}>
+              <DropdownMenuItem onClick={() => go(user.role === "doctor" ? "/clinic/doctor/profile" : "/clinic/account")}>
                 <BadgeCheckIcon />
                 Account
               </DropdownMenuItem>
