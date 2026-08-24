@@ -542,8 +542,8 @@ export async function notifyDoctorUpdated(
 
 /**
  * Sent to the patient when a medicine record is created or updated.
- * Includes the FULL record: doctor, visit date, diagnosis, symptoms,
- * treatment and notes.
+ * Professional, clean, 100% WhatsApp-compatible text (no HTML/tables).
+ * Uses bold, emojis, line breaks and separators only.
  */
 export async function notifyMedicineRecord(
   db: Db,
@@ -565,25 +565,32 @@ export async function notifyMedicineRecord(
   const phone = pickNotifyPhone(patient);
   if (!phone) return;
 
-  const org = await ensureDefaultOrganization(db);
+  // Resolve clinic name from real clinic record (fallback to org)
+  let clinicName = "";
+  if (opts.clinicId) {
+    const clinicDetails = await fetchClinicDetails(db, opts.clinicId);
+    clinicName = clinicDetails?.name ?? "";
+  }
+  if (!clinicName) {
+    const org = await ensureDefaultOrganization(db);
+    clinicName = org.name;
+  }
+
   const d = new Date(`${opts.record.visitDate}T00:00:00`);
   const visitDate = Number.isNaN(d.getTime())
     ? opts.record.visitDate
     : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
-  // The records UI stores extended fields (nextReviewDate, advice, …) as JSON
-  // inside `notes`. Extract them for the message; fall back to plain notes.
+  // Extended fields (nextReviewDate, advice, …) are stored as JSON inside `notes`
   let meta: Record<string, unknown> = {};
-  let plainNotes = opts.record.notes ?? null;
-  if (plainNotes && plainNotes.trim().startsWith("{")) {
+  if (opts.record.notes && opts.record.notes.trim().startsWith("{")) {
     try {
-      const parsed = JSON.parse(plainNotes) as unknown;
+      const parsed = JSON.parse(opts.record.notes) as unknown;
       if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
         meta = parsed as Record<string, unknown>;
-        plainNotes = typeof meta.internalNotes === "string" && meta.internalNotes.trim() ? meta.internalNotes : null;
       }
     } catch {
-      // plain-text notes — keep as-is
+      // plain-text notes — ignore
     }
   }
   const fmtDate = (v: unknown): string | null => {
@@ -594,20 +601,30 @@ export async function notifyMedicineRecord(
       : dt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
   };
   const nextReview = fmtDate(meta.nextReviewDate);
+  const advice = typeof meta.advice === "string" ? meta.advice.trim() : "";
 
+  // WhatsApp-compatible message — bold via *text*, emojis, separators
+  const sep = "────────────";
   const lines: string[] = [
-    `💊 Hi ${opts.patientName}, your medicine record at *${org.name}* has been ${opts.action === "created" ? "added" : "updated"}.`,
+    `💊 Hi *${opts.patientName}*, your medicine record at *${clinicName}* has been ${opts.action === "created" ? "added" : "updated"}.`,
     ``,
-    `📋 *Record Details:*`,
-    `👨‍⚕️ Doctor: ${opts.doctorName ? `Dr. ${opts.doctorName}` : "—"}`,
-    `📅 Visit Date: ${visitDate}`,
-    `🏥 Diagnosis: ${opts.record.diagnosis}`,
+    sep,
+    `📋 *RECORD DETAILS*`,
+    sep,
+    `👨‍⚕️ *Doctor:* ${opts.doctorName ? `Dr. ${opts.doctorName}` : "—"}`,
+    `📅 *Visit Date:* *${visitDate}*`,
+    `🩺 *Diagnosis:* ${opts.record.diagnosis || "—"}`,
+    `🌡️ *Symptoms:* ${opts.record.symptoms?.trim() || "—"}`,
+    `💉 *Treatment:* ${opts.record.treatment?.trim() || "—"}`,
+    `💡 *Advice:* ${advice || "—"}`,
+    ``,
+    sep,
+    `🔄 *Next Review Date:* *${nextReview ?? "—"}*`,
+    sep,
+    ``,
+    `✅ Thank you for choosing *${clinicName}*.`,
+    `We are committed to your health and well-being. 💚`,
   ];
-  if (opts.record.symptoms) lines.push(`🌡️ Symptoms: ${opts.record.symptoms}`);
-  if (opts.record.treatment) lines.push(`💉 Treatment: ${opts.record.treatment}`);
-  if (typeof meta.advice === "string" && meta.advice.trim()) lines.push(`💡 Advice: ${meta.advice}`);
-  if (nextReview) lines.push(`🔄 *Next Review Date:* ${nextReview}`);
-  if (plainNotes) lines.push(`📝 Notes: ${plainNotes}`);
 
   await queue(db, phone, lines.join("\n"), "medicine_record", undefined, opts.clinicId);
 }
