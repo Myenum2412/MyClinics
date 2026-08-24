@@ -28,8 +28,12 @@ function formatFullINR(value: number): string {
 export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps) {
   const [range, setRange] = React.useState<"12m" | "6m" | "3m">("12m");
   const monthsCount = range === "12m" ? 12 : range === "6m" ? 6 : 3;
+  const todayStr = React.useMemo(
+    () => new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
+    []
+  );
 
-  const { chartData, totalBilled, totalPaid, outstanding, highestMonth } = React.useMemo(() => {
+  const { chartData, totalBilled, totalPaid, outstanding, highestMonth, dailyData } = React.useMemo(() => {
     const now = new Date();
     // Determine window start for range filtering
     const windowStart = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1);
@@ -87,6 +91,29 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
       growth = 100;
     }
 
+    // Daily records for last 7 days (including today) - real per-day totals
+    const dailyTotalsByDate = new Map<string, number>();
+    for (const bill of bills) {
+      if (bill.status === "void") continue;
+      const invoice = new Date(bill.invoiceDate);
+      if (Number.isNaN(invoice.getTime())) continue;
+      const dayKey = `${invoice.getFullYear()}-${String(invoice.getMonth() + 1).padStart(2, "0")}-${String(invoice.getDate()).padStart(2, "0")}`;
+      dailyTotalsByDate.set(dayKey, (dailyTotalsByDate.get(dayKey) ?? 0) + (bill.total ?? 0));
+    }
+    const dailyData: { key: string; label: string; total: number; isToday: boolean }[] = [];
+    for (let offset = 6; offset >= 0; offset--) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("en-US", { day: "2-digit", month: "short" });
+      const isToday = offset === 0;
+      dailyData.push({
+        key,
+        label,
+        total: Math.round(dailyTotalsByDate.get(key) ?? 0),
+        isToday,
+      });
+    }
+
     return {
       chartData: data,
       totalBilled: totalBilledVal,
@@ -97,6 +124,7 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
         value: max.total,
         growth,
       },
+      dailyData,
     };
   }, [bills, monthsCount]);
 
@@ -229,6 +257,28 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
           </ResponsiveContainer>
         </div>
       </CardContent>
+
+      {/* Today Date + Every Day Record (last 7 days) */}
+      <div className="px-6 pb-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-[#0f172a]">Today: {todayStr}</p>
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Daily records · Last 7 days</p>
+        </div>
+        <div className="mt-3 grid grid-cols-7 gap-1.5">
+          {dailyData.map((d) => (
+            <div
+              key={d.key}
+              className={`rounded-lg border px-1.5 py-2 text-center transition ${d.isToday ? "border-indigo-200 bg-indigo-50" : "border-border bg-white"}`}
+            >
+              <p className={`text-[10px] font-medium ${d.isToday ? "text-indigo-600" : "text-muted-foreground"}`}>{d.label}</p>
+              <p className={`mt-1 text-xs font-bold tabular-nums ${d.isToday ? "text-indigo-600" : "text-[#0f172a]"}`}>
+                {d.total === 0 ? "—" : formatFullINR(d.total)}
+              </p>
+              {d.isToday && <p className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-indigo-600">Today</p>}
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Bottom Insight */}
       <div className="mx-6 mb-5 mt-1 flex items-center justify-between rounded-xl border border-border bg-[#f8fafc] px-4 py-3">
