@@ -18,6 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { BillingOverviewCard } from "@/components/clinic/billing-overview-card";
 import { RecentAppointmentsCard } from "@/components/clinic/recent-appointments-card";
+import { Folder, ArrowRight } from "lucide-react";
 
 import { type ClinicSession } from "@/lib/clinic-api";
 
@@ -85,12 +86,8 @@ function getGreeting(): Greeting {
 
 function GreetingBanner({
   doctorName,
-  todayCount,
-  loading,
 }: {
   doctorName: string;
-  todayCount: number;
-  loading: boolean;
 }) {
   const greeting = useMemo(() => getGreeting(), []);
 
@@ -138,34 +135,20 @@ function GreetingBanner({
           </p>
         </div>
 
-        {/* Right: clickable appointment count chip */}
+        {/* Right: Medical Record button */}
         <Link
-          href="/clinic/appointments"
+          href="/clinic/medical-record"
           className="group flex w-fit items-center gap-3 rounded-xl border border-border/80 bg-background/80 px-5 py-4 shadow-md backdrop-blur-md transition-all duration-200 hover:border-primary/40 hover:bg-background hover:shadow-lg active:scale-[0.97]"
-          title="View today appointments"
+          title="Open medical records"
         >
-          <div className="flex flex-col items-center min-w-[3.5rem]">
-            {loading ? (
-              <Skeleton className="h-9 w-12 rounded-lg" />
-            ) : (
-              <span className={`text-4xl font-extrabold tabular-nums leading-none ${greeting.accentColor}`}>
-                {todayCount}
-              </span>
-            )}
-            <span className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-              Today&apos;s Appointments
-            </span>
+          <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 border border-indigo-100">
+            <Folder className="size-5 text-indigo-600" />
           </div>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="size-5 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-foreground">Medical Record</p>
+            <p className="text-xs text-muted-foreground">View patient files</p>
+          </div>
+          <ArrowRight className="size-5 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5" />
         </Link>
       </div>
     </div>
@@ -179,7 +162,6 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
 
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
@@ -190,23 +172,17 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     setLoading(true);
     Promise.allSettled([
       listAppointments(clinicId, { limit: 50 }),
-      listAppointments(clinicId, { date: todayISO(), limit: 50 }),
       listPatients(clinicId, { limit: 50 }),
       listDoctors(clinicId, { limit: 50 }),
       listBills(clinicId, { limit: 50 }),
     ])
-      .then(([apptRes, todayRes, patientRes, doctorRes, billRes]) => {
+      .then(([apptRes, patientRes, doctorRes, billRes]) => {
         if (!active) return;
         if (apptRes.status === "fulfilled") {
           setAppointments(apptRes.value.items);
         } else {
           console.error("Failed to load appointments", apptRes.reason);
           toast.error("Failed to load appointments");
-        }
-        if (todayRes.status === "fulfilled") {
-          setTodayAppointments(todayRes.value.items);
-        } else {
-          console.error("Failed to load today appointments", todayRes.reason);
         }
         if (patientRes.status === "fulfilled") {
           setPatients(patientRes.value.items);
@@ -238,11 +214,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   return (
     <div className="w-full flex flex-col gap-6">
       {/* Greeting banner */}
-      <GreetingBanner
-        doctorName={session.name ?? "Doctor"}
-        todayCount={todayAppointments.length}
-        loading={loading}
-      />
+      <GreetingBanner doctorName={session.name ?? "Doctor"} />
 
       {/* Recent Appointments + Billing row */}
       <div className="grid gap-6 lg:grid-cols-2">
