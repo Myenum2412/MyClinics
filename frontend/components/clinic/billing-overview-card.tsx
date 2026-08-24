@@ -154,7 +154,7 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
 
   if (loading) {
     return (
-      <Card className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+      <Card className="rounded-[20px] has-[table]:rounded-[20px] border border-border bg-white shadow-sm overflow-hidden">
         <div className="px-6 pt-6 pb-4">
           <div className="h-5 w-40 animate-pulse rounded bg-muted" />
           <div className="mt-2 h-3 w-56 animate-pulse rounded bg-muted/60" />
@@ -167,7 +167,7 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
   }
 
   return (
-    <Card className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+    <Card className="rounded-[20px] has-[table]:rounded-[20px] border border-border bg-white shadow-sm overflow-hidden">
       {/* Header */}
       <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4">
         <div>

@@ -67,7 +67,7 @@ export function RecentAppointmentsCard({
 
   if (loading) {
     return (
-      <Card className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+      <Card className="rounded-[20px] has-[table]:rounded-[20px] border border-border bg-white shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-6 pt-6 pb-4">
           <div>
             <div className="h-4 w-40 animate-pulse rounded bg-muted" />
@@ -85,7 +85,7 @@ export function RecentAppointmentsCard({
   }
 
   return (
-    <Card className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+    <Card className="rounded-[20px] has-[table]:rounded-[20px] border border-border bg-white shadow-sm overflow-hidden">
       {/* Header - minimal, no icons */}
       <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4">
         <div>
