@@ -31,6 +31,7 @@ import {
   BellIcon,
   ClipboardDocumentCheckIcon as RecordsIcon,
   FolderOpenIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 
 interface NavItem {
@@ -90,6 +91,12 @@ const NAV_ITEMS: NavItem[] = [
     url: "/clinic/billing",
     icon: <ReceiptTextIcon className="size-6" />,
     roles: ["patient", "doctor", "staff", "clinic_admin"],
+  },
+  {
+    title: "Reports",
+    url: "/clinic/reports",
+    icon: <ChartBarIcon className="size-6" />,
+    roles: ["staff", "clinic_admin"],
   },
   {
     title: "Audit Logs",
