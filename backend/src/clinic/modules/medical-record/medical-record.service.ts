@@ -240,16 +240,25 @@ export class MedicalRecordService {
 
     // Send a copy of the file to the patient's WhatsApp number.
     if (doc.patientPhone) {
+      const MAX_WHATSAPP_MEDIA_SIZE = 1.5 * 1024 * 1024; // 1.5 MB limit for base64 WhatsApp Web sending
+      const isLargeFile = input.data.length > MAX_WHATSAPP_MEDIA_SIZE;
+      const message = `Your medical document "${input.fileName}" has been added to your records.${
+        isLargeFile ? "\n\n(Since the file is large, please log in to the Patient Portal to view and download it.)" : ""
+      }`;
+      const media = isLargeFile
+        ? undefined
+        : {
+            filename: input.fileName,
+            mimetype: input.mimeType ?? "application/octet-stream",
+            data: input.data.toString("base64"),
+          };
+
       await enqueueClinicNotification(
         this.db,
         doc.patientPhone,
-        `Your medical document "${input.fileName}" has been added to your records.`,
+        message,
         "medical_record",
-        {
-          filename: input.fileName,
-          mimetype: input.mimeType ?? "application/octet-stream",
-          data: input.data.toString("base64"),
-        },
+        media,
         requireClinicOf(ctx)
       ).catch(() => void 0);
     }
@@ -304,12 +313,25 @@ export class MedicalRecordService {
 
     const patientPhone = doc.patientPhone ?? "";
     if (patientPhone) {
+      const MAX_WHATSAPP_MEDIA_SIZE = 1.5 * 1024 * 1024; // 1.5 MB limit for base64 WhatsApp Web sending
+      const isLargeFile = data.length > MAX_WHATSAPP_MEDIA_SIZE;
+      const message = `Updated version of "${fileName}" (v${doc.version + 1}) has been added to your records.${
+        isLargeFile ? "\n\n(Since the file is large, please log in to the Patient Portal to view and download it.)" : ""
+      }`;
+      const media = isLargeFile
+        ? undefined
+        : {
+            filename: fileName,
+            mimetype: mimeType ?? "application/octet-stream",
+            data: data.toString("base64"),
+          };
+
       await enqueueClinicNotification(
         this.db,
         patientPhone,
-        `Updated version of "${fileName}" (v${doc.version + 1}) has been added to your records.`,
+        message,
         "medical_record",
-        { filename: fileName, mimetype: mimeType ?? "application/octet-stream", data: data.toString("base64") },
+        media,
         requireClinicOf(ctx)
       ).catch(() => void 0);
     }
