@@ -899,6 +899,17 @@ export default function RecordsPage() {
 
       <Card className="border-border shadow-sm">
         <CardContent className="p-0">
+          <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between border-b border-border">
+            <div className="relative mx-auto w-full max-w-md sm:w-72">
+              <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+              <Input
+                placeholder="Search records..."
+                value={q}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="h-9 w-full pl-9"
+              />
+            </div>
+          </div>
           {loading ? (
             <div className="p-6 space-y-3">
               <Skeleton className="h-10 w-full" />

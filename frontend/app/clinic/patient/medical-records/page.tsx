@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -154,6 +156,12 @@ const orphanFiles = files.filter(
 
       {/* My Appointments */}
       <Card>
+        <CardHeader className="border-b border-border px-5 py-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold text-foreground">My Appointments</CardTitle>
+            <Badge variant="outline" className="text-xs">{appointments.length}</Badge>
+          </div>
+        </CardHeader>
         <CardContent className="p-5">
           {appointments.length === 0 ? (
             <p className="text-sm text-muted-foreground">No appointments yet.</p>
@@ -192,6 +200,17 @@ const orphanFiles = files.filter(
 
       {/* My Files & Documents */}
       <Card>
+        <CardHeader className="border-b border-border px-5 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
+                <Folder className="size-4" />
+              </span>
+              <CardTitle className="text-sm font-semibold text-foreground">My Files & Documents</CardTitle>
+            </div>
+            <Badge variant="outline" className="text-xs">{files.length}</Badge>
+          </div>
+        </CardHeader>
         <CardContent className="p-5">
           {folders.length === 0 && files.length === 0 ? (
             <div className="rounded-xl border border-border bg-background p-10 text-center">
@@ -303,6 +322,14 @@ const orphanFiles = files.filter(
 
       {/* Medical Records */}
       <Card>
+        <CardHeader className="border-b border-border px-5 py-4">
+          <div className="flex items-center gap-2">
+            <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
+              <FileText className="size-4" />
+            </span>
+            <CardTitle className="text-sm font-semibold text-foreground">Medical Records</CardTitle>
+          </div>
+        </CardHeader>
         <CardContent className="p-5">
           {records.length === 0 ? (
             <div className="rounded-xl border border-border bg-background p-12 text-center">

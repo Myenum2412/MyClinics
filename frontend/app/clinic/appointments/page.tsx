@@ -644,6 +644,41 @@ export default function AppointmentsPage() {
       {/* Main Table Card */}
       <Card className="shadow-sm">
         <CardContent className="p-0">
+          <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between border-b border-border">
+            <div className="relative mx-auto w-full max-w-md sm:w-72">
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search name, doctor, reason..."
+                className="h-8 w-full pl-8 text-xs focus-visible:ring-1"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Input
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className="h-8 w-36 text-xs focus-visible:ring-1"
+              />
+
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
+                <SelectTrigger className="h-8 w-36 text-xs">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
+                  {STATUSES.map((s) => (
+                    <SelectItem key={s} value={s} className="text-xs">
+                      {STATUS_LABELS[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           {loading ? (
             <div className="space-y-4 p-6">
               <Skeleton className="h-10 w-full" />

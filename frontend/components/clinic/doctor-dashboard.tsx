@@ -167,6 +167,24 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
 
       {/* Today's appointments */}
       <Card className="border-border shadow-sm">
+        <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <Calendar className="size-5 text-muted-foreground" />
+                Today&apos;s Appointments
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Appointments scheduled with you for today.
+              </p>
+            </div>
+            <Link href="/clinic/appointments">
+              <Button variant="outline" size="sm" className="h-9">
+                View all
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
         <CardContent className="p-0">
           {appointments.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
@@ -211,6 +229,24 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
 
       {/* My patients */}
       <Card className="border-border shadow-sm">
+        <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+                <Users className="size-5 text-muted-foreground" />
+                My Patients
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Patients assigned to you — only their details are shown.
+              </p>
+            </div>
+            <Link href="/clinic/patients">
+              <Button variant="outline" size="sm" className="h-9">
+                View all
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
         <CardContent className="p-0">
           {patients.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
@@ -263,6 +299,24 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
       {/* Recent prescriptions */}
       {prescriptions.length > 0 && (
         <Card className="border-border shadow-sm">
+          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-xl font-semibold text-foreground flex items-center gap-2">
+                  <ClipboardList className="size-5 text-muted-foreground" />
+                  Recent Prescriptions
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Your latest issued prescriptions.
+                </p>
+              </div>
+              <Link href="/clinic/prescriptions">
+                <Button variant="outline" size="sm" className="h-9">
+                  View all
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader>

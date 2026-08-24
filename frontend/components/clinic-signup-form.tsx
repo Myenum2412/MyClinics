@@ -178,7 +178,7 @@ export function ClinicSignupForm({
             <FieldDescription className="text-black">
               {gticket
                 ? "Your Google account is verified. Pick a clinic name and you're done — no password needed."
-                : "One clinic = one secure tenant. Your Clinic ID is generated automatically at signup."}
+                : "Your Clinic ID is generated automatically at signup."}
             </FieldDescription>
           </div>
 
@@ -320,4 +320,4 @@ export function ClinicSignupForm({
       </FieldDescription>
     </div>
   );
-}
+}
