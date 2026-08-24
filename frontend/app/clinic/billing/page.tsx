@@ -495,17 +495,15 @@ export default function BillingPage() {
     <div className="flex flex-col gap-6">
       {/* Metrics Section */}
       {!loading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-          <StatsBilling
-            bills={items}
-            action={
-              <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
-                <Plus className="size-4" />
-                New Bill
-              </Button>
-            }
-          />
-        </div>
+        <StatsBilling
+          bills={items}
+          action={
+            <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
+              <Plus className="size-4" />
+              New Bill
+            </Button>
+          }
+        />
       )}
 
       {/* Bulk actions bar if selected */}
