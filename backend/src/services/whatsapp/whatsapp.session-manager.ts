@@ -16,6 +16,7 @@ import {
   upsertSessionConfig,
   type SessionCommandDoc,
 } from "@/services/whatsapp/whatsapp-session.store";
+import { handleIncomingMessage } from "@/services/whatsapp/whatsapp.message-handler";
 
 /**
  * Owns every per-clinic WhatsApp Web connection inside the worker process.
@@ -178,7 +179,14 @@ function wireEvents(db: Db, session: ManagedSession): void {
     scheduleReconnect(db, session);
   });
 
-  // Notification-only connection: incoming messages are intentionally ignored.
+  client.on("message", (msg) => {
+    void handleIncomingMessage(client, msg).catch((err) => {
+      logger.error("clinic whatsapp message handler error", {
+        clinicId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
+  });
 }
 
 /**

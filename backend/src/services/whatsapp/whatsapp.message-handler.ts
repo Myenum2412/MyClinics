@@ -251,7 +251,22 @@ export async function handleIncomingMessage(client: Client, message: Message): P
 
   try {
     const botNumber = client.info?.me?.user ?? null;
-    const org = (await findOrganizationByWhatsappNumber(db, botNumber)) ?? (await ensureDefaultOrganization(db));
+    let org = (await findOrganizationByWhatsappNumber(db, botNumber)) ?? (await ensureDefaultOrganization(db));
+    // For per-clinic notification numbers, use the clinic's name for AI replies (each clinic has its own WhatsApp)
+    let clinicNameOverride: string | null = null;
+    if (botNumber) {
+      try {
+        const clinicSession = await db.collection("wa_clinic_sessions").findOne({ phone: botNumber });
+        if (clinicSession?.clinicId) {
+          const clinic = await db.collection("clc_clinics").findOne({ clinicId: clinicSession.clinicId });
+          if (clinic?.name) clinicNameOverride = clinic.name;
+        }
+        if (!clinicNameOverride) {
+          const clinicByPhone = await db.collection("clc_clinics").findOne({ phone: botNumber });
+          if (clinicByPhone?.name) clinicNameOverride = clinicByPhone.name;
+        }
+      } catch {}
+    }
 
     let phoneNumber = remote;
     let contactName: string | null = null;
@@ -286,7 +301,7 @@ export async function handleIncomingMessage(client: Client, message: Message): P
 
     const contextBase: AgentContext = {
       organizationId: org.id,
-      clinicName: org.name,
+      clinicName: clinicNameOverride ?? org.name,
       soul: soul.content,
       fallbackReply: soul.fallbackReply,
       customerName: customer.name,
