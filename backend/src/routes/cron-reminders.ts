@@ -62,14 +62,22 @@ async function handleReminders(request: import("fastify").FastifyRequest, reply:
 
   const startTime = Date.now();
   try {
-    // Keep total budget < 9s to stay under typical 10s reverse-proxy timeout (e.g. Cloudflare/Nginx on api.myclinic.myenum.in)
-    const db = await withTimeout(getCronDb(), 5_000, "getCronDb");
+    // Allow up to 8 s for the DB pool on a cold start (first connect + server
+    // selection can legitimately take ~5-6 s on a fresh MongoDB Atlas cold pick).
+    // Previously 5 s was too tight and caused spurious timeouts on the first
+    // cron tick after a server restart.
+    const db = await withTimeout(getCronDb(), 8_000, "getCronDb");
 
+    // Run both notification streams concurrently. Each gets 20 s which keeps
+    // the absolute worst-case wall-clock well under Cloudflare's 30 s proxy
+    // timeout. The previous 5 s budget was so tight that any momentary Atlas
+    // latency spike (common during the shared-tier scaling window) caused a
+    // step timeout that surfaced as an incomplete response → 502.
     const [prescription, appointment] = await Promise.all([
-      runStep(5_000, "processPrescriptionNotifications", () =>
+      runStep(20_000, "processPrescriptionNotifications", () =>
         processPrescriptionNotifications(db).then(() => ({}))
       ),
-      runStep(5_000, "processAppointmentNotifications", () =>
+      runStep(20_000, "processAppointmentNotifications", () =>
         processAppointmentNotifications(db).then(() => ({}))
       ),
     ]);

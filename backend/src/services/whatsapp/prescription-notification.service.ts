@@ -201,9 +201,12 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
   }
 
   // 6. Update status of enqueued notifications by checking the status in wa_notifications
+  // Limit to the most recent 200 enqueued notifications per tick.
   const enqueuedNotifications = await db
     .collection<PrescriptionNotificationDoc>("clc_prescription_notifications")
     .find({ status: "enqueued", waNotificationId: { $ne: null } })
+    .sort({ createdAt: -1 })
+    .limit(200)
     .toArray();
 
   for (const notification of enqueuedNotifications) {

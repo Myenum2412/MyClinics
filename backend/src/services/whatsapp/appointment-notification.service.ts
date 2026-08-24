@@ -365,9 +365,13 @@ export async function processAppointmentNotifications(db: Db): Promise<void> {
     }
 
     // 2. Sync delivery status from wa_notifications
+    // Limit to the most recent 200 enqueued notifications per tick to prevent
+    // an unbounded scan as older "enqueued" rows accumulate in the collection.
     const enqueuedNotifications = await db
       .collection<AppointmentNotificationDoc>("clc_appointment_notifications")
       .find({ status: "enqueued", waNotificationId: { $ne: null } })
+      .sort({ createdAt: -1 })
+      .limit(200)
       .toArray();
 
     for (const notif of enqueuedNotifications) {

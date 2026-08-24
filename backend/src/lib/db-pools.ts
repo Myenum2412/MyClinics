@@ -23,7 +23,11 @@ const POOL_CONFIGS: Record<string, PoolConfig> = {
 
 const BASE_OPTIONS = {
   serverApi: { version: ServerApiVersion.v1 },
-  maxIdleTimeMS: 60_000,
+  // Keep connections alive for 5 minutes so the cron pool (fired every minute)
+  // doesn't reconnect on every tick. The previous 60 s idle timeout matched
+  // the cron interval almost exactly, creating a race that killed the connection
+  // just before the next ping hit it.
+  maxIdleTimeMS: 300_000,
   waitQueueTimeoutMS: 10_000,
   serverSelectionTimeoutMS: 10_000,
   connectTimeoutMS: 10_000,
@@ -38,15 +42,12 @@ class PoolManager {
     const config = POOL_CONFIGS[poolName] ?? POOL_CONFIGS.default;
 
     if (this.pools.has(poolName)) {
-      const pool = this.pools.get(poolName)!;
-      try {
-        // Verify connection is alive
-        await pool.client.db().command({ ping: 1 });
-        return pool.db;
-      } catch {
-        // Connection dead, recreate
-        this.pools.delete(poolName);
-      }
+      // Return the cached pool directly. The MongoDB driver manages internal
+      // connection health and will transparently reconnect on the next
+      // operation if a socket was dropped. Pinging on every getPool() call
+      // added a full round-trip to every request and triggered unnecessary
+      // reconnects when the idle timeout raced with the cron interval.
+      return this.pools.get(poolName)!.db;
     }
 
     if (this.initializing.has(poolName)) {
