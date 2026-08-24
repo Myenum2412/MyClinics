@@ -105,7 +105,7 @@ export default function StatsAppointments({
             Appointment Analytics
           </h2>
           <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
-            Real-time insights on clinic visits, today's schedule, and completion progress.
+            Visit and completion insights.
           </p>
         </div>
         {action && <div className="shrink-0">{action}</div>}
