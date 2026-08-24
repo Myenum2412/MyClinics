@@ -312,11 +312,9 @@ export default function DoctorProfilePage() {
   const docSpecialization = doctor?.specialization || "General Medicine";
   const docQualification = doctor?.qualification || "MBBS";
   const docExp = doctor?.experienceYears ? `${doctor.experienceYears} Years` : "—";
-  const docFee = doctor?.fee ? `₹${doctor.fee}` : "—";
-
   const stats = [
     { label: "Experience", value: docExp },
-    { label: "Consultation Fee", value: docFee },
+    { label: "Qualification", value: docQualification },
     { label: "Specialization", value: docSpecialization },
   ];
 
@@ -772,22 +770,9 @@ export default function DoctorProfilePage() {
                   <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
                     <Calendar className="size-4 text-primary" />
                   </div>
-                  <h3 className="text-sm font-semibold text-foreground">Consultation Fee & Availability</h3>
+                  <h3 className="text-sm font-semibold text-foreground">Consultation Availability</h3>
                 </div>
                 <FieldGrid cols={2}>
-                  <Field label="Consultation Fee (₹)">
-                    {editing ? (
-                      <Input
-                        type="number"
-                        min={0}
-                        value={form.fee}
-                        onChange={(e) => setField("fee", Number(e.target.value))}
-                      />
-                    ) : (
-                      `₹${doctor?.fee ?? 0}`
-                    )}
-                  </Field>
-
                   <Field label="Available Consultation Days" className="col-span-2">
                     {editing ? (
                       <div className="flex flex-wrap gap-2.5 pt-1">
