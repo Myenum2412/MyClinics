@@ -237,6 +237,14 @@ export default function AccountPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (session?.role === "doctor") {
+      router.replace("/clinic/doctor-profile");
+    } else if (session?.role === "patient") {
+      router.replace("/clinic/patient/profile");
+    }
+  }, [session?.role, router]);
+
   function handlePincodeChange(value: string) {
     const pincode = value.replace(/\D/g, "").slice(0, 6);
     setProfile({ pincode: pincode || null });
@@ -267,13 +275,20 @@ export default function AccountPage() {
   }
 
   const load = useCallback(() => {
-    if (!clinicId) return;
+    if (!clinicId) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     getOwnClinic(clinicId)
       .then((res) => {
         setClinic(res);
         setForm(formOf(res));
       })
-      .catch(() => toast.error("Failed to load clinic profile"))
+      .catch((err) => {
+        console.error("Failed to load clinic profile:", err);
+        toast.error("Failed to load clinic profile");
+      })
       .finally(() => setLoading(false));
   }, [clinicId]);
 
@@ -398,6 +413,20 @@ export default function AccountPage() {
   const profile = useMemo(() => (clinic ? profileOf(clinic) : EMPTY_PROFILE), [clinic]);
 
   if (loading || !clinic || !form) {
+    if (!loading && (!clinic || !form)) {
+      return (
+        <div className="mx-auto max-w-xl p-12 text-center my-12 rounded-xl border border-border bg-card shadow-sm">
+          <Building2 className="mx-auto size-12 text-muted-foreground opacity-50 mb-3" />
+          <h2 className="text-xl font-bold text-foreground">Clinic Profile Unavailable</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Unable to load clinic details. Please check your connection or try reloading.
+          </p>
+          <Button className="mt-4 gap-2" onClick={() => load()}>
+            Reload Profile
+          </Button>
+        </div>
+      );
+    }
     return (
       <div className="mx-auto max-w-4xl space-y-6">
         <Skeleton className="h-9 w-48 rounded-lg" />
