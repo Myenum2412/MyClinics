@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { toast } from "sonner";
 
 import {
@@ -54,6 +55,7 @@ interface Greeting {
   gradientFrom: string;
   gradientTo: string;
   accentColor: string;
+  bgImage: string;
 }
 
 function getGreeting(): Greeting {
@@ -65,6 +67,7 @@ function getGreeting(): Greeting {
       gradientFrom: "from-amber-500/15",
       gradientTo: "to-orange-400/5",
       accentColor: "text-amber-600 dark:text-amber-400",
+      bgImage: "/goodmorning.png",
     };
   }
   if (h >= 12 && h < 17) {
@@ -74,6 +77,7 @@ function getGreeting(): Greeting {
       gradientFrom: "from-sky-500/15",
       gradientTo: "to-blue-400/5",
       accentColor: "text-sky-600 dark:text-sky-400",
+      bgImage: "/GoodAfterNoon.png",
     };
   }
   if (h >= 17 && h < 21) {
@@ -83,6 +87,7 @@ function getGreeting(): Greeting {
       gradientFrom: "from-violet-500/15",
       gradientTo: "to-purple-400/5",
       accentColor: "text-violet-600 dark:text-violet-400",
+      bgImage: "/GoodAfterNoon.png",
     };
   }
   return {
@@ -91,6 +96,7 @@ function getGreeting(): Greeting {
     gradientFrom: "from-indigo-500/15",
     gradientTo: "to-blue-900/5",
     accentColor: "text-indigo-600 dark:text-indigo-400",
+    bgImage: "/GoodNight.png",
   };
 }
 
@@ -114,11 +120,23 @@ function GreetingBanner({
     <div
       className={`relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br ${greeting.gradientFrom} ${greeting.gradientTo} px-6 py-7 shadow-sm`}
     >
+      {/* Time-of-day Background Image */}
+      <div className="pointer-events-none absolute inset-0 select-none overflow-hidden">
+        <Image
+          src={greeting.bgImage}
+          alt={greeting.text}
+          fill
+          className="object-cover object-right opacity-30 dark:opacity-20 transition-opacity duration-300"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-background/30 dark:from-background/95 dark:via-background/80 dark:to-background/40" />
+      </div>
+
       {/* Decorative blurred circles */}
       <div className="pointer-events-none absolute -right-10 -top-10 size-48 rounded-full bg-white/5 blur-2xl" />
       <div className="pointer-events-none absolute -bottom-8 -left-8 size-32 rounded-full bg-white/5 blur-2xl" />
 
-      <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         {/* Left: greeting text */}
         <div>
           <p className={`text-sm font-semibold uppercase tracking-widest ${greeting.accentColor}`}>
