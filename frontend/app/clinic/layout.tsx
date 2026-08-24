@@ -5,6 +5,7 @@ import { useRequireRole } from "@/hooks/use-clinic-session";
 import { getOwnClinic } from "@/lib/clinic-api";
 import { DoctorSidebar } from "@/components/clinic/doctor-sidebar";
 import { PatientHeader } from "@/components/clinic/patient-header";
+import { PatientBottomNav } from "@/components/clinic/patient-bottom-nav";
 import { PatientSidebar } from "@/components/clinic/patient-sidebar";
 import { WorkspaceSidebar } from "@/components/clinic/workspace-sidebar";
 import { WorkspaceHeader } from "@/components/clinic/workspace-header";
@@ -17,14 +18,14 @@ export default function ClinicLayout({
   children: React.ReactNode;
 }) {
   const session = useRequireRole("patient");
-  const [clinicName, setClinicName] = useState("My Clinic");
+  const [clinicName, setClinicName] = useState("Meenu Care");
 
   useEffect(() => {
     if (!session?.clinicId) return;
     let active = true;
     getOwnClinic(session.clinicId)
       .then((clinic) => {
-        if (active) setClinicName(clinic.name);
+        if (active && clinic?.name) setClinicName(clinic.name);
       })
       .catch(() => {
         /* keep default */
@@ -36,11 +37,13 @@ export default function ClinicLayout({
 
   if (!session) {
     return (
-      <div className="flex min-h-svh items-center justify-center">
-        <Skeleton className="h-10 w-64" />
+      <div className="flex min-h-svh items-center justify-center bg-slate-50">
+        <Skeleton className="h-10 w-64 rounded-xl" />
       </div>
     );
   }
+
+  const isPatient = session.role === "patient";
 
   return (
     <SidebarProvider>
@@ -50,7 +53,7 @@ export default function ClinicLayout({
           clinicId={session.clinicId ?? ""}
           user={{ name: session.name ?? "User", email: session.email ?? "" }}
         />
-      ) : session.role === "patient" ? (
+      ) : isPatient ? (
         <PatientSidebar
           clinicName={clinicName}
           user={{ name: session.name ?? "User", email: session.email ?? "" }}
@@ -64,10 +67,15 @@ export default function ClinicLayout({
         />
       )}
       <SidebarInset>
-        {session.role === "patient" ? <PatientHeader /> : <WorkspaceHeader />}
-        <div className="flex flex-1 flex-col gap-4 px-4 py-6 md:px-6 lg:px-8">
+        {isPatient ? <PatientHeader clinicName={clinicName} /> : <WorkspaceHeader />}
+        <div
+          className={`flex flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-8 ${
+            isPatient ? "pb-24 md:pb-8" : ""
+          }`}
+        >
           {children}
         </div>
+        {isPatient && <PatientBottomNav />}
       </SidebarInset>
     </SidebarProvider>
   );
