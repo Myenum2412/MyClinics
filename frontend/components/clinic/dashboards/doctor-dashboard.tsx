@@ -15,7 +15,10 @@ import {
   listDoctors,
   listPatients,
 } from "@/lib/clinic-api";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
+import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
 import { BillingOverviewCard } from "@/components/clinic/billing-overview-card";
 import { RecentAppointmentsCard } from "@/components/clinic/recent-appointments-card";
 import { Folder, ArrowRight } from "lucide-react";
@@ -211,10 +214,77 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     };
   }, [clinicId]);
 
+  // Stats-07 section cards with real clinic data
+  const chartConfig = { capacity: { label: "Capacity", color: "hsl(var(--primary))" } } satisfies ChartConfig;
+  const totalRevenue = bills.reduce((s, b) => (b.status !== "void" ? s + b.total : s), 0);
+  const statsData = [
+    {
+      name: "Patients",
+      current: patients.length,
+      allowed: 100,
+      capacity: Math.min(100, Math.round((patients.length / 100) * 100)),
+      fill: "var(--chart-1)",
+    },
+    {
+      name: "Appointments",
+      current: appointments.length,
+      allowed: 50,
+      capacity: Math.min(100, Math.round((appointments.length / 50) * 100)),
+      fill: "var(--chart-2)",
+    },
+    {
+      name: "Revenue",
+      current: totalRevenue,
+      allowed: Math.max(totalRevenue, 1),
+      capacity: totalRevenue ? Math.min(100, Math.round((bills.filter(b => b.status === "paid").reduce((s, b) => s + b.total, 0) / Math.max(1, totalRevenue)) * 100)) : 0,
+      fill: "var(--chart-3)",
+    },
+    {
+      name: "Doctors",
+      current: doctors.length,
+      allowed: 10,
+      capacity: Math.min(100, Math.round((doctors.length / 10) * 100)),
+      fill: "var(--chart-4)",
+    },
+  ];
+
   return (
     <div className="w-full flex flex-col gap-6">
       {/* Greeting banner */}
       <GreetingBanner doctorName={session.name ?? "Doctor"} />
+
+      {/* Section cards — stats-07 design */}
+      <div>
+        <h2 className="text-balance font-medium text-foreground text-xl">Clinic Overview</h2>
+        <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
+          Real-time stats from your clinic — <span className="font-medium text-foreground">{patients.length} patients</span> · {appointments.length} appointments · {doctors.length} doctors
+        </p>
+        <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {statsData.map((item) => (
+            <Card className="p-4 shadow-2xs" key={item.name}>
+              <CardContent className="flex items-center space-x-4 p-0">
+                <div className="relative flex items-center justify-center">
+                  <ChartContainer className="h-[80px] w-[80px]" config={chartConfig}>
+                    <RadialBarChart barSize={6} data={[item]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}>
+                      <PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0, 100]} tick={false} type="number" />
+                      <RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill} />
+                    </RadialBarChart>
+                  </ChartContainer>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="font-medium text-base text-foreground">{item.capacity}%</span>
+                  </div>
+                </div>
+                <div>
+                  <dt className="font-medium text-foreground text-sm">{item.name}</dt>
+                  <dd className="text-muted-foreground text-sm">
+                    {item.name === "Revenue" ? `₹${item.current.toLocaleString("en-IN")}` : `${item.current} of ${item.allowed} used`}
+                  </dd>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </dl>
+      </div>
 
       {/* Recent Appointments + Billing row */}
       <div className="grid gap-6 lg:grid-cols-2">
