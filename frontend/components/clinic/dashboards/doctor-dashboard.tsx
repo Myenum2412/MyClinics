@@ -25,18 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import dynamic from "next/dynamic";
-import {
-  type ChartBarInteractiveDatum,
-} from "@/components/chart-bar-interactive";
-
-const ChartBarInteractive = dynamic(
-  () =>
-    import("@/components/chart-bar-interactive").then(
-      (m) => m.ChartBarInteractive
-    ),
-  { loading: () => <Skeleton className="h-[300px] w-full" /> }
-);
+import { BillingOverviewCard } from "@/components/clinic/billing-overview-card";
 
 import { type ClinicSession } from "@/lib/clinic-api";
 
@@ -248,32 +237,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     })[0];
   }, [appointments]);
 
-  const monthlyBilling: ChartBarInteractiveDatum[] = useMemo(() => {
-    const now = new Date();
-    const totalsByKey = new Map<string, number>();
-    const paidByKey = new Map<string, number>();
-    for (const bill of bills) {
-      if (bill.status === "void") continue;
-      const invoice = new Date(bill.invoiceDate);
-      if (Number.isNaN(invoice.getTime())) continue;
-      const key = `${invoice.getFullYear()}-${String(invoice.getMonth() + 1).padStart(2, "0")}-01`;
-      totalsByKey.set(key, (totalsByKey.get(key) ?? 0) + bill.total);
-      if (bill.status === "paid") {
-        paidByKey.set(key, (paidByKey.get(key) ?? 0) + bill.total);
-      }
-    }
-    const out: ChartBarInteractiveDatum[] = [];
-    for (let offset = 11; offset >= 0; offset--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - offset, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-      out.push({
-        date: key,
-        total: Math.round(totalsByKey.get(key) ?? 0),
-        paid: Math.round(paidByKey.get(key) ?? 0),
-      });
-    }
-    return out;
-  }, [bills]);
+
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -360,22 +324,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           </CardContent>
         </Card>
 
-        {loading ? (
-          <Card className="overflow-hidden rounded-none border-border bg-card shadow-sm">
-            <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-              <div className="h-5 w-40 animate-pulse rounded-none bg-muted" />
-            </CardHeader>
-            <CardContent className="p-6">
-              <Skeleton className="h-[250px] w-full rounded-none" />
-            </CardContent>
-          </Card>
-        ) : (
-          <ChartBarInteractive
-            title="Billing — Last 12 Months"
-            subtitle="Total invoiced amount per month (excludes voided bills)."
-            data={monthlyBilling}
-          />
-        )}
+        <BillingOverviewCard bills={bills} loading={loading} />
       </div>
     </div>
   );
