@@ -255,11 +255,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
 
       {/* Section cards — stats-07 design */}
       <div>
-        <h2 className="text-balance font-medium text-foreground text-xl">Clinic Overview</h2>
-        <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
-          Real-time stats from your clinic — <span className="font-medium text-foreground">{patients.length} patients</span> · {appointments.length} appointments · {doctors.length} doctors
-        </p>
-        <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {statsData.map((item) => (
             <Card className="p-4 shadow-2xs" key={item.name}>
               <CardContent className="flex items-center space-x-4 p-0">
