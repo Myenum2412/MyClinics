@@ -80,11 +80,6 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     icon: <PillIcon className="size-6" />,
   },
   {
-    title: "My Profile",
-    url: "/clinic/doctor-profile",
-    icon: <StethoscopeIcon className="size-6" />,
-  },
-  {
     title: "Notifications",
     url: "/clinic/notifications",
     icon: <BellIcon className="size-6" />,
