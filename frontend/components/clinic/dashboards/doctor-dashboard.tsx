@@ -120,16 +120,18 @@ function GreetingBanner({
     <div
       className={`relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br ${greeting.gradientFrom} ${greeting.gradientTo} px-6 py-7 shadow-sm`}
     >
-      {/* Time-of-day Background Image */}
-      <div className="pointer-events-none absolute inset-0 select-none overflow-hidden">
+      {/* Time-of-day Background Image - Fixed to card with increased brightness */}
+      <div className="pointer-events-none absolute inset-0 select-none overflow-hidden rounded-2xl">
         <Image
           src={greeting.bgImage}
           alt={greeting.text}
           fill
-          className="object-cover object-right opacity-30 dark:opacity-20 transition-opacity duration-300"
+          sizes="(max-width: 1200px) 100vw, 1200px"
+          className="object-cover object-center opacity-85 brightness-110 dark:opacity-75 dark:brightness-105 transition-all duration-300"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-background/30 dark:from-background/95 dark:via-background/80 dark:to-background/40" />
+        {/* Soft gradient overlay for crisp text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/40 to-transparent dark:from-background/90 dark:via-background/55 dark:to-background/20" />
       </div>
 
       {/* Decorative blurred circles */}
@@ -138,14 +140,14 @@ function GreetingBanner({
 
       <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         {/* Left: greeting text */}
-        <div>
-          <p className={`text-sm font-semibold uppercase tracking-widest ${greeting.accentColor}`}>
+        <div className="rounded-xl bg-background/30 p-2.5 backdrop-blur-[2px] sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+          <p className={`text-sm font-bold uppercase tracking-widest ${greeting.accentColor}`}>
             {greeting.emoji}&nbsp;&nbsp;{greeting.text}
           </p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
             Dr. {firstName}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm font-medium text-foreground/80">
             {new Date().toLocaleDateString("en-IN", {
               weekday: "long",
               day: "numeric",
@@ -158,7 +160,7 @@ function GreetingBanner({
         {/* Right: clickable appointment count chip */}
         <Link
           href="/clinic/appointments"
-          className="group flex w-fit items-center gap-3 rounded-xl border border-border bg-background/70 px-5 py-4 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-primary/40 hover:bg-background hover:shadow-md active:scale-[0.97]"
+          className="group flex w-fit items-center gap-3 rounded-xl border border-border/80 bg-background/80 px-5 py-4 shadow-md backdrop-blur-md transition-all duration-200 hover:border-primary/40 hover:bg-background hover:shadow-lg active:scale-[0.97]"
           title="View today appointments"
         >
           <div className="flex flex-col items-center min-w-[3.5rem]">
