@@ -9,23 +9,15 @@ import {
   type Appointment,
   type Bill,
   type Patient,
+  type Doctor,
   listAppointments,
   listBills,
+  listDoctors,
   listPatients,
 } from "@/lib/clinic-api";
-import { formatDate, formatTime } from "@/lib/format-time";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { BillingOverviewCard } from "@/components/clinic/billing-overview-card";
+import { RecentAppointmentsCard } from "@/components/clinic/recent-appointments-card";
 
 import { type ClinicSession } from "@/lib/clinic-api";
 
@@ -189,6 +181,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
 
   useEffect(() => {
@@ -199,9 +192,10 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
       listAppointments(clinicId, { limit: 50 }),
       listAppointments(clinicId, { date: todayISO(), limit: 50 }),
       listPatients(clinicId, { limit: 50 }),
+      listDoctors(clinicId, { limit: 50 }),
       listBills(clinicId, { limit: 50 }),
     ])
-      .then(([apptRes, todayRes, patientRes, billRes]) => {
+      .then(([apptRes, todayRes, patientRes, doctorRes, billRes]) => {
         if (!active) return;
         if (apptRes.status === "fulfilled") {
           setAppointments(apptRes.value.items);
@@ -220,12 +214,16 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           console.error("Failed to load patients", patientRes.reason);
           toast.error("Failed to load patients");
         }
+        if (doctorRes.status === "fulfilled") {
+          setDoctors(doctorRes.value.items);
+        } else {
+          console.error("Failed to load doctors", doctorRes.reason);
+        }
         if (billRes.status === "fulfilled") {
           setBills(billRes.value.items);
         } else {
           console.error("Failed to load bills", billRes.reason);
           const reason = billRes.reason as unknown as { status?: number; message?: string };
-          // Only show user-facing toast for bills if it's not just empty data
           if (reason?.status !== 404) toast.error("Failed to load billing data");
         }
       })
@@ -237,22 +235,6 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     };
   }, [clinicId]);
 
-  const patientById = useMemo(() => {
-    const map = new Map<string, Patient>();
-    for (const p of patients) map.set(p.patientId, p);
-    return map;
-  }, [patients]);
-
-  const recentAppointment = useMemo(() => {
-    if (appointments.length === 0) return null;
-    return [...appointments].sort((a, b) => {
-      if (a.date === b.date) return b.time.localeCompare(a.time);
-      return b.date.localeCompare(a.date);
-    })[0];
-  }, [appointments]);
-
-
-
   return (
     <div className="w-full flex flex-col gap-6">
       {/* Greeting banner */}
@@ -262,81 +244,15 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
         loading={loading}
       />
 
-      {/* Charts row */}
+      {/* Recent Appointments + Billing row */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="overflow-hidden rounded-none border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-semibold text-foreground">
-                  Recent Appointment
-                </CardTitle>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Latest appointment across all doctors.
-                </p>
-              </div>
-              <Link
-                href="/clinic/appointments"
-                className="inline-flex h-7 items-center justify-center gap-1.5 rounded-none border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
-              >
-                View all
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="space-y-2 p-6">
-                <Skeleton className="h-9 w-full rounded-none" />
-              </div>
-            ) : !recentAppointment ? (
-              <p className="px-6 py-10 text-center text-sm text-muted-foreground">
-                No appointments yet.
-              </p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30 hover:bg-muted/30">
-                    <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Patient
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Reason
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Date &amp; Time
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {(() => {
-                    const patient = patientById.get(recentAppointment.patientId);
-                    return (
-                      <TableRow>
-                        <TableCell className="font-medium text-foreground">
-                          {patient?.fullName ??
-                            `Patient #${recentAppointment.patientId.slice(-6)}`}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {recentAppointment.reason || "—"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          <div className="flex flex-col">
-                            <span className="text-foreground">
-                              {formatDate(recentAppointment.date)}
-                            </span>
-                            <span className="text-xs">
-                              {formatTime(recentAppointment.time)}
-                            </span>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })()}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+        <RecentAppointmentsCard
+          appointments={appointments}
+          patients={patients}
+          doctors={doctors}
+          clinicId={clinicId}
+          loading={loading}
+        />
 
         <BillingOverviewCard bills={bills} loading={loading} />
       </div>
