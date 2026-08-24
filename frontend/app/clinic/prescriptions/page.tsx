@@ -51,6 +51,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { PatientSelect } from "@/components/clinic/pickers";
+import {
+  SuggestionInput,
+  MedicineNameInput,
+  DOSAGE_SUGGESTIONS,
+  FREQUENCY_SUGGESTIONS,
+  DURATION_SUGGESTIONS,
+} from "@/components/clinic/medicine-input";
+import { useDropdownOptions } from "@/lib/dropdown-options";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
@@ -1013,6 +1021,7 @@ function PrescriptionForm({
     medicines: [{ ...EMPTY_MEDICINE }],
     notes: "",
   });
+  const { getOptions } = useDropdownOptions(clinicId);
 
   const set = <K extends keyof PrescriptionFormState>(key: K, value: PrescriptionFormState[K] | null) =>
     setForm((f) => ({ ...f, [key]: (value ?? "") as PrescriptionFormState[K] }));
@@ -1094,12 +1103,11 @@ function PrescriptionForm({
             {form.medicines.map((m, i) => (
               <div key={i} className="space-y-2 rounded-lg border border-border bg-background p-3">
                 <div className="grid grid-cols-[1fr_auto] gap-2 items-center">
-                  <Input
-                    placeholder="Medicine name"
+                  <MedicineNameInput
+                    clinicId={clinicId}
                     value={m.name}
-                    onChange={(e) => setMedicine(i, { name: e.target.value })}
+                    onChange={(v) => setMedicine(i, { name: v })}
                     required
-                    className="border border-border focus:ring-ring"
                   />
                   {form.medicines.length > 1 && (
                     <Button type="button" variant="ghost" size="sm" onClick={() => removeMedicine(i)} className="h-8 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive">
@@ -1108,11 +1116,35 @@ function PrescriptionForm({
                   )}
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <Input placeholder="Dosage" value={m.dosage ?? ""} onChange={(e) => setMedicine(i, { dosage: e.target.value })} className="border border-border focus:ring-ring" />
-                  <Input placeholder="Frequency" value={m.frequency ?? ""} onChange={(e) => setMedicine(i, { frequency: e.target.value })} className="border border-border focus:ring-ring" />
-                  <Input placeholder="Duration" value={m.duration ?? ""} onChange={(e) => setMedicine(i, { duration: e.target.value })} className="border border-border focus:ring-ring" />
+                  <SuggestionInput
+                    value={m.dosage ?? ""}
+                    onChange={(v) => setMedicine(i, { dosage: v })}
+                    options={DOSAGE_SUGGESTIONS}
+                    placeholder="Dosage"
+                    className="border border-border focus:ring-ring"
+                  />
+                  <SuggestionInput
+                    value={m.frequency ?? ""}
+                    onChange={(v) => setMedicine(i, { frequency: v })}
+                    options={FREQUENCY_SUGGESTIONS}
+                    placeholder="Frequency"
+                    className="border border-border focus:ring-ring"
+                  />
+                  <SuggestionInput
+                    value={m.duration ?? ""}
+                    onChange={(v) => setMedicine(i, { duration: v })}
+                    options={DURATION_SUGGESTIONS}
+                    placeholder="Duration"
+                    className="border border-border focus:ring-ring"
+                  />
                 </div>
-                <Input placeholder="Instructions (e.g. before food)" value={m.instructions ?? ""} onChange={(e) => setMedicine(i, { instructions: e.target.value })} className="border border-border focus:ring-ring" />
+                <SuggestionInput
+                  value={m.instructions ?? ""}
+                  onChange={(v) => setMedicine(i, { instructions: v })}
+                  options={getOptions("medicine_instructions")}
+                  placeholder="Instructions (e.g. before food)"
+                  className="border border-border focus:ring-ring"
+                />
               </div>
             ))}
           </div>

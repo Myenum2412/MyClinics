@@ -5,6 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
+import {
+  SuggestionInput,
+  MedicineNameInput,
+  DOSAGE_SUGGESTIONS,
+  FREQUENCY_SUGGESTIONS,
+  DURATION_SUGGESTIONS,
+} from "@/components/clinic/medicine-input";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 import {
@@ -303,101 +310,6 @@ function SearchableSelect({
               </button>
             ))}
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Autocomplete medicine-name input with suggestions; free text is allowed. */
-function MedicineNameInput({
-  value,
-  onChange,
-  placeholder,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-}) {
-  const session = useRequireRole("patient");
-  const { getOptions } = useDropdownOptions(session?.clinicId ?? "");
-  const medicines = getOptions("medicines");
-  const [open, setOpen] = useState(false);
-  const [dropUp, setDropUp] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [open]);
-
-  const suggestions = useMemo(() => {
-    const q = value.trim().toLowerCase();
-    if (!q) return medicines.slice(0, 8);
-    return medicines.filter((m) => m.toLowerCase().includes(q)).slice(0, 8);
-  }, [value, medicines]);
-
-  const exactMatch = medicines.some(
-    (m) => m.toLowerCase() === value.trim().toLowerCase()
-  );
-
-  return (
-    <div ref={containerRef} className="relative">
-      <Input
-        value={value}
-        onChange={(e) => {
-          onChange(e.target.value);
-          const rect = containerRef.current?.getBoundingClientRect();
-          setDropUp(Boolean(rect) && window.innerHeight - (rect as DOMRect).bottom < 280 && (rect as DOMRect).top > 280);
-          setOpen(true);
-        }}
-        onFocus={() => {
-          const rect = containerRef.current?.getBoundingClientRect();
-          setDropUp(Boolean(rect) && window.innerHeight - (rect as DOMRect).bottom < 280 && (rect as DOMRect).top > 280);
-          setOpen(true);
-        }}
-        placeholder={placeholder || "Search medicine..."}
-        className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
-      />
-      {open && (
-        <div
-          className={`absolute left-0 right-0 z-50 overflow-hidden rounded-xl border border-border bg-background shadow-lg ${
-            dropUp ? "bottom-full mb-1" : "top-full mt-1"
-          }`}
-        >
-          {suggestions.length > 0 && (
-            <div className="max-h-56 overflow-y-auto p-1">
-              {suggestions.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => {
-                    onChange(m);
-                    setOpen(false);
-                  }}
-                  className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm hover:bg-accent ${
-                    m.toLowerCase() === value.trim().toLowerCase()
-                      ? "bg-accent font-medium text-foreground"
-                      : "text-foreground"
-                  }`}
-                >
-                  <span className="truncate">{m}</span>
-                </button>
-              ))}
-            </div>
-          )}
-          {!exactMatch && value.trim() && (
-            <div className="border-t border-border px-2.5 py-2 text-xs text-muted-foreground">
-              {`"${value.trim()}" will be saved as a new medicine name.`}
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -1450,52 +1362,52 @@ function RecordForm({
                       Medicine name *
                     </Label>
                     <MedicineNameInput
+                      clinicId={clinicId}
                       value={medicine.name}
                       onChange={(v) => setMedicine(i, { name: v })}
                       placeholder="Search or type medicine name..."
+                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">Dosage *</Label>
-                    <Input
+                    <SuggestionInput
                       value={medicine.dosage}
-                      onChange={(e) => setMedicine(i, { dosage: e.target.value })}
-                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
+                      onChange={(v) => setMedicine(i, { dosage: v })}
+                      options={DOSAGE_SUGGESTIONS}
                       placeholder="e.g., 500mg"
+                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">Frequency *</Label>
-                    <Input
+                    <SuggestionInput
                       value={medicine.frequency}
-                      onChange={(e) => setMedicine(i, { frequency: e.target.value })}
-                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
+                      onChange={(v) => setMedicine(i, { frequency: v })}
+                      options={FREQUENCY_SUGGESTIONS}
                       placeholder="e.g., Twice daily"
+                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                     />
                   </div>
                   <div className="grid gap-2">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">Duration *</Label>
-                    <Input
+                    <SuggestionInput
                       value={medicine.duration}
-                      onChange={(e) => setMedicine(i, { duration: e.target.value })}
-                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
+                      onChange={(v) => setMedicine(i, { duration: v })}
+                      options={DURATION_SUGGESTIONS}
                       placeholder="e.g., 7 days"
+                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                     />
                   </div>
                   <div className="grid gap-2 md:col-span-2">
                     <Label className="text-xs uppercase tracking-wide text-muted-foreground">Instructions</Label>
-                    <Input
+                    <SuggestionInput
                       value={medicine.instructions}
-                      onChange={(e) => setMedicine(i, { instructions: e.target.value })}
-                      list="medicine-instruction-suggestions"
-                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
+                      onChange={(v) => setMedicine(i, { instructions: v })}
+                      options={getOptions("medicine_instructions")}
                       placeholder="e.g., Before food"
+                      className="h-10 rounded-xl border border-border bg-background focus:ring-ring"
                     />
-                    <datalist id="medicine-instruction-suggestions">
-                      {getOptions("medicine_instructions").map((s) => (
-                        <option key={s} value={s} />
-                      ))}
-                    </datalist>
                   </div>
                   <div className="flex items-end justify-end">
                     <Button
