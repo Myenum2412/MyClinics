@@ -1,25 +1,83 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
   getMyPatient,
-  listDoctors,
   updatePatient,
   type Patient,
 } from "@/lib/clinic-api";
-import { PatientForm, type PatientFormState } from "@/components/clinic/patient-form";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, CalendarDays, Phone, Mail, UserRound } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Calendar,
+  HeartPulse,
+  Info,
+  LogOut,
+  Mail,
+  MapPin,
+  Pencil,
+  Phone,
+  Save,
+  UserRound,
+  X,
+  FileText,
+  ShieldCheck,
+  Briefcase,
+  Activity,
+} from "lucide-react";
 import { toast } from "sonner";
 
-function patientToForm(p: Patient): PatientFormState {
+interface FormState {
+  fullName: string;
+  mobile: string;
+  whatsapp: string;
+  email: string;
+  gender: string;
+  dateOfBirth: string;
+  bloodGroup: string;
+  height: string;
+  weight: string;
+  maritalStatus: string;
+  occupation: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+  emergencyContactName: string;
+  emergencyContactRelationship: string;
+  emergencyContactMobile: string;
+  allergies: string;
+  medicalConditions: string;
+  previousSurgeries: string;
+  currentMedications: string;
+  idType: string;
+  idNumber: string;
+  insuranceProvider: string;
+  insurancePolicyNumber: string;
+  insurancePolicyHolderName: string;
+  insuranceValidTill: string;
+}
+
+function patientToForm(p: Patient): FormState {
   return {
-    fullName: p.fullName,
-    mobile: p.mobile,
+    fullName: p.fullName ?? "",
+    mobile: p.mobile ?? "",
     whatsapp: p.whatsapp ?? "",
     email: p.email ?? "",
     gender: p.gender ?? "",
@@ -46,18 +104,12 @@ function patientToForm(p: Patient): PatientFormState {
     insurancePolicyNumber: p.insurancePolicyNumber ?? "",
     insurancePolicyHolderName: p.insurancePolicyHolderName ?? "",
     insuranceValidTill: p.insuranceValidTill ?? "",
-    referredBy: p.referredBy ?? "",
-    howDidYouHear: p.howDidYouHear ?? "",
-    notes: p.notes ?? "",
-    doctorId: p.doctorId,
-    password: "",
-    confirmPassword: "",
-    portalAccess: "disable",
-    loginNotification: "none",
-    attachments: [],
-    patientId: p.patientId,
-    profileImage: null,
   };
+}
+
+function orDash(value: string | number | null | undefined): string {
+  if (value === null || value === undefined || value === "") return "—";
+  return String(value);
 }
 
 function memberSince(createdAt: string | undefined): string {
@@ -67,38 +119,79 @@ function memberSince(createdAt: string | undefined): string {
   return d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 }
 
+function FieldGrid({ children, cols = 4 }: { children: React.ReactNode; cols?: number }) {
+  const colClass =
+    cols === 2
+      ? "grid-cols-1 md:grid-cols-2"
+      : cols === 3
+      ? "grid-cols-1 md:grid-cols-3"
+      : "grid-cols-1 sm:grid-cols-2 md:grid-cols-4";
+  return <div className={`grid gap-4 ${colClass}`}>{children}</div>;
+}
+
+function Field({
+  label,
+  value,
+  children,
+  className = "",
+}: {
+  label: string;
+  value?: React.ReactNode;
+  children?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`space-y-1 ${className}`}>
+      <Label className="text-xs font-semibold text-muted-foreground">{label}</Label>
+      {children ? (
+        children
+      ) : (
+        <p className="text-sm font-medium text-foreground">{value ?? "—"}</p>
+      )}
+    </div>
+  );
+}
+
 export default function PatientProfilePage() {
   const session = useRequireRole("patient");
+  const clinicId = session?.clinicId ?? "";
   const router = useRouter();
+
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [doctors, setDoctors] = useState<{ doctorId: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState<"view" | "edit">("view");
+  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<FormState | null>(null);
 
   const load = useCallback(async () => {
-    if (!session?.clinicId) return;
+    if (!clinicId) return;
     try {
-      const [me, docsRes] = await Promise.all([
-        getMyPatient(session.clinicId),
-        listDoctors(session.clinicId, { status: "active", limit: 100 }),
-      ]);
+      const me = await getMyPatient(clinicId);
       setPatient(me);
-      setDoctors(docsRes.items.map((d) => ({ doctorId: d.doctorId, name: d.name })));
+      if (me) setForm(patientToForm(me));
     } catch {
-      // leave empty state visible
+      toast.error("Failed to load patient profile");
     } finally {
       setLoading(false);
     }
-  }, [session?.clinicId]);
+  }, [clinicId]);
 
   useEffect(() => {
-    if (!session?.clinicId) return;
+    if (!clinicId) return;
     load();
-  }, [session?.clinicId, load]);
+  }, [clinicId, load]);
 
-  async function handleSave(form: PatientFormState) {
-    if (!session?.clinicId || !patient) return;
+  const setField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setForm((f) => (f ? { ...f, [key]: value } : f));
+
+  function startEdit() {
+    if (!patient) return;
+    setForm(patientToForm(patient));
+    setEditing(true);
+  }
+
+  async function handleSave() {
+    if (!clinicId || !patient || !form) return;
     setSaving(true);
     try {
       const payload: Record<string, any> = {
@@ -130,17 +223,11 @@ export default function PatientProfilePage() {
         insurancePolicyNumber: form.insurancePolicyNumber || null,
         insurancePolicyHolderName: form.insurancePolicyHolderName || null,
         insuranceValidTill: form.insuranceValidTill || null,
-        referredBy: form.referredBy || null,
-        howDidYouHear: form.howDidYouHear || null,
-        notes: form.notes || null,
       };
-      if (form.password) {
-        payload.password = form.password;
-      }
-      
-      const updated = await updatePatient(session.clinicId, patient.patientId, payload);
+
+      const updated = await updatePatient(clinicId, patient.patientId, payload);
       setPatient(updated);
-      setMode("view");
+      setEditing(false);
       toast.success("Profile updated successfully!");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update profile");
@@ -149,121 +236,577 @@ export default function PatientProfilePage() {
     }
   }
 
-  if (loading) {
+  const handleLogout = () => {
+    localStorage.removeItem("clinic_token");
+    document.cookie = "clinic_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    router.push("/login");
+  };
+
+  if (loading || !patient || !form) {
+    if (!loading && (!patient || !form)) {
+      return (
+        <div className="mx-auto max-w-xl p-12 text-center my-12 rounded-xl border border-border bg-card shadow-sm">
+          <UserRound className="mx-auto size-12 text-muted-foreground opacity-50 mb-3" />
+          <h2 className="text-xl font-bold text-foreground">Profile Unavailable</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Unable to load patient profile details. Please contact clinic support.
+          </p>
+          <Button className="mt-4 gap-2" onClick={() => load()}>
+            Reload Profile
+          </Button>
+        </div>
+      );
+    }
     return (
-      <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-10 border-b border-border bg-background">
-          <div className="px-4 py-6 sm:px-6 lg:px-8">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="mt-2 h-4 w-64" />
-          </div>
+      <div className="w-full space-y-6">
+        <Skeleton className="h-9 w-48 rounded-lg" />
+        <Skeleton className="h-32 w-full rounded-xl" />
+        <div className="grid gap-4 md:grid-cols-2">
+          <Skeleton className="h-56 w-full rounded-xl" />
+          <Skeleton className="h-56 w-full rounded-xl" />
         </div>
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
-          <Skeleton className="h-40 w-full rounded-xl" />
-          <Skeleton className="mt-6 h-96 w-full rounded-xl" />
-        </div>
+        <Skeleton className="h-64 w-full rounded-xl" />
       </div>
     );
   }
 
-  if (!patient) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-center">
-        <UserRound className="size-12 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">We couldn&apos;t find your patient profile.</p>
-        <p className="text-xs text-muted-foreground">Please contact your clinic for assistance.</p>
-      </div>
-    );
-  }
+  const locationLabel = [patient.city, patient.state].filter(Boolean).join(", ") || "—";
+  const joinedDateLabel = `Member since ${memberSince(patient.createdAt)}`;
+  const stats = [
+    { label: "Blood Group", value: orDash(patient.bloodGroup) },
+    { label: "Gender", value: orDash(patient.gender) },
+    { label: "DOB", value: orDash(patient.dateOfBirth) },
+  ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-10 border-b border-border bg-background">
-        <div className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex items-start gap-4">
-            <button
-              onClick={() => {
-                if (mode === "edit") {
-                  setMode("view");
-                } else {
-                  router.push("/clinic/patient");
-                }
-              }}
-              className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"
-            >
-              <ChevronLeft size={20} className="text-muted-foreground" />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">My Profile</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Your personal and medical details as registered with the clinic.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-4 py-8 sm:px-6 lg:px-8">
-        {/* Profile summary card */}
-        <div className="mb-8 overflow-hidden rounded-xl border border-border bg-gradient-to-b from-muted/50 to-background">
-          <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center md:p-8">
-            <PersonAvatar
-              clinicId={session?.clinicId ?? ""}
-              ownerType="patient"
-              ownerId={patient.patientId}
-              name={patient.fullName}
-              size="md"
-              className="size-20 rounded-full ring-4 ring-white shadow-sm"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl font-bold text-foreground">{patient.fullName}</h2>
-                <Badge
-                  variant="outline"
-                  className="border-success/25 bg-success/10 text-success"
-                >
-                  Active
-                </Badge>
-              </div>
-              <p className="mt-1 font-mono text-xs text-muted-foreground">ID: {patient.patientId}</p>
-              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5">
-                  <Phone className="size-3.5 text-muted-foreground" />
-                  {patient.mobile || "—"}
-                </span>
-                {patient.email && (
-                  <span className="flex items-center gap-1.5">
-                    <Mail className="size-3.5 text-muted-foreground" />
-                    {patient.email}
-                  </span>
-                )}
-                <span className="flex items-center gap-1.5">
-                  <CalendarDays className="size-3.5 text-muted-foreground" />
-                  Member since {memberSince(patient.createdAt)}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Reuse the Patient form in view/edit mode */}
-        <PatientForm
-          clinicId={session?.clinicId ?? ""}
-          initialData={patientToForm(patient)}
-          mode={mode}
-          doctors={doctors}
-          onClose={() => {
-            if (mode === "edit") {
-              setMode("view");
-            } else {
-              router.push("/clinic/patient");
-            }
-          }}
-          onEdit={() => setMode("edit")}
-          onSave={handleSave}
-          saving={saving}
+    <div className="w-full min-h-[calc(100vh-4rem)]">
+      <section className="w-full min-h-[calc(100vh-4rem)] rounded-xl border border-purple-100/90 bg-background overflow-hidden flex flex-col shadow-2xs">
+        {/* Soft Lavender Gradient Banner Header */}
+        <div
+          className="h-32 w-full bg-gradient-to-br from-indigo-500/15 via-purple-100/90 to-indigo-50/60"
+          aria-hidden="true"
         />
-      </div>
+
+        <div className="px-4 sm:px-6 pb-6">
+          <div className="flex items-end justify-between gap-4">
+            <div className="-mt-12 sm:-mt-14">
+              <PersonAvatar
+                clinicId={clinicId}
+                ownerType="patient"
+                ownerId={patient.patientId}
+                name={patient.fullName}
+                size="md"
+                className="size-20 sm:size-24 rounded-full ring-4 ring-white shadow-sm"
+              />
+            </div>
+            <div className="flex items-center gap-2 pt-4">
+              {!editing ? (
+                <>
+                  <Button variant="outline" size="sm" className="gap-1.5 rounded-xl border-purple-200 hover:bg-purple-50" onClick={startEdit}>
+                    <Pencil className="size-4 text-indigo-600" />
+                    <span>Edit Profile</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="size-4" />
+                    <span>Logout</span>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="outline" size="sm" className="gap-1.5 rounded-xl" onClick={() => setEditing(false)}>
+                    <X className="size-4" />
+                    <span>Cancel</span>
+                  </Button>
+                  <Button size="sm" className="gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold" onClick={handleSave} disabled={saving}>
+                    <Save className="size-4" />
+                    <span>{saving ? "Saving..." : "Save"}</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 rounded-xl text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="size-4" />
+                    <span>Logout</span>
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+              {patient.fullName}
+            </h2>
+            <Badge
+              variant="outline"
+              className="bg-emerald-50 text-emerald-700 border-emerald-200/80 rounded-full px-2.5 py-0.5 text-xs font-bold"
+            >
+              <span className="mr-1.5 size-1.5 rounded-full bg-emerald-600" />
+              Active Patient
+            </Badge>
+          </div>
+          <p className="text-xs font-mono text-slate-500 mt-0.5">ID: {patient.patientId}</p>
+
+          <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs sm:text-sm">
+            {stats.map((stat) => (
+              <span key={stat.label} className="flex items-baseline gap-1.5">
+                <span className="font-bold text-slate-900 tabular-nums">{stat.value}</span>
+                <span className="text-slate-500">{stat.label}</span>
+              </span>
+            ))}
+          </div>
+
+          <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs sm:text-sm text-slate-600">
+            <li className="flex items-center gap-2">
+              <MapPin className="size-4 shrink-0 text-indigo-600" />
+              <span>{locationLabel}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Phone className="size-4 shrink-0 text-indigo-600" />
+              <span>{orDash(patient.mobile)}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Mail className="size-4 shrink-0 text-indigo-600" />
+              <span>{orDash(patient.email)}</span>
+            </li>
+            <li className="flex items-center gap-2">
+              <Calendar className="size-4 shrink-0 text-indigo-600" />
+              <span>{joinedDateLabel}</span>
+            </li>
+          </ul>
+
+          <Tabs defaultValue="overview" className="mt-6 gap-4">
+            <TabsList className="w-full bg-purple-50/80 border border-purple-100 rounded-xl p-1">
+              <TabsTrigger value="overview" className="flex-1 rounded-lg text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-xs">
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="contact" className="flex-1 rounded-lg text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-xs">
+                Contact & Address
+              </TabsTrigger>
+              <TabsTrigger value="medical" className="flex-1 rounded-lg text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-xs">
+                Medical & Health
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="flex flex-col gap-6 mt-4">
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                    <UserRound className="size-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">Personal Details</h3>
+                </div>
+                <FieldGrid cols={4}>
+                  {editing ? (
+                    <Field label="Full Name">
+                      <Input
+                        value={form.fullName}
+                        onChange={(e) => setField("fullName", e.target.value)}
+                        required
+                      />
+                    </Field>
+                  ) : (
+                    <Field label="Full Name" value={patient.fullName} />
+                  )}
+                  <Field label="Gender">
+                    {editing ? (
+                      <Select
+                        value={form.gender}
+                        onValueChange={(v) => setField("gender", v ?? "")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      orDash(patient.gender)
+                    )}
+                  </Field>
+                  <Field label="Date of Birth">
+                    {editing ? (
+                      <Input
+                        type="date"
+                        value={form.dateOfBirth}
+                        onChange={(e) => setField("dateOfBirth", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.dateOfBirth)
+                    )}
+                  </Field>
+                  <Field label="Blood Group">
+                    {editing ? (
+                      <Select
+                        value={form.bloodGroup}
+                        onValueChange={(v) => setField("bloodGroup", v ?? "")}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select blood group" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
+                            <SelectItem key={bg} value={bg}>
+                              {bg}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      orDash(patient.bloodGroup)
+                    )}
+                  </Field>
+                </FieldGrid>
+              </div>
+
+              <Separator className="bg-purple-50" />
+
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                    <Activity className="size-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">Physical & ID Information</h3>
+                </div>
+                <FieldGrid cols={4}>
+                  <Field label="Height">
+                    {editing ? (
+                      <Input
+                        value={form.height}
+                        onChange={(e) => setField("height", e.target.value)}
+                        placeholder="e.g. 175 cm"
+                      />
+                    ) : (
+                      orDash(patient.height)
+                    )}
+                  </Field>
+                  <Field label="Weight">
+                    {editing ? (
+                      <Input
+                        value={form.weight}
+                        onChange={(e) => setField("weight", e.target.value)}
+                        placeholder="e.g. 70 kg"
+                      />
+                    ) : (
+                      orDash(patient.weight)
+                    )}
+                  </Field>
+                  <Field label="Marital Status">
+                    {editing ? (
+                      <Input
+                        value={form.maritalStatus}
+                        onChange={(e) => setField("maritalStatus", e.target.value)}
+                        placeholder="Single / Married"
+                      />
+                    ) : (
+                      orDash(patient.maritalStatus)
+                    )}
+                  </Field>
+                  <Field label="Occupation">
+                    {editing ? (
+                      <Input
+                        value={form.occupation}
+                        onChange={(e) => setField("occupation", e.target.value)}
+                        placeholder="e.g. Software Engineer"
+                      />
+                    ) : (
+                      orDash(patient.occupation)
+                    )}
+                  </Field>
+                  <Field label="ID Type">
+                    {editing ? (
+                      <Input
+                        value={form.idType}
+                        onChange={(e) => setField("idType", e.target.value)}
+                        placeholder="Aadhaar / Passport"
+                      />
+                    ) : (
+                      orDash(patient.idType)
+                    )}
+                  </Field>
+                  <Field label="ID Number">
+                    {editing ? (
+                      <Input
+                        value={form.idNumber}
+                        onChange={(e) => setField("idNumber", e.target.value)}
+                        placeholder="XXXX-XXXX-XXXX"
+                      />
+                    ) : (
+                      orDash(patient.idNumber)
+                    )}
+                  </Field>
+                </FieldGrid>
+              </div>
+            </TabsContent>
+
+            {/* Contact & Address Tab */}
+            <TabsContent value="contact" className="flex flex-col gap-6 mt-4">
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                    <Phone className="size-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">Contact Channels</h3>
+                </div>
+                <FieldGrid cols={3}>
+                  <Field label="Mobile Number">
+                    {editing ? (
+                      <Input
+                        value={form.mobile}
+                        onChange={(e) => setField("mobile", e.target.value)}
+                        required
+                      />
+                    ) : (
+                      orDash(patient.mobile)
+                    )}
+                  </Field>
+                  <Field label="WhatsApp Number">
+                    {editing ? (
+                      <Input
+                        value={form.whatsapp}
+                        onChange={(e) => setField("whatsapp", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.whatsapp)
+                    )}
+                  </Field>
+                  <Field label="Email Address">
+                    {editing ? (
+                      <Input
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => setField("email", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.email)
+                    )}
+                  </Field>
+                </FieldGrid>
+              </div>
+
+              <Separator className="bg-purple-50" />
+
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                    <MapPin className="size-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">Address Details</h3>
+                </div>
+                <FieldGrid cols={4}>
+                  <Field label="Street Address" className="col-span-2">
+                    {editing ? (
+                      <Input
+                        value={form.address}
+                        onChange={(e) => setField("address", e.target.value)}
+                        placeholder="House no, Street name..."
+                      />
+                    ) : (
+                      orDash(patient.address)
+                    )}
+                  </Field>
+                  <Field label="City">
+                    {editing ? (
+                      <Input
+                        value={form.city}
+                        onChange={(e) => setField("city", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.city)
+                    )}
+                  </Field>
+                  <Field label="State">
+                    {editing ? (
+                      <Input
+                        value={form.state}
+                        onChange={(e) => setField("state", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.state)
+                    )}
+                  </Field>
+                  <Field label="Pincode">
+                    {editing ? (
+                      <Input
+                        value={form.pincode}
+                        onChange={(e) => setField("pincode", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.pincode)
+                    )}
+                  </Field>
+                </FieldGrid>
+              </div>
+
+              <Separator className="bg-purple-50" />
+
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                    <Info className="size-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">Emergency Contact</h3>
+                </div>
+                <FieldGrid cols={3}>
+                  <Field label="Contact Name">
+                    {editing ? (
+                      <Input
+                        value={form.emergencyContactName}
+                        onChange={(e) => setField("emergencyContactName", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.emergencyContactName)
+                    )}
+                  </Field>
+                  <Field label="Relationship">
+                    {editing ? (
+                      <Input
+                        value={form.emergencyContactRelationship}
+                        onChange={(e) => setField("emergencyContactRelationship", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.emergencyContactRelationship)
+                    )}
+                  </Field>
+                  <Field label="Emergency Mobile">
+                    {editing ? (
+                      <Input
+                        value={form.emergencyContactMobile}
+                        onChange={(e) => setField("emergencyContactMobile", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.emergencyContactMobile)
+                    )}
+                  </Field>
+                </FieldGrid>
+              </div>
+            </TabsContent>
+
+            {/* Medical & Health Tab */}
+            <TabsContent value="medical" className="flex flex-col gap-6 mt-4">
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                    <HeartPulse className="size-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">Medical History</h3>
+                </div>
+                <FieldGrid cols={2}>
+                  <Field label="Known Allergies" className="col-span-2">
+                    {editing ? (
+                      <Input
+                        value={form.allergies}
+                        onChange={(e) => setField("allergies", e.target.value)}
+                        placeholder="Dust, Penicillin (comma separated)"
+                      />
+                    ) : (
+                      orDash(form.allergies)
+                    )}
+                  </Field>
+                  <Field label="Medical Conditions" className="col-span-2">
+                    {editing ? (
+                      <Textarea
+                        value={form.medicalConditions}
+                        onChange={(e) => setField("medicalConditions", e.target.value)}
+                        rows={2}
+                      />
+                    ) : (
+                      orDash(patient.medicalConditions)
+                    )}
+                  </Field>
+                  <Field label="Current Medications" className="col-span-2">
+                    {editing ? (
+                      <Textarea
+                        value={form.currentMedications}
+                        onChange={(e) => setField("currentMedications", e.target.value)}
+                        rows={2}
+                      />
+                    ) : (
+                      orDash(patient.currentMedications)
+                    )}
+                  </Field>
+                  <Field label="Previous Surgeries" className="col-span-2">
+                    {editing ? (
+                      <Textarea
+                        value={form.previousSurgeries}
+                        onChange={(e) => setField("previousSurgeries", e.target.value)}
+                        rows={2}
+                      />
+                    ) : (
+                      orDash(patient.previousSurgeries)
+                    )}
+                  </Field>
+                </FieldGrid>
+              </div>
+
+              <Separator className="bg-purple-50" />
+
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                    <ShieldCheck className="size-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">Insurance Details</h3>
+                </div>
+                <FieldGrid cols={4}>
+                  <Field label="Insurance Provider">
+                    {editing ? (
+                      <Input
+                        value={form.insuranceProvider}
+                        onChange={(e) => setField("insuranceProvider", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.insuranceProvider)
+                    )}
+                  </Field>
+                  <Field label="Policy Number">
+                    {editing ? (
+                      <Input
+                        value={form.insurancePolicyNumber}
+                        onChange={(e) => setField("insurancePolicyNumber", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.insurancePolicyNumber)
+                    )}
+                  </Field>
+                  <Field label="Policy Holder Name">
+                    {editing ? (
+                      <Input
+                        value={form.insurancePolicyHolderName}
+                        onChange={(e) => setField("insurancePolicyHolderName", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.insurancePolicyHolderName)
+                    )}
+                  </Field>
+                  <Field label="Valid Till">
+                    {editing ? (
+                      <Input
+                        type="date"
+                        value={form.insuranceValidTill}
+                        onChange={(e) => setField("insuranceValidTill", e.target.value)}
+                      />
+                    ) : (
+                      orDash(patient.insuranceValidTill)
+                    )}
+                  </Field>
+                </FieldGrid>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </section>
     </div>
   );
 }
