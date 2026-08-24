@@ -423,17 +423,17 @@ export default function SettingsPage() {
                       {waSession === null
                         ? "The status service is not reachable right now. The WhatsApp worker may be down — check pm2 status on the server (myclinic-whatsapp), then reload this page."
                         : stage === "unconfigured" || stage === "disconnected" || stage === "error"
-                          ? "Link this clinic's own WhatsApp number to send appointment reminders and patient notifications from it. Each clinic connects its own number separately."
+                          ? "Link this clinic's own WhatsApp number to send appointment reminders and patient notifications from it. Each clinic connects its own number separately — this QR is unique to the current clinic."
                           : stage === "idle"
-                            ? "Starting WhatsApp… QR will appear in a few seconds (up to 20s). Please wait — polling every 2s."
+                            ? "Starting WhatsApp for this clinic… QR will appear shortly. Each clinic connects separately — this QR is only for the current clinic."
                             : stage === "authenticated"
-                              ? "Authenticated — preparing WhatsApp, QR will refresh shortly…"
+                              ? "Authenticated for this clinic — preparing WhatsApp…"
                               : "Make sure the WhatsApp worker is running on the server (pm2: myclinic-whatsapp) and a Chromium browser is available."}
                     </p>
                     {(stage === "idle" || stage === "authenticated") && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span className="size-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary inline-block" />
-                        Waiting for QR…
+                        Waiting for this clinic's QR…
                       </div>
                     )}
                     {canEdit &&
