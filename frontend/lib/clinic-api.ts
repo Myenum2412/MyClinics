@@ -621,17 +621,6 @@ export function updateOwnClinic(
   });
 }
 
-export function updateUser(
-  clinicId: string,
-  userId: string,
-  input: Record<string, unknown>
-): Promise<unknown> {
-  return request(tenantPath(clinicId, `/users/${userId}`), {
-    method: "PATCH",
-    body: JSON.stringify(input),
-  });
-}
-
 // ── Patients ───────────────────────────────────────────────────────────────
 
 export function listPatients(
@@ -792,6 +781,10 @@ export function createDoctor(
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export function getDoctor(clinicId: string, doctorId: string): Promise<Doctor> {
+  return request(tenantPath(clinicId, `/doctors/${doctorId}`));
 }
 
 export function updateDoctor(

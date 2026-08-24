@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { toast } from "sonner";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import {
@@ -11,7 +10,6 @@ import {
   getAvatarUrl,
   getOwnClinic,
   updateOwnClinic,
-  updateUser,
   uploadAvatar,
 } from "@/lib/clinic-api";
 
@@ -41,7 +39,6 @@ import {
   FileText,
   Globe,
   Info,
-  KeyRound,
   Link as LinkIcon,
   Loader2,
   LogOut,
@@ -51,8 +48,6 @@ import {
   Pencil,
   Phone,
   Save,
-  ShieldCheck,
-  UserCog,
   Users,
   X,
 } from "lucide-react";
@@ -217,10 +212,16 @@ function formatTime12h(value: string | null | undefined): string {
   return `${displayHours}:${minutes} ${period}`;
 }
 
+import { DoctorProfileView } from "@/components/clinic/doctor-profile-view";
+
 export default function AccountPage() {
-  const session = useRequireRole("staff");
+  const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
   const router = useRouter();
+
+  if (session && session.role === "doctor") {
+    return <DoctorProfileView session={session} />;
+  }
 
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [loading, setLoading] = useState(true);
@@ -233,38 +234,6 @@ export default function AccountPage() {
   const [pincodeMessage, setPincodeMessage] = useState<string | null>(null);
   const pincodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pincodeSeqRef = useRef(0);
-
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [resettingPassword, setResettingPassword] = useState(false);
-
-  async function handleResetPassword(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newPassword || newPassword.length < 6) {
-      toast.error("New password must be at least 6 characters long");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    setResettingPassword(true);
-    try {
-      if (session?.userId) {
-        await updateUser(clinicId, session.userId, { password: newPassword });
-      }
-      toast.success("Password reset successfully!");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch {
-      toast.success("Password reset successfully!");
-      setNewPassword("");
-      setConfirmPassword("");
-    } finally {
-      setResettingPassword(false);
-    }
-  }
 
   const canManage = sessionCan(session, "clinic_admin");
 
@@ -463,20 +432,6 @@ export default function AccountPage() {
 
   return (
     <div className="w-full min-h-[calc(100vh-4rem)]">
-      {/* 2 Profile Types Selector Navigation */}
-      <div className="flex items-center gap-2 border-b border-border pb-3 mb-4">
-        <Link href="/clinic/profile">
-          <Button variant="outline" size="sm" className="gap-2 font-medium text-muted-foreground hover:text-foreground">
-            <Building2 className="size-4" />
-            Clinic Profile
-          </Button>
-        </Link>
-        <Button variant="default" size="sm" className="gap-2 font-medium shadow-xs">
-          <UserCog className="size-4" />
-          Account Profile & Reset Password
-        </Button>
-      </div>
-
       <section className="w-full min-h-[calc(100vh-4rem)] rounded-xl border border-[#E3F2FD] bg-background overflow-hidden flex flex-col">
         <div
           className="h-32 w-full bg-linear-to-br from-foreground/10 via-[#E3F2FD] to-[#E3F2FD]/60"
@@ -612,9 +567,6 @@ export default function AccountPage() {
               </TabsTrigger>
               <TabsTrigger value="practice" className="flex-1">
                 Practice
-              </TabsTrigger>
-              <TabsTrigger value="security" className="flex-1 font-semibold">
-                Reset Password
               </TabsTrigger>
             </TabsList>
 
@@ -1097,61 +1049,6 @@ export default function AccountPage() {
                   </Field>
                 </FieldGrid>
               </div>
-            </TabsContent>
-
-            <TabsContent value="security" className="flex flex-col gap-6 pt-4">
-              <Card className="border-border shadow-sm p-6">
-                <div className="flex items-center gap-3 border-b border-border pb-4 mb-6">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <KeyRound className="size-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-semibold text-foreground">Reset / Change Password</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Update your account login password securely.
-                    </p>
-                  </div>
-                </div>
-
-                <form onSubmit={handleResetPassword} className="max-w-md space-y-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="new-password-input" className="text-sm font-medium">
-                      New Password
-                    </Label>
-                    <Input
-                      id="new-password-input"
-                      type="password"
-                      placeholder="Enter new password (min 6 characters)"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      minLength={6}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password-input" className="text-sm font-medium">
-                      Confirm New Password
-                    </Label>
-                    <Input
-                      id="confirm-password-input"
-                      type="password"
-                      placeholder="Re-enter new password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      minLength={6}
-                      required
-                    />
-                  </div>
-
-                  <div className="pt-2">
-                    <Button type="submit" className="gap-2 w-full sm:w-auto shadow-xs" disabled={resettingPassword}>
-                      <ShieldCheck className="size-4" />
-                      {resettingPassword ? "Updating Password..." : "Reset Password"}
-                    </Button>
-                  </div>
-                </form>
-              </Card>
             </TabsContent>
           </Tabs>
         </div>

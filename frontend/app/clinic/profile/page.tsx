@@ -7,7 +7,6 @@ import {
   Bell,
   Bone,
   Baby,
-  Building2,
   CalendarDays,
   Camera,
   ChevronRight,
@@ -157,6 +156,8 @@ function SectionCard({
   );
 }
 
+import { DoctorProfileView } from "@/components/clinic/doctor-profile-view";
+
 const MAP_TILE =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><path d='M40 0H0V40' fill='none' stroke='%23e2e8f0' stroke-width='1'/></svg>";
 
@@ -164,6 +165,10 @@ export default function ClinicProfilePage() {
   const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
   const isDoctor = session?.role === "doctor";
+
+  if (session && isDoctor) {
+    return <DoctorProfileView session={session} />;
+  }
   const SETTINGS_ROWS = ALL_SETTINGS_ROWS.filter((r) => !(isDoctor && r.doctorHidden));
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [stats, setStats] = useState<{
@@ -298,20 +303,6 @@ export default function ClinicProfilePage() {
             <Camera className="size-4" />
             Edit Profile
           </Button>
-      </div>
-
-      {/* Profile Type Navigation: Clinic Profile vs Account Profile */}
-      <div className="flex items-center gap-2 border-b border-border pb-3">
-        <Button variant="default" size="sm" className="gap-2 font-medium shadow-xs">
-          <Building2 className="size-4" />
-          Clinic Profile
-        </Button>
-        <Link href="/clinic/account">
-          <Button variant="outline" size="sm" className="gap-2 font-medium text-muted-foreground hover:text-foreground">
-            <UserCog className="size-4" />
-            Account Profile & Reset Password
-          </Button>
-        </Link>
       </div>
 
       <Card className="overflow-hidden">
