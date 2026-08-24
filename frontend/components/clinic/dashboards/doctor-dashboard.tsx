@@ -10,18 +10,22 @@ import {
   type Bill,
   type Patient,
   type Doctor,
+  type Prescription,
   listAppointments,
   listBills,
   listDoctors,
   listPatients,
+  listPrescriptions,
 } from "@/lib/clinic-api";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
 import { BillingOverviewCard } from "@/components/clinic/billing-overview-card";
 import { RecentAppointmentsCard } from "@/components/clinic/recent-appointments-card";
-import { Folder, ArrowRight } from "lucide-react";
+import { PersonAvatar } from "@/components/clinic/person-avatar";
+import { Folder, ArrowRight, Users, Phone, Eye, FileText } from "lucide-react";
 
 import { type ClinicSession } from "@/lib/clinic-api";
 
@@ -68,7 +72,7 @@ function getGreeting(): Greeting {
   if (h >= 17 && h < 21) {
     return {
       text: "Good Evening",
-      emoji: "🌇",
+      emoji: "<ctrl42>",
       gradientFrom: "from-violet-500/15",
       gradientTo: "to-purple-400/5",
       accentColor: "text-violet-600 dark:text-violet-400",
@@ -158,52 +162,122 @@ function GreetingBanner({
   );
 }
 
+// ── Doctor Assigned Patients Card ──────────────────────────────────────────────
+
+function DoctorPatientsCard({
+  patients,
+  clinicId,
+  loading,
+}: {
+  patients: Patient[];
+  clinicId: string;
+  loading: boolean;
+}) {
+  return (
+    <Card className="border-border shadow-sm flex flex-col justify-between">
+      <div>
+        <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
+          <div>
+            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <Users className="size-4 text-primary" />
+              My Assigned Patients
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Patients currently assigned to your care.
+            </p>
+          </div>
+          <Link href="/clinic/patients">
+            <Button variant="ghost" size="sm" className="h-8 text-xs gap-1">
+              View all <ArrowRight className="size-3.5" />
+            </Button>
+          </Link>
+        </div>
+
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="space-y-3 p-6">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : patients.length === 0 ? (
+            <div className="py-12 text-center text-sm text-muted-foreground">
+              No patients assigned to you yet.
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {patients.slice(0, 5).map((p) => (
+                <div key={p.patientId} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} />
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-foreground">{p.fullName}</span>
+                      <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                        <Phone className="size-3" /> {p.mobile || "No Contact"}
+                      </span>
+                    </div>
+                  </div>
+                  <Link href={`/clinic/records?patientId=${p.patientId}`}>
+                    <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1">
+                      <Eye className="size-3" /> EHR File
+                    </Button>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </div>
+    </Card>
+  );
+}
+
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 
 export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const clinicId = session.clinicId ?? "";
+  const isDoctorRole = session.role === "doctor";
 
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
 
   useEffect(() => {
     if (!clinicId) return;
     let active = true;
     setLoading(true);
-    Promise.allSettled([
+
+    const promises: Promise<any>[] = [
       listAppointments(clinicId, { limit: 50 }),
       listPatients(clinicId, { limit: 50 }),
       listDoctors(clinicId, { limit: 50 }),
-      listBills(clinicId, { limit: 50 }),
-    ])
-      .then(([apptRes, patientRes, doctorRes, billRes]) => {
+      listPrescriptions(clinicId, { limit: 50 }),
+    ];
+
+    if (!isDoctorRole) {
+      promises.push(listBills(clinicId, { limit: 50 }));
+    }
+
+    Promise.allSettled(promises)
+      .then(([apptRes, patientRes, doctorRes, rxRes, billRes]) => {
         if (!active) return;
         if (apptRes.status === "fulfilled") {
           setAppointments(apptRes.value.items);
-        } else {
-          console.error("Failed to load appointments", apptRes.reason);
-          toast.error("Failed to load appointments");
         }
         if (patientRes.status === "fulfilled") {
           setPatients(patientRes.value.items);
-        } else {
-          console.error("Failed to load patients", patientRes.reason);
-          toast.error("Failed to load patients");
         }
         if (doctorRes.status === "fulfilled") {
           setDoctors(doctorRes.value.items);
-        } else {
-          console.error("Failed to load doctors", doctorRes.reason);
         }
-        if (billRes.status === "fulfilled") {
+        if (rxRes && rxRes.status === "fulfilled") {
+          setPrescriptions(rxRes.value.items);
+        }
+        if (billRes && billRes.status === "fulfilled") {
           setBills(billRes.value.items);
-        } else {
-          console.error("Failed to load bills", billRes.reason);
-          const reason = billRes.reason as unknown as { status?: number; message?: string };
-          if (reason?.status !== 404) toast.error("Failed to load billing data");
         }
       })
       .finally(() => {
@@ -212,41 +286,73 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     return () => {
       active = false;
     };
-  }, [clinicId]);
+  }, [clinicId, isDoctorRole]);
 
-  // Stats-07 section cards with real clinic data
+  // Stats section cards
   const chartConfig = { capacity: { label: "Capacity", color: "hsl(var(--primary))" } } satisfies ChartConfig;
   const totalRevenue = bills.reduce((s, b) => (b.status !== "void" ? s + b.total : s), 0);
-  const statsData = [
-    {
-      name: "Patients",
-      current: patients.length,
-      allowed: 100,
-      capacity: Math.min(100, Math.round((patients.length / 100) * 100)),
-      fill: "var(--chart-1)",
-    },
-    {
-      name: "Appointments",
-      current: appointments.length,
-      allowed: 50,
-      capacity: Math.min(100, Math.round((appointments.length / 50) * 100)),
-      fill: "var(--chart-2)",
-    },
-    {
-      name: "Revenue",
-      current: totalRevenue,
-      allowed: Math.max(totalRevenue, 1),
-      capacity: totalRevenue ? Math.min(100, Math.round((bills.filter(b => b.status === "paid").reduce((s, b) => s + b.total, 0) / Math.max(1, totalRevenue)) * 100)) : 0,
-      fill: "var(--chart-3)",
-    },
-    {
-      name: "Doctors",
-      current: doctors.length,
-      allowed: 10,
-      capacity: Math.min(100, Math.round((doctors.length / 10) * 100)),
-      fill: "var(--chart-4)",
-    },
-  ];
+
+  const statsData = isDoctorRole
+    ? [
+        {
+          name: "My Patients",
+          current: patients.length,
+          allowed: 100,
+          capacity: Math.min(100, Math.round((patients.length / 100) * 100)),
+          fill: "var(--chart-1)",
+        },
+        {
+          name: "Appointments",
+          current: appointments.length,
+          allowed: 50,
+          capacity: Math.min(100, Math.round((appointments.length / 50) * 100)),
+          fill: "var(--chart-2)",
+        },
+        {
+          name: "Prescriptions",
+          current: prescriptions.length,
+          allowed: 100,
+          capacity: Math.min(100, Math.round((prescriptions.length / 100) * 100)),
+          fill: "var(--chart-3)",
+        },
+        {
+          name: "Doctors Roster",
+          current: doctors.length,
+          allowed: 10,
+          capacity: Math.min(100, Math.round((doctors.length / 10) * 100)),
+          fill: "var(--chart-4)",
+        },
+      ]
+    : [
+        {
+          name: "Patients",
+          current: patients.length,
+          allowed: 100,
+          capacity: Math.min(100, Math.round((patients.length / 100) * 100)),
+          fill: "var(--chart-1)",
+        },
+        {
+          name: "Appointments",
+          current: appointments.length,
+          allowed: 50,
+          capacity: Math.min(100, Math.round((appointments.length / 50) * 100)),
+          fill: "var(--chart-2)",
+        },
+        {
+          name: "Revenue",
+          current: totalRevenue,
+          allowed: Math.max(totalRevenue, 1),
+          capacity: totalRevenue ? Math.min(100, Math.round((bills.filter(b => b.status === "paid").reduce((s, b) => s + b.total, 0) / Math.max(1, totalRevenue)) * 100)) : 0,
+          fill: "var(--chart-3)",
+        },
+        {
+          name: "Doctors",
+          current: doctors.length,
+          allowed: 10,
+          capacity: Math.min(100, Math.round((doctors.length / 10) * 100)),
+          fill: "var(--chart-4)",
+        },
+      ];
 
   return (
     <div className="w-full flex flex-col gap-6">
@@ -267,13 +373,13 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
                     </RadialBarChart>
                   </ChartContainer>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="font-medium text-base text-foreground">{item.capacity}%</span>
+                    <span className="font-semibold text-xs text-foreground">{item.capacity}%</span>
                   </div>
                 </div>
                 <div>
-                  <dt className="font-medium text-foreground text-sm">{item.name}</dt>
-                  <dd className="text-muted-foreground text-sm">
-                    {item.name === "Revenue" ? `₹${item.current.toLocaleString("en-IN")}` : `${item.current} of ${item.allowed} used`}
+                  <dt className="font-semibold text-foreground text-sm tracking-tight leading-none mb-1">{item.name}</dt>
+                  <dd className="text-muted-foreground text-xs">
+                    {item.name === "Revenue" ? `₹${item.current.toLocaleString("en-IN")}` : `${item.current} of ${item.allowed} ${isDoctorRole ? 'assigned' : 'used'}`}
                   </dd>
                 </div>
               </CardContent>
@@ -282,7 +388,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
         </dl>
       </div>
 
-      {/* Recent Appointments + Billing row */}
+      {/* Recent Appointments + Doctor Patients / Billing row */}
       <div className="grid gap-6 lg:grid-cols-2">
         <RecentAppointmentsCard
           appointments={appointments}
@@ -292,7 +398,11 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           loading={loading}
         />
 
-        <BillingOverviewCard bills={bills} loading={loading} />
+        {isDoctorRole ? (
+          <DoctorPatientsCard patients={patients} clinicId={clinicId} loading={loading} />
+        ) : (
+          <BillingOverviewCard bills={bills} loading={loading} />
+        )}
       </div>
     </div>
   );
