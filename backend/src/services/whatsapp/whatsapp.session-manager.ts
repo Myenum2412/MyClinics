@@ -7,6 +7,7 @@ import {
   writeQrFiles,
   sessionDirForKey,
   clearSessionArtifacts,
+  clearSingletonLock,
 } from "@/services/whatsapp/whatsapp.session";
 import {
   claimPendingSessionCommands,
@@ -204,6 +205,10 @@ export async function startClinicSession(db: Db, clinicId: string): Promise<void
     );
   }
 
+  // Clear stale Chromium singleton locks left behind by a crashed worker (common after PM2 restart)
+  // e.g. "The browser is already running for /.../session-clinic-xxx"
+  clearSingletonLock(clinicId);
+
   const client = createWhatsAppClient({
     clientId: `clinic-${clinicId}`,
     dataPath: sessionDirForKey(clinicId),
@@ -212,7 +217,8 @@ export async function startClinicSession(db: Db, clinicId: string): Promise<void
     clinicId,
     client,
     reconnectTimer: null,
-    reconnectAttempts: existing?.reconnectAttempts ?? 0,
+    // Explicit connect resets backoff - previous error attempts should not poison the new session
+    reconnectAttempts: 0,
     readyWatchdog: null,
     stopping: false,
   };
@@ -223,6 +229,22 @@ export async function startClinicSession(db: Db, clinicId: string): Promise<void
   try {
     await client.initialize();
   } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    // Handle the common "browser is already running" lock left after a crash - clear and retry once
+    if (msg.includes("browser is already running")) {
+      logger.warn("clinic whatsapp browser lock detected, clearing and retrying", { clinicId });
+      clearSingletonLock(clinicId);
+      // Retry once after clearing lock
+      try {
+        await client.initialize();
+        return;
+      } catch (retryErr) {
+        logger.error("clinic whatsapp retry after lock clear failed", {
+          clinicId,
+          error: retryErr instanceof Error ? retryErr.message : String(retryErr),
+        });
+      }
+    }
     // initialize() can reject on transient websock errors even though the
     // client later recovers; only clean up when the client never came up.
     if (!client.info && sessions.get(clinicId) === session) {

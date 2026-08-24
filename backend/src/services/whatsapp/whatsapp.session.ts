@@ -133,6 +133,23 @@ export function readQrTextFromDisk(key: string): { content: string; generatedAt:
   }
 }
 
+/** Removes only the Chromium singleton lock files that cause "browser is already running" errors. */
+export function clearSingletonLock(key: string): void {
+  if (key === LEGACY_SESSION_KEY) return;
+  const dir = sessionDirForKey(key);
+  // LocalAuth stores the Chrome profile under <dir>/session-<clientId>/
+  // The lock files are inside that profile directory.
+  const profileDir = join(dir, `session-${key === LEGACY_SESSION_KEY ? "legacy" : `clinic-${key}`}`);
+  for (const name of ["SingletonLock", "SingletonSocket", "SingletonCookie"]) {
+    try {
+      rmSync(join(profileDir, name), { force: true });
+    } catch {}
+    try {
+      rmSync(join(dir, name), { force: true });
+    } catch {}
+  }
+}
+
 /** Deletes every persisted artifact (LocalAuth + status + QR) for a key. */
 export function clearSessionArtifacts(key: string): void {
   if (key === LEGACY_SESSION_KEY) {
