@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import {
   Building2,
+  Briefcase,
   Calendar,
   Camera,
   ClipboardList,
@@ -43,9 +44,11 @@ import {
   LogOut,
   Mail,
   MapPin,
+  MessageCircle,
   Pencil,
   Phone,
   Save,
+  Users,
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -966,11 +969,34 @@ export default function AccountPage() {
                         />
                       </div>
                     ) : (
-                      <div className="flex flex-wrap gap-x-6 gap-y-1">
-                        <span>Facebook: {orDash(profile.socialMedia.facebook)}</span>
-                        <span>Instagram: {orDash(profile.socialMedia.instagram)}</span>
-                        <span>Twitter: {orDash(profile.socialMedia.twitter)}</span>
-                        <span>LinkedIn: {orDash(profile.socialMedia.linkedin)}</span>
+                      <div className="flex flex-wrap gap-4">
+                        {[
+                          { label: "Facebook", url: profile.socialMedia.facebook, Icon: Users },
+                          { label: "Instagram", url: profile.socialMedia.instagram, Icon: Camera },
+                          { label: "Twitter", url: profile.socialMedia.twitter, Icon: MessageCircle },
+                          { label: "LinkedIn", url: profile.socialMedia.linkedin, Icon: Briefcase },
+                        ].map(({ label, url, Icon }) =>
+                          url ? (
+                            <a
+                              key={label}
+                              href={url.startsWith("http") ? url : `https://${url}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-primary hover:bg-accent transition"
+                            >
+                              <Icon className="size-4" />
+                              {label}
+                            </a>
+                          ) : (
+                            <span
+                              key={label}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/20 px-3 py-1.5 text-sm text-muted-foreground"
+                            >
+                              <Icon className="size-4 opacity-50" />
+                              {label}: —
+                            </span>
+                          )
+                        )}
                       </div>
                     )}
                   </Field>
