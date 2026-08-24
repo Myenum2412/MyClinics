@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { type AuditLogEntry, listAuditLogs } from "@/lib/clinic-api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -173,45 +173,6 @@ export default function AuditLogsPage() {
 
       {/* Main card containing listing */}
       <Card className="border-border shadow-sm">
-        <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-xl font-semibold text-foreground">
-                Audit Logs Listing
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Search and analyze system event records.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="grid gap-1">
-                  <Input
-                    placeholder="Filter Entity"
-                    value={entity}
-                    onChange={(e) => {
-                      setEntity(e.target.value);
-                      setPageIndex(0);
-                    }}
-                    className="h-9 w-36"
-                  />
-                </div>
-                <div className="grid gap-1">
-                  <Input
-                    placeholder="Filter Action"
-                    value={action}
-                    onChange={(e) => {
-                      setAction(e.target.value);
-                      setPageIndex(0);
-                    }}
-                    className="h-9 w-36"
-                  />
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </CardHeader>
         <CardContent className="p-0">
           {loading ? (
             <div className="p-6 space-y-3">

@@ -176,10 +176,7 @@ export default function AdminClinicDetailPage() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Patients</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           {loadingPatients ? (
             <div className="space-y-2">
               <Skeleton className="h-10 w-full" />

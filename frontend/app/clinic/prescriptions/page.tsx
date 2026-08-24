@@ -596,32 +596,6 @@ export default function PrescriptionsPage() {
 
       {/* Main Table Card */}
       <Card className="shadow-sm">
-        <CardHeader className="pb-3 border-b border-border bg-muted/20">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Table Heading */}
-            <CardTitle className="font-heading text-lg font-semibold tracking-tight text-foreground">
-              Prescriptions Table
-            </CardTitle>
-
-            {/* Filters / Visibility Controls */}
-            <div className="flex items-center justify-center gap-2">
-              <div className="relative mx-auto w-full max-w-md sm:w-72">
-                <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="search"
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setPageIndex(0);
-                  }}
-                  placeholder="Search patients, doctors..."
-                  className="h-8 w-full pl-8 text-xs focus-visible:ring-1"
-                />
-              </div>
-
-            </div>
-          </div>
-        </CardHeader>
         <CardContent className="p-0">
           {loading ? (
             <div className="space-y-4 p-6">

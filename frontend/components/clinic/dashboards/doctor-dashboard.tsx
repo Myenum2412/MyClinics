@@ -267,24 +267,6 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
       {/* Charts row */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="overflow-hidden rounded-none border-border bg-card shadow-sm">
-          <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-semibold text-foreground">
-                  Recent Appointment
-                </CardTitle>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  Latest appointment across all doctors.
-                </p>
-              </div>
-              <Link
-                href="/clinic/appointments"
-                className="inline-flex h-7 items-center justify-center gap-1.5 rounded-none border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
-              >
-                View all
-              </Link>
-            </div>
-          </CardHeader>
           <CardContent className="p-0">
             {loading ? (
               <div className="space-y-2 p-6">

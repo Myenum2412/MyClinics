@@ -20,7 +20,7 @@ import {
 } from "@/lib/clinic-api";
 import { formatTime } from "@/lib/format-time";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -643,53 +643,6 @@ export default function AppointmentsPage() {
 
       {/* Main Table Card */}
       <Card className="shadow-sm">
-        <CardHeader className="pb-3 border-b border-border bg-muted/20">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Table Heading */}
-            <CardTitle className="font-heading text-lg font-semibold tracking-tight text-foreground">
-              Appointments Listing
-            </CardTitle>
-
-            {/* Filters / Search Bar */}
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <div className="relative mx-auto w-full max-w-md sm:w-72">
-                <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="search"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search name, doctor, reason..."
-                  className="h-8 w-full pl-8 text-xs focus-visible:ring-1"
-                />
-              </div>
-
-              {/* Date Filter */}
-              <Input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="h-8 w-36 text-xs focus-visible:ring-1"
-              />
-
-              {/* Status Filter */}
-              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
-                <SelectTrigger className="h-8 w-36 text-xs">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
-                  {STATUSES.map((s) => (
-                    <SelectItem key={s} value={s} className="text-xs">
-                      {STATUS_LABELS[s]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-            </div>
-          </div>
-        </CardHeader>
-        
         <CardContent className="p-0">
           {loading ? (
             <div className="space-y-4 p-6">

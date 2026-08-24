@@ -19,7 +19,7 @@ import {
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -540,53 +540,6 @@ export default function BillingPage() {
 
       {/* Main card containing listing */}
       <Card className="border-border shadow-sm">
-        <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-xl font-semibold text-foreground">
-                Bills Listing
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                View and manage invoices, status changes, and outstanding payments.
-              </p>
-            </div>
-            <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto">
-              <div className="relative mx-auto w-full max-w-md sm:w-72">
-                <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search bills..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setPageIndex(0);
-                  }}
-                  className="h-9 w-full pl-9"
-                />
-              </div>
-
-              {/* Status Filter */}
-              <Select
-                value={statusFilter}
-                onValueChange={(v) => {
-                  setStatusFilter(v ?? "all");
-                  setPageIndex(0);
-                }}
-              >
-                <SelectTrigger className="h-9 w-36">
-                  <SelectValue placeholder="All Statuses" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="issued">Issued</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="void">Void</SelectItem>
-                </SelectContent>
-              </Select>
-
-            </div>
-          </div>
-        </CardHeader>
         <CardContent className="p-0">
           {loading ? (
             <div className="p-6 space-y-3">

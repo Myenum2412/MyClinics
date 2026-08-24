@@ -691,34 +691,6 @@ export default function PatientsPage() {
 
       {/* Main card containing listing */}
       <Card className="border-border shadow-sm">
-        <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-xl font-semibold text-foreground">
-                Patients Listing
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {isDoctor
-                  ? "Only patients assigned to you are listed here. Other patients are never visible."
-                  : "Manage registered clinic patients, assign primary doctors, and view profile records."}
-              </p>
-            </div>
-            <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto">
-              <div className="relative mx-auto w-full max-w-md sm:w-72">
-                <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search patients..."
-                  value={q}
-                  onChange={(e) => {
-                    setQ(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="h-9 w-full pl-9"
-                />
-              </div>
-            </div>
-          </div>
-        </CardHeader>
         <CardContent className="p-0">
           {loading ? (
             <div className="p-6 space-y-3">
