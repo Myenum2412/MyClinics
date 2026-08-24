@@ -17,8 +17,6 @@ import {
 import { handleIncomingMessage } from "@/services/whatsapp/whatsapp.message-handler";
 import { processDueReminders, scanAndQueueReminders } from "@/services/reminder/reminder.service";
 import { processDueNotificationsForClients } from "@/services/whatsapp/notification.service";
-import { processPrescriptionNotifications } from "@/services/whatsapp/prescription-notification.service";
-import { processAppointmentNotifications } from "@/services/whatsapp/appointment-notification.service";
 
 /**
  * WhatsApp worker.
@@ -160,10 +158,14 @@ function startReminderLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void 
     try {
       const org = await ensureDefaultOrganization(db);
 
-      // Staging scans/processors only touch the database.
+      // Stage-only: scan and queue reminders into the DB.
+      // NOTE: processPrescriptionNotifications and processAppointmentNotifications
+      // are intentionally NOT called here. The cron HTTP endpoint
+      // (POST /api/cron/reminders, pinged every minute by cron-job.org) is the
+      // single owner of notification queue draining. Running them here too caused
+      // both processes to race on the same MongoDB rows, producing duplicate
+      // WhatsApp sends and stuck notifications.
       await scanAndQueueReminders(db, new Date());
-      await processPrescriptionNotifications(db);
-      await processAppointmentNotifications(db);
 
       // Deliveries need live connections, routed per clinic.
       const clientsByRoute = connectedClinicClients();

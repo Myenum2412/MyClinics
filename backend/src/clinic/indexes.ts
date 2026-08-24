@@ -124,11 +124,21 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     auditLogs.createIndex({ clinicId: 1, action: 1, createdAt: -1 }),
 
     // ── Prescription Notifications ────────────────────────────────────────
+    // Per-clinic index (used when queuing from clinic context)
     prescriptionNotifications.createIndex({ clinicId: 1, prescriptionId: 1, status: 1, attempts: 1 }),
     prescriptionNotifications.createIndex({ clinicId: 1, status: 1, attempts: 1 }),
+    // Global index used by the cron endpoint which queries across ALL clinics
+    // (no clinicId filter). Without this, every cron tick does a full-collection scan.
+    prescriptionNotifications.createIndex({ status: 1, attempts: 1, createdAt: -1 }),
+    prescriptionNotifications.createIndex({ status: 1, waNotificationId: 1 }),
 
     // ── Appointment Notifications ─────────────────────────────────────────
+    // Per-clinic index (used when queuing from clinic context)
     appointmentNotifications.createIndex({ clinicId: 1, appointmentId: 1, status: 1, attempts: 1 }),
     appointmentNotifications.createIndex({ clinicId: 1, status: 1, attempts: 1, scheduledTime: 1 }),
+    // Global index used by the cron endpoint which queries across ALL clinics
+    // (no clinicId filter). Without this, every cron tick does a full-collection scan.
+    appointmentNotifications.createIndex({ status: 1, attempts: 1, scheduledTime: 1 }),
+    appointmentNotifications.createIndex({ status: 1, waNotificationId: 1 }),
   ]);
 }
