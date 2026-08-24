@@ -226,7 +226,7 @@ export default function PatientPortalDashboard() {
   }, [appointments, files, prescriptions, doctors]);
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-6 md:max-w-4xl">
+    <div className="w-full space-y-6">
       {/* ── Welcome Card Section ── */}
       <section aria-label="Welcome Overview">
         <div className="relative overflow-hidden rounded-[22px] border border-purple-100/90 bg-gradient-to-br from-[#F5F3FF] via-[#EEF2FF] to-white p-5 sm:p-7 shadow-xs">

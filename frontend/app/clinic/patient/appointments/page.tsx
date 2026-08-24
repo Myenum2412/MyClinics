@@ -161,7 +161,7 @@ export default function PatientAppointmentsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto w-full max-w-lg space-y-4">
+      <div className="w-full space-y-4">
         <Skeleton className="h-10 w-48 rounded-xl bg-slate-100" />
         <Skeleton className="h-12 w-full rounded-2xl bg-slate-100" />
         {[...Array(2)].map((_, i) => (
@@ -174,7 +174,7 @@ export default function PatientAppointmentsPage() {
   // Booking View Form
   if (booking) {
     return (
-      <div className="mx-auto w-full max-w-lg space-y-5 md:max-w-3xl">
+      <div className="w-full space-y-5">
         <div className="flex items-center gap-3 border-b border-purple-100/80 pb-4">
           <button
             type="button"
@@ -224,7 +224,7 @@ export default function PatientAppointmentsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-lg space-y-5 md:max-w-3xl">
+    <div className="w-full space-y-5">
       {/* ── 3. Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
