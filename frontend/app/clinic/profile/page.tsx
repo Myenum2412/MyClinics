@@ -156,8 +156,6 @@ function SectionCard({
   );
 }
 
-import { DoctorProfileView } from "@/components/clinic/doctor-profile-view";
-
 const MAP_TILE =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><path d='M40 0H0V40' fill='none' stroke='%23e2e8f0' stroke-width='1'/></svg>";
 
@@ -165,10 +163,6 @@ export default function ClinicProfilePage() {
   const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
   const isDoctor = session?.role === "doctor";
-
-  if (session && isDoctor) {
-    return <DoctorProfileView session={session} />;
-  }
   const SETTINGS_ROWS = ALL_SETTINGS_ROWS.filter((r) => !(isDoctor && r.doctorHidden));
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [stats, setStats] = useState<{

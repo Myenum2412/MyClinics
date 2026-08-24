@@ -212,16 +212,10 @@ function formatTime12h(value: string | null | undefined): string {
   return `${displayHours}:${minutes} ${period}`;
 }
 
-import { DoctorProfileView } from "@/components/clinic/doctor-profile-view";
-
 export default function AccountPage() {
-  const session = useRequireRole("patient");
+  const session = useRequireRole("staff");
   const clinicId = session?.clinicId ?? "";
   const router = useRouter();
-
-  if (session && session.role === "doctor") {
-    return <DoctorProfileView session={session} />;
-  }
 
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [loading, setLoading] = useState(true);

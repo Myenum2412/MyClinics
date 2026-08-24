@@ -783,7 +783,10 @@ export function createDoctor(
   });
 }
 
-export function getDoctor(clinicId: string, doctorId: string): Promise<Doctor> {
+export function getDoctor(
+  clinicId: string,
+  doctorId: string
+): Promise<Doctor> {
   return request(tenantPath(clinicId, `/doctors/${doctorId}`));
 }
 
