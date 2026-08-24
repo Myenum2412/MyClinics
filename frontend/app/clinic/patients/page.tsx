@@ -627,13 +627,19 @@ export default function PatientsPage() {
       {!loading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
-            title="Patient Directory"
+            title="Patient Analytics"
             description={
               isDoctor
-                ? "Real-time analytics on patients assigned to you. You can only see patients assigned to your care."
+                ? "Demographics and assigned patient insights."
                 : "Real-time analytics on patient demographics, engagement, and registrations."
             }
             items={patientStats}
+            searchTerm={q}
+            onSearchChange={(val) => {
+              setQ(val);
+              setCurrentPage(1);
+            }}
+            searchPlaceholder="Search name, mobile, email, condition..."
             action={
               !isDoctor && (
                 <Link href="/clinic/patients/new">
@@ -688,22 +694,6 @@ export default function PatientsPage() {
           </div>
         </div>
       )}
-
-      {/* Search Controls - Centered Outside Card */}
-      <div className="flex justify-center">
-        <div className="relative w-full max-w-md sm:w-72">
-          <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Search patients..."
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="h-9 w-full pl-9"
-          />
-        </div>
-      </div>
 
       {/* Main card containing listing */}
       <Card className="border-border shadow-sm">

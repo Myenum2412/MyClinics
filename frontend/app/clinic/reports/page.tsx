@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
+import StatsGeneric from "@/components/stats-generic";
 import {
   type Appointment,
   type Bill,
@@ -290,45 +291,72 @@ export default function BusinessReportsPage() {
 
   if (loading) return <div className="p-6 space-y-4"><Skeleton className="h-24 w-full" /><Skeleton className="h-64 w-full" /><Skeleton className="h-64 w-full" /></div>;
 
+  const reportStatsItems = [
+    {
+      name: 'Total Revenue',
+      percentage: Math.min(100, Math.round((totalRevenue / 200000) * 100)),
+      current: `₹${totalRevenue.toLocaleString('en-IN')}`,
+      allowed: `₹2,00,000`,
+      allowedLabel: 'target',
+      fill: 'var(--chart-1)',
+    },
+    {
+      name: 'Completed Visits',
+      percentage: completionRate,
+      current: completed,
+      allowed: totalAppts,
+      allowedLabel: 'total appts',
+      fill: 'var(--chart-2)',
+    },
+    {
+      name: 'Patient Retention',
+      percentage: retentionRate,
+      current: returningPatients,
+      allowed: totalPatients,
+      allowedLabel: 'total patients',
+      fill: 'var(--chart-3)',
+    },
+    {
+      name: 'Collection Rate',
+      percentage: totalRevenue ? Math.round((totalPaid / totalRevenue) * 100) : 0,
+      current: `₹${totalPaid.toLocaleString('en-IN')}`,
+      allowed: `₹${totalRevenue.toLocaleString('en-IN')}`,
+      allowedLabel: 'billed',
+      fill: 'var(--chart-4)',
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-6 p-1">
-      {/* Header */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">Business Improvement & Reports</h1>
-            <p className="mt-1 text-sm text-muted-foreground">How is my clinic performing, where am I losing business, and what should I improve next? — Real data, no estimates.</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-1.5"><Download className="size-4" /> CSV</Button>
-            <Button variant="outline" size="sm" onClick={() => window.print()} className="gap-1.5"><FileText className="size-4" /> Print</Button>
-          </div>
-        </div>
-        <Card className="border-border bg-card p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <Label className="text-sm">Period</Label>
-            <Select value={range} onValueChange={(v) => setRange(v as Range)}>
-              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="lastMonth">Last Month</SelectItem>
-                <SelectItem value="quarter">This Quarter</SelectItem>
-                <SelectItem value="year">This Year</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
-            {range === "custom" && (
-              <>
-                <Input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)} className="w-40" />
-                <Input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)} className="w-40" />
-              </>
-            )}
-            <Badge variant="secondary" className="ml-2">{label}: {start.toLocaleDateString()} → {end.toLocaleDateString()}</Badge>
-            <span className="text-xs text-muted-foreground">vs previous period</span>
-          </div>
-        </Card>
+      {/* Header with StatsGeneric matching exact design */}
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <StatsGeneric
+          title="Report Analytics"
+          description="How is my clinic performing, where am I losing business, and what should I improve next?"
+          items={reportStatsItems}
+          searchPlaceholder="Search report metric..."
+          onSearchChange={() => {}}
+          action={
+            <div className="flex items-center gap-2">
+              <Select value={range} onValueChange={(v) => setRange(v as Range)}>
+                <SelectTrigger className="h-9 w-36">
+                  <SelectValue placeholder="Period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                  <SelectItem value="lastMonth">Last Month</SelectItem>
+                  <SelectItem value="quarter">This Quarter</SelectItem>
+                  <SelectItem value="year">This Year</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={handleExportCSV} className="h-9 gap-1.5">
+                <Download className="size-4" /> CSV
+              </Button>
+            </div>
+          }
+        />
       </div>
 
       {/* Executive Overview — stats-07 design */}

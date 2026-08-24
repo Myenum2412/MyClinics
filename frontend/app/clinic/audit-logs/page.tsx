@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { type AuditLogEntry, listAuditLogs } from "@/lib/clinic-api";
+import StatsGeneric from "@/components/stats-generic";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,16 +130,69 @@ export default function AuditLogsPage() {
 
   const pageCount = Math.ceil(items.length / pageSize);
 
+  const auditStatsItems = [
+    {
+      name: 'Total Logs',
+      percentage: Math.min(100, Math.round((items.length / 50) * 100)),
+      current: items.length,
+      allowed: 50,
+      allowedLabel: 'target',
+      fill: 'var(--chart-1)',
+    },
+    {
+      name: 'System Mutations',
+      percentage: items.length ? Math.round((items.filter((i) => i.action !== 'READ').length / items.length) * 100) : 0,
+      current: items.filter((i) => i.action !== 'READ').length,
+      allowed: items.length,
+      allowedLabel: 'total events',
+      fill: 'var(--chart-2)',
+    },
+    {
+      name: 'Security Checks',
+      percentage: 100,
+      current: items.length,
+      allowed: items.length,
+      allowedLabel: 'audited',
+      fill: 'var(--chart-3)',
+    },
+    {
+      name: 'Active Entities',
+      percentage: Math.min(100, Math.round((new Set(items.map((i) => i.entity)).size / 10) * 100)),
+      current: new Set(items.map((i) => i.entity)).size,
+      allowed: 10,
+      allowedLabel: 'entities',
+      fill: 'var(--chart-4)',
+    },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
-      {/* Top Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-xl border border-border bg-card p-6 shadow-sm">
-        <div>
-          <h2 className="text-balance font-medium text-foreground text-xl">Audit Trail</h2>
-          <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
-            Review detailed security access history, database alterations, and clinic administrative logs.
-          </p>
-        </div>
+      {/* Top Header Section with StatsGeneric */}
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <StatsGeneric
+          title="Audit Log Analytics"
+          description="Review detailed security access history, database alterations, and clinic administrative logs."
+          items={auditStatsItems}
+          searchTerm={entity}
+          onSearchChange={(v) => {
+            setEntity(v);
+            setPageIndex(0);
+          }}
+          searchPlaceholder="Search entity, action, actor..."
+          action={
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Action filter"
+                value={action}
+                onChange={(e) => {
+                  setAction(e.target.value);
+                  setPageIndex(0);
+                }}
+                className="h-9 w-32"
+              />
+            </div>
+          }
+        />
       </div>
 
       {/* Bulk actions bar if selected */}
@@ -170,30 +224,6 @@ export default function AuditLogsPage() {
           </div>
         </div>
       )}
-
-      {/* Filter Controls - Centered Outside Card */}
-      <div className="flex justify-center">
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Input
-            placeholder="Filter Entity"
-            value={entity}
-            onChange={(e) => {
-              setEntity(e.target.value);
-              setPageIndex(0);
-            }}
-            className="h-9 w-36"
-          />
-          <Input
-            placeholder="Filter Action"
-            value={action}
-            onChange={(e) => {
-              setAction(e.target.value);
-              setPageIndex(0);
-            }}
-            className="h-9 w-36"
-          />
-        </div>
-      </div>
 
       {/* Main card containing listing */}
       <Card className="border-border shadow-sm">

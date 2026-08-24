@@ -619,9 +619,12 @@ export default function DoctorsPage() {
       {!loading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
-            title="Doctors Registry"
+            title="Doctor Analytics"
             description="Real-time analytics on doctor specializations, shift coverage, and active rosters."
             items={doctorStats}
+            searchTerm={q}
+            onSearchChange={handleSearchChange}
+            searchPlaceholder="Search doctor, specialization, city..."
             action={
               canManage && (
                 <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
@@ -663,19 +666,6 @@ export default function DoctorsPage() {
           </div>
         </div>
       )}
-
-      {/* Search Controls - Centered Outside Card */}
-      <div className="flex justify-center">
-        <div className="relative w-full max-w-md sm:w-72">
-          <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Search doctors..."
-            value={q}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="h-9 w-full pl-9"
-          />
-        </div>
-      </div>
 
       {/* Main card containing listing */}
       <Card className="border-border shadow-sm">

@@ -543,6 +543,12 @@ export default function PrescriptionsPage() {
           <Stats07
             prescriptions={items}
             patients={patients}
+            searchTerm={searchTerm}
+            onSearchChange={(v) => {
+              setSearchTerm(v);
+              setPageIndex(0);
+            }}
+            searchPlaceholder="Search patient, medicine, doctor..."
             action={
               <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
                 <Plus className="size-4" />
@@ -593,23 +599,6 @@ export default function PrescriptionsPage() {
           </div>
         </div>
       )}
-
-      {/* Search Controls - Centered Outside Card */}
-      <div className="flex justify-center">
-        <div className="relative w-full max-w-md sm:w-72">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setPageIndex(0);
-            }}
-            placeholder="Search patients, doctors..."
-            className="h-8 w-full pl-8 text-xs focus-visible:ring-1"
-          />
-        </div>
-      </div>
 
       {/* Main Table Card */}
       <Card className="shadow-sm">

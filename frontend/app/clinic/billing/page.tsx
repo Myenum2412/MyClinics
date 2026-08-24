@@ -498,11 +498,38 @@ export default function BillingPage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsBilling
             bills={items}
+            searchTerm={searchTerm}
+            onSearchChange={(v) => {
+              setSearchTerm(v);
+              setPageIndex(0);
+            }}
+            searchPlaceholder="Search bills, patient, status..."
             action={
-              <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
-                <Plus className="size-4" />
-                New Bill
-              </Button>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={statusFilter}
+                  onValueChange={(v) => {
+                    setStatusFilter(v ?? "all");
+                    setPageIndex(0);
+                  }}
+                >
+                  <SelectTrigger className="h-9 w-36">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="issued">Issued</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="void">Void</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Button className="flex items-center gap-1.5 shadow-sm h-9" onClick={() => setCreating(true)}>
+                  <Plus className="size-4" />
+                  New Bill
+                </Button>
+              </div>
             }
           />
         </div>
@@ -537,43 +564,6 @@ export default function BillingPage() {
           </div>
         </div>
       )}
-
-      {/* Search Controls - Centered Outside Card */}
-      <div className="flex justify-center">
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <div className="relative w-full max-w-md sm:w-72">
-            <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-            <Input
-              placeholder="Search bills..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setPageIndex(0);
-              }}
-              className="h-9 w-full pl-9"
-            />
-          </div>
-
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => {
-              setStatusFilter(v ?? "all");
-              setPageIndex(0);
-            }}
-          >
-            <SelectTrigger className="h-9 w-36">
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="issued">Issued</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="void">Void</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
 
       {/* Main card containing listing */}
       <Card className="border-border shadow-sm">

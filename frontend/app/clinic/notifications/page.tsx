@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
+import StatsGeneric from "@/components/stats-generic";
 import {
   type Notification,
   createNotification,
@@ -75,11 +76,61 @@ export default function NotificationsPage() {
     load();
   }, [load]);
 
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredItems = useMemo(() => {
+    if (!searchTerm.trim()) return items;
+    const q = searchTerm.toLowerCase();
+    return items.filter(
+      (n) => n.title.toLowerCase().includes(q) || (n.body && n.body.toLowerCase().includes(q)) || n.type.toLowerCase().includes(q)
+    );
+  }, [items, searchTerm]);
+
   const paginatedItems = useMemo(
-    () => items.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize),
-    [items, pageIndex, pageSize]
+    () => filteredItems.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize),
+    [filteredItems, pageIndex, pageSize]
   );
-  const pageCount = Math.max(1, Math.ceil(items.length / pageSize));
+  const pageCount = Math.max(1, Math.ceil(filteredItems.length / pageSize));
+
+  const totalCount = items.length;
+  const readCount = totalCount - unread;
+  const readRate = totalCount ? Math.round((readCount / totalCount) * 100) : 100;
+  const alertCount = items.filter((i) => i.type === 'appointment' || i.type === 'bill').length;
+
+  const notifStatsItems = [
+    {
+      name: 'Total Alerts',
+      percentage: Math.min(100, Math.round((totalCount / 50) * 100)),
+      current: totalCount,
+      allowed: 50,
+      allowedLabel: 'target',
+      fill: 'var(--chart-1)',
+    },
+    {
+      name: 'Unread Alerts',
+      percentage: totalCount ? Math.round((unread / totalCount) * 100) : 0,
+      current: unread,
+      allowed: totalCount,
+      allowedLabel: 'total alerts',
+      fill: 'var(--chart-2)',
+    },
+    {
+      name: 'Read Rate',
+      percentage: readRate,
+      current: readCount,
+      allowed: totalCount,
+      allowedLabel: 'read alerts',
+      fill: 'var(--chart-3)',
+    },
+    {
+      name: 'WhatsApp Triggers',
+      percentage: totalCount ? Math.round((alertCount / totalCount) * 100) : 0,
+      current: alertCount,
+      allowed: totalCount,
+      allowedLabel: 'alerts',
+      fill: 'var(--chart-4)',
+    },
+  ];
 
   async function handleRead(n: Notification) {
     if (n.readAt) return;
@@ -130,30 +181,43 @@ export default function NotificationsPage() {
   const canCreate = sessionCan(session, "staff");
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2">
-        {unread > 0 && (
-          <Badge className="bg-primary/10 text-primary">{unread} unread</Badge>
-        )}
-        <div className="flex-1" />
-        <Button variant="outline" size="sm" onClick={handleReadAll}>
-          Mark all as read
-        </Button>
-        {canCreate && (
-          <Dialog open={creating} onOpenChange={setCreating}>
-            <DialogTrigger render={<Button size="sm">Send notification</Button>} />
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Send notification</DialogTitle>
-                <DialogDescription>
-                  Notify a user in this clinic.
-                </DialogDescription>
-              </DialogHeader>
-              <NotificationForm clinicId={clinicId} saving={saving} onSave={handleCreate} />
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
+    <div className="flex flex-col gap-6">
+      {!loading && (
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <StatsGeneric
+            title="Notification Analytics"
+            description="Real-time insights on WhatsApp alerts, system notifications, and delivery status."
+            items={notifStatsItems}
+            searchTerm={searchTerm}
+            onSearchChange={(v) => {
+              setSearchTerm(v);
+              setPageIndex(0);
+            }}
+            searchPlaceholder="Search notifications..."
+            action={
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleReadAll} className="h-9">
+                  Mark all as read
+                </Button>
+                {canCreate && (
+                  <Dialog open={creating} onOpenChange={setCreating}>
+                    <DialogTrigger render={<Button size="sm" className="h-9">Send notification</Button>} />
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Send notification</DialogTitle>
+                        <DialogDescription>
+                          Notify a user in this clinic.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <NotificationForm clinicId={clinicId} saving={saving} onSave={handleCreate} />
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+            }
+          />
+        </div>
+      )}
 
       <Card>
         <CardHeader>

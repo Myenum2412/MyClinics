@@ -41,6 +41,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Plus } from "lucide-react";
+import StatsGeneric from "@/components/stats-generic";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -120,42 +122,86 @@ export default function AdminClinicsPage() {
     }
   }
 
+  const totalClinics = items.length;
   const activeCount = items.filter((c) => c.status === "active").length;
+  const suspendedCount = items.filter((c) => c.status === "suspended").length;
+
+  const adminStatsItems = [
+    {
+      name: 'Total Clinics',
+      percentage: Math.min(100, Math.round((totalClinics / 20) * 100)),
+      current: totalClinics,
+      allowed: 20,
+      allowedLabel: 'target',
+      fill: 'var(--chart-1)',
+    },
+    {
+      name: 'Active Clinics',
+      percentage: totalClinics ? Math.round((activeCount / totalClinics) * 100) : 0,
+      current: activeCount,
+      allowed: totalClinics,
+      allowedLabel: 'total clinics',
+      fill: 'var(--chart-2)',
+    },
+    {
+      name: 'Suspended Clinics',
+      percentage: totalClinics ? Math.round((suspendedCount / totalClinics) * 100) : 0,
+      current: suspendedCount,
+      allowed: totalClinics,
+      allowedLabel: 'total clinics',
+      fill: 'var(--chart-3)',
+    },
+    {
+      name: 'System Capacity',
+      percentage: 100,
+      current: totalClinics,
+      allowed: 100,
+      allowedLabel: 'max clinics',
+      fill: 'var(--chart-4)',
+    },
+  ];
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <Input
-          placeholder="Search clinics..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          className="w-full max-w-md"
-        />
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "")}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="active">active</SelectItem>
-            <SelectItem value="suspended">suspended</SelectItem>
-          </SelectContent>
-        </Select>
-        <span className="text-sm text-muted-foreground">{activeCount} active</span>
-        <div className="flex-1" />
-        <Dialog open={creating} onOpenChange={setCreating}>
-          <DialogTrigger render={<Button>Create clinic</Button>} />
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create clinic</DialogTitle>
-              <DialogDescription>
-                Provisions a new tenant with its first clinic_admin account.
-              </DialogDescription>
-            </DialogHeader>
-            <CreateClinicForm saving={saving} onSave={handleCreate} />
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="flex flex-col gap-6">
+      {!loading && (
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <StatsGeneric
+            title="Platform Analytics"
+            description="Multi-clinic deployment, tenant provisioning, and system status insights."
+            items={adminStatsItems}
+            searchTerm={q}
+            onSearchChange={setQ}
+            searchPlaceholder="Search clinic name, admin, email..."
+            action={
+              <div className="flex items-center gap-2">
+                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
+                  <SelectTrigger className="h-9 w-36">
+                    <SelectValue placeholder="All statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All statuses</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Dialog open={creating} onOpenChange={setCreating}>
+                  <DialogTrigger render={<Button className="h-9 flex items-center gap-1.5 shadow-sm"><Plus className="size-4" /> Create clinic</Button>} />
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create clinic</DialogTitle>
+                      <DialogDescription>
+                        Provisions a new tenant with its first clinic_admin account.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <CreateClinicForm saving={saving} onSave={handleCreate} />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            }
+          />
+        </div>
+      )}
 
       <Card>
         <CardHeader>

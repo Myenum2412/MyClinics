@@ -851,9 +851,12 @@ export default function RecordsPage() {
       {!loading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
-            title="Medicine"
+            title="Medical Record Analytics"
             description="Real-time insights on diagnoses, symptom records, and treatment documentation."
             items={recordsStats}
+            searchTerm={q}
+            onSearchChange={handleSearchChange}
+            searchPlaceholder="Search patient, diagnosis, treatment..."
             action={
               <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
                 <Plus className="size-4" />
@@ -892,19 +895,6 @@ export default function RecordsPage() {
           </div>
         </div>
       )}
-
-      {/* Search Controls - Centered Outside Card */}
-      <div className="flex justify-center">
-        <div className="relative w-full max-w-md sm:w-72">
-          <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Search records..."
-            value={q}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="h-9 w-full pl-9"
-          />
-        </div>
-      </div>
 
       <Card className="border-border shadow-sm">
         <CardContent className="p-0">

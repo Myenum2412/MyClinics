@@ -3,6 +3,8 @@
 import { PolarAngleAxis, RadialBar, RadialBarChart } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { type ChartConfig, ChartContainer } from '@/components/ui/chart';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 import type { Bill } from '@/lib/clinic-api';
 
 const chartConfig = {
@@ -15,9 +17,15 @@ const chartConfig = {
 export default function StatsBilling({
   bills,
   action,
+  searchTerm,
+  onSearchChange,
+  searchPlaceholder = 'Search bills, patient, status...',
 }: {
   bills: Bill[];
   action?: React.ReactNode;
+  searchTerm?: string;
+  onSearchChange?: (v: string) => void;
+  searchPlaceholder?: string;
 }) {
   const totalCount = bills.length;
   
@@ -76,20 +84,34 @@ export default function StatsBilling({
 
   return (
     <div className="w-full">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="shrink-0">
           <h2 className="text-balance font-medium text-foreground text-xl">
-            Billing Metrics
+            Billing Analytics
           </h2>
           <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
             Real-time insights on clinic revenue, collections status, and outstanding invoices.
           </p>
         </div>
+        {onSearchChange !== undefined && (
+          <div className="flex-1 flex justify-center px-4">
+            <div className="relative w-full max-w-md">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                value={searchTerm ?? ""}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder={searchPlaceholder}
+                className="h-9 w-full pl-9"
+              />
+            </div>
+          </div>
+        )}
         {action && <div className="shrink-0">{action}</div>}
       </div>
       <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {data.map((item) => (
-          <Card className="p-4 shadow-sm" key={item.name}>
+          <Card className="p-4 shadow-sm bg-card" key={item.name}>
             <CardContent className="flex items-center space-x-4 p-0">
               <div className="relative flex items-center justify-center">
                 <ChartContainer
@@ -121,17 +143,17 @@ export default function StatsBilling({
                   </RadialBarChart>
                 </ChartContainer>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="font-medium text-base text-foreground">
+                  <span className="font-semibold text-xs text-foreground">
                     {item.percentage}%
                   </span>
                 </div>
               </div>
               <div>
-                <dt className="font-medium text-foreground text-sm">
+                <dt className="font-semibold text-foreground text-sm tracking-tight leading-none mb-1">
                   {item.name}
                 </dt>
-                <dd className="text-muted-foreground text-sm">
-                  {item.current} of {item.allowed} <span className="text-xs">{item.allowedLabel}</span>
+                <dd className="text-muted-foreground text-xs">
+                  {item.current} of {item.allowed} {item.allowedLabel}
                 </dd>
               </div>
             </CardContent>
@@ -141,3 +163,4 @@ export default function StatsBilling({
     </div>
   );
 }
+
