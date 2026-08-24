@@ -579,10 +579,6 @@ export default function AppointmentsPage() {
             appointments={appointments}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            dateFilter={dateFilter}
-            onDateFilterChange={setDateFilter}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
             action={
               <div className="flex items-center gap-2">
                 <Button
