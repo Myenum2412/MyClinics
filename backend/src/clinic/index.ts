@@ -17,6 +17,7 @@ import { registerWhatsappRoutes } from "@/clinic/modules/whatsapp/whatsapp.route
 import { registerAuditLogRoutes } from "@/clinic/modules/audit-logs/audit-logs.routes";
 import { registerPatientPortalRoutes } from "@/clinic/modules/portal/patient-portal.routes";
 import { registerAvatarRoutes } from "@/clinic/modules/avatars/avatars.routes";
+import { registerReportsRoutes } from "@/clinic/modules/reports/reports.routes";
 
 /**
  * Clinic (multi-tenant) API entry point.
@@ -58,5 +59,6 @@ export function registerClinicApi(app: FastifyInstance): void {
     registerAuditLogRoutes(tenantApi);
     registerPatientPortalRoutes(tenantApi);
     registerAvatarRoutes(tenantApi);
+    registerReportsRoutes(tenantApi);
   });
 }

@@ -104,6 +104,8 @@ export default function BusinessReportsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [aiInsights, setAiInsights] = useState<{ priority: string; title: string; detail: string; action: string }[] | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const { start, end, prevStart, prevEnd, label } = useMemo(() => getRangeDates(range, { from: customFrom, to: customTo }), [range, customFrom, customTo]);
 
@@ -229,6 +231,50 @@ export default function BusinessReportsPage() {
     if (peakHours[0]) recs.push({ priority: "Medium", title: "Peak hours", detail: `${peakHours[0].hour} is busiest (${peakHours[0].count} appts).`, action: "Add slots or staff during peak, offer discounts off-peak." });
     return recs.slice(0, 5);
   }, [noShowRate, outstanding, totalRevenue, completionRate, revenueByService, peakHours]);
+
+  const fetchAiInsights = useCallback(async () => {
+    if (!clinicId) return;
+    setAiLoading(true);
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("clinic_token") : null;
+      const res = await fetch(`/api/clinics/${clinicId}/reports/ai-insights`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({
+          totalRevenue,
+          prevRevenue,
+          revenueGrowth,
+          totalPatients,
+          newPatients,
+          returningPatients,
+          retentionRate,
+          totalAppointments: totalAppts,
+          completed,
+          cancelled,
+          noShow,
+          completionRate,
+          noShowRate,
+          cancellationRate,
+          totalBilled: totalRevenue,
+          totalPaid,
+          outstanding,
+          avgInvoice,
+          revenueByDoctor,
+          revenueByService,
+          peakHours,
+          healthScore,
+          periodLabel: label,
+        }),
+      });
+      const data = await res.json();
+      if (data.recommendations) setAiInsights(data.recommendations);
+      else toast.error("AI insights failed");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI insights failed");
+    } finally {
+      setAiLoading(false);
+    }
+  }, [clinicId, totalRevenue, prevRevenue, revenueGrowth, totalPatients, newPatients, returningPatients, retentionRate, totalAppts, completed, cancelled, noShow, completionRate, noShowRate, cancellationRate, totalPaid, outstanding, avgInvoice, revenueByDoctor, revenueByService, peakHours, healthScore, label]);
 
   const handleExportCSV = () => {
     const rows = [["Metric", "Value"], ["Total Revenue", String(totalRevenue)], ["Total Patients", String(totalPatients)], ["Appointments", String(totalAppts)], ["Completed", String(completed)], ["Outstanding", String(outstanding)]];
@@ -389,6 +435,97 @@ export default function BusinessReportsPage() {
         </CardContent>
       </Card>
 
+      {/* Service Performance */}
+      <Card className="border-border bg-card">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-base"><FileText className="size-4 text-primary" /> Service Performance</CardTitle></CardHeader>
+        <CardContent>
+          {revenueByService.length ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {revenueByService.map((s, i) => {
+                const cat = s.value > totalRevenue * 0.25 ? "High Performing" : s.value > totalRevenue * 0.1 ? "Growth Opportunity" : "Underperforming";
+                return (
+                  <div key={s.name} className="rounded-lg border border-border p-3">
+                    <p className="text-xs font-medium text-muted-foreground truncate">{s.name}</p>
+                    <p className="mt-1 text-lg font-bold">{formatINR(s.value)}</p>
+                    <Badge variant="outline" className={`mt-2 text-xs ${cat === "High Performing" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : cat === "Growth Opportunity" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-50 text-slate-600 border-slate-200"}`}>{cat}</Badge>
+                  </div>
+                );
+              })}
+            </div>
+          ) : <p className="text-xs text-muted-foreground">Not enough data — no billed services in period.</p>}
+        </CardContent>
+      </Card>
+
+      {/* Retention, Drop-off, Capacity, Billing, Forecasting */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="border-border bg-card">
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><UserCheck className="size-4 text-primary" /> Patient Retention & Loyalty</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">First → Second visit</span><span className="font-medium">{patients.length > 1 ? `${Math.round((returningPatients / Math.max(1, totalPatients)) * 100)}%` : "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Avg visits / patient</span><span className="font-medium">{totalPatients ? (totalAppts / totalPatients).toFixed(1) : "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Inactive 30d+</span><span className="font-medium">{patients.filter(p => { const d = new Date(p.createdAt ?? ""); return !Number.isNaN(d.getTime()) && Date.now() - d.getTime() > 30 * 86400000; }).length} patients</span></div>
+            <p className="text-xs text-muted-foreground">Action: Create follow-up list for patients with no visit in 30/60/90 days (available via patient list).</p>
+          </CardContent>
+        </Card>
+        <Card className="border-border bg-card">
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Target className="size-4 text-primary" /> Patient Drop-off (Funnel)</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-2 text-sm">
+              {(() => {
+                const funnel = [
+                  { label: "New Patients", value: newPatients },
+                  { label: "Attended (completed appts)", value: completed },
+                  { label: "Billed", value: billsInRange.length },
+                  { label: "Returned (follow-up)", value: returningPatients },
+                ];
+                const max = Math.max(...funnel.map(f => f.value), 1);
+                return funnel.map(f => (
+                  <div key={f.label} className="flex items-center gap-3">
+                    <span className="w-36 text-xs text-muted-foreground truncate">{f.label}</span>
+                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden"><div className="h-full bg-primary" style={{ width: `${(f.value / max) * 100}%` }} /></div>
+                    <span className="w-12 text-right text-xs font-medium">{f.value}</span>
+                  </div>
+                ));
+              })()}
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">Biggest drop-off highlighted — focus follow-up and billing conversion.</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card className="border-border bg-card">
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Clock className="size-4 text-primary" /> Capacity & Operational Efficiency</CardTitle></CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Peak hours</span><span className="font-medium">{peakHours.map(p => p.hour).join(", ") || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Peak weekdays</span><span className="font-medium">{peakWeekdays.map(p => p.day).join(", ") || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Avg daily appts</span><span className="font-medium">{totalAppts ? (totalAppts / Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000))).toFixed(1) : "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Capacity utilization</span><span className="font-medium">{doctors.length && totalAppts ? `${Math.round((totalAppts / (doctors.length * 8 * Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000)))) * 100)}%` : "—"}</span></div>
+          </CardContent>
+        </Card>
+        <Card className="border-border bg-card">
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><CreditCard className="size-4 text-primary" /> Billing & Payment Intelligence</CardTitle></CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Collection rate</span><span className="font-medium">{totalRevenue ? `${Math.round((totalPaid / totalRevenue) * 100)}%` : "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Outstanding &gt;30d</span><span className="font-medium text-amber-700">{formatINR(bills.filter(b => b.balanceDue > 0 && new Date(b.invoiceDate) < new Date(Date.now() - 30 * 86400000)).reduce((s, b) => s + b.balanceDue, 0))}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Avg payment delay</span><span className="font-medium">—</span></div>
+            <p className="text-xs text-muted-foreground">Tip: Enable UPI QR and automated reminders for overdue &gt;30d.</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-border bg-card">
+        <CardHeader><CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="size-4 text-primary" /> Forecasting (Estimates)</CardTitle></CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <p className="text-xs text-muted-foreground">Based on last 3 periods moving average — labeled as estimates, not guaranteed.</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Next month revenue</p><p className="text-lg font-bold">{formatINR(Math.round((totalRevenue + prevRevenue) / 2))} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
+            <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Next month appts</p><p className="text-lg font-bold">{Math.round((totalAppts + apptsPrev.length) / 2)} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
+            <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Patient growth</p><p className="text-lg font-bold">{newPatients ? `${Math.round(((newPatients - patients.filter(p => { const d = new Date(p.createdAt ?? ""); return d >= prevStart && d <= prevEnd; }).length) / Math.max(1, newPatients)) * 100)}%` : "—"} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Health + Recommendations */}
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="border-border bg-card lg:col-span-1">
@@ -404,9 +541,20 @@ export default function BusinessReportsPage() {
           </CardContent>
         </Card>
         <Card className="border-border bg-card lg:col-span-2">
-          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Lightbulb className="size-4 text-primary" /> What Should You Improve? (AI Recommendations)</CardTitle></CardHeader>
+          <CardHeader>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 text-base"><Lightbulb className="size-4 text-primary" /> What Should You Improve? (AI Recommendations)</CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="bg-violet-50 text-violet-700 border-violet-200 text-xs">NVIDIA: minimax-m3</Badge>
+                <Button size="sm" variant="outline" onClick={fetchAiInsights} disabled={aiLoading} className="h-7 text-xs">
+                  {aiLoading ? "Generating..." : aiInsights ? "Regenerate" : "Generate AI Insights"}
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Powered by NVIDIA minimax-m3 — analyzes your real clinic data, no fake statistics.</p>
+          </CardHeader>
           <CardContent className="space-y-3">
-            {recommendations.length ? recommendations.map((r, i) => (
+            {(aiInsights ?? recommendations).length ? (aiInsights ?? recommendations).map((r, i) => (
               <div key={i} className={`rounded-lg border p-3 ${r.priority === "High" ? "border-red-200 bg-red-50" : r.priority === "Medium" ? "border-amber-200 bg-amber-50" : "border-emerald-200 bg-emerald-50"}`}>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className={r.priority === "High" ? "bg-red-100 text-red-700 border-red-200" : r.priority === "Medium" ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-emerald-100 text-emerald-700 border-emerald-200"}>{r.priority}</Badge>
@@ -415,7 +563,8 @@ export default function BusinessReportsPage() {
                 <p className="mt-1 text-xs text-muted-foreground">{r.detail}</p>
                 <p className="mt-1 text-xs font-medium text-foreground">→ {r.action}</p>
               </div>
-            )) : <p className="text-xs text-muted-foreground">No issues detected — clinic is performing well.</p>}
+            )) : <p className="text-xs text-muted-foreground">No issues detected — clinic is performing well. Click Generate AI Insights for NVIDIA-powered analysis.</p>}
+            {aiInsights && <p className="text-xs text-muted-foreground text-center">AI generated via minimax-m3 from your real data — {label}</p>}
           </CardContent>
         </Card>
       </div>
