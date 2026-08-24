@@ -756,7 +756,7 @@ export default function MedicalRecordPage() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   /** null = patient root; otherwise a folder id (default key or custom id). */
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
-  const [view, setView] = useState<"drive" | "overview" | "appointments">("drive");
+  const [view, setView] = useState<"drive" | "overview">("drive");
 
   const [search, setSearch] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -1446,7 +1446,7 @@ export default function MedicalRecordPage() {
         {selectedPatient && (
           <div className="mt-4">
             <div className="flex gap-1 rounded-lg bg-muted/60 p-1">
-              {(["drive", "overview", "appointments"] as const).map((v) => (
+              {(["drive", "overview"] as const).map((v) => (
                 <button
                   key={v}
                   type="button"
@@ -1455,7 +1455,7 @@ export default function MedicalRecordPage() {
                     view === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {v === "drive" ? "Files" : v === "overview" ? "Overview" : "Appointments"}
+                  {v === "drive" ? "Files" : "Overview"}
                 </button>
               ))}
             </div>
@@ -1593,10 +1593,8 @@ export default function MedicalRecordPage() {
                   </div>
                 )}
               </>
-            ) : view === "overview" ? (
-              overview && <OverviewPanel />
             ) : (
-              <AppointmentsPanel />
+              overview && <OverviewPanel />
             )}
           </div>
         )}
