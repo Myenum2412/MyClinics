@@ -35,7 +35,7 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
 
   const { chartData, totalBilled, totalPaid, outstanding, highestMonth, dailyData } = React.useMemo(() => {
     const now = new Date();
-    // Determine window start for range filtering
+    // Determine window start for range filtering (real data window)
     const windowStart = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1);
     const totalsByKey = new Map<string, number>();
     let totalBilledWindow = 0;
@@ -50,7 +50,6 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
       const billTotal = bill.total ?? 0;
       totalsByKey.set(key, (totalsByKey.get(key) ?? 0) + billTotal);
 
-      // Only count bills inside selected window for summary metrics (real data for Last X Months)
       if (invoice >= windowStart) {
         totalBilledWindow += billTotal;
         totalPaidWindow += bill.amountPaid ?? 0;
@@ -58,17 +57,32 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
       }
     }
 
+    // Build chart data per range spec: 12m = 6 points every 2 months (Oct,Dec,Feb,Apr,Jun,Aug), 6m = 6 monthly, 3m = 3 monthly
+    const is12m = range === "12m";
+    const points = is12m ? 6 : monthsCount;
+    const step = is12m ? 2 : 1;
     const data: { key: string; label: string; shortLabel: string; total: number; isLatest: boolean }[] = [];
-    for (let offset = monthsCount - 1; offset >= 0; offset--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    for (let i = points - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i * step, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
       const label = d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+      let total = 0;
+      if (is12m) {
+        // Aggregate 2 months per point to cover full 12 months without gaps (e.g., Oct+Nov, Dec+Jan, etc.)
+        for (let s = 0; s < step; s++) {
+          const dm = new Date(d.getFullYear(), d.getMonth() + s, 1);
+          const km = `${dm.getFullYear()}-${String(dm.getMonth() + 1).padStart(2, "0")}-01`;
+          total += totalsByKey.get(km) ?? 0;
+        }
+      } else {
+        total = totalsByKey.get(key) ?? 0;
+      }
       data.push({
         key,
         label,
         shortLabel: label,
-        total: Math.round(totalsByKey.get(key) ?? 0),
-        isLatest: offset === 0,
+        total: Math.round(total),
+        isLatest: i === 0,
       });
     }
 
@@ -212,14 +226,14 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
       <CardContent className="px-2 pb-2 pt-0 sm:px-4">
         <div className="h-[220px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} barCategoryGap="22%">
+            <BarChart key={range} data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }} barCategoryGap={range === "12m" ? "28%" : range === "6m" ? "22%" : "32%"}>
               <CartesianGrid vertical={false} stroke="#e2e8f0" strokeOpacity={0.6} strokeDasharray="0" />
               <XAxis
                 dataKey="shortLabel"
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 500 }}
-                interval={monthsCount === 12 ? 1 : 0}
+                interval={0}
                 dy={8}
               />
               <YAxis
@@ -244,7 +258,7 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
                   );
                 }}
               />
-              <Bar dataKey="total" radius={[8, 8, 0, 0]} barSize={monthsCount === 3 ? 36 : monthsCount === 6 ? 24 : 18}>
+              <Bar dataKey="total" radius={[8, 8, 0, 0]} barSize={range === "3m" ? 36 : range === "6m" ? 28 : 24} minPointSize={2}>
                 {chartData.map((entry, idx) => (
                   <Cell
                     key={`cell-${idx}`}
