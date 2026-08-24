@@ -171,7 +171,7 @@ export default function AuditLogsPage() {
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <StatsGeneric
           title="Audit Log Analytics"
-          description="Review detailed security access history, database alterations, and clinic administrative logs."
+          description="Security audit trail, administrative actions, and data mutation logs."
           items={auditStatsItems}
           searchTerm={entity}
           onSearchChange={(v) => {

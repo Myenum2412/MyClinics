@@ -155,7 +155,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <StatsGeneric
           title="My Overview"
-          description="Real-time analytics scoped to your own patients, appointments, and prescriptions."
+          description="Personalized schedule, patient roster, and daily visit insights."
           items={stats}
         />
       </div>

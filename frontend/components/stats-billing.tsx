@@ -90,7 +90,7 @@ export default function StatsBilling({
             Billing Analytics
           </h2>
           <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
-            Real-time insights on clinic revenue, collections status, and outstanding invoices.
+            Revenue totals, payment collection, and outstanding invoice insights.
           </p>
         </div>
         {onSearchChange !== undefined && (

@@ -628,11 +628,7 @@ export default function PatientsPage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
             title="Patient Analytics"
-            description={
-              isDoctor
-                ? "Demographics and assigned patient insights."
-                : "Real-time analytics on patient demographics, engagement, and registrations."
-            }
+            description="Demographics and assigned patient insights."
             items={patientStats}
             searchTerm={q}
             onSearchChange={(val) => {

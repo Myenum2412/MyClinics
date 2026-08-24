@@ -852,7 +852,7 @@ export default function RecordsPage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
             title="Medical Record Analytics"
-            description="Real-time insights on diagnoses, symptom records, and treatment documentation."
+            description="Clinical visits, patient diagnoses, and treatment documentation insights."
             items={recordsStats}
             searchTerm={q}
             onSearchChange={handleSearchChange}

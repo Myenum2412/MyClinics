@@ -620,7 +620,7 @@ export default function DoctorsPage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
             title="Doctor Analytics"
-            description="Real-time analytics on doctor specializations, shift coverage, and active rosters."
+            description="Doctor specializations, roster availability, and shift insights."
             items={doctorStats}
             searchTerm={q}
             onSearchChange={handleSearchChange}

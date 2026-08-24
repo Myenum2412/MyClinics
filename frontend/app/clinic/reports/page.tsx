@@ -332,7 +332,7 @@ export default function BusinessReportsPage() {
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <StatsGeneric
           title="Report Analytics"
-          description="How is my clinic performing, where am I losing business, and what should I improve next?"
+          description="Clinic growth, revenue metrics, and performance analytics."
           items={reportStatsItems}
           searchPlaceholder="Search report metric..."
           onSearchChange={() => {}}

@@ -95,7 +95,7 @@ export default function Stats07({
             Prescription Analytics
           </h2>
           <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
-            Real-time insights on issued prescriptions and notification delivery readiness.
+            Issued prescriptions, medication averages, and patient reach insights.
           </p>
         </div>
         {onSearchChange !== undefined && (

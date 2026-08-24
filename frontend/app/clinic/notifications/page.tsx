@@ -186,7 +186,7 @@ export default function NotificationsPage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
             title="Notification Analytics"
-            description="Real-time insights on WhatsApp alerts, system notifications, and delivery status."
+            description="WhatsApp alerts, automated reminders, and delivery log insights."
             items={notifStatsItems}
             searchTerm={searchTerm}
             onSearchChange={(v) => {

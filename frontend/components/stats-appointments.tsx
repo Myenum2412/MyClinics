@@ -88,7 +88,7 @@ export default function StatsAppointments({
             Appointment Analytics
           </h2>
           <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
-            Visit and completion insights.
+            Visit schedule, status trends, and completion insights.
           </p>
         </div>
         {onSearchChange !== undefined && (

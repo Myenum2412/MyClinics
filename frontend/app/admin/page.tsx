@@ -167,7 +167,7 @@ export default function AdminClinicsPage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
             title="Platform Analytics"
-            description="Multi-clinic deployment, tenant provisioning, and system status insights."
+            description="Multi-tenant clinic deployments, account status, and system insights."
             items={adminStatsItems}
             searchTerm={q}
             onSearchChange={setQ}
