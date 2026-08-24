@@ -113,7 +113,7 @@ export async function writeQrFiles(key: string, qr: string): Promise<{ txt: stri
   return { txt: txtFile, png: pngFile };
 }
 
-const QR_FRESH_MS = 5 * 60 * 1000;
+const QR_FRESH_MS = 25 * 1000;
 
 /**
  * Reads the still-fresh QR payload for a connection. Returns null when the
