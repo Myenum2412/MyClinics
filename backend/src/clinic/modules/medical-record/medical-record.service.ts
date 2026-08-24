@@ -11,8 +11,7 @@ import {
   uploadToR2,
   copyObjectInR2,
 } from "@/lib/r2";
-import { enqueueNotification } from "@/services/whatsapp/notification.service";
-import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
+import { enqueueClinicNotification } from "@/services/whatsapp/notification.service";
 import type { PatientDoc } from "@/clinic/modules/patients/patients.schema";
 import {
   type MedicalRecordFileDoc,
@@ -241,10 +240,8 @@ export class MedicalRecordService {
 
     // Send a copy of the file to the patient's WhatsApp number.
     if (doc.patientPhone) {
-      const org = await ensureDefaultOrganization(this.db);
-      await enqueueNotification(
+      await enqueueClinicNotification(
         this.db,
-        org.id,
         doc.patientPhone,
         `Your medical document "${input.fileName}" has been added to your records.`,
         "medical_record",
@@ -252,7 +249,8 @@ export class MedicalRecordService {
           filename: input.fileName,
           mimetype: input.mimeType ?? "application/octet-stream",
           data: input.data.toString("base64"),
-        }
+        },
+        requireClinicOf(ctx)
       ).catch(() => void 0);
     }
 
@@ -306,14 +304,13 @@ export class MedicalRecordService {
 
     const patientPhone = doc.patientPhone ?? "";
     if (patientPhone) {
-      const org = await ensureDefaultOrganization(this.db);
-      await enqueueNotification(
+      await enqueueClinicNotification(
         this.db,
-        org.id,
         patientPhone,
         `Updated version of "${fileName}" (v${doc.version + 1}) has been added to your records.`,
         "medical_record",
-        { filename: fileName, mimetype: mimeType ?? "application/octet-stream", data: data.toString("base64") }
+        { filename: fileName, mimetype: mimeType ?? "application/octet-stream", data: data.toString("base64") },
+        requireClinicOf(ctx)
       ).catch(() => void 0);
     }
 
