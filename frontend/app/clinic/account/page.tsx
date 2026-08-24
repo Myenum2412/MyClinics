@@ -426,9 +426,9 @@ export default function AccountPage() {
 
   return (
     <div className="w-full min-h-[calc(100vh-4rem)]">
-      <section className="w-full min-h-[calc(100vh-4rem)] rounded-xl border border-border bg-background overflow-hidden flex flex-col">
+      <section className="w-full min-h-[calc(100vh-4rem)] rounded-xl border border-[#E3F2FD] bg-background overflow-hidden flex flex-col">
         <div
-          className="h-32 w-full bg-linear-to-br from-foreground/15 via-muted to-muted-foreground/10"
+          className="h-32 w-full bg-linear-to-br from-foreground/10 via-[#E3F2FD] to-[#E3F2FD]/60"
           aria-hidden="true"
         />
 
@@ -552,7 +552,7 @@ export default function AccountPage() {
           </ul>
 
           <Tabs defaultValue="overview" className="mt-6 gap-4">
-            <TabsList className="w-full">
+            <TabsList className="w-full bg-[#E3F2FD]">
               <TabsTrigger value="overview" className="flex-1">
                 Overview
               </TabsTrigger>
@@ -868,11 +868,11 @@ export default function AccountPage() {
                 </div>
                 <Field label="Weekly Schedule" className="w-full">
                   {editing ? (
-                    <div className="space-y-3 rounded-lg border border-border bg-muted/20 p-4">
+                    <div className="space-y-3 rounded-lg border border-[#E3F2FD] bg-[#E3F2FD]/50 p-4">
                       {form.weeklySchedule.map((sched, idx) => (
                         <div
                           key={sched.day}
-                          className="flex items-center justify-between gap-4 py-1.5 border-b border-border/50 last:border-0"
+                          className="flex items-center justify-between gap-4 py-1.5 border-b border-[#E3F2FD]/50 last:border-0"
                         >
                           <span className="w-24 text-sm font-medium">{sched.day}</span>
                           <div className="flex items-center gap-4">
@@ -927,7 +927,7 @@ export default function AccountPage() {
                       {getInitialWeeklySchedule(clinic).map((sched) => (
                         <div
                           key={sched.day}
-                          className="flex justify-between py-0.5 border-b border-border/30 last:border-0 sm:border-b-0"
+                          className="flex justify-between py-0.5 border-b border-[#E3F2FD]/30 last:border-0 sm:border-b-0"
                         >
                           <span className="font-medium text-foreground">{sched.day}</span>
                           <span>
@@ -1023,7 +1023,7 @@ export default function AccountPage() {
                               href={url.startsWith("http") ? url : `https://${url}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-primary hover:bg-accent transition"
+                              className="inline-flex items-center gap-1.5 rounded-full border border-[#E3F2FD] bg-background px-3 py-1.5 text-sm font-medium text-primary hover:bg-accent transition"
                             >
                               <Icon className="size-4" />
                               {label}
@@ -1031,7 +1031,7 @@ export default function AccountPage() {
                           ) : (
                             <span
                               key={label}
-                              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/20 px-3 py-1.5 text-sm text-muted-foreground"
+                              className="inline-flex items-center gap-1.5 rounded-full border border-[#E3F2FD] bg-[#E3F2FD]/60 px-3 py-1.5 text-sm text-muted-foreground"
                             >
                               <Icon className="size-4 opacity-50" />
                               {label}: —
