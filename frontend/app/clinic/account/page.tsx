@@ -13,7 +13,6 @@ import {
   uploadAvatar,
 } from "@/lib/clinic-api";
 
-import { ClinicWelcomeDocuments } from "@/components/clinic/clinic-welcome-documents";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -853,14 +852,6 @@ export default function AccountPage() {
                 )}
               </Field>
             </FieldGrid>
-          </Section>
-
-          <Section
-            icon={<ClipboardList className="size-4 text-primary" />}
-            title="Attachments"
-            description="Upload and manage clinic documents, videos, and other files."
-          >
-            <ClinicWelcomeDocuments clinicId={clinicId} />
           </Section>
 
           <div className="flex items-center justify-end gap-2 border-t border-border bg-muted/20 px-6 py-4">
