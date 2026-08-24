@@ -3,8 +3,8 @@
 import * as React from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Cell, ResponsiveContainer } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Bill } from "@/lib/clinic-api";
 
 interface BillingOverviewCardProps {
@@ -26,24 +26,39 @@ function formatFullINR(value: number): string {
 }
 
 export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps) {
+  const [range, setRange] = React.useState<"12m" | "6m" | "3m">("12m");
+  const monthsCount = range === "12m" ? 12 : range === "6m" ? 6 : 3;
+
   const { chartData, totalBilled, totalPaid, outstanding, highestMonth } = React.useMemo(() => {
     const now = new Date();
+    // Determine window start for range filtering
+    const windowStart = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1);
     const totalsByKey = new Map<string, number>();
+    let totalBilledWindow = 0;
+    let totalPaidWindow = 0;
+    let outstandingWindow = 0;
+
     for (const bill of bills) {
       if (bill.status === "void") continue;
       const invoice = new Date(bill.invoiceDate);
       if (Number.isNaN(invoice.getTime())) continue;
       const key = `${invoice.getFullYear()}-${String(invoice.getMonth() + 1).padStart(2, "0")}-01`;
-      totalsByKey.set(key, (totalsByKey.get(key) ?? 0) + bill.total);
+      const billTotal = bill.total ?? 0;
+      totalsByKey.set(key, (totalsByKey.get(key) ?? 0) + billTotal);
+
+      // Only count bills inside selected window for summary metrics (real data for Last X Months)
+      if (invoice >= windowStart) {
+        totalBilledWindow += billTotal;
+        totalPaidWindow += bill.amountPaid ?? 0;
+        outstandingWindow += bill.balanceDue ?? 0;
+      }
     }
 
     const data: { key: string; label: string; shortLabel: string; total: number; isLatest: boolean }[] = [];
-    for (let offset = 11; offset >= 0; offset--) {
+    for (let offset = monthsCount - 1; offset >= 0; offset--) {
       const d = new Date(now.getFullYear(), now.getMonth() - offset, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-      const label = d.toLocaleDateString("en-US", { month: "short", year: "2-digit" }); // e.g. Aug 26
-      // For X-axis we show every 2 months to match spec: Oct 25, Dec 25 etc.
-      // But we keep all 12 points in data and filter ticks via XAxis interval.
+      const label = d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
       data.push({
         key,
         label,
@@ -53,20 +68,15 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
       });
     }
 
-    const totalBilledVal = data.reduce((acc, c) => acc + c.total, 0);
-    const totalPaidVal = bills
-      .filter((b) => b.status !== "void")
-      .reduce((acc, b) => acc + (b.amountPaid ?? 0), 0);
-    // If amountPaid not matching chart totals (e.g., partial), clamp to totalBilled for display consistency
-    // Use balanceDue sum for outstanding
-    const outstandingVal = Math.max(0, bills.filter((b) => b.status !== "void").reduce((acc, b) => acc + (b.balanceDue ?? 0), 0));
+    const totalBilledVal = totalBilledWindow;
+    const totalPaidVal = totalPaidWindow;
+    const outstandingVal = Math.max(0, outstandingWindow);
 
-    // Highest month
+    // Highest month within selected range
     let max = data[0];
     for (const item of data) {
       if (item.total > max.total) max = item;
     }
-    // Growth vs previous month for highest month
     let growth: number | null = null;
     const maxIdx = data.findIndex((d) => d.key === max.key);
     if (maxIdx > 0) {
@@ -88,7 +98,7 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
         growth,
       },
     };
-  }, [bills]);
+  }, [bills, monthsCount]);
 
   // Y-axis domain: round up to nice value
   const maxVal = Math.max(...chartData.map((d) => d.total), 100);
@@ -136,14 +146,16 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
           <h3 className="text-[15px] font-semibold tracking-tight text-[#0f172a]">Billing Overview</h3>
           <p className="mt-1 text-xs text-muted-foreground">Total invoiced amount per month</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 rounded-full border border-border bg-white px-3 text-xs font-medium text-foreground shadow-sm hover:bg-muted/50"
-        >
-          Last 12 Months
-          <ChevronDown className="ml-1 size-3.5 text-muted-foreground" />
-        </Button>
+        <Select value={range} onValueChange={(v) => setRange(v as "12m" | "6m" | "3m")}>
+          <SelectTrigger className="h-8 rounded-full border border-border bg-white px-3 text-xs font-medium shadow-sm w-[140px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="12m">Last 12 Months</SelectItem>
+            <SelectItem value="6m">Last 6 Months</SelectItem>
+            <SelectItem value="3m">Last 3 Months</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Summary Metrics */}
@@ -179,7 +191,7 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 11, fill: "#94a3b8", fontWeight: 500 }}
-                interval={1}
+                interval={monthsCount === 12 ? 1 : 0}
                 dy={8}
               />
               <YAxis
@@ -204,7 +216,7 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
                   );
                 }}
               />
-              <Bar dataKey="total" radius={[8, 8, 0, 0]} barSize={18}>
+              <Bar dataKey="total" radius={[8, 8, 0, 0]} barSize={monthsCount === 3 ? 36 : monthsCount === 6 ? 24 : 18}>
                 {chartData.map((entry, idx) => (
                   <Cell
                     key={`cell-${idx}`}

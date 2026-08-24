@@ -203,16 +203,30 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     ])
       .then(([apptRes, todayRes, patientRes, billRes]) => {
         if (!active) return;
-        if (apptRes.status === "fulfilled") setAppointments(apptRes.value.items);
-        if (todayRes.status === "fulfilled") setTodayAppointments(todayRes.value.items);
-        if (patientRes.status === "fulfilled") setPatients(patientRes.value.items);
-        if (billRes.status === "fulfilled") setBills(billRes.value.items);
-        if (
-          apptRes.status === "rejected" &&
-          patientRes.status === "rejected" &&
-          billRes.status === "rejected"
-        ) {
-          toast.error("Failed to load dashboard data");
+        if (apptRes.status === "fulfilled") {
+          setAppointments(apptRes.value.items);
+        } else {
+          console.error("Failed to load appointments", apptRes.reason);
+          toast.error("Failed to load appointments");
+        }
+        if (todayRes.status === "fulfilled") {
+          setTodayAppointments(todayRes.value.items);
+        } else {
+          console.error("Failed to load today appointments", todayRes.reason);
+        }
+        if (patientRes.status === "fulfilled") {
+          setPatients(patientRes.value.items);
+        } else {
+          console.error("Failed to load patients", patientRes.reason);
+          toast.error("Failed to load patients");
+        }
+        if (billRes.status === "fulfilled") {
+          setBills(billRes.value.items);
+        } else {
+          console.error("Failed to load bills", billRes.reason);
+          const reason = billRes.reason as unknown as { status?: number; message?: string };
+          // Only show user-facing toast for bills if it's not just empty data
+          if (reason?.status !== 404) toast.error("Failed to load billing data");
         }
       })
       .finally(() => {
