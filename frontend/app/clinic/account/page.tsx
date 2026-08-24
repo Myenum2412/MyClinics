@@ -53,6 +53,47 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="#1877F2" aria-hidden="true">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+    </svg>
+  );
+}
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id="ig-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#feda75" />
+          <stop offset="25%" stopColor="#fa7e1e" />
+          <stop offset="50%" stopColor="#d62976" />
+          <stop offset="75%" stopColor="#962fbf" />
+          <stop offset="100%" stopColor="#4f5bd5" />
+        </linearGradient>
+      </defs>
+      <path
+        fill="url(#ig-grad)"
+        d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.278.261 2.148.558 2.913.306.789.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.765.298 1.635.5 2.913.558C8.333 23.985 8.74 24 12 24s3.667-.015 4.947-.072c1.278-.06 2.148-.261 2.913-.558.789-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.337 1.384-2.126.298-.765.5-1.635.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.278-.261-2.148-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.862.63 19.097.333 18.227.131 16.947.072 15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.012 4.85.07 1.17.054 1.805.249 2.227.415.562.218.96.478 1.382.9.421.421.682.819.9 1.381.164.422.36 1.057.413 2.227.058 1.265.07 1.647.07 4.85s-.012 3.585-.07 4.85c-.054 1.17-.249 1.805-.413 2.227-.218.562-.478.96-.9 1.382-.421.421-.819.682-1.381.9-.422.164-1.057.36-2.227.413-1.265.058-1.647.07-4.85.07s-3.585-.012-4.85-.07c-1.17-.054-1.805-.249-2.227-.413-.562-.218-.96-.478-1.382-.9-.421-.421-.682-.819-.9-1.381-.164-.422-.36-1.057-.413-2.227-.058-1.265-.07-1.647-.07-4.85s.012-3.585.07-4.85c.054-1.17.249-1.805.413-2.227.218-.562.478-.96.9-1.382.421-.421.819-.682 1.381-.9.422-.164 1.057-.36 2.227-.413C8.415 2.172 8.797 2.16 12 2.16zm0 3.678a5.162 5.162 0 100 10.324 5.162 5.162 0 000-10.324zm0 8.566a3.404 3.404 0 110-6.808 3.404 3.404 0 010 6.808zm5.838-8.695a1.207 1.207 0 11-2.414 0 1.207 1.207 0 012.414 0z"
+      />
+    </svg>
+  );
+}
+function TwitterIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="#000" aria-hidden="true">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+function LinkedinIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="#0A66C2" aria-hidden="true">
+      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.777 13.019H3.56V9h3.554v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+    </svg>
+  );
+}
+
 const CLINIC_TYPES = [
   "General Clinic",
   "Polyclinic",
@@ -971,10 +1012,10 @@ export default function AccountPage() {
                     ) : (
                       <div className="flex flex-wrap gap-4">
                         {[
-                          { label: "Facebook", url: profile.socialMedia.facebook, Icon: Users },
-                          { label: "Instagram", url: profile.socialMedia.instagram, Icon: Camera },
-                          { label: "Twitter", url: profile.socialMedia.twitter, Icon: MessageCircle },
-                          { label: "LinkedIn", url: profile.socialMedia.linkedin, Icon: Briefcase },
+                          { label: "Facebook", url: profile.socialMedia.facebook, Icon: FacebookIcon },
+                          { label: "Instagram", url: profile.socialMedia.instagram, Icon: InstagramIcon },
+                          { label: "Twitter", url: profile.socialMedia.twitter, Icon: TwitterIcon },
+                          { label: "LinkedIn", url: profile.socialMedia.linkedin, Icon: LinkedinIcon },
                         ].map(({ label, url, Icon }) =>
                           url ? (
                             <a
