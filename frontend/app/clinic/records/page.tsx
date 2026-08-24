@@ -585,14 +585,11 @@ export default function RecordsPage() {
         attachments: uploadedAttachments,
       };
 
-      let savedRecord: MedicineRecord;
       if (editing) {
-        const updated = await updateRecord(clinicId, editing.recordId, recordPayload);
-        savedRecord = { ...updated, notes: recordPayload.notes as string };
+        await updateRecord(clinicId, editing.recordId, recordPayload);
         toast.success("Medicine record updated");
       } else {
-        const newRecord = await createRecord(clinicId, recordPayload);
-        savedRecord = { ...newRecord, notes: recordPayload.notes as string };
+        await createRecord(clinicId, recordPayload);
 
         if (form.medicines.length > 0) {
           await createPrescription(clinicId, {
@@ -610,9 +607,8 @@ export default function RecordsPage() {
       }
 
       setCreating(false);
+      setEditing(null);
       load();
-      // Open the saved medicine record for review.
-      setEditing(savedRecord);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save record");
     } finally {
