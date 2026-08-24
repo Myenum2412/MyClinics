@@ -7,6 +7,7 @@ import {
   Bell,
   Bone,
   Baby,
+  Building2,
   CalendarDays,
   Camera,
   ChevronRight,
@@ -297,6 +298,20 @@ export default function ClinicProfilePage() {
             <Camera className="size-4" />
             Edit Profile
           </Button>
+      </div>
+
+      {/* Profile Type Navigation: Clinic Profile vs Account Profile */}
+      <div className="flex items-center gap-2 border-b border-border pb-3">
+        <Button variant="default" size="sm" className="gap-2 font-medium shadow-xs">
+          <Building2 className="size-4" />
+          Clinic Profile
+        </Button>
+        <Link href="/clinic/account">
+          <Button variant="outline" size="sm" className="gap-2 font-medium text-muted-foreground hover:text-foreground">
+            <UserCog className="size-4" />
+            Account Profile & Reset Password
+          </Button>
+        </Link>
       </div>
 
       <Card className="overflow-hidden">

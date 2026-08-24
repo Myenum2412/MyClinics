@@ -621,6 +621,17 @@ export function updateOwnClinic(
   });
 }
 
+export function updateUser(
+  clinicId: string,
+  userId: string,
+  input: Record<string, unknown>
+): Promise<unknown> {
+  return request(tenantPath(clinicId, `/users/${userId}`), {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
 // ── Patients ───────────────────────────────────────────────────────────────
 
 export function listPatients(
