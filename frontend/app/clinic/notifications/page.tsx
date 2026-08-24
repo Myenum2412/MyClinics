@@ -6,8 +6,10 @@ import { useRequireRole } from "@/hooks/use-clinic-session";
 import StatsGeneric from "@/components/stats-generic";
 import {
   type Notification,
+  type Patient,
   createNotification,
   listNotifications,
+  listPatients,
   markAllNotificationsRead,
   markNotificationRead,
 } from "@/lib/clinic-api";
@@ -298,19 +300,42 @@ function NotificationForm({
     link: string;
   }) => Promise<void>;
 }) {
-  const session = useRequireRole("staff");
-  const [users, setUsers] = useState<{ userId: string; label: string }[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [loadingPatients, setLoadingPatients] = useState(true);
   const [recipientUserId, setRecipientUserId] = useState("");
   const [type, setType] = useState("general");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [link, setLink] = useState("");
 
-
+  useEffect(() => {
+    if (!clinicId) return;
+    let active = true;
+    setLoadingPatients(true);
+    listPatients(clinicId, { limit: 100 })
+      .then((res) => {
+        if (active) {
+          setPatients(res.items);
+          if (res.items.length > 0) {
+            setRecipientUserId(res.items[0].userId || res.items[0].patientId);
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoadingPatients(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [clinicId]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!recipientUserId) return;
+    if (!recipientUserId) {
+      toast.error("Please select a patient recipient");
+      return;
+    }
     await onSave({ recipientUserId, type, title, body, link });
   }
 
@@ -318,30 +343,32 @@ function NotificationForm({
     <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-3">
         <div className="grid gap-2">
-          <Label>Recipient user</Label>
-          {users.length > 0 ? (
+          <Label>Select Patient *</Label>
+          {loadingPatients ? (
+            <Skeleton className="h-10 w-full rounded-md" />
+          ) : patients.length > 0 ? (
             <Select value={recipientUserId} onValueChange={(v) => setRecipientUserId(v ?? "")} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select user" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose a patient..." />
               </SelectTrigger>
               <SelectContent>
-                {users.map((u) => (
-                  <SelectItem key={u.userId} value={u.userId}>
-                    {u.label}
+                {patients.map((p) => (
+                  <SelectItem key={p.patientId} value={p.userId || p.patientId}>
+                    {p.fullName} {p.mobile ? `(${p.mobile})` : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           ) : (
             <Input
-              placeholder="Enter user id (usr_...)"
+              placeholder="Enter Patient User ID (usr_...)"
               value={recipientUserId}
               onChange={(e) => setRecipientUserId(e.target.value)}
               required
             />
           )}
           <p className="text-xs text-muted-foreground">
-            The recipient user id (usr_...) of the account to notify.
+            Select the patient account to receive this notification.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -361,13 +388,13 @@ function NotificationForm({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label>Title</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
+            <Label>Title *</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Notification title" />
           </div>
         </div>
         <div className="grid gap-2">
           <Label>Body</Label>
-          <Input value={body} onChange={(e) => setBody(e.target.value)} />
+          <Input value={body} onChange={(e) => setBody(e.target.value)} placeholder="Details or message content..." />
         </div>
         <div className="grid gap-2">
           <Label>Link</Label>
@@ -376,7 +403,7 @@ function NotificationForm({
       </div>
       <DialogFooter>
         <Button type="submit" disabled={saving || !recipientUserId}>
-          {saving ? "Sending..." : "Send"}
+          {saving ? "Sending..." : "Send Notification"}
         </Button>
       </DialogFooter>
     </form>
