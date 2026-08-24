@@ -171,29 +171,33 @@ export default function AuditLogsPage() {
         </div>
       )}
 
+      {/* Filter Controls - Centered Outside Card */}
+      <div className="flex justify-center">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Input
+            placeholder="Filter Entity"
+            value={entity}
+            onChange={(e) => {
+              setEntity(e.target.value);
+              setPageIndex(0);
+            }}
+            className="h-9 w-36"
+          />
+          <Input
+            placeholder="Filter Action"
+            value={action}
+            onChange={(e) => {
+              setAction(e.target.value);
+              setPageIndex(0);
+            }}
+            className="h-9 w-36"
+          />
+        </div>
+      </div>
+
       {/* Main card containing listing */}
       <Card className="border-border shadow-sm">
         <CardContent className="p-0">
-          <div className="flex flex-wrap items-center gap-3 p-4 border-b border-border">
-            <Input
-              placeholder="Filter Entity"
-              value={entity}
-              onChange={(e) => {
-                setEntity(e.target.value);
-                setPageIndex(0);
-              }}
-              className="h-9 w-36"
-            />
-            <Input
-              placeholder="Filter Action"
-              value={action}
-              onChange={(e) => {
-                setAction(e.target.value);
-                setPageIndex(0);
-              }}
-              className="h-9 w-36"
-            />
-          </div>
           {loading ? (
             <div className="p-6 space-y-3">
               <Skeleton className="h-10 w-full" />

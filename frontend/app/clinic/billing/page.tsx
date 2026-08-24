@@ -538,42 +538,46 @@ export default function BillingPage() {
         </div>
       )}
 
+      {/* Search Controls - Centered Outside Card */}
+      <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <div className="relative w-full max-w-md sm:w-72">
+            <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+            <Input
+              placeholder="Search bills..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPageIndex(0);
+              }}
+              className="h-9 w-full pl-9"
+            />
+          </div>
+
+          <Select
+            value={statusFilter}
+            onValueChange={(v) => {
+              setStatusFilter(v ?? "all");
+              setPageIndex(0);
+            }}
+          >
+            <SelectTrigger className="h-9 w-36">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="issued">Issued</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="void">Void</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Main card containing listing */}
       <Card className="border-border shadow-sm">
         <CardContent className="p-0">
-          <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between border-b border-border">
-            <div className="relative mx-auto w-full max-w-md sm:w-72">
-              <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Search bills..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setPageIndex(0);
-                }}
-                className="h-9 w-full pl-9"
-              />
-            </div>
-
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => {
-                setStatusFilter(v ?? "all");
-                setPageIndex(0);
-              }}
-            >
-              <SelectTrigger className="h-9 w-36">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="issued">Issued</SelectItem>
-                <SelectItem value="paid">Paid</SelectItem>
-                <SelectItem value="void">Void</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           {loading ? (
             <div className="p-6 space-y-3">
               <Skeleton className="h-10 w-full" />

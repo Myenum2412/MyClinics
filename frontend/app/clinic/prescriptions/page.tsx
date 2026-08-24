@@ -594,24 +594,26 @@ export default function PrescriptionsPage() {
         </div>
       )}
 
+      {/* Search Controls - Centered Outside Card */}
+      <div className="flex justify-center">
+        <div className="relative w-full max-w-md sm:w-72">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPageIndex(0);
+            }}
+            placeholder="Search patients, doctors..."
+            className="h-8 w-full pl-8 text-xs focus-visible:ring-1"
+          />
+        </div>
+      </div>
+
       {/* Main Table Card */}
       <Card className="shadow-sm">
         <CardContent className="p-0">
-          <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between border-b border-border">
-            <div className="relative mx-auto w-full max-w-md sm:w-72">
-              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                type="search"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setPageIndex(0);
-                }}
-                placeholder="Search patients, doctors..."
-                className="h-8 w-full pl-8 text-xs focus-visible:ring-1"
-              />
-            </div>
-          </div>
           {loading ? (
             <div className="space-y-4 p-6">
               <Skeleton className="h-10 w-full" />
