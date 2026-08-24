@@ -1,3 +1,4 @@
+import { nowMs } from "@/clinic/core/datetime";
 import type { ClinicDocument } from "@/clinic/core/repository";
 
 export interface ClinicWelcomeDocumentVersion {
@@ -52,7 +53,7 @@ export function clinicWelcomeDocumentToPublic(doc: ClinicWelcomeDocumentDoc) {
 }
 
 export function generateWelcomeDocumentId(): string {
-  return `cwd_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  return `cwd_${nowMs()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 export function r2KeyForWelcomeDocument(clinicId: string, documentId: string, fileName: string): string {

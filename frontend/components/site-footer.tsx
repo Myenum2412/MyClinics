@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { now } from "@/lib/datetime";
 
 const productLinks = [
 	{ label: "Home", href: "/" },
@@ -74,7 +75,7 @@ export function SiteFooter() {
 
 			<div className="border-t py-4">
 				<p className="text-center text-muted-foreground">
-					© {new Date().getFullYear()} My Clinics. All rights reserved.
+					© {now().getFullYear()} My Clinics. All rights reserved.
 				</p>
 			</div>
 		</footer>

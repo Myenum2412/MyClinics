@@ -36,6 +36,7 @@ import {
   CheckCircle,
   ExternalLink,
 } from "lucide-react";
+import { now, toLocalDateISO } from "@/lib/datetime";
 
 const GENDERS = ["Male", "Female", "Other"];
 
@@ -138,13 +139,13 @@ const validateEmail = (email: string): boolean => {
 
 const calculateAge = (dateOfBirth: string): number | null => {
   if (!dateOfBirth) return null;
-  const today = new Date();
-  const birthDate = new Date(dateOfBirth);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
+  const [ty, tm, td] = toLocalDateISO(now()).split("-").map(Number);
+  const [by, bm, bd] = dateOfBirth.split("-").map(Number);
+  let age = ty - by;
+  const monthDiff = tm - bm;
   if (
     monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    (monthDiff === 0 && td < bd)
   ) {
     age--;
   }

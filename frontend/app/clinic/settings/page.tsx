@@ -18,6 +18,7 @@ import type {
   ClinicSettings,
 } from "@/lib/clinic-api";
 import { DROPDOWN_OPTION_DEFS, useDropdownOptions } from "@/lib/dropdown-options";
+import { formatTimeOnly } from "@/lib/datetime";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -451,7 +452,7 @@ export default function SettingsPage() {
                 )}
                 <p className="text-xs text-muted-foreground">
                   Powered by WhatsApp Integration · last update{" "}
-                  {waSession?.updatedAt ? new Date(waSession.updatedAt).toLocaleTimeString("en-IN") : "—"}
+                   {waSession?.updatedAt ? formatTimeOnly(waSession.updatedAt) : "—"}
                 </p>
               </CardContent>
             </Card>

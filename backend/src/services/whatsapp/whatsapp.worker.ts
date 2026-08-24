@@ -1,6 +1,7 @@
 import "../../scripts/bootstrap-env";
 import type { Client } from "whatsapp-web.js";
 import { logger } from "@/lib/logger";
+import { now as nowFn } from "@/clinic/core/datetime";
 import { getWhatsAppDb } from "@/lib/db-pools";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { createWhatsAppClient } from "@/services/whatsapp/whatsapp.client";
@@ -165,7 +166,7 @@ function startReminderLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void 
       // single owner of notification queue draining. Running them here too caused
       // both processes to race on the same MongoDB rows, producing duplicate
       // WhatsApp sends and stuck notifications.
-      await scanAndQueueReminders(db, new Date());
+      await scanAndQueueReminders(db, nowFn());
 
       // Deliveries need live connections, routed per clinic.
       const clientsByRoute = connectedClinicClients();

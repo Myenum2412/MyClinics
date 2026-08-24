@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import bcrypt from "bcryptjs";
 import type { Db, WithId } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
@@ -49,7 +50,7 @@ export class PatientService {
   async createPatient(ctx: ClinicContext, input: CreatePatientInput): Promise<WithId<PatientDoc>> {
     const clinicId = requireClinicOf(ctx);
     const patientId = generatePatientId();
-    const now = new Date();
+    const now = nowFn();
 
     const patients = this.db.collection<PatientDoc>(CLINIC_COLLECTIONS.patients);
 
@@ -427,7 +428,7 @@ export class PatientService {
       .collection(CLINIC_COLLECTIONS.appointments)
       .updateMany(
         { clinicId, patientId, status: { $ne: "cancelled" } },
-        { $set: { status: "cancelled", deletedAt: new Date(), updatedAt: new Date() } }
+        { $set: { status: "cancelled", deletedAt: nowFn(), updatedAt: nowFn() } }
       );
 
     // 6. Soft-delete prescriptions
@@ -435,7 +436,7 @@ export class PatientService {
       .collection(CLINIC_COLLECTIONS.prescriptions)
       .updateMany(
         { clinicId, patientId, status: { $ne: "deleted" } },
-        { $set: { status: "deleted", deletedAt: new Date(), updatedAt: new Date() } }
+        { $set: { status: "deleted", deletedAt: nowFn(), updatedAt: nowFn() } }
       );
 
     // 7. Soft-delete medical records (medicine)
@@ -443,7 +444,7 @@ export class PatientService {
       .collection(CLINIC_COLLECTIONS.medicalRecords)
       .updateMany(
         { clinicId, patientId, status: { $ne: "deleted" } },
-        { $set: { status: "deleted", deletedAt: new Date(), updatedAt: new Date() } }
+        { $set: { status: "deleted", deletedAt: nowFn(), updatedAt: nowFn() } }
       );
 
     // 8. Soft-delete bills
@@ -451,7 +452,7 @@ export class PatientService {
       .collection(CLINIC_COLLECTIONS.bills)
       .updateMany(
         { clinicId, patientId, status: { $ne: "void" } },
-        { $set: { status: "void", deletedAt: new Date(), updatedAt: new Date() } }
+        { $set: { status: "void", deletedAt: nowFn(), updatedAt: nowFn() } }
       );
 
     // 9. Hard-delete notifications
@@ -468,7 +469,7 @@ export class PatientService {
       await Promise.all([
         this.db.collection(CLINIC_COLLECTIONS.users).updateOne(
           { clinicId, userId: patient.userId },
-          { $set: { status: "deleted", deletedAt: new Date() } }
+          { $set: { status: "deleted", deletedAt: nowFn() } }
         ),
         this.db.collection(CLINIC_COLLECTIONS.notifications).deleteMany({ clinicId, recipientUserId: patient.userId }),
       ]);
@@ -509,7 +510,7 @@ export class PatientService {
     const passwordHash = await bcrypt.hash(password, 12);
     await this.db
       .collection(CLINIC_COLLECTIONS.users)
-      .updateOne({ clinicId, userId: user.userId }, { $set: { passwordHash, updatedAt: new Date() } });
+      .updateOne({ clinicId, userId: user.userId }, { $set: { passwordHash, updatedAt: nowFn() } });
 
     await writeAudit(this.db, ctx, {
       action: "update",

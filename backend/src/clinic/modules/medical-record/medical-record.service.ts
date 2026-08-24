@@ -1,3 +1,8 @@
+import {
+  endOfDayKolkata,
+  now as nowFn,
+  startOfDayKolkata,
+} from "@/clinic/core/datetime";
 import type { Db, WithId } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
@@ -147,7 +152,7 @@ export class MedicalRecordService {
     const byKey = new Map(
       existing.filter((f) => f.defaultKey).map((f) => [f.defaultKey, f])
     );
-    const now = new Date();
+    const now = nowFn();
     const ops = DEFAULT_SUBFOLDERS.filter((d) => !byKey.has(d.key)).map((d) => ({
       clinicId,
       folderId: defaultFolderKeyToId(patientId, d.key),
@@ -201,7 +206,7 @@ export class MedicalRecordService {
     const key = r2Key(requireClinicOf(ctx), input.patientId, fileId, input.fileName);
     await uploadToR2(key, input.data, input.mimeType ?? "application/octet-stream");
 
-    const now = new Date();
+    const now = nowFn();
     const patientPhone = patient.whatsapp ?? patient.mobile ?? "";
     const doc: MedicalRecordFileDoc = {
       clinicId: requireClinicOf(ctx),
@@ -292,7 +297,7 @@ export class MedicalRecordService {
     const key = r2Key(requireClinicOf(ctx), doc.patientId, fileId, fileName);
     await uploadToR2(key, data, mimeType ?? "application/octet-stream");
 
-    const now = new Date();
+    const now = nowFn();
     const updated: Partial<MedicalRecordFileDoc> = {
       r2Key: key,
       fileName,
@@ -350,7 +355,7 @@ export class MedicalRecordService {
     if (!name) throw new BadRequestError("File name is required");
     await this.collection().updateOne(
       { clinicId: requireClinicOf(ctx), fileId },
-      { $set: { fileName: name, updatedAt: new Date() } }
+      { $set: { fileName: name, updatedAt: nowFn() } }
     );
     await writeAudit(this.db, ctx, {
       action: "update",
@@ -375,7 +380,7 @@ export class MedicalRecordService {
     const folder = await this.resolveFolderKey(ctx, doc.patientId, targetFolder);
     await this.collection().updateOne(
       { clinicId: requireClinicOf(ctx), fileId },
-      { $set: { folder, updatedAt: new Date() } }
+      { $set: { folder, updatedAt: nowFn() } }
     );
     await writeAudit(this.db, ctx, {
       action: "update",
@@ -401,7 +406,7 @@ export class MedicalRecordService {
     const key = r2Key(clinicId, doc.patientId, newFileId, doc.fileName);
     await copyObjectInR2(doc.r2Key, key);
 
-    const now = new Date();
+    const now = nowFn();
     const copy: MedicalRecordFileDoc = {
       ...doc,
       clinicId,
@@ -461,7 +466,7 @@ export class MedicalRecordService {
             lastDownloadedAt: null,
             uploadedBy: "system",
             uploadedByName: "Legacy upload",
-            createdAt: obj.lastModified ?? new Date(),
+            createdAt: obj.lastModified ?? nowFn(),
           };
         });
       })
@@ -515,8 +520,8 @@ export class MedicalRecordService {
     }
     if (filter.from || filter.to) {
       matchQuery.createdAt = {
-        ...(filter.from ? { $gte: new Date(`${filter.from}T00:00:00.000Z`) } : {}),
-        ...(filter.to ? { $lte: new Date(`${filter.to}T23:59:59.999Z`) } : {}),
+        ...(filter.from ? { $gte: startOfDayKolkata(filter.from) } : {}),
+        ...(filter.to ? { $lte: endOfDayKolkata(filter.to) } : {}),
       };
     }
 
@@ -585,7 +590,7 @@ export class MedicalRecordService {
     }
 
     const folderId = generateFolderId();
-    const now = new Date();
+    const now = nowFn();
     const doc: MedicalRecordFolderDoc = {
       clinicId: requireClinicOf(ctx),
       folderId,
@@ -687,7 +692,7 @@ export class MedicalRecordService {
     if (!name) throw new BadRequestError("Folder name is required");
     await this.folderCollection().updateOne(
       { clinicId, folderId },
-      { $set: { name, updatedAt: new Date() } }
+      { $set: { name, updatedAt: nowFn() } }
     );
     await writeAudit(this.db, ctx, {
       action: "update",
@@ -727,7 +732,7 @@ export class MedicalRecordService {
 
     await this.folderCollection().updateOne(
       { clinicId, folderId },
-      { $set: { parentFolderId: targetParentFolderId ?? null, updatedAt: new Date() } }
+      { $set: { parentFolderId: targetParentFolderId ?? null, updatedAt: nowFn() } }
     );
     await writeAudit(this.db, ctx, {
       action: "update",
@@ -757,7 +762,7 @@ export class MedicalRecordService {
     // Map source folderId → copied folderId.
     const { folders, files } = await this.collectFolderTree(clinicId, folderId);
     const copyId = new Map<string, string>();
-    const now = new Date();
+    const now = nowFn();
     const folderCopies = folders.map((f) => {
       const newId = generateFolderId();
       copyId.set(f.folderId, newId);
@@ -835,7 +840,7 @@ export class MedicalRecordService {
         lastDownloadedAt: null,
         uploadedBy: "system",
         uploadedByName: "Legacy upload",
-        createdAt: new Date(),
+        createdAt: nowFn(),
       };
     }
 
@@ -857,7 +862,7 @@ export class MedicalRecordService {
     if (!legacy) {
       await this.collection().updateOne(
         { clinicId: requireClinicOf(ctx), fileId },
-        { $inc: { downloadCount: 1 }, $set: { lastDownloadedAt: new Date() } }
+        { $inc: { downloadCount: 1 }, $set: { lastDownloadedAt: nowFn() } }
       );
     }
     await writeAudit(this.db, ctx, {

@@ -1,6 +1,7 @@
 import type { Db } from "mongodb";
 import { ObjectId } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
+import { formatDate, now as nowFn, KOLKATA_OFFSET } from "@/clinic/core/datetime";
 import { enqueueClinicNotification, NOTIFICATIONS_COLLECTION } from "@/services/whatsapp/notification.service";
 import { logger } from "@/lib/logger";
 
@@ -24,20 +25,11 @@ export interface AppointmentNotificationDoc {
   processedAt?: Date | null;
 }
 
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
-
 function getScheduledReminderTime(dateStr: string, timeStr: string): Date {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const [hh, mm] = timeStr.split(":").map(Number);
-  // Parse in local time
-  const appointmentTime = new Date(y, m - 1, d, hh, mm, 0, 0);
-  // Subtract 1 hour (60 minutes)
-  appointmentTime.setHours(appointmentTime.getHours() - 1);
-  return appointmentTime;
+  // Parse the appointment as a Kolkata-local instant, then subtract 1 hour
+  // via instant arithmetic (TZ-independent, unlike setHours on server-local).
+  const appointmentTime = new Date(`${dateStr}T${timeStr}:00${KOLKATA_OFFSET}`);
+  return new Date(appointmentTime.getTime() - 60 * 60 * 1000);
 }
 
 export async function queueAppointmentNotifications(
@@ -84,7 +76,7 @@ export async function queueAppointmentNotifications(
     const patientPhone = patient.whatsapp ?? patient.mobile;
     const doctorPhone = doctor.whatsapp ?? doctor.phone;
 
-    const now = new Date();
+    const now = nowFn();
 
     // If updated or cancelled, clean up any unsent pending/enqueued reminders for this appointment
     if (action === "updated" || action === "cancelled") {
@@ -239,7 +231,7 @@ export async function queueAppointmentNotifications(
 
 export async function processAppointmentNotifications(db: Db): Promise<void> {
   try {
-    const now = new Date();
+    const now = nowFn();
 
     // 1. Fetch pending notifications that are due
     const pendingList = await db
@@ -340,8 +332,8 @@ export async function processAppointmentNotifications(db: Db): Promise<void> {
               waNotificationId,
               attempts: notification.attempts + 1,
               lastError: result.queued ? null : "Failed to queue WhatsApp message",
-              processedAt: new Date(),
-              updatedAt: new Date(),
+              processedAt: nowFn(),
+              updatedAt: nowFn(),
             },
           }
         );
@@ -357,7 +349,7 @@ export async function processAppointmentNotifications(db: Db): Promise<void> {
               status: "failed",
               attempts: notification.attempts + 1,
               lastError: err instanceof Error ? err.message : String(err),
-              updatedAt: new Date(),
+              updatedAt: nowFn(),
             },
           }
         );
@@ -382,7 +374,7 @@ export async function processAppointmentNotifications(db: Db): Promise<void> {
           if (waNotif.status === "sent") {
             await db.collection("clc_appointment_notifications").updateOne(
               { _id: notif._id },
-              { $set: { status: "sent", updatedAt: new Date() } }
+              { $set: { status: "sent", updatedAt: nowFn() } }
             );
           } else if (waNotif.status === "failed") {
             await db.collection("clc_appointment_notifications").updateOne(
@@ -391,7 +383,7 @@ export async function processAppointmentNotifications(db: Db): Promise<void> {
                 $set: {
                   status: "failed",
                   lastError: waNotif.lastError || "WhatsApp delivery failed",
-                  updatedAt: new Date(),
+                  updatedAt: nowFn(),
                 },
               }
             );

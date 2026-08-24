@@ -18,6 +18,7 @@ import {
   listPrescriptions,
 } from "@/lib/clinic-api";
 import { Card, CardContent } from "@/components/ui/card";
+import { KOLKATA_TZ, now, toLocalDateISO } from "@/lib/datetime";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
@@ -32,10 +33,7 @@ import { type ClinicSession } from "@/lib/clinic-api";
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function todayISO(): string {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
+  return toLocalDateISO(now());
 }
 
 interface Greeting {
@@ -48,7 +46,11 @@ interface Greeting {
 }
 
 function getGreeting(): Greeting {
-  const h = new Date().getHours();
+  const h = Number(
+    new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: KOLKATA_TZ })
+      .formatToParts(now())
+      .find((p) => p.type === "hour")?.value ?? "0"
+  ) % 24;
   if (h >= 5 && h < 12) {
     return {
       text: "Good Morning",
@@ -133,12 +135,13 @@ function GreetingBanner({
             Dr. {firstName}
           </h1>
           <p className="mt-1 text-sm font-medium text-foreground/80">
-            {new Date().toLocaleDateString("en-IN", {
+            {new Intl.DateTimeFormat("en-IN", {
               weekday: "long",
               day: "numeric",
               month: "long",
               year: "numeric",
-            })}
+              timeZone: KOLKATA_TZ,
+            }).format(now())}
           </p>
         </div>
 

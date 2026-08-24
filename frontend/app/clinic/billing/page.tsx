@@ -47,6 +47,8 @@ import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import dynamic from "next/dynamic";
 import { billStatusTone } from "@/lib/status-styles";
+import { formatDate } from "@/lib/format-time";
+import { nowMs, todayISO } from "@/lib/datetime";
 
 const StatsBilling = dynamic(() => import("@/components/stats-billing"), {
   loading: () => <div className="h-[270px]" aria-hidden="true" />,
@@ -91,24 +93,11 @@ const COMMON_ITEMS = [
   "Other Service",
 ];
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
-
 function formatINR(value: number): string {
   return `₹${(Number.isFinite(value) ? value : 0).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
-}
-
-function todayISO(): string {
-  const d = new Date();
-  const m = `${d.getMonth() + 1}`.padStart(2, "0");
-  const day = `${d.getDate()}`.padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
 }
 
 export default function BillingPage() {
@@ -303,7 +292,7 @@ export default function BillingPage() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(selectedRows, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `bills_export_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `bills_export_${nowMs()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();

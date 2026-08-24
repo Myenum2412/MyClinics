@@ -1,3 +1,5 @@
+import { parseLocalDate, todayISO, toLocalDateISO } from "@/clinic/core/datetime";
+
 export type StatsItem = {
   name: string;
   current: number;
@@ -11,32 +13,35 @@ export function capacityOf(current: number, allowed: number) {
 }
 
 export function dateString(d: Date) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
+  return toLocalDateISO(d);
 }
 
 export function todayDateString() {
-  return dateString(new Date());
+  return todayISO();
+}
+
+function kolkataTodayParts(): [number, number, number] {
+  const [y, m, d] = todayISO().split("-").map(Number);
+  return [y, m, d];
+}
+
+function formatParts(y: number, m: number, d: number): string {
+  return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 }
 
 export function mondayDateString() {
-  const d = new Date();
-  const monday = (d.getDay() + 6) % 7;
-  d.setDate(d.getDate() - monday);
-  return dateString(d);
+  const [y, m, d] = kolkataTodayParts();
+  const weekday = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  const mondayOffset = (weekday + 6) % 7;
+  const dt = new Date(Date.UTC(y, m - 1, d - mondayOffset));
+  return formatParts(dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate());
 }
 
 export function startOfMonthDate() {
-  const d = new Date();
-  return new Date(d.getFullYear(), d.getMonth(), 1);
+  const [y, m] = kolkataTodayParts();
+  return parseLocalDate(formatParts(y, m, 1));
 }
 
 export function startOfWeekDate() {
-  const d = new Date();
-  const monday = (d.getDay() + 6) % 7;
-  d.setDate(d.getDate() - monday);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return parseLocalDate(mondayDateString());
 }

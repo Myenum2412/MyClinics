@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import { randomBytes } from "node:crypto";
+import { nowMs } from "@/clinic/core/datetime";
 import { isClinicRole, type ClinicRole } from "@/clinic/core/roles";
 
 /**
@@ -66,7 +67,7 @@ export async function signClinicToken(
     .setAudience(AUDIENCE)
     .setJti(randomBytes(16).toString("hex"))
     .setIssuedAt()
-    .setExpirationTime(Math.floor(Date.now() / 1000) + accessTokenTtlSeconds())
+    .setExpirationTime(Math.floor(nowMs() / 1000) + accessTokenTtlSeconds())
     .sign(new TextEncoder().encode(secret));
 }
 

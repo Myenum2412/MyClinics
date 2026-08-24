@@ -12,6 +12,7 @@ import {
   type Patient,
 } from "@/lib/clinic-api";
 import { formatDate, formatTime } from "@/lib/format-time";
+import { KOLKATA_TZ, parseDate, startOfDayKolkata, parseLocalDate } from "@/lib/datetime";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -45,12 +46,20 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function parseDateComponents(dateStr: string, timeStr?: string) {
-  const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) {
+  const d = parseDate(dateStr);
+  if (!d) {
     return { day: "24", monthYear: "Aug 2026", time: timeStr || "12:25 AM" };
   }
-  const day = d.getDate().toString();
-  const monthYear = d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+  const parts = new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: KOLKATA_TZ,
+  }).formatToParts(d);
+  const day = parts.find((p) => p.type === "day")?.value ?? "";
+  const month = parts.find((p) => p.type === "month")?.value ?? "";
+  const year = parts.find((p) => p.type === "year")?.value ?? "";
+  const monthYear = `${month} ${year}`;
   const time = timeStr ? formatTime(timeStr) : "12:25 AM";
   return { day, monthYear, time };
 }
@@ -142,11 +151,10 @@ export default function PatientAppointmentsPage() {
     const upcoming: Appointment[] = [];
     const past: Appointment[] = [];
 
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
+    const now = startOfDayKolkata();
 
     for (const a of appointments) {
-      const apptDate = new Date(a.date);
+      const apptDate = parseLocalDate(a.date);
       if (a.status === "completed" || a.status === "cancelled" || a.status === "no_show" || apptDate < now) {
         past.push(a);
       } else {

@@ -12,6 +12,7 @@ import {
   updateOwnClinic,
   uploadAvatar,
 } from "@/lib/clinic-api";
+import { formatMonthYear } from "@/lib/datetime";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -443,7 +444,7 @@ export default function AccountPage() {
   const locationLabel =
     [profile.city, profile.state].filter(Boolean).join(", ") || "—";
   const joinedDateLabel = clinic.createdAt
-    ? `Joined ${new Date(clinic.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" })}`
+    ? `Joined ${formatMonthYear(clinic.createdAt)}`
     : "Joined —";
   const handleLabel = clinic.email || clinic.slug || clinic.clinicId;
   const bioText = clinic.description || "No description provided.";

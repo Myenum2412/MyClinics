@@ -1,9 +1,10 @@
 import "./bootstrap-env";
+import { now as nowFn } from "@/clinic/core/datetime";
 import { getDb } from "@/lib/db-pools";
 
 async function main() {
   const db = await getDb();
-  const now = new Date();
+  const now = nowFn();
   console.log("now:", now.toISOString());
 
   for (const coll of ["conversations", "customers", "organizations"]) {

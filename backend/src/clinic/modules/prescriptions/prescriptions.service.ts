@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db, WithId } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
@@ -77,10 +78,10 @@ export class PrescriptionService {
         $set: {
           clinicId,
           patientId: input.patientId,
-          updatedAt: new Date(),
+          updatedAt: nowFn(),
         },
         $setOnInsert: {
-          createdAt: new Date(),
+          createdAt: nowFn(),
           attempts: 0,
           status: "pending",
           lastError: null,
@@ -141,10 +142,10 @@ export class PrescriptionService {
           $set: {
             clinicId: updated.clinicId,
             patientId: updated.patientId,
-            updatedAt: new Date(),
+            updatedAt: nowFn(),
           },
           $setOnInsert: {
-            createdAt: new Date(),
+            createdAt: nowFn(),
             attempts: 0,
             status: "pending",
             lastError: null,

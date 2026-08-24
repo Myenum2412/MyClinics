@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import type { Clinic } from "@/lib/clinic-api";
+import { todayISO, formatMonthYear } from "@/lib/datetime";
 import {
   getOwnClinic,
   listAppointments,
@@ -85,18 +86,9 @@ function formatTime(value: string | undefined, fallback = "9:00 AM") {
   return `${hour}:${String(m ?? 0).padStart(2, "0")} ${period}`;
 }
 
-function localDateString(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")}`;
-}
-
 function memberSince(createdAt: string | undefined): string {
   if (!createdAt) return "—";
-  const d = new Date(createdAt);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  return formatMonthYear(createdAt);
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -188,7 +180,7 @@ export default function ClinicProfilePage() {
     Promise.all([
       getOwnClinic(clinicId),
       listPatients(clinicId, { limit: 1 }),
-      listAppointments(clinicId, { date: localDateString(), limit: 1 }),
+      listAppointments(clinicId, { date: todayISO(), limit: 1 }),
       listDoctors(clinicId, { limit: 100 }),
       listStaff(clinicId, { limit: 1 }),
       billsPromise,

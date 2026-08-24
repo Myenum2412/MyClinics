@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import bcrypt from "bcryptjs";
 import type { Db } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
@@ -77,8 +78,8 @@ export class AuthService {
       phone: input.phone ?? null,
       status: "active",
       lastLoginAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: nowFn(),
+      updatedAt: nowFn(),
     };
     await this.repo.createUser(userDoc);
 
@@ -171,8 +172,8 @@ export class AuthService {
       phone: null,
       status: "active",
       lastLoginAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: nowFn(),
+      updatedAt: nowFn(),
     };
     await this.repo.createUser(userDoc);
 

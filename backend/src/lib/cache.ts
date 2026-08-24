@@ -1,3 +1,5 @@
+import { nowMs } from "@/clinic/core/datetime";
+
 interface Entry {
   value: unknown;
   expiresAt: number;
@@ -7,7 +9,7 @@ const store = new Map<string, Entry>();
 const MAX_ENTRIES = 1000;
 
 function sweep(): void {
-  const now = Date.now();
+  const now = nowMs();
   for (const [key, entry] of store) {
     if (entry.expiresAt <= now) store.delete(key);
   }
@@ -31,7 +33,7 @@ export async function cached<T>(
   ttlMs: number,
   loader: () => Promise<T>
 ): Promise<T> {
-  const now = Date.now();
+  const now = nowMs();
   const hit = store.get(key);
   if (hit && hit.expiresAt > now) return hit.value as T;
   const value = await loader();

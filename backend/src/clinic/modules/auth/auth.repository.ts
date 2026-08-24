@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import type { ClinicDoc, UserDoc } from "@/clinic/core/types";
@@ -28,7 +29,7 @@ export class AuthRepository {
     createdAt?: Date;
     updatedAt?: Date;
   }): Promise<ClinicDoc> {
-    const now = new Date();
+    const now = nowFn();
     return this.db.collection(CLINIC_COLLECTIONS.clinics).insertOne({
       ...doc,
       status: doc.status ?? "active",
@@ -53,7 +54,7 @@ export class AuthRepository {
   touchLastLogin(userId: string): Promise<void> {
     return this.db
       .collection(CLINIC_COLLECTIONS.users)
-      .updateOne({ userId }, { $set: { lastLoginAt: new Date() } })
+      .updateOne({ userId }, { $set: { lastLoginAt: nowFn() } })
       .then(() => undefined);
   }
 }

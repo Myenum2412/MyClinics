@@ -10,6 +10,8 @@
  * server-side — the URL clinicId is never trusted on its own.
  */
 
+import { nowMs } from "./datetime";
+
 export const CLINIC_TOKEN_KEY = "clinic_token";
 
 export type ClinicRole =
@@ -414,7 +416,7 @@ function isTokenExpired(token: string): boolean {
   const payload = decodePayload(token);
   if (!payload) return true;
   const exp = Number(payload.exp ?? 0);
-  return !exp || exp * 1000 <= Date.now() + 30_000;
+  return !exp || exp * 1000 <= nowMs() + 30_000;
 }
 
 function setToken(token: string, ttlSeconds: number): void {
@@ -475,7 +477,7 @@ async function request<T>(
 
   if (method === "GET" && !skipCache) {
     const hit = getCache.get(cacheKey);
-    if (hit && hit.expires > Date.now()) return hit.data as T;
+    if (hit && hit.expires > nowMs()) return hit.data as T;
   } else {
     getCache.clear();
   }
@@ -499,9 +501,9 @@ async function request<T>(
   }
 
   if (method === "GET" && !skipCache) {
-    getCache.set(cacheKey, { data, expires: Date.now() + GET_CACHE_TTL_MS });
+    getCache.set(cacheKey, { data, expires: nowMs() + GET_CACHE_TTL_MS });
     if (getCache.size > 200) {
-      const now = Date.now();
+      const now = nowMs();
       for (const [key, entry] of getCache) {
         if (entry.expires <= now) getCache.delete(key);
       }

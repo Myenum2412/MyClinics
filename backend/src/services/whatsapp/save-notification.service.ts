@@ -1,5 +1,6 @@
 import type { Db } from "mongodb";
 import { logger } from "@/lib/logger";
+import { formatDate, parseLocalDate } from "@/clinic/core/datetime";
 import { downloadFromR2, getDownloadUrl } from "@/lib/r2";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { enqueueNotification } from "@/services/whatsapp/notification.service";
@@ -576,10 +577,10 @@ export async function notifyMedicineRecord(
     clinicName = org.name;
   }
 
-  const d = new Date(`${opts.record.visitDate}T00:00:00`);
+  const d = parseLocalDate(opts.record.visitDate);
   const visitDate = Number.isNaN(d.getTime())
     ? opts.record.visitDate
-    : d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+    : formatDate(d);
 
   // Extended fields (nextReviewDate, advice, …) are stored as JSON inside `notes`
   let meta: Record<string, unknown> = {};
@@ -595,10 +596,10 @@ export async function notifyMedicineRecord(
   }
   const fmtDate = (v: unknown): string | null => {
     if (typeof v !== "string" || !v.trim()) return null;
-    const dt = new Date(`${v}T00:00:00`);
+    const dt = parseLocalDate(v);
     return Number.isNaN(dt.getTime())
       ? v
-      : dt.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+      : formatDate(dt);
   };
   const nextReview = fmtDate(meta.nextReviewDate);
   const advice = typeof meta.advice === "string" ? meta.advice.trim() : "";

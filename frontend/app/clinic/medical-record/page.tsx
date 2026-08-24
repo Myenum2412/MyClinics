@@ -46,7 +46,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { formatTime } from "@/lib/format-time";
+import { formatTime, formatDate } from "@/lib/format-time";
+import { now, parseDate, todayISO } from "@/lib/datetime";
 import {
   Table,
   TableBody,
@@ -196,18 +197,11 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 function calculateAge(dateOfBirth: string | null): number | null {
   if (!dateOfBirth) return null;
-  const today = new Date();
-  const birthDate = new Date(dateOfBirth);
+  const today = now();
+  const birthDate = parseDate(dateOfBirth);
+  if (!birthDate) return null;
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
@@ -1264,7 +1258,7 @@ export default function MedicalRecordPage() {
         .map((x) => x.visitDate)
         .sort()
         .pop() ?? null;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayISO();
     const nextAppointment = patientAppointments
       .filter((a) => a.status === "scheduled" && a.date >= today)
       .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))[0] ?? null;

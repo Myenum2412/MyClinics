@@ -11,6 +11,7 @@ import {
   listPrescriptions,
 } from "@/lib/clinic-api";
 import { formatTime } from "@/lib/format-time";
+import { now, toLocalDateISO } from "@/lib/datetime";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,10 +31,7 @@ import StatsAppointments from "@/components/stats-appointments";
 import { appointmentStatusTone } from "@/lib/status-styles";
 
 function today(): string {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
+  return toLocalDateISO(now());
 }
 
 function ApptStatus({ status }: { status: string }) {

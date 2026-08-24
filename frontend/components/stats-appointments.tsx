@@ -6,6 +6,7 @@ import { type ChartConfig, ChartContainer } from '@/components/ui/chart';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import type { Appointment } from '@/lib/clinic-api';
+import { todayISO } from '@/lib/datetime';
 
 const chartConfig = {
   capacity: {
@@ -13,13 +14,6 @@ const chartConfig = {
     color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
-
-function getTodayString(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")}`;
-}
 
 export default function StatsAppointments({
   appointments,
@@ -35,7 +29,7 @@ export default function StatsAppointments({
   const totalCount = appointments.length;
 
   // Calculate today's appointments
-  const todayStr = getTodayString();
+  const todayStr = todayISO();
   const todayCount = appointments.filter((a) => a.date === todayStr).length;
 
   // Calculate completed appointments

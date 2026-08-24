@@ -1,5 +1,6 @@
 import type { Client } from "whatsapp-web.js";
 import type { Db, ObjectId } from "mongodb";
+import { KOLKATA_OFFSET, now as nowFn } from "@/clinic/core/datetime";
 import { logger } from "@/lib/logger";
 import { todayDateString } from "@/lib/stats";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
@@ -53,7 +54,7 @@ export function minutesUntil(date: string, time: string, now: Date): number {
   ) {
     return Number.POSITIVE_INFINITY;
   }
-  const at = new Date(y, m - 1, d, hh, mm, 0, 0);
+  const at = new Date(`${date}T${time}:00${KOLKATA_OFFSET}`);
   return Math.round((at.getTime() - now.getTime()) / 60_000);
 }
 
@@ -174,7 +175,7 @@ export async function queueReminders(
       status: "queued",
       attempts: 0,
       lastError: remoteId ? null : "No WhatsApp number for this patient",
-      createdAt: new Date(),
+      createdAt: nowFn(),
       sentAt: null,
     });
   }
@@ -244,7 +245,7 @@ export async function processDueReminders(
       await sendWithTimeout(client, reminder.remoteId, reminder.message);
       updates.push({
         filter: { _id: reminder._id },
-        update: { $set: { status: "sent", sentAt: new Date(), lastError: null } },
+        update: { $set: { status: "sent", sentAt: nowFn(), lastError: null } },
       });
       logger.info("appointment reminder sent", {
         organizationId,

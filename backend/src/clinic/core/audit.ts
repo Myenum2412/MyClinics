@@ -1,6 +1,7 @@
 import type { Db } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import type { ClinicContext } from "@/clinic/core/context";
+import { now as nowFn } from "@/clinic/core/datetime";
 import { randomToken } from "@/clinic/core/ids";
 
 export interface AuditEntryInput {
@@ -22,7 +23,7 @@ export async function writeAudit(
   ctx: ClinicContext | null,
   input: AuditEntryInput
 ): Promise<void> {
-  const now = new Date();
+  const now = nowFn();
   await db.collection(CLINIC_COLLECTIONS.auditLogs).insertOne({
     auditId: `aud_${randomToken(12)}`,
     clinicId: ctx?.clinicId ?? null,

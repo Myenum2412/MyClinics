@@ -1,4 +1,5 @@
 import type { Db, ObjectId } from "mongodb";
+import { now as nowFn } from "@/clinic/core/datetime";
 
 /**
  * Persistence layer for per-clinic WhatsApp Web connections.
@@ -51,7 +52,7 @@ export async function enqueueSessionCommand(
     action,
     status: "pending",
     error: null,
-    createdAt: new Date(),
+    createdAt: nowFn(),
     processedAt: null,
   });
 }
@@ -80,7 +81,7 @@ export async function completeSessionCommand(
       $set: {
         status: error ? "error" : "done",
         error: error ?? null,
-        processedAt: new Date(),
+        processedAt: nowFn(),
       },
     }
   );
@@ -106,7 +107,7 @@ export async function upsertSessionConfig(
   clinicId: string,
   patch: Partial<Pick<ClinicSessionConfigDoc, "enabled" | "phone" | "lastConnectedAt" | "lastDisconnectedAt">>
 ): Promise<void> {
-  const now = new Date();
+  const now = nowFn();
   await db.collection<ClinicSessionConfigDoc>(WA_CLINIC_SESSIONS_COLLECTION).updateOne(
     { clinicId },
     {

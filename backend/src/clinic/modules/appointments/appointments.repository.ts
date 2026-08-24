@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db, WithId } from "mongodb";
 import type { AppointmentDoc } from "@/clinic/modules/appointments/appointments.schema";
 
@@ -87,7 +88,7 @@ export class AppointmentRepository {
   }
 
   async insert(doc: Omit<AppointmentDoc, "_id" | "clinicId" | "createdAt" | "updatedAt">): Promise<WithId<AppointmentDoc>> {
-    const now = new Date();
+    const now = nowFn();
     await this.collection().insertOne({
       ...doc,
       clinicId: this.clinicId,
@@ -100,7 +101,7 @@ export class AppointmentRepository {
   async update(appointmentId: string, patch: Record<string, unknown>): Promise<boolean> {
     const result = await this.collection().updateOne(
       this.scoped({ appointmentId }),
-      { $set: { ...patch, updatedAt: new Date() } }
+      { $set: { ...patch, updatedAt: nowFn() } }
     );
     return result.matchedCount === 1;
   }
@@ -108,7 +109,7 @@ export class AppointmentRepository {
   async softDelete(appointmentId: string): Promise<boolean> {
     const result = await this.collection().updateOne(
       this.scoped({ appointmentId }),
-      { $set: { status: "cancelled", deletedAt: new Date(), updatedAt: new Date() } }
+      { $set: { status: "cancelled", deletedAt: nowFn(), updatedAt: nowFn() } }
     );
     return result.matchedCount === 1;
   }

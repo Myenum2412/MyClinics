@@ -30,7 +30,8 @@ import {
   createPrescription,
   uploadMedicalRecordFile,
 } from "@/lib/clinic-api";
-import { formatTime } from "@/lib/format-time";
+import { formatTime, formatDate } from "@/lib/format-time";
+import { nowMs, todayISO, daysAgo, parseLocalDate } from "@/lib/datetime";
 import { Button } from "@/components/ui/button";
 import { TimePicker } from "@/components/ui/time-picker";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -77,19 +78,6 @@ import {
 } from "@/components/clinic/attachment-uploader";
 
 
-function today(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")}`;
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
-
 interface MedicineEntry {
   name: string;
   dosage: string;
@@ -129,7 +117,7 @@ interface RecordFormState {
 const EMPTY_FORM: RecordFormState = {
   patientId: "",
   doctorId: "",
-  visitDate: today(),
+    visitDate: todayISO(),
   visitTime: "",
   visitType: "new",
   appointmentId: null,
@@ -554,9 +542,8 @@ export default function RecordsPage() {
   const totalCount = items.length;
   const uniquePatients = new Set(items.map((i) => i.patientId)).size;
   const thisMonthRecords = items.filter((i) => {
-    const recordDate = new Date(i.visitDate);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recordDate = parseLocalDate(i.visitDate);
+    const thirtyDaysAgo = daysAgo(30);
     return recordDate >= thirtyDaysAgo;
   }).length;
   const withTreatmentCount = items.filter((i) => i.treatment).length;
@@ -608,7 +595,7 @@ export default function RecordsPage() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(mappedSelected, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `medicine_export_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `medicine_export_${nowMs()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();

@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -75,8 +76,8 @@ export async function getSoul(db: Db, organizationId: string): Promise<SoulRecor
     fallbackReply: KNOWLEDGE_NOT_FOUND_REPLY,
     version: 1,
     isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: nowFn(),
+    updatedAt: nowFn(),
   });
 
   const inserted = await souls.findOne({ _id: result.insertedId });
@@ -94,7 +95,7 @@ export async function updateSoul(
   fallbackReply?: string
 ): Promise<SoulRecord> {
   const souls = db.collection(DB_COLLECTIONS.souls);
-  const update: Record<string, unknown> = { content, updatedAt: new Date() };
+  const update: Record<string, unknown> = { content, updatedAt: nowFn() };
   if (typeof fallbackReply === "string" && fallbackReply.trim()) {
     update.fallbackReply = fallbackReply.trim();
   }

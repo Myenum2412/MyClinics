@@ -14,6 +14,16 @@ import {
   listDoctors,
   listPatients,
 } from "@/lib/clinic-api";
+import {
+  addDays,
+  daysAgo,
+  endOfDayKolkata,
+  parseDate,
+  parseLocalDate,
+  startOfDayKolkata,
+  weekdayIndex,
+  toLocalDateISO,
+} from "@/lib/datetime";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,25 +84,53 @@ function pct(cur: number, prev: number): number | null {
   return Math.round(((cur - prev) / prev) * 100);
 }
 function inRange(dateStr: string, start: Date, end: Date): boolean {
-  const d = new Date(`${dateStr}T00:00:00`);
-  return !Number.isNaN(d.getTime()) && d >= start && d <= end;
+  const d = parseLocalDate(dateStr);
+  return d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
 }
 function getRangeDates(range: Range, custom?: { from: string; to: string }): { start: Date; end: Date; prevStart: Date; prevEnd: Date; label: string } {
-  const now = new Date();
-  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const today = toLocalDateISO(new Date());
+  const [ty, tm, td] = today.split("-").map(Number);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const end = endOfDayKolkata();
   let start: Date;
-  if (range === "today") start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  else if (range === "week") { start = new Date(now); start.setDate(now.getDate() - 6); }
-  else if (range === "month") start = new Date(now.getFullYear(), now.getMonth(), 1);
-  else if (range === "lastMonth") { start = new Date(now.getFullYear(), now.getMonth() - 1, 1); const e = new Date(now.getFullYear(), now.getMonth(), 0); return { start, end: e, prevStart: new Date(now.getFullYear(), now.getMonth() - 2, 1), prevEnd: new Date(now.getFullYear(), now.getMonth() - 1, 0), label: "Last Month" }; }
-  else if (range === "quarter") { const q = Math.floor(now.getMonth() / 3); start = new Date(now.getFullYear(), q * 3, 1); }
-  else if (range === "year") start = new Date(now.getFullYear(), 0, 1);
-  else if (range === "custom" && custom?.from && custom?.to) { start = new Date(`${custom.from}T00:00:00`); const ce = new Date(`${custom.to}T23:59:59`); const days = Math.ceil((ce.getTime() - start.getTime()) / 86400000); const prevEnd = new Date(start); prevEnd.setDate(prevEnd.getDate() - 1); const prevStart = new Date(prevEnd); prevStart.setDate(prevEnd.getDate() - days + 1); return { start, end: ce, prevStart, prevEnd, label: `${custom.from} → ${custom.to}` }; }
-  else start = new Date(now.getFullYear(), now.getMonth(), 1);
+  if (range === "today") start = startOfDayKolkata();
+  else if (range === "week") start = addDays(startOfDayKolkata(), -6);
+  else if (range === "month") start = parseLocalDate(`${today.slice(0, 7)}-01`);
+  else if (range === "lastMonth") {
+    const lm = tm === 1 ? 12 : tm - 1;
+    const ly = tm === 1 ? ty - 1 : ty;
+    const pm = lm === 1 ? 12 : lm - 1;
+    const py = lm === 1 ? ly - 1 : ly;
+    const lmLast = new Date(ly, lm, 0).getDate();
+    const pmLast = new Date(py, pm, 0).getDate();
+    return {
+      start: parseLocalDate(`${ly}-${pad(lm)}-01`),
+      end: parseLocalDate(`${ly}-${pad(lm)}-${lmLast}`),
+      prevStart: parseLocalDate(`${py}-${pad(pm)}-01`),
+      prevEnd: parseLocalDate(`${py}-${pad(pm)}-${pmLast}`),
+      label: "Last Month",
+    };
+  } else if (range === "quarter") {
+    const q = Math.floor((tm - 1) / 3);
+    start = parseLocalDate(`${ty}-${pad(q * 3 + 1)}-01`);
+  } else if (range === "year") start = parseLocalDate(`${ty}-01-01`);
+  else if (range === "custom" && custom?.from && custom?.to) {
+    start = parseLocalDate(custom.from);
+    const ce = endOfDayKolkata(parseLocalDate(custom.to));
+    const days = Math.ceil((ce.getTime() - start.getTime()) / 86400000);
+    const prevStart = new Date(start.getTime() - days * 86400000);
+    const prevEnd = new Date(start.getTime() - 86400000 - 1);
+    return { start, end: ce, prevStart, prevEnd, label: `${custom.from} → ${custom.to}` };
+  } else start = parseLocalDate(`${today.slice(0, 7)}-01`);
   const diff = end.getTime() - start.getTime();
   const prevEnd = new Date(start.getTime() - 1);
   const prevStart = new Date(prevEnd.getTime() - diff);
-  const label = range === "today" ? "Today" : range === "week" ? "This Week" : range === "month" ? "This Month" : range === "quarter" ? "This Quarter" : range === "year" ? "This Year" : "This Month";
+  const label =
+    range === "today" ? "Today" :
+    range === "week" ? "This Week" :
+    range === "month" ? "This Month" :
+    range === "quarter" ? "This Quarter" :
+    range === "year" ? "This Year" : "This Month";
   return { start, end, prevStart, prevEnd, label };
 }
 
@@ -135,7 +173,7 @@ export default function BusinessReportsPage() {
   const billsPrev = useMemo(() => bills.filter(b => b.invoiceDate && inRange(b.invoiceDate.slice(0, 10), prevStart, prevEnd) && b.status !== "void"), [bills, prevStart, prevEnd]);
   const apptsInRange = useMemo(() => appointments.filter(a => inRange(a.date, start, end)), [appointments, start, end]);
   const apptsPrev = useMemo(() => appointments.filter(a => inRange(a.date, prevStart, prevEnd)), [appointments, prevStart, prevEnd]);
-  const patientsInRange = useMemo(() => patients.filter(p => { const d = new Date(p.createdAt ?? ""); return !Number.isNaN(d.getTime()) ? d >= start && d <= end : false; }), [patients, start, end]);
+  const patientsInRange = useMemo(() => patients.filter(p => { const d = parseDate(p.createdAt); return !!d ? d >= start && d <= end : false; }), [patients, start, end]);
 
   // ── Executive Overview ──────────────────────────────────────────────────
   const totalRevenue = billsInRange.reduce((s, b) => s + b.total, 0);
@@ -203,7 +241,7 @@ export default function BusinessReportsPage() {
   const peakWeekdays = useMemo(() => {
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const map = new Map<string, number>();
-    for (const a of apptsInRange) { const d = new Date(`${a.date}T00:00:00`).getDay(); const label = days[d]; map.set(label, (map.get(label) ?? 0) + 1); }
+    for (const a of apptsInRange) { const d = weekdayIndex(a.date); const label = days[d]; map.set(label, (map.get(label) ?? 0) + 1); }
     return [...map.entries()].map(([day, count]) => ({ day, count })).sort((a, b) => b.count - a.count).slice(0, 3);
   }, [apptsInRange]);
 
@@ -469,7 +507,7 @@ export default function BusinessReportsPage() {
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">First → Second visit</span><span className="font-medium">{patients.length > 1 ? `${Math.round((returningPatients / Math.max(1, totalPatients)) * 100)}%` : "—"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Avg visits / patient</span><span className="font-medium">{totalPatients ? (totalAppts / totalPatients).toFixed(1) : "—"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Inactive 30d+</span><span className="font-medium">{patients.filter(p => { const d = new Date(p.createdAt ?? ""); return !Number.isNaN(d.getTime()) && Date.now() - d.getTime() > 30 * 86400000; }).length} patients</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Inactive 30d+</span><span className="font-medium">{patients.filter(p => { const d = parseDate(p.createdAt); return !!d && d.getTime() < daysAgo(30).getTime(); }).length} patients</span></div>
             <p className="text-xs text-muted-foreground">Action: Create follow-up list for patients with no visit in 30/60/90 days (available via patient list).</p>
           </CardContent>
         </Card>
@@ -513,7 +551,7 @@ export default function BusinessReportsPage() {
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><CreditCard className="size-4 text-primary" /> Billing & Payment Intelligence</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Collection rate</span><span className="font-medium">{totalRevenue ? `${Math.round((totalPaid / totalRevenue) * 100)}%` : "—"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Outstanding &gt;30d</span><span className="font-medium text-amber-700">{formatINR(bills.filter(b => b.balanceDue > 0 && new Date(b.invoiceDate) < new Date(Date.now() - 30 * 86400000)).reduce((s, b) => s + b.balanceDue, 0))}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Outstanding &gt;30d</span><span className="font-medium text-amber-700">{formatINR(bills.filter(b => { const inv = parseDate(b.invoiceDate); return b.balanceDue > 0 && !!inv && inv.getTime() < daysAgo(30).getTime(); }).reduce((s, b) => s + b.balanceDue, 0))}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Avg payment delay</span><span className="font-medium">—</span></div>
             <p className="text-xs text-muted-foreground">Tip: Enable UPI QR and automated reminders for overdue &gt;30d.</p>
           </CardContent>
@@ -527,7 +565,7 @@ export default function BusinessReportsPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Next month revenue</p><p className="text-lg font-bold">{formatINR(Math.round((totalRevenue + prevRevenue) / 2))} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
             <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Next month appts</p><p className="text-lg font-bold">{Math.round((totalAppts + apptsPrev.length) / 2)} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
-            <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Patient growth</p><p className="text-lg font-bold">{newPatients ? `${Math.round(((newPatients - patients.filter(p => { const d = new Date(p.createdAt ?? ""); return d >= prevStart && d <= prevEnd; }).length) / Math.max(1, newPatients)) * 100)}%` : "—"} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
+            <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Patient growth</p><p className="text-lg font-bold">{newPatients ? `${Math.round(((newPatients - patients.filter(p => { const d = parseDate(p.createdAt); return !!d && d >= prevStart && d <= prevEnd; }).length) / Math.max(1, newPatients)) * 100)}%` : "—"} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
           </div>
         </CardContent>
       </Card>

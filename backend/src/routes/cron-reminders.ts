@@ -4,6 +4,7 @@ import { syncCronJobs } from "@/services/cronjob/cronjob.service";
 import { requireCronSecret } from "@/plugins/auth";
 import { processPrescriptionNotifications } from "@/services/whatsapp/prescription-notification.service";
 import { processAppointmentNotifications } from "@/services/whatsapp/appointment-notification.service";
+import { nowMs } from "@/clinic/core/datetime";
 import { logger } from "@/lib/logger";
 
 async function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
@@ -60,7 +61,7 @@ async function runStep<T>(ms: number, label: string, fn: () => Promise<T>): Prom
 async function handleReminders(request: import("fastify").FastifyRequest, reply: import("fastify").FastifyReply) {
   if (!requireCronSecret(request, reply)) return;
 
-  const startTime = Date.now();
+  const startTime = nowMs();
   try {
     // Allow up to 8 s for the DB pool on a cold start (first connect + server
     // selection can legitimately take ~5-6 s on a fresh MongoDB Atlas cold pick).
@@ -82,7 +83,7 @@ async function handleReminders(request: import("fastify").FastifyRequest, reply:
       ),
     ]);
 
-    const duration = Date.now() - startTime;
+    const duration = nowMs() - startTime;
     logger.info("Cron reminders completed", {
       durationMs: duration,
       prescriptions: prescription.status,
@@ -95,7 +96,7 @@ async function handleReminders(request: import("fastify").FastifyRequest, reply:
       durationMs: duration,
     });
   } catch (error) {
-    const duration = Date.now() - startTime;
+    const duration = nowMs() - startTime;
     const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error("Cron reminders error", { durationMs: duration, error: errorMessage });
     return reply.code(200).send({ ok: false, error: errorMessage, durationMs: duration });

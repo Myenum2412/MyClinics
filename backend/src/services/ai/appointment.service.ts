@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db, ObjectId } from "mongodb";
 import { DB_COLLECTIONS } from "@/lib/constants";
 import type {
@@ -280,7 +281,7 @@ export async function createAppointment(
     };
   }
 
-  const now = new Date();
+  const now = nowFn();
   const result = await db.collection(DB_COLLECTIONS.appointments).insertOne({
     organizationId: input.organizationId,
     fullName: input.patientName,
@@ -392,7 +393,7 @@ export async function rescheduleAppointment(
         date: input.newDate,
         time: input.newTime,
         status: "rescheduled",
-        updatedAt: new Date(),
+        updatedAt: nowFn(),
         ...(input.conversationId ? { whatsappConversationId: input.conversationId } : {}),
       },
     }
@@ -438,7 +439,7 @@ export async function cancelAppointment(
 
   await db.collection(DB_COLLECTIONS.appointments).updateOne(
     { _id: existing._id },
-    { $set: { status: "cancelled", updatedAt: new Date() } }
+    { $set: { status: "cancelled", updatedAt: nowFn() } }
   );
 
   logger.info("appointment cancelled via whatsapp ai", {

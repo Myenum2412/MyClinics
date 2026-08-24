@@ -9,6 +9,7 @@ import type {
   WithId,
 } from "mongodb";
 import { CLINIC_COLLECTIONS, type ClinicCollectionName } from "@/clinic/core/collections";
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { ClinicContext } from "@/clinic/core/context";
 
 /**
@@ -142,7 +143,7 @@ export abstract class ClinicRepository<T extends ClinicDocument> {
     const doc = {
       ...data,
       clinicId: this.ctx.clinicId,
-      createdAt: new Date(),
+      createdAt: nowFn(),
     } as unknown as OptionalUnlessRequiredId<T>;
     const { insertedId } = await this.collection.insertOne(doc);
     return (await this.collection.findOne({ _id: insertedId } as Filter<T>)) as WithId<T>;
@@ -155,7 +156,7 @@ export abstract class ClinicRepository<T extends ClinicDocument> {
   ): Promise<{ matchedCount: number; modifiedCount: number; upsertedId?: ObjectId }> {
     const stamped = {
       ...update,
-      $set: { ...(update.$set ?? {}), updatedAt: new Date() },
+      $set: { ...(update.$set ?? {}), updatedAt: nowFn() },
     } as unknown as UpdateFilter<T>;
     const result = await this.collection.updateOne(this.scoped(filter), stamped, options);
     return {
@@ -174,7 +175,7 @@ export abstract class ClinicRepository<T extends ClinicDocument> {
   /** Soft delete: flags the record so default queries exclude it. */
   async softDelete(filter: Filter<T>): Promise<boolean> {
     const result = await this.collection.updateOne(this.scoped(filter), {
-      $set: { status: SOFT_DELETE_MARKER, deletedAt: new Date(), updatedAt: new Date() },
+      $set: { status: SOFT_DELETE_MARKER, deletedAt: nowFn(), updatedAt: nowFn() },
     } as unknown as UpdateFilter<T>);
     return result.modifiedCount === 1;
   }

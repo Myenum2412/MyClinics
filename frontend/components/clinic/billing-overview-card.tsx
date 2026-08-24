@@ -6,6 +6,33 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Bill } from "@/lib/clinic-api";
+import {
+  KOLKATA_TZ,
+  addDays,
+  now,
+  parseDate,
+  parseLocalDate,
+  startOfDayKolkata,
+  toLocalDateISO,
+} from "@/lib/datetime";
+
+/** Shift a "YYYY-MM" month key by `delta` months (negative = past). */
+function shiftMonthKey(key: string, delta: number): string {
+  const [y, m] = key.split("-").map(Number);
+  let mi = m - 1 + delta;
+  const yr = y + Math.floor(mi / 12);
+  mi = ((mi % 12) + 12) % 12;
+  return `${yr}-${String(mi + 1).padStart(2, "0")}`;
+}
+
+/** "Aug 24" style label for a "YYYY-MM" month key, rendered in Asia/Kolkata. */
+function monthLabel(key: string): string {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    year: "2-digit",
+    timeZone: KOLKATA_TZ,
+  }).format(parseLocalDate(`${key}-01`));
+}
 
 interface BillingOverviewCardProps {
   bills: Bill[];
@@ -29,14 +56,14 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
   const [range, setRange] = React.useState<"12m" | "6m" | "3m">("12m");
   const monthsCount = range === "12m" ? 12 : range === "6m" ? 6 : 3;
   const todayStr = React.useMemo(
-    () => new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
+    () => new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: KOLKATA_TZ }).format(now()),
     []
   );
 
   const { chartData, totalBilled, totalPaid, outstanding, highestMonth, dailyData } = React.useMemo(() => {
-    const now = new Date();
-    // Determine window start for range filtering (real data window)
-    const windowStart = new Date(now.getFullYear(), now.getMonth() - monthsCount + 1, 1);
+    const nowMonthKey = toLocalDateISO(now()).slice(0, 7); // "YYYY-MM" in Kolkata
+    // Determine window start month key for range filtering (real data window)
+    const windowStartKey = shiftMonthKey(nowMonthKey, -(monthsCount - 1));
     const totalsByKey = new Map<string, number>();
     let totalBilledWindow = 0;
     let totalPaidWindow = 0;
@@ -44,13 +71,13 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
 
     for (const bill of bills) {
       if (bill.status === "void") continue;
-      const invoice = new Date(bill.invoiceDate);
-      if (Number.isNaN(invoice.getTime())) continue;
-      const key = `${invoice.getFullYear()}-${String(invoice.getMonth() + 1).padStart(2, "0")}-01`;
+      const invoice = parseDate(bill.invoiceDate);
+      if (!invoice) continue;
+      const key = `${toLocalDateISO(invoice).slice(0, 7)}-01`;
       const billTotal = bill.total ?? 0;
       totalsByKey.set(key, (totalsByKey.get(key) ?? 0) + billTotal);
 
-      if (invoice >= windowStart) {
+      if (key >= windowStartKey) {
         totalBilledWindow += billTotal;
         totalPaidWindow += bill.amountPaid ?? 0;
         outstandingWindow += bill.balanceDue ?? 0;
@@ -63,15 +90,13 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
     const step = is12m ? 2 : 1;
     const data: { key: string; label: string; shortLabel: string; total: number; isLatest: boolean }[] = [];
     for (let i = points - 1; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i * step, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-      const label = d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+      const key = `${shiftMonthKey(nowMonthKey, -i * step)}-01`;
+      const label = monthLabel(key.slice(0, 7));
       let total = 0;
       if (is12m) {
         // Aggregate 2 months per point to cover full 12 months without gaps (e.g., Oct+Nov, Dec+Jan, etc.)
         for (let s = 0; s < step; s++) {
-          const dm = new Date(d.getFullYear(), d.getMonth() + s, 1);
-          const km = `${dm.getFullYear()}-${String(dm.getMonth() + 1).padStart(2, "0")}-01`;
+          const km = `${shiftMonthKey(key.slice(0, 7), s)}-01`;
           total += totalsByKey.get(km) ?? 0;
         }
       } else {
@@ -109,16 +134,15 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
     const dailyTotalsByDate = new Map<string, number>();
     for (const bill of bills) {
       if (bill.status === "void") continue;
-      const invoice = new Date(bill.invoiceDate);
-      if (Number.isNaN(invoice.getTime())) continue;
-      const dayKey = `${invoice.getFullYear()}-${String(invoice.getMonth() + 1).padStart(2, "0")}-${String(invoice.getDate()).padStart(2, "0")}`;
+      const invoice = parseDate(bill.invoiceDate);
+      if (!invoice) continue;
+      const dayKey = toLocalDateISO(invoice);
       dailyTotalsByDate.set(dayKey, (dailyTotalsByDate.get(dayKey) ?? 0) + (bill.total ?? 0));
     }
     const dailyData: { key: string; label: string; total: number; isToday: boolean }[] = [];
     for (let offset = 6; offset >= 0; offset--) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      const label = d.toLocaleDateString("en-US", { day: "2-digit", month: "short" });
+      const key = toLocalDateISO(addDays(startOfDayKolkata(), -offset));
+      const label = new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "short", timeZone: KOLKATA_TZ }).format(parseLocalDate(key));
       const isToday = offset === 0;
       dailyData.push({
         key,

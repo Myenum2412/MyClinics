@@ -1,5 +1,6 @@
 import type { Client } from "whatsapp-web.js";
 import { logger } from "@/lib/logger";
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db } from "mongodb";
 import { createWhatsAppClient } from "@/services/whatsapp/whatsapp.client";
 import {
@@ -156,7 +157,7 @@ function wireEvents(db: Db, session: ManagedSession): void {
     void upsertSessionConfig(db, clinicId, {
       enabled: true,
       phone,
-      lastConnectedAt: new Date(),
+      lastConnectedAt: nowFn(),
     }).catch(() => {});
   });
 
@@ -175,7 +176,7 @@ function wireEvents(db: Db, session: ManagedSession): void {
     }
     setSessionStage(clinicId, "disconnected");
     logger.warn("clinic whatsapp disconnected", { clinicId, reason: String(reason) });
-    void upsertSessionConfig(db, clinicId, { lastDisconnectedAt: new Date() }).catch(() => {});
+    void upsertSessionConfig(db, clinicId, { lastDisconnectedAt: nowFn() }).catch(() => {});
     scheduleReconnect(db, session);
   });
 
@@ -303,7 +304,7 @@ export async function stopClinicSession(
     await upsertSessionConfig(db, clinicId, {
       enabled: false,
       phone: null,
-      lastDisconnectedAt: new Date(),
+      lastDisconnectedAt: nowFn(),
     });
   }
   setSessionStage(clinicId, options.logout ? "idle" : "disconnected");

@@ -53,6 +53,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 import dynamic from "next/dynamic";
 import { appointmentStatusTone } from "@/lib/status-styles";
+import { formatDateTime, nowMs } from "@/lib/datetime";
 
 const StatsAppointments = dynamic(
   () => import("@/components/stats-appointments"),
@@ -294,7 +295,7 @@ export default function AppointmentsPage() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(selectedAppts, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `appointments_export_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `appointments_export_${nowMs()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -883,8 +884,8 @@ export default function AppointmentsPage() {
           ) : (
             <div className="space-y-4 py-2">
               {logs.map((log) => {
-                const dateFmt = new Date(log.createdAt).toLocaleString();
-                const schedFmt = new Date(log.scheduledTime).toLocaleString();
+                 const dateFmt = formatDateTime(log.createdAt);
+                const schedFmt = formatDateTime(log.scheduledTime);
 
                 return (
                   <div

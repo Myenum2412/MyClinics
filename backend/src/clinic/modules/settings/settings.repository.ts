@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db, WithId } from "mongodb";
 import type { ClinicSettingsDoc } from "@/clinic/modules/settings/settings.schema";
 import { DEFAULT_SETTINGS } from "@/clinic/modules/settings/settings.dto";
@@ -17,7 +18,7 @@ export class SettingsRepository {
     const result = await this.collection().findOneAndUpdate(
       { clinicId: this.clinicId },
       {
-        $setOnInsert: { ...DEFAULT_SETTINGS, clinicId: this.clinicId, createdAt: new Date(), updatedAt: new Date() },
+        $setOnInsert: { ...DEFAULT_SETTINGS, clinicId: this.clinicId, createdAt: nowFn(), updatedAt: nowFn() },
       },
       { upsert: true, returnDocument: "after" }
     );
@@ -34,8 +35,8 @@ export class SettingsRepository {
     const result = await this.collection().findOneAndUpdate(
       { clinicId: this.clinicId },
       {
-        $set: { ...patch, updatedAt: new Date() },
-        $setOnInsert: { ...insertDefaults, clinicId: this.clinicId, createdAt: new Date() },
+        $set: { ...patch, updatedAt: nowFn() },
+        $setOnInsert: { ...insertDefaults, clinicId: this.clinicId, createdAt: nowFn() },
       },
       { upsert: true, returnDocument: "after" }
     );

@@ -59,6 +59,7 @@ import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mai
 import dynamic from "next/dynamic";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import { patientStatusTone } from "@/lib/status-styles";
+import { todayISO } from "@/lib/datetime";
 
 const StatsGeneric = dynamic(() => import("@/components/stats-generic"), {
   loading: () => <div className="h-[270px]" aria-hidden="true" />,
@@ -304,7 +305,7 @@ export default function PatientsPage() {
   const totalPatients = items.length;
   const activePatients = items.filter((p) => p.status === "active").length;
   const femalePatients = items.filter((p) => p.gender === "female").length;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayISO();
   const upcomingAppointments = apptItems.filter(
     (a) => a.status === "scheduled" && a.date >= today
   ).length;

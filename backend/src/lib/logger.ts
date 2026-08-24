@@ -1,8 +1,10 @@
+import { nowISO } from "@/clinic/core/datetime";
+
 type Level = "info" | "warn" | "error";
 
 function write(level: Level, message: string, fields?: Record<string, unknown>) {
   const entry: Record<string, unknown> = {
-    ts: new Date().toISOString(),
+    ts: nowISO(),
     level,
     message,
   };

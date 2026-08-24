@@ -63,6 +63,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import dynamic from "next/dynamic";
+import { formatDate } from "@/lib/format-time";
+import { nowMs, todayISO, parseDate, formatDateTime } from "@/lib/datetime";
 
 const Stats07 = dynamic(() => import("@/components/stats-07"), {
   loading: () => <div className="h-[270px]" aria-hidden="true" />,
@@ -88,19 +90,6 @@ import {
   FileText,
   MessageSquare,
 } from "lucide-react";
-
-function today(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")}`;
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
 
 interface PrescriptionFormState {
   patientId: string;
@@ -192,7 +181,10 @@ export default function PrescriptionsPage() {
             const map: Record<string, any> = {};
             (notifData.notifications || []).forEach((n: any) => {
               // Keep the newest notification status per prescription
-              if (!map[n.prescriptionId] || new Date(n.updatedAt) > new Date(map[n.prescriptionId].updatedAt)) {
+              const existing = map[n.prescriptionId];
+              const nUpdated = parseDate(n.updatedAt);
+              const existingUpdated = existing ? parseDate(existing.updatedAt) : null;
+              if (!existing || (nUpdated && existingUpdated && nUpdated > existingUpdated)) {
                 map[n.prescriptionId] = n;
               }
             });
@@ -270,7 +262,7 @@ export default function PrescriptionsPage() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(selectedRows, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `prescriptions_export_${Date.now()}.json`);
+      downloadAnchor.setAttribute("download", `prescriptions_export_${nowMs()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -931,15 +923,9 @@ export default function PrescriptionsPage() {
                               {log.status}
                             </Badge>
                           </div>
-                          <p className="text-muted-foreground text-[10px]">
-                            Triggered: {new Intl.DateTimeFormat("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }).format(new Date(log.createdAt))}
-                          </p>
+                           <p className="text-muted-foreground text-[10px]">
+                             Triggered: {formatDateTime(log.createdAt)}
+                           </p>
                           {log.phone && (
                             <p className="text-[10px] text-foreground">
                               Recipient Phone: <span className="font-mono">{log.phone}</span>
@@ -1016,7 +1002,7 @@ function PrescriptionForm({
   const [form, setForm] = useState<PrescriptionFormState>(initial || {
     patientId: "",
     doctorId,
-    visitDate: today(),
+    visitDate: todayISO(),
     diagnosis: "",
     medicines: [{ ...EMPTY_MEDICINE }],
     notes: "",
@@ -1166,7 +1152,7 @@ function PrescriptionForm({
 
       {!readOnly && (
         <div className="flex gap-3 border-t border-border pt-8">
-          <Button type="button" variant="outline" onClick={() => setForm(initial || { patientId: "", doctorId, visitDate: today(), diagnosis: "", medicines: [{ ...EMPTY_MEDICINE }], notes: "" })} className="border-primary/30 text-primary hover:bg-accent">
+          <Button type="button" variant="outline" onClick={() => setForm(initial || { patientId: "", doctorId, visitDate: todayISO(), diagnosis: "", medicines: [{ ...EMPTY_MEDICINE }], notes: "" })} className="border-primary/30 text-primary hover:bg-accent">
             Reset
           </Button>
           <div className="flex-1" />

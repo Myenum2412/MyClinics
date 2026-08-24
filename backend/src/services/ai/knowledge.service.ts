@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -107,7 +108,7 @@ export async function ensureKnowledgeSeeded(db: Db, organizationId: string): Pro
   const entries = parseSeedMarkdown(defaultSeedContent());
   if (entries.length === 0) return;
 
-  const now = new Date();
+  const now = nowFn();
   const docs = entries.map((entry) => ({
     organizationId,
     title: entry.title,
@@ -144,7 +145,7 @@ async function tryEmbedContent(db: Db, organizationId: string): Promise<void> {
     if (embedding) {
       await collection.updateOne(
         { _id: doc._id },
-        { $set: { embedding, updatedAt: new Date() } }
+        { $set: { embedding, updatedAt: nowFn() } }
       );
     }
   }
@@ -156,7 +157,7 @@ export async function createKnowledgeDocument(
   input: { title: string; category: string; content: string }
 ): Promise<KnowledgeDocument> {
   const collection = knowledgeCollection(db);
-  const now = new Date();
+  const now = nowFn();
   const result = await collection.insertOne({
     organizationId,
     title: input.title,
@@ -187,7 +188,7 @@ export async function updateKnowledgeDocument(
         title: input.title,
         category: input.category || "clinic",
         content: input.content,
-        updatedAt: new Date(),
+        updatedAt: nowFn(),
       },
       $unset: { embedding: "" },
     },

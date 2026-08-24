@@ -1,3 +1,5 @@
+import { nowMs } from "@/clinic/core/datetime";
+
 export interface RateLimiter {
   check(key: string): boolean;
   clear(key: string): void;
@@ -15,7 +17,7 @@ export function createRateLimiter(options: {
   const { windowMs, max } = options;
 
   setInterval(() => {
-    const cutoff = Date.now() - windowMs;
+    const cutoff = nowMs() - windowMs;
     for (const [key, times] of hits) {
       const remaining = times.filter((t) => t > cutoff);
       if (remaining.length === 0) hits.delete(key);
@@ -25,7 +27,7 @@ export function createRateLimiter(options: {
 
   return {
     check(key: string): boolean {
-      const now = Date.now();
+      const now = nowMs();
       const cutoff = now - windowMs;
       const times = (hits.get(key) ?? []).filter((t) => t > cutoff);
       if (times.length >= max) {

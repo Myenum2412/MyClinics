@@ -21,6 +21,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
+import { formatDateTime, nowMs } from "@/lib/datetime";
 import {
   Columns,
   Search,
@@ -28,19 +29,6 @@ import {
   ChevronRight,
   Download,
 } from "lucide-react";
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
 
 export default function AuditLogsPage() {
   const session = useRequireRole("clinic_admin");
@@ -115,7 +103,7 @@ export default function AuditLogsPage() {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(selectedRows, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `audit_logs_export_${Date.now()}.json`);
+        downloadAnchor.setAttribute("download", `audit_logs_export_${nowMs()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -286,7 +274,7 @@ export default function AuditLogsPage() {
                     )}
                     {visibleColumns.createdAt && (
                       <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                        {formatDate(a.createdAt)}
+                        {formatDateTime(a.createdAt)}
                       </TableCell>
                     )}
                     {visibleColumns.actorUserId && (

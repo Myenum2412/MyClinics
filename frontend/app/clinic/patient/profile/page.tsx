@@ -45,6 +45,7 @@ import {
   Activity,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatMonthYear } from "@/lib/datetime";
 
 interface FormState {
   fullName: string;
@@ -117,9 +118,7 @@ function orDash(value: string | number | null | undefined): string {
 
 function memberSince(createdAt: string | undefined): string {
   if (!createdAt) return "—";
-  const d = new Date(createdAt);
-  if (Number.isNaN(d.getTime())) return "—";
-  return d.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+  return formatMonthYear(createdAt);
 }
 
 function FieldGrid({ children, cols = 4 }: { children: React.ReactNode; cols?: number }) {

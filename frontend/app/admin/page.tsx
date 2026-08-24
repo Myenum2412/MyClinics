@@ -43,12 +43,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Plus } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
-}
+import { formatDate } from "@/lib/datetime";
 
 export default function AdminClinicsPage() {
   const session = useRequireRole("platform_admin");

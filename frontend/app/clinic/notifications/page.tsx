@@ -41,21 +41,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
+import { formatDateTime } from "@/lib/datetime";
 
 const NOTIFICATION_TYPES = ["appointment", "bill", "report", "prescription", "general"];
 const MAX_ATTACHMENTS = 3;
 const MAX_ATTACHMENT_MB = 10;
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("en-IN", {
-    day: "numeric",
-    month: "short",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
 
 export default function NotificationsPage() {
   const session = useRequireRole("patient");
@@ -264,7 +254,7 @@ export default function NotificationsPage() {
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-medium">{n.title}</span>
                     <span className="shrink-0 text-xs text-muted-foreground">
-                      {formatDate(n.createdAt)}
+                      {formatDateTime(n.createdAt)}
                     </span>
                   </div>
                   {n.body && <p className="mt-1 text-sm text-muted-foreground">{n.body}</p>}

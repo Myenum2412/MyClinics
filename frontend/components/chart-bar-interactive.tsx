@@ -16,6 +16,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { KOLKATA_TZ, parseDate } from "@/lib/datetime";
 
 export interface ChartBarInteractiveDatum {
   date: string;
@@ -107,12 +108,13 @@ export function ChartBarInteractive({
               tickMargin={8}
               minTickGap={32}
               tickFormatter={(value) => {
-                const date = new Date(value);
-                if (Number.isNaN(date.getTime())) return String(value);
-                return date.toLocaleDateString("en-US", {
+                const date = parseDate(value);
+                if (!date) return String(value);
+                return new Intl.DateTimeFormat("en-US", {
                   month: "short",
                   year: "2-digit",
-                });
+                  timeZone: KOLKATA_TZ,
+                }).format(date);
               }}
             />
             <ChartTooltip
@@ -121,12 +123,13 @@ export function ChartBarInteractive({
                   className="w-[180px]"
                   nameKey={activeChart}
                   labelFormatter={(value) => {
-                    const date = new Date(String(value));
-                    if (Number.isNaN(date.getTime())) return String(value);
-                    return date.toLocaleDateString("en-US", {
+                    const date = parseDate(value);
+                    if (!date) return String(value);
+                    return new Intl.DateTimeFormat("en-US", {
                       month: "short",
                       year: "numeric",
-                    });
+                      timeZone: KOLKATA_TZ,
+                    }).format(date);
                   }}
                   formatter={(value) => [
                     formatINR(Number(value)),

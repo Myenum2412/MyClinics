@@ -1,5 +1,6 @@
 import PDFDocument from "pdfkit";
 import { readFileSync } from "node:fs";
+import { KOLKATA_TZ } from "@/clinic/core/datetime";
 import { fileURLToPath } from "node:url";
 import type { OrganizationRecord } from "@/services/customer/customer-context.service";
 
@@ -144,6 +145,7 @@ function formatDate(value: string | null | undefined): string {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+    timeZone: KOLKATA_TZ,
   }).format(parsed);
 }
 

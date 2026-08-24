@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db, Filter, WithId } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import type { ClinicDoc } from "@/clinic/core/types";
@@ -31,7 +32,7 @@ export class ClinicRepository {
       updatedAt?: Date;
     }
   ): Promise<WithId<ClinicDoc>> {
-    const now = new Date();
+    const now = nowFn();
     await this.collection().insertOne({
       ...doc,
       settings: doc.settings ?? {
@@ -87,7 +88,7 @@ export class ClinicRepository {
   async update(clinicId: string, patch: Record<string, unknown>): Promise<WithId<ClinicDoc> | null> {
     const result = await this.collection().findOneAndUpdate(
       { clinicId },
-      { $set: { ...patch, updatedAt: new Date() } },
+      { $set: { ...patch, updatedAt: nowFn() } },
       { returnDocument: "after" }
     );
     return result;
@@ -96,7 +97,7 @@ export class ClinicRepository {
   async updateStatus(clinicId: string, status: ClinicDoc["status"]): Promise<boolean> {
     const result = await this.collection().updateOne(
       { clinicId },
-      { $set: { status, updatedAt: new Date() } }
+      { $set: { status, updatedAt: nowFn() } }
     );
     return result.matchedCount === 1;
   }
@@ -123,7 +124,7 @@ export class ClinicOwnRepository {
       .collection<ClinicDoc>(CLINIC_COLLECTIONS.clinics)
       .findOneAndUpdate(
         { clinicId: this.clinicId },
-        { $set: { ...patch, updatedAt: new Date() } },
+        { $set: { ...patch, updatedAt: nowFn() } },
         { returnDocument: "after" }
       );
     return result;

@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db, ObjectId } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import { enqueueClinicNotification, NOTIFICATIONS_COLLECTION } from "@/services/whatsapp/notification.service";
@@ -48,7 +49,7 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
               status: "failed",
               attempts: notification.attempts + 1,
               lastError: "Prescription not found or deleted",
-              updatedAt: new Date(),
+              updatedAt: nowFn(),
             },
           }
         );
@@ -72,7 +73,7 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
               status: "failed",
               attempts: notification.attempts + 1,
               lastError: "Patient not found or deleted",
-              updatedAt: new Date(),
+              updatedAt: nowFn(),
             },
           }
         );
@@ -88,7 +89,7 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
               status: "failed",
               attempts: notification.attempts + 1,
               lastError: "Patient has no mobile number",
-              updatedAt: new Date(),
+              updatedAt: nowFn(),
             },
           }
         );
@@ -120,7 +121,7 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
               status: "failed",
               attempts: notification.attempts + 1,
               lastError: "Recipient is a doctor. Prescription notifications are restricted to patients only.",
-              updatedAt: new Date(),
+              updatedAt: nowFn(),
             },
           }
         );
@@ -175,8 +176,8 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
             message,
             attempts: notification.attempts + 1,
             lastError: result.queued ? null : "Failed to queue WhatsApp message",
-            processedAt: new Date(),
-            updatedAt: new Date(),
+            processedAt: nowFn(),
+            updatedAt: nowFn(),
           },
         }
       );
@@ -193,7 +194,7 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
             status: "failed",
             attempts: notification.attempts + 1,
             lastError: errorMsg,
-            updatedAt: new Date(),
+            updatedAt: nowFn(),
           },
         }
       );
@@ -223,8 +224,8 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
             {
               $set: {
                 status: "sent",
-                processedAt: waNotif.sentAt ?? new Date(),
-                updatedAt: new Date(),
+                processedAt: waNotif.sentAt ?? nowFn(),
+                updatedAt: nowFn(),
               },
             }
           );
@@ -235,7 +236,7 @@ export async function processPrescriptionNotifications(db: Db): Promise<void> {
               $set: {
                 status: "failed",
                 lastError: waNotif.lastError ?? "WhatsApp delivery failed",
-                updatedAt: new Date(),
+                updatedAt: nowFn(),
               },
             }
           );

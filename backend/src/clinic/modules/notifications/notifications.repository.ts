@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db, WithId } from "mongodb";
 import type { NotificationDoc } from "@/clinic/modules/notifications/notifications.schema";
 
@@ -46,7 +47,7 @@ export class NotificationRepository {
     await this.collection().insertOne({
       ...doc,
       clinicId: this.clinicId,
-      createdAt: new Date(),
+      createdAt: nowFn(),
     } as never);
     return (await this.findByNotificationId(doc.notificationId)) as WithId<NotificationDoc>;
   }
@@ -54,7 +55,7 @@ export class NotificationRepository {
   async markRead(notificationId: string, recipientUserId: string): Promise<boolean> {
     const result = await this.collection().updateOne(
       { clinicId: this.clinicId, notificationId, recipientUserId },
-      { $set: { readAt: new Date() } }
+      { $set: { readAt: nowFn() } }
     );
     return result.matchedCount === 1;
   }
@@ -62,7 +63,7 @@ export class NotificationRepository {
   async markAllRead(recipientUserId: string): Promise<number> {
     const result = await this.collection().updateMany(
       { clinicId: this.clinicId, recipientUserId, readAt: null },
-      { $set: { readAt: new Date() } }
+      { $set: { readAt: nowFn() } }
     );
     return result.modifiedCount;
   }

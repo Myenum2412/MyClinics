@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db, WithId } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
@@ -37,7 +38,7 @@ export class ClinicWelcomeDocumentService {
   ): Promise<WithId<ClinicWelcomeDocumentDoc>> {
     const clinicId = requireClinicOf(ctx);
     const documentId = generateWelcomeDocumentId();
-    const now = new Date();
+    const now = nowFn();
     const r2Key = r2KeyForWelcomeDocument(clinicId, documentId, input.fileName);
 
     await uploadToR2(r2Key, input.data, input.mimeType ?? "application/octet-stream");
@@ -118,7 +119,7 @@ export class ClinicWelcomeDocumentService {
       { _id: doc._id },
       {
         $inc: { downloadCount: 1 },
-        $set: { lastDownloadedAt: new Date() },
+        $set: { lastDownloadedAt: nowFn() },
       }
     );
 
@@ -133,7 +134,7 @@ export class ClinicWelcomeDocumentService {
     await deleteFromR2(doc.r2Key);
     await this.collection().updateOne(
       { _id: doc._id },
-      { $set: { deletedAt: new Date() } }
+      { $set: { deletedAt: nowFn() } }
     );
 
     await writeAudit(this.db, ctx, {

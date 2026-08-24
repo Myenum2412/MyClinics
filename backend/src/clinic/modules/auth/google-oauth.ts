@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { nowMs } from "@/clinic/core/datetime";
 
 /**
  * Google OAuth (authorization code flow) for clinic sign-in.
@@ -61,9 +62,9 @@ const pendingStates = new Map<string, { exp: number; from: "login" | "signup" }>
 
 export function issueStateToken(from: "login" | "signup" = "login"): string {
   const state = randomBytes(24).toString("hex");
-  pendingStates.set(state, { exp: Date.now() + STATE_TTL_MS, from });
+  pendingStates.set(state, { exp: nowMs() + STATE_TTL_MS, from });
   if (pendingStates.size > 1000) {
-    const now = Date.now();
+    const now = nowMs();
     for (const [key, entry] of pendingStates) {
       if (entry.exp < now) pendingStates.delete(key);
     }
@@ -76,7 +77,7 @@ export function consumeStateToken(state: string): "login" | "signup" | null {
   const entry = pendingStates.get(state);
   if (!entry) return null;
   pendingStates.delete(state);
-  return entry.exp >= Date.now() ? entry.from : null;
+  return entry.exp >= nowMs() ? entry.from : null;
 }
 
 // ── One-time Google signup tickets ─────────────────────────────────────────
@@ -89,7 +90,7 @@ const signupTickets = new Map<string, { exp: number; email: string }>();
 
 export function issueGoogleSignupTicket(email: string): string {
   const ticket = randomBytes(24).toString("hex");
-  signupTickets.set(ticket, { exp: Date.now() + STATE_TTL_MS, email });
+  signupTickets.set(ticket, { exp: nowMs() + STATE_TTL_MS, email });
   return ticket;
 }
 
@@ -98,7 +99,7 @@ export function consumeGoogleSignupTicket(ticket: string): string | null {
   const entry = signupTickets.get(ticket);
   if (!entry) return null;
   signupTickets.delete(ticket);
-  return entry.exp >= Date.now() ? entry.email : null;
+  return entry.exp >= nowMs() ? entry.email : null;
 }
 
 // ── Google calls ───────────────────────────────────────────────────────────

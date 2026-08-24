@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import bcrypt from "bcryptjs";
 import type { Db, WithId } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
@@ -148,8 +149,8 @@ export class ClinicService {
       phone: input.phone ?? null,
       status: "active",
       lastLoginAt: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: nowFn(),
+      updatedAt: nowFn(),
     };
     await this.db.collection<UserDoc>(CLINIC_COLLECTIONS.users).insertOne(userDoc as never);
 

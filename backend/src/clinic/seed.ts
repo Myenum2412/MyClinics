@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import type { Db } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
+import { now as nowFn } from "@/clinic/core/datetime";
 import { generateUserId, normalizeEmail } from "@/clinic/core/ids";
 import type { UserDoc } from "@/clinic/core/types";
 
@@ -23,7 +24,7 @@ export async function ensurePlatformAdmin(db: Db): Promise<void> {
   if (existing) return;
 
   const passwordHash = await bcrypt.hash(password, 12);
-  const now = new Date();
+  const now = nowFn();
   await db.collection(CLINIC_COLLECTIONS.users).insertOne({
     clinicId: null,
     userId: generateUserId(),

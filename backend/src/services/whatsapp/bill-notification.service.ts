@@ -1,5 +1,6 @@
 import type { Db } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
+import { KOLKATA_TZ } from "@/clinic/core/datetime";
 import {
   enqueueClinicNotification,
   type NotificationMedia,
@@ -37,6 +38,7 @@ function shortDate(value: Date | null | undefined): string {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
+    timeZone: KOLKATA_TZ,
   }).format(d);
 }
 

@@ -1,3 +1,4 @@
+import { nowMs } from "@/clinic/core/datetime";
 import { logger } from "@/lib/logger";
 
 export class NvidiaConfigError extends Error {
@@ -201,7 +202,7 @@ export async function embedText(text: string): Promise<number[] | null> {
   const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey) return null;
 
-  if (embedCooldownUntil > Date.now()) return null;
+  if (embedCooldownUntil > nowMs()) return null;
 
   const url = process.env.NVIDIA_EMBED_URL ?? DEFAULT_EMBED_URL;
   const model = process.env.NVIDIA_EMBED_MODEL ?? DEFAULT_EMBED_MODEL;
@@ -221,7 +222,7 @@ export async function embedText(text: string): Promise<number[] | null> {
     if (!res.ok) {
       embedFailures += 1;
       if (embedFailures >= EMBED_BREAKER_THRESHOLD) {
-        embedCooldownUntil = Date.now() + EMBED_BREAKER_COOLDOWN_MS;
+        embedCooldownUntil = nowMs() + EMBED_BREAKER_COOLDOWN_MS;
         logger.warn("nvidia embed circuit opened", { status: res.status });
       }
       return null;
@@ -236,7 +237,7 @@ export async function embedText(text: string): Promise<number[] | null> {
   } catch {
     embedFailures += 1;
     if (embedFailures >= EMBED_BREAKER_THRESHOLD) {
-      embedCooldownUntil = Date.now() + EMBED_BREAKER_COOLDOWN_MS;
+      embedCooldownUntil = nowMs() + EMBED_BREAKER_COOLDOWN_MS;
       logger.warn("nvidia embed circuit opened (network)");
     }
     return null;

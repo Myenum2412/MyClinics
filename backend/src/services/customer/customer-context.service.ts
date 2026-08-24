@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import { ObjectId, type Db } from "mongodb";
 import { DB_COLLECTIONS, DEFAULT_WORKING_HOURS } from "@/lib/constants";
 import type { WaCustomer } from "@/lib/ai-types";
@@ -73,8 +74,8 @@ export async function ensureDefaultOrganization(db: Db): Promise<OrganizationRec
     address: null,
     website: null,
     description: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: nowFn(),
+    updatedAt: nowFn(),
   });
 
   const inserted = await db
@@ -141,7 +142,7 @@ export async function updateOrganizationDetails(
 ): Promise<OrganizationRecord> {
   await db.collection(DB_COLLECTIONS.organizations).updateOne(
     { _id: new ObjectId(organizationId) },
-    { $set: { ...patch, updatedAt: new Date() } }
+    { $set: { ...patch, updatedAt: nowFn() } }
   );
   const doc = await db
     .collection<OrganizationDoc>(DB_COLLECTIONS.organizations)
@@ -221,7 +222,7 @@ export async function getOrCreateCustomer(
   });
   if (existing) {
     const customer = toCustomer(existing as never);
-    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    const updates: Record<string, unknown> = { updatedAt: nowFn() };
     if (customer.phoneNumber !== phoneNumber) updates.phoneNumber = phoneNumber;
     if (name && customer.name !== name) updates.name = name;
     if (Object.keys(updates).length > 1) {
@@ -232,7 +233,7 @@ export async function getOrCreateCustomer(
     return customer;
   }
 
-  const now = new Date();
+  const now = nowFn();
   const result = await collection.insertOne({
     organizationId: params.organizationId,
     whatsappId,
@@ -263,6 +264,6 @@ export async function touchCustomer(
 ): Promise<void> {
   await db.collection(DB_COLLECTIONS.waCustomers).updateOne(
     { organizationId, customerId },
-    { $set: { lastInteractionAt: new Date() } }
+    { $set: { lastInteractionAt: nowFn() } }
   );
 }

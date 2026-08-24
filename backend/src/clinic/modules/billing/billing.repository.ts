@@ -1,3 +1,9 @@
+import {
+  endOfDayKolkata,
+  now as nowFn,
+  startOfDayKolkata,
+  todayISO,
+} from "@/clinic/core/datetime";
 import type { Db, WithId } from "mongodb";
 import type { BillDoc } from "@/clinic/modules/billing/billing.schema";
 
@@ -49,8 +55,8 @@ export class BillRepository {
     if (query.status) filter.status = query.status;
     if (query.from || query.to) {
       filter.createdAt = {
-        ...(query.from ? { $gte: new Date(`${query.from}T00:00:00Z`) } : {}),
-        ...(query.to ? { $lte: new Date(`${query.to}T23:59:59Z`) } : {}),
+        ...(query.from ? { $gte: startOfDayKolkata(query.from) } : {}),
+        ...(query.to ? { $lte: endOfDayKolkata(query.to) } : {}),
       };
     }
     const scoped = this.scoped(filter);
@@ -68,7 +74,7 @@ export class BillRepository {
 
   /** Next sequential bill number for this clinic (B-YYYY-####). */
   async nextBillNumber(): Promise<string> {
-    const year = new Date().getUTCFullYear();
+    const year = Number(todayISO().slice(0, 4));
     const prefix = `B-${year}-`;
     const latest = await this.collection()
       .find({ clinicId: this.clinicId, billNumber: { $regex: `^${prefix}` } })
@@ -81,7 +87,7 @@ export class BillRepository {
   }
 
   async insert(doc: Omit<BillDoc, "_id" | "clinicId" | "createdAt" | "updatedAt">): Promise<WithId<BillDoc>> {
-    const now = new Date();
+    const now = nowFn();
     await this.collection().insertOne({
       ...doc,
       clinicId: this.clinicId,
@@ -94,7 +100,7 @@ export class BillRepository {
   async update(billId: string, patch: Record<string, unknown>): Promise<boolean> {
     const result = await this.collection().updateOne(
       this.scoped({ billId }),
-      { $set: { ...patch, updatedAt: new Date() } }
+      { $set: { ...patch, updatedAt: nowFn() } }
     );
     return result.matchedCount === 1;
   }
@@ -102,7 +108,7 @@ export class BillRepository {
   async softDelete(billId: string): Promise<boolean> {
     const result = await this.collection().updateOne(
       this.scoped({ billId }),
-      { $set: { status: "void", deletedAt: new Date(), updatedAt: new Date() } }
+      { $set: { status: "void", deletedAt: nowFn(), updatedAt: nowFn() } }
     );
     return result.matchedCount === 1;
   }

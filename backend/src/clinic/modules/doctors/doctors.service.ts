@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db, WithId } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
@@ -20,7 +21,7 @@ export class DoctorService {
   }
 
   async createDoctor(ctx: ClinicContext, input: CreateDoctorInput): Promise<WithId<DoctorDoc>> {
-    const now = new Date();
+    const now = nowFn();
     const doctor = await this.repo(ctx).insert({
       doctorId: generateDoctorId(),
       userId: null,
@@ -165,7 +166,7 @@ export class DoctorService {
       .collection(CLINIC_COLLECTIONS.users)
       .updateMany(
         { clinicId, role: "doctor", doctorId },
-        { $set: { status: "deleted", deletedAt: new Date(), updatedAt: new Date() } }
+        { $set: { status: "deleted", deletedAt: nowFn(), updatedAt: nowFn() } }
       );
 
     await writeAudit(this.db, ctx, {

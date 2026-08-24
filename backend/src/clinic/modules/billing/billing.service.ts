@@ -1,3 +1,4 @@
+import { now as nowFn, parseLocalDate } from "@/clinic/core/datetime";
 import type { Db, WithId } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
@@ -71,7 +72,7 @@ export class BillingService {
     const amountPaid = Math.min(Math.max(input.amountPaid ?? 0, 0), total);
     const paymentStatus = derivePaymentStatus(total, amountPaid);
     const status = input.status ?? (paymentStatus === "paid" && total > 0 ? "paid" : "draft");
-    const now = new Date();
+    const now = nowFn();
 
     const bill = await this.repo(ctx).insert({
       billId: generateBillId(),
@@ -102,8 +103,8 @@ export class BillingService {
       balanceDue: Math.round((total - amountPaid) * 100) / 100,
       paymentStatus,
       paymentMethod: input.paymentType ?? null,
-      invoiceDate: input.invoiceDate ? new Date(`${input.invoiceDate}T00:00:00`) : now,
-      dueDate: input.dueDate ? new Date(`${input.dueDate}T00:00:00`) : null,
+      invoiceDate: input.invoiceDate ? parseLocalDate(input.invoiceDate) : now,
+      dueDate: input.dueDate ? parseLocalDate(input.dueDate) : null,
       paidAt: status === "paid" ? now : null,
       notes: input.notes ?? null,
       internalNotes: input.internalNotes ?? null,
@@ -226,16 +227,16 @@ export class BillingService {
     if (input.reference !== undefined) patch.reference = input.reference;
     if (input.sendMethod !== undefined) patch.sendMethod = input.sendMethod;
     if (input.invoiceDate !== undefined) {
-      patch.invoiceDate = new Date(`${input.invoiceDate}T00:00:00`);
+      patch.invoiceDate = parseLocalDate(input.invoiceDate);
     }
     if (input.dueDate !== undefined) {
-      patch.dueDate = input.dueDate ? new Date(`${input.dueDate}T00:00:00`) : null;
+      patch.dueDate = input.dueDate ? parseLocalDate(input.dueDate) : null;
     }
     if (input.paymentMethod !== undefined) patch.paymentMethod = input.paymentMethod;
     if (input.status !== undefined) {
       patch.status = input.status;
       if (input.status === "paid") {
-        patch.paidAt = new Date();
+        patch.paidAt = nowFn();
         patch.paymentMethod =
           input.paymentType ?? input.paymentMethod ?? existing.paymentMethod ?? "cash";
       } else if (input.status === "draft" || input.status === "void") {

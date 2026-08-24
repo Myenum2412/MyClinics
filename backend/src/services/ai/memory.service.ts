@@ -1,3 +1,4 @@
+import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db } from "mongodb";
 import { DB_COLLECTIONS } from "@/lib/constants";
 import type { WaCustomer, WaConversation } from "@/lib/ai-types";
@@ -54,12 +55,12 @@ export async function setMemory(
   await db.collection(DB_COLLECTIONS.waMemories).updateOne(
     { organizationId, customerId, key },
     {
-      $set: { value, source, updatedAt: new Date() },
+      $set: { value, source, updatedAt: nowFn() },
       $setOnInsert: {
         organizationId,
         customerId,
         key,
-        createdAt: new Date(),
+        createdAt: nowFn(),
       },
     },
     { upsert: true }
@@ -172,7 +173,7 @@ export async function saveConversation(
 ): Promise<void> {
   await db.collection(DB_COLLECTIONS.waConversations).insertOne({
     ...conversation,
-    timestamp: conversation.timestamp instanceof Date ? conversation.timestamp : new Date(),
+    timestamp: conversation.timestamp instanceof Date ? conversation.timestamp : nowFn(),
   });
 }
 
@@ -236,8 +237,8 @@ export async function maybeSummarize(
       {
         $set: {
           conversationSummary: summary.trim(),
-          lastSummaryAt: new Date(),
-          updatedAt: new Date(),
+          lastSummaryAt: nowFn(),
+          updatedAt: nowFn(),
         },
       }
     );
@@ -266,7 +267,7 @@ export async function appendAppointmentHistory(
       { organizationId, customerId },
       {
         $push: { appointmentHistory: entry },
-        $set: { updatedAt: new Date() },
+        $set: { updatedAt: nowFn() },
       }
     );
 }

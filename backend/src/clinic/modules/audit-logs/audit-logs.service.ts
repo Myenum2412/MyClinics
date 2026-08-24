@@ -1,3 +1,4 @@
+import { endOfDayKolkata, parseLocalDate, startOfDayKolkata } from "@/clinic/core/datetime";
 import type { Db, WithId } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import type { ClinicContext } from "@/clinic/core/context";
@@ -43,8 +44,8 @@ export class AuditLogService {
     if (query.actorId) filter.actorId = query.actorId;
     if (query.from || query.to) {
       filter.createdAt = {
-        ...(query.from ? { $gte: new Date(`${query.from}T00:00:00Z`) } : {}),
-        ...(query.to ? { $lte: new Date(`${query.to}T23:59:59Z`) } : {}),
+        ...(query.from ? { $gte: startOfDayKolkata(query.from) } : {}),
+        ...(query.to ? { $lte: endOfDayKolkata(query.to) } : {}),
       };
     }
 

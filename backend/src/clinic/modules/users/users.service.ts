@@ -10,6 +10,7 @@ import {
   NotFoundError,
 } from "@/clinic/core/errors";
 import { generateUserId, normalizeEmail } from "@/clinic/core/ids";
+import { now as nowFn } from "@/clinic/core/datetime";
 import { isClinicRole, ROLE_PRIORITY, type ClinicRole } from "@/clinic/core/roles";
 import type { UserDoc } from "@/clinic/core/types";
 import type { CreateUserInput, UpdateUserInput } from "@/clinic/modules/users/users.dto";
@@ -61,7 +62,7 @@ export class UsersService {
     }
 
     const passwordHash = await bcrypt.hash(input.password, 12);
-    const now = new Date();
+    const now = nowFn();
     const doc: UserDoc = {
       clinicId,
       userId: existing?.userId ?? generateUserId(),
@@ -214,7 +215,7 @@ export class UsersService {
 
     const result = await this.collection().updateOne(
       { clinicId, userId: targetUserId },
-      { $set: { status: "deleted", deletedAt: new Date() } }
+      { $set: { status: "deleted", deletedAt: nowFn() } }
     );
     if (result.matchedCount === 0) throw new NotFoundError("User not found");
 

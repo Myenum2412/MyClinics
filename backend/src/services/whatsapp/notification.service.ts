@@ -4,6 +4,7 @@ import type { Client } from "whatsapp-web.js";
 const { MessageMedia } = wpp;
 import type { Db, ObjectId } from "mongodb";
 import { logger } from "@/lib/logger";
+import { now as nowFn } from "@/clinic/core/datetime";
 import { toWhatsAppRemoteId } from "@/lib/phone";
 import { todayDateString } from "@/lib/stats";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
@@ -67,7 +68,7 @@ export async function enqueueNotification(
     status: "queued",
     attempts: 0,
     lastError: null,
-    createdAt: new Date(),
+    createdAt: nowFn(),
     sentAt: null,
     mediaFilename: media?.filename,
     mediaMimetype: media?.mimetype,
@@ -178,7 +179,7 @@ async function sendBatch(
       updates.push({
         filter: { _id: notificationId },
         update: {
-          $set: { status: "sent", sentAt: new Date(), lastError: null },
+          $set: { status: "sent", sentAt: nowFn(), lastError: null },
         },
       });
       logger.info("whatsapp notification sent", {

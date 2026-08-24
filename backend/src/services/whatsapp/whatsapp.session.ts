@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import QRCode from "qrcode";
+import { nowISO, nowMs } from "@/clinic/core/datetime";
 import { logger } from "@/lib/logger";
 
 export interface SessionState {
@@ -49,7 +50,7 @@ function statusFileForKey(key: string): string {
 const states = new Map<string, SessionState>();
 
 function blankState(): SessionState {
-  return { connected: false, stage: "idle", updatedAt: new Date().toISOString() };
+  return { connected: false, stage: "idle", updatedAt: nowISO() };
 }
 
 export function getSessionState(key: string): SessionState {
@@ -60,7 +61,7 @@ export function setSessionStage(key: string, stage: SessionState["stage"]): void
   const state = states.get(key) ?? blankState();
   state.stage = stage;
   state.connected = stage === "ready";
-  state.updatedAt = new Date().toISOString();
+  state.updatedAt = nowISO();
   states.set(key, state);
   persistState(key, state);
 }
@@ -123,7 +124,7 @@ export function readQrTextFromDisk(key: string): { content: string; generatedAt:
   const file = join(sessionDirForKey(key), SESSION_QR_TEXT_FILE);
   try {
     const stat = statSync(file);
-    if (Date.now() - stat.mtimeMs > QR_FRESH_MS) return null;
+    if (nowMs() - stat.mtimeMs > QR_FRESH_MS) return null;
     return {
       content: readFileSync(file, "utf-8"),
       generatedAt: new Date(stat.mtimeMs).toISOString(),

@@ -1,3 +1,5 @@
+import { KOLKATA_TZ, todayISO } from "@/clinic/core/datetime";
+
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_24H = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
@@ -5,10 +7,7 @@ function pad(n: number): string {
   return n < 10 ? `0${n}` : String(n);
 }
 
-export function todayISO(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
+export { todayISO };
 
 export function isISODate(value: string): boolean {
   if (!ISO_DATE.test(value)) return false;
@@ -41,7 +40,7 @@ export function formatISODate(value: string): string {
     month: "long",
     day: "numeric",
     year: "numeric",
-    timeZone: "UTC",
+    timeZone: KOLKATA_TZ,
   }).format(parsed);
 }
 

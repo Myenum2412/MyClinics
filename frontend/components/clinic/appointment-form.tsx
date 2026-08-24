@@ -5,6 +5,7 @@ import { useDropdownOptions } from "@/lib/dropdown-options";
 import type { Appointment, Doctor, Patient } from "@/lib/clinic-api";
 import { TimePicker } from "@/components/ui/time-picker";
 import { formatTime } from "@/lib/format-time";
+import { now, toLocalDateISO } from "@/lib/datetime";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,10 +21,7 @@ import {
 import { AlertCircle } from "lucide-react";
 
 export function today(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")}`;
+  return toLocalDateISO(now());
 }
 
 export interface AppointmentFormState {

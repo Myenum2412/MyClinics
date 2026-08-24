@@ -41,6 +41,7 @@ import {
   type AgentReply,
   type WaCustomer,
 } from "@/lib/ai-types";
+import { now as nowFn, nowISO, nowMs, todayISO } from "@/clinic/core/datetime";
 import { formatISODate, formatTime12h } from "@/services/ai/dates";
 
 const RATE_LIMIT_WINDOW_MS = 10_000;
@@ -88,11 +89,11 @@ function isGroupMessage(message: Message): boolean {
 
 async function getCachedContext(organizationId: string) {
   const cached = contextCache.get(organizationId);
-  if (cached && Date.now() - cached.at < CONTEXT_TTL_MS) {
+  if (cached && nowMs() - cached.at < CONTEXT_TTL_MS) {
     return cached.ctx;
   }
   const { data } = await getAiContext(organizationId);
-  contextCache.set(organizationId, { at: Date.now(), ctx: data });
+  contextCache.set(organizationId, { at: nowMs(), ctx: data });
   return data;
 }
 
@@ -158,7 +159,7 @@ async function executeAction(
       time: appointment.time,
       doctor: appointment.doctorName ?? "Clinic",
       status: appointment.status,
-      bookedAt: new Date().toISOString(),
+      bookedAt: nowISO(),
     });
     logger.info("whatsapp appointment created", {
       organizationId: ctx.organizationId,
@@ -212,7 +213,7 @@ async function saveTurn(
   incoming: { messageId: string; message: string; reply: AgentReply; aiResponse: string; sentText: string }
 ): Promise<void> {
   const db = await getWhatsAppDb();
-  const now = new Date();
+  const now = nowFn();
   await saveConversation(db, {
     organizationId,
     customerId: customer.id,
@@ -238,7 +239,7 @@ async function saveTurn(
  */
 export async function handleIncomingMessage(client: Client, message: Message): Promise<void> {
   const remote = message.from;
-  const messageId = message.id?.id ?? `${remote}-${Date.now()}`;
+  const messageId = message.id?.id ?? `${remote}-${nowMs()}`;
 
   if (message.fromMe || !message.body || isGroupMessage(message)) return;
   if (!dedupe(messageId)) return;
@@ -310,7 +311,7 @@ export async function handleIncomingMessage(client: Client, message: Message): P
       conversationSummary,
       history,
       doctors: aiContext?.doctors ?? [],
-      todayISO: aiContext?.todayISO ?? new Date().toISOString().slice(0, 10),
+      todayISO: aiContext?.todayISO ?? todayISO(),
       workingHours: aiContext?.workingHours,
       knowledgeDocs: [],
     };

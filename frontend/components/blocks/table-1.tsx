@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { KOLKATA_TZ } from "@/lib/datetime"
 import {
   sortFn_datetime,
   type ColumnDef,
@@ -402,6 +403,7 @@ const dateFmt = new Intl.DateTimeFormat("en-US", {
   month: "short",
   day: "2-digit",
   year: "numeric",
+  timeZone: KOLKATA_TZ,
 })
 
 function formatDate(value: string) {

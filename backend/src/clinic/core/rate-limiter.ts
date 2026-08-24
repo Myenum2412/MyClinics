@@ -1,4 +1,5 @@
 import { RateLimitError } from "@/clinic/core/errors";
+import { nowMs } from "@/clinic/core/datetime";
 
 interface Bucket {
   hits: number[];
@@ -25,7 +26,7 @@ export class SlidingWindowLimiter {
   }
 
   /** Registers a hit; returns true when the hit is within the limit. */
-  hit(key: string, now = Date.now()): boolean {
+  hit(key: string, now = nowMs()): boolean {
     const bucket = this.buckets.get(key);
     const cutoff = now - this.windowMs;
     if (!bucket || bucket.resetAt <= now) {
@@ -43,7 +44,7 @@ export class SlidingWindowLimiter {
   }
 
   /** Number of hits in the current window (for tests / metrics). */
-  count(key: string, now = Date.now()): number {
+  count(key: string, now = nowMs()): number {
     const bucket = this.buckets.get(key);
     if (!bucket) return 0;
     return bucket.hits.filter((t) => t > now - this.windowMs).length;
@@ -55,7 +56,7 @@ export class SlidingWindowLimiter {
   }
 
   /** Remove expired buckets and prune old hits from active buckets. */
-  private cleanup(now = Date.now()): void {
+  private cleanup(now = nowMs()): void {
     const cutoff = now - this.windowMs;
     for (const [key, bucket] of this.buckets) {
       if (bucket.resetAt <= now) {

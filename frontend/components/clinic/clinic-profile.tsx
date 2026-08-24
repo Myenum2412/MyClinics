@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDate } from "@/lib/format-time";
 
 export function ClinicProfile({
   clinicId,
@@ -128,7 +129,7 @@ export function ClinicProfile({
               </div>
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <span>Status: {clinic.status}</span>
-                <span>Created {new Date(clinic.createdAt).toLocaleDateString("en-IN")}</span>
+                <span>Created {formatDate(clinic.createdAt)}</span>
               </div>
             </div>
             {canEdit && (
@@ -174,13 +175,13 @@ export function ClinicProfile({
                 <div>
                   <p className="text-xs text-muted-foreground">Created</p>
                   <p className="text-sm text-foreground">
-                    {new Date(clinic.createdAt).toLocaleDateString("en-IN")}
+                    {formatDate(clinic.createdAt)}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Last updated</p>
                   <p className="text-sm text-foreground">
-                    {new Date(clinic.updatedAt).toLocaleDateString("en-IN")}
+                    {formatDate(clinic.updatedAt)}
                   </p>
                 </div>
               </div>
