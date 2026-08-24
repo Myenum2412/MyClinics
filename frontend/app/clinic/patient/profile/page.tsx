@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
   getMyPatient,
+  getOwnClinic,
   updatePatient,
   type Patient,
+  type Clinic,
 } from "@/lib/clinic-api";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { Button } from "@/components/ui/button";
@@ -25,7 +27,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Building2,
   Calendar,
+  Clock,
+  Globe,
   HeartPulse,
   Info,
   LogOut,
@@ -36,9 +41,7 @@ import {
   Save,
   UserRound,
   X,
-  FileText,
   ShieldCheck,
-  Briefcase,
   Activity,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -158,6 +161,7 @@ export default function PatientProfilePage() {
   const router = useRouter();
 
   const [patient, setPatient] = useState<Patient | null>(null);
+  const [clinic, setClinic] = useState<Clinic | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -166,8 +170,12 @@ export default function PatientProfilePage() {
   const load = useCallback(async () => {
     if (!clinicId) return;
     try {
-      const me = await getMyPatient(clinicId);
+      const [me, clinicRes] = await Promise.all([
+        getMyPatient(clinicId),
+        getOwnClinic(clinicId).catch(() => null),
+      ]);
       setPatient(me);
+      setClinic(clinicRes);
       if (me) setForm(patientToForm(me));
     } catch {
       toast.error("Failed to load patient profile");
@@ -272,6 +280,7 @@ export default function PatientProfilePage() {
 
   const locationLabel = [patient.city, patient.state].filter(Boolean).join(", ") || "—";
   const joinedDateLabel = `Member since ${memberSince(patient.createdAt)}`;
+  const clinicName = clinic?.name || "Meenu Care";
   const stats = [
     { label: "Blood Group", value: orDash(patient.bloodGroup) },
     { label: "Gender", value: orDash(patient.gender) },
@@ -365,6 +374,10 @@ export default function PatientProfilePage() {
 
           <ul className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-xs sm:text-sm text-slate-600">
             <li className="flex items-center gap-2">
+              <Building2 className="size-4 shrink-0 text-indigo-600" />
+              <span className="font-semibold text-slate-900">Clinic: {clinicName}</span>
+            </li>
+            <li className="flex items-center gap-2">
               <MapPin className="size-4 shrink-0 text-indigo-600" />
               <span>{locationLabel}</span>
             </li>
@@ -383,15 +396,18 @@ export default function PatientProfilePage() {
           </ul>
 
           <Tabs defaultValue="overview" className="mt-6 gap-4">
-            <TabsList className="w-full bg-purple-50/80 border border-purple-100 rounded-xl p-1">
-              <TabsTrigger value="overview" className="flex-1 rounded-lg text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-xs">
+            <TabsList className="w-full bg-purple-50/80 border border-purple-100 rounded-xl p-1 grid grid-cols-2 sm:grid-cols-4 gap-1 h-auto">
+              <TabsTrigger value="overview" className="rounded-lg text-xs sm:text-sm font-semibold py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-xs">
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="contact" className="flex-1 rounded-lg text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-xs">
+              <TabsTrigger value="contact" className="rounded-lg text-xs sm:text-sm font-semibold py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-xs">
                 Contact & Address
               </TabsTrigger>
-              <TabsTrigger value="medical" className="flex-1 rounded-lg text-xs sm:text-sm font-semibold data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-xs">
+              <TabsTrigger value="medical" className="rounded-lg text-xs sm:text-sm font-semibold py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-xs">
                 Medical & Health
+              </TabsTrigger>
+              <TabsTrigger value="clinic" className="rounded-lg text-xs sm:text-sm font-semibold py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-xs">
+                Clinic Details
               </TabsTrigger>
             </TabsList>
 
@@ -801,6 +817,76 @@ export default function PatientProfilePage() {
                       orDash(patient.insuranceValidTill)
                     )}
                   </Field>
+                </FieldGrid>
+              </div>
+            </TabsContent>
+
+            {/* Clinic Details Tab */}
+            <TabsContent value="clinic" className="flex flex-col gap-6 mt-4">
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                    <Building2 className="size-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">Clinic Overview</h3>
+                </div>
+                <FieldGrid cols={4}>
+                  <Field label="Clinic Name" value={clinic?.name || "Meenu Care"} />
+                  <Field label="Clinic Type" value={orDash(clinic?.profile?.clinicType || "General Healthcare / Polyclinic")} />
+                  <Field label="Registration Number" value={orDash(clinic?.profile?.registrationNumber)} />
+                  <Field label="Established Year" value={orDash(clinic?.profile?.establishedYear)} />
+                </FieldGrid>
+              </div>
+
+              <Separator className="bg-purple-50" />
+
+              <div>
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
+                    <Phone className="size-4" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900">Clinic Contact & Location</h3>
+                </div>
+                <FieldGrid cols={4}>
+                  <Field label="Clinic Phone" value={orDash(clinic?.phone)} />
+                  <Field label="WhatsApp Support" value={orDash(clinic?.profile?.whatsapp)} />
+                  <Field label="Clinic Email" value={orDash(clinic?.email)} />
+                  <Field
+                    label="Website"
+                    value={
+                      clinic?.website ? (
+                        <a href={clinic.website} target="_blank" rel="noreferrer" className="text-indigo-600 font-semibold hover:underline">
+                          {clinic.website}
+                        </a>
+                      ) : (
+                        "—"
+                      )
+                    }
+                  />
+                  <Field
+                    label="Clinic Address"
+                    className="col-span-2"
+                    value={
+                      [
+                        clinic?.profile?.addressLine1,
+                        clinic?.profile?.addressLine2,
+                        clinic?.profile?.city,
+                        clinic?.profile?.state,
+                        clinic?.profile?.pincode,
+                      ]
+                        .filter(Boolean)
+                        .join(", ") || "—"
+                    }
+                  />
+                  <Field
+                    label="Working Hours"
+                    value={
+                      clinic?.settings?.workingHours
+                        ? `${clinic.settings.workingHours.open} - ${clinic.settings.workingHours.close}`
+                        : "09:00 AM - 06:00 PM"
+                    }
+                  />
+                  <Field label="Emergency Contact" value={orDash(clinic?.profile?.emergencyContact)} />
                 </FieldGrid>
               </div>
             </TabsContent>
