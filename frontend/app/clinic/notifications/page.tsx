@@ -1,23 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { Paperclip, X } from "lucide-react";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import StatsGeneric from "@/components/stats-generic";
 import {
   type Notification,
   type Patient,
-  createNotification,
+
   listNotifications,
   listPatients,
   markAllNotificationsRead,
   markNotificationRead,
+  sendWhatsappBroadcast,
 } from "@/lib/clinic-api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +43,8 @@ import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
 
 const NOTIFICATION_TYPES = ["appointment", "bill", "report", "prescription", "general"];
+const MAX_ATTACHMENTS = 3;
+const MAX_ATTACHMENT_MB = 10;
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
@@ -154,23 +160,32 @@ export default function NotificationsPage() {
     }
   }
 
-  async function handleCreate(form: {
-    recipientUserId: string;
+  async function handleSend(form: {
+    allPatients: boolean;
+    patientIds: string[];
     type: string;
     title: string;
-    body: string;
-    link: string;
+    message: string;
+    files: File[];
   }) {
     setSaving(true);
     try {
-      await createNotification(clinicId, {
-        recipientUserId: form.recipientUserId,
-        type: form.type,
-        title: form.title,
-        body: form.body || null,
-        link: form.link || null,
-      });
-      toast.success("Notification sent");
+      const result = await sendWhatsappBroadcast(
+        clinicId,
+        {
+          allPatients: form.allPatients,
+          patientIds: form.patientIds,
+          type: form.type,
+          title: form.title,
+          message: form.message,
+        },
+        form.files
+      );
+      const parts = [`Sent to ${result.queued} patient${result.queued === 1 ? "" : "s"}`];
+      if (result.skippedNoPhone > 0) {
+        parts.push(`${result.skippedNoPhone} skipped (no phone number)`);
+      }
+      toast.success(parts.join(" · "));
       setCreating(false);
       load();
     } catch (e) {
@@ -208,10 +223,10 @@ export default function NotificationsPage() {
                       <DialogHeader>
                         <DialogTitle>Send notification</DialogTitle>
                         <DialogDescription>
-                          Notify a user in this clinic.
+                          Send a WhatsApp notification to selected patients — or all patients — with optional attachments.
                         </DialogDescription>
                       </DialogHeader>
-                      <NotificationForm clinicId={clinicId} saving={saving} onSave={handleCreate} />
+                      <NotificationForm clinicId={clinicId} saving={saving} onSave={handleSend} />
                     </DialogContent>
                   </Dialog>
                 )}
@@ -293,84 +308,172 @@ function NotificationForm({
   clinicId: string;
   saving: boolean;
   onSave: (form: {
-    recipientUserId: string;
+    allPatients: boolean;
+    patientIds: string[];
     type: string;
     title: string;
-    body: string;
-    link: string;
+    message: string;
+    files: File[];
   }) => Promise<void>;
 }) {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [loadingPatients, setLoadingPatients] = useState(true);
-  const [recipientUserId, setRecipientUserId] = useState("");
+  const [patientsLoading, setPatientsLoading] = useState(true);
+  const [allPatients, setAllPatients] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
   const [type, setType] = useState("general");
   const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-  const [link, setLink] = useState("");
+  const [message, setMessage] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!clinicId) return;
-    let active = true;
-    setLoadingPatients(true);
-    listPatients(clinicId, { limit: 100 })
+    let cancelled = false;
+    listPatients(clinicId, { status: "active", limit: 100 })
       .then((res) => {
-        if (active) {
-          setPatients(res.items);
-          if (res.items.length > 0) {
-            setRecipientUserId(res.items[0].userId || res.items[0].patientId);
-          }
-        }
+        if (!cancelled) setPatients(res.items);
       })
-      .catch(() => {})
+      .catch(() => {
+        if (!cancelled) toast.error("Failed to load patients");
+      })
       .finally(() => {
-        if (active) setLoadingPatients(false);
+        if (!cancelled) setPatientsLoading(false);
       });
     return () => {
-      active = false;
+      cancelled = true;
     };
   }, [clinicId]);
 
+  const filteredPatients = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return patients;
+    return patients.filter(
+      (p) =>
+        p.fullName.toLowerCase().includes(q) ||
+        (p.whatsapp ?? "").includes(q) ||
+        p.mobile.includes(q)
+    );
+  }, [patients, search]);
+
+  function togglePatient(patientId: string, checked: boolean) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(patientId);
+      else next.delete(patientId);
+      return next;
+    });
+  }
+
+  function addFiles(chosen: FileList | null) {
+    if (!chosen?.length) return;
+    const accepted: File[] = [];
+    for (const file of Array.from(chosen)) {
+      if (file.size > MAX_ATTACHMENT_MB * 1024 * 1024) {
+        toast.error(`"${file.name}" exceeds the ${MAX_ATTACHMENT_MB}MB limit`);
+        continue;
+      }
+      accepted.push(file);
+    }
+    setFiles((prev) => {
+      const merged = [...prev, ...accepted];
+      if (merged.length > MAX_ATTACHMENTS) {
+        toast.error(`At most ${MAX_ATTACHMENTS} attachments are allowed`);
+        return merged.slice(0, MAX_ATTACHMENTS);
+      }
+      return merged;
+    });
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!recipientUserId) {
-      toast.error("Please select a patient recipient");
+    if (!allPatients && selectedIds.size === 0) {
+      toast.error("Select at least one patient or choose all patients");
       return;
     }
-    await onSave({ recipientUserId, type, title, body, link });
+    if (!title.trim()) return;
+    if (!message.trim() && files.length === 0) {
+      toast.error("Write a message or attach a file");
+      return;
+    }
+    await onSave({
+      allPatients,
+      patientIds: [...selectedIds],
+      type,
+      title,
+      message,
+      files,
+    });
   }
+
+  const recipientCount = allPatients ? null : selectedIds.size;
 
   return (
     <form onSubmit={submit} className="space-y-4">
       <div className="grid gap-3">
         <div className="grid gap-2">
-          <Label>Select Patient *</Label>
-          {loadingPatients ? (
-            <Skeleton className="h-10 w-full rounded-md" />
-          ) : patients.length > 0 ? (
-            <Select value={recipientUserId} onValueChange={(v) => setRecipientUserId(v ?? "")} required>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Choose a patient..." />
-              </SelectTrigger>
-              <SelectContent>
-                {patients.map((p) => (
-                  <SelectItem key={p.patientId} value={p.userId || p.patientId}>
-                    {p.fullName} {p.mobile ? `(${p.mobile})` : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-between gap-2">
+            <Label>Recipients</Label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+              <Checkbox checked={allPatients} onCheckedChange={(c) => setAllPatients(c === true)} />
+              All patients
+            </label>
+          </div>
+          {allPatients ? (
+            <p className="rounded-lg border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+              This message will be sent to every active patient in your clinic.
+            </p>
+          ) : patientsLoading ? (
+            <div className="space-y-2">
+              <Skeleton className="h-9 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
           ) : (
-            <Input
-              placeholder="Enter Patient User ID (usr_...)"
-              value={recipientUserId}
-              onChange={(e) => setRecipientUserId(e.target.value)}
-              required
-            />
+            <>
+              <Input
+                placeholder="Search patients by name or phone..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border p-2">
+                {filteredPatients.length === 0 ? (
+                  <p className="py-3 text-center text-sm text-muted-foreground">
+                    No patients found.
+                  </p>
+                ) : (
+                  filteredPatients.map((p) => {
+                    const phone = (p.whatsapp ?? "").trim() || p.mobile.trim();
+                    return (
+                      <label
+                        key={p.patientId}
+                        className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm transition hover:bg-muted/60"
+                      >
+                        <Checkbox
+                          checked={selectedIds.has(p.patientId)}
+                          onCheckedChange={(c) => togglePatient(p.patientId, c === true)}
+                        />
+                        <span className="flex-1 truncate">{p.fullName}</span>
+                        {phone ? (
+                          <span className="shrink-0 text-xs text-muted-foreground">{phone}</span>
+                        ) : (
+                          <Badge variant="outline" className="shrink-0 text-xs text-destructive">
+                            no phone
+                          </Badge>
+                        )}
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {recipientCount === 0
+                  ? "No patients selected."
+                  : `${recipientCount} patient${recipientCount === 1 ? "" : "s"} selected.`}
+              </p>
+            </>
           )}
-          <p className="text-xs text-muted-foreground">
-            Select the patient account to receive this notification.
-          </p>
         </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Type</Label>
@@ -392,18 +495,78 @@ function NotificationForm({
             <Input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Notification title" />
           </div>
         </div>
+
         <div className="grid gap-2">
-          <Label>Body</Label>
-          <Input value={body} onChange={(e) => setBody(e.target.value)} placeholder="Details or message content..." />
+          <Label>Message</Label>
+          <Textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={3}
+            placeholder="Type the message patients will receive on WhatsApp..."
+          />
         </div>
+
         <div className="grid gap-2">
-          <Label>Link</Label>
-          <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="/clinic/appointments" />
+          <Label>Attachments</Label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={(e) => addFiles(e.target.files)}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="w-fit"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={files.length >= MAX_ATTACHMENTS}
+          >
+            <Paperclip className="size-4" />
+            Attach files
+          </Button>
+          {files.length > 0 && (
+            <div className="space-y-1">
+              {files.map((file, i) => (
+                <div
+                  key={`${file.name}-${i}`}
+                  className="flex items-center justify-between gap-2 rounded-lg border px-3 py-1.5 text-sm"
+                >
+                  <span className="truncate">{file.name}</span>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {(file.size / 1024).toFixed(0)} KB
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
+                      className="text-muted-foreground transition hover:text-destructive"
+                      aria-label={`Remove ${file.name}`}
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <p className="text-xs text-muted-foreground">
+                Up to {MAX_ATTACHMENTS} files, {MAX_ATTACHMENT_MB}MB each.
+              </p>
+            </div>
+          )}
         </div>
       </div>
+
       <DialogFooter>
-        <Button type="submit" disabled={saving || !recipientUserId}>
-          {saving ? "Sending..." : "Send Notification"}
+        <Button
+          type="submit"
+          disabled={
+            saving ||
+            !title.trim() ||
+            (!allPatients && selectedIds.size === 0)
+          }
+        >
+          {saving ? "Sending..." : "Send via WhatsApp"}
         </Button>
       </DialogFooter>
     </form>

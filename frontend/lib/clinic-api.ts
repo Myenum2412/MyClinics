@@ -1153,8 +1153,8 @@ export function uploadMedicalRecordFile(
       options.onXhrCreated(xhr);
     }
 
-    let startTime = Date.now();
-    let startLoaded = 0;
+    const startTime = Date.now();
+    const startLoaded = 0;
 
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable && options?.onProgress) {
@@ -1608,6 +1608,63 @@ export function createNotification(
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+export interface WhatsappBroadcastResult {
+  targeted: number;
+  queued: number;
+  messagesQueued: number;
+  skippedNoPhone: number;
+}
+
+/**
+ * Sends a WhatsApp notification (optionally with attachments) to the given
+ * patients — or every active patient when `allPatients` is set. Multipart
+ * upload, so attachments travel inline with the form fields.
+ */
+export async function sendWhatsappBroadcast(
+  clinicId: string,
+  input: {
+    allPatients: boolean;
+    patientIds: string[];
+    type: string;
+    title: string;
+    message: string;
+  },
+  files: File[]
+): Promise<WhatsappBroadcastResult> {
+  const form = new FormData();
+  form.append("all", String(input.allPatients));
+  form.append("patientIds", JSON.stringify(input.patientIds));
+  form.append("type", input.type);
+  form.append("title", input.title);
+  form.append("message", input.message);
+  for (const file of files) {
+    form.append("attachments", file, file.name);
+  }
+
+  const headers: Record<string, string> = {};
+  const token = typeof window !== "undefined" ? getStoredToken() : null;
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}${tenantPath(clinicId, "/notifications/whatsapp")}`, {
+    method: "POST",
+    headers,
+    body: form,
+    cache: "no-store",
+  });
+
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  if (!res.ok) {
+    const err = data as { error?: string };
+    throw new ClinicApiError(err.error ?? `Request failed (${res.status})`, res.status);
+  }
+  return data as WhatsappBroadcastResult;
 }
 
 export function markNotificationRead(clinicId: string, notificationId: string): Promise<{ ok: true }> {

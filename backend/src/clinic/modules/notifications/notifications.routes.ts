@@ -11,6 +11,7 @@ import {
  *
  *   GET    /api/clinics/:clinicId/notifications            any clinic member (own)
  *   POST   /api/clinics/:clinicId/notifications            staff+
+ *   POST   /api/clinics/:clinicId/notifications/whatsapp   staff+ (multipart — WhatsApp broadcast to patients, with attachments)
  *   POST   /api/clinics/:clinicId/notifications/read-all   any clinic member (own)
  *   POST   /api/clinics/:clinicId/notifications/:notificationId/read  any clinic member (own)
  */
@@ -27,6 +28,12 @@ export function registerNotificationRoutes(app: FastifyInstance): void {
     "/api/clinics/:clinicId/notifications",
     { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => controller.create(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/:clinicId/notifications/whatsapp",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.sendWhatsapp(request, reply)
   );
 
   app.post(
