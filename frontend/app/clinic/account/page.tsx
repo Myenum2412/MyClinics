@@ -381,26 +381,8 @@ export default function AccountPage() {
   ];
 
   return (
-    <div className="w-full">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Clinic Profile</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Manage your clinic&apos;s basic details, contact, address and information.
-          </p>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
-          onClick={handleLogout}
-        >
-          <LogOut className="size-4" />
-          Logout
-        </Button>
-      </div>
-
-      <section className="mx-auto w-full max-w-3xl rounded-xl border border-border bg-background overflow-hidden">
+    <div className="w-full min-h-[calc(100vh-4rem)]">
+      <section className="w-full min-h-[calc(100vh-4rem)] rounded-xl border border-border bg-background overflow-hidden flex flex-col">
         <div
           className="h-32 w-full bg-linear-to-br from-foreground/15 via-muted to-muted-foreground/10"
           aria-hidden="true"
@@ -418,14 +400,36 @@ export default function AccountPage() {
             </div>
             <div className="flex items-center gap-2 pt-4">
               {!editing && canManage ? (
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={startEdit}>
-                  <Pencil className="size-4" />
-                  Edit Profile
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={startEdit}>
+                    <Pencil className="size-4" />
+                    Edit Profile
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="size-4" />
+                    Logout
+                  </Button>
+                </>
               ) : !editing ? (
-                <p className="hidden text-sm text-muted-foreground sm:block">
-                  Only clinic administrators can edit the profile.
-                </p>
+                <>
+                  <p className="hidden text-sm text-muted-foreground sm:block">
+                    Only clinic administrators can edit the profile.
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="size-4" />
+                    Logout
+                  </Button>
+                </>
               ) : (
                 <>
                   <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditing(false)}>
@@ -435,6 +439,15 @@ export default function AccountPage() {
                   <Button size="sm" className="gap-1.5" onClick={handleSave} disabled={saving}>
                     <Save className="size-4" />
                     {saving ? "Saving..." : "Save"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="size-4" />
+                    Logout
                   </Button>
                 </>
               )}
