@@ -572,11 +572,17 @@ export default function AppointmentsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Stats Section with action slot */}
+      {/* Stats Section with action slot - Appointment Analytics with centered search */}
       {!loading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsAppointments
             appointments={appointments}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            dateFilter={dateFilter}
+            onDateFilterChange={setDateFilter}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
             action={
               <div className="flex items-center gap-2">
                 <Button
@@ -640,45 +646,6 @@ export default function AppointmentsPage() {
           </div>
         </div>
       )}
-
-      {/* Search Controls - Centered Outside Card */}
-      <div className="flex justify-center">
-        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-          <div className="relative w-full max-w-md sm:w-72">
-            <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search name, doctor, reason..."
-              className="h-8 w-full pl-8 text-xs focus-visible:ring-1"
-            />
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <Input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="h-8 w-36 text-xs focus-visible:ring-1"
-            />
-
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
-              <SelectTrigger className="h-8 w-36 text-xs">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all" className="text-xs">All Statuses</SelectItem>
-                {STATUSES.map((s) => (
-                  <SelectItem key={s} value={s} className="text-xs">
-                    {STATUS_LABELS[s]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
 
       {/* Main Table Card */}
       <Card className="shadow-sm">
