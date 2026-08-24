@@ -57,44 +57,47 @@ async function runStep<T>(ms: number, label: string, fn: () => Promise<T>): Prom
  *    job as failed. This is a best-effort, idempotent queueing job that
  *    re-runs every minute; real problems are visible in the logs.
  */
+async function handleReminders(request: import("fastify").FastifyRequest, reply: import("fastify").FastifyReply) {
+  if (!requireCronSecret(request, reply)) return;
+
+  const startTime = Date.now();
+  try {
+    // Keep total budget < 9s to stay under typical 10s reverse-proxy timeout (e.g. Cloudflare/Nginx on api.myclinic.myenum.in)
+    const db = await withTimeout(getCronDb(), 5_000, "getCronDb");
+
+    const [prescription, appointment] = await Promise.all([
+      runStep(5_000, "processPrescriptionNotifications", () =>
+        processPrescriptionNotifications(db).then(() => ({}))
+      ),
+      runStep(5_000, "processAppointmentNotifications", () =>
+        processAppointmentNotifications(db).then(() => ({}))
+      ),
+    ]);
+
+    const duration = Date.now() - startTime;
+    logger.info("Cron reminders completed", {
+      durationMs: duration,
+      prescriptions: prescription.status,
+      appointments: appointment.status,
+    });
+    return reply.send({
+      ok: true,
+      prescriptions: prescription.status,
+      appointments: appointment.status,
+      durationMs: duration,
+    });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error("Cron reminders error", { durationMs: duration, error: errorMessage });
+    return reply.code(200).send({ ok: false, error: errorMessage, durationMs: duration });
+  }
+}
+
 export function registerCronRoutes(app: FastifyInstance): void {
-  app.post("/api/cron/reminders", async (request, reply) => {
-    if (!requireCronSecret(request, reply)) return;
-
-    const startTime = Date.now();
-    try {
-      // Bound the DB connection so the request can never hang past the proxy timeout.
-      const db = await withTimeout(getCronDb(), 8_000, "getCronDb");
-
-      const [prescription, appointment] = await Promise.all([
-        runStep(8_000, "processPrescriptionNotifications", () =>
-          processPrescriptionNotifications(db).then(() => ({}))
-        ),
-        runStep(8_000, "processAppointmentNotifications", () =>
-          processAppointmentNotifications(db).then(() => ({}))
-        ),
-      ]);
-
-      const duration = Date.now() - startTime;
-      logger.info("Cron reminders completed", {
-        durationMs: duration,
-        prescriptions: prescription.status,
-        appointments: appointment.status,
-      });
-      return reply.send({
-        ok: true,
-        prescriptions: prescription.status,
-        appointments: appointment.status,
-        durationMs: duration,
-      });
-    } catch (error) {
-      // Only reachable when the DB handle itself could not be obtained.
-      const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error("Cron reminders error", { durationMs: duration, error: errorMessage });
-      return reply.code(200).send({ ok: false, error: errorMessage, durationMs: duration });
-    }
-  });
+  // cron-job.org is configured for POST, but also handle GET for health checks / manual probes
+  app.post("/api/cron/reminders", handleReminders);
+  app.get("/api/cron/reminders", handleReminders);
 
   app.post("/api/cron/sync", async (request, reply) => {
     if (!requireCronSecret(request, reply)) return;
