@@ -359,53 +359,7 @@ export default function BusinessReportsPage() {
         />
       </div>
 
-      {/* Executive Overview — stats-07 design */}
-      <div>
-        <h2 className="text-balance font-medium text-foreground text-xl">Executive Overview</h2>
-        <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
-          Real-time clinic KPIs — <span className="font-medium text-foreground">{label}</span> vs previous period. All values from your actual bills, appointments and patients.
-        </p>
-        {(() => {
-          const chartConfig = { capacity: { label: "Capacity", color: "hsl(var(--primary))" } } satisfies ChartConfig;
-          const items = [
-            { label: "Total Revenue", value: formatINR(totalRevenue), sub: revenueGrowth !== null ? `${revenueGrowth > 0 ? "↑" : "↓"} ${Math.abs(revenueGrowth)}% vs prev` : "—", capacity: revenueGrowth !== null ? Math.min(100, Math.max(0, 50 + revenueGrowth)) : 50, fill: "var(--chart-1)", current: formatINR(totalRevenue), allowed: revenueGrowth !== null ? `${Math.abs(revenueGrowth)}%` : "—" },
-            { label: "Total Patients", value: String(totalPatients), sub: `${newPatients} new · ${returningPatients} returning`, capacity: totalPatients ? Math.round((newPatients / totalPatients) * 100) : 0, fill: "var(--chart-2)", current: String(newPatients), allowed: `${totalPatients} total` },
-            { label: "Appointments", value: String(totalAppts), sub: `${completed} completed · ${cancelled} cancelled`, capacity: completionRate, fill: "var(--chart-3)", current: String(completed), allowed: `${totalAppts} total` },
-            { label: "Outstanding", value: formatINR(outstanding), sub: `${formatINR(totalPaid)} paid · avg ${formatINR(avgInvoice)}`, capacity: totalRevenue ? Math.round((1 - outstanding / Math.max(1, totalRevenue)) * 100) : 0, fill: "var(--chart-4)", current: formatINR(outstanding), allowed: formatINR(totalRevenue) },
-            { label: "Completion Rate", value: `${completionRate}%`, sub: `No-show ${noShowRate}% · Cancel ${cancellationRate}%`, capacity: completionRate, fill: "var(--chart-1)", current: `${completed}`, allowed: `${totalAppts} appts` },
-            { label: "Retention Rate", value: `${retentionRate}%`, sub: `${returningPatients} returning of ${totalPatients}`, capacity: retentionRate, fill: "var(--chart-2)", current: `${returningPatients}`, allowed: `${totalPatients} patients` },
-            { label: "Avg Revenue / Patient", value: formatINR(avgRevenuePerPatient), sub: `Avg invoice ${formatINR(avgInvoice)}`, capacity: Math.min(100, Math.round((avgRevenuePerPatient / 2000) * 100)), fill: "var(--chart-3)", current: formatINR(avgRevenuePerPatient), allowed: formatINR(avgInvoice) },
-            { label: "Health Score", value: healthScore !== null ? `${healthScore} / 100` : "—", sub: healthScore !== null ? (healthScore >= 80 ? "Healthy" : healthScore >= 60 ? "Stable" : "Needs attention") : "Not enough data", capacity: healthScore ?? 0, fill: "var(--chart-4)", current: healthScore !== null ? `${healthScore}%` : "—", allowed: "100" },
-          ];
-          return (
-            <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {items.map((item) => (
-                <Card className="p-4 shadow-2xs" key={item.label}>
-                  <CardContent className="flex items-center space-x-4 p-0">
-                    <div className="relative flex items-center justify-center">
-                      <ChartContainer className="h-[80px] w-[80px]" config={chartConfig}>
-                        <RadialBarChart barSize={6} data={[item]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}>
-                          <PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0, 100]} tick={false} type="number" />
-                          <RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill} />
-                        </RadialBarChart>
-                      </ChartContainer>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="font-medium text-base text-foreground">{item.capacity}%</span>
-                      </div>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <dt className="font-medium text-foreground text-sm truncate">{item.label}</dt>
-                      <dd className="text-sm font-bold text-foreground truncate">{item.value}</dd>
-                      <dd className="text-xs text-muted-foreground truncate">{item.sub}</dd>
-                      <dd className="text-xs text-muted-foreground">{item.current} of {item.allowed}</dd>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </dl>
-          );
-        })()}
-      </div>
+
 
       {/* Revenue Intelligence */}
       <Card className="border-border bg-card">
