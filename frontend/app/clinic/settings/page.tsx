@@ -57,7 +57,7 @@ const STAGE_LABEL: Record<string, string> = {
   authenticated: "Authenticated — preparing…",
   ready: "Connected — notifications are active",
   disconnected: "Disconnected — press Connect to go back online",
-  error: "Connection error — try connecting again or check the server logs",
+  error: "Connection error — if your phone showed 'Can't Link New Devices right now', remove a linked device (WhatsApp → Settings → Linked devices, max 4), update WhatsApp, wait 1 min, then scan a fresh QR within 20s",
 };
 
 export default function SettingsPage() {
@@ -398,7 +398,7 @@ export default function SettingsPage() {
                     <p className="max-w-sm text-sm font-medium text-primary">
                       Open WhatsApp on your phone → Settings → Linked devices → Link a device,
                       then scan this QR with THIS clinic&apos;s phone. QR refreshes every few
-                      seconds.
+                      seconds — scan within 20 seconds. If your phone shows &apos;Can&apos;t Link New Devices right now&apos;, remove an old linked device (max 4) and update WhatsApp first.
                     </p>
                     {canEdit && (
                       <Button
@@ -422,13 +422,15 @@ export default function SettingsPage() {
                     <p className="max-w-sm text-sm text-muted-foreground">
                       {waSession === null
                         ? "The status service is not reachable right now. The WhatsApp worker may be down — check pm2 status on the server (myclinic-whatsapp), then reload this page."
-                        : stage === "unconfigured" || stage === "disconnected" || stage === "error"
-                          ? "Link this clinic's own WhatsApp number to send appointment reminders and patient notifications from it. Each clinic connects its own number separately — this QR is unique to the current clinic."
-                          : stage === "idle"
-                            ? "Starting WhatsApp for this clinic… QR will appear shortly. Each clinic connects separately — this QR is only for the current clinic."
-                            : stage === "authenticated"
-                              ? "Authenticated for this clinic — preparing WhatsApp…"
-                              : "Make sure the WhatsApp worker is running on the server (pm2: myclinic-whatsapp) and a Chromium browser is available."}
+                        : stage === "error"
+                          ? "If your phone showed 'Can't Link New Devices right now': WhatsApp allows max 4 linked devices. Remove one (WhatsApp → Settings → Linked devices), update WhatsApp to latest, wait 1 minute, then click Connect again and scan the fresh QR within 20 seconds."
+                          : stage === "unconfigured" || stage === "disconnected"
+                            ? "Link this clinic's own WhatsApp number to send appointment reminders and patient notifications from it. Each clinic connects its own number separately — this QR is unique to the current clinic."
+                            : stage === "idle"
+                              ? "Starting WhatsApp for this clinic… QR will appear shortly. Each clinic connects separately — this QR is only for the current clinic. If QR doesn't appear in 20s, click Retry Connect."
+                              : stage === "authenticated"
+                                ? "Authenticated for this clinic — preparing WhatsApp…"
+                                : "Make sure the WhatsApp worker is running on the server (pm2: myclinic-whatsapp) and a Chromium browser is available."}
                     </p>
                     {(stage === "idle" || stage === "authenticated") && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
