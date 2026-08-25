@@ -21,9 +21,33 @@ export async function ensurePlatformAdmin(db: Db): Promise<void> {
   const existing = await db
     .collection<UserDoc>(CLINIC_COLLECTIONS.users)
     .findOne({ email: normalized });
-  if (existing) return;
 
   const passwordHash = await bcrypt.hash(password, 12);
+
+  // Idempotent: (re)create the account, or repair it if it already exists
+  // with a stale password/role/status, so the configured org credentials always work.
+  if (existing) {
+    if (
+      existing.passwordHash !== passwordHash ||
+      existing.role !== "platform_admin" ||
+      existing.status !== "active"
+    ) {
+      await db.collection(CLINIC_COLLECTIONS.users).updateOne(
+        { _id: existing._id },
+        {
+          $set: {
+            passwordHash,
+            role: "platform_admin",
+            status: "active",
+            updatedAt: nowFn(),
+          },
+        }
+      );
+      console.log("[clinic] platform_admin account updated");
+    }
+    return;
+  }
+
   const now = nowFn();
   await db.collection(CLINIC_COLLECTIONS.users).insertOne({
     clinicId: null,
