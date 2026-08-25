@@ -52,7 +52,7 @@ export async function ensurePlatformAdmin(db: Db): Promise<void> {
   await db.collection(CLINIC_COLLECTIONS.users).insertOne({
     clinicId: null,
     userId: generateUserId(),
-    name: "Platform Admin",
+    name: "orgmenu",
     email: normalized,
     passwordHash,
     role: "platform_admin",

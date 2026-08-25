@@ -7,24 +7,12 @@ import { useClinicSession } from "@/hooks/use-clinic-session";
 import {
   type Clinic,
   activateClinic,
-  createClinic,
   listAllClinics,
   suspendClinic,
 } from "@/lib/clinic-api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -41,7 +29,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus } from "lucide-react";
 import StatsGeneric from "@/components/stats-generic";
 import { formatDate } from "@/lib/datetime";
 
@@ -51,8 +38,6 @@ export default function OrgMenuDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [q, setQ] = useState("");
-  const [creating, setCreating] = useState(false);
-  const [saving, setSaving] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -69,32 +54,6 @@ export default function OrgMenuDashboardPage() {
   useEffect(() => {
     if (session.session) load();
   }, [session.session, load]);
-
-  async function handleCreate(form: {
-    name: string;
-    adminName: string;
-    email: string;
-    password: string;
-    phone: string;
-  }) {
-    setSaving(true);
-    try {
-      await createClinic({
-        name: form.name,
-        adminName: form.adminName,
-        email: form.email,
-        password: form.password,
-        phone: form.phone || undefined,
-      });
-      toast.success("Clinic created");
-      setCreating(false);
-      load();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to create clinic");
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleSuspend(clinic: Clinic) {
     if (!confirm(`Suspend ${clinic.name}? Its members will be blocked from login.`)) return;
@@ -179,19 +138,6 @@ export default function OrgMenuDashboardPage() {
                     <SelectItem value="suspended">Suspended</SelectItem>
                   </SelectContent>
                 </Select>
-
-                <Dialog open={creating} onOpenChange={setCreating}>
-                  <DialogTrigger render={<Button className="h-9 flex items-center gap-1.5 shadow-sm"><Plus className="size-4" /> Create clinic</Button>} />
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Create clinic</DialogTitle>
-                      <DialogDescription>
-                        Provisions a new tenant with its first clinic_admin account.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <CreateClinicForm saving={saving} onSave={handleCreate} />
-                  </DialogContent>
-                </Dialog>
               </div>
             }
           />
@@ -272,64 +218,5 @@ export default function OrgMenuDashboardPage() {
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function CreateClinicForm({
-  saving,
-  onSave,
-}: {
-  saving: boolean;
-  onSave: (form: {
-    name: string;
-    adminName: string;
-    email: string;
-    password: string;
-    phone: string;
-  }) => Promise<void>;
-}) {
-  const [name, setName] = useState("");
-  const [adminName, setAdminName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    await onSave({ name, adminName, email, password, phone });
-  }
-
-  return (
-    <form onSubmit={submit} className="space-y-4">
-      <div className="grid gap-3">
-        <div className="grid gap-2">
-          <Label>Clinic name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} required minLength={2} />
-        </div>
-        <div className="grid gap-2">
-          <Label>Admin name</Label>
-          <Input value={adminName} onChange={(e) => setAdminName(e.target.value)} required minLength={2} />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="grid gap-2">
-            <Label>Admin email</Label>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-          <div className="grid gap-2">
-            <Label>Phone</Label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
-          </div>
-        </div>
-        <div className="grid gap-2">
-          <Label>Admin password</Label>
-          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
-        </div>
-      </div>
-      <DialogFooter>
-        <Button type="submit" disabled={saving}>
-          {saving ? "Creating..." : "Create clinic"}
-        </Button>
-      </DialogFooter>
-    </form>
   );
 }

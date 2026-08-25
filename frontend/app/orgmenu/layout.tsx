@@ -1,6 +1,8 @@
 "use client";
 
-import { useRequireRole } from "@/hooks/use-clinic-session";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useClinicSession } from "@/hooks/use-clinic-session";
 import { OrgSidebar } from "@/components/org/org-sidebar";
 import { WorkspaceHeader } from "@/components/clinic/workspace-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -11,9 +13,21 @@ export default function OrgMenuLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = useRequireRole("platform_admin");
+  const { session, loading } = useClinicSession();
+  const router = useRouter();
 
-  if (!session) {
+  useEffect(() => {
+    if (loading) return;
+    if (!session) {
+      router.replace("/login?callbackUrl=/orgmenu");
+      return;
+    }
+    if (session.role !== "platform_admin") {
+      router.replace(session.role === "patient" ? "/clinic/patient" : "/clinic");
+    }
+  }, [loading, session, router]);
+
+  if (loading || !session || session.role !== "platform_admin") {
     return (
       <div className="flex min-h-svh items-center justify-center">
         <Skeleton className="h-10 w-64" />

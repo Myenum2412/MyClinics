@@ -73,7 +73,7 @@ export function useRequireRole(
       return;
     }
     if (!can(session.role, min)) {
-      router.replace(session.role === "platform_admin" ? "/orgmenu" : "/clinic");
+      router.replace(session.role === "platform_admin" ? "/admin" : "/clinic");
     }
   }, [loading, session, router, pathname, min]);
 
