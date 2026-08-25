@@ -19,7 +19,7 @@ export default function OrgMenuLayout({
   useEffect(() => {
     if (loading) return;
     if (!session) {
-      router.replace("/orgmenu/login");
+      router.replace("/login?callbackUrl=/orgmenu");
       return;
     }
     if (session.role !== "platform_admin") {
