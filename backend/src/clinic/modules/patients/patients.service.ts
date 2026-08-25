@@ -54,15 +54,9 @@ export class PatientService {
 
     const patients = this.db.collection<PatientDoc>(CLINIC_COLLECTIONS.patients);
 
-    // Prevent duplicate registrations inside this clinic.
-    const dupByMobile = await patients.findOne({
-      clinicId,
-      mobile: input.mobile,
-      status: { $ne: "deleted" },
-    });
-    if (dupByMobile) {
-      throw new ConflictError("A patient with this mobile number already exists in your clinic");
-    }
+    // A shared mobile/WhatsApp number (e.g. a family contact) may belong to
+    // several patient profiles, so we no longer block duplicate mobiles. We
+    // only keep the email guard because email is the unique portal-login key.
     if (input.email) {
       const dupByEmail = await patients.findOne({
         clinicId,
