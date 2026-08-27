@@ -80,7 +80,6 @@ function StatusBadge({ status }: { status: PharmacyPurchase["status"] }) {
 export default function PharmacyPurchasesPage() {
   const session = useRequireRole("billing_staff")
   const clinicId = session?.clinicId ?? ""
-  if (!session) return null
 
   const [purchases, setPurchases] = React.useState<PharmacyPurchase[]>([])
   const [suppliers, setSuppliers] = React.useState<PharmacySupplier[]>([])
@@ -223,6 +222,8 @@ export default function PharmacyPurchasesPage() {
       toast.error("Failed to receive purchase")
     }
   }
+
+  if (!session) return null
 
   return (
     <div className="space-y-6 p-6">

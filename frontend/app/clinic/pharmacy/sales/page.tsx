@@ -98,8 +98,6 @@ export default function PharmacySalesPage() {
     void reload()
   }, [clinicId, reload])
 
-  if (!session) return null
-
   const medicineById = React.useMemo(() => {
     const map = new Map<string, PharmacyMedicine>()
     for (const m of medicines) map.set(m.medicineId, m)
@@ -195,6 +193,8 @@ export default function PharmacySalesPage() {
       toast.error(e instanceof Error ? e.message : "Failed to load sale")
     }
   }
+
+  if (!session) return null
 
   return (
     <div className="space-y-6 p-6">

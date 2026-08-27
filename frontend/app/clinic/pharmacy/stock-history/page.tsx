@@ -118,8 +118,6 @@ export default function PharmacyStockHistoryPage() {
     }
   }, [clinicId])
 
-  if (!session) return null
-
   const medName = React.useMemo(() => {
     const map = new Map<string, string>()
     for (const med of medicines) map.set(med.medicineId, med.name)
@@ -155,6 +153,8 @@ export default function PharmacyStockHistoryPage() {
     setTo("")
     setPage(0)
   }
+
+  if (!session) return null
 
   return (
     <div className="space-y-6 p-6">
