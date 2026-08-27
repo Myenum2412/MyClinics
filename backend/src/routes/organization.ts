@@ -8,6 +8,7 @@ import {
 } from "@/services/customer/customer-context.service";
 import { cached, invalidateCache } from "@/lib/cache";
 import { handleError } from "@/lib/http";
+import { WHATSAPP_NOTIFICATION_TEMPLATES } from "@/services/whatsapp/notification-templates";
 
 const MAX = {
   name: 120,
@@ -98,6 +99,17 @@ export function registerOrganizationRoutes(app: FastifyInstance): void {
       return reply.send({ company: mapCompany(updated) });
     } catch (error) {
       handleError(reply, error, "Update company");
+    }
+  });
+
+  // Read-only catalog of every WhatsApp notification template the platform
+  // sends, for display in the org menu. Requires an authenticated session.
+  app.get("/api/organization/whatsapp-notifications", async (request, reply) => {
+    try {
+      if (!(await requireAuth(request, reply))) return;
+      return reply.send({ templates: WHATSAPP_NOTIFICATION_TEMPLATES });
+    } catch (error) {
+      handleError(reply, error, "List WhatsApp notifications");
     }
   });
 }

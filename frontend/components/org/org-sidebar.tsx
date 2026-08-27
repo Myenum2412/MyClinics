@@ -18,6 +18,7 @@ import {
 import {
   BuildingOffice2Icon as BuildingOfficeIcon,
   BuildingLibraryIcon as BuildingLibrary,
+  ChatBubbleLeftRightIcon as ChatBubbleIcon,
 } from "@heroicons/react/24/outline";
 
 const NAV_ITEMS = [
@@ -31,6 +32,12 @@ const NAV_ITEMS = [
     title: "Organization",
     url: "/orgmenu/organization",
     icon: <BuildingLibrary />,
+    match: "prefix" as const,
+  },
+  {
+    title: "WhatsApp Messages",
+    url: "/orgmenu/whatsapp",
+    icon: <ChatBubbleIcon />,
     match: "prefix" as const,
   },
 ];
