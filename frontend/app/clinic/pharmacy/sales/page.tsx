@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
+import Link from "next/link"
 import {
   listSales,
   getSale,
-  createSale,
   listMedicines,
   type PharmacySale,
   type PharmacyMedicine,
@@ -23,8 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
 import {
   Table,
   TableBody,
@@ -33,18 +32,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { toast } from "sonner"
 
 const fmtMoney = (n: number) =>
   `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(n || 0)}`
 
 type SaleStatus = "completed" | "cancelled" | "refunded"
-
-interface SaleItemDraft {
-  medicineId: string
-  quantity: number
-  discount: number
-}
 
 function statusBadge(status: SaleStatus) {
   switch (status) {
@@ -65,16 +57,7 @@ export default function PharmacySalesPage() {
   const [loading, setLoading] = React.useState(true)
   const [search, setSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<"" | SaleStatus>("")
-
-  const [newOpen, setNewOpen] = React.useState(false)
   const [detail, setDetail] = React.useState<PharmacySale | null>(null)
-  const [submitting, setSubmitting] = React.useState(false)
-
-  const [saleDate, setSaleDate] = React.useState(() => new Date().toISOString().slice(0, 10))
-  const [patientId, setPatientId] = React.useState("")
-  const [paymentMethod, setPaymentMethod] = React.useState("cash")
-  const [notes, setNotes] = React.useState("")
-  const [items, setItems] = React.useState<SaleItemDraft[]>([])
 
   const reload = React.useCallback(async () => {
     if (!clinicId) return
@@ -104,6 +87,8 @@ export default function PharmacySalesPage() {
     return map
   }, [medicines])
 
+  if (!session) return null
+
   const filtered = sales.filter((s) => {
     if (statusFilter && s.status !== statusFilter) return false
     if (search) {
@@ -114,77 +99,6 @@ export default function PharmacySalesPage() {
     return true
   })
 
-  const computed = React.useMemo(() => {
-    let subtotal = 0
-    let discount = 0
-    let tax = 0
-    for (const it of items) {
-      const med = medicineById.get(it.medicineId)
-      if (!med) continue
-      const line = med.sellingPrice * (it.quantity || 0)
-      const d = it.discount || 0
-      subtotal += line
-      discount += d
-      tax += ((line - d) * med.taxPercent) / 100
-    }
-    const total = subtotal - discount + tax
-    return { subtotal, discount, tax, total }
-  }, [items, medicineById])
-
-  function resetForm() {
-    setSaleDate(new Date().toISOString().slice(0, 10))
-    setPatientId("")
-    setPaymentMethod("cash")
-    setNotes("")
-    setItems([])
-  }
-
-  function addItem() {
-    setItems((prev) => [...prev, { medicineId: "", quantity: 1, discount: 0 }])
-  }
-
-  function updateItem(idx: number, patch: Partial<SaleItemDraft>) {
-    setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, ...patch } : it)))
-  }
-
-  function removeItem(idx: number) {
-    setItems((prev) => prev.filter((_, i) => i !== idx))
-  }
-
-  async function submitSale() {
-    if (!clinicId) return
-    if (items.length === 0) {
-      toast.error("Add at least one item")
-      return
-    }
-    if (items.some((it) => !it.medicineId || (it.quantity || 0) <= 0)) {
-      toast.error("Each item needs a medicine and a positive quantity")
-      return
-    }
-    setSubmitting(true)
-    try {
-      await createSale(clinicId, {
-        saleDate,
-        patientId: patientId || null,
-        paymentMethod,
-        notes: notes || null,
-        items: items.map((it) => ({
-          medicineId: it.medicineId,
-          quantity: Number(it.quantity),
-          discount: Number(it.discount) || 0,
-        })),
-      })
-      toast.success("Sale recorded")
-      setNewOpen(false)
-      resetForm()
-      await reload()
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to create sale")
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
   async function openDetail(s: PharmacySale) {
     try {
       const full = await getSale(clinicId, s.saleId)
@@ -194,8 +108,6 @@ export default function PharmacySalesPage() {
     }
   }
 
-  if (!session) return null
-
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -203,7 +115,7 @@ export default function PharmacySalesPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Pharmacy Sales</h1>
           <p className="text-sm text-muted-foreground">Dispensing records and new sales</p>
         </div>
-        <Button onClick={() => { resetForm(); setNewOpen(true) }}>New Sale</Button>
+        <Button render={<Link href="/clinic/pharmacy/sales/new" />}>New Sale</Button>
       </div>
 
       <Card>
@@ -279,164 +191,6 @@ export default function PharmacySalesPage() {
           </Table>
         </CardContent>
       </Card>
-
-      <Dialog open={newOpen} onOpenChange={setNewOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>New Sale</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="saleDate">Sale Date</Label>
-                <Input id="saleDate" type="date" value={saleDate} onChange={(e) => setSaleDate(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="patientId">Patient ID (optional)</Label>
-                <Input
-                  id="patientId"
-                  placeholder="Walk-in if blank"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label>Payment Method</Label>
-                <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v ?? "cash")}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
-                    <SelectItem value="upi">UPI</SelectItem>
-                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                    <SelectItem value="credit">Credit</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="notes">Notes (optional)</Label>
-                <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Items</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                  Add Item
-                </Button>
-              </div>
-
-              {items.length === 0 ? (
-                <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-                  No items added yet.
-                </p>
-              ) : (
-                <div className="overflow-x-auto rounded-lg border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Medicine</TableHead>
-                        <TableHead>Qty</TableHead>
-                        <TableHead>Disc (₹)</TableHead>
-                        <TableHead>Line</TableHead>
-                        <TableHead></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {items.map((it, idx) => {
-                        const med = medicineById.get(it.medicineId)
-                        const line = med ? med.sellingPrice * (it.quantity || 0) - (it.discount || 0) : 0
-                        return (
-                          <TableRow key={idx}>
-                            <TableCell>
-                              <Select
-                                value={it.medicineId}
-                                onValueChange={(v) => updateItem(idx, { medicineId: v ?? "" })}
-                              >
-                                <SelectTrigger className="h-8 w-56">
-                                  <SelectValue placeholder="Select medicine" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {medicines.map((m) => (
-                                    <SelectItem key={m.medicineId} value={m.medicineId}>
-                                      {m.name}
-                                      {m.strength ? ` ${m.strength}` : ""}
-                                      {m.brand ? ` · ${m.brand}` : ""}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {med && (
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                  {fmtMoney(med.sellingPrice)} · tax {med.taxPercent}%
-                                </p>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Input
-                                type="number"
-                                min={1}
-                                value={it.quantity}
-                                onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })}
-                                className="h-8 w-20"
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <Input
-                                type="number"
-                                min={0}
-                                value={it.discount}
-                                onChange={(e) => updateItem(idx, { discount: Number(e.target.value) })}
-                                className="h-8 w-24"
-                              />
-                            </TableCell>
-                            <TableCell className="tabular-nums">{fmtMoney(line)}</TableCell>
-                            <TableCell>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() => removeItem(idx)}
-                                aria-label="Remove item"
-                              >
-                                ✕
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </div>
-
-            {items.length > 0 && (
-              <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                <div className="flex justify-between"><span>Subtotal</span><span className="tabular-nums">{fmtMoney(computed.subtotal)}</span></div>
-                <div className="flex justify-between"><span>Discount</span><span className="tabular-nums">{fmtMoney(computed.discount)}</span></div>
-                <div className="flex justify-between"><span>Tax</span><span className="tabular-nums">{fmtMoney(computed.tax)}</span></div>
-                <div className="flex justify-between font-medium"><span>Total (approx)</span><span className="tabular-nums">{fmtMoney(computed.total)}</span></div>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNewOpen(false)}>Cancel</Button>
-            <Button onClick={submitSale} disabled={submitting}>
-              {submitting ? "Saving…" : "Record Sale"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <DialogContent className="max-w-2xl">
