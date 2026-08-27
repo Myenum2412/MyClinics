@@ -68,7 +68,10 @@ export class MetaController {
     if (!ctx) throw new UnauthorizedError();
     const db = await this.db;
     if (!this.auth(db).isConfigured) {
-      throw new BadRequestError("Meta integration is not configured on this server");
+      const missing = ["META_APP_ID", "META_APP_SECRET"].filter((k) => !process.env[k]);
+      throw new BadRequestError(
+        `Meta integration is not configured on this server. Set the following backend env vars: ${missing.join(", ")}`
+      );
     }
     const { authUrl, state } = await this.auth(db).beginConnect(requireClinicOf(ctx));
     return reply.send({ authUrl, state });
