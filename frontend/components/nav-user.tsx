@@ -22,9 +22,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import {
+  ArrowLeftStartOnRectangleIcon as LogOutIcon,
   BellIcon as NotificationsActiveIcon,
   UserCircleIcon as BadgeCheckIcon,
 } from "@heroicons/react/24/outline";
+import { logout } from "@/lib/clinic-api";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 
 export function NavUser({
@@ -44,6 +46,11 @@ export function NavUser({
   const go = (href: string) => {
     if (isMobile) setOpenMobile(false)
     router.push(href)
+  }
+
+  const handleLogout = async () => {
+    await logout()
+    router.replace("/login")
   }
 
   const avatar = clinicId ? (
@@ -113,6 +120,10 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOutIcon />
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

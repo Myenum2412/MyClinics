@@ -57,6 +57,15 @@ export class ClinicController {
     return reply.send(clinic);
   }
 
+  async getStats(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (!ctx) throw new UnauthorizedError();
+    const { clinicId } = request.params as { clinicId: string };
+    const db = await getDb();
+    const stats = await this.service(db).getClinicStats(clinicId);
+    return reply.send(stats);
+  }
+
   async updateById(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();

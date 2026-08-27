@@ -170,6 +170,53 @@ export class ClinicService {
     return clinic;
   }
 
+  async getClinicStats(clinicId: string): Promise<{
+    clinicId: string;
+    doctors: number;
+    staff: number;
+    patients: number;
+    appointments: number;
+    medicalRecords: number;
+    prescriptions: number;
+    bills: number;
+    users: number;
+  }> {
+    const clinic = await this.platformRepo().findById(clinicId);
+    if (!clinic) throw new NotFoundError("Clinic not found");
+
+    const [
+      doctors,
+      staff,
+      patients,
+      appointments,
+      medicalRecords,
+      prescriptions,
+      bills,
+      users,
+    ] = await Promise.all([
+      this.db.collection(CLINIC_COLLECTIONS.doctors).countDocuments({ clinicId }),
+      this.db.collection(CLINIC_COLLECTIONS.staff).countDocuments({ clinicId }),
+      this.db.collection(CLINIC_COLLECTIONS.patients).countDocuments({ clinicId }),
+      this.db.collection(CLINIC_COLLECTIONS.appointments).countDocuments({ clinicId }),
+      this.db.collection(CLINIC_COLLECTIONS.medicalRecords).countDocuments({ clinicId }),
+      this.db.collection(CLINIC_COLLECTIONS.prescriptions).countDocuments({ clinicId }),
+      this.db.collection(CLINIC_COLLECTIONS.bills).countDocuments({ clinicId }),
+      this.db.collection(CLINIC_COLLECTIONS.users).countDocuments({ clinicId }),
+    ]);
+
+    return {
+      clinicId,
+      doctors,
+      staff,
+      patients,
+      appointments,
+      medicalRecords,
+      prescriptions,
+      bills,
+      users,
+    };
+  }
+
   async updateClinic(
     clinicId: string,
     input: UpdateClinicInput,

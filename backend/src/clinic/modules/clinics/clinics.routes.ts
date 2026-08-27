@@ -36,6 +36,12 @@ export function registerClinicRoutes(app: FastifyInstance): void {
     async (request, reply) => controller.getById(request, reply)
   );
 
+  app.get(
+    "/api/clinics/:clinicId/stats",
+    { preHandler: requireClinicAccess },
+    async (request, reply) => controller.getStats(request, reply)
+  );
+
   app.patch(
     "/api/clinics/:clinicId",
     { preHandler: requireClinicAccess },

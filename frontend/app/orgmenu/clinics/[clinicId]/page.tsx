@@ -6,9 +6,11 @@ import { toast } from "sonner";
 import { useClinicSession } from "@/hooks/use-clinic-session";
 import {
   type Clinic,
+  type ClinicStats,
   type Patient,
   activateClinic,
   getAnyClinic,
+  getClinicStats,
   listPatients,
   suspendClinic,
 } from "@/lib/clinic-api";
@@ -31,6 +33,7 @@ export default function OrgClinicDetailPage() {
   const { clinicId } = useParams<{ clinicId: string }>();
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [stats, setStats] = useState<ClinicStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingPatients, setLoadingPatients] = useState(true);
 
@@ -41,6 +44,13 @@ export default function OrgClinicDetailPage() {
       .then(setClinic)
       .catch(() => toast.error("Failed to load clinic"))
       .finally(() => setLoading(false));
+  }, [clinicId]);
+
+  const loadStats = useCallback(() => {
+    if (!clinicId) return;
+    getClinicStats(clinicId)
+      .then(setStats)
+      .catch(() => toast.error("Failed to load clinic stats"));
   }, [clinicId]);
 
   const loadPatients = useCallback(() => {
@@ -55,9 +65,10 @@ export default function OrgClinicDetailPage() {
   useEffect(() => {
     if (session.session) {
       load();
+      loadStats();
       loadPatients();
     }
-  }, [session.session, load, loadPatients]);
+  }, [session.session, load, loadStats, loadPatients]);
 
   async function handleSuspend() {
     if (!clinic) return;
@@ -82,8 +93,32 @@ export default function OrgClinicDetailPage() {
     }
   }
 
+  const statCards = stats
+    ? [
+        { label: "Doctors", value: stats.doctors },
+        { label: "Staff", value: stats.staff },
+        { label: "Patients", value: stats.patients },
+        { label: "Appointments", value: stats.appointments },
+        { label: "Medical Records", value: stats.medicalRecords },
+        { label: "Prescriptions", value: stats.prescriptions },
+        { label: "Bills", value: stats.bills },
+        { label: "Users", value: stats.users },
+      ]
+    : [];
+
   return (
     <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {statCards.map((s) => (
+          <Card key={s.label}>
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-muted-foreground">{s.label}</p>
+              <p className="mt-1 text-2xl font-bold">{s.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">

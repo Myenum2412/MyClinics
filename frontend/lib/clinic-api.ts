@@ -1777,6 +1777,22 @@ export function getAnyClinic(clinicId: string): Promise<Clinic> {
   return request(`/api/clinics/${clinicId}`);
 }
 
+export interface ClinicStats {
+  clinicId: string;
+  doctors: number;
+  staff: number;
+  patients: number;
+  appointments: number;
+  medicalRecords: number;
+  prescriptions: number;
+  bills: number;
+  users: number;
+}
+
+export function getClinicStats(clinicId: string): Promise<ClinicStats> {
+  return request(`/api/clinics/${clinicId}/stats`);
+}
+
 export function updateAnyClinic(
   clinicId: string,
   input: Record<string, unknown>
