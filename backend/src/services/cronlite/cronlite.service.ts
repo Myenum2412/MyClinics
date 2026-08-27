@@ -215,3 +215,85 @@ export async function syncCronJobs(): Promise<CronSyncResult> {
     throw error;
   }
 }
+
+export type CronLiteStatus =
+  | "not_configured"
+  | "connection_failed"
+  | "authentication_failed"
+  | "job_missing"
+  | "duplicate_jobs"
+  | "healthy";
+
+export interface CronLiteStatusResult {
+  status: CronLiteStatus;
+  jobId: string | null;
+  jobCount: number;
+  detail?: string;
+}
+
+/**
+ * Health/verification check that proves whether MyClinics can reach the
+ * self-hosted CronLite API and whether the required `myclinics-reminders` job
+ * exists. Distinguishes the failure modes so operators get an actionable
+ * signal instead of a generic error:
+ *   - not_configured     CRONLITE_API_KEY is unset
+ *   - connection_failed  CronLite unreachable / network error
+ *   - authentication_failed  API rejected our Bearer token (401/403)
+ *   - job_missing        configured, reachable, but no reminder job exists
+ *   - duplicate_jobs     more than one reminder job exists (should be exactly 1)
+ *   - healthy            exactly one correctly-configured reminder job
+ */
+export async function getCronLiteStatus(): Promise<CronLiteStatusResult> {
+  if (!isConfigured()) {
+    return {
+      status: "not_configured",
+      jobId: null,
+      jobCount: 0,
+      detail: "CRONLITE_API_KEY is not set",
+    };
+  }
+
+  const name = process.env.CRONLITE_REMINDER_JOB_NAME ?? "myclinics-reminders";
+  const webhookUrl = `${APP_BASE_URL}/api/cron/reminders`;
+  const cronExpression = process.env.CRONLITE_REMINDER_CRON ?? "* * * * *";
+
+  let jobs: CronLiteJob[];
+  try {
+    jobs = (await listCronLiteJobs(name)).filter((job) => job.name === name);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    // 401/403 => the API key is wrong/expired; everything else is a transport error.
+    if (/\b(401|403)\b|unauthorized|forbidden|invalid.*token|api key/i.test(message)) {
+      return { status: "authentication_failed", jobId: null, jobCount: 0, detail: message };
+    }
+    return { status: "connection_failed", jobId: null, jobCount: 0, detail: message };
+  }
+
+  if (jobs.length === 0) {
+    return { status: "job_missing", jobId: null, jobCount: 0 };
+  }
+  if (jobs.length > 1) {
+    logger.warn("cronlite status: duplicate reminder jobs detected", { count: jobs.length });
+    return { status: "duplicate_jobs", jobId: jobs[0].id, jobCount: jobs.length };
+  }
+
+  const job = jobs[0];
+  const drifted = job.webhook_url !== webhookUrl || job.cron_expression !== cronExpression;
+  if (drifted) {
+    // Exactly one job, but its target/schedule drifted. Report it as missing so
+    // the next /api/cron/sync reconciles it (syncCronJobs recreates on drift).
+    logger.warn("cronlite status: reminder job config drifted", {
+      jobId: job.id,
+      webhook_url: job.webhook_url,
+      cron_expression: job.cron_expression,
+    });
+    return {
+      status: "job_missing",
+      jobId: job.id,
+      jobCount: 1,
+      detail: "single reminder job exists but its webhook_url/cron_expression drifted",
+    };
+  }
+
+  return { status: "healthy", jobId: job.id, jobCount: 1 };
+}

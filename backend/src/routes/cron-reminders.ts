@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { getCronDb } from "@/lib/db-pools";
-import { syncCronJobs } from "@/services/cronlite/cronlite.service";
+import { syncCronJobs, getCronLiteStatus } from "@/services/cronlite/cronlite.service";
 import { requireCronSecret } from "@/plugins/auth";
 import { processPrescriptionNotifications } from "@/services/whatsapp/prescription-notification.service";
 import {
@@ -184,6 +184,29 @@ export function registerCronRoutes(app: FastifyInstance): void {
       return reply.code(500).send({
         error: `Something went wrong. Please try again. (${errorMessage})`,
       });
+    }
+  });
+
+  // Operational health check for the CronLite integration. Protected so it does
+  // not disclose infrastructure topology to the public. Returns one of:
+  // not_configured | connection_failed | authentication_failed | job_missing |
+  // duplicate_jobs | healthy.
+  app.get("/api/cron/status", async (request, reply) => {
+    if (!requireCronSecret(request, reply)) return;
+
+    try {
+      const status = await withTimeout(getCronLiteStatus(), 15_000, "getCronLiteStatus");
+      const code =
+        status.status === "healthy"
+          ? 200
+          : status.status === "not_configured"
+            ? 200
+            : 503;
+      return reply.code(code).send(status);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error("cronlite status error", { error: errorMessage });
+      return reply.code(500).send({ status: "connection_failed", error: errorMessage });
     }
   });
 }
