@@ -777,25 +777,40 @@ export default function MedicalRecordPage() {
 
   const refresh = useCallback(() => {
     if (!clinicId) return;
-    Promise.all([
-      listPatients(clinicId, { limit: 50 }),
-      listDoctors(clinicId, { limit: 50 }),
-      listMedicalRecordFiles(clinicId),
-      listMedicalRecordFolders(clinicId),
-      listRecords(clinicId, { limit: 50 }),
-      listPrescriptions(clinicId, { limit: 50 }),
-      listAppointments(clinicId, { limit: 50 }),
-    ])
-      .then(([p, d, f, fo, r, pr, ap]) => {
-        setPatients(p.items);
-        setDoctors(d.items);
-        setFiles(f.files);
-        setFolders(fo.folders);
-        setRecords(r.items);
-        setPrescriptions(pr.items);
-        setAppointments({ items: ap.items, total: ap.total });
+    setLoading(true);
+    const calls: Array<[string, Promise<unknown>]> = [
+      ["patients", listPatients(clinicId, { limit: 50 })],
+      ["doctors", listDoctors(clinicId, { limit: 50 })],
+      ["files", listMedicalRecordFiles(clinicId)],
+      ["folders", listMedicalRecordFolders(clinicId)],
+      ["records", listRecords(clinicId, { limit: 50 })],
+      ["prescriptions", listPrescriptions(clinicId, { limit: 50 })],
+      ["appointments", listAppointments(clinicId, { limit: 50 })],
+    ];
+    Promise.allSettled(calls.map(([, p]) => p))
+      .then((results) => {
+        const [p, d, f, fo, r, pr, ap] = results;
+        if (p.status === "fulfilled") setPatients((p.value as PageResult<Patient>).items);
+        if (d.status === "fulfilled") setDoctors((d.value as PageResult<Doctor>).items);
+        if (f.status === "fulfilled") setFiles((f.value as { files: MedicalRecordFile[] }).files);
+        if (fo.status === "fulfilled") setFolders((fo.value as { folders: MedicalRecordFolder[] }).folders);
+        if (r.status === "fulfilled") setRecords((r.value as PageResult<MedicineRecord>).items);
+        if (pr.status === "fulfilled") setPrescriptions((pr.value as PageResult<Prescription>).items);
+        if (ap.status === "fulfilled") {
+          const a = ap.value as PageResult<Appointment>;
+          setAppointments({ items: a.items, total: a.total });
+        }
+        const failed = calls.filter(([,], i) => results[i].status === "rejected").map(([name]) => name);
+        if (failed.length) {
+          const reason = (results.find((x) => x.status === "rejected") as PromiseRejectedResult)?.reason;
+          console.error("[medical-record] failed to load:", failed, reason);
+          toast.error(
+            failed.length === calls.length
+              ? "Failed to load medical records — check your session and try again"
+              : `Some sections failed to load: ${failed.join(", ")}`
+          );
+        }
       })
-      .catch(() => toast.error("Failed to load medical records"))
       .finally(() => setLoading(false));
   }, [clinicId]);
 
