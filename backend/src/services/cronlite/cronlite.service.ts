@@ -178,9 +178,19 @@ export async function syncCronJobs(): Promise<CronSyncResult> {
   const webhookUrl = `${APP_BASE_URL}/api/cron/reminders`;
   const cronExpression = process.env.CRONLITE_REMINDER_CRON ?? "* * * * *";
 
-  const existing = (await listCronLiteJobs(name)).find((job) => job.name === name);
+  const matches = (await listCronLiteJobs(name)).filter((job) => job.name === name);
+
+  // Defensive: a past bug, a manual duplicate, or a partial failure could leave
+  // more than one job with the same name. Keep exactly one — delete any extras
+  // so CronLite never fires the reminder poll more than once per minute.
+  const [existing, ...duplicates] = matches;
+  for (const dup of duplicates) {
+    logger.warn("cronlite removing duplicate reminder job", { jobId: dup.id, name });
+    await deleteCronLiteJob(dup.id).catch(() => {});
+  }
+
   if (existing) {
-    // Re-create with the latest config if the target moved.
+    // Re-create with the latest config if the target or schedule moved.
     if (existing.webhook_url !== webhookUrl || existing.cron_expression !== cronExpression) {
       await deleteCronLiteJob(existing.id);
     } else {

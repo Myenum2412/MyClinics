@@ -86,6 +86,19 @@ export async function scheduleAppointmentReminder(
 ): Promise<string | null> {
   if (status === "cancelled" || status === "completed" || status === "no_show") return null;
 
+  // Idempotent: don't create a second CronLite job if one is already tracked
+  // for this appointment. reschedule/cancel manage transitions of this id, so
+  // a repeated create (e.g. a redelivered event) must be a no-op.
+  const tracked = await getCronLiteJobId(db, clinicId, appointmentId);
+  if (tracked) {
+    logger.info("appointment reminder already scheduled", {
+      clinicId,
+      appointmentId,
+      jobId: tracked,
+    });
+    return tracked;
+  }
+
   const when = reminderInstant(date, time);
   if (when.getTime() <= nowFn().getTime() + MIN_LEAD_MS) {
     // Reminder window is in the past (or too close) — the every-minute poll
