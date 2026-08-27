@@ -126,6 +126,26 @@ async function mongoFallback(
       status: { $ne: "deleted" },
       $or: cfg.searchFields.map((f) => ({ [f]: regex })),
     };
+
+    // The OpenSearch path enriches appointments/prescriptions with the linked
+    // patient (and doctor) name. To keep the Mongo fallback useful, widen the
+    // filter to also match those entities by their patient's name/contact.
+    if (entity === "appointment" || entity === "prescription") {
+      const patientIds = await db
+        .collection("clc_patients")
+        .find(
+          {
+            clinicId,
+            status: { $ne: "deleted" },
+            $or: [{ fullName: regex }, { mobile: regex }, { email: regex }],
+          },
+          { projection: { patientId: 1 } }
+        )
+        .toArray();
+      const ids = patientIds.map((p) => p.patientId).filter(Boolean);
+      if (ids.length) (filter.$or as Record<string, unknown>[]).push({ patientId: { $in: ids } });
+    }
+
     const docs = await db
       .collection(cfg.collection)
       .find(filter)
