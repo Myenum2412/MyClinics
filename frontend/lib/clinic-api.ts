@@ -1802,3 +1802,250 @@ export function updateAnyClinic(
     body: JSON.stringify(input),
   });
 }
+// ── Meta Business Integration ──────────────────────────────────────────────
+
+export interface MetaIntegrationPublic {
+  integrationId: string;
+  metaBusinessId: string | null;
+  metaBusinessName: string | null;
+  status: string;
+  webhookStatus: string;
+  grantedScopes: string[];
+  tokenExpiresAt: string | null;
+  lastSyncedAt: string | null;
+  connectedAt: string | null;
+  disconnectedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  hasToken: boolean;
+}
+
+export interface MetaHealth {
+  status: string;
+  tokenExpiring: boolean;
+  tokenExpired: boolean;
+  webhookStatus: string;
+  lastSyncedAt: string | null;
+  missingScopes: string[];
+  issues: string[];
+}
+
+export interface MetaAssets {
+  pages: Array<{ pageId: string; pageName: string; category: string | null; status: string }>;
+  instagram: Array<{ instagramAccountId: string; username: string | null; name: string | null; status: string }>;
+  adAccounts: Array<{ adAccountId: string; name: string | null; accountId: string | null; currency: string | null; status: string }>;
+  leadForms: Array<{ formId: string; metaPageId: string; formName: string; status: string }>;
+  whatsapp: Array<{ waBusinessId: string; name: string | null; phoneNumberId: string | null; status: string }>;
+}
+
+export interface MetaCampaignMapping {
+  mappingId: string;
+  metaCampaignId: string;
+  metaCampaignName: string | null;
+  department: string | null;
+  service: string | null;
+  team: string | null;
+  doctorId: string | null;
+  pipeline: string | null;
+}
+
+export interface MetaSyncJob {
+  syncJobId: string;
+  mode: string;
+  fromDate: string | null;
+  toDate: string | null;
+  status: string;
+  found: number;
+  imported: number;
+  duplicates: number;
+  failed: number;
+  startedAt: string | null;
+  finishedAt: string | null;
+  createdAt: string;
+}
+
+export interface MetaWebhookEvent {
+  eventId: string;
+  eventType: string;
+  status: string;
+  attempts: number;
+  lastError: string | null;
+  processedAt: string | null;
+  createdAt: string;
+}
+
+export interface MetaAnalytics {
+  totalMetaLeads: number;
+  byPlatform: { facebook: number; instagram: number; unknown: number };
+  byCampaign: Array<{ campaignId: string | null; campaignName: string | null; leads: number; appointments: number; converted: number; conversionRate: number }>;
+  byAdSet: Array<{ adsetId: string | null; adsetName: string | null; leads: number }>;
+  byAd: Array<{ adId: string | null; adName: string | null; leads: number }>;
+  byForm: Array<{ formId: string | null; formName: string | null; leads: number }>;
+  appointmentsGenerated: number;
+  convertedLeads: number;
+  conversionRate: number;
+  costPerLead: null;
+  costPerAppointment: null;
+  costPerConversion: null;
+}
+
+export function getMetaStatus(clinicId: string): Promise<{ integration: MetaIntegrationPublic | null; health: MetaHealth }> {
+  return request(tenantPath(clinicId, "/meta/status"));
+}
+export function connectMeta(clinicId: string): Promise<{ authUrl: string; state: string }> {
+  return request(tenantPath(clinicId, "/meta/connect"), { method: "POST" });
+}
+export function reconnectMeta(clinicId: string): Promise<{ authUrl: string; state: string }> {
+  return request(tenantPath(clinicId, "/meta/reconnect"), { method: "POST" });
+}
+export function disconnectMeta(clinicId: string): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, "/meta/disconnect"), { method: "POST" });
+}
+export function getMetaAssets(clinicId: string): Promise<MetaAssets> {
+  return request(tenantPath(clinicId, "/meta/assets"));
+}
+export function listCampaignMappings(clinicId: string): Promise<{ mappings: MetaCampaignMapping[] }> {
+  return request(tenantPath(clinicId, "/meta/campaign-mappings"));
+}
+export function upsertCampaignMapping(clinicId: string, input: Partial<MetaCampaignMapping>): Promise<MetaCampaignMapping> {
+  return request(tenantPath(clinicId, "/meta/campaign-mappings"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+export function deleteCampaignMapping(clinicId: string, mappingId: string): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/meta/campaign-mappings/${mappingId}`), { method: "DELETE" });
+}
+export function syncMetaNow(clinicId: string): Promise<MetaSyncJob> {
+  return request(tenantPath(clinicId, "/meta/sync"), { method: "POST" });
+}
+export function syncMetaRange(clinicId: string, fromDate: string, toDate: string): Promise<MetaSyncJob> {
+  return request(tenantPath(clinicId, "/meta/sync/range"), {
+    method: "POST",
+    body: JSON.stringify({ fromDate, toDate }),
+  });
+}
+export function listMetaSyncJobs(clinicId: string): Promise<{ jobs: MetaSyncJob[] }> {
+  return request(tenantPath(clinicId, "/meta/sync/jobs"));
+}
+export function getMetaAnalytics(clinicId: string): Promise<MetaAnalytics> {
+  return request(tenantPath(clinicId, "/meta/analytics"));
+}
+export function listMetaWebhookEvents(clinicId: string): Promise<{ events: MetaWebhookEvent[] }> {
+  return request(tenantPath(clinicId, "/meta/webhook-events"));
+}
+export function retryMetaWebhooks(clinicId: string): Promise<{ retried: number; stillFailing: number }> {
+  return request(tenantPath(clinicId, "/meta/webhook-events/retry"), { method: "POST" });
+}
+
+// ── Leads ────────────────────────────────────────────────────────────────────
+
+export interface Lead {
+  leadId: string;
+  source: string;
+  sourceRef: string | null;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  formAnswers: Record<string, string>;
+  consent: Record<string, unknown> | null;
+  status: string;
+  priority: string;
+  department: string | null;
+  service: string | null;
+  team: string | null;
+  assignedTo: string | null;
+  assignedAt: string | null;
+  receivedAt: string;
+  firstResponseAt: string | null;
+  firstContactAt: string | null;
+  contactAttempts: number;
+  appointmentBookedAt: string | null;
+  convertedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LeadAttribution {
+  metaLeadId: string | null;
+  businessId: string | null;
+  pageId: string | null;
+  instagramAccountId: string | null;
+  adAccountId: string | null;
+  campaignId: string | null;
+  campaignName: string | null;
+  adsetId: string | null;
+  adsetName: string | null;
+  adId: string | null;
+  adName: string | null;
+  formId: string | null;
+  formName: string | null;
+  platform: string;
+  submittedAt: string | null;
+}
+
+export function listLeads(clinicId: string, query: { status?: string } = {}): Promise<{ leads: Lead[] }> {
+  const qs = query.status ? `?status=${encodeURIComponent(query.status)}` : "";
+  return request(tenantPath(clinicId, `/leads${qs}`));
+}
+export function createLead(clinicId: string, input: Partial<Lead>): Promise<Lead> {
+  return request(tenantPath(clinicId, "/leads"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+export function getLead(clinicId: string, leadId: string): Promise<{ lead: Lead; attribution: LeadAttribution | null; whatsappFollowup: unknown | null }> {
+  return request(tenantPath(clinicId, `/leads/${leadId}`));
+}
+export function assignLead(clinicId: string, leadId: string, assignedTo: string): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/leads/${leadId}/assign`), {
+    method: "POST",
+    body: JSON.stringify({ assignedTo }),
+  });
+}
+export function markLeadContacted(clinicId: string, leadId: string): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/leads/${leadId}/contacted`), { method: "POST" });
+}
+export function bookLeadAppointment(clinicId: string, leadId: string): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/leads/${leadId}/appointment`), { method: "POST" });
+}
+export function convertLead(clinicId: string, leadId: string): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/leads/${leadId}/convert`), { method: "POST" });
+}
+export function getLeadWorkflowStats(clinicId: string): Promise<{
+  totalLeads: number;
+  metaLeads: number;
+  appointmentsBooked: number;
+  converted: number;
+  avgFirstResponseMs: number | null;
+  leadToAppointmentRate: number;
+}> {
+  return request(tenantPath(clinicId, "/leads/stats/workflow"));
+}
+export function upsertLeadWhatsappFollowup(clinicId: string, leadId: string, input: Record<string, unknown>): Promise<unknown> {
+  return request(tenantPath(clinicId, `/leads/${leadId}/whatsapp-followup`), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+// ── Platform admin Meta oversight ────────────────────────────────────────────
+
+export function getPlatformMetaOverview(): Promise<{
+  connectedClinics: number;
+  totalIntegrations: number;
+  byStatus: Record<string, number>;
+  integrations: Array<{
+    clinicId: string;
+    metaBusinessId: string | null;
+    metaBusinessName: string | null;
+    status: string;
+    webhookStatus: string;
+    lastSyncedAt: string | null;
+    tokenExpiresAt: string | null;
+    hasToken: boolean;
+  }>;
+  webhookErrors: MetaWebhookEvent[];
+}> {
+  return request("/api/platform/meta/overview");
+}

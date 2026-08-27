@@ -29,6 +29,7 @@ import {
   UsersIcon,
   ClipboardDocumentListIcon as ClipboardListIcon,
   BellIcon,
+  InboxIcon,
   ClipboardDocumentCheckIcon as RecordsIcon,
   FolderOpenIcon,
   ChartBarIcon,
@@ -114,6 +115,12 @@ const NAV_ITEMS: NavItem[] = [
     title: "Settings",
     url: "/clinic/settings",
     icon: <Settings2Icon className="size-6" />,
+    roles: ["staff", "clinic_admin"],
+  },
+  {
+    title: "Leads",
+    url: "/clinic/leads",
+    icon: <InboxIcon className="size-6" />,
     roles: ["staff", "clinic_admin"],
   },
 ]

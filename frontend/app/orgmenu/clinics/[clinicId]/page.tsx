@@ -207,6 +207,21 @@ export default function OrgClinicDetailPage() {
         </CardContent>
       </Card>
 
+      {clinic && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Integrations</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={() => (window.location.href = `/orgmenu/clinics/${clinic.clinicId}/integrations/meta`)}>
+              Meta Business Integration
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Patients</CardTitle>

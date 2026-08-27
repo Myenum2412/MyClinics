@@ -24,6 +24,21 @@ export const CLINIC_COLLECTIONS = {
   prescriptionNotifications: "clc_prescription_notifications",
   appointmentNotifications: "clc_appointment_notifications",
   clinicWelcomeDocuments: "clc_clinic_welcome_documents",
+  // ── Leads ─────────────────────────────────────────────────────────────
+  leads: "clc_leads",
+  // ── Meta Business Integration (tenant-isolated) ───────────────────────
+  metaIntegrations: "clc_meta_integrations",
+  metaPages: "clc_meta_pages",
+  metaInstagramAccounts: "clc_meta_instagram_accounts",
+  metaAdAccounts: "clc_meta_ad_accounts",
+  metaLeadForms: "clc_meta_lead_forms",
+  metaLeadAttributions: "clc_meta_lead_attributions",
+  metaCampaignMappings: "clc_meta_campaign_mappings",
+  metaWhatsapp: "clc_meta_whatsapp",
+  metaWhatsappFollowups: "clc_meta_whatsapp_followups",
+  metaWebhookEvents: "clc_meta_webhook_events",
+  metaSyncJobs: "clc_meta_sync_jobs",
+  metaOauthStates: "clc_meta_oauth_states",
 } as const;
 
 export type ClinicCollectionName =

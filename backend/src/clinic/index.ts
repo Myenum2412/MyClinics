@@ -18,6 +18,12 @@ import { registerAuditLogRoutes } from "@/clinic/modules/audit-logs/audit-logs.r
 import { registerPatientPortalRoutes } from "@/clinic/modules/portal/patient-portal.routes";
 import { registerAvatarRoutes } from "@/clinic/modules/avatars/avatars.routes";
 import { registerReportsRoutes } from "@/clinic/modules/reports/reports.routes";
+import { registerLeadRoutes } from "@/clinic/modules/leads/leads.routes";
+import {
+  registerMetaRoutes,
+  registerPlatformMetaRoutes,
+  registerPublicMetaRoutes,
+} from "@/clinic/modules/meta/meta.routes";
 
 /**
  * Clinic (multi-tenant) API entry point.
@@ -35,6 +41,10 @@ import { registerReportsRoutes } from "@/clinic/modules/reports/reports.routes";
  */
 export function registerClinicApi(app: FastifyInstance): void {
   registerPublicAuthRoutes(app);
+  // Public Meta endpoints (OAuth callback + webhook) live OUTSIDE the
+  // clinic-scope middleware — they resolve the clinic from the oauth state
+  // or the Meta asset id, never from a caller-supplied value.
+  registerPublicMetaRoutes(app);
 
   // Encapsulated context: the clinic-scope middleware runs for every route
   // registered below, and only for those routes.
@@ -60,5 +70,8 @@ export function registerClinicApi(app: FastifyInstance): void {
     registerPatientPortalRoutes(tenantApi);
     registerAvatarRoutes(tenantApi);
     registerReportsRoutes(tenantApi);
+    registerLeadRoutes(tenantApi);
+    registerMetaRoutes(tenantApi);
+    registerPlatformMetaRoutes(tenantApi);
   });
 }
