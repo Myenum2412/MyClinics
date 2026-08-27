@@ -1,5 +1,6 @@
 import type { Db } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
+import { logger } from "@/lib/logger";
 
 /**
  * Indexes for the clinic (multi-tenant) domain, created idempotently at
@@ -37,7 +38,7 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
   const metaSyncJobs = db.collection(CLINIC_COLLECTIONS.metaSyncJobs);
   const metaOauthStates = db.collection(CLINIC_COLLECTIONS.metaOauthStates);
 
-  await Promise.all([
+  const indexSpecs = [
     // ── Clinics ──────────────────────────────────────────────────────────
     clinics.createIndex({ clinicId: 1 }, { unique: true }),
     clinics.createIndex({ slug: 1 }, { unique: true }),
@@ -218,5 +219,17 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
 
     metaOauthStates.createIndex({ state: 1 }, { unique: true }),
     metaOauthStates.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
-  ]);
+  ];
+
+  // A single failing index (e.g. a unique index hitting pre-existing
+  // duplicate data) must NOT take down the whole server — log and continue
+  // so the API stays up. Queries simply miss that index until it's fixed.
+  const results = await Promise.allSettled(indexSpecs);
+  for (const r of results) {
+    if (r.status === "rejected") {
+      logger.warn("Failed to create a clinic index (continuing)", {
+        error: String((r.reason as { message?: string })?.message ?? r.reason),
+      });
+    }
+  }
 }

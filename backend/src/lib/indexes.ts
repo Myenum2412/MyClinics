@@ -1,4 +1,5 @@
 import type { Db } from "mongodb";
+import { logger } from "@/lib/logger";
 
 /**
  * Idempotent index creation for platform collections (WhatsApp/AI services),
@@ -23,7 +24,7 @@ export async function ensureIndexes(db: Db): Promise<void> {
   const waSessionCommands = db.collection("wa_session_commands");
   const waClinicSessions = db.collection("wa_clinic_sessions");
 
-  await Promise.all([
+  const indexSpecs = [
     appointments.createIndex({ date: 1, status: 1, time: 1 }),
     appointments.createIndex({ date: 1, status: 1, createdAt: 1 }),
     appointments.createIndex({ patientId: 1, date: 1 }),
@@ -62,5 +63,14 @@ export async function ensureIndexes(db: Db): Promise<void> {
     // Per-clinic WhatsApp Web connections
     waSessionCommands.createIndex({ status: 1, createdAt: 1 }),
     waClinicSessions.createIndex({ clinicId: 1 }, { unique: true }),
-  ]);
+  ];
+
+  const results = await Promise.allSettled(indexSpecs);
+  for (const r of results) {
+    if (r.status === "rejected") {
+      logger.warn("Failed to create a platform index (continuing)", {
+        error: String((r.reason as { message?: string })?.message ?? r.reason),
+      });
+    }
+  }
 }
