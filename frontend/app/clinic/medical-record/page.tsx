@@ -1297,7 +1297,7 @@ export default function MedicalRecordPage() {
       onDragLeave={onPageDragLeave}
       onDrop={onPageDrop}
     >
-      <div className="mx-auto max-w-7xl">
+      <div className="w-full">
         <div className="flex flex-wrap items-center gap-2">
           {selectedPatient ? (
             <>
