@@ -1,0 +1,53 @@
+# Local infrastructure for MyClinics performance layer.
+#   Valkey      — shared, off-heap TTL cache (drop-in Redis replacement)
+#   OpenSearch  — full-text, cross-entity unified search
+#
+# Start with:  docker compose up -d
+# Both are OPTIONAL: the API degrades gracefully (in-memory cache + Mongo
+# fallback search) when VALKEY_URL / OPENSEARCH_URL are unset.
+
+services:
+  valkey:
+    image: valkey/valkey:7.2
+    container_name: myclinics-valkey
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - valkey-data:/data
+    restart: unless-stopped
+
+  opensearch:
+    image: opensearch-project/opensearch:2.19.1
+    container_name: myclinics-opensearch
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "9200:9200"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    restart: unless-stopped
+
+volumes:
+  valkey-data:
+  opensearch-data:

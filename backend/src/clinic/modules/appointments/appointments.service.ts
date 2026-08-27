@@ -13,6 +13,7 @@ import type { CreateAppointmentInput, UpdateAppointmentInput } from "@/clinic/mo
 import { AppointmentRepository } from "@/clinic/modules/appointments/appointments.repository";
 import type { AppointmentDoc } from "@/clinic/modules/appointments/appointments.schema";
 import { queueAppointmentNotifications } from "@/services/whatsapp/appointment-notification.service";
+import { indexEntity, removeEntity } from "@/services/search/indexer";
 
 export class AppointmentService {
   constructor(private readonly db: Db) {}
@@ -54,6 +55,8 @@ export class AppointmentService {
       notes: input.notes ?? null,
       createdBy: ctx.userId,
     });
+
+    void indexEntity("appointment", clinicId, appointment.appointmentId, appointment).catch(() => {});
 
     await writeAudit(this.db, ctx, {
       action: "create",
@@ -148,6 +151,8 @@ export class AppointmentService {
 
     const updated = await repo.findByAppointmentId(appointmentId);
 
+    void indexEntity("appointment", requireClinicOf(ctx), appointmentId, updated ?? existing).catch(() => {});
+
     if (patch.status || patch.date || patch.time) {
       const action = patch.status === "cancelled" ? "cancelled" : "updated";
       await queueAppointmentNotifications(this.db, requireClinicOf(ctx), appointmentId, action);
@@ -162,6 +167,8 @@ export class AppointmentService {
     if (!existing) throw new NotFoundError("Appointment not found");
 
     await repo.softDelete(appointmentId);
+
+    void removeEntity("appointment", requireClinicOf(ctx), appointmentId).catch(() => {});
 
     await queueAppointmentNotifications(this.db, requireClinicOf(ctx), appointmentId, "cancelled");
 

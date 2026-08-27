@@ -1,8 +1,10 @@
 import "./scripts/bootstrap-env";
 import { buildServer } from "@/app";
 import { getDb, closeAllPools } from "@/lib/db-pools";
+import { closeCache } from "@/lib/cache";
 import { ensureIndexes } from "@/lib/indexes";
 import { ensureClinicIndexes } from "@/clinic/indexes";
+import { ensureSearchIndex } from "@/services/search/client";
 import { ensurePlatformAdmin } from "@/clinic/seed";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { syncCronJobs } from "@/services/cronjob/cronjob.service";
@@ -17,6 +19,7 @@ async function main() {
     db = await getDb();
     await ensureIndexes(db);
     await ensureClinicIndexes(db);
+    await ensureSearchIndex();
     await ensurePlatformAdmin(db);
     await ensureDefaultOrganization(db);
     logger.info("Database initialization complete");
@@ -35,6 +38,7 @@ async function main() {
     try {
       await app.close();
       await closeAllPools();
+      await closeCache();
       logger.info("Server closed successfully");
       process.exit(0);
     } catch (error) {

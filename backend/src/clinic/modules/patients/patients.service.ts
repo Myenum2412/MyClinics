@@ -29,6 +29,7 @@ import {
   type Notifyable,
 } from "@/services/whatsapp/save-notification.service";
 import { deleteFromR2, listR2Objects } from "@/lib/r2";
+import { indexEntity, removeEntity } from "@/services/search/indexer";
 
 export class PatientService {
   constructor(private readonly db: Db) {}
@@ -169,6 +170,8 @@ export class PatientService {
 
     const created = await this.repo(ctx).insert(doc as never);
 
+    void indexEntity("patient", clinicId, created.patientId, created).catch(() => {});
+
     await writeAudit(this.db, ctx, {
       action: "create",
       entity: "patient",
@@ -307,6 +310,8 @@ export class PatientService {
 
     const updated = await repo.findByPatientId(patientId);
     const saved = updated ?? patient;
+
+    void indexEntity("patient", requireClinicOf(ctx), patientId, saved).catch(() => {});
 
     // Notify the patient and their assigned doctor that the profile changed.
     await notifyPatientUpdated(this.db, saved, Object.keys(patch), requireClinicOf(ctx));
@@ -457,6 +462,8 @@ export class PatientService {
 
     // 10. Perform patient soft-delete in repository
     await repo.softDelete(patientId);
+
+    void removeEntity("patient", clinicId, patientId).catch(() => {});
 
     // Deactivate the linked portal account, if any.
     if (patient.userId) {

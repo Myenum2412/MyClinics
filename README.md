@@ -36,6 +36,36 @@ reminders and turn alerts.
 
 ## Architecture
 
+### Performance layer (Valkey + OpenSearch)
+
+Both services are **optional** — the API degrades gracefully when they are
+unconfigured, so local development works without them.
+
+- **Valkey** (`VALKEY_URL`, Redis-compatible) backs the existing `cached()` /
+  `invalidateCache()` TTL cache (`backend/src/lib/cache.ts`). When set, hot
+  reads (organization, soul, knowledge, doctor list, tenant-user revalidation)
+  are served from shared, off-heap memory instead of the per-process `Map`,
+  which is the automatic fallback on any connection error.
+- **OpenSearch** (`OPENSEARCH_URL`) powers a unified cross-entity search at
+  `GET /api/clinics/:clinicId/search?q=<term>&types=patient,doctor`. Patients,
+  appointments, prescriptions and doctors are indexed on every write
+  (`backend/src/services/search/`). When OpenSearch is unavailable the endpoint
+  transparently falls back to a Mongo `$regex` scan.
+
+**Local infra:**
+
+```bash
+docker compose up -d        # starts Valkey (:6379) + OpenSearch (:9200)
+```
+
+Set `VALKEY_URL=redis://localhost:6379` and `OPENSEARCH_URL=http://localhost:9200`
+(see `.env.example`). On first boot the search index is created automatically.
+To backfill existing data:
+
+```bash
+npm run search:reindex -w @myclinics/backend
+```
+
 An npm-workspaces monorepo with two packages sharing one MongoDB database:
 
 ```

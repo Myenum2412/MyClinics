@@ -19,6 +19,7 @@ import { registerPatientPortalRoutes } from "@/clinic/modules/portal/patient-por
 import { registerAvatarRoutes } from "@/clinic/modules/avatars/avatars.routes";
 import { registerReportsRoutes } from "@/clinic/modules/reports/reports.routes";
 import { registerLeadRoutes } from "@/clinic/modules/leads/leads.routes";
+import { registerSearchRoutes } from "@/services/search/search.routes";
 import {
   registerMetaRoutes,
   registerPlatformMetaRoutes,
@@ -71,6 +72,7 @@ export function registerClinicApi(app: FastifyInstance): void {
     registerAvatarRoutes(tenantApi);
     registerReportsRoutes(tenantApi);
     registerLeadRoutes(tenantApi);
+    registerSearchRoutes(tenantApi);
     registerMetaRoutes(tenantApi);
     registerPlatformMetaRoutes(tenantApi);
   });

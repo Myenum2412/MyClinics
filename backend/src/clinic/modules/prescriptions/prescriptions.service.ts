@@ -12,6 +12,7 @@ import { generatePrescriptionId } from "@/clinic/core/ids";
 import type { CreatePrescriptionInput, UpdatePrescriptionInput } from "@/clinic/modules/prescriptions/prescriptions.dto";
 import { PrescriptionRepository } from "@/clinic/modules/prescriptions/prescriptions.repository";
 import type { PrescriptionDoc } from "@/clinic/modules/prescriptions/prescriptions.schema";
+import { indexEntity, removeEntity } from "@/services/search/indexer";
 
 export class PrescriptionService {
   constructor(private readonly db: Db) {}
@@ -64,6 +65,8 @@ export class PrescriptionService {
       notes: input.notes ?? null,
       createdBy: ctx.userId,
     });
+
+    void indexEntity("prescription", clinicId, prescription.prescriptionId, prescription).catch(() => {});
 
     await writeAudit(this.db, ctx, {
       action: "create",
@@ -135,6 +138,8 @@ export class PrescriptionService {
 
     const updated = await repo.findByPrescriptionId(prescriptionId);
 
+    void indexEntity("prescription", requireClinicOf(ctx), prescriptionId, updated ?? existing).catch(() => {});
+
     if (updated) {
       await this.db.collection("clc_prescription_notifications").updateOne(
         { prescriptionId: updated.prescriptionId, action: "updated", status: "pending" },
@@ -164,6 +169,8 @@ export class PrescriptionService {
     if (!existing) throw new NotFoundError("Prescription not found");
 
     await repo.softDelete(prescriptionId);
+
+    void removeEntity("prescription", requireClinicOf(ctx), prescriptionId).catch(() => {});
 
     await writeAudit(this.db, ctx, {
       action: "delete",

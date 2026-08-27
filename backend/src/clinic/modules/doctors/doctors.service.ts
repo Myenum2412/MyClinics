@@ -2,6 +2,7 @@ import { now as nowFn } from "@/clinic/core/datetime";
 import type { Db, WithId } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
+import { indexEntity, removeEntity } from "@/services/search/indexer";
 import { requireClinicOf, type ClinicContext } from "@/clinic/core/context";
 import { ForbiddenError, NotFoundError } from "@/clinic/core/errors";
 import { generateDoctorId } from "@/clinic/core/ids";
@@ -65,6 +66,8 @@ export class DoctorService {
 
     // Notify the doctor that their profile was created.
     await notifyDoctorRegistered(this.db, doctor, requireClinicOf(ctx));
+
+    void indexEntity("doctor", requireClinicOf(ctx), doctor.doctorId, doctor).catch(() => {});
 
     return doctor;
   }
@@ -144,6 +147,8 @@ export class DoctorService {
     const updated = await this.repo(ctx).findByDoctorId(doctorId);
     const saved = updated ?? existing;
 
+    void indexEntity("doctor", requireClinicOf(ctx), doctorId, saved).catch(() => {});
+
     // Notify the doctor that their profile changed.
     await notifyDoctorUpdated(this.db, saved, requireClinicOf(ctx));
 
@@ -159,6 +164,8 @@ export class DoctorService {
     if (!existing) throw new NotFoundError("Doctor not found");
 
     await this.repo(ctx).softDelete(doctorId);
+
+    void removeEntity("doctor", clinicId, doctorId).catch(() => {});
 
     // Deactivate the doctor's login account so it can no longer sign in and
     // its email is freed for reuse when the doctor is re-created.
