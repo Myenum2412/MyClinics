@@ -1,9 +1,14 @@
 import type { FastifyInstance } from "fastify";
 import { getCronDb } from "@/lib/db-pools";
-import { syncCronJobs } from "@/services/cronjob/cronjob.service";
+import { syncCronJobs } from "@/services/cronlite/cronlite.service";
 import { requireCronSecret } from "@/plugins/auth";
 import { processPrescriptionNotifications } from "@/services/whatsapp/prescription-notification.service";
-import { processAppointmentNotifications } from "@/services/whatsapp/appointment-notification.service";
+import {
+  processAppointmentNotifications,
+  sendReminderForAppointment,
+} from "@/services/whatsapp/appointment-notification.service";
+import { deleteFiredAppointmentJob } from "@/services/cronlite/appointment-scheduler.service";
+import { deleteCronLiteJob } from "@/services/cronlite/cronlite.service";
 import { nowMs } from "@/clinic/core/datetime";
 import { logger } from "@/lib/logger";
 
@@ -45,7 +50,7 @@ async function runStep<T>(ms: number, label: string, fn: () => Promise<T>): Prom
 }
 
 /**
- * Entry point for the appointment reminder scheduler (cron-job.org pings this
+ * Entry point for the appointment reminder scheduler (CronLite pings this
  * every minute). Drains the tenant notification queues (prescriptions and
  * appointment events/1-hour reminders) that the WhatsApp worker then delivers.
  *
@@ -54,7 +59,7 @@ async function runStep<T>(ms: number, label: string, fn: () => Promise<T>): Prom
  *    sequential chain could spend up to ~25s of wall-clock (plus a 10s DB
  *    connect), which periodically exceeded the reverse-proxy timeout and
  *    surfaced as 502 Bad Gateway to the scheduler.
- *  - The endpoint ALWAYS answers with a 2xx so cron-job.org never flags the
+ *  - The endpoint ALWAYS answers with a 2xx so CronLite never flags the
  *    job as failed. This is a best-effort, idempotent queueing job that
  *    re-runs every minute; real problems are visible in the logs.
  */
@@ -104,9 +109,68 @@ async function handleReminders(request: import("fastify").FastifyRequest, reply:
 }
 
 export function registerCronRoutes(app: FastifyInstance): void {
-  // cron-job.org is configured for POST, but also handle GET for health checks / manual probes
+  // CronLite (or legacy x-cron-secret) is configured for POST, but also handle
+  // GET for health checks / manual probes.
   app.post("/api/cron/reminders", handleReminders);
   app.get("/api/cron/reminders", handleReminders);
+
+  /**
+   * Per-appointment reminder delivery. CronLite fires this one-shot job exactly
+   * at (appointment − 1h) for the given appointment. After sending, the job is
+   * deleted so it never re-fires. The every-minute /api/cron/reminders poll is
+   * the safety-net fallback for any job that was missed or had no future window.
+   */
+  app.post("/api/cron/appointment-reminder", async (request, reply) => {
+    if (!requireCronSecret(request, reply)) return;
+
+    const query = request.query as Record<string, unknown>;
+    const clinicId = typeof query.clinicId === "string" ? query.clinicId : "";
+    const appointmentId = typeof query.appointmentId === "string" ? query.appointmentId : "";
+    if (!clinicId || !appointmentId) {
+      return reply.code(400).send({ error: "clinicId and appointmentId are required" });
+    }
+
+    const startTime = nowMs();
+    try {
+      const db = await withTimeout(getCronDb(), 8_000, "getCronDb");
+      const sent = await withTimeout(
+        sendReminderForAppointment(db, clinicId, appointmentId),
+        20_000,
+        "sendReminderForAppointment"
+      );
+      // One-shot job: remove it so it can't re-fire on a later matching date.
+      // Prefer the job id from the webhook payload (authoritative even if the
+      // appointment was rescheduled and the stored id now points at a new job);
+      // fall back to the stored id otherwise.
+      const payload = request.body as { job_id?: string } | null;
+      const firedJobId = typeof payload?.job_id === "string" ? payload.job_id : "";
+      if (firedJobId) {
+        await deleteCronLiteJob(firedJobId).catch(() => {});
+      } else {
+        await deleteFiredAppointmentJob(db, clinicId, appointmentId).catch(() => {});
+      }
+
+      const duration = nowMs() - startTime;
+      logger.info("Per-appointment reminder delivered", {
+        clinicId,
+        appointmentId,
+        sent,
+        durationMs: duration,
+      });
+      return reply.send({ ok: true, sent, durationMs: duration });
+    } catch (error) {
+      const duration = nowMs() - startTime;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error("Per-appointment reminder failed", {
+        clinicId,
+        appointmentId,
+        durationMs: duration,
+        error: errorMessage,
+      });
+      // Always 2xx so CronLite doesn't flag the execution as failed/retry.
+      return reply.code(200).send({ ok: false, error: errorMessage, durationMs: duration });
+    }
+  });
 
   app.post("/api/cron/sync", async (request, reply) => {
     if (!requireCronSecret(request, reply)) return;
@@ -116,7 +180,7 @@ export function registerCronRoutes(app: FastifyInstance): void {
       return reply.send({ ok: true, ...result });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error("Cron-job.org sync error", { error: errorMessage });
+      logger.error("cronlite sync error", { error: errorMessage });
       return reply.code(500).send({
         error: `Something went wrong. Please try again. (${errorMessage})`,
       });

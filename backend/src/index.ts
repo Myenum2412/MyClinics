@@ -7,7 +7,7 @@ import { ensureClinicIndexes } from "@/clinic/indexes";
 import { ensureSearchIndex } from "@/services/search/client";
 import { ensurePlatformAdmin } from "@/clinic/seed";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
-import { syncCronJobs } from "@/services/cronjob/cronjob.service";
+import { syncCronJobs } from "@/services/cronlite/cronlite.service";
 import { logger } from "@/lib/logger";
 
 const PORT = Number(process.env.BACKEND_PORT ?? 3100);
@@ -62,12 +62,12 @@ async function main() {
 
   void syncCronJobs()
     .then((result) =>
-      logger.info(`[cron-job.org] scheduler job ${result.action}`, {
+      logger.info(`[cronlite] scheduler job ${result.action}`, {
         jobId: result.jobId ?? "n/a",
       })
     )
     .catch((error) =>
-      logger.error("[cron-job.org] scheduler sync failed", { error })
+      logger.error("[cronlite] scheduler sync failed", { error })
     );
 }
 

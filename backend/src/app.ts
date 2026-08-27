@@ -61,7 +61,10 @@ export function buildServer() {
   app.addContentTypeParser(
     "application/json",
     { parseAs: "string" },
-    (_request, body, done) => {
+    (request, body, done) => {
+      // Keep the exact bytes for HMAC verification of signed webhooks
+      // (CronLite signs the raw body with X-CronLite-Signature).
+      (request as unknown as { rawBody?: string }).rawBody = String(body);
       const text = String(body).trim();
       if (text === "") return done(null, null);
       try {

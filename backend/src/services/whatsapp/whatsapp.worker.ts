@@ -162,7 +162,7 @@ function startReminderLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void 
       // Stage-only: scan and queue reminders into the DB.
       // NOTE: processPrescriptionNotifications and processAppointmentNotifications
       // are intentionally NOT called here. The cron HTTP endpoint
-      // (POST /api/cron/reminders, pinged every minute by cron-job.org) is the
+      // (POST /api/cron/reminders, pinged every minute by CronLite) is the
       // single owner of notification queue draining. Running them here too caused
       // both processes to race on the same MongoDB rows, producing duplicate
       // WhatsApp sends and stuck notifications.

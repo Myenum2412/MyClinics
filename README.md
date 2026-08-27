@@ -155,8 +155,12 @@ WHATSAPP_SESSION_PATH=C:\path\to\whatsapp-session
 # Optional: pin the Chrome binary used by the headless browser
 # WHATSAPP_CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
 
-# --- Reminder cron webhook (cron-job.org) ---
-CRON_SECRET=<random string, also set as the job header x-cron-secret>
+# --- Reminder scheduler (CronLite — self-hosted cron-as-a-service) ---
+# CRON_SECRET is the shared HMAC secret (also the legacy x-cron-secret header).
+CRON_SECRET=<random string>
+CRONLITE_URL=http://localhost:8080
+CRONLITE_API_KEY=<cronlite api key>
+CRONLITE_WEBHOOK_SECRET=<same random string as CRON_SECRET>
 
 # --- Cloudflare R2 (reports) ---
 R2_ACCOUNT_ID=<account id>
@@ -279,9 +283,17 @@ Auth via `Authorization: Bearer <token>` (or `mt_token` cookie). Token lifetime:
 - The worker scans for upcoming appointments every 30 seconds and queues WhatsApp
   reminders for appointments that are **about 60 minutes** away (50–70 minute window,
   `REMINDER_MINUTES_BEFORE` in `backend/src/services/reminder/reminder.service.ts`).
-- A cron job (e.g. cron-job.org) posts every minute to
-  `POST /api/cron/reminders` with the header `x-cron-secret: <CRON_SECRET>` to trigger
-  an immediate scan. The endpoint returns `{ ok, checked, queued, skipped }`.
+- **CronLite** (self-hosted cron-as-a-service, `github.com/djlord-it/cronlite`) drives
+  scheduling. `POST /api/cron/sync` (or server boot) creates two kinds of jobs:
+  1. A **per-minute safety-net job** (`myclinics-reminders`) that posts to
+     `POST /api/cron/reminders` with an HMAC-signed body (`X-CronLite-Signature`).
+  2. A **per-appointment one-shot job** for each booking, scheduled to fire exactly
+     at (appointment − 1h) and post to `POST /api/cron/appointment-reminder?clinicId=…&appointmentId=…`.
+     The job deletes itself after firing. Both paths share the `CRONLITE_WEBHOOK_SECRET`
+     so one verifier (`verifyCronLiteSignature`) authenticates every delivery.
+- Each appointment's CronLite job id is stored on the appointment (`cronliteJobId`) and
+  is rescheduled on time changes or cancelled/deleted with the appointment.
+- The `/api/cron/reminders` endpoint returns `{ ok, prescriptions, appointments, durationMs }`.
 - Notifications are persisted in the `wa_notifications` collection with retry
   (max 3 attempts) and sent as soon as the worker is connected.
 
