@@ -17,15 +17,23 @@ export const CLINIC_TOKEN_KEY = "clinic_token";
 export type ClinicRole =
   | "platform_admin"
   | "clinic_admin"
+  | "pharmacy_manager"
   | "doctor"
+  | "pharmacist"
+  | "inventory_staff"
+  | "billing_staff"
   | "staff"
   | "patient";
 
 /** Role hierarchy — higher roles pass `requireRoles(min)` gates. */
 export const ROLE_PRIORITY: Record<ClinicRole, number> = {
-  platform_admin: 5,
-  clinic_admin: 4,
-  doctor: 3,
+  platform_admin: 7,
+  clinic_admin: 6,
+  pharmacy_manager: 5,
+  doctor: 4,
+  pharmacist: 3,
+  inventory_staff: 3,
+  billing_staff: 3,
   staff: 2,
   patient: 1,
 };
@@ -2048,4 +2056,519 @@ export function getPlatformMetaOverview(): Promise<{
   webhookErrors: MetaWebhookEvent[];
 }> {
   return request("/api/platform/meta/overview");
+}
+
+// ── Pharmacy Management ──────────────────────────────────────────────────────
+
+export interface PharmacyOperatingHour {
+  day: string;
+  open: string;
+  close: string;
+  closed: boolean;
+}
+export interface PharmacyDispensingSettings {
+  allowSubstitution: boolean;
+  requirePrescription: boolean;
+  defaultTaxPercent: number;
+  rounding: "none" | "nearest_rupee";
+}
+export interface PharmacyInvoiceConfig {
+  prefix: string;
+  nextNumber: number;
+  footerNote: string | null;
+}
+export interface PharmacySettings {
+  clinicId: string;
+  pharmacyId: string;
+  pharmacyName: string | null;
+  registrationNumber: string | null;
+  licenseNumber: string | null;
+  gstNumber: string | null;
+  taxId: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  pincode: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  pharmacistName: string | null;
+  pharmacistRegistration: string | null;
+  operatingHours: PharmacyOperatingHour[];
+  dispensingSettings: PharmacyDispensingSettings;
+  invoiceConfig: PharmacyInvoiceConfig;
+  paymentMethods: string[];
+  supplierInfo: string | null;
+  pharmacyStatus: "active" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+}
+export interface PharmacyMedicine {
+  clinicId: string;
+  medicineId: string;
+  name: string;
+  genericName: string | null;
+  brand: string | null;
+  category: string | null;
+  dosageForm: string | null;
+  strength: string | null;
+  unit: string | null;
+  manufacturer: string | null;
+  hsnCode: string | null;
+  barcode: string | null;
+  batchNumber: string | null;
+  prescriptionRequired: boolean;
+  reorderLevel: number;
+  minStockLevel: number;
+  maxStockLevel: number | null;
+  purchasePrice: number;
+  sellingPrice: number;
+  taxPercent: number;
+  discount: number;
+  supplierId: string | null;
+  manufacturingDate: string | null;
+  expiryDate: string | null;
+  storageConditions: string | null;
+  status: "active" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+}
+export interface PharmacyInventory {
+  inventoryId: string;
+  medicineId: string;
+  name: string;
+  genericName: string | null;
+  category: string | null;
+  batchNumber: string;
+  barcode: string | null;
+  quantityAvailable: number;
+  quantityReserved: number;
+  quantityDamaged: number;
+  purchasePrice: number;
+  sellingPrice: number;
+  taxPercent: number;
+  expiryDate: string | null;
+  manufacturingDate: string | null;
+  supplierId: string | null;
+  storageLocation: string | null;
+  reorderLevel: number;
+  status: "in_stock" | "low_stock" | "out_of_stock" | "near_expiry" | "expired";
+  reorderStatus: "ok" | "reorder";
+  lastUpdated: string;
+  supplierName?: string | null;
+}
+export interface PharmacyMovement {
+  movementId: string;
+  transactionId: string;
+  medicineId: string;
+  batchNumber: string;
+  quantityBefore: number;
+  quantityChanged: number;
+  quantityAfter: number;
+  movementType: string;
+  referenceInvoice: string | null;
+  party: string | null;
+  performedBy: string | null;
+  reason: string | null;
+  notes: string | null;
+  createdAt: string;
+  medicineName?: string;
+}
+export interface PharmacySupplier {
+  supplierId: string;
+  name: string;
+  contactPerson: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  gstNumber: string | null;
+  drugLicenseNumber: string | null;
+  paymentTerms: string | null;
+  notes: string | null;
+  status: "active" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+}
+export interface PharmacyPurchaseItem {
+  medicineId: string;
+  batchNumber: string;
+  quantity: number;
+  unitPrice: number;
+  expiryDate: string | null;
+  manufacturingDate: string | null;
+  supplierId: string | null;
+  storageLocation: string | null;
+}
+export interface PharmacyPurchase {
+  purchaseId: string;
+  invoiceNumber: string;
+  supplierId: string | null;
+  purchaseDate: string;
+  items: PharmacyPurchaseItem[];
+  subtotal: number;
+  taxAmount: number;
+  total: number;
+  status: "draft" | "received" | "cancelled";
+  receivedBy: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface PharmacySaleItem {
+  medicineId: string;
+  batchNumber: string | null;
+  quantity: number;
+  unitPrice: number;
+  discount: number;
+  taxPercent: number;
+}
+export interface PharmacySale {
+  saleId: string;
+  invoiceNumber: string;
+  saleDate: string;
+  patientId: string | null;
+  items: PharmacySaleItem[];
+  subtotal: number;
+  discount: number;
+  taxAmount: number;
+  total: number;
+  paymentMethod: string;
+  status: "completed" | "cancelled" | "refunded";
+  soldBy: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface PharmacyAdjustment {
+  adjustmentId: string;
+  medicineId: string;
+  batchNumber: string;
+  currentQuantity: number;
+  newQuantity: number;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  requestedBy: string | null;
+  approvedBy: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface PharmacyTransferItem {
+  medicineId: string;
+  batchNumber: string;
+  quantity: number;
+}
+export interface PharmacyTransfer {
+  transferId: string;
+  fromLocation: string;
+  toLocation: string;
+  items: PharmacyTransferItem[];
+  status: "pending" | "approved" | "rejected" | "completed";
+  requestedBy: string | null;
+  approvedBy: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface PharmacyReturnItem {
+  medicineId: string;
+  batchNumber: string;
+  quantity: number;
+  reason: string | null;
+}
+export interface PharmacyReturn {
+  returnId: string;
+  type: "supplier_return" | "customer_return";
+  referenceId: string | null;
+  items: PharmacyReturnItem[];
+  processedBy: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+export interface PharmacyDashboard {
+  totalMedicines: number;
+  totalStockValue: number;
+  lowStock: number;
+  outOfStock: number;
+  nearExpiry: number;
+  expired: number;
+  todaySales: { count: number; value: number };
+  purchaseValue: number;
+  stockMovementsToday: number;
+  reorderCount: number;
+}
+export interface PharmacyAlerts {
+  lowStock: PharmacyInventory[];
+  outOfStock: PharmacyInventory[];
+  nearExpiry: PharmacyInventory[];
+  expired: PharmacyInventory[];
+  reorderSuggestions: Array<{
+    inventoryId: string;
+    medicineId: string;
+    name: string;
+    batchNumber: string;
+    available: number;
+    reorderLevel: number;
+    suggested: number;
+  }>;
+}
+
+function pharmacyQuery(params: Record<string, unknown>): string {
+  const sp = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v === undefined || v === null || v === "") continue;
+    sp.set(k, String(v));
+  }
+  const s = sp.toString();
+  return s ? `?${s}` : "";
+}
+
+export function getPharmacySettings(clinicId: string): Promise<PharmacySettings | null> {
+  return request(tenantPath(clinicId, "/pharmacy/settings"));
+}
+export function updatePharmacySettings(
+  clinicId: string,
+  input: Record<string, unknown>
+): Promise<PharmacySettings> {
+  return request(tenantPath(clinicId, "/pharmacy/settings"), {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+export function listMedicines(
+  clinicId: string,
+  query: { search?: string; category?: string; status?: string; supplierId?: string; limit?: number } = {}
+): Promise<{ items: PharmacyMedicine[]; total: number }> {
+  return request(tenantPath(clinicId, `/pharmacy/medicines${pharmacyQuery(query)}`));
+}
+export function getMedicine(clinicId: string, medicineId: string): Promise<PharmacyMedicine> {
+  return request(tenantPath(clinicId, `/pharmacy/medicines/${medicineId}`));
+}
+export function createMedicine(clinicId: string, input: Record<string, unknown>): Promise<PharmacyMedicine> {
+  return request(tenantPath(clinicId, "/pharmacy/medicines"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+export function updateMedicine(
+  clinicId: string,
+  medicineId: string,
+  input: Record<string, unknown>
+): Promise<PharmacyMedicine> {
+  return request(tenantPath(clinicId, `/pharmacy/medicines/${medicineId}`), {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+export function deleteMedicine(clinicId: string, medicineId: string): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/pharmacy/medicines/${medicineId}`), { method: "DELETE" });
+}
+export function bulkMedicines(
+  clinicId: string,
+  input: { ids: string[]; action: "activate" | "deactivate" | "delete" }
+): Promise<{ modified: number }> {
+  return request(tenantPath(clinicId, "/pharmacy/medicines/bulk"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+export function listInventory(
+  clinicId: string,
+  query: Record<string, unknown> = {}
+): Promise<{ items: PharmacyInventory[]; total: number }> {
+  return request(tenantPath(clinicId, `/pharmacy/inventory${pharmacyQuery(query)}`));
+}
+export function getInventory(clinicId: string, inventoryId: string): Promise<PharmacyInventory> {
+  return request(tenantPath(clinicId, `/pharmacy/inventory/${inventoryId}`));
+}
+export function addOpeningStock(
+  clinicId: string,
+  items: PharmacyPurchaseItem[],
+  notes?: string | null
+): Promise<{ created: number }> {
+  return request(tenantPath(clinicId, "/pharmacy/inventory/opening-stock"), {
+    method: "POST",
+    body: JSON.stringify({ items, notes: notes ?? null }),
+  });
+}
+export function writeOffStock(
+  clinicId: string,
+  input: Record<string, unknown>
+): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, "/pharmacy/inventory/write-off"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+export function listMovements(
+  clinicId: string,
+  query: Record<string, unknown> = {}
+): Promise<{ items: PharmacyMovement[]; total: number }> {
+  return request(tenantPath(clinicId, `/pharmacy/movements${pharmacyQuery(query)}`));
+}
+export function listSuppliers(
+  clinicId: string,
+  query: { search?: string; status?: string; limit?: number } = {}
+): Promise<{ items: PharmacySupplier[]; total: number }> {
+  return request(tenantPath(clinicId, `/pharmacy/suppliers${pharmacyQuery(query)}`));
+}
+export function getSupplier(clinicId: string, supplierId: string): Promise<PharmacySupplier> {
+  return request(tenantPath(clinicId, `/pharmacy/suppliers/${supplierId}`));
+}
+export function createSupplier(clinicId: string, input: Record<string, unknown>): Promise<PharmacySupplier> {
+  return request(tenantPath(clinicId, "/pharmacy/suppliers"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+export function updateSupplier(
+  clinicId: string,
+  supplierId: string,
+  input: Record<string, unknown>
+): Promise<PharmacySupplier> {
+  return request(tenantPath(clinicId, `/pharmacy/suppliers/${supplierId}`), {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+export function deleteSupplier(clinicId: string, supplierId: string): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/pharmacy/suppliers/${supplierId}`), { method: "DELETE" });
+}
+export function listPurchases(
+  clinicId: string,
+  query: Record<string, unknown> = {}
+): Promise<{ items: PharmacyPurchase[]; total: number }> {
+  return request(tenantPath(clinicId, `/pharmacy/purchases${pharmacyQuery(query)}`));
+}
+export function getPurchase(clinicId: string, purchaseId: string): Promise<PharmacyPurchase> {
+  return request(tenantPath(clinicId, `/pharmacy/purchases/${purchaseId}`));
+}
+export function createPurchase(clinicId: string, input: Record<string, unknown>): Promise<PharmacyPurchase> {
+  return request(tenantPath(clinicId, "/pharmacy/purchases"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+export function receivePurchase(
+  clinicId: string,
+  purchaseId: string,
+  notes?: string | null
+): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/pharmacy/purchases/${purchaseId}/receive`), {
+    method: "POST",
+    body: JSON.stringify({ notes: notes ?? null }),
+  });
+}
+export function listSales(
+  clinicId: string,
+  query: Record<string, unknown> = {}
+): Promise<{ items: PharmacySale[]; total: number }> {
+  return request(tenantPath(clinicId, `/pharmacy/sales${pharmacyQuery(query)}`));
+}
+export function getSale(clinicId: string, saleId: string): Promise<PharmacySale> {
+  return request(tenantPath(clinicId, `/pharmacy/sales/${saleId}`));
+}
+export function createSale(clinicId: string, input: Record<string, unknown>): Promise<PharmacySale> {
+  return request(tenantPath(clinicId, "/pharmacy/sales"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+export function listAdjustments(
+  clinicId: string,
+  query: { status?: string; limit?: number } = {}
+): Promise<{ items: PharmacyAdjustment[]; total: number }> {
+  return request(tenantPath(clinicId, `/pharmacy/adjustments${pharmacyQuery(query)}`));
+}
+export function createAdjustment(clinicId: string, input: Record<string, unknown>): Promise<PharmacyAdjustment> {
+  return request(tenantPath(clinicId, "/pharmacy/adjustments"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+export function reviewAdjustment(
+  clinicId: string,
+  adjustmentId: string,
+  decision: "approved" | "rejected",
+  notes?: string | null
+): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/pharmacy/adjustments/${adjustmentId}/review`), {
+    method: "POST",
+    body: JSON.stringify({ decision, notes: notes ?? null }),
+  });
+}
+export function listTransfers(
+  clinicId: string,
+  query: { status?: string; limit?: number } = {}
+): Promise<{ items: PharmacyTransfer[]; total: number }> {
+  return request(tenantPath(clinicId, `/pharmacy/transfers${pharmacyQuery(query)}`));
+}
+export function createTransfer(clinicId: string, input: Record<string, unknown>): Promise<PharmacyTransfer> {
+  return request(tenantPath(clinicId, "/pharmacy/transfers"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+export function reviewTransfer(
+  clinicId: string,
+  transferId: string,
+  decision: "approved" | "rejected" | "completed",
+  notes?: string | null
+): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/pharmacy/transfers/${transferId}/review`), {
+    method: "POST",
+    body: JSON.stringify({ decision, notes: notes ?? null }),
+  });
+}
+export function listReturns(
+  clinicId: string,
+  query: { type?: string; limit?: number } = {}
+): Promise<{ items: PharmacyReturn[]; total: number }> {
+  return request(tenantPath(clinicId, `/pharmacy/returns${pharmacyQuery(query)}`));
+}
+export function createReturn(clinicId: string, input: Record<string, unknown>): Promise<PharmacyReturn> {
+  return request(tenantPath(clinicId, "/pharmacy/returns"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+export function getPharmacyDashboard(clinicId: string): Promise<PharmacyDashboard> {
+  return request(tenantPath(clinicId, "/pharmacy/dashboard"));
+}
+export function getPharmacyAlerts(clinicId: string): Promise<PharmacyAlerts> {
+  return request(tenantPath(clinicId, "/pharmacy/alerts"));
+}
+export async function downloadPharmacyReport(
+  clinicId: string,
+  query: { type: string; from?: string; to?: string; category?: string; supplierId?: string; format?: string }
+): Promise<void> {
+  const token = typeof window !== "undefined" ? getStoredToken() : null;
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const url = `${API_BASE}${tenantPath(clinicId, `/pharmacy/reports${pharmacyQuery(query)}`)}`;
+  const res = await fetch(url, { method: "GET", headers, cache: "no-store" });
+  if (!res.ok) {
+    let message = "Failed to generate report";
+    try {
+      const body = await res.json();
+      message = (body as { error?: string; message?: string }).message ?? message;
+    } catch {
+      /* ignore */
+    }
+    throw new ClinicApiError(message, res.status, "REPORT_FAILED");
+  }
+  const disposition = res.headers.get("content-disposition") ?? "";
+  const match = disposition.match(/filename="?([^";]+)"?/);
+  const filename = match?.[1] ?? "pharmacy-report";
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = objectUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(objectUrl);
 }

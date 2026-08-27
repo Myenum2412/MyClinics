@@ -53,6 +53,38 @@ export function generateReportId(): string {
   return `rpt_${randomToken(12)}`;
 }
 
+// ── Pharmacy Management ─────────────────────────────────────────────────────
+export function generatePharmacySettingsId(): string {
+  return `phs_${randomToken(12)}`;
+}
+export function generatePharmacyMedicineId(): string {
+  return `med_${randomToken(12)}`;
+}
+export function generatePharmacyInventoryId(): string {
+  return `inv_${randomToken(12)}`;
+}
+export function generatePharmacyMovementId(): string {
+  return `mvn_${randomToken(12)}`;
+}
+export function generatePharmacySupplierId(): string {
+  return `sup_${randomToken(12)}`;
+}
+export function generatePharmacyPurchaseId(): string {
+  return `pur_${randomToken(12)}`;
+}
+export function generatePharmacySaleId(): string {
+  return `sal_${randomToken(12)}`;
+}
+export function generatePharmacyAdjustmentId(): string {
+  return `adj_${randomToken(12)}`;
+}
+export function generatePharmacyTransferId(): string {
+  return `trf_${randomToken(12)}`;
+}
+export function generatePharmacyReturnId(): string {
+  return `ret_${randomToken(12)}`;
+}
+
 export function generateNotificationId(): string {
   return `ntf_${randomToken(12)}`;
 }

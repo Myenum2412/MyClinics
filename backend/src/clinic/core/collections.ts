@@ -26,6 +26,17 @@ export const CLINIC_COLLECTIONS = {
   clinicWelcomeDocuments: "clc_clinic_welcome_documents",
   // ── Leads ─────────────────────────────────────────────────────────────
   leads: "clc_leads",
+  // ── Pharmacy Management (tenant-isolated) ────────────────────────────
+  pharmacySettings: "clc_pharmacy_settings",
+  pharmacyMedicines: "clc_pharmacy_medicines",
+  pharmacyInventory: "clc_pharmacy_inventory",
+  pharmacyStockMovements: "clc_pharmacy_stock_movements",
+  pharmacySuppliers: "clc_pharmacy_suppliers",
+  pharmacyPurchases: "clc_pharmacy_purchases",
+  pharmacySales: "clc_pharmacy_sales",
+  pharmacyAdjustments: "clc_pharmacy_adjustments",
+  pharmacyTransfers: "clc_pharmacy_transfers",
+  pharmacyReturns: "clc_pharmacy_returns",
   // ── Meta Business Integration (tenant-isolated) ───────────────────────
   metaIntegrations: "clc_meta_integrations",
   metaPages: "clc_meta_pages",

@@ -14,7 +14,11 @@
 export const CLINIC_ROLES = [
   "platform_admin",
   "clinic_admin",
+  "pharmacy_manager",
   "doctor",
+  "pharmacist",
+  "inventory_staff",
+  "billing_staff",
   "staff",
   "patient",
 ] as const;
@@ -23,10 +27,29 @@ export type ClinicRole = (typeof CLINIC_ROLES)[number];
 export const CLINIC_STAFF_ROLES = ["clinic_admin", "doctor", "staff"] as const;
 export type ClinicStaffRole = (typeof CLINIC_STAFF_ROLES)[number];
 
+/** Pharmacy-specific roles introduced by the Pharmacy Management module. */
+export const PHARMACY_ROLES = [
+  "pharmacy_manager",
+  "pharmacist",
+  "inventory_staff",
+  "billing_staff",
+] as const;
+export type PharmacyRole = (typeof PHARMACY_ROLES)[number];
+
+export function isPharmacyRole(role: unknown): role is PharmacyRole {
+  return (
+    typeof role === "string" && (PHARMACY_ROLES as readonly string[]).includes(role)
+  );
+}
+
 export const ROLE_PRIORITY: Record<ClinicRole, number> = {
-  platform_admin: 5,
-  clinic_admin: 4,
-  doctor: 3,
+  platform_admin: 7,
+  clinic_admin: 6,
+  pharmacy_manager: 5,
+  doctor: 4,
+  pharmacist: 3,
+  inventory_staff: 3,
+  billing_staff: 3,
   staff: 2,
   patient: 1,
 };
@@ -59,7 +82,11 @@ export function hasRoleAtLeast(role: ClinicRole, minimum: ClinicRole): boolean {
 export const ROLE_LABELS: Record<ClinicRole, string> = {
   platform_admin: "Platform Admin",
   clinic_admin: "Clinic Admin",
+  pharmacy_manager: "Pharmacy Manager",
   doctor: "Doctor",
+  pharmacist: "Pharmacist",
+  inventory_staff: "Inventory Staff",
+  billing_staff: "Billing Staff",
   staff: "Staff",
   patient: "Patient",
 };

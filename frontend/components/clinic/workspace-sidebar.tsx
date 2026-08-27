@@ -17,6 +17,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
 import {
@@ -41,6 +44,7 @@ interface NavItem {
   icon?: React.ReactNode
   match?: "exact" | "prefix"
   roles: ClinicRole[]
+  children?: { title: string; url: string; match?: "exact" | "prefix" }[]
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -92,6 +96,27 @@ const NAV_ITEMS: NavItem[] = [
     url: "/clinic/billing",
     icon: <ReceiptTextIcon className="size-6" />,
     roles: ["patient", "doctor", "staff", "clinic_admin"],
+  },
+  {
+    title: "Pharmacy",
+    url: "/clinic/pharmacy",
+    icon: <PillIcon className="size-6" />,
+    match: "prefix",
+    roles: ["clinic_admin", "pharmacy_manager", "pharmacist", "inventory_staff", "billing_staff"],
+    children: [
+      { title: "Dashboard", url: "/clinic/pharmacy", match: "exact" },
+      { title: "Settings", url: "/clinic/pharmacy/settings" },
+      { title: "Medicines", url: "/clinic/pharmacy/medicines" },
+      { title: "Inventory", url: "/clinic/pharmacy/inventory" },
+      { title: "Stock History", url: "/clinic/pharmacy/stock-history" },
+      { title: "Purchases", url: "/clinic/pharmacy/purchases" },
+      { title: "Sales", url: "/clinic/pharmacy/sales" },
+      { title: "Suppliers", url: "/clinic/pharmacy/suppliers" },
+      { title: "Adjustments", url: "/clinic/pharmacy/adjustments" },
+      { title: "Transfers", url: "/clinic/pharmacy/transfers" },
+      { title: "Returns", url: "/clinic/pharmacy/returns" },
+      { title: "Reports", url: "/clinic/pharmacy/reports" },
+    ],
   },
   {
     title: "Reports",
@@ -180,6 +205,47 @@ export function WorkspaceSidebar({
                 item.match === "exact"
                   ? pathname === url
                   : pathname.startsWith(`${url}/`) || pathname === url
+              const childActive =
+                item.children?.some((c) =>
+                  c.match === "exact"
+                    ? pathname === c.url
+                    : pathname.startsWith(`${c.url}/`) || pathname === c.url
+                ) ?? false
+              if (item.children) {
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      size="lg"
+                      tooltip={item.title}
+                      render={<a href={url} />}
+                      data-active={active || childActive}
+                      className="h-11 rounded-lg text-[13.5px] font-medium group-data-[collapsible=icon]:h-12! data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground"
+                    >
+                      {item.icon}
+                      <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
+                    </SidebarMenuButton>
+                    <SidebarMenuSub>
+                      {item.children.map((c) => {
+                        const ca =
+                          c.match === "exact"
+                            ? pathname === c.url
+                            : pathname.startsWith(`${c.url}/`) || pathname === c.url
+                        return (
+                          <SidebarMenuSubItem key={c.url}>
+                            <SidebarMenuSubButton
+                              isActive={ca}
+                              render={<a href={c.url} />}
+                              className="text-[13px]"
+                            >
+                              <span>{c.title}</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        )
+                      })}
+                    </SidebarMenuSub>
+                  </SidebarMenuItem>
+                )
+              }
               return (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton

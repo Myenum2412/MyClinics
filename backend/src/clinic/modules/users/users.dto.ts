@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PHARMACY_ROLES } from "@/clinic/core/roles";
 
 const NAME_MAX = 120;
 const EMAIL_MAX = 120;
@@ -19,7 +20,7 @@ export const createUserSchema = z
       .string()
       .min(8, "Password must be at least 8 characters")
       .max(200),
-    role: z.enum(["doctor", "staff", "patient"]),
+    role: z.enum(["doctor", "staff", "patient", ...PHARMACY_ROLES]),
     phone: z.string().trim().max(PHONE_MAX).nullable().optional(),
     whatsapp: z.string().trim().max(PHONE_MAX).nullable().optional(),
     /** Existing profile id to link (must exist in this clinic). */
@@ -47,7 +48,7 @@ export const updateUserSchema = z.object({
   phone: z.string().trim().max(PHONE_MAX).nullable().optional(),
   whatsapp: z.string().trim().max(PHONE_MAX).nullable().optional(),
   status: z.enum(["active", "inactive"]).optional(),
-  role: z.enum(["doctor", "staff", "patient"]).optional(),
+  role: z.enum(["doctor", "staff", "patient", ...PHARMACY_ROLES]).optional(),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
@@ -59,6 +60,6 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 
 export const listUsersSchema = z.object({
   q: z.string().trim().max(200).optional(),
-  role: z.enum(["doctor", "staff", "patient", "clinic_admin"]).optional(),
+  role: z.enum(["doctor", "staff", "patient", "clinic_admin", ...PHARMACY_ROLES]).optional(),
   status: z.enum(["active", "inactive"]).optional(),
 });

@@ -11,7 +11,7 @@ import {
 } from "@/clinic/core/errors";
 import { generateUserId, normalizeEmail } from "@/clinic/core/ids";
 import { now as nowFn } from "@/clinic/core/datetime";
-import { isClinicRole, ROLE_PRIORITY, type ClinicRole } from "@/clinic/core/roles";
+import { isClinicRole, isPharmacyRole, ROLE_PRIORITY, type ClinicRole } from "@/clinic/core/roles";
 import type { UserDoc } from "@/clinic/core/types";
 import type { CreateUserInput, UpdateUserInput } from "@/clinic/modules/users/users.dto";
 import { UsersRepository } from "@/clinic/modules/users/users.repository";
@@ -47,18 +47,24 @@ export class UsersService {
       throw new ConflictError("An account with this email already exists");
     }
 
+    const isPharmacy = isPharmacyRole(input.role);
+
     const linkField =
       input.role === "doctor"
         ? { doctorId: input.doctorId! }
         : input.role === "staff"
           ? { staffId: input.staffId! }
-          : { patientId: input.patientId! };
+          : input.role === "patient"
+            ? { patientId: input.patientId! }
+            : {};
 
-    const linked = await this.verifyLink(clinicId, input.role, Object.values(linkField)[0] as string);
-    if (!linked) {
-      throw new BadRequestError(
-        `The ${input.role} profile does not exist in this clinic`
-      );
+    if (!isPharmacy) {
+      const linked = await this.verifyLink(clinicId, input.role, Object.values(linkField)[0] as string);
+      if (!linked) {
+        throw new BadRequestError(
+          `The ${input.role} profile does not exist in this clinic`
+        );
+      }
     }
 
     const passwordHash = await bcrypt.hash(input.password, 12);
@@ -97,7 +103,7 @@ export class UsersService {
       await this.db
         .collection(CLINIC_COLLECTIONS.staff)
         .updateOne({ clinicId, staffId: input.staffId }, { $set: { userId: doc.userId } });
-    } else {
+    } else if (input.role === "patient") {
       await this.db
         .collection(CLINIC_COLLECTIONS.patients)
         .updateOne({ clinicId, patientId: input.patientId }, { $set: { userId: doc.userId } });

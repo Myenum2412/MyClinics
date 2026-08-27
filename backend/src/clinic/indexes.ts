@@ -37,6 +37,16 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
   const metaWebhookEvents = db.collection(CLINIC_COLLECTIONS.metaWebhookEvents);
   const metaSyncJobs = db.collection(CLINIC_COLLECTIONS.metaSyncJobs);
   const metaOauthStates = db.collection(CLINIC_COLLECTIONS.metaOauthStates);
+  const pharmacySettings = db.collection(CLINIC_COLLECTIONS.pharmacySettings);
+  const pharmacyMedicines = db.collection(CLINIC_COLLECTIONS.pharmacyMedicines);
+  const pharmacyInventory = db.collection(CLINIC_COLLECTIONS.pharmacyInventory);
+  const pharmacyStockMovements = db.collection(CLINIC_COLLECTIONS.pharmacyStockMovements);
+  const pharmacySuppliers = db.collection(CLINIC_COLLECTIONS.pharmacySuppliers);
+  const pharmacyPurchases = db.collection(CLINIC_COLLECTIONS.pharmacyPurchases);
+  const pharmacySales = db.collection(CLINIC_COLLECTIONS.pharmacySales);
+  const pharmacyAdjustments = db.collection(CLINIC_COLLECTIONS.pharmacyAdjustments);
+  const pharmacyTransfers = db.collection(CLINIC_COLLECTIONS.pharmacyTransfers);
+  const pharmacyReturns = db.collection(CLINIC_COLLECTIONS.pharmacyReturns);
 
   const indexSpecs = [
     // ── Clinics ──────────────────────────────────────────────────────────
@@ -219,6 +229,45 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
 
     metaOauthStates.createIndex({ state: 1 }, { unique: true }),
     metaOauthStates.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
+
+    // ── Pharmacy Management ─────────────────────────────────────────────
+    pharmacySettings.createIndex({ clinicId: 1 }, { unique: true }),
+    pharmacyMedicines.createIndex({ clinicId: 1, medicineId: 1 }, { unique: true }),
+    pharmacyMedicines.createIndex(
+      { clinicId: 1, barcode: 1 },
+      { unique: true, partialFilterExpression: { barcode: { $type: "string" } } }
+    ),
+    pharmacyMedicines.createIndex({ clinicId: 1, name: 1 }),
+    pharmacyMedicines.createIndex({ clinicId: 1, genericName: 1 }),
+    pharmacyMedicines.createIndex({ clinicId: 1, category: 1, status: 1 }),
+    pharmacyInventory.createIndex({ clinicId: 1, inventoryId: 1 }, { unique: true }),
+    pharmacyInventory.createIndex({ clinicId: 1, medicineId: 1, batchNumber: 1 }, { unique: true }),
+    pharmacyInventory.createIndex({ clinicId: 1, barcode: 1 }),
+    pharmacyInventory.createIndex({ clinicId: 1, status: 1, expiryDate: 1 }),
+    pharmacyInventory.createIndex({ clinicId: 1, supplierId: 1 }),
+    pharmacyStockMovements.createIndex({ clinicId: 1, movementId: 1 }, { unique: true }),
+    pharmacyStockMovements.createIndex({ clinicId: 1, transactionId: 1 }),
+    pharmacyStockMovements.createIndex({ clinicId: 1, medicineId: 1, createdAt: -1 }),
+    pharmacyStockMovements.createIndex({ clinicId: 1, batchNumber: 1 }),
+    pharmacyStockMovements.createIndex({ clinicId: 1, movementType: 1, createdAt: -1 }),
+    pharmacySuppliers.createIndex({ clinicId: 1, supplierId: 1 }, { unique: true }),
+    pharmacySuppliers.createIndex({ clinicId: 1, name: 1 }),
+    pharmacySuppliers.createIndex(
+      { clinicId: 1, gstNumber: 1 },
+      { unique: true, partialFilterExpression: { gstNumber: { $type: "string" } } }
+    ),
+    pharmacyPurchases.createIndex({ clinicId: 1, purchaseId: 1 }, { unique: true }),
+    pharmacyPurchases.createIndex({ clinicId: 1, invoiceNumber: 1 }),
+    pharmacyPurchases.createIndex({ clinicId: 1, supplierId: 1, purchaseDate: -1 }),
+    pharmacySales.createIndex({ clinicId: 1, saleId: 1 }, { unique: true }),
+    pharmacySales.createIndex({ clinicId: 1, invoiceNumber: 1 }),
+    pharmacySales.createIndex({ clinicId: 1, saleDate: -1 }),
+    pharmacyAdjustments.createIndex({ clinicId: 1, adjustmentId: 1 }, { unique: true }),
+    pharmacyAdjustments.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
+    pharmacyTransfers.createIndex({ clinicId: 1, transferId: 1 }, { unique: true }),
+    pharmacyTransfers.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
+    pharmacyReturns.createIndex({ clinicId: 1, returnId: 1 }, { unique: true }),
+    pharmacyReturns.createIndex({ clinicId: 1, type: 1, createdAt: -1 }),
   ];
 
   // A single failing index (e.g. a unique index hitting pre-existing
