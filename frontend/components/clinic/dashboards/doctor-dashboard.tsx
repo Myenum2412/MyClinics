@@ -104,7 +104,7 @@ function buildAppointmentWeek(
       time: appt.time,
       duration: appt.session ? `${appt.session[0].toUpperCase()}${appt.session.slice(1)}` : "Scheduled",
       title,
-      location: appt.reason ?? undefined,
+      reason: appt.reason ?? undefined,
       status: APPOINTMENT_STATUS_TO_EVENT[appt.status] ?? "tentative",
     };
     day.events.push(event);

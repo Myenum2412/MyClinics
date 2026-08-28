@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
-import { Calendar, ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react"
+import { Calendar, ChevronLeft, ChevronRight, MapPin, Clock, FileText } from "lucide-react"
 
 export type EventStatus = "confirmed" | "tentative" | "cancelled"
 
@@ -21,6 +21,7 @@ export interface CalEvent {
   duration: string
   title: string
   location?: string
+  reason?: string
   status: EventStatus
 }
 
@@ -415,6 +416,11 @@ export default function CalendarBlock({
                                   {event.location}
                                 </span>
                               )}
+                              {event.reason && (
+                                <span className="truncate text-[10px] text-muted-foreground">
+                                  {event.reason}
+                                </span>
+                              )}
                             </div>
 
                             <ChevronRight className="size-4 shrink-0 self-center text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
@@ -444,6 +450,12 @@ export default function CalendarBlock({
                                 <span className="flex items-center gap-1.5">
                                   <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
                                   {event.location}
+                                </span>
+                              )}
+                              {event.reason && (
+                                <span className="flex items-center gap-1.5">
+                                  <FileText className="size-3.5 shrink-0" aria-hidden="true" />
+                                  {event.reason}
                                 </span>
                               )}
                               <span className="flex items-center gap-1.5">
