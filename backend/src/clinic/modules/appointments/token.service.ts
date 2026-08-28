@@ -134,7 +134,7 @@ async function getQueueSettings(db: Db, clinicId: string): Promise<QueueSettings
   if (!doc) {
     return {
       clinicId,
-      enabledStages: ["you_are_next", "token_called", "proceed_to_room"],
+      enabledStages: ["you_are_next", "please_be_ready", "token_called", "proceed_to_room"],
       channel: "whatsapp",
       templateOverrides: {},
     };
@@ -228,7 +228,7 @@ export async function checkIn(
   const session = doc.session ?? deriveSession(doc.time);
   const tokenNumber = doc.tokenNumber ?? (await generateTokenNumber(db, clinicId, doc.doctorId, doc.date, session));
 
-  const patch: Record<string, unknown> = {
+  const set: Record<string, unknown> = {
     queueStatus: "waiting",
     tokenNumber,
     session,
@@ -236,13 +236,16 @@ export async function checkIn(
     checkedInAt: doc.checkedInAt ?? nowFn(),
     status: "scheduled",
     notifiedStages: [],
-    $push: {
-      queueHistory: { status: "checked_in", at: nowFn(), by: ctx.userId } as never,
-    },
   };
   await db
     .collection<AppointmentDoc>(CLINIC_COLLECTIONS.appointments)
-    .updateOne({ clinicId, appointmentId }, { $set: patch, $setOnInsert: {} } as never);
+    .updateOne(
+      { clinicId, appointmentId },
+      {
+        $set: set,
+        $push: { queueHistory: { status: "checked_in", at: nowFn(), by: ctx.userId } as never },
+      } as never
+    );
   return (await db
     .collection<AppointmentDoc>(CLINIC_COLLECTIONS.appointments)
     .findOne({ clinicId, appointmentId })) as WithId<AppointmentDoc>;
