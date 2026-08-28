@@ -26,8 +26,8 @@ import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
 import { BillingOverviewCard } from "@/components/clinic/billing-overview-card";
 import { RecentAppointmentsCard } from "@/components/clinic/recent-appointments-card";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
-import { Folder, ArrowRight, Users, Phone, Eye, FileText, CalendarDays } from "lucide-react";
-import CalendarBlock, {
+import { Folder, ArrowRight, Users, Phone, Eye, FileText } from "lucide-react";
+import {
   type Week,
   type AgendaDay,
   type CalEvent,
@@ -450,18 +450,6 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
       {/* Greeting banner */}
       <GreetingBanner doctorName={session.name ?? "Doctor"} />
 
-      {/* Weekly appointments agenda */}
-      <div>
-        <h2 className="mb-3 text-base font-semibold text-foreground flex items-center gap-2">
-          <CalendarDays className="size-4 text-primary" /> This Week&apos;s Appointments
-        </h2>
-        <CalendarBlock
-          embedded
-          weeks={[appointmentWeek]}
-          todayWeek={0}
-        />
-      </div>
-
       {/* Section cards — stats-07 design */}
       <div>
         <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -499,6 +487,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           doctors={doctors}
           clinicId={clinicId}
           loading={loading}
+          weekCalendar={appointmentWeek}
         />
 
         {isDoctorRole ? (

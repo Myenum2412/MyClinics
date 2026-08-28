@@ -17,6 +17,7 @@ import {
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { formatDate, formatTime } from "@/lib/format-time";
 import type { Appointment, Patient, Doctor } from "@/lib/clinic-api";
+import CalendarBlock, { type Week } from "@/components/blocks/calendar-2";
 
 interface RecentAppointmentsCardProps {
   appointments: Appointment[];
@@ -24,6 +25,8 @@ interface RecentAppointmentsCardProps {
   doctors?: Doctor[];
   clinicId: string;
   loading?: boolean;
+  /** Weekly agenda to render inside the card (e.g. this week's appointments). */
+  weekCalendar?: Week;
 }
 
 function getInitials(name: string): string {
@@ -54,6 +57,7 @@ export function RecentAppointmentsCard({
   doctors = [],
   clinicId,
   loading,
+  weekCalendar,
 }: RecentAppointmentsCardProps) {
   const patientById = new Map(patients.map((p) => [p.patientId, p]));
   const doctorById = new Map(doctors.map((d) => [d.doctorId, d]));
@@ -251,6 +255,12 @@ export function RecentAppointmentsCard({
           </>
         )}
       </CardContent>
+
+      {weekCalendar && (
+        <div className="border-t border-border px-6 py-5">
+          <CalendarBlock embedded weeks={[weekCalendar]} todayWeek={0} />
+        </div>
+      )}
     </Card>
   );
 }
