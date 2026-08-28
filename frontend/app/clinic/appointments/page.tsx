@@ -15,6 +15,9 @@ import {
   listAppointments,
   listDoctors,
   listPatients,
+  queueCancel,
+  queueComplete,
+  queueNoShow,
   updateAppointment,
   API_BASE_URL,
 } from "@/lib/clinic-api";
@@ -88,6 +91,7 @@ import {
   Phone,
   Pencil,
   ListChecks,
+  Star,
 } from "lucide-react";
 
 const STATUSES: AppointmentStatus[] = ["scheduled", "completed", "cancelled", "no_show"];
@@ -280,9 +284,20 @@ export default function AppointmentsPage() {
   }
 
   async function handleStatus(appointment: Appointment, status: AppointmentStatus) {
+    if (!status) return;
+    const id = appointment.appointmentId;
     try {
-      await updateAppointment(clinicId, appointment.appointmentId, { status });
-      toast.success(`Appointment status updated to ${STATUS_LABELS[status]}.`);
+      // Queue-aware transitions notify the next waiting patient automatically.
+      if (status === "completed") {
+        await queueComplete(clinicId, id);
+      } else if (status === "no_show") {
+        await queueNoShow(clinicId, id);
+      } else if (status === "cancelled") {
+        await queueCancel(clinicId, id);
+      } else {
+        await updateAppointment(clinicId, id, { status });
+      }
+      toast.success(`Appointment marked ${STATUS_LABELS[status]}.`);
       loadData();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to update appointment");
@@ -700,6 +715,7 @@ export default function AppointmentsPage() {
 
                     {visibleColumns.patient && <TableHead className="w-[220px]">Patient</TableHead>}
                     {visibleColumns.doctor && <TableHead className="w-[180px]">Doctor</TableHead>}
+                    <TableHead className="w-[90px]">Token #</TableHead>
                     {visibleColumns.reason && <TableHead>Reason</TableHead>}
                     {visibleColumns.status && <TableHead className="w-[140px]">Status</TableHead>}
                     {visibleColumns.alerts && <TableHead className="w-[150px]">WhatsApp Alerts</TableHead>}
@@ -765,6 +781,17 @@ export default function AppointmentsPage() {
                             </div>
                           </TableCell>
                         )}
+
+                        <TableCell className="text-sm font-semibold">
+                          {a.tokenNumber != null ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-primary">
+                              #{a.tokenNumber}
+                              {a.priority && <Star className="size-3 fill-primary" />}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
 
                         {visibleColumns.reason && (
                           <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
