@@ -15,6 +15,7 @@ import {
   listAppointments,
   listDoctors,
   listPatients,
+  queueCallNext,
   queueCancel,
   queueComplete,
   queueNoShow,
@@ -55,9 +56,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { appointmentStatusTone } from "@/lib/status-styles";
-import { formatDateTime, nowMs } from "@/lib/datetime";
+import { formatDateTime, nowMs, todayISO } from "@/lib/datetime";
 
 const StatsAppointments = dynamic(
   () => import("@/components/stats-appointments"),
@@ -90,7 +90,7 @@ import {
   ChevronLeft,
   Phone,
   Pencil,
-  ListChecks,
+  ArrowRightCircle,
   Star,
 } from "lucide-react";
 
@@ -120,6 +120,27 @@ export default function AppointmentsPage() {
   const clinicId = session?.clinicId ?? "";
   const { getOptions } = useDropdownOptions(clinicId);
   const canManage = sessionCan(session, "staff");
+
+  const [callingNext, setCallingNext] = useState(false);
+
+  const handleCallNext = async () => {
+    if (!clinicId) return;
+    setCallingNext(true);
+    try {
+      const isDoctor = session?.role === "doctor";
+      const effectiveDoctorId = isDoctor ? session?.doctorId ?? "" : "";
+      await queueCallNext(clinicId, {
+        doctorId: effectiveDoctorId || undefined,
+        date: todayISO(),
+      });
+      toast.success("Called next patient");
+      loadData();
+    } catch {
+      toast.error("Failed to call next patient");
+    } finally {
+      setCallingNext(false);
+    }
+  };
 
   // Main Data States
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -609,12 +630,17 @@ export default function AppointmentsPage() {
                   Sync
                 </Button>
 
-                <Link href="/clinic/appointments/queue">
-                  <Button variant="outline" className="flex items-center gap-1.5 h-9">
-                    <ListChecks className="size-4" />
-                    Token Queue
+                {canManage && (
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-1.5 h-9"
+                    onClick={handleCallNext}
+                    disabled={callingNext}
+                  >
+                    <ArrowRightCircle className={`size-4 ${callingNext ? "animate-spin" : ""}`} />
+                    Call Next Patient
                   </Button>
-                </Link>
+                )}
 
                 <Button className="flex items-center gap-1.5 shadow-sm h-9" onClick={() => setCreating(true)}>
                   <Plus className="size-4" />
