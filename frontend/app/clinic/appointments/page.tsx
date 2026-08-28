@@ -181,6 +181,10 @@ export default function AppointmentsPage() {
   const [viewing, setViewing] = useState(false);
   const [editingAppt, setEditingAppt] = useState<Appointment | null>(null);
 
+  // Patient Appointment History (shown in View Appointment)
+  const [history, setHistory] = useState<Appointment[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   // Notification Logs Modal
   const [logs, setLogs] = useState<any[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
@@ -228,6 +232,39 @@ export default function AppointmentsPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  // Load patient's appointment history when opening the View modal
+  useEffect(() => {
+    if (!viewing || !selectedAppt || !clinicId) {
+      setHistory([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingHistory(true);
+    setHistory([]);
+    listAppointments(clinicId, {
+      patientId: selectedAppt.patientId,
+      limit: 100,
+    })
+      .then((res) => {
+        if (cancelled) return;
+        const items = res.items
+          .filter((a) => a.appointmentId !== selectedAppt.appointmentId)
+          .sort((a, b) =>
+            `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`)
+          );
+        setHistory(items);
+      })
+      .catch(() => {
+        if (!cancelled) setHistory([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingHistory(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [viewing, selectedAppt, clinicId]);
 
   // Actions
   async function handleCreate(form: {
@@ -602,6 +639,83 @@ export default function AppointmentsPage() {
               readOnly
               saving={false}
             />
+
+            {/* Patient Appointment History */}
+            <Card className="shadow-sm">
+              <CardContent className="p-5">
+                <div className="mb-4 flex items-center gap-2">
+                  <Clock className="size-4 text-primary" />
+                  <h2 className="text-base font-semibold text-foreground">
+                    Appointment History
+                  </h2>
+                  {!loadingHistory && history.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px]">
+                      {history.length} past
+                    </Badge>
+                  )}
+                </div>
+
+                {loadingHistory ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ) : history.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-muted-foreground">
+                    No previous appointments for this patient.
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                          <TableHead className="w-[120px]">Date</TableHead>
+                          <TableHead className="w-[90px]">Time</TableHead>
+                          <TableHead className="w-[180px]">Doctor</TableHead>
+                          <TableHead>Reason</TableHead>
+                          <TableHead className="w-[140px]">Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {history.map((h) => {
+                          const hDoctor = doctorMap.get(h.doctorId);
+                          return (
+                            <TableRow
+                              key={h.appointmentId}
+                              className="cursor-pointer hover:bg-muted/30 transition-colors"
+                              onClick={() => {
+                                setSelectedAppt(h);
+                              }}
+                            >
+                              <TableCell className="text-xs font-medium">
+                                {h.date}
+                              </TableCell>
+                              <TableCell className="text-xs text-muted-foreground">
+                                {formatTime(h.time)}
+                              </TableCell>
+                              <TableCell className="text-xs">
+                                {hDoctor?.name || h.doctorId}
+                              </TableCell>
+                              <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
+                                {h.reason || "—"}
+                              </TableCell>
+                              <TableCell>
+                                <span
+                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_CLASS[h.status]}`}
+                                >
+                                  {STATUS_LABELS[h.status]}
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
