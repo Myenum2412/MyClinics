@@ -19,7 +19,7 @@ import {
   queueComplete,
   queueNoShow,
   updateAppointment,
-  API_BASE_URL,
+  getAppointmentNotifications,
 } from "@/lib/clinic-api";
 import { formatTime } from "@/lib/format-time";
 import { Button } from "@/components/ui/button";
@@ -372,13 +372,8 @@ export default function AppointmentsPage() {
     setLoadingLogs(true);
     setLogs([]);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/clinics/${clinicId}/appointments/${appt.appointmentId}/notifications`);
-      if (res.ok) {
-        const data = await res.json();
-        setLogs(data.notifications || []);
-      } else {
-        toast.error("Failed to load WhatsApp logs");
-      }
+      const data = await getAppointmentNotifications(clinicId, appt.appointmentId);
+      setLogs(data.notifications || []);
     } catch {
       toast.error("Error fetching notification delivery status");
     } finally {
@@ -698,6 +693,8 @@ export default function AppointmentsPage() {
                       />
                     </TableHead>
 
+                    <TableHead className="w-[90px]">Token #</TableHead>
+
                     {visibleColumns.dateTime && (
                       <TableHead className="w-[180px]">
                         <Button
@@ -715,7 +712,6 @@ export default function AppointmentsPage() {
 
                     {visibleColumns.patient && <TableHead className="w-[220px]">Patient</TableHead>}
                     {visibleColumns.doctor && <TableHead className="w-[180px]">Doctor</TableHead>}
-                    <TableHead className="w-[90px]">Token #</TableHead>
                     {visibleColumns.reason && <TableHead>Reason</TableHead>}
                     {visibleColumns.status && <TableHead className="w-[140px]">Status</TableHead>}
                     {visibleColumns.alerts && <TableHead className="w-[150px]">WhatsApp Alerts</TableHead>}
@@ -737,6 +733,17 @@ export default function AppointmentsPage() {
                             checked={selectedIds.has(a.appointmentId)}
                             onCheckedChange={() => toggleSelectRow(a.appointmentId)}
                           />
+                        </TableCell>
+
+                        <TableCell className="text-sm font-semibold">
+                          {a.tokenNumber != null ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-primary">
+                              #{a.tokenNumber}
+                              {a.priority && <Star className="size-3 fill-primary" />}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </TableCell>
 
                         {visibleColumns.dateTime && (
@@ -781,17 +788,6 @@ export default function AppointmentsPage() {
                             </div>
                           </TableCell>
                         )}
-
-                        <TableCell className="text-sm font-semibold">
-                          {a.tokenNumber != null ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-primary">
-                              #{a.tokenNumber}
-                              {a.priority && <Star className="size-3 fill-primary" />}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
 
                         {visibleColumns.reason && (
                           <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">

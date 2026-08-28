@@ -10,11 +10,10 @@ import {
   type PharmacySupplier,
 } from "@/lib/clinic-api"
 import { toast } from "sonner"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -22,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SectionCard } from "@/components/clinic/form-kit"
 
 const str = (v: string) => (v.trim() === "" ? null : v.trim())
 const num = (v: string) => (v.trim() === "" ? 0 : Number(v))
@@ -80,7 +80,15 @@ const emptyForm: FormState = {
   status: "active",
 }
 
-export function MedicineForm({ clinicId, id }: { clinicId: string; id?: string }) {
+export function MedicineForm({
+  clinicId,
+  id,
+  onError,
+}: {
+  clinicId: string
+  id?: string
+  onError?: (msg: string | null) => void
+}) {
   const router = useRouter()
   const [suppliers, setSuppliers] = React.useState<PharmacySupplier[]>([])
   const [form, setForm] = React.useState<FormState>(emptyForm)
@@ -166,6 +174,7 @@ export function MedicineForm({ clinicId, id }: { clinicId: string; id?: string }
       status: form.status,
     }
     setSaving(true)
+    onError?.(null)
     try {
       if (id) {
         await updateMedicine(clinicId, id, payload)
@@ -176,7 +185,9 @@ export function MedicineForm({ clinicId, id }: { clinicId: string; id?: string }
       }
       router.push("/clinic/pharmacy/medicines")
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Save failed")
+      const msg = e instanceof Error ? e.message : "Save failed"
+      onError?.(msg)
+      toast.error(msg)
     } finally {
       setSaving(false)
     }
@@ -185,16 +196,18 @@ export function MedicineForm({ clinicId, id }: { clinicId: string; id?: string }
   if (loading) {
     return (
       <Card>
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">Loading…</CardContent>
+        <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          Loading…
+        </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card>
-      <CardContent className="pt-5">
-        <form onSubmit={submit} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="sm:col-span-2">
+    <form onSubmit={submit} className="space-y-6">
+      <SectionCard title="Basic Details" description="Name, classification and formulation of the medicine.">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="md:col-span-2">
             <Label htmlFor="name">Name *</Label>
             <Input id="name" value={form.name} onChange={(e) => set("name", e.target.value)} />
           </div>
@@ -222,6 +235,11 @@ export function MedicineForm({ clinicId, id }: { clinicId: string; id?: string }
             <Label htmlFor="unit">Unit</Label>
             <Input id="unit" value={form.unit} onChange={(e) => set("unit", e.target.value)} />
           </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Supplier & Identifiers" description="Supplier linkage and batch / regulatory identifiers.">
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="manufacturer">Manufacturer</Label>
             <Input id="manufacturer" value={form.manufacturer} onChange={(e) => set("manufacturer", e.target.value)} />
@@ -238,18 +256,27 @@ export function MedicineForm({ clinicId, id }: { clinicId: string; id?: string }
             <Label htmlFor="batchNumber">Batch Number</Label>
             <Input id="batchNumber" value={form.batchNumber} onChange={(e) => set("batchNumber", e.target.value)} />
           </div>
-          <div>
-            <Label htmlFor="reorderLevel">Reorder Level *</Label>
-            <Input id="reorderLevel" type="number" value={form.reorderLevel} onChange={(e) => set("reorderLevel", e.target.value)} />
+          <div className="md:col-span-2">
+            <Label htmlFor="supplierId">Supplier</Label>
+            <Select value={form.supplierId} onValueChange={(v) => set("supplierId", v ?? "")}>
+              <SelectTrigger id="supplierId">
+                <SelectValue placeholder="Select supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">None</SelectItem>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.supplierId} value={s.supplierId}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <div>
-            <Label htmlFor="minStockLevel">Min Stock Level</Label>
-            <Input id="minStockLevel" type="number" value={form.minStockLevel} onChange={(e) => set("minStockLevel", e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="maxStockLevel">Max Stock Level</Label>
-            <Input id="maxStockLevel" type="number" value={form.maxStockLevel} onChange={(e) => set("maxStockLevel", e.target.value)} />
-          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Pricing & Tax" description="Purchase / selling price and applicable tax & discount.">
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="purchasePrice">Purchase Price</Label>
             <Input id="purchasePrice" type="number" step="0.01" value={form.purchasePrice} onChange={(e) => set("purchasePrice", e.target.value)} />
@@ -266,22 +293,28 @@ export function MedicineForm({ clinicId, id }: { clinicId: string; id?: string }
             <Label htmlFor="discount">Discount</Label>
             <Input id="discount" type="number" step="0.01" value={form.discount} onChange={(e) => set("discount", e.target.value)} />
           </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Stock Levels" description="Reorder and min/max thresholds used for low-stock alerts.">
+        <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <Label htmlFor="supplierId">Supplier</Label>
-            <Select value={form.supplierId} onValueChange={(v) => set("supplierId", v ?? "")}>
-              <SelectTrigger id="supplierId">
-                <SelectValue placeholder="Select supplier" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">None</SelectItem>
-                {suppliers.map((s) => (
-                  <SelectItem key={s.supplierId} value={s.supplierId}>
-                    {s.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="reorderLevel">Reorder Level *</Label>
+            <Input id="reorderLevel" type="number" value={form.reorderLevel} onChange={(e) => set("reorderLevel", e.target.value)} />
           </div>
+          <div>
+            <Label htmlFor="minStockLevel">Min Stock Level</Label>
+            <Input id="minStockLevel" type="number" value={form.minStockLevel} onChange={(e) => set("minStockLevel", e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="maxStockLevel">Max Stock Level</Label>
+            <Input id="maxStockLevel" type="number" value={form.maxStockLevel} onChange={(e) => set("maxStockLevel", e.target.value)} />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Dates & Storage" description="Manufacturing / expiry dates and storage conditions.">
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="manufacturingDate">Manufacturing Date</Label>
             <Input id="manufacturingDate" type="date" value={form.manufacturingDate} onChange={(e) => set("manufacturingDate", e.target.value)} />
@@ -290,6 +323,15 @@ export function MedicineForm({ clinicId, id }: { clinicId: string; id?: string }
             <Label htmlFor="expiryDate">Expiry Date</Label>
             <Input id="expiryDate" type="date" value={form.expiryDate} onChange={(e) => set("expiryDate", e.target.value)} />
           </div>
+          <div className="md:col-span-2">
+            <Label htmlFor="storageConditions">Storage Conditions</Label>
+            <Input id="storageConditions" value={form.storageConditions} onChange={(e) => set("storageConditions", e.target.value)} />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Status">
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
             <Label htmlFor="status">Status</Label>
             <Select value={form.status} onValueChange={(v) => set("status", (v as "active" | "inactive") ?? "active")}>
@@ -302,29 +344,28 @@ export function MedicineForm({ clinicId, id }: { clinicId: string; id?: string }
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center gap-2 pt-2">
-            <Checkbox
-              checked={form.prescriptionRequired}
-              onCheckedChange={(v) => set("prescriptionRequired", v === true)}
+          <div className="flex items-center gap-2 pt-6">
+            <input
+              type="checkbox"
               id="prescriptionRequired"
+              checked={form.prescriptionRequired}
+              onChange={(e) => set("prescriptionRequired", e.target.checked)}
+              className="size-4 rounded border-border"
             />
             <Label htmlFor="prescriptionRequired">Prescription Required</Label>
           </div>
-          <div className="sm:col-span-2">
-            <Label htmlFor="storageConditions">Storage Conditions</Label>
-            <Input id="storageConditions" value={form.storageConditions} onChange={(e) => set("storageConditions", e.target.value)} />
-          </div>
+        </div>
+      </SectionCard>
 
-          <div className="sm:col-span-2 flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => router.push("/clinic/pharmacy/medicines")}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Saving…" : id ? "Update" : "Create"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="flex gap-3 border-t border-border pt-8">
+        <Button type="button" variant="outline" onClick={() => router.push("/clinic/pharmacy/medicines")} disabled={saving} className="border-primary/30 text-primary hover:bg-accent">
+          Cancel
+        </Button>
+        <div className="flex-1" />
+        <Button type="submit" disabled={saving} size="lg">
+          {saving ? "Saving…" : id ? "Update Medicine" : "Create Medicine"}
+        </Button>
+      </div>
+    </form>
   )
 }

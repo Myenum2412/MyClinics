@@ -4,7 +4,6 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { getInventory, writeOffStock, type PharmacyInventory } from "@/lib/clinic-api"
 import { toast } from "sonner"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SectionCard } from "@/components/clinic/form-kit"
 
 const WRITE_OFF_REASONS = [
   { value: "damaged", label: "Damaged" },
@@ -22,7 +22,15 @@ const WRITE_OFF_REASONS = [
   { value: "expired", label: "Expired" },
 ]
 
-export function WriteOffForm({ clinicId, inventoryId }: { clinicId: string; inventoryId: string }) {
+export function WriteOffForm({
+  clinicId,
+  inventoryId,
+  onError,
+}: {
+  clinicId: string
+  inventoryId: string
+  onError?: (msg: string | null) => void
+}) {
   const router = useRouter()
   const [detail, setDetail] = React.useState<PharmacyInventory | null>(null)
   const [quantity, setQuantity] = React.useState("")
@@ -45,6 +53,7 @@ export function WriteOffForm({ clinicId, inventoryId }: { clinicId: string; inve
       return
     }
     setSaving(true)
+    onError?.(null)
     writeOffStock(clinicId, {
       inventoryId,
       quantity: Number(quantity),
@@ -56,28 +65,31 @@ export function WriteOffForm({ clinicId, inventoryId }: { clinicId: string; inve
         router.push("/clinic/pharmacy/inventory")
       })
       .catch((e: unknown) => {
-        toast.error(e instanceof Error ? e.message : "Failed to write off stock")
+        const msg = e instanceof Error ? e.message : "Failed to write off stock"
+        onError?.(msg)
+        toast.error(msg)
         setSaving(false)
       })
   }
 
   return (
-    <Card>
-      <CardContent className="pt-5">
-        {detail && (
-          <div className="mb-4 rounded-lg bg-muted/50 p-3 text-sm">
-            <p className="font-medium">{detail.name}</p>
-            <p className="text-muted-foreground">
-              Batch {detail.batchNumber} · Available {detail.quantityAvailable}
-            </p>
+    <form onSubmit={submit} className="space-y-6">
+      {detail && (
+        <SectionCard title="Batch Details">
+          <p className="text-sm font-medium text-foreground">{detail.name}</p>
+          <p className="text-sm text-muted-foreground">
+            Batch {detail.batchNumber} · Available {detail.quantityAvailable}
+          </p>
+        </SectionCard>
+      )}
+
+      <SectionCard title="Write-Off Details" description="Quantity and reason for removing this stock.">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="quantity">Quantity</Label>
+            <Input id="quantity" type="number" min={0} value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" />
           </div>
-        )}
-        <form onSubmit={submit} className="space-y-3">
-          <div className="space-y-1">
-            <Label>Quantity</Label>
-            <Input type="number" min={0} value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="0" />
-          </div>
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label>Reason</Label>
             <Select value={reason} onValueChange={(v) => setReason((v as typeof reason) ?? "damaged")}>
               <SelectTrigger className="w-full">
@@ -92,21 +104,22 @@ export function WriteOffForm({ clinicId, inventoryId }: { clinicId: string; inve
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
-            <Label>Notes</Label>
-            <Input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes" />
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes" />
           </div>
+        </div>
+      </SectionCard>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => router.push("/clinic/pharmacy/inventory")}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="destructive" disabled={saving}>
-              {saving ? "Saving…" : "Write Off"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="flex gap-3 border-t border-border pt-8">
+        <Button type="button" variant="outline" onClick={() => router.push("/clinic/pharmacy/inventory")} disabled={saving} className="border-primary/30 text-primary hover:bg-accent">
+          Cancel
+        </Button>
+        <div className="flex-1" />
+        <Button type="submit" variant="destructive" disabled={saving} size="lg">
+          {saving ? "Saving…" : "Write Off"}
+        </Button>
+      </div>
+    </form>
   )
 }

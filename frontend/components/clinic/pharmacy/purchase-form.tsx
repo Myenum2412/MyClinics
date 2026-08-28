@@ -11,7 +11,6 @@ import {
   type PharmacyPurchaseItem,
 } from "@/lib/clinic-api"
 import { toast } from "sonner"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -31,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { SectionCard } from "@/components/clinic/form-kit"
 
 interface NewItem extends PharmacyPurchaseItem {}
 
@@ -47,7 +47,13 @@ function emptyItem(): NewItem {
   }
 }
 
-export function PurchaseForm({ clinicId }: { clinicId: string }) {
+export function PurchaseForm({
+  clinicId,
+  onError,
+}: {
+  clinicId: string
+  onError?: (msg: string | null) => void
+}) {
   const router = useRouter()
   const [suppliers, setSuppliers] = React.useState<PharmacySupplier[]>([])
   const [medicines, setMedicines] = React.useState<PharmacyMedicine[]>([])
@@ -87,6 +93,7 @@ export function PurchaseForm({ clinicId }: { clinicId: string }) {
       return
     }
     setSubmitting(true)
+    onError?.(null)
     try {
       const items = form.items.map((i) => ({
         medicineId: i.medicineId,
@@ -107,135 +114,137 @@ export function PurchaseForm({ clinicId }: { clinicId: string }) {
       toast.success("Purchase created")
       router.push("/clinic/pharmacy/purchases")
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to create purchase")
+      const msg = e instanceof Error ? e.message : "Failed to create purchase"
+      onError?.(msg)
+      toast.error(msg)
       setSubmitting(false)
     }
   }
 
   return (
-    <Card>
-      <CardContent className="pt-5">
-        <form onSubmit={submit} className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="supplier">Supplier</Label>
-              <Select value={form.supplierId} onValueChange={(v) => setForm((f) => ({ ...f, supplierId: v ?? "" }))}>
-                <SelectTrigger id="supplier">
-                  <SelectValue placeholder="Select supplier" />
-                </SelectTrigger>
-                <SelectContent>
-                  {suppliers.map((s) => (
-                    <SelectItem key={s.supplierId} value={s.supplierId}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="pdate">Purchase Date</Label>
-              <Input id="pdate" type="date" value={form.purchaseDate} onChange={(e) => setForm((f) => ({ ...f, purchaseDate: e.target.value }))} />
-            </div>
+    <form onSubmit={submit} className="space-y-6">
+      <SectionCard title="Purchase Details" description="Supplier, date and notes for this purchase order.">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="supplier">Supplier</Label>
+            <Select value={form.supplierId} onValueChange={(v) => setForm((f) => ({ ...f, supplierId: v ?? "" }))}>
+              <SelectTrigger id="supplier">
+                <SelectValue placeholder="Select supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers.map((s) => (
+                  <SelectItem key={s.supplierId} value={s.supplierId}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-
-          <div className="space-y-1.5">
+          <div className="space-y-2">
+            <Label htmlFor="pdate">Purchase Date</Label>
+            <Input id="pdate" type="date" value={form.purchaseDate} onChange={(e) => setForm((f) => ({ ...f, purchaseDate: e.target.value }))} />
+          </div>
+          <div className="space-y-2 md:col-span-2">
             <Label htmlFor="pnotes">Notes</Label>
             <Textarea id="pnotes" placeholder="Optional notes" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
           </div>
+        </div>
+      </SectionCard>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Items</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                Add Row
-              </Button>
-            </div>
-            <div className="overflow-x-auto rounded-lg border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Medicine</TableHead>
-                    <TableHead>Batch</TableHead>
-                    <TableHead>Qty</TableHead>
-                    <TableHead>Unit ₹</TableHead>
-                    <TableHead>Exp</TableHead>
-                    <TableHead>Mfg</TableHead>
-                    <TableHead>Line Supplier</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead />
+      <SectionCard title="Items" description="Add the medicines received in this purchase.">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Line items</p>
+            <Button type="button" variant="outline" size="sm" onClick={addItem}>
+              Add Row
+            </Button>
+          </div>
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Medicine</TableHead>
+                  <TableHead>Batch</TableHead>
+                  <TableHead>Qty</TableHead>
+                  <TableHead>Unit ₹</TableHead>
+                  <TableHead>Exp</TableHead>
+                  <TableHead>Mfg</TableHead>
+                  <TableHead>Line Supplier</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {form.items.map((it, idx) => (
+                  <TableRow key={idx}>
+                    <TableCell className="min-w-[180px]">
+                      <Select value={it.medicineId} onValueChange={(v) => updateItem(idx, { medicineId: v ?? "" })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Medicine" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {medicines.map((m) => (
+                            <SelectItem key={m.medicineId} value={m.medicineId}>
+                              {m.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Input value={it.batchNumber} onChange={(e) => updateItem(idx, { batchNumber: e.target.value })} placeholder="Batch" />
+                    </TableCell>
+                    <TableCell className="w-20">
+                      <Input type="number" min={1} value={it.quantity} onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })} />
+                    </TableCell>
+                    <TableCell className="w-24">
+                      <Input type="number" min={0} step="0.01" value={it.unitPrice} onChange={(e) => updateItem(idx, { unitPrice: Number(e.target.value) })} />
+                    </TableCell>
+                    <TableCell className="w-36">
+                      <Input type="date" value={it.expiryDate ?? ""} onChange={(e) => updateItem(idx, { expiryDate: e.target.value || null })} />
+                    </TableCell>
+                    <TableCell className="w-36">
+                      <Input type="date" value={it.manufacturingDate ?? ""} onChange={(e) => updateItem(idx, { manufacturingDate: e.target.value || null })} />
+                    </TableCell>
+                    <TableCell className="min-w-[150px]">
+                      <Select value={it.supplierId ?? ""} onValueChange={(v) => updateItem(idx, { supplierId: v || null })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Optional" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {suppliers.map((s) => (
+                            <SelectItem key={s.supplierId} value={s.supplierId}>
+                              {s.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell className="w-32">
+                      <Input value={it.storageLocation ?? ""} onChange={(e) => updateItem(idx, { storageLocation: e.target.value })} placeholder="Shelf" />
+                    </TableCell>
+                    <TableCell className="w-10">
+                      <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(idx)} disabled={form.items.length === 1}>
+                        Remove
+                      </Button>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {form.items.map((it, idx) => (
-                    <TableRow key={idx}>
-                      <TableCell className="min-w-[180px]">
-                        <Select value={it.medicineId} onValueChange={(v) => updateItem(idx, { medicineId: v ?? "" })}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Medicine" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {medicines.map((m) => (
-                              <SelectItem key={m.medicineId} value={m.medicineId}>
-                                {m.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Input value={it.batchNumber} onChange={(e) => updateItem(idx, { batchNumber: e.target.value })} placeholder="Batch" />
-                      </TableCell>
-                      <TableCell className="w-20">
-                        <Input type="number" min={1} value={it.quantity} onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })} />
-                      </TableCell>
-                      <TableCell className="w-24">
-                        <Input type="number" min={0} step="0.01" value={it.unitPrice} onChange={(e) => updateItem(idx, { unitPrice: Number(e.target.value) })} />
-                      </TableCell>
-                      <TableCell className="w-36">
-                        <Input type="date" value={it.expiryDate ?? ""} onChange={(e) => updateItem(idx, { expiryDate: e.target.value || null })} />
-                      </TableCell>
-                      <TableCell className="w-36">
-                        <Input type="date" value={it.manufacturingDate ?? ""} onChange={(e) => updateItem(idx, { manufacturingDate: e.target.value || null })} />
-                      </TableCell>
-                      <TableCell className="min-w-[150px]">
-                        <Select value={it.supplierId ?? ""} onValueChange={(v) => updateItem(idx, { supplierId: v || null })}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Optional" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {suppliers.map((s) => (
-                              <SelectItem key={s.supplierId} value={s.supplierId}>
-                                {s.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="w-32">
-                        <Input value={it.storageLocation ?? ""} onChange={(e) => updateItem(idx, { storageLocation: e.target.value })} placeholder="Shelf" />
-                      </TableCell>
-                      <TableCell className="w-10">
-                        <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(idx)} disabled={form.items.length === 1}>
-                          Remove
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                ))}
+              </TableBody>
+            </Table>
           </div>
+        </div>
+      </SectionCard>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => router.push("/clinic/pharmacy/purchases")}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Saving…" : "Create Purchase"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="flex gap-3 border-t border-border pt-8">
+        <Button type="button" variant="outline" onClick={() => router.push("/clinic/pharmacy/purchases")} disabled={submitting} className="border-primary/30 text-primary hover:bg-accent">
+          Cancel
+        </Button>
+        <div className="flex-1" />
+        <Button type="submit" disabled={submitting} size="lg">
+          {submitting ? "Saving…" : "Create Purchase"}
+        </Button>
+      </div>
+    </form>
   )
 }

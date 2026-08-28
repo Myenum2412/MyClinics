@@ -1,26 +1,24 @@
 "use client"
 
+import { useState } from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
-import Link from "next/link"
 import { PurchaseForm } from "@/components/clinic/pharmacy/purchase-form"
-import { Button } from "@/components/ui/button"
+import { FormShell } from "@/components/clinic/form-kit"
 
 export default function NewPurchasePage() {
   const session = useRequireRole("billing_staff")
   const clinicId = session?.clinicId ?? ""
+  const [error, setError] = useState<string | null>(null)
   if (!session) return null
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">New Purchase</h1>
-          <p className="text-sm text-muted-foreground">Record a supplier purchase and its line items</p>
-        </div>
-        <Button variant="outline" render={<Link href="/clinic/pharmacy/purchases" />}>
-          Back
-        </Button>
-      </div>
-      <PurchaseForm clinicId={clinicId} />
-    </div>
+    <FormShell
+      title="New Purchase"
+      subtitle="Record a supplier purchase and its line items"
+      backHref="/clinic/pharmacy/purchases"
+      error={error}
+      onErrorDismiss={() => setError(null)}
+    >
+      <PurchaseForm clinicId={clinicId} onError={setError} />
+    </FormShell>
   )
 }

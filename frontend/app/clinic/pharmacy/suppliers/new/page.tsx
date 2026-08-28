@@ -1,26 +1,24 @@
 "use client"
 
+import { useState } from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
-import Link from "next/link"
 import { SupplierForm } from "@/components/clinic/pharmacy/supplier-form"
-import { Button } from "@/components/ui/button"
+import { FormShell } from "@/components/clinic/form-kit"
 
 export default function NewSupplierPage() {
   const session = useRequireRole("billing_staff")
   const clinicId = session?.clinicId ?? ""
+  const [error, setError] = useState<string | null>(null)
   if (!session) return null
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Add Supplier</h1>
-          <p className="text-sm text-muted-foreground">Create a new supplier record</p>
-        </div>
-        <Button variant="outline" render={<Link href="/clinic/pharmacy/suppliers" />}>
-          Back
-        </Button>
-      </div>
-      <SupplierForm clinicId={clinicId} />
-    </div>
+    <FormShell
+      title="Add Supplier"
+      subtitle="Create a new supplier record"
+      backHref="/clinic/pharmacy/suppliers"
+      error={error}
+      onErrorDismiss={() => setError(null)}
+    >
+      <SupplierForm clinicId={clinicId} onError={setError} />
+    </FormShell>
   )
 }

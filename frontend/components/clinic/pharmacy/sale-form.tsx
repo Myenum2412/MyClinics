@@ -8,7 +8,6 @@ import {
   type PharmacyMedicine,
 } from "@/lib/clinic-api"
 import { toast } from "sonner"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -28,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { SectionCard } from "@/components/clinic/form-kit"
 
 const fmtMoney = (n: number) =>
   `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(n || 0)}`
@@ -38,7 +38,13 @@ interface SaleItemDraft {
   discount: number
 }
 
-export function SaleForm({ clinicId }: { clinicId: string }) {
+export function SaleForm({
+  clinicId,
+  onError,
+}: {
+  clinicId: string
+  onError?: (msg: string | null) => void
+}) {
   const router = useRouter()
   const [medicines, setMedicines] = React.useState<PharmacyMedicine[]>([])
   const [saleDate, setSaleDate] = React.useState(() => new Date().toISOString().slice(0, 10))
@@ -95,6 +101,7 @@ export function SaleForm({ clinicId }: { clinicId: string }) {
       return
     }
     setSubmitting(true)
+    onError?.(null)
     try {
       await createSale(clinicId, {
         saleDate,
@@ -110,120 +117,119 @@ export function SaleForm({ clinicId }: { clinicId: string }) {
       toast.success("Sale recorded")
       router.push("/clinic/pharmacy/sales")
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to create sale")
+      const msg = e instanceof Error ? e.message : "Failed to create sale"
+      onError?.(msg)
+      toast.error(msg)
       setSubmitting(false)
     }
   }
 
   return (
-    <Card>
-      <CardContent className="pt-5">
-        <form onSubmit={submit} className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="saleDate">Sale Date</Label>
-              <Input id="saleDate" type="date" value={saleDate} onChange={(e) => setSaleDate(e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="patientId">Patient ID (optional)</Label>
-              <Input id="patientId" placeholder="Walk-in if blank" value={patientId} onChange={(e) => setPatientId(e.target.value)} />
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label>Payment Method</Label>
-              <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v ?? "cash")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">Cash</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
-                  <SelectItem value="upi">UPI</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="credit">Credit</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="notes">Notes (optional)</Label>
-              <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
-            </div>
-          </div>
-
+    <form onSubmit={submit} className="space-y-6">
+      <SectionCard title="Sale Details" description="Date, patient and payment method for this sale.">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Items</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                Add Item
-              </Button>
-            </div>
-
-            {items.length === 0 ? (
-              <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">
-                No items added yet.
-              </p>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Medicine</TableHead>
-                      <TableHead>Qty</TableHead>
-                      <TableHead>Disc (₹)</TableHead>
-                      <TableHead>Line</TableHead>
-                      <TableHead />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items.map((it, idx) => {
-                      const med = medicineById.get(it.medicineId)
-                      const line = med ? med.sellingPrice * (it.quantity || 0) - (it.discount || 0) : 0
-                      return (
-                        <TableRow key={idx}>
-                          <TableCell>
-                            <Select value={it.medicineId} onValueChange={(v) => updateItem(idx, { medicineId: v ?? "" })}>
-                              <SelectTrigger className="h-8 w-56">
-                                <SelectValue placeholder="Select medicine" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {medicines.map((m) => (
-                                  <SelectItem key={m.medicineId} value={m.medicineId}>
-                                    {m.name}
-                                    {m.strength ? ` ${m.strength}` : ""}
-                                    {m.brand ? ` · ${m.brand}` : ""}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {med && (
-                              <p className="mt-1 text-xs text-muted-foreground">
-                                {fmtMoney(med.sellingPrice)} · tax {med.taxPercent}%
-                              </p>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Input type="number" min={1} value={it.quantity} onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })} className="h-8 w-20" />
-                          </TableCell>
-                          <TableCell>
-                            <Input type="number" min={0} value={it.discount} onChange={(e) => updateItem(idx, { discount: Number(e.target.value) })} className="h-8 w-24" />
-                          </TableCell>
-                          <TableCell className="tabular-nums">{fmtMoney(line)}</TableCell>
-                          <TableCell>
-                            <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(idx)} aria-label="Remove item">
-                              ✕
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+            <Label htmlFor="saleDate">Sale Date</Label>
+            <Input id="saleDate" type="date" value={saleDate} onChange={(e) => setSaleDate(e.target.value)} />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="patientId">Patient ID (optional)</Label>
+            <Input id="patientId" placeholder="Walk-in if blank" value={patientId} onChange={(e) => setPatientId(e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label>Payment Method</Label>
+            <Select value={paymentMethod} onValueChange={(v) => setPaymentMethod(v ?? "cash")}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cash">Cash</SelectItem>
+                <SelectItem value="card">Card</SelectItem>
+                <SelectItem value="upi">UPI</SelectItem>
+                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                <SelectItem value="credit">Credit</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes (optional)</Label>
+            <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Items" description="Medicines dispensed in this sale.">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">Line items</p>
+            <Button type="button" variant="outline" size="sm" onClick={addItem}>
+              Add Item
+            </Button>
+          </div>
+
+          {items.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+              No items added yet.
+            </p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Medicine</TableHead>
+                    <TableHead>Qty</TableHead>
+                    <TableHead>Disc (₹)</TableHead>
+                    <TableHead>Line</TableHead>
+                    <TableHead />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {items.map((it, idx) => {
+                    const med = medicineById.get(it.medicineId)
+                    const line = med ? med.sellingPrice * (it.quantity || 0) - (it.discount || 0) : 0
+                    return (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          <Select value={it.medicineId} onValueChange={(v) => updateItem(idx, { medicineId: v ?? "" })}>
+                            <SelectTrigger className="h-8 w-56">
+                              <SelectValue placeholder="Select medicine" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {medicines.map((m) => (
+                                <SelectItem key={m.medicineId} value={m.medicineId}>
+                                  {m.name}
+                                  {m.strength ? ` ${m.strength}` : ""}
+                                  {m.brand ? ` · ${m.brand}` : ""}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {med && (
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {fmtMoney(med.sellingPrice)} · tax {med.taxPercent}%
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Input type="number" min={1} value={it.quantity} onChange={(e) => updateItem(idx, { quantity: Number(e.target.value) })} className="h-8 w-20" />
+                        </TableCell>
+                        <TableCell>
+                          <Input type="number" min={0} value={it.discount} onChange={(e) => updateItem(idx, { discount: Number(e.target.value) })} className="h-8 w-24" />
+                        </TableCell>
+                        <TableCell className="tabular-nums">{fmtMoney(line)}</TableCell>
+                        <TableCell>
+                          <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(idx)} aria-label="Remove item">
+                            ✕
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
           {items.length > 0 && (
             <div className="rounded-lg bg-muted/50 p-3 text-sm">
@@ -233,17 +239,18 @@ export function SaleForm({ clinicId }: { clinicId: string }) {
               <div className="flex justify-between font-medium"><span>Total (approx)</span><span className="tabular-nums">{fmtMoney(computed.total)}</span></div>
             </div>
           )}
+        </div>
+      </SectionCard>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => router.push("/clinic/pharmacy/sales")}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? "Saving…" : "Record Sale"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+      <div className="flex gap-3 border-t border-border pt-8">
+        <Button type="button" variant="outline" onClick={() => router.push("/clinic/pharmacy/sales")} disabled={submitting} className="border-primary/30 text-primary hover:bg-accent">
+          Cancel
+        </Button>
+        <div className="flex-1" />
+        <Button type="submit" disabled={submitting} size="lg">
+          {submitting ? "Saving…" : "Record Sale"}
+        </Button>
+      </div>
+    </form>
   )
 }
