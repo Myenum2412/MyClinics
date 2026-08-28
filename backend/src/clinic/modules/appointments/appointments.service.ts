@@ -27,11 +27,6 @@ import {
   startConsultation as startConsultationToken,
 } from "@/clinic/modules/appointments/token.service";
 import { queueAppointmentNotifications } from "@/services/whatsapp/appointment-notification.service";
-import {
-  scheduleAppointmentReminder,
-  rescheduleAppointmentReminder,
-  cancelAppointmentReminder,
-} from "@/services/cronlite/appointment-scheduler.service";
 import { logger } from "@/lib/logger";
 import { indexEntity, removeEntity } from "@/services/search/indexer";
 
@@ -92,22 +87,9 @@ export class AppointmentService {
 
     await queueAppointmentNotifications(this.db, clinicId, appointment.appointmentId, "created");
 
-    // Schedule a precise per-appointment reminder job on CronLite (the every-minute
-    // poll is the safety-net fallback). Fire-and-forget: a failure here must not
-    // fail the appointment booking — the poll still covers it.
-    void scheduleAppointmentReminder(
-      this.db,
-      clinicId,
-      appointment.appointmentId,
-      appointment.date,
-      appointment.time,
-      appointment.status
-    ).catch((error) =>
-      logger.warn("Failed to schedule CronLite appointment reminder", {
-        appointmentId: appointment.appointmentId,
-        error: error instanceof Error ? error.message : String(error),
-      })
-    );
+    // Reminders are sent by the every-minute /api/cron/reminders poll once the
+    // 1-hour-ahead scheduled time is reached (queued above), so no per-appointment
+    // scheduler is required.
 
     return appointment;
   }
@@ -193,31 +175,7 @@ export class AppointmentService {
     if (patch.status || patch.date || patch.time) {
       const action = patch.status === "cancelled" ? "cancelled" : "updated";
       await queueAppointmentNotifications(this.db, requireClinicOf(ctx), appointmentId, action);
-
-      const current = updated ?? existing;
-      if (action === "cancelled") {
-        void cancelAppointmentReminder(this.db, requireClinicOf(ctx), appointmentId).catch(
-          (error) =>
-            logger.warn("Failed to cancel CronLite appointment reminder", {
-              appointmentId,
-              error: error instanceof Error ? error.message : String(error),
-            })
-        );
-      } else if (patch.date || patch.time) {
-        void rescheduleAppointmentReminder(
-          this.db,
-          requireClinicOf(ctx),
-          appointmentId,
-          current.date,
-          current.time,
-          current.status
-        ).catch((error) =>
-          logger.warn("Failed to reschedule CronLite appointment reminder", {
-            appointmentId,
-            error: error instanceof Error ? error.message : String(error),
-          })
-        );
-      }
+      // Reminder delivery is handled by the every-minute /api/cron/reminders poll.
     }
 
     return updated ?? existing;
@@ -231,13 +189,6 @@ export class AppointmentService {
     await repo.softDelete(appointmentId);
 
     void removeEntity("appointment", requireClinicOf(ctx), appointmentId).catch(() => {});
-
-    void cancelAppointmentReminder(this.db, requireClinicOf(ctx), appointmentId).catch((error) =>
-      logger.warn("Failed to cancel CronLite appointment reminder on delete", {
-        appointmentId,
-        error: error instanceof Error ? error.message : String(error),
-      })
-    );
 
     await queueAppointmentNotifications(this.db, requireClinicOf(ctx), appointmentId, "cancelled");
 

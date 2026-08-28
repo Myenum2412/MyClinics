@@ -23,8 +23,6 @@ export interface AppointmentDoc extends ClinicDocument {
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;
-  /** CronLite job id for this appointment's 1-hour reminder (null when not scheduled). */
-  cronliteJobId?: string | null;
   /** Token / queue execution state (Token Management methodology). Null when not yet in the queue. */
   queueStatus?: AppointmentQueueStatus | null;
   tokenNumber?: number | null;

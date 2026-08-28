@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import type {
   FastifyInstance,
   FastifyPluginOptions,
@@ -8,38 +7,7 @@ import type {
 import { getSessionUser, type SessionUser } from "@/lib/auth-token";
 import { canAccessBilling } from "@/lib/roles";
 import { verifyClinicToken } from "@/clinic/core/jwt";
-
-/** Fastify stores the exact request body bytes here (set in the JSON content-type parser). */
-type RawBodyRequest = FastifyRequest & { rawBody?: string | Buffer };
-
-/**
- * Verifies CronLite's HMAC-SHA256 webhook signature (header `X-CronLite-Signature`,
- * raw hex — no `sha256=` prefix). The signature is computed over the exact raw
- * request body with the shared `CRONLITE_WEBHOOK_SECRET` (falls back to CRON_SECRET).
- */
-export function verifyCronLiteSignature(request: FastifyRequest): boolean {
-  const secret = process.env.CRONLITE_WEBHOOK_SECRET ?? process.env.CRON_SECRET;
-  if (!secret) return false;
-
-  const header = request.headers["x-cronlite-signature"];
-  if (typeof header !== "string" || header.length === 0) return false;
-
-  const raw = (request as RawBodyRequest).rawBody;
-  const bodyBuf =
-    raw == null
-      ? Buffer.alloc(0)
-      : Buffer.isBuffer(raw)
-        ? raw
-        : Buffer.from(raw, "utf8");
-
-  const expected = crypto.createHmac("sha256", secret).update(bodyBuf).digest("hex");
-  const provided = Buffer.from(header.trim().toLowerCase());
-
-  // Constant-time compare; reject outright on length mismatch (timingSafeEqual
-  // throws on length mismatch, which would otherwise 500 the request).
-  if (provided.length !== expected.length) return false;
-  return crypto.timingSafeEqual(provided, Buffer.from(expected));
-}
+import { logger } from "@/lib/logger";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -94,19 +62,27 @@ export function requireInternalToken(
 }
 
 /**
- * Guards the cron webhook. Accepts either a CronLite HMAC-signed delivery
- * (preferred) or the legacy `x-cron-secret` shared-secret header (manual
- * pings / backwards-compatibility). A request is authorized if it satisfies
- * either check.
+ * Guards the cron webhook used by external schedulers (e.g. cron-job.org).
+ * Authorized when the request carries the shared `CRON_SECRET` either via the
+ * `x-cron-secret` header or the `secret` query parameter. Both are supported so
+ * a scheduler that can't set headers (cron-job.org) can pass it on the URL.
  */
 export function requireCronSecret(
   request: FastifyRequest,
   reply: FastifyReply
 ): boolean {
-  if (verifyCronLiteSignature(request)) return true;
-
   const secret = process.env.CRON_SECRET;
-  if (secret && request.headers["x-cron-secret"] === secret) return true;
+  if (!secret) {
+    logger.error("CRON_SECRET is not configured — refusing cron request");
+    reply.code(500).send({ error: "Cron is not configured" });
+    return false;
+  }
+
+  const headerSecret = request.headers["x-cron-secret"];
+  const query = request.query as Record<string, unknown> | undefined;
+  const querySecret = typeof query?.secret === "string" ? query.secret : "";
+
+  if (headerSecret === secret || querySecret === secret) return true;
 
   reply.code(401).send({ error: "Unauthorized" });
   return false;

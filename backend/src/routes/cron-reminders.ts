@@ -1,14 +1,11 @@
 import type { FastifyInstance } from "fastify";
 import { getCronDb } from "@/lib/db-pools";
-import { syncCronJobs, getCronLiteStatus } from "@/services/cronlite/cronlite.service";
 import { requireCronSecret } from "@/plugins/auth";
 import { processPrescriptionNotifications } from "@/services/whatsapp/prescription-notification.service";
 import {
   processAppointmentNotifications,
   sendReminderForAppointment,
 } from "@/services/whatsapp/appointment-notification.service";
-import { deleteFiredAppointmentJob } from "@/services/cronlite/appointment-scheduler.service";
-import { deleteCronLiteJob } from "@/services/cronlite/cronlite.service";
 import { nowMs } from "@/clinic/core/datetime";
 import { logger } from "@/lib/logger";
 
@@ -109,16 +106,16 @@ async function handleReminders(request: import("fastify").FastifyRequest, reply:
 }
 
 export function registerCronRoutes(app: FastifyInstance): void {
-  // CronLite (or legacy x-cron-secret) is configured for POST, but also handle
+  // External schedulers (e.g. cron-job.org) ping this every minute. Also handle
   // GET for health checks / manual probes.
   app.post("/api/cron/reminders", handleReminders);
   app.get("/api/cron/reminders", handleReminders);
 
   /**
-   * Per-appointment reminder delivery. CronLite fires this one-shot job exactly
-   * at (appointment − 1h) for the given appointment. After sending, the job is
-   * deleted so it never re-fires. The every-minute /api/cron/reminders poll is
-   * the safety-net fallback for any job that was missed or had no future window.
+   * Per-appointment reminder delivery. Can be triggered manually or by an
+   * external scheduler for a specific appointment. Idempotent: the notification
+   * row is claimed atomically so the every-minute /api/cron/reminders poll can
+   * never double-send the same reminder.
    */
   app.post("/api/cron/appointment-reminder", async (request, reply) => {
     if (!requireCronSecret(request, reply)) return;
@@ -138,17 +135,6 @@ export function registerCronRoutes(app: FastifyInstance): void {
         20_000,
         "sendReminderForAppointment"
       );
-      // One-shot job: remove it so it can't re-fire on a later matching date.
-      // Prefer the job id from the webhook payload (authoritative even if the
-      // appointment was rescheduled and the stored id now points at a new job);
-      // fall back to the stored id otherwise.
-      const payload = request.body as { job_id?: string } | null;
-      const firedJobId = typeof payload?.job_id === "string" ? payload.job_id : "";
-      if (firedJobId) {
-        await deleteCronLiteJob(firedJobId).catch(() => {});
-      } else {
-        await deleteFiredAppointmentJob(db, clinicId, appointmentId).catch(() => {});
-      }
 
       const duration = nowMs() - startTime;
       logger.info("Per-appointment reminder delivered", {
@@ -167,46 +153,8 @@ export function registerCronRoutes(app: FastifyInstance): void {
         durationMs: duration,
         error: errorMessage,
       });
-      // Always 2xx so CronLite doesn't flag the execution as failed/retry.
+      // Always 2xx so the external scheduler doesn't flag the execution as failed.
       return reply.code(200).send({ ok: false, error: errorMessage, durationMs: duration });
-    }
-  });
-
-  app.post("/api/cron/sync", async (request, reply) => {
-    if (!requireCronSecret(request, reply)) return;
-
-    try {
-      const result = await withTimeout(syncCronJobs(), 15_000, "syncCronJobs");
-      return reply.send({ ok: true, ...result });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error("cronlite sync error", { error: errorMessage });
-      return reply.code(500).send({
-        error: `Something went wrong. Please try again. (${errorMessage})`,
-      });
-    }
-  });
-
-  // Operational health check for the CronLite integration. Protected so it does
-  // not disclose infrastructure topology to the public. Returns one of:
-  // not_configured | connection_failed | authentication_failed | job_missing |
-  // duplicate_jobs | healthy.
-  app.get("/api/cron/status", async (request, reply) => {
-    if (!requireCronSecret(request, reply)) return;
-
-    try {
-      const status = await withTimeout(getCronLiteStatus(), 15_000, "getCronLiteStatus");
-      const code =
-        status.status === "healthy"
-          ? 200
-          : status.status === "not_configured"
-            ? 200
-            : 503;
-      return reply.code(code).send(status);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error("cronlite status error", { error: errorMessage });
-      return reply.code(500).send({ status: "connection_failed", error: errorMessage });
     }
   });
 }
