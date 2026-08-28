@@ -3,10 +3,10 @@ import { AvatarController } from "@/clinic/modules/avatars/avatars.controller";
 import { requireClinicAccess, requireRoles } from "@/clinic/core/scope";
 
 /**
- * Avatar routes — clinic-scoped profile photos stored in R2.
+ * Avatar routes — clinic-scoped profile photos stored in MongoDB.
  *
  *   POST /api/clinics/:clinicId/avatars/:ownerType/:ownerId   staff+ (multipart image)
- *   GET  /api/clinics/:clinicId/avatars/:ownerType/:ownerId   doctor+ (signed URL or null)
+ *   GET  /api/clinics/:clinicId/avatars/:ownerType/:ownerId   doctor+ (avatar bytes / 404)
  */
 export function registerAvatarRoutes(app: FastifyInstance): void {
   const controller = new AvatarController();

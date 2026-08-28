@@ -18,6 +18,7 @@ import type {
 } from "@/clinic/modules/patients/patients.dto";
 import { PatientRepository } from "@/clinic/modules/patients/patients.repository";
 import type { PatientDoc } from "@/clinic/modules/patients/patients.schema";
+import { getAvatarRepository } from "@/clinic/modules/avatars/avatars.repository";
 import {
   notifyDoctorOfAssignment,
   notifyDoctorOfNewPatient,
@@ -385,11 +386,10 @@ export class PatientService {
 
     const clinicId = requireClinicOf(ctx);
 
-    // 1. Delete avatars from R2
-    await Promise.all([
-      deleteFromR2(`avatars/${clinicId}/patient/${patientId}.jpg`).catch(() => void 0),
-      deleteFromR2(`avatars/${clinicId}/patient/${patientId}.png`).catch(() => void 0),
-    ]);
+    // 1. Delete avatar stored in MongoDB
+    await getAvatarRepository(ctx)
+      .then((repo) => repo.delete("patient", patientId))
+      .catch(() => void 0);
 
     // 2. Query and delete custom uploaded medical record files from R2
     const customFiles = await this.db

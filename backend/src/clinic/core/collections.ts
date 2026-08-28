@@ -50,6 +50,7 @@ export const CLINIC_COLLECTIONS = {
   metaWebhookEvents: "clc_meta_webhook_events",
   metaSyncJobs: "clc_meta_sync_jobs",
   metaOauthStates: "clc_meta_oauth_states",
+  avatars: "clc_avatars",
 } as const;
 
 export type ClinicCollectionName =

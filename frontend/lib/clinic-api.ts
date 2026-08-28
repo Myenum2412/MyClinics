@@ -1286,6 +1286,14 @@ export interface MedicalRecordFileVersion {
   createdAt: string;
 }
 
+export type WhatsAppCopyStatus = "queued" | "skipped_no_phone" | "failed";
+
+export interface WhatsAppCopyResult {
+  status: WhatsAppCopyStatus;
+  /** true when the file exceeded the 1.5MB inline-media limit and only a portal link was shared. */
+  largeFile: boolean;
+}
+
 export interface MedicalRecordFile {
   fileId: string;
   patientId: string;
@@ -1303,7 +1311,13 @@ export interface MedicalRecordFile {
   uploadedBy: string;
   uploadedByName: string | null;
   createdAt: string;
+  whatsapp?: WhatsAppCopyResult;
 }
+
+/** Return shape of an upload: the stored medical-record file plus the WhatsApp-copy outcome. */
+export type MedicalRecordFileUploadResult = MedicalRecordFile & {
+  whatsapp?: WhatsAppCopyResult;
+};
 
 export interface MedicalRecordFolder {
   folderId: string;
@@ -1350,7 +1364,7 @@ export function uploadMedicalRecordFile(
   file: File,
   folder?: string,
   options?: UploadOptions
-): Promise<MedicalRecordFile> {
+): Promise<MedicalRecordFileUploadResult> {
   return new Promise((resolve, reject) => {
     const form = new FormData();
     form.append("patientId", patientId);
@@ -1415,7 +1429,7 @@ export async function uploadMedicalRecordFileVersion(
   clinicId: string,
   fileId: string,
   file: File
-): Promise<MedicalRecordFile> {
+): Promise<MedicalRecordFileUploadResult> {
   const form = new FormData();
   form.append("patientId", "");
   form.append("file", file);
@@ -1468,12 +1482,31 @@ export function avatarPath(
   return tenantPath(clinicId, `/avatars/${ownerType}/${encodeURIComponent(ownerId)}`);
 }
 
-export function getAvatarUrl(
+export async function getAvatarUrl(
   clinicId: string,
   ownerType: AvatarOwnerType,
   ownerId: string
 ): Promise<{ url: string | null }> {
-  return request(avatarPath(clinicId, ownerType, ownerId), { cache: "no-store" });
+  // The backend serves the avatar bytes directly (Content-Type: image/*).
+  // We probe for a real image before handing the path to <img src> so the
+  // initials fallback still shows when no avatar is set.
+  try {
+    const headers: Record<string, string> = {};
+    const token = typeof window !== "undefined" ? getStoredToken() : null;
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}${avatarPath(clinicId, ownerType, ownerId)}`, {
+      method: "GET",
+      cache: "no-store",
+      headers,
+    });
+    const type = res.headers.get("content-type") ?? "";
+    if (res.ok && type.startsWith("image/")) {
+      return { url: avatarPath(clinicId, ownerType, ownerId) };
+    }
+  } catch {
+    // ignore — fall back to initials below
+  }
+  return { url: null };
 }
 
 export async function uploadAvatar(
