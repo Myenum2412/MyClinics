@@ -482,10 +482,6 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
       {/* Recent Appointments + Doctor Patients / Billing row */}
       <div className="grid gap-6 lg:grid-cols-2">
         <RecentAppointmentsCard
-          appointments={appointments}
-          patients={patients}
-          doctors={doctors}
-          clinicId={clinicId}
           loading={loading}
           weekCalendar={appointmentWeek}
         />
