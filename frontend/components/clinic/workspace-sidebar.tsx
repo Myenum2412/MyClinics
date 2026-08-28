@@ -38,6 +38,7 @@ import {
   ChartBarIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
+import { Pill } from "lucide-react";
 
 interface NavItem {
   title: string
@@ -110,7 +111,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     title: "Pharmacy",
     url: "/clinic/pharmacy/medicines",
-    icon: <PillIcon className="size-6" />,
+    icon: <Pill className="size-6" />,
     match: "prefix",
     roles: ["clinic_admin", "pharmacy_manager", "pharmacist", "inventory_staff", "billing_staff"],
     children: [
