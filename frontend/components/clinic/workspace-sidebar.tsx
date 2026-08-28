@@ -45,7 +45,7 @@ interface NavItem {
   icon?: React.ReactNode
   match?: "exact" | "prefix"
   roles: ClinicRole[]
-  children?: { title: string; url: string; match?: "exact" | "prefix" }[]
+  children?: { title: string; url: string; match?: "exact" | "prefix"; roles?: ClinicRole[] }[]
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -60,7 +60,16 @@ const NAV_ITEMS: NavItem[] = [
     title: "Appointments",
     url: "/clinic/appointments",
     icon: <CalendarDaysIcon className="size-6" />,
+    match: "prefix",
     roles: ["patient", "doctor", "staff", "clinic_admin"],
+    children: [
+      { title: "Appointments", url: "/clinic/appointments" },
+      {
+        title: "Token Queue",
+        url: "/clinic/appointments/queue",
+        roles: ["doctor", "staff", "clinic_admin"],
+      },
+    ],
   },
   {
     title: "Patients",
@@ -235,8 +244,10 @@ export function WorkspaceSidebar({
                       />
                     </SidebarMenuButton>
                     {isOpen && (
-                      <SidebarMenuSub>
-                        {item.children.map((c) => {
+                       <SidebarMenuSub>
+                         {item.children
+                           .filter((c) => !c.roles || c.roles.includes(role))
+                           .map((c) => {
                           const ca =
                             c.match === "exact"
                               ? pathname === c.url

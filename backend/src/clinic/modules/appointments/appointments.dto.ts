@@ -38,3 +38,22 @@ export const listAppointmentsSchema = z.object({
   doctorId: z.string().startsWith("doc_").optional(),
   patientId: z.string().startsWith("pat_").optional(),
 });
+
+export const rescheduleQueueSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+});
+
+export type RescheduleQueueInput = z.infer<typeof rescheduleQueueSchema>;
+
+export const queueSettingsSchema = z.object({
+  enabledStages: z
+    .array(z.enum(["you_are_next", "please_be_ready", "token_called", "proceed_to_room"]))
+    .optional(),
+  channel: z.enum(["whatsapp", "sms", "push", "in_app"]).optional(),
+  templateOverrides: z
+    .record(z.enum(["you_are_next", "please_be_ready", "token_called", "proceed_to_room"]), z.string())
+    .optional(),
+});
+
+export type QueueSettingsInput = z.infer<typeof queueSettingsSchema>;

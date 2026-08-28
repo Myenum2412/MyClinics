@@ -115,16 +115,20 @@ const APPT_STATUSES: AppointmentStatus[] = ["scheduled", "completed", "cancelled
 
 const APPT_STATUS_LABELS: Record<AppointmentStatus, string> = {
   scheduled: "Scheduled",
+  confirmed: "Confirmed",
   completed: "Completed",
   cancelled: "Cancelled",
   no_show: "No Show",
+  rescheduled: "Rescheduled",
 };
 
 const APPT_STATUS_CLASS: Record<AppointmentStatus, string> = {
   scheduled: "bg-primary/10 text-primary border border-primary/20",
+  confirmed: "bg-primary/10 text-primary border border-primary/20",
   completed: "bg-success/10 text-success border border-success/20",
   cancelled: "bg-destructive/10 text-destructive border border-destructive/20",
   no_show: "bg-warning/10 text-warning border border-warning/20",
+  rescheduled: "bg-warning/10 text-warning border border-warning/20",
 };
 
 // ── Strict medical-document allowlist (mirrors backend upload-guard) ──────

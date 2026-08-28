@@ -116,6 +116,11 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
       { clinicId: 1, doctorId: 1, date: 1, time: 1, status: 1 },
       { unique: true, partialFilterExpression: { status: "scheduled" } }
     ),
+    // Token queue snapshot queries (clinic/doctor/date + queue state + token order).
+    appointments.createIndex({ clinicId: 1, date: 1, queueStatus: 1 }),
+    appointments.createIndex({ clinicId: 1, doctorId: 1, date: 1, queueStatus: 1, priority: -1, tokenNumber: 1 }),
+    appointments.createIndex({ clinicId: 1, doctorId: 1, date: 1, session: 1, tokenNumber: -1 }),
+    db.collection("clc_queue_settings").createIndex({ clinicId: 1 }, { unique: true }),
 
     // ── Medicine ─────────────────────────────────────────────────────────
     medicine.createIndex({ clinicId: 1, recordId: 1 }, { unique: true }),

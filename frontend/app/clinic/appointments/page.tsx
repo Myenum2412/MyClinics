@@ -52,6 +52,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { appointmentStatusTone } from "@/lib/status-styles";
 import { formatDateTime, nowMs } from "@/lib/datetime";
 
@@ -86,22 +87,27 @@ import {
   ChevronLeft,
   Phone,
   Pencil,
+  ListChecks,
 } from "lucide-react";
 
 const STATUSES: AppointmentStatus[] = ["scheduled", "completed", "cancelled", "no_show"];
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
   scheduled: "Scheduled",
+  confirmed: "Confirmed",
   completed: "Completed",
   cancelled: "Cancelled",
   no_show: "No Show",
+  rescheduled: "Rescheduled",
 };
 
 const STATUS_CLASS: Record<AppointmentStatus, string> = {
   scheduled: appointmentStatusTone("scheduled"),
+  confirmed: appointmentStatusTone("confirmed"),
   completed: appointmentStatusTone("completed"),
   cancelled: appointmentStatusTone("cancelled"),
   no_show: appointmentStatusTone("no_show"),
+  rescheduled: appointmentStatusTone("rescheduled"),
 };
 
 
@@ -592,6 +598,13 @@ export default function AppointmentsPage() {
                   <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
                   Sync
                 </Button>
+
+                <Link href="/clinic/appointments/queue">
+                  <Button variant="outline" className="flex items-center gap-1.5 h-9">
+                    <ListChecks className="size-4" />
+                    Token Queue
+                  </Button>
+                </Link>
 
                 <Button className="flex items-center gap-1.5 shadow-sm h-9" onClick={() => setCreating(true)}>
                   <Plus className="size-4" />

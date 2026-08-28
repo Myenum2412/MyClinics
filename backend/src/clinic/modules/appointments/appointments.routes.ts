@@ -77,4 +77,78 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
     { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => controller.delete(request, reply)
   );
+
+  // ----- Token / Queue management -----
+
+  app.get(
+    "/api/clinics/:clinicId/appointments/queue",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.getQueue(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/:clinicId/appointments/:appointmentId/check-in",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.checkIn(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/:clinicId/appointments/call-next",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.callNext(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/:clinicId/appointments/:appointmentId/start-consultation",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.startConsultation(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/:clinicId/appointments/:appointmentId/skip",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.skip(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/:clinicId/appointments/:appointmentId/recall",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.recall(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/:clinicId/appointments/:appointmentId/complete",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.complete(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/:clinicId/appointments/:appointmentId/no-show",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.noShow(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/:clinicId/appointments/:appointmentId/cancel",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.cancelQueue(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/:clinicId/appointments/:appointmentId/reschedule",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.rescheduleQueue(request, reply)
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/appointments/queue-settings",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.getQueueSettings(request, reply)
+  );
+
+  app.put(
+    "/api/clinics/:clinicId/appointments/queue-settings",
+    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    async (request, reply) => controller.saveQueueSettings(request, reply)
+  );
 }

@@ -144,6 +144,15 @@ export default function PatientAppointmentsPage() {
         notes: null,
         createdAt: "2026-08-24T00:00:00Z",
         updatedAt: "2026-08-24T00:00:00Z",
+        queueStatus: null,
+        tokenNumber: null,
+        session: null,
+        priority: false,
+        checkedInAt: null,
+        calledAt: null,
+        completedAt: null,
+        notifiedStages: [],
+        queueHistory: [],
       };
       return { upcomingList: [demoItem], pastList: [] };
     }

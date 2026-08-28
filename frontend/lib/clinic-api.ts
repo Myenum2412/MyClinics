@@ -236,7 +236,40 @@ export interface Patient {
   updatedAt: string;
 }
 
-export type AppointmentStatus = "scheduled" | "completed" | "cancelled" | "no_show";
+export type AppointmentStatus =
+  | "scheduled"
+  | "confirmed"
+  | "completed"
+  | "cancelled"
+  | "no_show"
+  | "rescheduled";
+
+export type AppointmentQueueStatus =
+  | "scheduled"
+  | "checked_in"
+  | "waiting"
+  | "called"
+  | "in_consultation"
+  | "completed"
+  | "cancelled"
+  | "no_show"
+  | "skipped"
+  | "rescheduled";
+
+export type QueueChannel = "whatsapp" | "sms" | "push" | "in_app";
+
+export type QueueStage =
+  | "you_are_next"
+  | "please_be_ready"
+  | "token_called"
+  | "proceed_to_room";
+
+export interface QueueSettings {
+  clinicId: string;
+  enabledStages: QueueStage[];
+  channel: QueueChannel;
+  templateOverrides?: Partial<Record<QueueStage, string>>;
+}
 
 export interface Appointment {
   appointmentId: string;
@@ -249,6 +282,15 @@ export interface Appointment {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+  queueStatus: AppointmentQueueStatus | null;
+  tokenNumber: number | null;
+  session: "morning" | "afternoon" | "evening" | null;
+  priority: boolean;
+  checkedInAt: string | null;
+  calledAt: string | null;
+  completedAt: string | null;
+  notifiedStages: string[];
+  queueHistory: { status: AppointmentQueueStatus; at: string; by?: string | null }[];
 }
 
 export interface MedicineRecord {
@@ -767,6 +809,163 @@ export function deleteAppointment(
   return request(tenantPath(clinicId, `/appointments/${appointmentId}`), {
     method: "DELETE",
   });
+}
+
+// ── Appointment Token / Queue management ────────────────────────────────────
+
+export interface QueueItem {
+  appointment: Appointment;
+  patientName: string;
+  patientPhone: string | null;
+  doctorName: string;
+}
+
+export interface QueueSnapshot {
+  date: string;
+  doctorId: string | null;
+  current: QueueItem | null;
+  next: QueueItem | null;
+  waiting: QueueItem[];
+  completed: QueueItem[];
+  upcoming: QueueItem[];
+  counts: {
+    waiting: number;
+    called: number;
+    inConsultation: number;
+    completed: number;
+    upcoming: number;
+    priority: number;
+  };
+}
+
+export function getAppointmentQueue(
+  clinicId: string,
+  query: { doctorId?: string; date?: string } = {}
+): Promise<QueueSnapshot> {
+  const params = new URLSearchParams();
+  if (query.doctorId) params.set("doctorId", query.doctorId);
+  if (query.date) params.set("date", query.date);
+  return request(tenantPath(clinicId, `/appointments/queue?${params}`));
+}
+
+export function queueCheckIn(
+  clinicId: string,
+  appointmentId: string,
+  priority = false
+): Promise<Appointment> {
+  return request(tenantPath(clinicId, `/appointments/${appointmentId}/check-in`), {
+    method: "POST",
+    body: JSON.stringify({ priority }),
+  });
+}
+
+export function queueCallNext(
+  clinicId: string,
+  input: { doctorId?: string; date?: string }
+): Promise<{ appointmentId: string | null }> {
+  return request(tenantPath(clinicId, `/appointments/call-next`), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function queueStartConsultation(
+  clinicId: string,
+  appointmentId: string
+): Promise<Appointment> {
+  return request(tenantPath(clinicId, `/appointments/${appointmentId}/start-consultation`), {
+    method: "POST",
+  });
+}
+
+export function queueSkip(clinicId: string, appointmentId: string): Promise<Appointment> {
+  return request(tenantPath(clinicId, `/appointments/${appointmentId}/skip`), {
+    method: "POST",
+  });
+}
+
+export function queueRecall(clinicId: string, appointmentId: string): Promise<Appointment> {
+  return request(tenantPath(clinicId, `/appointments/${appointmentId}/recall`), {
+    method: "POST",
+  });
+}
+
+export function queueComplete(clinicId: string, appointmentId: string): Promise<Appointment> {
+  return request(tenantPath(clinicId, `/appointments/${appointmentId}/complete`), {
+    method: "POST",
+  });
+}
+
+export function queueNoShow(clinicId: string, appointmentId: string): Promise<Appointment> {
+  return request(tenantPath(clinicId, `/appointments/${appointmentId}/no-show`), {
+    method: "POST",
+  });
+}
+
+export function queueCancel(clinicId: string, appointmentId: string): Promise<Appointment> {
+  return request(tenantPath(clinicId, `/appointments/${appointmentId}/cancel`), {
+    method: "POST",
+  });
+}
+
+export function queueReschedule(
+  clinicId: string,
+  appointmentId: string,
+  input: { date: string; time: string }
+): Promise<Appointment> {
+  return request(tenantPath(clinicId, `/appointments/${appointmentId}/reschedule`), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function getQueueSettings(clinicId: string): Promise<QueueSettings> {
+  return request(tenantPath(clinicId, `/appointments/queue-settings`));
+}
+
+export function saveQueueSettings(
+  clinicId: string,
+  input: Partial<QueueSettings>
+): Promise<QueueSettings> {
+  return request(tenantPath(clinicId, `/appointments/queue-settings`), {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+export function getAppointmentNotifications(
+  clinicId: string,
+  appointmentId: string
+): Promise<{ notifications: AppointmentNotification[] }> {
+  return request(
+    tenantPath(clinicId, `/appointments/${appointmentId}/notifications`)
+  );
+}
+
+export function getAllAppointmentNotifications(
+  clinicId: string
+): Promise<{ notifications: AppointmentNotification[] }> {
+  return request(tenantPath(clinicId, `/appointments/notifications`));
+}
+
+export interface AppointmentNotification {
+  _id?: string;
+  appointmentId: string;
+  clinicId: string;
+  recipientRole: "patient" | "doctor";
+  recipientId: string;
+  type: "event" | "reminder" | "queue";
+  action: "created" | "updated" | "cancelled" | "reminder" | "queue";
+  status: "pending" | "processing" | "enqueued" | "sent" | "failed";
+  phone?: string;
+  message?: string;
+  stage?: string | null;
+  channel?: string | null;
+  scheduledTime: string;
+  attempts: number;
+  lastError: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ── Doctors ────────────────────────────────────────────────────────────────

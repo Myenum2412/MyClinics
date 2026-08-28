@@ -11,12 +11,16 @@ export interface AppointmentNotificationDoc {
   clinicId: string;
   recipientRole: "patient" | "doctor";
   recipientId: string;
-  type: "event" | "reminder";
-  action: "created" | "updated" | "cancelled" | "reminder";
+  type: "event" | "reminder" | "queue";
+  action: "created" | "updated" | "cancelled" | "reminder" | "queue";
   status: "pending" | "processing" | "enqueued" | "sent" | "failed";
   waNotificationId?: ObjectId | null;
   phone?: string;
   message?: string;
+  /** Queue workflow stage that triggered this notification (when action === "queue"). */
+  stage?: string | null;
+  /** Delivery channel for the notification. */
+  channel?: string | null;
   scheduledTime: Date;
   attempts: number;
   lastError: string | null;
