@@ -985,6 +985,10 @@ export default function MedicalRecordPage() {
       setUploading(true);
       let uploaded = 0;
       let failed = 0;
+      let waQueued = 0;
+      let waSkippedNoPhone = 0;
+      let waFailed = 0;
+      let waLarge = 0;
       for (const file of Array.from(fileList)) {
         if (file.size > MAX_FILE_BYTES) {
           toast.error(`${file.name} exceeds 25MB — skipped`);
@@ -997,17 +1001,33 @@ export default function MedicalRecordPage() {
           continue;
         }
         try {
-          await uploadMedicalRecordFile(clinicId, selectedPatient.patientId, file, target);
+          const res = await uploadMedicalRecordFile(clinicId, selectedPatient.patientId, file, target);
           uploaded += 1;
+          if (res.whatsapp) {
+            if (res.whatsapp.status === "queued") waQueued += 1;
+            else if (res.whatsapp.status === "skipped_no_phone") waSkippedNoPhone += 1;
+            else waFailed += 1;
+            if (res.whatsapp.largeFile) waLarge += 1;
+          }
         } catch (err) {
           failed += 1;
           toast.error(err instanceof Error ? err.message : `Failed to upload ${file.name}`);
         }
       }
       if (uploaded > 0) {
-        toast.success(
-          `${uploaded} file${uploaded === 1 ? "" : "s"} uploaded — a copy was sent to ${selectedPatient.fullName}'s WhatsApp${failed > 0 ? ` (${failed} failed)` : ""}`
-        );
+        const name = selectedPatient.fullName;
+        let msg = `${uploaded} file${uploaded === 1 ? "" : "s"} added to ${name}'s medical record`;
+        if (waQueued > 0) {
+          msg += `. WhatsApp copy sent to ${name}${waLarge > 0 ? " (large file shared as a portal link)" : ""}`;
+        }
+        if (waSkippedNoPhone > 0) {
+          msg += `. ${waSkippedNoPhone} file${waSkippedNoPhone === 1 ? "" : "s"} had no WhatsApp number on file — no copy sent`;
+        }
+        if (waFailed > 0) {
+          msg += `. Couldn't queue the WhatsApp copy for ${waFailed} file${waFailed === 1 ? "" : "s"}`;
+        }
+        if (failed > 0) msg += ` (${failed} failed to upload)`;
+        toast.success(msg);
         void refresh();
       }
       setUploading(false);

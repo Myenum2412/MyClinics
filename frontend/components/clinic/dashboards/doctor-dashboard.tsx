@@ -18,7 +18,7 @@ import {
   listPrescriptions,
 } from "@/lib/clinic-api";
 import { Card, CardContent } from "@/components/ui/card";
-import { KOLKATA_TZ, now, toLocalDateISO } from "@/lib/datetime";
+import { KOLKATA_TZ, now, toLocalDateISO, parseLocalDate, addDays, formatDate } from "@/lib/datetime";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
@@ -26,7 +26,13 @@ import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
 import { BillingOverviewCard } from "@/components/clinic/billing-overview-card";
 import { RecentAppointmentsCard } from "@/components/clinic/recent-appointments-card";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
-import { Folder, ArrowRight, Users, Phone, Eye, FileText } from "lucide-react";
+import { Folder, ArrowRight, Users, Phone, Eye, FileText, CalendarDays } from "lucide-react";
+import CalendarBlock, {
+  type Week,
+  type AgendaDay,
+  type CalEvent,
+  type EventStatus,
+} from "@/components/blocks/calendar-2";
 
 import { type ClinicSession } from "@/lib/clinic-api";
 
@@ -34,6 +40,82 @@ import { type ClinicSession } from "@/lib/clinic-api";
 
 function todayISO(): string {
   return toLocalDateISO(now());
+}
+
+// ── Appointment → agenda week ─────────────────────────────────────────────────
+
+const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+
+const APPOINTMENT_STATUS_TO_EVENT: Record<string, EventStatus> = {
+  confirmed: "confirmed",
+  completed: "confirmed",
+  scheduled: "tentative",
+  rescheduled: "tentative",
+  cancelled: "cancelled",
+  no_show: "cancelled",
+};
+
+/**
+ * Groups appointments into a single Mon–Sun week containing today, ready to feed
+ * the CalendarBlock agenda. Appointments outside the current week are ignored.
+ */
+function buildAppointmentWeek(
+  appointments: Appointment[],
+  patientMap: Map<string, string>,
+  doctorMap: Map<string, string>,
+  isDoctorRole: boolean
+): Week {
+  const today = todayISO();
+  const monday = (() => {
+    const d = parseLocalDate(today);
+    const dow = d.getUTCDay(); // 0 Sun … 6 Sat
+    const diff = dow === 0 ? -6 : 1 - dow;
+    return addDays(d, diff);
+  })();
+
+  const days: AgendaDay[] = DAY_LABELS.map((label, i) => {
+    const dayDate = addDays(monday, i);
+    const iso = toLocalDateISO(dayDate);
+    return {
+      label,
+      date: Number(iso.slice(8, 10)),
+      isToday: iso === today,
+      events: [],
+    };
+  });
+  const dayByISO = new Map<string, AgendaDay>();
+  days.forEach((d, i) => dayByISO.set(toLocalDateISO(addDays(monday, i)), d));
+
+  const sorted = [...appointments].sort((a, b) =>
+    a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date)
+  );
+
+  for (const appt of sorted) {
+    const day = dayByISO.get(appt.date);
+    if (!day) continue;
+    const patientName = patientMap.get(appt.patientId) ?? "Patient";
+    const doctorName = doctorMap.get(appt.doctorId);
+    const title = isDoctorRole
+      ? patientName
+      : doctorName
+        ? `${patientName} · Dr. ${doctorName}`
+        : patientName;
+    const event: CalEvent = {
+      time: appt.time,
+      duration: appt.session ? `${appt.session[0].toUpperCase()}${appt.session.slice(1)}` : "Scheduled",
+      title,
+      location: appt.reason ?? undefined,
+      status: APPOINTMENT_STATUS_TO_EVENT[appt.status] ?? "tentative",
+    };
+    day.events.push(event);
+  }
+
+  const sundayISO = toLocalDateISO(addDays(monday, 6));
+  const range = `${formatDate(parseLocalDate(toLocalDateISO(monday)))} – ${formatDate(
+    parseLocalDate(sundayISO)
+  )}`;
+
+  return { range, days };
 }
 
 interface Greeting {
@@ -357,10 +439,28 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
         },
       ];
 
+  const appointmentWeek = useMemo(() => {
+    const pMap = new Map(patients.map((p) => [p.patientId, p.fullName]));
+    const dMap = new Map(doctors.map((d) => [d.doctorId, d.name]));
+    return buildAppointmentWeek(appointments, pMap, dMap, isDoctorRole);
+  }, [appointments, patients, doctors, isDoctorRole]);
+
   return (
     <div className="w-full flex flex-col gap-6">
       {/* Greeting banner */}
       <GreetingBanner doctorName={session.name ?? "Doctor"} />
+
+      {/* Weekly appointments agenda */}
+      <div>
+        <h2 className="mb-3 text-base font-semibold text-foreground flex items-center gap-2">
+          <CalendarDays className="size-4 text-primary" /> This Week&apos;s Appointments
+        </h2>
+        <CalendarBlock
+          embedded
+          weeks={[appointmentWeek]}
+          todayWeek={0}
+        />
+      </div>
 
       {/* Section cards — stats-07 design */}
       <div>

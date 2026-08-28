@@ -5,6 +5,8 @@ import { closeCache } from "@/lib/cache";
 import { ensureIndexes } from "@/lib/indexes";
 import { ensureClinicIndexes } from "@/clinic/indexes";
 import { ensureSearchIndex } from "@/services/search/client";
+import { ensureNeoIndexes } from "@/neo/core/neo-indexes";
+import { startNeoEngine } from "@/neo/neo-engine";
 import { ensurePlatformAdmin } from "@/clinic/seed";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { logger } from "@/lib/logger";
@@ -19,6 +21,7 @@ async function main() {
     await ensureIndexes(db);
     await ensureClinicIndexes(db);
     await ensureSearchIndex();
+    await ensureNeoIndexes(db);
     await ensurePlatformAdmin(db);
     await ensureDefaultOrganization(db);
     logger.info("Database initialization complete");
@@ -28,6 +31,14 @@ async function main() {
   }
 
   const app = buildServer();
+
+  // Start the RGB Neo background engine (priority queue + incident processing).
+  try {
+    await startNeoEngine(db);
+    logger.info("RGB Neo engine started");
+  } catch (error) {
+    logger.error("Failed to start RGB Neo engine", { error });
+  }
 
   let isShuttingDown = false;
   const shutdown = async (signal: string) => {

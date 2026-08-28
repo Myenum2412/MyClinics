@@ -3,6 +3,7 @@ import {
   now as nowFn,
   startOfDayKolkata,
 } from "@/clinic/core/datetime";
+import { logger } from "@/lib/logger";
 import type { Db, WithId } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
@@ -22,6 +23,7 @@ import {
   type MedicalRecordFileDoc,
   type MedicalRecordFileVersion,
   type MedicalRecordFolderDoc,
+  type WhatsAppCopyResult,
   medicalRecordFileToPublic,
   medicalRecordFolderToPublic,
   DEFAULT_SUBFOLDERS,
@@ -198,7 +200,7 @@ export class MedicalRecordService {
   async uploadFile(
     ctx: ClinicContext,
     input: UploadMedicalRecordFileInput
-  ): Promise<MedicalRecordFileDoc> {
+  ): Promise<{ file: MedicalRecordFileDoc; whatsapp: WhatsAppCopyResult }> {
     const patient = await this.assertPatientAccess(ctx, input.patientId);
     const folder = await this.resolveFolderKey(ctx, input.patientId, input.folder);
 
@@ -243,32 +245,65 @@ export class MedicalRecordService {
       },
     });
 
-    // Send a copy of the file to the patient's WhatsApp number.
-    if (doc.patientPhone) {
-      const MAX_WHATSAPP_MEDIA_SIZE = 1.5 * 1024 * 1024; // 1.5 MB limit for base64 WhatsApp Web sending
-      const isLargeFile = input.data.length > MAX_WHATSAPP_MEDIA_SIZE;
-      const message = `Your medical document "${input.fileName}" has been added to your records.${
-        isLargeFile ? "\n\n(Since the file is large, please log in to the Patient Portal to view and download it.)" : ""
-      }`;
-      const media = isLargeFile
-        ? undefined
-        : {
-            filename: input.fileName,
-            mimetype: input.mimeType ?? "application/octet-stream",
-            data: input.data.toString("base64"),
-          };
+    const whatsapp = await this.enqueuePatientCopy(ctx, doc, input.fileName, false, input.data, input.mimeType);
 
-      await enqueueClinicNotification(
+    return { file: doc, whatsapp };
+  }
+
+  /**
+   * Sends a copy of an uploaded medical document to the patient's WhatsApp
+   * number (through the clinic's own connection). Large files (>1.5MB) are
+   * shared as a portal link in text rather than inline media. Returns an honest
+   * status so the caller can surface delivery state to the UI.
+   */
+  private async enqueuePatientCopy(
+    ctx: ClinicContext,
+    doc: MedicalRecordFileDoc,
+    fileName: string,
+    isUpdate: boolean,
+    data: Buffer,
+    mimeType: string | null
+  ): Promise<WhatsAppCopyResult> {
+    const MAX_WHATSAPP_MEDIA_SIZE = 1.5 * 1024 * 1024; // 1.5 MB limit for base64 WhatsApp Web sending
+    const largeFile = data.length > MAX_WHATSAPP_MEDIA_SIZE;
+
+    if (!doc.patientPhone) {
+      return { status: "skipped_no_phone", largeFile };
+    }
+
+    const message = isUpdate
+      ? `Updated version of "${fileName}" (v${doc.version + 1}) has been added to your records.${
+          largeFile ? "\n\n(Since the file is large, please log in to the Patient Portal to view and download it.)" : ""
+        }`
+      : `Your medical document "${fileName}" has been added to your records.${
+          largeFile ? "\n\n(Since the file is large, please log in to the Patient Portal to view and download it.)" : ""
+        }`;
+    const media = largeFile
+      ? undefined
+      : {
+          filename: fileName,
+          mimetype: mimeType ?? "application/octet-stream",
+          data: data.toString("base64"),
+        };
+
+    try {
+      const res = await enqueueClinicNotification(
         this.db,
         doc.patientPhone,
         message,
         "medical_record",
         media,
         requireClinicOf(ctx)
-      ).catch(() => void 0);
+      );
+      return { status: res.queued ? "queued" : "failed", largeFile };
+    } catch (err) {
+      logger.error("failed to enqueue medical-record WhatsApp copy", {
+        clinicId: requireClinicOf(ctx),
+        fileId: doc.fileId,
+        error: err instanceof Error ? err.message : String(err),
+      });
+      return { status: "failed", largeFile };
     }
-
-    return doc;
   }
 
   /** Upload a new version of an existing file (replaces content, keeps fileId). */
@@ -278,7 +313,7 @@ export class MedicalRecordService {
     fileName: string,
     mimeType: string | null,
     data: Buffer
-  ): Promise<MedicalRecordFileDoc> {
+  ): Promise<{ file: MedicalRecordFileDoc; whatsapp: WhatsAppCopyResult }> {
     this.assertCanManage(ctx);
     if (decodeLegacyFileId(fileId)) {
       throw new BadRequestError("Legacy files cannot be versioned");
@@ -316,32 +351,10 @@ export class MedicalRecordService {
       metadata: { fileName, version: doc.version + 1, size: data.length },
     });
 
-    const patientPhone = doc.patientPhone ?? "";
-    if (patientPhone) {
-      const MAX_WHATSAPP_MEDIA_SIZE = 1.5 * 1024 * 1024; // 1.5 MB limit for base64 WhatsApp Web sending
-      const isLargeFile = data.length > MAX_WHATSAPP_MEDIA_SIZE;
-      const message = `Updated version of "${fileName}" (v${doc.version + 1}) has been added to your records.${
-        isLargeFile ? "\n\n(Since the file is large, please log in to the Patient Portal to view and download it.)" : ""
-      }`;
-      const media = isLargeFile
-        ? undefined
-        : {
-            filename: fileName,
-            mimetype: mimeType ?? "application/octet-stream",
-            data: data.toString("base64"),
-          };
+    const refreshed = await this.getFile(ctx, fileId);
+    const whatsapp = await this.enqueuePatientCopy(ctx, refreshed, fileName, true, data, mimeType);
 
-      await enqueueClinicNotification(
-        this.db,
-        patientPhone,
-        message,
-        "medical_record",
-        media,
-        requireClinicOf(ctx)
-      ).catch(() => void 0);
-    }
-
-    return this.getFile(ctx, fileId);
+    return { file: refreshed, whatsapp };
   }
 
   /** Rename a file. */

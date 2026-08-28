@@ -57,14 +57,14 @@ export class MedicalRecordController {
     if (!ctx) throw new UnauthorizedError();
     const { patientId, fileName, folder, mimeType, data } = await this.parseUpload(request);
     const db = await getMedicalRecordsDb();
-    const file = await this.service(db).uploadFile(ctx, {
+    const { file, whatsapp } = await this.service(db).uploadFile(ctx, {
       patientId,
       fileName,
       mimeType,
       data,
       folder,
     });
-    return reply.code(201).send(medicalRecordFileToPublic(file));
+    return reply.code(201).send(medicalRecordFileToPublic(file, whatsapp));
   }
 
   async uploadVersion(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
@@ -74,8 +74,8 @@ export class MedicalRecordController {
     if (!fileId) throw new BadRequestError("fileId is required");
     const { fileName, mimeType, data } = await this.parseUpload(request);
     const db = await getMedicalRecordsDb();
-    const file = await this.service(db).uploadVersion(ctx, fileId, fileName, mimeType, data);
-    return reply.send(medicalRecordFileToPublic(file));
+    const { file, whatsapp } = await this.service(db).uploadVersion(ctx, fileId, fileName, mimeType, data);
+    return reply.send(medicalRecordFileToPublic(file, whatsapp));
   }
 
   async list(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
@@ -91,7 +91,7 @@ export class MedicalRecordController {
       from: params.from,
       to: params.to,
     });
-    return reply.send({ files: files.map(medicalRecordFileToPublic) });
+    return reply.send({ files: files.map((f) => medicalRecordFileToPublic(f)) });
   }
 
   async createFolder(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {

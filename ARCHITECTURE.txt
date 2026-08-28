@@ -1,0 +1,428 @@
+================================================================================
+MYCLINICS — ARCHITECTURE EXPLANATION
+================================================================================
+A clinic management platform with a WhatsApp AI assistant that books,
+reschedules and cancels appointments, answers clinic questions, sends reminders
+and turn alerts. This document explains the full architecture in plain text.
+
+--------------------------------------------------------------------------------
+1. HIGH-LEVEL OVERVIEW
+--------------------------------------------------------------------------------
+MyClinics is an npm-workspaces monorepo with TWO deployable packages that share
+ONE MongoDB database:
+
+    myclinics/
+    ├── frontend/   -> Next.js 16 (App Router) + React 19   : the UI only
+    └── backend/    -> Fastify 5 standalone API server       : ALL /api/* routes
+                                                            + the WhatsApp worker
+
+There are THREE long-running processes in a normal deployment:
+
+    (A) API SERVER      (backend, port 3100)  -> every /api/* endpoint
+    (B) WEB SERVER      (frontend, port 3456) -> serves dashboard + patient portal
+    (C) WHATSAPP WORKER (backend, separate)   -> links WhatsApp & runs the AI bot
+
+The frontend is "UI only": it renders pages and proxies all data calls to the
+backend. The backend is the single source of truth for data, auth verification,
+AI, WhatsApp, reminders, and the multi-tenant clinic SaaS.
+
+--------------------------------------------------------------------------------
+2. TECH STACK
+--------------------------------------------------------------------------------
+Frontend:
+  - Next.js 16 (App Router), React 19
+  - Tailwind CSS v4 + shadcn-style UI components
+  - next-auth v5 (beta) with MongoDB adapter (runs in-process in the web server)
+
+Backend:
+  - Fastify 5 (standalone HTTP API server)
+  - MongoDB via the native driver (MongoDB Atlas)
+  - Zod for request/response validation (DTOs)
+  - jose for JWT/JWE verification
+  - whatsapp-web.js for the WhatsApp client (linked device, headless Chrome)
+  - NVIDIA NIM for LLM chat + embeddings
+  - Cloudflare R2 (S3-compatible) for report file storage
+  - vitest for tests
+
+Dev/tooling:
+  - npm workspaces + concurrently (run api + web together)
+  - tsx for running TypeScript directly
+  - ESLint (frontend), tsc --noEmit (backend typecheck)
+
+--------------------------------------------------------------------------------
+3. THE THREE PROCESSES AND HOW THEY TALK
+--------------------------------------------------------------------------------
+3.1 API SERVER (backend, port 3100)
+  - Built in src/app.ts via buildServer().
+  - Registers Fastify plugins: @fastify/compress (gzip), @fastify/etag,
+    @fastify/cors, @fastify/multipart (file uploads up to 50MB).
+  - Registers the auth plugin (plugins/auth.ts) which re-verifies the next-auth
+    session cookie itself by decrypting the JWE with jose. This means requests
+    proxied from the frontend are authenticated WITHOUT a second source of truth.
+  - Route groups registered:
+        Platform services : knowledge, soul, whatsapp-session, cron-reminders,
+                             pincode, public-appointments, ai, organization, health
+        Clinic SaaS API   : /api/clinics  (the multi-tenant domain, guarded by the
+                             clinic-scope middleware)
+  - Custom error handler maps AppError (domain errors: 401/403/404/409/400) and
+    keeps Fastify's "Invalid JSON body" 400 contract.
+  - On startup (src/index.ts main()) it:
+        * connects to MongoDB (getDb)
+        * ensures platform indexes (lib/indexes)
+        * ensures clinic/tenant indexes (clinic/indexes)
+        * ensures a platform admin user (clinic/seed)
+        * ensures a default organization (customer-context.service)
+        * syncs cron jobs (cronjob.service)
+    then calls buildServer() and listens on BACKEND_HOST/BACKEND_PORT (default
+    0.0.0.0:3100). It also handles graceful shutdown (close pools, exit).
+
+3.2 WEB SERVER (frontend, port 3456)
+  - Serves the dashboard (for clinic staff) and the patient portal.
+  - next-auth runs IN-PROCESS. Server Components may read MongoDB DIRECTLY for
+    page data (e.g. initial loads) using frontend/lib/db.
+  - Every /api/* request (EXCEPT /api/auth) is proxied to the API server via
+    Next.js rewrites (BACKEND_URL, default http://localhost:3100). /api/auth is
+    handled locally by next-auth.
+  - So the browser talks only to the web server; the web server forwards data
+    calls to the API server, carrying the same session cookie.
+
+3.3 WHATSAPP WORKER (backend, separate process)
+  - Started by `npm run whatsapp` -> src/services/whatsapp/whatsapp.worker.ts.
+  - Connects WhatsApp as a linked device. Prints/saves a QR code
+    (WHATSAPP_SESSION_PATH/qr.png) to scan with the phone. Writes status.json.
+  - Processes incoming messages and NEVER calls dashboard modules directly. It
+    talks to the AI ONLY through the internal /api/ai/* endpoints, authenticated
+    with the shared AI_INTERNAL_TOKEN header. This enforces a security boundary:
+    the bot cannot touch clinic data except through the intended AI endpoints.
+
+Request flow summary:
+    Browser --> Web server (3456) --> (proxy /api/*) --> API server (3100)
+    Phone   --> WhatsApp --> Worker --> (AI_INTERNAL_TOKEN) --> /api/ai/* (3100)
+    Cron    --> POST /api/cron/reminders (x-cron-secret) --> API server (3100)
+
+--------------------------------------------------------------------------------
+4. BACKEND INTERNAL ARCHITECTURE (CLEAN / LAYERED PER DOMAIN)
+--------------------------------------------------------------------------------
+The clinic domain lives under backend/src/clinic and follows a consistent
+layered pattern. Each domain module (e.g. appointments, patients, billing) is a
+folder containing:
+
+    <module>.routes.ts      -> Fastify route registration (HTTP wiring)
+    <module>.controller.ts  -> request parsing, calls service, shapes response
+    <module>.service.ts     -> business logic
+    <module>.repository.ts  -> data access (MongoDB), tenant-scoped
+    <module>.schema.ts      -> DB document shape / types
+    <module>.dto.ts         -> Zod request/response validation (DTOs)
+
+This separation makes each domain independently testable and keeps HTTP concerns
+(controller), rules (service), and data (repository) apart.
+
+Core / shared clinic infrastructure (src/clinic/core):
+    errors.ts        -> AppError hierarchy (401/403/404/409/400)
+    ids.ts           -> id generators (clinicId, userId, patientId, ...)
+    roles.ts         -> role definitions (clinic_admin > staff > patient)
+    scope.ts         -> tenant-scope middleware (JWT -> request.tenant)
+    repository.ts    -> BASE repository that injects clinicId into every query
+    permissions.ts   -> role/permission helpers
+    pagination.ts    -> standard pagination envelope
+    rate-limiter.ts  -> rate limiting
+    audit.ts         -> audit log writer (never throws)
+    collections.ts   -> collection name constants
+    context.ts       -> request context decoration
+    datetime.ts      -> datetime helpers
+    upload-guard.ts  -> upload validation
+
+This core is what the README calls the multi-tenant foundation. Note the project
+uses BOTH names: the README's "mt/" (multi-tenant) and the actual folder
+"clinic/" — they describe the same tenant model; the real code lives under
+src/clinic and exposes it under /api/clinics.
+
+--------------------------------------------------------------------------------
+5. MULTI-TENANCY AND TENANT ISOLATION
+--------------------------------------------------------------------------------
+The platform is multi-tenant: EVERY clinic is a tenant and strict isolation is
+enforced at every layer.
+
+Roles (hierarchy):
+    clinic_admin  -> full control of the clinic
+    staff         -> clinical data (patients, appointments, prescriptions...)
+    patient       -> own data only
+
+Tenant data model:
+    Every collection carries a clinicId. Examples:
+        clinics, users, patients, appointments, medicine, prescriptions,
+        medical-record, billing, audit-logs, notifications, doctors, reports.
+
+Isolation enforcement:
+    - Tenant-scope middleware (clinic/core/scope.ts): verifies the JWT,
+      re-validates the user + clinic against the DB (cached ~30s), and injects
+      request.tenant into every handler. No handler runs without it.
+    - Tenant-scoped repository base (clinic/core/repository.ts): merges clinicId
+      into every query automatically. Callers cannot supply their own clinicId
+      (it throws), and the raw collection is never exposed. This prevents
+      cross-tenant leakage by construction.
+    - Patient ownership: a patient's patientId claim must match the resource;
+      mismatches return 404 so other patients' existence is never revealed.
+    - Audit logs (clinic/modules/audit-logs): record create/update/delete/access
+      /login events with actor, clinic, entity, IP and user-agent. Admin can
+      query them; patients can see their own.
+
+Auth tokens:
+    - The clinic API uses HS256 JWTs embedding clinicId + role + patientId.
+    - Sent via Authorization: Bearer <token> or the mt_token cookie.
+    - Lifetime controlled by MT_JWT_TTL_HOURS (default 24h). Falls back to
+      AUTH_SECRET if MT_JWT_SECRET is unset.
+    - Signup at /signup/clinic (or POST /api/clinics/auth/signup) creates the
+      clinic, generates a Clinic ID (clc_...), stamps it on clinic + admin user,
+      and returns the JWT.
+
+--------------------------------------------------------------------------------
+6. AUTHENTICATION & SESSION MODEL
+--------------------------------------------------------------------------------
+Two auth systems coexist:
+
+  (1) Dashboard / staff / patient portal auth  -> next-auth v5 (beta) with the
+      MongoDB adapter. Runs in the web server. The session cookie is a JWE that
+      the BACKEND re-verifies itself (plugins/auth.ts, jose) so the API server
+      trusts proxied requests without re-querying next-auth. Optional Google
+      OAuth (AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET) is supported.
+
+  (2) Clinic multi-tenant API auth -> the HS256 JWT described in section 5,
+      used by the /api/clinics/* surface and the patient portal data calls.
+
+AUTH_SECRET is the master secret. AI_INTERNAL_TOKEN is a separate 64-char shared
+secret used ONLY between the web server/worker and the internal /api/ai/* routes.
+CRON_SECRET guards the reminder cron webhook (x-cron-secret header).
+
+--------------------------------------------------------------------------------
+7. AI AGENT ARCHITECTURE (WhatsApp assistant)
+--------------------------------------------------------------------------------
+Location: backend/src/services/ai. Files:
+
+    nvidia.service.ts   -> Low-level client for NVIDIA NIM chat + embeddings,
+                           with model fallbacks (NVIDIA_MODEL + NVIDIA_MODEL_FALLBACKS)
+                           and NVIDIA_TIMEOUT_MS.
+    agent.service.ts    -> The conversational agent orchestration.
+    intent.service.ts   -> Detects user intent (book / reschedule / cancel / ask).
+    appointment.service.ts -> Turns extracted slots into real appointments via
+                           the backend (doctor -> date -> time, one question at a
+                           time, confirm once).
+    knowledge.service.ts-> Retrieves clinic knowledge-base docs (embeddings +
+                           vector/similarity search).
+    soul.service.ts     -> Loads the clinic "soul" (personality + knowledge
+                           boundary) from souls/default.md (editable in dashboard
+                           Settings).
+    soul-only.prompt.ts -> Prompt used when answering from soul only.
+    grounding.ts        -> ENFORCES the knowledge boundary: every reply must come
+                           from soul.md + retrieved KB docs. If the answer isn't
+                           there, returns the configured fallback instead of
+                           guessing. Also validates quoted prices against the
+                           authorized context.
+    memory.service.ts   -> Per-customer conversation memory: extracts facts,
+                           stores them, and auto-summarizes long conversations.
+    dates.ts / schemas.ts / api-client.ts / ai-auth.ts -> date helpers, IO
+                           schemas, internal API client, AI auth token handling.
+
+Knowledge boundary (the safety core):
+    The bot is grounded STRICTLY in the clinic's soul.md and the retrieved
+    knowledge base. It cannot invent facts or prices. Customers are identified by
+    their WhatsApp profile name, so the bot never asks for a name.
+
+Booking flow:
+    bot collects doctor -> date -> time (one question at a time) -> confirms once
+    -> creates appointment through the backend via appointment.service.ts.
+
+--------------------------------------------------------------------------------
+8. WHATSAPP WORKER & MESSAGING
+--------------------------------------------------------------------------------
+Location: backend/src/services/whatsapp and backend/src/clinic/modules/whatsapp.
+
+    whatsapp.worker.ts  -> entry point: links device, prints QR, listens.
+    message handler     -> routes incoming text to the AI agent (/api/ai/*).
+    notification queue   -> outgoing messages persisted in wa_notifications with
+                           retry (max 3 attempts), sent when worker is connected.
+    whatsapp-session routes -> expose session status / QR to the dashboard.
+
+The bot only ever reaches the AI through internal /api/ai/* endpoints protected
+by AI_INTERNAL_TOKEN, so it can never call dashboard modules directly.
+
+--------------------------------------------------------------------------------
+9. REMINDERS, QUEUE & TURN ALERTS
+--------------------------------------------------------------------------------
+Appointment reminders (services/reminder/reminder.service.ts):
+    - Worker scans upcoming appointments (default ~60 min window,
+      REMINDER_MINUTES_BEFORE) and queues WhatsApp reminders.
+    - A cron job (e.g. cron-job.org) POSTs every minute to
+      /api/cron/reminders with header x-cron-secret: <CRON_SECRET> to trigger an
+      immediate scan. Returns { ok, checked, queued, skipped }.
+    - Notifications persisted in wa_notifications with retry (max 3).
+
+Queue & turn alerts (services/queue.service.ts / clinic modules):
+    - Each day's pending/confirmed appointments get a counter # in time order.
+    - Marking a patient "completed" renumbers the queue and sends a turn alert to
+      the next patient via WhatsApp.
+
+--------------------------------------------------------------------------------
+10. DATA LAYER & PERFORMANCE
+--------------------------------------------------------------------------------
+Database: MongoDB (Atlas) via native driver.
+
+Performance & data handling:
+    - Indexes created on startup: lib/indexes.ts (platform) and
+      clinic/indexes.ts (tenant-scoped, unique on clinicId pairs).
+    - Connection pooling with tuned timeouts: lib/db-pools.ts / lib/db.ts.
+    - Server-side pagination + search: ?page=&pageSize=&q= returns
+      { rows, total, page, pageSize, pageCount }. Without page param, legacy flat
+      array (capped at 200). Dashboard tables use useServerPagination hook.
+    - gzip compression (@fastify/compress) + ETags (@fastify/etag).
+    - TTL caching for frequently-read data (doctors, medicines, organization,
+      soul, knowledge, AI context), invalidated on writes.
+    - Reminder/notification/queue services use bulk operations + windowed queries
+      instead of per-document round trips.
+
+File storage:
+    - Report file uploads stored in Cloudflare R2 (S3-compatible via
+      @aws-sdk/client-s3). Downloads served via signed URLs.
+    - Uploads validated by clinic/core/upload-guard.ts; max 50MB.
+
+Validation & errors:
+    - Zod DTOs (dto.ts per module) validate every request.
+    - AppError hierarchy gives consistent 401/403/404/409/400 responses.
+
+--------------------------------------------------------------------------------
+11. FRONTEND ARCHITECTURE (Next.js App Router)
+--------------------------------------------------------------------------------
+Location: frontend/. Pages live under frontend/app by route segment.
+
+Route groups (URLs):
+    /                       -> landing / home
+    /login, /signup/clinic  -> auth
+    /clinic/*               -> staff dashboard:
+        /clinic               -> dashboard (live queue + per-day counters)
+        /clinic/appointments, /clinic/patients, /clinic/doctors
+        /clinic/billing, /clinic/reports, /clinic/prescriptions
+        /clinic/medical-record, /clinic/records
+        /clinic/settings       -> edit soul + knowledge base
+        /clinic/audit-logs     -> admin audit view
+        /clinic/notifications  -> WhatsApp/turn alerts view
+        /clinic/account, /clinic/profile
+    /clinic/patient/*       -> PATIENT PORTAL (own data only):
+        appointments, billing, prescriptions, medical-records, medicine-records,
+        book-appointment, profile
+    /admin/*, /orgmenu/*     -> platform / organization admin
+    /blog/*, /privacy, /terms, /offline, /pincode/[pincode] -> marketing/content
+    /llms.txt, /robots.txt, /sitemap.xml, /manifest.webmanifest -> SEO/meta
+
+Key frontend folders:
+    app/        -> pages + app/api/auth/[...nextauth] (next-auth)
+    components/ -> tables, forms, dialogs, shadcn-style ui/, clinic/, admin/, org/
+    hooks/      -> use-server-pagination (server-side table paging)
+    lib/        -> auth, db (direct Mongo for server components), billing, stats,
+                   utils, server-api (proxy helper to backend)
+    content/blog -> ~80 SEO blog articles (MDX/markdown) for organic marketing
+
+Data fetching on the frontend:
+    - Server Components may read MongoDB directly (lib/db) for page data.
+    - Client data mutations/calls go through lib/server-api -> Next.js rewrite ->
+      backend /api/*.
+    - next-auth protects routes; session cookie is forwarded to the backend.
+
+Styling:
+    - Tailwind CSS v4 + shadcn-style components in components/ui.
+
+--------------------------------------------------------------------------------
+12. SECURITY MODEL (SUMMARY)
+--------------------------------------------------------------------------------
+    - Single source of truth for auth: backend re-verifies the next-auth JWE.
+    - Tenant isolation by construction: clinicId injected into every query; raw
+      collections never exposed; patients can only see own data (404 otherwise).
+    - Separate secrets: AUTH_SECRET (sessions), AI_INTERNAL_TOKEN (internal AI),
+      CRON_SECRET (cron webhook), MT_JWT_SECRET (clinic JWTs).
+    - AI knowledge boundary: bot cannot invent facts/prices (grounding.ts).
+    - Bot cannot touch dashboard modules: only /api/ai/* with AI_INTERNAL_TOKEN.
+    - Audit logging of create/update/delete/access/login with actor + IP + UA.
+    - Upload limits (50MB) + upload-guard validation; signed R2 URLs for downloads.
+    - Rate limiting (clinic/core/rate-limiter.ts) and 30s request timeout.
+
+--------------------------------------------------------------------------------
+13. DEVELOPMENT & RUN COMMANDS
+--------------------------------------------------------------------------------
+    npm install              -> install both workspaces
+    npm run dev              -> API server (3100) + web server (3456) together
+    npm run whatsapp         -> WhatsApp worker (separate terminal, prints QR)
+    npm run build            -> production build (frontend)
+    npm run start            -> serve production build + API server
+    npm run lint             -> ESLint (frontend)
+    npm test                 -> vitest suite (backend)
+    npm run typecheck        -> tsc --noEmit (backend)
+
+Environment: copy variables into frontend/.env.local (or repo-root .env.local).
+Key vars: MONGODB_URI, AUTH_SECRET, AI_INTERNAL_TOKEN, MT_JWT_SECRET,
+BACKEND_URL, NVIDIA_API_KEY/MODEL, WHATSAPP_SESSION_PATH, CRON_SECRET,
+R2_* (account/id/key/secret/bucket), optional AUTH_GOOGLE_*.
+
+--------------------------------------------------------------------------------
+14. END-TO-END EXAMPLE FLOWS
+--------------------------------------------------------------------------------
+Patient books via WhatsApp:
+    Phone msg -> Worker -> /api/ai/* (AI_INTERNAL_TOKEN) -> agent.service
+    detects intent -> collects doctor/date/time -> appointment.service creates
+    appointment in MongoDB (tenant-scoped) -> confirmation sent back via Worker.
+
+Staff views dashboard:
+    Browser -> Web server (3456) -> next-auth session -> proxy /api/clinics/*
+    (cookie) -> backend scope middleware injects clinicId -> repository returns
+    only this clinic's data -> paginated JSON -> dashboard table.
+
+Reminder fired:
+    Cron -> POST /api/cron/reminders (x-cron-secret) -> reminder.service scans
+    ~60-min window -> queues wa_notifications -> Worker sends WhatsApp.
+
+Turn alert:
+    Staff marks patient completed -> queue.service renumbers day queue ->
+    sends turn alert to next patient via Worker.
+
+--------------------------------------------------------------------------------
+15. PROJECT STRUCTURE (CONDENSED)
+--------------------------------------------------------------------------------
+myclinics/
+├── package.json                # npm workspaces (frontend, backend) + scripts
+├── README.md / AGENTS.md / CLAUDE.md
+├── frontend/                   # Next.js 16 UI
+│   ├── app/                    # pages + api/auth
+│   ├── components/             # ui/, clinic/, admin/, org/
+│   ├── hooks/                  # use-server-pagination
+│   ├── lib/                    # auth, db, billing, stats, server-api
+│   └── content/blog/           # ~80 SEO articles
+└── backend/                    # Fastify API + WhatsApp worker
+    └── src/
+        ├── app.ts              # buildServer(): plugins + route registration
+        ├── index.ts            # bootstrap: db, indexes, seed, listen
+        ├── plugins/auth.ts     # next-auth JWE verification + guards
+        ├── lib/                # db-pools, indexes, logger
+        ├── clinic/             # MULTI-TENANT SAAS DOMAIN
+        │   ├── core/           # errors, ids, roles, scope, repository,
+        │   │                  # permissions, pagination, rate-limiter, audit
+        │   ├── indexes.ts      # tenant-scoped indexes
+        │   └── modules/        # auth, clinics, users, patients, appointments,
+        │                      # doctors, billing, medicine, prescriptions,
+        │                      # medical-record, reports, notifications,
+        │                      # audit-logs, avatars, portal, settings, whatsapp
+        │       (each: routes/controller/service/repository/schema/dto)
+        ├── services/
+        │   ├── ai/             # nvidia, agent, intent, appointment, knowledge,
+        │   │                  # soul, grounding, memory
+        │   ├── whatsapp/       # worker, message handler, notification queue
+        │   ├── reminder/       # reminder scanning
+        │   ├── cronjob/        # cron sync
+        │   └── customer/       # customer context / default organization
+        ├── routes/             # platform routes: knowledge, soul, ai,
+        │                      # whatsapp-session, cron-reminders, pincode,
+        │                      # public-appointments, organization, health
+        ├── souls/default.md    # AI personality + knowledge boundary
+        ├── knowledge/          # seeded clinic knowledge base
+        └── tests/              # vitest suites (fake in-memory MongoDB)
+
+================================================================================
+END OF ARCHITECTURE EXPLANATION
+================================================================================

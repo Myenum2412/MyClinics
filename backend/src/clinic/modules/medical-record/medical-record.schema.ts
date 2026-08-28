@@ -49,7 +49,19 @@ export interface MedicalRecordFolderDoc extends ClinicDocument {
   createdAt: Date;
 }
 
-export function medicalRecordFileToPublic(doc: MedicalRecordFileDoc) {
+/** Outcome of the automatic WhatsApp copy sent to the patient on upload. */
+export type WhatsAppCopyStatus = "queued" | "skipped_no_phone" | "failed";
+
+export interface WhatsAppCopyResult {
+  status: WhatsAppCopyStatus;
+  /** true when the file exceeded the 1.5MB inline-media limit and only a portal link was shared. */
+  largeFile: boolean;
+}
+
+export function medicalRecordFileToPublic(
+  doc: MedicalRecordFileDoc,
+  whatsapp?: WhatsAppCopyResult
+) {
   return {
     fileId: doc.fileId,
     patientId: doc.patientId,
@@ -73,6 +85,7 @@ export function medicalRecordFileToPublic(doc: MedicalRecordFileDoc) {
     uploadedBy: doc.uploadedBy,
     uploadedByName: doc.uploadedByName,
     createdAt: doc.createdAt,
+    whatsapp,
   };
 }
 
