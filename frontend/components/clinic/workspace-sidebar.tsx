@@ -36,6 +36,7 @@ import {
   ClipboardDocumentCheckIcon as RecordsIcon,
   FolderOpenIcon,
   ChartBarIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 
 interface NavItem {
@@ -161,6 +162,7 @@ export function WorkspaceSidebar({
 }) {
   const pathname = usePathname()
   const items = NAV_ITEMS.filter((item) => item.roles.includes(role))
+  const [openMap, setOpenMap] = React.useState<Record<string, boolean>>({})
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -206,37 +208,53 @@ export function WorkspaceSidebar({
                     : pathname.startsWith(`${c.url}/`) || pathname === c.url
                 ) ?? false
               if (item.children) {
+                const isOpen = openMap[item.url] ?? childActive
                 return (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton
                       size="lg"
                       tooltip={item.title}
-                      render={<a href={url} />}
+                      render={
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setOpenMap((m) => ({ ...m, [item.url]: !isOpen }))
+                          }
+                        />
+                      }
                       data-active={active || childActive}
+                      aria-expanded={isOpen}
                       className="h-11 rounded-lg text-[13.5px] font-medium group-data-[collapsible=icon]:h-12! data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:[&>svg]:text-sidebar-accent-foreground"
                     >
                       {item.icon}
                       <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
+                      <ChevronRightIcon
+                        className={`ml-auto size-4 transition-transform group-data-[collapsible=icon]:hidden ${
+                          isOpen ? "rotate-90" : ""
+                        }`}
+                      />
                     </SidebarMenuButton>
-                    <SidebarMenuSub>
-                      {item.children.map((c) => {
-                        const ca =
-                          c.match === "exact"
-                            ? pathname === c.url
-                            : pathname.startsWith(`${c.url}/`) || pathname === c.url
-                        return (
-                          <SidebarMenuSubItem key={c.url}>
-                            <SidebarMenuSubButton
-                              isActive={ca}
-                              render={<a href={c.url} />}
-                              className="text-[13px]"
-                            >
-                              <span>{c.title}</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        )
-                      })}
-                    </SidebarMenuSub>
+                    {isOpen && (
+                      <SidebarMenuSub>
+                        {item.children.map((c) => {
+                          const ca =
+                            c.match === "exact"
+                              ? pathname === c.url
+                              : pathname.startsWith(`${c.url}/`) || pathname === c.url
+                          return (
+                            <SidebarMenuSubItem key={c.url}>
+                              <SidebarMenuSubButton
+                                isActive={ca}
+                                render={<a href={c.url} />}
+                                className="text-[13px]"
+                              >
+                                <span>{c.title}</span>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          )
+                        })}
+                      </SidebarMenuSub>
+                    )}
                   </SidebarMenuItem>
                 )
               }
