@@ -46,7 +46,11 @@ const BASE_OPTIONS = {
   waitQueueTimeoutMS: 15_000,
   serverSelectionTimeoutMS: 15_000,
   connectTimeoutMS: 15_000,
-  socketTimeoutMS: 30_000,
+  // Keep this low: the network path between this host and Atlas is flaky and
+  // silently drops idle/dead sockets. A long socket timeout lets a wedged
+  // connection hang a full operation before failing. 10s fails fast so the
+  // worker's health-check can recycle the pool and retry on a fresh socket.
+  socketTimeoutMS: 10_000,
 };
 
 class PoolManager {

@@ -1,6 +1,7 @@
 import "../../scripts/bootstrap-env";
 import { exec } from "node:child_process";
 import type { Client } from "whatsapp-web.js";
+import type { Db } from "mongodb";
 import { logger } from "@/lib/logger";
 import { now as nowFn } from "@/clinic/core/datetime";
 import { getWhatsAppDb, closeAllPools } from "@/lib/db-pools";
@@ -74,6 +75,31 @@ async function resetDbPool(): Promise<void> {
     });
   }
   dbConsecutiveFailures = 0;
+}
+
+/**
+ * Returns a DB handle that is verified alive with a cheap ping. If the ping
+ * fails we hard-reset the pool (once per cooldown window) so the next call
+ * returns a freshly established connection. This is the real recovery path:
+ * the MongoDB driver keeps reusing a socket that looks ESTABLISHED but is
+ * silently dead on the Atlas path, so serverSelection never trips and every
+ * operation just hangs until it times out. A fresh socket during a good
+ * network window fixes it. The shared-counter self-heal below is a fallback.
+ */
+let lastDbReset = 0;
+async function getHealthyDb(): Promise<Db> {
+  const candidate = await getWhatsAppDb();
+  try {
+    await candidate.command({ ping: 1 });
+    return candidate;
+  } catch {
+    const now = Date.now();
+    if (now - lastDbReset > 15_000) {
+      lastDbReset = now;
+      await resetDbPool();
+    }
+    return getWhatsAppDb();
+  }
 }
 
 /**
@@ -201,10 +227,11 @@ async function startLegacyClient(): Promise<void> {
 
 // ── Background loops ─────────────────────────────────────────────────────────
 
-function startReminderLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void {
+function startReminderLoop(): void {
   if (reminderTimer) return;
   reminderTimer = setInterval(async () => {
     try {
+      const db = await getHealthyDb();
       const org = await ensureDefaultOrganization(db);
 
       // Stage-only: scan and queue reminders into the DB.
@@ -237,10 +264,11 @@ function startReminderLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void 
   }, REMINDER_POLL_MS);
 }
 
-function startCommandLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void {
+function startCommandLoop(): void {
   if (commandTimer) return;
   commandTimer = setInterval(async () => {
     try {
+      const db = await getHealthyDb();
       await processSessionCommands(db);
       dbConsecutiveFailures = 0;
     } catch (err) {
@@ -266,10 +294,11 @@ function startCommandLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void {
  *    persisted LocalAuth folder, so an already-paired number reconnects with
  *    NO new QR scan.
  */
-function startWatchdog(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void {
+function startWatchdog(): void {
   if (watchdogTimer) return;
   watchdogTimer = setInterval(async () => {
     try {
+      const db = await getHealthyDb();
       if ((!legacyClient || !legacyClient.info) && !reconnectTimer) {
         logger.warn("watchdog: legacy whatsapp client not connected; restarting");
         void startLegacyClient().catch(() => scheduleLegacyReconnect());
@@ -319,9 +348,9 @@ async function main(): Promise<void> {
     logger.info("clinic whatsapp sessions restored", { count: restored });
   }
 
-  startReminderLoop(db);
-  startCommandLoop(db);
-  startWatchdog(db);
+  startReminderLoop();
+  startCommandLoop();
+  startWatchdog();
 
   const shutdown = async () => {
     if (shuttingDown) return;
