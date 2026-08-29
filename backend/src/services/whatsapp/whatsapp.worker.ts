@@ -303,6 +303,11 @@ async function main(): Promise<void> {
   } else {
     await startLegacyClient();
 
+    // Let the legacy Chromium finish its memory-heavy startup before clinic
+    // browsers launch, so we never start several Chromium instances at once
+    // on this memory-tight box.
+    await new Promise((r) => setTimeout(r, 5_000));
+
     // Restore every clinic connection marked enabled before the restart.
     const restored = await startConfiguredClinicSessions(db);
     if (restored > 0) {

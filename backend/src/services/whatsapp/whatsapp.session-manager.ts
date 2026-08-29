@@ -37,7 +37,11 @@ const RECONNECT_MAX_DELAY_MS = 30_000;
 /** If a client authenticates but never becomes ready, recycle just that client. */
 const STUCK_AFTER_AUTH_MS = 90_000;
 const DESTROY_TIMEOUT_MS = 5_000;
-const BOOT_START_STAGGER_MS = 2_000;
+// Launch clinics with a generous gap. The worker box is memory-tight and each
+// Chromium instance peaks during startup; launching several close together can
+// OOM-kill the last one ("Failed to launch the browser process: Code: null").
+// Spacing them out keeps at most one browser in its heavy launch phase.
+const BOOT_START_STAGGER_MS = 8_000;
 
 function maxClinicSessions(): number {
   const parsed = Number(process.env.WHATSAPP_MAX_CLINIC_SESSIONS ?? "");
