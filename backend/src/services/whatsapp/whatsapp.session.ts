@@ -1,4 +1,5 @@
 import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { exec } from "node:child_process";
 import { join } from "node:path";
 import QRCode from "qrcode";
 import { nowISO, nowMs } from "@/clinic/core/datetime";
@@ -134,10 +135,27 @@ export function readQrTextFromDisk(key: string): { content: string; generatedAt:
   }
 }
 
+/** Kills any Chromium process whose user-data-dir lives under this key's session dir. */
+export function killStaleBrowser(key: string): void {
+  const dir = sessionDirForKey(key);
+  // Escape regex-special chars so the path is matched literally by pkill -f.
+  const pattern = dir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  try {
+    exec(`pkill -f "${pattern}"`, () => {});
+  } catch {
+    /* best-effort */
+  }
+}
+
 /** Removes only the Chromium singleton lock files that cause "browser is already running" errors. */
 export function clearSingletonLock(key: string): void {
   if (key === LEGACY_SESSION_KEY) return;
   const dir = sessionDirForKey(key);
+  // A previous crashed worker can leave a Chromium process alive that still
+  // holds this profile's page binding ("onQRChangedEvent already exists") and
+  // the singleton lock. Killing it is what actually lets the next client
+  // initialize cleanly — removing the lock files alone is not enough.
+  killStaleBrowser(key);
   // LocalAuth stores the Chrome profile under <dir>/session-<clientId>/
   // The lock files are inside that profile directory.
   const profileDir = join(dir, `session-${key === LEGACY_SESSION_KEY ? "legacy" : `clinic-${key}`}`);

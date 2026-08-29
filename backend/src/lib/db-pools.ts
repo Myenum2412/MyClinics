@@ -8,17 +8,17 @@ interface PoolConfig {
 
 const POOL_CONFIGS: Record<string, PoolConfig> = {
   // Main API pool - handles most requests
-  default: { name: "default", maxPoolSize: 50, minPoolSize: 5 },
+  default: { name: "default", maxPoolSize: 12, minPoolSize: 2 },
   // Medical records - heavy read/write, needs dedicated pool
-  medicalRecords: { name: "medicalRecords", maxPoolSize: 30, minPoolSize: 3 },
+  medicalRecords: { name: "medicalRecords", maxPoolSize: 8, minPoolSize: 1 },
   // Appointments - high frequency, needs dedicated pool
-  appointments: { name: "appointments", maxPoolSize: 30, minPoolSize: 3 },
+  appointments: { name: "appointments", maxPoolSize: 8, minPoolSize: 1 },
   // WhatsApp worker - long-running, separate pool
-  whatsapp: { name: "whatsapp", maxPoolSize: 20, minPoolSize: 2 },
+  whatsapp: { name: "whatsapp", maxPoolSize: 8, minPoolSize: 1 },
   // Cron jobs - burst traffic, small pool
-  cron: { name: "cron", maxPoolSize: 10, minPoolSize: 1 },
+  cron: { name: "cron", maxPoolSize: 5, minPoolSize: 1 },
   // AI services - occasional heavy queries
-  ai: { name: "ai", maxPoolSize: 15, minPoolSize: 2 },
+  ai: { name: "ai", maxPoolSize: 6, minPoolSize: 1 },
 };
 
 const BASE_OPTIONS = {

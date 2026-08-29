@@ -1,4 +1,5 @@
 import "../../scripts/bootstrap-env";
+import { exec } from "node:child_process";
 import type { Client } from "whatsapp-web.js";
 import { logger } from "@/lib/logger";
 import { now as nowFn } from "@/clinic/core/datetime";
@@ -13,8 +14,11 @@ import {
 import {
   processSessionCommands,
   startConfiguredClinicSessions,
+  startClinicSession,
+  clinicSessionSnapshot,
   connectedClinicClients,
 } from "@/services/whatsapp/whatsapp.session-manager";
+import { listEnabledSessionConfigs } from "@/services/whatsapp/whatsapp-session.store";
 import { handleIncomingMessage } from "@/services/whatsapp/whatsapp.message-handler";
 import { processDueReminders, scanAndQueueReminders } from "@/services/reminder/reminder.service";
 import { processDueNotificationsForClients } from "@/services/whatsapp/notification.service";
@@ -45,6 +49,25 @@ let reminderTimer: ReturnType<typeof setInterval> | null = null;
 let commandTimer: ReturnType<typeof setInterval> | null = null;
 let shuttingDown = false;
 let readyWatchdog: ReturnType<typeof setTimeout> | null = null;
+let watchdogTimer: ReturnType<typeof setInterval> | null = null;
+
+/**
+ * Kills any Chromium processes left behind by previous crashed worker instances
+ * that share our WhatsApp session paths. These zombies hold the profile lock
+ * and the page binding, which makes the next client fail with
+ * "onQRChangedEvent already exists" and crash the whole worker. Must run before
+ * any client is started.
+ */
+function killOrphanedChromium(): void {
+  const root = process.env.WHATSAPP_SESSION_PATH ?? "./whatsapp-session";
+  const pattern = root.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  try {
+    exec(`pkill -f "${pattern}"`, () => {});
+    logger.info("killed orphaned chromium processes for whatsapp session paths");
+  } catch {
+    /* best-effort */
+  }
+}
 
 // ── Legacy central bot connection ────────────────────────────────────────────
 
@@ -196,10 +219,54 @@ function startCommandLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void {
   }, COMMAND_POLL_MS);
 }
 
+/**
+ * Self-healing watchdog. Runs every minute and guarantees the "always
+ * connected, always in background" behaviour the product promises:
+ *  - if the legacy bot client died without a pending reconnect, restart it;
+ *  - for every clinic marked enabled in the DB, re-assert a live session if
+ *    it has silently dropped out of the in-memory map (e.g. after a crash that
+ *    pm2 restarted, or a process-level teardown). Re-asserting reuses the
+ *    persisted LocalAuth folder, so an already-paired number reconnects with
+ *    NO new QR scan.
+ */
+function startWatchdog(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void {
+  if (watchdogTimer) return;
+  watchdogTimer = setInterval(async () => {
+    try {
+      if ((!legacyClient || !legacyClient.info) && !reconnectTimer) {
+        logger.warn("watchdog: legacy whatsapp client not connected; restarting");
+        void startLegacyClient().catch(() => scheduleLegacyReconnect());
+      }
+
+      const configs = await listEnabledSessionConfigs(db);
+      for (const cfg of configs) {
+        const snap = clinicSessionSnapshot(cfg.clinicId);
+        if (snap.active) continue; // still tracked; its own reconnect handles it
+        logger.warn("watchdog: clinic whatsapp session dropped; re-asserting", {
+          clinicId: cfg.clinicId,
+        });
+        await startClinicSession(db, cfg.clinicId).catch((err) => {
+          logger.error("watchdog: failed to re-assert clinic session", {
+            clinicId: cfg.clinicId,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        });
+      }
+    } catch (err) {
+      logger.warn("watchdog tick failed", {
+        error: err instanceof Error ? err.message : "unknown",
+      });
+    }
+  }, 60_000);
+}
+
 // ── Entry point ──────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
   logger.info("whatsapp worker starting");
+  // Clear any Chromium zombies from a previous crashed run BEFORE starting
+  // clients — otherwise the new clients inherit the dead page binding and crash.
+  killOrphanedChromium();
   db = await getWhatsAppDb();
   await ensureDefaultOrganization(db);
   await startLegacyClient();
@@ -212,6 +279,7 @@ async function main(): Promise<void> {
 
   startReminderLoop(db);
   startCommandLoop(db);
+  startWatchdog(db);
 
   const shutdown = async () => {
     if (shuttingDown) return;
@@ -220,6 +288,7 @@ async function main(): Promise<void> {
     if (reconnectTimer) clearTimeout(reconnectTimer);
     if (reminderTimer) clearInterval(reminderTimer);
     if (commandTimer) clearInterval(commandTimer);
+    if (watchdogTimer) clearInterval(watchdogTimer);
     clearLegacyWatchdog();
     if (legacyClient) {
       legacyClient.removeAllListeners();
