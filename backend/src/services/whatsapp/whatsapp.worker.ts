@@ -1,7 +1,6 @@
 import "../../scripts/bootstrap-env";
 import { exec } from "node:child_process";
 import type { Client } from "whatsapp-web.js";
-import type { Db } from "mongodb";
 import { logger } from "@/lib/logger";
 import { now as nowFn } from "@/clinic/core/datetime";
 import { getWhatsAppDb, closeAllPools } from "@/lib/db-pools";
@@ -52,69 +51,38 @@ let shuttingDown = false;
 let readyWatchdog: ReturnType<typeof setTimeout> | null = null;
 let watchdogTimer: ReturnType<typeof setInterval> | null = null;
 
-// Self-heal: if the DB pool gets stuck on a dead network path, the per-tick
-// retry alone won't recover it (the cached MongoClient keeps targeting the
-// unreachable node). After enough consecutive failures we hard-reset the pool
-// so the next operation re-establishes a fresh connection during a good
-// network window.
-let dbConsecutiveFailures = 0;
-const DB_FAILURE_RESET_THRESHOLD = 5;
+// Self-heal: the MongoDB driver keeps reusing a socket that looks ESTABLISHED
+// but is silently dead on the Atlas path, so operations just hang until they
+// time out and every retry hits the same wedged connection. When a loop's
+// operations fail repeatedly we hard-recycle the pool so the next attempt gets
+// a freshly established connection. The recycle is serialized so concurrent
+// loops never close a connection another loop is mid-flight on (which would
+// surface as "closed connection pool").
+const DB_FAILURE_RESET_THRESHOLD = 3;
 
-async function resetDbPool(): Promise<void> {
-  try {
-    await closeAllPools();
-  } catch {
-    /* best-effort */
-  }
-  try {
-    db = await getWhatsAppDb();
-    logger.info("whatsapp worker: DB pool reset after consecutive failures");
-  } catch (err) {
-    logger.error("whatsapp worker: DB pool reset failed", {
-      error: err instanceof Error ? err.message : String(err),
-    });
-  }
-  dbConsecutiveFailures = 0;
-}
-
-/**
- * Returns a DB handle that is verified alive with a cheap ping. If the ping
- * fails we hard-reset the pool (once per cooldown window) so the next call
- * returns a freshly established connection. This is the real recovery path:
- * the MongoDB driver keeps reusing a socket that looks ESTABLISHED but is
- * silently dead on the Atlas path, so serverSelection never trips and every
- * operation just hangs until it times out. A fresh socket during a good
- * network window fixes it. The shared-counter self-heal below is a fallback.
- */
-let lastDbReset = 0;
-async function getHealthyDb(): Promise<Db> {
-  // Guard every await so this can never throw an unhandled rejection into the
-  // interval callback (which would crash the worker). Whatever we return is
-  // verified by the caller's own try/catch at the operation level.
-  let candidate: Db | null = null;
-  try {
-    candidate = await getWhatsAppDb();
-    await candidate.command({ ping: 1 });
-    return candidate;
-  } catch {
-    /* ping failed — fall through to a pool reset below */
-  }
-  const now = Date.now();
-  if (now - lastDbReset > 15_000) {
-    lastDbReset = now;
+let poolResetting: Promise<void> | null = null;
+async function resetPoolSerialized(): Promise<void> {
+  if (poolResetting) return poolResetting;
+  poolResetting = (async () => {
+    logger.warn("whatsapp worker: recycling wedged Atlas connection pool");
     try {
-      await resetDbPool();
+      await closeAllPools();
     } catch {
       /* best-effort */
     }
-  }
+    try {
+      db = await getWhatsAppDb();
+      logger.info("whatsapp worker: Atlas pool recycled");
+    } catch (err) {
+      logger.error("whatsapp worker: Atlas pool recycle failed", {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  })();
   try {
-    return await getWhatsAppDb();
-  } catch {
-    // Last resort: hand back the possibly-wedged candidate so the caller's
-    // operation fails loudly (and is retried next tick) instead of crashing us.
-    if (candidate) return candidate;
-    throw new Error("whatsapp DB handle unavailable");
+    await poolResetting;
+  } finally {
+    poolResetting = null;
   }
 }
 
@@ -245,10 +213,11 @@ async function startLegacyClient(): Promise<void> {
 
 function startReminderLoop(): void {
   if (reminderTimer) return;
+  let fails = 0;
   reminderTimer = setInterval(async () => {
     try {
-      const db = await getHealthyDb();
-      const org = await ensureDefaultOrganization(db);
+      const dbh = await getWhatsAppDb();
+      const org = await ensureDefaultOrganization(dbh);
 
       // Stage-only: scan and queue reminders into the DB.
       // NOTE: processPrescriptionNotifications and processAppointmentNotifications
@@ -257,24 +226,25 @@ function startReminderLoop(): void {
       // single owner of notification queue draining. Running them here too caused
       // both processes to race on the same MongoDB rows, producing duplicate
       // WhatsApp sends and stuck notifications.
-      await scanAndQueueReminders(db, nowFn());
+      await scanAndQueueReminders(dbh, nowFn());
 
       // Deliveries need live connections, routed per clinic.
       const clientsByRoute = connectedClinicClients();
       if (legacyClient?.info) {
         clientsByRoute.set(LEGACY_SESSION_KEY, legacyClient);
-        await processDueReminders(legacyClient, db, org.id);
+        await processDueReminders(legacyClient, dbh, org.id);
       }
-      await processDueNotificationsForClients(db, clientsByRoute);
-      dbConsecutiveFailures = 0;
+      await processDueNotificationsForClients(dbh, clientsByRoute);
+      fails = 0;
     } catch (err) {
-      dbConsecutiveFailures += 1;
+      fails += 1;
       logger.warn("reminder processing failed", {
         error: err instanceof Error ? err.message : "unknown",
-        consecutiveFailures: dbConsecutiveFailures,
+        consecutiveFailures: fails,
       });
-      if (dbConsecutiveFailures >= DB_FAILURE_RESET_THRESHOLD) {
-        void resetDbPool();
+      if (fails >= DB_FAILURE_RESET_THRESHOLD) {
+        fails = 0;
+        void resetPoolSerialized();
       }
     }
   }, REMINDER_POLL_MS);
@@ -282,19 +252,21 @@ function startReminderLoop(): void {
 
 function startCommandLoop(): void {
   if (commandTimer) return;
+  let fails = 0;
   commandTimer = setInterval(async () => {
     try {
-      const db = await getHealthyDb();
-      await processSessionCommands(db);
-      dbConsecutiveFailures = 0;
+      const dbh = await getWhatsAppDb();
+      await processSessionCommands(dbh);
+      fails = 0;
     } catch (err) {
-      dbConsecutiveFailures += 1;
+      fails += 1;
       logger.warn("whatsapp command poll failed", {
         error: err instanceof Error ? err.message : "unknown",
-        consecutiveFailures: dbConsecutiveFailures,
+        consecutiveFailures: fails,
       });
-      if (dbConsecutiveFailures >= DB_FAILURE_RESET_THRESHOLD) {
-        void resetDbPool();
+      if (fails >= DB_FAILURE_RESET_THRESHOLD) {
+        fails = 0;
+        void resetPoolSerialized();
       }
     }
   }, COMMAND_POLL_MS);
@@ -312,36 +284,39 @@ function startCommandLoop(): void {
  */
 function startWatchdog(): void {
   if (watchdogTimer) return;
+  let fails = 0;
   watchdogTimer = setInterval(async () => {
     try {
-      const db = await getHealthyDb();
+      const dbh = await getWhatsAppDb();
       if ((!legacyClient || !legacyClient.info) && !reconnectTimer) {
         logger.warn("watchdog: legacy whatsapp client not connected; restarting");
         void startLegacyClient().catch(() => scheduleLegacyReconnect());
       }
 
-      const configs = await listEnabledSessionConfigs(db);
+      const configs = await listEnabledSessionConfigs(dbh);
       for (const cfg of configs) {
         const snap = clinicSessionSnapshot(cfg.clinicId);
         if (snap.active) continue; // still tracked; its own reconnect handles it
         logger.warn("watchdog: clinic whatsapp session dropped; re-asserting", {
           clinicId: cfg.clinicId,
         });
-        await startClinicSession(db, cfg.clinicId).catch((err) => {
+        await startClinicSession(dbh, cfg.clinicId).catch((err) => {
           logger.error("watchdog: failed to re-assert clinic session", {
             clinicId: cfg.clinicId,
             error: err instanceof Error ? err.message : String(err),
           });
         });
       }
+      fails = 0;
     } catch (err) {
-      dbConsecutiveFailures += 1;
+      fails += 1;
       logger.warn("watchdog tick failed", {
         error: err instanceof Error ? err.message : "unknown",
-        consecutiveFailures: dbConsecutiveFailures,
+        consecutiveFailures: fails,
       });
-      if (dbConsecutiveFailures >= DB_FAILURE_RESET_THRESHOLD) {
-        void resetDbPool();
+      if (fails >= DB_FAILURE_RESET_THRESHOLD) {
+        fails = 0;
+        void resetPoolSerialized();
       }
     }
   }, 60_000);
