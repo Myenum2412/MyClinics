@@ -12,6 +12,17 @@ export interface ClinicWhatsappSessionPublic {
   qr: { dataUrl: string; generatedAt: string } | null;
 }
 
+function toIso(value: Date | string | null | undefined): string | null {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string") {
+    // Tolerate already-serialized timestamps from the DB driver.
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  return null;
+}
+
 export function sessionToPublic(
   state: SessionState | null,
   config: ClinicSessionConfigDoc | null,
@@ -23,7 +34,7 @@ export function sessionToPublic(
     updatedAt: state?.updatedAt ?? null,
     phone: config?.phone ?? null,
     enabled: config?.enabled ?? false,
-    lastConnectedAt: config?.lastConnectedAt ? config.lastConnectedAt.toISOString() : null,
+    lastConnectedAt: toIso(config?.lastConnectedAt),
     qr,
   };
 }
