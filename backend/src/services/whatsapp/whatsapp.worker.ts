@@ -3,7 +3,7 @@ import { exec } from "node:child_process";
 import type { Client } from "whatsapp-web.js";
 import { logger } from "@/lib/logger";
 import { now as nowFn } from "@/clinic/core/datetime";
-import { getWhatsAppDb } from "@/lib/db-pools";
+import { getWhatsAppDb, closeAllPools } from "@/lib/db-pools";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { createWhatsAppClient } from "@/services/whatsapp/whatsapp.client";
 import {
@@ -50,6 +50,31 @@ let commandTimer: ReturnType<typeof setInterval> | null = null;
 let shuttingDown = false;
 let readyWatchdog: ReturnType<typeof setTimeout> | null = null;
 let watchdogTimer: ReturnType<typeof setInterval> | null = null;
+
+// Self-heal: if the DB pool gets stuck on a dead network path, the per-tick
+// retry alone won't recover it (the cached MongoClient keeps targeting the
+// unreachable node). After enough consecutive failures we hard-reset the pool
+// so the next operation re-establishes a fresh connection during a good
+// network window.
+let dbConsecutiveFailures = 0;
+const DB_FAILURE_RESET_THRESHOLD = 5;
+
+async function resetDbPool(): Promise<void> {
+  try {
+    await closeAllPools();
+  } catch {
+    /* best-effort */
+  }
+  try {
+    db = await getWhatsAppDb();
+    logger.info("whatsapp worker: DB pool reset after consecutive failures");
+  } catch (err) {
+    logger.error("whatsapp worker: DB pool reset failed", {
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
+  dbConsecutiveFailures = 0;
+}
 
 /**
  * Kills any Chromium processes left behind by previous crashed worker instances
@@ -198,10 +223,16 @@ function startReminderLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void 
         await processDueReminders(legacyClient, db, org.id);
       }
       await processDueNotificationsForClients(db, clientsByRoute);
+      dbConsecutiveFailures = 0;
     } catch (err) {
+      dbConsecutiveFailures += 1;
       logger.warn("reminder processing failed", {
         error: err instanceof Error ? err.message : "unknown",
+        consecutiveFailures: dbConsecutiveFailures,
       });
+      if (dbConsecutiveFailures >= DB_FAILURE_RESET_THRESHOLD) {
+        void resetDbPool();
+      }
     }
   }, REMINDER_POLL_MS);
 }
@@ -211,10 +242,16 @@ function startCommandLoop(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void {
   commandTimer = setInterval(async () => {
     try {
       await processSessionCommands(db);
+      dbConsecutiveFailures = 0;
     } catch (err) {
+      dbConsecutiveFailures += 1;
       logger.warn("whatsapp command poll failed", {
         error: err instanceof Error ? err.message : "unknown",
+        consecutiveFailures: dbConsecutiveFailures,
       });
+      if (dbConsecutiveFailures >= DB_FAILURE_RESET_THRESHOLD) {
+        void resetDbPool();
+      }
     }
   }, COMMAND_POLL_MS);
 }
@@ -253,9 +290,14 @@ function startWatchdog(db: Awaited<ReturnType<typeof getWhatsAppDb>>): void {
         });
       }
     } catch (err) {
+      dbConsecutiveFailures += 1;
       logger.warn("watchdog tick failed", {
         error: err instanceof Error ? err.message : "unknown",
+        consecutiveFailures: dbConsecutiveFailures,
       });
+      if (dbConsecutiveFailures >= DB_FAILURE_RESET_THRESHOLD) {
+        void resetDbPool();
+      }
     }
   }, 60_000);
 }

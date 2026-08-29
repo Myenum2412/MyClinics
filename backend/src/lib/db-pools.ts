@@ -21,30 +21,32 @@ interface PoolConfig {
 
 const POOL_CONFIGS: Record<string, PoolConfig> = {
   // Main API pool - handles most requests
-  default: { name: "default", maxPoolSize: 12, minPoolSize: 2 },
+  default: { name: "default", maxPoolSize: 12, minPoolSize: 0 },
   // Medical records - heavy read/write, needs dedicated pool
-  medicalRecords: { name: "medicalRecords", maxPoolSize: 8, minPoolSize: 1 },
+  medicalRecords: { name: "medicalRecords", maxPoolSize: 8, minPoolSize: 0 },
   // Appointments - high frequency, needs dedicated pool
-  appointments: { name: "appointments", maxPoolSize: 8, minPoolSize: 1 },
+  appointments: { name: "appointments", maxPoolSize: 8, minPoolSize: 0 },
   // WhatsApp worker - long-running, separate pool
-  whatsapp: { name: "whatsapp", maxPoolSize: 8, minPoolSize: 1 },
+  whatsapp: { name: "whatsapp", maxPoolSize: 8, minPoolSize: 0 },
   // Cron jobs - burst traffic, small pool
-  cron: { name: "cron", maxPoolSize: 5, minPoolSize: 1 },
+  cron: { name: "cron", maxPoolSize: 5, minPoolSize: 0 },
   // AI services - occasional heavy queries
-  ai: { name: "ai", maxPoolSize: 6, minPoolSize: 1 },
+  ai: { name: "ai", maxPoolSize: 6, minPoolSize: 0 },
 };
 
 const BASE_OPTIONS = {
   serverApi: { version: ServerApiVersion.v1 },
-  // Keep connections alive for 5 minutes so the cron pool (fired every minute)
-  // doesn't reconnect on every tick. The previous 60 s idle timeout matched
-  // the cron interval almost exactly, creating a race that killed the connection
-  // just before the next ping hit it.
-  maxIdleTimeMS: 300_000,
-  waitQueueTimeoutMS: 10_000,
-  serverSelectionTimeoutMS: 10_000,
-  connectTimeoutMS: 10_000,
-  socketTimeoutMS: 60_000,
+  // Connections are recycled well below the ~180 s idle-drop threshold of the
+  // network path between this host and Atlas. The previous 300 s idle timeout
+  // let pooled connections age past the drop window and go silently dead, after
+  // which every operation hung until it timed out. With minPoolSize 0 and a 60 s
+  // idle cap, connections are always fresh and the driver transparently
+  // re-establishes them on the next use.
+  maxIdleTimeMS: 60_000,
+  waitQueueTimeoutMS: 15_000,
+  serverSelectionTimeoutMS: 15_000,
+  connectTimeoutMS: 15_000,
+  socketTimeoutMS: 30_000,
 };
 
 class PoolManager {
