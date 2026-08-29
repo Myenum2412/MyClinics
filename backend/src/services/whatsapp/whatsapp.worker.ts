@@ -3,7 +3,7 @@ import { exec } from "node:child_process";
 import type { Client } from "whatsapp-web.js";
 import { logger } from "@/lib/logger";
 import { now as nowFn } from "@/clinic/core/datetime";
-import { getWhatsAppDb, closeAllPools } from "@/lib/db-pools";
+import { getWhatsAppDb } from "@/lib/db-pools";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { createWhatsAppClient } from "@/services/whatsapp/whatsapp.client";
 import {
@@ -51,40 +51,13 @@ let shuttingDown = false;
 let readyWatchdog: ReturnType<typeof setTimeout> | null = null;
 let watchdogTimer: ReturnType<typeof setInterval> | null = null;
 
-// Self-heal: the MongoDB driver keeps reusing a socket that looks ESTABLISHED
-// but is silently dead on the Atlas path, so operations just hang until they
-// time out and every retry hits the same wedged connection. When a loop's
-// operations fail repeatedly we hard-recycle the pool so the next attempt gets
-// a freshly established connection. The recycle is serialized so concurrent
-// loops never close a connection another loop is mid-flight on (which would
-// surface as "closed connection pool").
-const DB_FAILURE_RESET_THRESHOLD = 3;
-
-let poolResetting: Promise<void> | null = null;
-async function resetPoolSerialized(): Promise<void> {
-  if (poolResetting) return poolResetting;
-  poolResetting = (async () => {
-    logger.warn("whatsapp worker: recycling wedged Atlas connection pool");
-    try {
-      await closeAllPools();
-    } catch {
-      /* best-effort */
-    }
-    try {
-      db = await getWhatsAppDb();
-      logger.info("whatsapp worker: Atlas pool recycled");
-    } catch (err) {
-      logger.error("whatsapp worker: Atlas pool recycle failed", {
-        error: err instanceof Error ? err.message : String(err),
-      });
-    }
-  })();
-  try {
-    await poolResetting;
-  } finally {
-    poolResetting = null;
-  }
-}
+// The MongoDB driver already recycles wedged connections on its own: when an
+// operation times out on a silently-dead socket (socketTimeoutMS) the driver
+// drops that connection and opens a fresh one on the next use. Past attempts to
+// "hard-recycle" the pool from here closed the client mid-flight, which cancels
+// in-progress connects (surfacing as "connection establishment was cancelled")
+// and prevents the driver from ever establishing a fresh socket. So we rely on
+// the driver's built-in reconnection and just log failures.
 
 /**
  * Kills any Chromium processes left behind by previous crashed worker instances
@@ -242,10 +215,6 @@ function startReminderLoop(): void {
         error: err instanceof Error ? err.message : "unknown",
         consecutiveFailures: fails,
       });
-      if (fails >= DB_FAILURE_RESET_THRESHOLD) {
-        fails = 0;
-        void resetPoolSerialized();
-      }
     }
   }, REMINDER_POLL_MS);
 }
@@ -264,10 +233,6 @@ function startCommandLoop(): void {
         error: err instanceof Error ? err.message : "unknown",
         consecutiveFailures: fails,
       });
-      if (fails >= DB_FAILURE_RESET_THRESHOLD) {
-        fails = 0;
-        void resetPoolSerialized();
-      }
     }
   }, COMMAND_POLL_MS);
 }
@@ -314,10 +279,6 @@ function startWatchdog(): void {
         error: err instanceof Error ? err.message : "unknown",
         consecutiveFailures: fails,
       });
-      if (fails >= DB_FAILURE_RESET_THRESHOLD) {
-        fails = 0;
-        void resetPoolSerialized();
-      }
     }
   }, 60_000);
 }
