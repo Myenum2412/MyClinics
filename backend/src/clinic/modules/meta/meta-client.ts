@@ -39,6 +39,15 @@ export interface MetaClientConfig {
   fetchImpl?: typeof fetch;
 }
 
+/** Optional per-call overrides for {@link buildMetaClient}. */
+export interface MetaClientOptions {
+  appId?: string;
+  appSecret?: string;
+  redirectUri?: string;
+  /** Injected in tests; defaults to global fetch. */
+  fetchImpl?: typeof fetch;
+}
+
 export class MetaApiClient {
   readonly appId: string;
   readonly appSecret: string;
@@ -171,15 +180,17 @@ export class MetaApiClient {
   }
 }
 
-/** Resolves the configured Meta client, or null when Meta is not configured. */
-export function buildMetaClient(fetchImpl?: typeof fetch): MetaApiClient | null {
-  const appId = process.env.META_APP_ID;
-  const appSecret = process.env.META_APP_SECRET;
+/** Resolves the configured Meta client, or null when Meta is not configured.
+ *  Any of the env-derived values can be overridden (used for per-clinic apps). */
+export function buildMetaClient(opts?: MetaClientOptions): MetaApiClient | null {
+  const appId = opts?.appId ?? process.env.META_APP_ID;
+  const appSecret = opts?.appSecret ?? process.env.META_APP_SECRET;
   const redirectUri =
+    opts?.redirectUri?.trim() ||
     process.env.META_REDIRECT_URI?.trim() ||
     (process.env.NODE_ENV === "production"
       ? "https://api.myclinic.myenum.in/api/meta/oauth/callback"
       : "http://localhost:3100/api/meta/oauth/callback");
   if (!appId || !appSecret) return null;
-  return new MetaApiClient({ appId, appSecret, redirectUri, fetchImpl });
+  return new MetaApiClient({ appId, appSecret, redirectUri, fetchImpl: opts?.fetchImpl });
 }

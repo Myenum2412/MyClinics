@@ -23,6 +23,16 @@ export interface MetaIntegrationDoc extends ClinicDocument {
   integrationId: string;
   metaBusinessId: string | null;
   metaBusinessName: string | null;
+  /**
+   * Per-clinic Meta app credentials. When set, this clinic authenticates with
+   * ITS OWN Meta Business app (appId / appSecret), so the server no longer
+   * needs global META_APP_ID / META_APP_SECRET env vars. Falls back to the
+   * server env vars when not provided.
+   */
+  metaAppId: string | null;
+  /** Encrypted app secret (base64, AES-256-GCM). Never returned to the UI. */
+  metaAppSecretEnc: string | null;
+  metaRedirectUri: string | null;
   /** Opaque reference to the encrypted token blob (see meta-crypto). */
   tokenReference: string | null;
   /** Encrypted long-lived user access token (base64). Never returned to UI. */
@@ -196,6 +206,8 @@ export function metaIntegrationToPublic(doc: MetaIntegrationDoc) {
     integrationId: doc.integrationId,
     metaBusinessId: doc.metaBusinessId,
     metaBusinessName: doc.metaBusinessName,
+    /** True when the clinic supplies its own Meta app (per-clinic credentials). */
+    hasAppCredentials: Boolean(doc.metaAppId),
     status: doc.status,
     webhookStatus: doc.webhookStatus,
     grantedScopes: doc.grantedScopes,

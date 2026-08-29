@@ -5,10 +5,10 @@ import {
   requireRoles,
 } from "@/clinic/core/scope";
 import { UnauthorizedError, BadRequestError } from "@/clinic/core/errors";
-import { buildMetaClient } from "@/clinic/modules/meta/meta-client";
 import { MetaController } from "@/clinic/modules/meta/meta.controller";
 import { MetaAuthService } from "@/clinic/modules/meta/meta-auth.service";
 import { MetaWebhookService } from "@/clinic/modules/meta/meta-webhook.service";
+import { resolveMetaAppSecretForPage } from "@/clinic/modules/meta/meta-config";
 
 /**
  * Clinic-level Meta routes (sections 28–45). All run behind requireClinicAccess,
@@ -162,11 +162,7 @@ export function registerPublicMetaRoutes(app: FastifyInstance): void {
         "hub.verify_token"?: string;
         "hub.challenge"?: string;
       };
-      const webhook = new MetaWebhookService(
-        await getDb(),
-        buildMetaClient(),
-        process.env.META_APP_SECRET
-      );
+      const webhook = new MetaWebhookService(await getDb());
       const challenge = webhook.verifyChallenge(q["hub.mode"] ?? null, q["hub.verify_token"] ?? null, q["hub.challenge"] ?? null);
       if (challenge == null) return reply.code(403).send("forbidden");
       return reply.type("text/plain").send(challenge);
@@ -175,17 +171,41 @@ export function registerPublicMetaRoutes(app: FastifyInstance): void {
     webhookApp.post("/api/meta/webhook", async (request, reply) => {
       const buf = (request as FastifyRequest & { rawBody?: Buffer }).rawBody ?? Buffer.from("");
       const sig = request.headers["x-hub-signature-256"];
-      const webhook = new MetaWebhookService(
-        await getDb(),
-        buildMetaClient(),
-        process.env.META_APP_SECRET
-      );
-      if (!webhook.verifySignature(buf, typeof sig === "string" ? sig : undefined)) {
-        return reply.code(401).send({ error: "invalid signature" });
-      }
+      const db = await getDb();
+      const webhook = new MetaWebhookService(db);
+
       const payload = request.body as {
         entry?: Array<{ id?: string; changes?: Array<{ field?: string; value?: Record<string, unknown> }> }>;
       };
+
+      // Resolve candidate page ids so we can verify the signature with the
+      // correct clinic's app secret (each clinic may use its own Meta app).
+      const pageIds = new Set<string>();
+      for (const entry of payload.entry ?? []) {
+        if (entry.id) pageIds.add(entry.id);
+        for (const change of entry.changes ?? []) {
+          const pageId = (change.value as { page_id?: string } | undefined)?.page_id;
+          if (pageId) pageIds.add(pageId);
+        }
+      }
+
+      // Verify against whichever clinic app secret owns one of these pages.
+      const candidateSecrets: string[] = [];
+      for (const pageId of pageIds) {
+        const secret = await resolveMetaAppSecretForPage(db, pageId);
+        if (secret && !candidateSecrets.includes(secret)) candidateSecrets.push(secret);
+      }
+      // Fall back to the server-level secret when no page resolves to a clinic.
+      if (candidateSecrets.length === 0 && process.env.META_APP_SECRET) {
+        candidateSecrets.push(process.env.META_APP_SECRET);
+      }
+      const signatureValid = typeof sig === "string" && candidateSecrets.some((secret) =>
+        webhook.verifySignature(buf, sig, secret)
+      );
+      if (!signatureValid) {
+        return reply.code(401).send({ error: "invalid signature" });
+      }
+
       // Store + resolve + process each leadgen event.
       for (const entry of payload.entry ?? []) {
         const pageIdFromEntry = entry.id;

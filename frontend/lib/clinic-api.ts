@@ -2132,8 +2132,20 @@ export interface MetaAnalytics {
 export function getMetaStatus(clinicId: string): Promise<{ integration: MetaIntegrationPublic | null; health: MetaHealth }> {
   return request(tenantPath(clinicId, "/meta/status"));
 }
-export function connectMeta(clinicId: string): Promise<{ authUrl: string; state: string }> {
-  return request(tenantPath(clinicId, "/meta/connect"), { method: "POST" });
+export interface ConnectMetaInput {
+  appId?: string;
+  appSecret?: string;
+  redirectUri?: string;
+}
+
+export function connectMeta(
+  clinicId: string,
+  input: ConnectMetaInput = {}
+): Promise<{ authUrl: string; state: string }> {
+  return request(tenantPath(clinicId, "/meta/connect"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 export function reconnectMeta(clinicId: string): Promise<{ authUrl: string; state: string }> {
   return request(tenantPath(clinicId, "/meta/reconnect"), { method: "POST" });

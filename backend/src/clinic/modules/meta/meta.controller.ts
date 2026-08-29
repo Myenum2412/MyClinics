@@ -3,7 +3,6 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { getDb } from "@/lib/db-pools";
 import { requireClinicOf, type ClinicContext } from "@/clinic/core/context";
 import { UnauthorizedError, NotFoundError, BadRequestError } from "@/clinic/core/errors";
-import { buildMetaClient } from "@/clinic/modules/meta/meta-client";
 import { MetaRepository } from "@/clinic/modules/meta/meta.repository";
 import { MetaAuthService } from "@/clinic/modules/meta/meta-auth.service";
 import { MetaTokenService } from "@/clinic/modules/meta/meta-token.service";
@@ -11,6 +10,7 @@ import { MetaCampaignService } from "@/clinic/modules/meta/meta-campaign.service
 import { MetaSyncService } from "@/clinic/modules/meta/meta-sync.service";
 import { MetaAnalyticsService } from "@/clinic/modules/meta/meta-analytics.service";
 import { MetaWebhookService } from "@/clinic/modules/meta/meta-webhook.service";
+import { buildMetaClientForClinic } from "@/clinic/modules/meta/meta-config";
 import {
   metaAdAccountToPublic,
   metaInstagramToPublic,
@@ -36,14 +36,14 @@ export class MetaController {
   private auth(db: Db) {
     return new MetaAuthService(db);
   }
-  private tokenSvc(db: Db) {
-    return new MetaTokenService(db, buildMetaClient());
+  private async tokenSvc(db: Db, clinicId: string) {
+    return new MetaTokenService(db, await buildMetaClientForClinic(db, clinicId));
   }
   private campaignSvc(db: Db) {
     return new MetaCampaignService(db);
   }
-  private syncSvc(db: Db) {
-    return new MetaSyncService(db, buildMetaClient());
+  private async syncSvc(db: Db, clinicId: string) {
+    return new MetaSyncService(db, await buildMetaClientForClinic(db, clinicId));
   }
   private analyticsSvc(db: Db) {
     return new MetaAnalyticsService(db);
@@ -54,9 +54,10 @@ export class MetaController {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
     const db = await this.db;
+    const clinicId = requireClinicOf(ctx);
     const repo = new MetaRepository(db);
-    const integration = await repo.getIntegration(requireClinicOf(ctx));
-    const health = await this.tokenSvc(db).health(requireClinicOf(ctx));
+    const integration = await repo.getIntegration(clinicId);
+    const health = await (await this.tokenSvc(db, clinicId)).health(clinicId);
     return reply.send({
       integration: integration ? metaIntegrationToPublic(integration) : null,
       health,
@@ -67,13 +68,17 @@ export class MetaController {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
     const db = await this.db;
-    if (!this.auth(db).isConfigured) {
-      const missing = ["META_APP_ID", "META_APP_SECRET"].filter((k) => !process.env[k]);
-      throw new BadRequestError(
-        `Meta integration is not configured on this server. Set the following backend env vars: ${missing.join(", ")}`
-      );
-    }
-    const { authUrl, state } = await this.auth(db).beginConnect(requireClinicOf(ctx));
+    const clinicId = requireClinicOf(ctx);
+    const body = (request.body ?? {}) as {
+      appId?: unknown;
+      appSecret?: unknown;
+      redirectUri?: unknown;
+    };
+    const { authUrl, state } = await this.auth(db).beginConnect(clinicId, {
+      appId: typeof body.appId === "string" && body.appId ? body.appId : undefined,
+      appSecret: typeof body.appSecret === "string" && body.appSecret ? body.appSecret : undefined,
+      redirectUri: typeof body.redirectUri === "string" ? body.redirectUri : undefined,
+    });
     return reply.send({ authUrl, state });
   }
 
@@ -89,7 +94,8 @@ export class MetaController {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
     const db = await this.db;
-    await this.tokenSvc(db).disconnect(requireClinicOf(ctx));
+    const clinicId = requireClinicOf(ctx);
+    await (await this.tokenSvc(db, clinicId)).disconnect(clinicId);
     return reply.send({ ok: true });
   }
 
@@ -156,7 +162,8 @@ export class MetaController {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
     const db = await this.db;
-    const job = await this.syncSvc(db).sync(requireClinicOf(ctx), ctx.userId, { mode: "historical" });
+    const clinicId = requireClinicOf(ctx);
+    const job = await (await this.syncSvc(db, clinicId)).sync(clinicId, ctx.userId, { mode: "historical" });
     return reply.send(metaSyncJobToPublic(job));
   }
 
@@ -165,9 +172,10 @@ export class MetaController {
     if (!ctx) throw new UnauthorizedError();
     const body = (request.body ?? {}) as Record<string, unknown>;
     const db = await this.db;
+    const clinicId = requireClinicOf(ctx);
     const fromDate = typeof body.fromDate === "string" ? new Date(body.fromDate) : null;
     const toDate = typeof body.toDate === "string" ? new Date(body.toDate) : null;
-    const job = await this.syncSvc(db).sync(requireClinicOf(ctx), ctx.userId, {
+    const job = await (await this.syncSvc(db, clinicId)).sync(clinicId, ctx.userId, {
       mode: "date_range",
       fromDate,
       toDate,
@@ -179,7 +187,8 @@ export class MetaController {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
     const db = await this.db;
-    const jobs = await this.syncSvc(db).listJobs(requireClinicOf(ctx));
+    const clinicId = requireClinicOf(ctx);
+    const jobs = await (await this.syncSvc(db, clinicId)).listJobs(clinicId);
     return reply.send({ jobs: jobs.map(metaSyncJobToPublic) });
   }
 
@@ -203,7 +212,7 @@ export class MetaController {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
     const db = await this.db;
-    const webhook = new MetaWebhookService(db, buildMetaClient(), process.env.META_APP_SECRET);
+    const webhook = new MetaWebhookService(db);
     const result = await webhook.retryFailed(requireClinicOf(ctx));
     return reply.send(result);
   }

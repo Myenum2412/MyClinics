@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { now as nowFn } from "@/clinic/core/datetime";
 import { MetaRepository } from "@/clinic/modules/meta/meta.repository";
 import type { MetaApiClient } from "@/clinic/modules/meta/meta-client";
+import { buildMetaClientForClinic } from "@/clinic/modules/meta/meta-config";
 import { MetaLeadService } from "@/clinic/modules/meta/meta-lead.service";
 import { BadRequestError } from "@/clinic/core/errors";
 
@@ -12,7 +13,8 @@ const MAX_ATTEMPTS = 5;
  * MetaWebhookService — the webhook gateway (section 34).
  *
  * Security / isolation guarantees:
- *  - the payload signature is verified against the app secret (X-Hub-Signature-256),
+ *  - the payload signature is verified against the clinic's app secret
+ *    (X-Hub-Signature-256), resolved from the Meta page that emitted the event,
  *  - the clinic is resolved from the Meta ASSET (pageId), NEVER from any
  *    client-supplied clinicId,
  *  - event ingestion is idempotent (unique eventKey + metaLeadId), so
@@ -22,19 +24,27 @@ const MAX_ATTEMPTS = 5;
 export class MetaWebhookService {
   constructor(
     private readonly db: Db,
-    private readonly client: MetaApiClient | null,
-    private readonly appSecret: string | undefined
+    private readonly client?: MetaApiClient | null,
+    private readonly appSecret?: string | undefined
   ) {}
 
   private repo(): MetaRepository {
     return new MetaRepository(this.db);
   }
 
-  /** Validates the Meta webhook signature (SHA-256 HMAC). */
-  verifySignature(rawBody: Buffer | string, signatureHeader: string | undefined): boolean {
-    if (!this.appSecret) return false;
+  /**
+   * Validates the Meta webhook signature (SHA-256 HMAC). The secret may be
+   * passed explicitly (the per-clinic app secret resolved from the page) or
+   * fall back to the instance-level secret (tests / shared server app).
+   */
+  verifySignature(
+    rawBody: Buffer | string,
+    signatureHeader: string | undefined,
+    secret: string | undefined = this.appSecret
+  ): boolean {
+    if (!secret) return false;
     if (!signatureHeader) return false;
-    const expected = `sha256=${createHmac("sha256", this.appSecret)
+    const expected = `sha256=${createHmac("sha256", secret)
       .update(rawBody as Buffer)
       .digest("hex")}`;
     const a = Buffer.from(expected);
@@ -100,7 +110,10 @@ export class MetaWebhookService {
       return { status: event.status, duplicate: event.status === "duplicate" };
     }
 
-    const leadService = new MetaLeadService(this.db, this.client);
+    // Build a clinic-scoped client (the clinic's own Meta app, if configured).
+    // Tests may inject a fake client via the constructor.
+    const client = this.client ?? (await buildMetaClientForClinic(this.db, event.clinicId));
+    const leadService = new MetaLeadService(this.db, client);
     try {
       if (!event.metaLeadId) throw new BadRequestError("Event has no metaLeadId");
       const result = await leadService.ingestLead(event.clinicId, event.metaLeadId);

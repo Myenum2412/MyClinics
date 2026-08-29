@@ -28,6 +28,8 @@ import {
 } from "@/lib/clinic-api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,6 +60,9 @@ export default function MetaIntegrationPage() {
   const [analytics, setAnalytics] = useState<MetaAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [appId, setAppId] = useState("");
+  const [appSecret, setAppSecret] = useState("");
+  const [redirectUri, setRedirectUri] = useState("");
 
   const load = useCallback(async () => {
     if (!clinicId) return;
@@ -106,7 +111,11 @@ export default function MetaIntegrationPage() {
     if (!clinicId) return;
     try {
       setBusy(true);
-      const { authUrl } = await connectMeta(clinicId);
+      const { authUrl } = await connectMeta(clinicId, {
+        appId: appId.trim() || undefined,
+        appSecret: appSecret.trim() || undefined,
+        redirectUri: redirectUri.trim() || undefined,
+      });
       window.open(authUrl, "metaOAuth", "width=600,height=800");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to start Meta connection");
@@ -239,6 +248,58 @@ export default function MetaIntegrationPage() {
           )}
         </CardContent>
       </Card>
+
+      {!connected && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Connect your own Meta Business app</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Each clinic authenticates with its own Meta app. Create a Meta app in your Business Manager, then paste its App ID and App Secret below. Leave blank to use the server&apos;s shared app (if configured by the platform admin).
+            </p>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="meta-app-id">Meta App ID</Label>
+              <Input
+                id="meta-app-id"
+                placeholder="e.g. 1029384756"
+                value={appId}
+                onChange={(e) => setAppId(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="meta-app-secret">Meta App Secret</Label>
+              <Input
+                id="meta-app-secret"
+                type="password"
+                placeholder="App Secret"
+                value={appSecret}
+                onChange={(e) => setAppSecret(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <Label htmlFor="meta-redirect">OAuth Redirect URI (optional)</Label>
+              <Input
+                id="meta-redirect"
+                placeholder="https://your-domain/api/meta/oauth/callback"
+                value={redirectUri}
+                onChange={(e) => setRedirectUri(e.target.value)}
+                autoComplete="off"
+              />
+              <p className="text-xs text-muted-foreground">
+                Must match the redirect URI registered on your Meta app. Defaults to this server&apos;s callback URL.
+              </p>
+            </div>
+            <div className="sm:col-span-2">
+              <Button onClick={handleConnect} disabled={busy}>
+                {busy ? "Starting…" : "Connect Meta Business"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="assets">
         <TabsList className="flex flex-wrap">

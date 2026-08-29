@@ -4,7 +4,6 @@ import { MetaRepository } from "@/clinic/modules/meta/meta.repository";
 import type { MetaIntegrationDoc } from "@/clinic/modules/meta/meta-schema";
 import { decryptToken, encryptToken, isExpired } from "@/clinic/modules/meta/meta-crypto";
 import {
-  buildMetaClient,
   MetaApiClient,
   MetaApiError,
 } from "@/clinic/modules/meta/meta-client";

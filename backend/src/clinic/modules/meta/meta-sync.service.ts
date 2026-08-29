@@ -105,9 +105,7 @@ export class MetaSyncService {
       .find({ clinicId, status: { $in: ["received", "failed"] } })
       .toArray();
     const webhook = new (await import("@/clinic/modules/meta/meta-webhook.service")).MetaWebhookService(
-      this.db,
-      this.client,
-      process.env.META_APP_SECRET
+      this.db
     );
     let processed = 0;
     for (const ev of events) {
