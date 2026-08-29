@@ -95,6 +95,11 @@ class PoolManager {
         maxPoolSize: config.maxPoolSize,
         minPoolSize: config.minPoolSize,
       });
+      // Swallow client-level error events. The driver also surfaces connection
+      // problems via operation rejections (which callers catch), but an
+      // unhandled "error" event on the EventEmitter would otherwise crash the
+      // whole process.
+      client.on("error", () => {});
 
       const connectPromise = client.connect();
       const db = client.db("myclinic");

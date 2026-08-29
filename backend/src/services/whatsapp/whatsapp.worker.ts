@@ -88,17 +88,33 @@ async function resetDbPool(): Promise<void> {
  */
 let lastDbReset = 0;
 async function getHealthyDb(): Promise<Db> {
-  const candidate = await getWhatsAppDb();
+  // Guard every await so this can never throw an unhandled rejection into the
+  // interval callback (which would crash the worker). Whatever we return is
+  // verified by the caller's own try/catch at the operation level.
+  let candidate: Db | null = null;
   try {
+    candidate = await getWhatsAppDb();
     await candidate.command({ ping: 1 });
     return candidate;
   } catch {
-    const now = Date.now();
-    if (now - lastDbReset > 15_000) {
-      lastDbReset = now;
+    /* ping failed — fall through to a pool reset below */
+  }
+  const now = Date.now();
+  if (now - lastDbReset > 15_000) {
+    lastDbReset = now;
+    try {
       await resetDbPool();
+    } catch {
+      /* best-effort */
     }
-    return getWhatsAppDb();
+  }
+  try {
+    return await getWhatsAppDb();
+  } catch {
+    // Last resort: hand back the possibly-wedged candidate so the caller's
+    // operation fails loudly (and is retried next tick) instead of crashing us.
+    if (candidate) return candidate;
+    throw new Error("whatsapp DB handle unavailable");
   }
 }
 
