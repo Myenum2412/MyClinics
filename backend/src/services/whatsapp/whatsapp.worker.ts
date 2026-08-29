@@ -37,6 +37,10 @@ import { processDueNotificationsForClients } from "@/services/whatsapp/notificat
 
 const REMINDER_POLL_MS = 30_000;
 const COMMAND_POLL_MS = 2_000;
+/** Diagnostic toggle: when "1", the worker runs only its DB/reminder loops and
+ * does NOT launch any WhatsApp (Chromium) client. Used to isolate whether
+ * Chromium in the same process breaks the worker's Atlas connection. */
+const DISABLE_CLIENTS = process.env.WORKER_DISABLE_CLIENTS === "1";
 /** If the legacy client authenticates but never becomes ready, recycle it. */
 const STUCK_AFTER_AUTH_MS = 90_000;
 const MAX_RECONNECT_ATTEMPTS = 10;
@@ -252,7 +256,8 @@ function startWatchdog(): void {
   let fails = 0;
   watchdogTimer = setInterval(async () => {
     try {
-      const dbh = await getWhatsAppDb();
+    const dbh = await getWhatsAppDb();
+    if (!DISABLE_CLIENTS) {
       if ((!legacyClient || !legacyClient.info) && !reconnectTimer) {
         logger.warn("watchdog: legacy whatsapp client not connected; restarting");
         void startLegacyClient().catch(() => scheduleLegacyReconnect());
@@ -272,6 +277,7 @@ function startWatchdog(): void {
           });
         });
       }
+    }
       fails = 0;
     } catch (err) {
       fails += 1;
@@ -292,12 +298,16 @@ async function main(): Promise<void> {
   killOrphanedChromium();
   db = await getWhatsAppDb();
   await ensureDefaultOrganization(db);
-  await startLegacyClient();
+  if (DISABLE_CLIENTS) {
+    logger.warn("WORKER_DISABLE_CLIENTS=1: skipping WhatsApp client startup");
+  } else {
+    await startLegacyClient();
 
-  // Restore every clinic connection marked enabled before the restart.
-  const restored = await startConfiguredClinicSessions(db);
-  if (restored > 0) {
-    logger.info("clinic whatsapp sessions restored", { count: restored });
+    // Restore every clinic connection marked enabled before the restart.
+    const restored = await startConfiguredClinicSessions(db);
+    if (restored > 0) {
+      logger.info("clinic whatsapp sessions restored", { count: restored });
+    }
   }
 
   startReminderLoop();
