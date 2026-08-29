@@ -160,10 +160,20 @@ async function sendBatch(
       continue;
     }
     try {
-      if (notification.mediaData && notification.mediaMimetype) {
+      if (notification.mediaMimetype) {
+        let mediaData = notification.mediaData;
+        if (!mediaData) {
+          const full = await db
+            .collection<NotificationDoc>(NOTIFICATIONS_COLLECTION)
+            .findOne({ _id: notificationId }, { projection: { mediaData: 1 } });
+          mediaData = full?.mediaData;
+        }
+        if (!mediaData) {
+          throw new Error("missing mediaData for media notification");
+        }
         const media = new MessageMedia(
           notification.mediaMimetype,
-          notification.mediaData,
+          mediaData,
           notification.mediaFilename ?? "document"
         );
         await sendWithTimeout(
@@ -240,6 +250,7 @@ export async function processDueNotificationsForClients(
     .find({ status: "queued" })
     .sort({ createdAt: 1 })
     .limit(BATCH_LIMIT)
+    .project({ mediaData: 0 })
     .toArray();
 
   const groups = new Map<string, NotificationDoc[]>();
