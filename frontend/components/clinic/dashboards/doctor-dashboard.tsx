@@ -18,7 +18,7 @@ import {
   listPrescriptions,
 } from "@/lib/clinic-api";
 import { Card, CardContent } from "@/components/ui/card";
-import { KOLKATA_TZ, now, toLocalDateISO, parseLocalDate, addDays, formatDate } from "@/lib/datetime";
+import { KOLKATA_TZ, now, toLocalDateISO, parseLocalDate, addDays, formatDate, weekdayIndex } from "@/lib/datetime";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
@@ -68,7 +68,7 @@ function buildAppointmentWeek(
   const today = todayISO();
   const monday = (() => {
     const d = parseLocalDate(today);
-    const dow = d.getUTCDay(); // 0 Sun … 6 Sat
+    const dow = weekdayIndex(today); // 0 Sun … 6 Sat (timezone-independent)
     const diff = dow === 0 ? -6 : 1 - dow;
     return addDays(d, diff);
   })();
