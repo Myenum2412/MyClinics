@@ -1,4 +1,17 @@
+import dns from "node:dns";
 import { MongoClient, Db, ServerApiVersion } from "mongodb";
+
+// The host's systemd-resolved stub (127.0.0.53) intermittently fails the DNS
+// SRV/TXT lookups that `mongodb+srv://` performs to discover Atlas cluster
+// nodes. When that blips, the driver loses topology, gets stuck re-connecting
+// to a stale cached node IP, and every connection times out — which silently
+// kills the reminder/notification pipeline. Resolve via public DNS that
+// reliably answers Atlas SRV queries instead.
+try {
+  dns.setServers(["8.8.8.8", "1.1.1.1"]);
+} catch {
+  /* non-fatal: fall back to the system resolver */
+}
 
 interface PoolConfig {
   name: string;
