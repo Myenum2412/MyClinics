@@ -20,6 +20,11 @@ export interface PatientDoc extends ClinicDocument {
   pincode: string | null;
   height: string | null;
   weight: string | null;
+  bloodPressure: string | null;
+  temperature: string | null;
+  pulse: string | null;
+  respiratoryRate: string | null;
+  spo2: string | null;
   occupation: string | null;
   maritalStatus: string | null;
   emergencyContactName: string | null;
@@ -63,6 +68,11 @@ export function patientToPublic(doc: PatientDoc) {
     pincode: doc.pincode,
     height: doc.height,
     weight: doc.weight,
+    bloodPressure: doc.bloodPressure,
+    temperature: doc.temperature,
+    pulse: doc.pulse,
+    respiratoryRate: doc.respiratoryRate,
+    spo2: doc.spo2,
     occupation: doc.occupation,
     maritalStatus: doc.maritalStatus,
     emergencyContactName: doc.emergencyContactName,

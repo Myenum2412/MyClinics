@@ -4,6 +4,33 @@ A clinic management platform with a WhatsApp AI assistant that books, reschedule
 cancels appointments for patients, answers clinic questions, sends appointment
 reminders and turn alerts.
 
+## Purpose
+
+MyClinics exists to **automate the front desk** of small-to-medium clinics. In most
+clinics, booking, reminding, and queueing patients is a manual, phone-and-WhatsApp
+process that eats staff time and leads to no-shows. The platform replaces that
+fragmented workflow with a single system that handles:
+
+- **Patient self-service** — patients book, reschedule, or cancel appointments
+  directly over WhatsApp without calling the clinic.
+- **Zero-touch reminders** — automated WhatsApp reminders ~30 minutes before each
+  appointment, dramatically reducing no-shows.
+- **Live queue management** — a real-time counter system that auto-notifies the
+  next patient when the current one is seen, eliminating manual calling.
+- **AI-powered answers** — a WhatsApp chatbot grounded strictly in the clinic's
+  own knowledge base (soul.md + knowledge documents) so patients always get
+  accurate answers, never hallucinated ones.
+- **Clinic staff dashboard** — a unified view of appointments, patients, doctors,
+  billing, prescriptions, and reports so clinic managers have full visibility
+  and control.
+- **Multi-tenant SaaS** — every clinic is an isolated tenant with role-based
+  access (clinic_admin → staff → patient), meaning the same platform can serve
+  hundreds of independent clinics from a single deployment.
+
+The goal is to give clinics an **enterprise-grade** management tool without
+enterprise-grade complexity — one signup, one WhatsApp link, and the clinic runs
+itself.
+
 ## Features
 
 - **Dashboard** — appointments, patients, doctors, billing, medicines, prescriptions

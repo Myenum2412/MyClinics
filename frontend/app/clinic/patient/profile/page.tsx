@@ -57,6 +57,11 @@ interface FormState {
   bloodGroup: string;
   height: string;
   weight: string;
+  bloodPressure: string;
+  temperature: string;
+  pulse: string;
+  respiratoryRate: string;
+  spo2: string;
   maritalStatus: string;
   occupation: string;
   address: string;
@@ -89,6 +94,11 @@ function patientToForm(p: Patient): FormState {
     bloodGroup: p.bloodGroup ?? "",
     height: p.height ?? "",
     weight: p.weight ?? "",
+    bloodPressure: (p as any).bloodPressure ?? "",
+    temperature: (p as any).temperature ?? "",
+    pulse: (p as any).pulse ?? "",
+    respiratoryRate: (p as any).respiratoryRate ?? "",
+    spo2: (p as any).spo2 ?? "",
     maritalStatus: p.maritalStatus ?? "",
     occupation: p.occupation ?? "",
     address: p.address ?? "",
@@ -211,6 +221,11 @@ export default function PatientProfilePage() {
         bloodGroup: form.bloodGroup || null,
         height: form.height || null,
         weight: form.weight || null,
+        bloodPressure: form.bloodPressure || null,
+        temperature: form.temperature || null,
+        pulse: form.pulse || null,
+        respiratoryRate: form.respiratoryRate || null,
+        spo2: form.spo2 || null,
         maritalStatus: form.maritalStatus || null,
         occupation: form.occupation || null,
         address: form.address || null,
@@ -515,6 +530,61 @@ export default function PatientProfilePage() {
                       />
                     ) : (
                       orDash(patient.weight)
+                    )}
+                  </Field>
+                  <Field label="Blood Pressure">
+                    {editing ? (
+                      <Input
+                        value={form.bloodPressure}
+                        onChange={(e) => setField("bloodPressure", e.target.value)}
+                        placeholder="120/80 mmHg"
+                      />
+                    ) : (
+                      orDash((patient as any).bloodPressure ? `${(patient as any).bloodPressure} mmHg` : null)
+                    )}
+                  </Field>
+                  <Field label="Temperature">
+                    {editing ? (
+                      <Input
+                        value={form.temperature}
+                        onChange={(e) => setField("temperature", e.target.value)}
+                        placeholder="98.6 °F"
+                      />
+                    ) : (
+                      orDash((patient as any).temperature ? `${(patient as any).temperature}°` : null)
+                    )}
+                  </Field>
+                  <Field label="Pulse">
+                    {editing ? (
+                      <Input
+                        value={form.pulse}
+                        onChange={(e) => setField("pulse", e.target.value)}
+                        placeholder="72 bpm"
+                      />
+                    ) : (
+                      orDash((patient as any).pulse ? `${(patient as any).pulse} bpm` : null)
+                    )}
+                  </Field>
+                  <Field label="Respiratory Rate">
+                    {editing ? (
+                      <Input
+                        value={form.respiratoryRate}
+                        onChange={(e) => setField("respiratoryRate", e.target.value)}
+                        placeholder="16 /min"
+                      />
+                    ) : (
+                      orDash((patient as any).respiratoryRate ? `${(patient as any).respiratoryRate} /min` : null)
+                    )}
+                  </Field>
+                  <Field label="SpO₂">
+                    {editing ? (
+                      <Input
+                        value={form.spo2}
+                        onChange={(e) => setField("spo2", e.target.value)}
+                        placeholder="98 %"
+                      />
+                    ) : (
+                      orDash((patient as any).spo2 ? `${(patient as any).spo2} %` : null)
                     )}
                   </Field>
                   <Field label="Marital Status">

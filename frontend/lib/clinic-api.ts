@@ -213,6 +213,11 @@ export interface Patient {
   pincode: string | null;
   height: string | null;
   weight: string | null;
+  bloodPressure: string | null;
+  temperature: string | null;
+  pulse: string | null;
+  respiratoryRate: string | null;
+  spo2: string | null;
   occupation: string | null;
   maritalStatus: string | null;
   emergencyContactName: string | null;

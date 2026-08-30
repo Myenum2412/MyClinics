@@ -50,6 +50,11 @@ export interface PatientFormState {
   bloodGroup: string;
   height: string;
   weight: string;
+  bloodPressure: string;
+  temperature: string;
+  pulse: string;
+  respiratoryRate: string;
+  spo2: string;
   maritalStatus: string;
   occupation: string;
   address: string;
@@ -92,6 +97,11 @@ export const EMPTY_FORM: PatientFormState = {
   bloodGroup: "",
   height: "",
   weight: "",
+  bloodPressure: "",
+  temperature: "",
+  pulse: "",
+  respiratoryRate: "",
+  spo2: "",
   maritalStatus: "",
   occupation: "",
   address: "",
@@ -266,7 +276,7 @@ export function PatientForm({
   const howDidYouHear = getOptions("how_did_you_hear");
   const idProofTypes = getOptions("id_proof_types");
 
-  const [form, setForm] = useState<PatientFormState>(initialData as PatientFormState);
+  const [form, setForm] = useState<PatientFormState>({ ...EMPTY_FORM, ...initialData } as PatientFormState);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -429,7 +439,17 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="2. Address">
+        <SectionCard title="2. Vital Signs">
+          <div className="grid gap-4 md:grid-cols-2">
+            {renderViewField("Blood Pressure", form.bloodPressure ? `${form.bloodPressure} mmHg` : "—")}
+            {renderViewField("Temperature", form.temperature ? `${form.temperature} °C` : "—")}
+            {renderViewField("Pulse / Heart Rate", form.pulse ? `${form.pulse} bpm` : "—")}
+            {renderViewField("Respiratory Rate", form.respiratoryRate ? `${form.respiratoryRate} /min` : "—")}
+            {renderViewField("SpO₂ (Oxygen Saturation)", form.spo2 ? `${form.spo2} %` : "—")}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="3. Address">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("Full Address", form.address)}
             {renderViewField("City", form.city)}
@@ -438,7 +458,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="3. Emergency Contact">
+        <SectionCard title="4. Emergency Contact">
           <div className="grid gap-4 md:grid-cols-3">
             {renderViewField("Contact Name", form.emergencyContactName)}
             {renderViewField("Relationship", form.emergencyContactRelationship)}
@@ -446,7 +466,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="4. Medical Information">
+        <SectionCard title="5. Medical Information">
           <div className="space-y-4">
             {renderViewField("Known Allergies", form.allergies)}
             {renderViewField("Medical Conditions", form.medicalConditions)}
@@ -455,14 +475,14 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="5. Identification">
+        <SectionCard title="6. Identification">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("ID Proof Type", form.idType)}
             {renderViewField("ID Number", form.idNumber)}
           </div>
         </SectionCard>
 
-        <SectionCard title="6. Account & Portal Access">
+        <SectionCard title="7. Account & Portal Access">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField(
               "Assigned Doctor",
@@ -473,7 +493,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="7. Insurance">
+        <SectionCard title="8. Insurance">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("Insurance Provider", form.insuranceProvider)}
             {renderViewField("Policy Number", form.insurancePolicyNumber)}
@@ -482,7 +502,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="8. Additional Information">
+        <SectionCard title="9. Additional Information">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("Referred By", form.referredBy)}
             {renderViewField("How Did You Hear About Us?", form.howDidYouHear)}
@@ -493,7 +513,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="9. Attachments">
+        <SectionCard title="10. Attachments">
           <div className="space-y-2">
             <Label className="text-sm font-medium text-foreground">Uploaded Documents</Label>
             <div className="text-foreground">
@@ -741,7 +761,57 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="2. Address">
+      <SectionCard title="2. Vital Signs" description="Optional — captured at registration, editable anytime">
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            label="Blood Pressure"
+            name="bloodPressure"
+            value={form.bloodPressure}
+            onChange={(v) => handleChange("bloodPressure", v)}
+            placeholder="120/80"
+            helperText="mmHg, e.g. 120/80"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="Temperature"
+            name="temperature"
+            value={form.temperature}
+            onChange={(v) => handleChange("temperature", v)}
+            placeholder="98.6"
+            helperText="°F or °C"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="Pulse / Heart Rate"
+            name="pulse"
+            value={form.pulse}
+            onChange={(v) => handleChange("pulse", v)}
+            placeholder="72"
+            helperText="beats per minute (bpm)"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="Respiratory Rate"
+            name="respiratoryRate"
+            value={form.respiratoryRate}
+            onChange={(v) => handleChange("respiratoryRate", v)}
+            placeholder="16"
+            helperText="breaths per minute"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="SpO₂ (Oxygen Saturation)"
+            name="spo2"
+            value={form.spo2}
+            onChange={(v) => handleChange("spo2", v)}
+            placeholder="98"
+            helperText="%, e.g. 98"
+            disabled={isViewMode}
+          />
+        </div>
+      </SectionCard>
+
+      <SectionCard title="3. Address">
         <PincodeLookup
           pincode={form.pincode}
           city={form.city}
@@ -778,7 +848,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="3. Emergency Contact"
+        title="4. Emergency Contact"
         description="Optional but recommended"
       >
         <div className="grid gap-4 md:grid-cols-3">
@@ -812,7 +882,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="4. Medical Information"
+        title="5. Medical Information"
         description="Shared with the assigned doctor for prescriptions and consultations"
       >
         <FormField
@@ -870,7 +940,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="5. Identification"
+        title="6. Identification"
         description="Optional — only fill if required by your clinic"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -900,7 +970,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="6. Account & Portal Access"
+        title="7. Account & Portal Access"
         description="Assign the patient to a doctor and optionally create patient portal credentials"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1032,7 +1102,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="7. Insurance"
+        title="8. Insurance"
         description="Optional — add if the patient has health insurance"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1071,7 +1141,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="8. Additional Information">
+      <SectionCard title="9. Additional Information">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             label="Referred By"
@@ -1129,7 +1199,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="9. Attachments"
+        title="10. Attachments"
         description="Optional - upload patient documents"
       >
         {isViewMode ? (

@@ -82,6 +82,11 @@ interface PatientFormState {
   pincode: string;
   height: string;
   weight: string;
+  bloodPressure: string;
+  temperature: string;
+  pulse: string;
+  respiratoryRate: string;
+  spo2: string;
   occupation: string;
   maritalStatus: string;
   emergencyContactName: string;
@@ -121,6 +126,11 @@ const EMPTY_FORM: PatientFormState = {
   pincode: "",
   height: "",
   weight: "",
+  bloodPressure: "",
+  temperature: "",
+  pulse: "",
+  respiratoryRate: "",
+  spo2: "",
   occupation: "",
   maritalStatus: "",
   emergencyContactName: "",
@@ -214,6 +224,11 @@ export default function PatientsPage() {
         pincode: form.pincode || null,
         height: form.height || null,
         weight: form.weight || null,
+        bloodPressure: form.bloodPressure || null,
+        temperature: form.temperature || null,
+        pulse: form.pulse || null,
+        respiratoryRate: form.respiratoryRate || null,
+        spo2: form.spo2 || null,
         occupation: form.occupation || null,
         maritalStatus: form.maritalStatus || null,
         emergencyContactName: form.emergencyContactName || null,
@@ -507,6 +522,11 @@ export default function PatientsPage() {
                 pincode: editing.pincode ?? "",
                 height: editing.height ?? "",
                 weight: editing.weight ?? "",
+                bloodPressure: (editing as any).bloodPressure ?? "",
+                temperature: (editing as any).temperature ?? "",
+                pulse: (editing as any).pulse ?? "",
+                respiratoryRate: (editing as any).respiratoryRate ?? "",
+                spo2: (editing as any).spo2 ?? "",
                 occupation: editing.occupation ?? "",
                 maritalStatus: editing.maritalStatus ?? "",
                 emergencyContactName: editing.emergencyContactName ?? "",
@@ -589,6 +609,11 @@ export default function PatientsPage() {
                 pincode: viewing.pincode ?? "",
                 height: viewing.height ?? "",
                 weight: viewing.weight ?? "",
+                bloodPressure: (viewing as any).bloodPressure ?? "",
+                temperature: (viewing as any).temperature ?? "",
+                pulse: (viewing as any).pulse ?? "",
+                respiratoryRate: (viewing as any).respiratoryRate ?? "",
+                spo2: (viewing as any).spo2 ?? "",
                 occupation: viewing.occupation ?? "",
                 maritalStatus: viewing.maritalStatus ?? "",
                 emergencyContactName: viewing.emergencyContactName ?? "",
@@ -1056,6 +1081,31 @@ function PatientForm({
           <div className="grid gap-2">
             <Label>Weight (kg)</Label>
             <Input value={form.weight} onChange={(e) => set("weight", e.target.value)} placeholder="65" />
+          </div>
+        </div>
+        <div className="border-t border-border pt-3">
+          <p className="text-sm font-medium text-foreground mb-3">Vital Signs</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-2">
+              <Label>Blood Pressure</Label>
+              <Input value={form.bloodPressure} onChange={(e) => set("bloodPressure", e.target.value)} placeholder="120/80 mmHg" />
+            </div>
+            <div className="grid gap-2">
+              <Label>Temperature</Label>
+              <Input value={form.temperature} onChange={(e) => set("temperature", e.target.value)} placeholder="98.6 °F" />
+            </div>
+            <div className="grid gap-2">
+              <Label>Pulse / Heart Rate</Label>
+              <Input value={form.pulse} onChange={(e) => set("pulse", e.target.value)} placeholder="72 bpm" />
+            </div>
+            <div className="grid gap-2">
+              <Label>Respiratory Rate</Label>
+              <Input value={form.respiratoryRate} onChange={(e) => set("respiratoryRate", e.target.value)} placeholder="16 /min" />
+            </div>
+            <div className="grid gap-2">
+              <Label>SpO₂ (%)</Label>
+              <Input value={form.spo2} onChange={(e) => set("spo2", e.target.value)} placeholder="98 %" />
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
