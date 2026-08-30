@@ -63,14 +63,6 @@ const NAV_ITEMS: NavItem[] = [
     icon: <CalendarDaysIcon className="size-6" />,
     match: "prefix",
     roles: ["patient", "doctor", "staff", "clinic_admin"],
-    children: [
-      { title: "Appointments", url: "/clinic/appointments" },
-      {
-        title: "Token Queue",
-        url: "/clinic/appointments/queue",
-        roles: ["doctor", "staff", "clinic_admin"],
-      },
-    ],
   },
   {
     title: "Patients",
