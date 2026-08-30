@@ -4,8 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import {
-  getSoul,
-  updateSoul,
   getClinicWhatsappSession,
   connectClinicWhatsapp,
   disconnectClinicWhatsapp,
@@ -13,7 +11,6 @@ import {
   updateClinicSettings,
 } from "@/lib/clinic-api";
 import type {
-  SoulRecord,
   ClinicWhatsappSession,
   ClinicSettings,
 } from "@/lib/clinic-api";
@@ -67,10 +64,7 @@ export default function SettingsPage() {
 
   const [activeTab, setActiveTab] = useState<"whatsapp" | "billing" | "dropdowns">("whatsapp");
 
-  const [soul, setSoul] = useState<SoulRecord | null>(null);
-  const [soulDraft, setSoulDraft] = useState("");
   const [loading, setLoading] = useState(true);
-  const [savingSoul, setSavingSoul] = useState(false);
 
   const [waSession, setWaSession] = useState<ClinicWhatsappSession | null>(null);
   const [waLoading, setWaLoading] = useState(true);
@@ -92,21 +86,12 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!session?.clinicId) return;
 
-    Promise.all([
-      getSoul().catch((err) => {
-        console.error(err);
-        return { soul: { content: "", version: 0, fallbackReply: "Unavailable" } } as any;
-      }),
-      getClinicSettings(session.clinicId).catch((err) => {
+    getClinicSettings(session.clinicId)
+      .catch((err) => {
         console.error(err);
         return null;
-      }),
-    ])
-      .then(([soulRes, settingsRes]) => {
-        if (soulRes?.soul) {
-          setSoul(soulRes.soul);
-          setSoulDraft(soulRes.soul.content);
-        }
+      })
+      .then((settingsRes) => {
         if (settingsRes) {
           setSettings(settingsRes);
           setGstinDraft(settingsRes.gstin ?? "");
@@ -173,21 +158,6 @@ export default function SettingsPage() {
       toast.error(err instanceof Error ? err.message : "Failed to disconnect");
     } finally {
       setWaAction(null);
-    }
-  }
-
-  async function saveSoulMd(e: React.FormEvent) {
-    e.preventDefault();
-    setSavingSoul(true);
-    try {
-      const updated = await updateSoul(soulDraft);
-      setSoul(updated.soul);
-      setSoulDraft(updated.soul.content);
-      toast.success("soul.md saved");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save soul.md");
-    } finally {
-      setSavingSoul(false);
     }
   }
 
@@ -294,7 +264,7 @@ export default function SettingsPage() {
       <div>
         <h2 className="text-2xl font-bold text-foreground font-sans">Settings</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Manage your clinic's assistant configurations, billing variables, and dropdown lists.
+          Manage your clinic's WhatsApp connection, billing variables, and dropdown lists.
         </p>
       </div>
 
@@ -309,7 +279,7 @@ export default function SettingsPage() {
           }`}
         >
           <MessageSquare className="size-4" />
-          WhatsApp & AI
+          WhatsApp
         </button>
         <button
           onClick={() => setActiveTab("billing")}
@@ -457,43 +427,6 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>soul.md</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={saveSoulMd} className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    The story and purpose of your clinic, stored as a markdown file. The WhatsApp
-                    assistant uses this file to answer patients in your clinic&apos;s voice.
-                  </p>
-                  <div className="grid gap-2">
-                    <Label htmlFor="soul" className="text-sm font-medium text-foreground">
-                      soul.md content
-                    </Label>
-                    <Textarea
-                      id="soul"
-                      value={soulDraft}
-                      disabled={!canEdit}
-                      rows={12}
-                      placeholder={"# Our clinic's soul\n\nWhy we exist, what we stand for..."}
-                      className="min-h-64 resize-y font-mono text-sm"
-                      onChange={(e) => setSoulDraft(e.target.value)}
-                    />
-                  </div>
-                  {soul && (
-                    <p className="text-xs text-muted-foreground">
-                      Version {soul.version} · fallback reply: “{soul.fallbackReply}”
-                    </p>
-                  )}
-                  {canEdit && (
-                    <Button type="submit" disabled={savingSoul}>
-                      {savingSoul ? "Saving..." : "Save soul.md"}
-                    </Button>
-                  )}
-                </form>
-              </CardContent>
-            </Card>
           </>
         )}
 

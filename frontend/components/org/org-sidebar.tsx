@@ -37,6 +37,7 @@ import {
   TrendingUpIcon,
   ShieldAlertIcon,
   NetworkIcon,
+  FileText,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -56,6 +57,12 @@ const NAV_ITEMS = [
     title: "WhatsApp Messages",
     url: "/orgmenu/whatsapp",
     icon: <ChatBubbleIcon />,
+    match: "prefix" as const,
+  },
+  {
+    title: "Assistant Soul",
+    url: "/orgmenu/soul",
+    icon: <FileText className="size-4" />,
     match: "prefix" as const,
   },
 ];
