@@ -16,9 +16,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
 import {
@@ -91,7 +88,6 @@ export function OrgSidebar({
   }
 }) {
   const pathname = usePathname()
-  const isNeoActive = pathname.startsWith("/orgmenu/rgb-neo")
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -148,25 +144,20 @@ export function OrgSidebar({
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton render={<a href="/orgmenu/rgb-neo" />} isActive={isNeoActive} tooltip="RGB Neo">
-                  <RadioIcon className="size-4" />
-                  <span>Command Center</span>
-                </SidebarMenuButton>
-                <SidebarMenuSub>
-                  {NEO_SUBITEMS.filter((s) => s.url !== "/orgmenu/rgb-neo").map((sub) => {
-                    const active = pathname.startsWith(sub.url)
-                    return (
-                      <SidebarMenuSubItem key={sub.url}>
-                        <SidebarMenuSubButton render={<a href={sub.url} />} isActive={active}>
-                          {sub.icon}
-                          <span>{sub.title}</span>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    )
-                  })}
-                </SidebarMenuSub>
-              </SidebarMenuItem>
+              {NEO_SUBITEMS.map((item) => {
+                const active =
+                  item.url === "/orgmenu/rgb-neo"
+                    ? pathname === item.url
+                    : pathname.startsWith(item.url)
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton render={<a href={item.url} />} isActive={active} tooltip={item.title}>
+                      {item.icon}
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
