@@ -12,11 +12,14 @@ import { generateAppointmentId } from "@/clinic/core/ids";
 import type { CreateAppointmentInput, UpdateAppointmentInput } from "@/clinic/modules/appointments/appointments.dto";
 import { AppointmentRepository } from "@/clinic/modules/appointments/appointments.repository";
 import type { AppointmentDoc } from "@/clinic/modules/appointments/appointments.schema";
+import { now as nowFn } from "@/clinic/core/datetime";
 import {
   callNext,
   cancelQueue as cancelQueueToken,
   checkIn,
   complete as completeToken,
+  deriveSession,
+  generateTokenNumber,
   getQueueSettings,
   getQueueSnapshot,
   markNoShow as markNoShowToken,
@@ -41,6 +44,59 @@ export class AppointmentService {
     });
   }
 
+  private async backfillMissingTokens(
+    clinicId: string,
+    doctorId: string,
+    date: string,
+    session: import("@/clinic/modules/appointments/appointments.schema").AppointmentSession
+  ): Promise<void> {
+    const col = this.db.collection<AppointmentDoc>(CLINIC_COLLECTIONS.appointments);
+    // Find all appointments for this doctor/date without a token (old data has missing tokenNumber/session)
+    const missingAll = await col
+      .find({
+        clinicId,
+        doctorId,
+        date,
+        tokenNumber: null,
+        status: { $ne: "cancelled" as const },
+      })
+      .sort({ time: 1 })
+      .toArray();
+    const missing = missingAll.filter((d) => {
+      const s = d.session ?? deriveSession(d.time);
+      return s === session;
+    });
+    if (missing.length === 0) return;
+    // Find current max token for this session
+    const last = await col
+      .find({
+        clinicId,
+        doctorId,
+        date,
+        session: session as any,
+        tokenNumber: { $ne: null },
+        queueStatus: { $in: ["checked_in", "waiting", "called", "in_consultation", "skipped", "completed"] },
+      })
+      .sort({ tokenNumber: -1 })
+      .limit(1)
+      .toArray();
+    let next = (last[0]?.tokenNumber ?? 0) + 1;
+    for (const doc of missing) {
+      await col.updateOne(
+        { clinicId, appointmentId: doc.appointmentId },
+        {
+          $set: {
+            tokenNumber: next++,
+            session: session as any,
+            queueStatus: doc.queueStatus ?? "waiting",
+            checkedInAt: doc.checkedInAt ?? nowFn(),
+            updatedAt: nowFn(),
+          },
+        }
+      );
+    }
+  }
+
   async createAppointment(
     ctx: ClinicContext,
     input: CreateAppointmentInput
@@ -59,6 +115,12 @@ export class AppointmentService {
       throw new ConflictError("The doctor already has an appointment at this time");
     }
 
+    // Auto-assign Token # so it shows immediately in the appointments table (no manual check-in required).
+    // Tokens are per doctor / date / session (morning-afternoon-evening) and increment within that session.
+    const session = deriveSession(input.time);
+    await this.backfillMissingTokens(clinicId, input.doctorId, input.date, session);
+    const tokenNumber = await generateTokenNumber(this.db, clinicId, input.doctorId, input.date, session);
+
     const appointment = await this.repo(ctx).insert({
       appointmentId: generateAppointmentId(),
       patientId: input.patientId,
@@ -69,7 +131,14 @@ export class AppointmentService {
       reason: input.reason ?? null,
       notes: input.notes ?? null,
       createdBy: ctx.userId,
-    });
+      queueStatus: "waiting",
+      tokenNumber,
+      session,
+      priority: false,
+      checkedInAt: nowFn(),
+      notifiedStages: [],
+      queueHistory: [{ status: "waiting", at: nowFn(), by: ctx.userId }],
+    } as never);
 
     void indexEntity("appointment", clinicId, appointment.appointmentId, appointment).catch(() => {});
 
@@ -153,6 +222,18 @@ export class AppointmentService {
       const conflict = await repo.findConflicting(newDoctorId, newDate, newTime, appointmentId);
       if (conflict) {
         throw new ConflictError("The doctor already has an appointment at this time");
+      }
+      // Regenerate token when doctor/date/time changes so Token # stays correct and visible
+      const clinicIdForToken = requireClinicOf(ctx);
+      const newSession = deriveSession(newTime);
+      await this.backfillMissingTokens(clinicIdForToken, newDoctorId, newDate, newSession);
+      const newToken = await generateTokenNumber(this.db, clinicIdForToken, newDoctorId, newDate, newSession);
+      patch.session = newSession;
+      patch.tokenNumber = newToken;
+      if (!existing.queueStatus || existing.queueStatus === "scheduled") {
+        patch.queueStatus = "waiting";
+        patch.checkedInAt = existing.checkedInAt ?? nowFn();
+        patch.notifiedStages = [];
       }
     }
 

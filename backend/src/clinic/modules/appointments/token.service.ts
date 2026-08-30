@@ -66,7 +66,7 @@ const DEFAULT_TEMPLATES: Record<QueueStage, string> = {
     "Hi {name}, please proceed to the consultation room now (Token #{token}).",
 };
 
-function deriveSession(time: string): AppointmentSession {
+export function deriveSession(time: string): AppointmentSession {
   const hour = Number(time.split(":")[0] ?? "0");
   if (hour < 12) return "morning";
   if (hour < 17) return "afternoon";
@@ -165,7 +165,7 @@ export async function saveQueueSettings(
   return next;
 }
 
-async function generateTokenNumber(
+export async function generateTokenNumber(
   db: Db,
   clinicId: string,
   doctorId: string,

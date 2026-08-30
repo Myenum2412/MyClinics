@@ -204,6 +204,36 @@ export default function AppointmentsPage() {
     return map;
   }, [doctors]);
 
+  // Fallback Token # for old appointments where tokenNumber is still null (pre-fix data).
+  // Groups by doctor|date|session and assigns sequential numbers after existing max, so Token # always shows.
+  const tokenFallbackMap = useMemo(() => {
+    const map = new Map<string, number>();
+    const groups = new Map<string, Appointment[]>();
+    const deriveSession = (time: string) => {
+      const h = Number(time.split(":")[0] ?? "0");
+      if (h < 12) return "morning";
+      if (h < 17) return "afternoon";
+      return "evening";
+    };
+    for (const a of appointments) {
+      const session = (a.session as string) ?? deriveSession(a.time);
+      const key = `${a.doctorId}|${a.date}|${session}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(a);
+    }
+    for (const [, group] of groups) {
+      group.sort((x, y) => x.time.localeCompare(y.time));
+      const maxToken = Math.max(0, ...group.filter((g) => g.tokenNumber != null).map((g) => g.tokenNumber!));
+      let next = maxToken + 1;
+      for (const appt of group) {
+        if (appt.tokenNumber == null) {
+          map.set(appt.appointmentId, next++);
+        }
+      }
+    }
+    return map;
+  }, [appointments]);
+
   const loadData = useCallback(() => {
     if (!clinicId) return;
     Promise.allSettled([
@@ -876,14 +906,17 @@ export default function AppointmentsPage() {
                         </TableCell>
 
                         <TableCell className="text-sm font-semibold">
-                          {a.tokenNumber != null ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-primary">
-                              #{a.tokenNumber}
-                              {a.priority && <Star className="size-3 fill-primary" />}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
+                          {(() => {
+                            const displayToken = a.tokenNumber ?? tokenFallbackMap.get(a.appointmentId) ?? null;
+                            return displayToken != null ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-primary">
+                                #{displayToken}
+                                {a.priority && <Star className="size-3 fill-primary" />}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            );
+                          })()}
                         </TableCell>
 
                         {visibleColumns.dateTime && (
