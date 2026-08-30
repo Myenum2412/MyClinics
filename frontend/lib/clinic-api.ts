@@ -1492,10 +1492,12 @@ export async function getAvatarUrl(
   ownerType: AvatarOwnerType,
   ownerId: string
 ): Promise<{ url: string | null }> {
-  // The backend serves the avatar bytes directly (Content-Type: image/*).
-  // We probe for a real image before handing the path to <img src> so the
-  // initials fallback still shows when no avatar is set.
+  // The backend serves avatar bytes directly (Content-Type: image/*) and requires auth.
+  // We fetch with Bearer token and return a blob object URL so <img> does not need to
+  // re-authenticate via Cookie (which fails for <img> on some deployments). The caller
+  // should revoke the URL when done (PersonAvatar does this via bustAvatarCache).
   try {
+    if (!clinicId || !ownerType || !ownerId) return { url: null };
     const headers: Record<string, string> = {};
     const token = typeof window !== "undefined" ? getStoredToken() : null;
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -1506,7 +1508,9 @@ export async function getAvatarUrl(
     });
     const type = res.headers.get("content-type") ?? "";
     if (res.ok && type.startsWith("image/")) {
-      return { url: avatarPath(clinicId, ownerType, ownerId) };
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      return { url: objectUrl };
     }
   } catch {
     // ignore — fall back to initials below

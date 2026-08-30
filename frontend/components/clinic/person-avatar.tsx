@@ -6,9 +6,22 @@ import { getAvatarUrl, type AvatarOwnerType } from "@/lib/clinic-api";
 import { NameAvatar } from "@/components/clinic/name-avatar";
 
 const cache = new Map<string, Promise<string | null>>();
+const bustListeners = new Map<string, Set<() => void>>();
 
 export function bustAvatarCache(clinicId: string, ownerType: AvatarOwnerType, ownerId: string) {
-  cache.delete(`${clinicId}:${ownerType}:${ownerId}`);
+  const key = `${clinicId}:${ownerType}:${ownerId}`;
+  const promise = cache.get(key);
+  if (promise) {
+    // Revoke previous blob object URL to prevent memory leak
+    promise
+      .then((url) => {
+        if (url && url.startsWith("blob:")) URL.revokeObjectURL(url);
+      })
+      .catch(() => {});
+  }
+  cache.delete(key);
+  const listeners = bustListeners.get(key);
+  if (listeners) listeners.forEach((fn) => fn());
 }
 
 function avatarKey(clinicId: string, ownerType: AvatarOwnerType, ownerId: string) {
@@ -17,8 +30,8 @@ function avatarKey(clinicId: string, ownerType: AvatarOwnerType, ownerId: string
 
 /**
  * Profile-photo avatar with initials fallback.
- * Fetches a signed R2 URL once per owner (module-level cache); the cache is
- * busted after an upload via `bustAvatarCache` (or by bumping `refreshKey`).
+ * Fetches avatar bytes with Bearer auth and creates a blob URL (no cookie needed for <img>).
+ * Cache is busted via `bustAvatarCache` after upload or by bumping `refreshKey`.
  */
 export function PersonAvatar({
   clinicId,
@@ -39,11 +52,33 @@ export function PersonAvatar({
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const seenRefresh = useRef(0);
+  const currentUrlRef = useRef<string | null>(null);
+  const [bustTick, setBustTick] = useState(0);
 
   useEffect(() => {
     const key = avatarKey(clinicId, ownerType, ownerId);
-    const force = refreshKey !== seenRefresh.current;
-    seenRefresh.current = refreshKey;
+    let set = bustListeners.get(key);
+    if (!set) {
+      set = new Set();
+      bustListeners.set(key, set);
+    }
+    const onBust = () => setBustTick((v) => v + 1);
+    set.add(onBust);
+    return () => {
+      set!.delete(onBust);
+      if (set!.size === 0) bustListeners.delete(key);
+    };
+  }, [clinicId, ownerType, ownerId]);
+
+  useEffect(() => {
+    if (!clinicId || !ownerId) {
+      setUrl(null);
+      return;
+    }
+    const key = avatarKey(clinicId, ownerType, ownerId);
+    const force = refreshKey !== seenRefresh.current || bustTick > 0;
+    if (force) seenRefresh.current = refreshKey;
+
     let promise = force ? undefined : cache.get(key);
     if (!promise) {
       promise = getAvatarUrl(clinicId, ownerType, ownerId)
@@ -53,12 +88,29 @@ export function PersonAvatar({
     }
     let cancelled = false;
     promise.then((u) => {
-      if (!cancelled) setUrl(u);
+      if (cancelled) {
+        if (u && u.startsWith("blob:")) URL.revokeObjectURL(u);
+        return;
+      }
+      // Revoke previous blob URL held by this instance
+      if (currentUrlRef.current && currentUrlRef.current !== u && currentUrlRef.current.startsWith("blob:")) {
+        URL.revokeObjectURL(currentUrlRef.current);
+      }
+      currentUrlRef.current = u;
+      setUrl(u);
     });
     return () => {
       cancelled = true;
     };
-  }, [clinicId, ownerType, ownerId, refreshKey]);
+  }, [clinicId, ownerType, ownerId, refreshKey, bustTick]);
+
+  useEffect(() => {
+    return () => {
+      if (currentUrlRef.current && currentUrlRef.current.startsWith("blob:")) {
+        URL.revokeObjectURL(currentUrlRef.current);
+      }
+    };
+  }, []);
 
   if (!url) {
     return <NameAvatar name={name} className={className} size={size} />;
@@ -80,6 +132,14 @@ export function PersonAvatar({
         sizeClass,
         className
       )}
+      onError={() => {
+        // If blob fails, fall back to initials
+        if (currentUrlRef.current && currentUrlRef.current.startsWith("blob:")) {
+          URL.revokeObjectURL(currentUrlRef.current);
+        }
+        currentUrlRef.current = null;
+        setUrl(null);
+      }}
     />
   );
 }

@@ -1,5 +1,5 @@
 import type { Db } from "mongodb";
-import { getDb } from "@/lib/db";
+import { getDb } from "@/lib/db-pools";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import { requireClinicOf } from "@/clinic/core/context";
 import { now as nowFn } from "@/clinic/core/datetime";
