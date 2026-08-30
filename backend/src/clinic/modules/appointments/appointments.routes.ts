@@ -82,7 +82,7 @@ export function registerAppointmentRoutes(app: FastifyInstance): void {
 
   app.get(
     "/api/clinics/:clinicId/appointments/queue",
-    { preHandler: [requireClinicAccess, requireRoles("staff")] },
+    { preHandler: [requireClinicAccess, requireRoles("patient")] },
     async (request, reply) => controller.getQueue(request, reply)
   );
 

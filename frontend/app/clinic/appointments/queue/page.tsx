@@ -78,7 +78,7 @@ const STAGE_LABELS: Record<QueueStage, string> = {
 };
 
 export default function TokenQueuePage() {
-  const session = useRequireRole("patient");
+  const session = useRequireRole("staff");
   const clinicId = session?.clinicId ?? "";
   const canManage = session ? sessionCan(session, "staff") : false;
   const isDoctor = session?.role === "doctor";
@@ -278,6 +278,38 @@ export default function TokenQueuePage() {
             <StatCard label="Upcoming" value={snapshot?.counts.upcoming ?? 0} />
             <StatCard label="Priority" value={snapshot?.counts.priority ?? 0} tone="warning" />
           </div>
+
+          {/* Empty state for selected date/doctor */}
+          {snapshot &&
+            !loading &&
+            snapshot.counts.waiting === 0 &&
+            snapshot.counts.inConsultation === 0 &&
+            snapshot.counts.completed === 0 &&
+            snapshot.counts.upcoming === 0 &&
+            snapshot.waiting.length === 0 &&
+            snapshot.upcoming.length === 0 &&
+            !snapshot.current &&
+            !snapshot.next && (
+              <Card className="border-dashed">
+                <CardContent className="p-6 text-center">
+                  <p className="text-sm font-medium text-foreground">No appointments for {date}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {effectiveDoctorId
+                      ? "No appointments for the selected doctor on this date. Try 'All doctors' or another date."
+                      : "No appointments scheduled for this date."}{" "}
+                    Create an appointment or check the Appointments page for other dates.
+                  </p>
+                  <div className="mt-4 flex justify-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setDate(todayISO())}>
+                      Go to Today
+                    </Button>
+                    <Button size="sm" onClick={() => (window.location.href = "/clinic/appointments")}>
+                      Create Appointment
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
           {/* Current + Call next */}
           <div className="grid gap-4 lg:grid-cols-3">
