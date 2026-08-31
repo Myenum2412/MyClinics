@@ -245,13 +245,13 @@ export async function processDueNotificationsForClients(
   db: Db,
   clientsByRoute: Map<string, Client>
 ): Promise<{ sent: number; failed: number; skipped: number }> {
-  const queued = await db
+  const queued = (await db
     .collection<NotificationDoc>(NOTIFICATIONS_COLLECTION)
     .find({ status: "queued" })
     .sort({ createdAt: 1 })
     .limit(BATCH_LIMIT)
     .project({ mediaData: 0 })
-    .toArray();
+    .toArray()) as unknown as NotificationDoc[];
 
   const groups = new Map<string, NotificationDoc[]>();
   for (const doc of queued) {

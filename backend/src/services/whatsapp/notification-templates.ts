@@ -360,4 +360,39 @@ Please arrive 10 minutes before your appointment.
 
 Reply here if you need to reschedule or cancel.`,
   },
+  {
+    key: "morning_digest_doctor",
+    category: "Queue & Reminders",
+    title: "Morning digest — Doctor",
+    recipient: "Doctor",
+    description: "Daily 10:00 AM IST digest sent to each doctor with today's appointments.",
+    sample: `Good Morning Dr. {Doctor Name} ☀️
+
+You have {Count} appointment(s) today ({Date}) at {Clinic Name}:
+
+1. {Time} - {Patient Name} - {Phone} ({Reason})
+2. {Time} - {Patient Name}
+
+Please be prepared.
+
+Best regards,
+{Clinic Name}`,
+  },
+  {
+    key: "morning_digest_clinic",
+    category: "Queue & Reminders",
+    title: "Morning digest — Clinic",
+    recipient: "Staff",
+    description: "Daily 10:00 AM IST digest sent to the clinic's WhatsApp number with today's appointment summary by doctor.",
+    sample: `Good Morning {Clinic Name} 🏥
+
+Appointment Summary for {Date}:
+Total: {Count} appointment(s)
+
+👨‍⚕️ Dr. {Doctor Name}: {Count} appointment(s)
+  • {Time} - {Patient Name}
+
+Best regards,
+System`,
+  },
 ];
