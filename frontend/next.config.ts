@@ -27,6 +27,17 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex" },
         ],
       },
+      // Never index Next internals or private app areas — the bookmarklet you
+      // ran greps every quoted "/..." string out of JS/HTML; these paths are
+      // required for the browser to function but must not be crawled/indexed.
+      {
+        source: "/_next/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
+        source: "/api/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
       {
         // Security headers for every route — reduces fingerprinting and
         // mitigates the information disclosure the bookmarklet relies on.
