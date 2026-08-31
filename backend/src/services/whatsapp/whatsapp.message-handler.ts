@@ -70,8 +70,12 @@ const RATE_LIMIT_REPLY =
  * Backend knowledge-boundary gate (soul.md §17). Minimum keyword relevance a
  * factual query needs against the current soul.md to be allowed to reach the
  * LLM when no knowledge document was retrieved.
+ * Lowered to 0.10 to be more answerable for related chats — the LLM is still
+ * strictly grounded in soul.md + retrieved knowledge, so a lower threshold
+ * only reduces false fallback for paraphrased related questions (e.g. "clinic
+ * timings?" vs "opening hours").
  */
-const SOUL_RELEVANCE_MIN_SCORE = 0.15;
+const SOUL_RELEVANCE_MIN_SCORE = 0.10;
 
 function dedupe(messageId: string): boolean {
   if (recentMessageIds.has(messageId)) return false;

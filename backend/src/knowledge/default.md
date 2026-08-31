@@ -31,8 +31,15 @@ and invoice that you can submit to your insurer.
 ## Contact information
 
 To reach the clinic, call or WhatsApp 0484 220 1234 during opening hours.
+Phone: 0484 220 1234 — WhatsApp: 0484 220 1234 — Contact number: 0484 220 1234.
 For emergencies outside opening hours, please call 112 or go to the nearest
 hospital emergency department.
+
+## Services
+
+We provide general consultation, follow-up care, telephone and video consultations,
+and routine health check-ups. For a full list of services, please contact the clinic
+directly.
 
 ## Appointments policy
 

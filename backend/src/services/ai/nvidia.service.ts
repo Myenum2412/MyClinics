@@ -182,7 +182,7 @@ export async function complete(
 }
 
 const DEFAULT_EMBED_URL = "https://integrate.api.nvidia.com/v1/embeddings";
-const DEFAULT_EMBED_MODEL = "snowflake/arctic-embed-l";
+const DEFAULT_EMBED_MODEL = "nvidia/nemotron-3-embed-1b";
 
 // Circuit breaker: when the embeddings endpoint keeps failing (e.g. the model
 // does not exist for this key), stop calling it for EMBED_BREAKER_COOLDOWN_MS

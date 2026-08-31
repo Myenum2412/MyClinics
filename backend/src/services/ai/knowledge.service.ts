@@ -238,13 +238,34 @@ function tokenize(text: string): Set<string> {
   );
 }
 
+function normalizeToken(token: string): string {
+  // Simple stemming: strip common plurals/suffixes for better recall on
+  // related chats (e.g. payment vs payments, timing vs timings, phone vs phones).
+  if (token.length > 3 && token.endsWith("ing")) return token.slice(0, -3);
+  if (token.length > 3 && token.endsWith("ies")) return token.slice(0, -3) + "y";
+  if (token.length > 2 && token.endsWith("es")) return token.slice(0, -2);
+  if (token.length > 2 && token.endsWith("s")) return token.slice(0, -1);
+  return token;
+}
+
 function keywordScore(query: string, content: string): number {
   const queryTokens = tokenize(query);
   const contentTokens = tokenize(content);
   if (queryTokens.size === 0) return 0;
+  // Build normalized content set for fuzzy matching
+  const normalizedContent = new Set([...contentTokens].map(normalizeToken));
+  const contentJoined = ` ${[...contentTokens].join(" ")} `;
   let hits = 0;
   for (const token of queryTokens) {
-    if (contentTokens.has(token)) hits++;
+    const norm = normalizeToken(token);
+    if (
+      contentTokens.has(token) ||
+      normalizedContent.has(norm) ||
+      contentJoined.includes(` ${token} `) ||
+      [...contentTokens].some((ct) => ct.includes(token) || token.includes(ct))
+    ) {
+      hits++;
+    }
   }
   return hits / queryTokens.size;
 }
@@ -259,7 +280,7 @@ export function contentRelevance(query: string, content: string): number {
   return keywordScore(query, content);
 }
 
-const RETRIEVAL_MIN_SCORE = 0.18;
+const RETRIEVAL_MIN_SCORE = 0.12;
 const RETRIEVAL_TOP_K = 3;
 
 export interface KnowledgeHit {
