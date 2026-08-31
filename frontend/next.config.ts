@@ -19,6 +19,30 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   async headers() {
     return [
+      // Favicons / manifest — never serve stale icons after an update.
+      // Browsers + service workers cache /favicon.ico aggressively; a short
+      // max-age + must-revalidate forces a conditional GET on every visit so
+      // updated icons (regenerated from public/logo.png) appear immediately.
+      {
+        source: "/favicon.ico",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/favicon.svg",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/favicon-96x96.png",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/icons/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/manifest.webmanifest",
+        headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
       // Block direct access to source maps if they are ever emitted.
       {
         source: "/:path*.map",

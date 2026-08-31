@@ -10,11 +10,14 @@
  *
  * Bumping CACHE_NAME invalidates old caches on activation.
  */
-const CACHE_NAME = "myclinics-v1";
+const CACHE_NAME = "myclinics-v2";
 const SHELL = [
   "/",
   "/offline",
   "/manifest.webmanifest",
+  "/favicon.ico",
+  "/favicon.svg",
+  "/favicon-96x96.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/icon-maskable-512.png",
