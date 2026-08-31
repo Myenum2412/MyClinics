@@ -185,7 +185,12 @@ export function LoginForm({
 
           <div className="flex flex-col items-center gap-3 pt-2">
             <p className="text-sm font-semibold text-black">Join our community</p>
-            <CommunityLinks className="flex items-center gap-3" size={20} />
+            <CommunityLinks
+              className="flex items-center gap-3"
+              size={20}
+              whatsappHref="https://whatsapp.com/channel/0029Vb9076JJ93wXGP5ILx0b"
+              discordHref="https://discord.gg/F9h2CHpnh"
+            />
           </div>
         </FieldGroup>
       </form>
