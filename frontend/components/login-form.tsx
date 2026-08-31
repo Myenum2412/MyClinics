@@ -74,7 +74,9 @@ export function LoginForm({
       const result = await login({ email, password });
       const destination =
         result.role === "platform_admin" ? "/orgmenu" : result.role === "patient" ? "/clinic/patient" : "/clinic";
-      router.push(callbackUrl && callbackUrl.startsWith("/") ? callbackUrl : destination);
+      const safeCallback =
+        callbackUrl && /^\/(?!\/)/.test(callbackUrl) ? callbackUrl : null;
+      router.push(safeCallback ?? destination);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invalid email or password.");

@@ -13,6 +13,48 @@ const BACKEND_URL =
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Never ship browser source maps — they leak original file paths and
+  // source code to anyone who runs the bookmarklet / DevTools. The build
+  // output (.next/build/*.map) is server-only.
+  productionBrowserSourceMaps: false,
+  async headers() {
+    return [
+      // Block direct access to source maps if they are ever emitted.
+      {
+        source: "/:path*.map",
+        headers: [
+          { key: "Cache-Control", value: "no-store" },
+          { key: "X-Robots-Tag", value: "noindex" },
+        ],
+      },
+      {
+        // Security headers for every route — reduces fingerprinting and
+        // mitigates the information disclosure the bookmarklet relies on.
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+          { key: "X-DNS-Prefetch-Control", value: "off" },
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains; preload" },
+          {
+            key: "Content-Security-Policy",
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.myenum.in",
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: https: blob:",
+              "font-src 'self' data:",
+              "connect-src 'self' https://api.myclinic.myenum.in https://*.myenum.in",
+              "frame-ancestors 'none'",
+            ].join("; "),
+          },
+        ],
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

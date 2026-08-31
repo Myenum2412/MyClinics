@@ -476,12 +476,14 @@ function isTokenExpired(token: string): boolean {
 
 function setToken(token: string, ttlSeconds: number): void {
   localStorage.setItem(CLINIC_TOKEN_KEY, token);
-  document.cookie = `${CLINIC_TOKEN_KEY}=${token}; path=/; max-age=${ttlSeconds}; samesite=lax`;
+  const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; secure" : "";
+  document.cookie = `${CLINIC_TOKEN_KEY}=${token}; path=/; max-age=${ttlSeconds}; samesite=lax${secure}`;
 }
 
 export function clearSession(): void {
   localStorage.removeItem(CLINIC_TOKEN_KEY);
-  document.cookie = `${CLINIC_TOKEN_KEY}=; path=/; max-age=0; samesite=lax`;
+  const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; secure" : "";
+  document.cookie = `${CLINIC_TOKEN_KEY}=; path=/; max-age=0; samesite=lax${secure}`;
 }
 
 /** Stores an externally issued session token (e.g. Google OAuth callback). */

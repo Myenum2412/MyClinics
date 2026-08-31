@@ -38,46 +38,88 @@ async function verifySession(request: NextRequest): Promise<{
   }
 }
 
+function securityHeaders(res: NextResponse): NextResponse {
+  res.headers.set("X-Content-Type-Options", "nosniff");
+  res.headers.set("X-Frame-Options", "DENY");
+  res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.headers.set("X-DNS-Prefetch-Control", "off");
+  res.headers.set("Cross-Origin-Opener-Policy", "same-origin");
+  res.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  res.headers.set(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.myenum.in",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https: blob:",
+      "font-src 'self' data:",
+      "connect-src 'self' https://api.myclinic.myenum.in https://*.myenum.in",
+      "frame-ancestors 'none'",
+    ].join("; ")
+  );
+  return res;
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Hard block for source maps — they leak file paths and original source.
+  // The bookmarklet you ran fetches every <script src> and greps for
+  // quoted "/..." strings; with maps disabled there is no map to fetch, but
+  // this is defence-in-depth for any stray .map that reaches the edge.
+  if (pathname.endsWith(".map")) {
+    return new NextResponse(null, { status: 404 });
+  }
+
   const session = await verifySession(request);
   const isPublic = PUBLIC_PATHS.some(
     (page) => pathname === page || pathname.startsWith(`${page}/`)
   );
   const isClinicWorkspace = pathname === "/clinic" || pathname.startsWith("/clinic/");
   const isAdminWorkspace = pathname === "/admin" || pathname.startsWith("/admin/");
+  const isOrgMenu = pathname === "/orgmenu" || pathname.startsWith("/orgmenu/");
 
   if (!session) {
-    if (isClinicWorkspace || isAdminWorkspace) {
+    if (isClinicWorkspace || isAdminWorkspace || isOrgMenu) {
       const url = new URL("/login", request.url);
       url.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(url);
+      return securityHeaders(NextResponse.redirect(url));
     }
-    return NextResponse.next();
+    return securityHeaders(NextResponse.next());
   }
 
   if (isPublic) {
     const url = new URL(session.role === "platform_admin" ? "/admin" : "/clinic", request.url);
-    return NextResponse.redirect(url);
+    return securityHeaders(NextResponse.redirect(url));
   }
 
   if (isAdminWorkspace && session.role !== "platform_admin") {
-    return NextResponse.redirect(new URL("/clinic", request.url));
+    return securityHeaders(NextResponse.redirect(new URL("/clinic", request.url)));
+  }
+
+  if (isOrgMenu && session.role !== "platform_admin") {
+    const dest = session.role === "patient" ? "/clinic/patient" : "/clinic";
+    return securityHeaders(NextResponse.redirect(new URL(dest, request.url)));
   }
 
   if (isClinicWorkspace && session.role === "platform_admin") {
-    return NextResponse.redirect(new URL("/admin", request.url));
+    return securityHeaders(NextResponse.redirect(new URL("/admin", request.url)));
   }
 
-  return NextResponse.next();
+  return securityHeaders(NextResponse.next());
 }
 
 export const config = {
   matcher: [
     "/clinic/:path*",
     "/admin/:path*",
+    "/orgmenu/:path*",
     "/login",
     "/signup",
     "/signup/:path*",
+    // Defence-in-depth: block source maps everywhere (they leak file paths).
+    // Without this entry the proxy would not run for /_next/static/*.map.
+    "/:path*.map",
   ],
 };
