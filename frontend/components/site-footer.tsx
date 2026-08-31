@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CommunityLinks } from "@/components/community-icons";
 import { now } from "@/lib/datetime";
 
 const productLinks = [
@@ -62,6 +63,12 @@ export function SiteFooter() {
 					<p className="mt-3 mb-6 max-w-[220px] text-muted-foreground">
 						Less paperwork. More patients.
 					</p>
+					<div className="mt-2">
+						<h4 className="mb-3 text-muted-foreground text-xs tracking-wide">
+							Join our community
+						</h4>
+						<CommunityLinks className="flex items-center gap-3" size={18} />
+					</div>
 				</div>
 
 				<div className="grid grid-cols-2 gap-10 md:pr-10">
