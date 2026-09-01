@@ -122,7 +122,7 @@ function RecordTab({sharedPatient, patients}:{sharedPatient:string;patients:Pati
   }
   return <>
     <TableSection items={items} cols={COLS_RECORD} sharedPatient={sharedPatient} onView={setViewing} onEdit={e=>{setV({...e.data});setEditing(e.id);setOpen(true)}} onDelete={e=>save(items.filter(x=>x.id!==e.id))} onAdd={()=>{setV(Object.fromEntries(COLS_RECORD.map(c=>[c,""])));setEditing(null);setOpen(true)}}/>
-    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>{editing?"Edit":"New"} Treatment Record</DialogTitle></DialogHeader>
+    {open && <div className="rounded-xl border bg-card p-5 space-y-4"><h3 className="font-semibold text-sm">{editing?"Edit":"New"} Treatment Record</h3>
       <div className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Patient *</Label>
@@ -151,8 +151,7 @@ function RecordTab({sharedPatient, patients}:{sharedPatient:string;patients:Pati
           <div><Label className="text-xs">Attachments / Reports</Label><Input value={v["Attachments / Reports"]} onChange={e=>setV({...v, ["Attachments / Reports"]:e.target.value})} className="mt-1 h-9"/></div>
         </div>
       </div>
-      <DialogFooter><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></DialogFooter>
-    </DialogContent></Dialog>
+      <div className="flex gap-2"><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></div></div>}
     <Dialog open={!!viewing} onOpenChange={v=>!v&&setViewing(null)}><DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>View Record</DialogTitle></DialogHeader>{viewing&&<div className="grid sm:grid-cols-2 gap-3 text-sm">{Object.entries(viewing.data).map(([k,v])=><div key={k}><span className="text-muted-foreground text-xs">{k}:</span><div className="font-medium break-words">{String(v)||"—"}</div></div>)}</div>}<DialogFooter><Button variant="outline" onClick={()=>setViewing(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
   </>
 }
@@ -172,7 +171,7 @@ function ComplaintTab({sharedPatient}:{sharedPatient:string}){
   }
   return <>
     <TableSection items={items} cols={COLS_COMPLAINT} sharedPatient={sharedPatient} onView={setViewing} onEdit={e=>{setV({...e.data});setEditing(e.id);setOpen(true)}} onDelete={e=>save(items.filter(x=>x.id!==e.id))} onAdd={()=>{setV(Object.fromEntries(COLS_COMPLAINT.map(c=>[c,""])));setEditing(null);setOpen(true)}}/>
-    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>{editing?"Edit":"New"} Complaint</DialogTitle></DialogHeader>
+    {open && <div className="rounded-xl border bg-card p-5 space-y-4"><h3 className="font-semibold text-sm">{editing?"Edit":"New"} Complaint</h3>
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2"><Label className="text-xs">Chief Complaint *</Label><Input value={v["Chief Complaint"]} onChange={e=>SV("Chief Complaint", e.target.value)} className="mt-1 h-9"/></div>
         <div><Label className="text-xs">Complaint Category</Label><select value={v["Complaint Category"]} onChange={e=>SV("Complaint Category", e.target.value)} className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"><option value="">Select</option><option value="treatment">treatment</option><option value="staff">staff</option><option value="billing">billing</option><option value="facility">facility</option><option value="other">other</option></select></div>
@@ -187,8 +186,7 @@ function ComplaintTab({sharedPatient}:{sharedPatient:string}){
         <div className="sm:col-span-2"><Label className="text-xs">Doctor&apos;s Observation</Label><Textarea value={v["Doctor's Observation"]} onChange={e=>SV("Doctor's Observation", e.target.value)} rows={2}/></div>
         <div><Label className="text-xs">Priority</Label><select value={v["Priority"]} onChange={e=>SV("Priority", e.target.value)} className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"><option value="">Select</option><option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option><option value="Emergency">Emergency</option></select></div>
       </div>
-      <DialogFooter><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></DialogFooter>
-    </DialogContent></Dialog>
+      <div className="flex gap-2"><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></div></div>}
     <Dialog open={!!viewing} onOpenChange={v=>!v&&setViewing(null)}><DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>View Complaint</DialogTitle></DialogHeader>{viewing&&<div className="grid sm:grid-cols-2 gap-3 text-sm">{Object.entries(viewing.data).map(([k,v])=><div key={k}><span className="text-muted-foreground text-xs">{k}:</span><div className="font-medium break-words">{String(v)||"—"}</div></div>)}</div>}<DialogFooter><Button variant="outline" onClick={()=>setViewing(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
   </>
 }
@@ -208,7 +206,7 @@ function PlanTab({sharedPatient}:{sharedPatient:string}){
   }
   return <>
     <TableSection items={items} cols={COLS_PLAN} sharedPatient={sharedPatient} onView={setViewing} onEdit={e=>{setV({...e.data});setEditing(e.id);setOpen(true)}} onDelete={e=>save(items.filter(x=>x.id!==e.id))} onAdd={()=>{setV(Object.fromEntries(COLS_PLAN.map(c=>[c,""])));setEditing(null);setOpen(true)}}/>
-    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>{editing?"Edit":"New"} Treatment Plan</DialogTitle></DialogHeader>
+    {open && <div className="rounded-xl border bg-card p-5 space-y-4"><h3 className="font-semibold text-sm">{editing?"Edit":"New"} Treatment Plan</h3>
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2"><Label className="text-xs">Diagnosis / Clinical Impression *</Label><Input value={v["Diagnosis / Clinical Impression"]} onChange={e=>SV("Diagnosis / Clinical Impression", e.target.value)} className="mt-1 h-9"/></div>
         <div className="sm:col-span-2"><Label className="text-xs">Treatment Objective</Label><Input value={v["Treatment Objective"]} onChange={e=>SV("Treatment Objective", e.target.value)} className="mt-1 h-9"/></div>
@@ -223,8 +221,7 @@ function PlanTab({sharedPatient}:{sharedPatient:string}){
         <div className="sm:col-span-2"><Label className="text-xs">Doctor&apos;s Remarks</Label><Textarea value={v["Doctor's Remarks"]} onChange={e=>SV("Doctor's Remarks", e.target.value)} rows={2}/></div>
         <div><Label className="text-xs">Patient Consent</Label><select value={v["Patient Consent"]} onChange={e=>SV("Patient Consent", e.target.value)} className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option><option value="Pending">Pending</option></select></div>
       </div>
-      <DialogFooter><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></DialogFooter>
-    </DialogContent></Dialog>
+      <div className="flex gap-2"><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></div></div>}
     <Dialog open={!!viewing} onOpenChange={v=>!v&&setViewing(null)}><DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>View Plan</DialogTitle></DialogHeader>{viewing&&<div className="grid sm:grid-cols-2 gap-3 text-sm">{Object.entries(viewing.data).map(([k,v])=><div key={k}><span className="text-muted-foreground text-xs">{k}:</span><div className="font-medium break-words">{String(v)||"—"}</div></div>)}</div>}<DialogFooter><Button variant="outline" onClick={()=>setViewing(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
   </>
 }
@@ -244,7 +241,7 @@ function DischargeTab({sharedPatient}:{sharedPatient:string}){
   }
   return <>
     <TableSection items={items} cols={COLS_DISCHARGE} sharedPatient={sharedPatient} onView={setViewing} onEdit={e=>{setV({...e.data});setEditing(e.id);setOpen(true)}} onDelete={e=>save(items.filter(x=>x.id!==e.id))} onAdd={()=>{setV(Object.fromEntries(COLS_DISCHARGE.map(c=>[c,""])));setEditing(null);setOpen(true)}}/>
-    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>{editing?"Edit":"New"} Discharge</DialogTitle></DialogHeader>
+    {open && <div className="rounded-xl border bg-card p-5 space-y-4"><h3 className="font-semibold text-sm">{editing?"Edit":"New"} Discharge</h3>
       <div className="grid sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2"><Label className="text-xs">Patient Details *</Label><Input value={v["Patient Details"]} onChange={e=>SV("Patient Details", e.target.value)} className="mt-1 h-9"/></div>
         <div><Label className="text-xs">Admission Date</Label><Input type="date" value={v["Admission Date"]} onChange={e=>SV("Admission Date", e.target.value)} className="mt-1 h-9"/></div>
@@ -262,8 +259,7 @@ function DischargeTab({sharedPatient}:{sharedPatient:string}){
         <div><Label className="text-xs">Doctor&apos;s Signature</Label><Input value={v["Doctor's Signature"]} onChange={e=>SV("Doctor's Signature", e.target.value)} className="mt-1 h-9"/></div>
         <div><Label className="text-xs">Patient / Attendant Acknowledgement</Label><select value={v["Patient / Attendant Acknowledgement"]} onChange={e=>SV("Patient / Attendant Acknowledgement", e.target.value)} className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"><option value="">Select</option><option value="Acknowledged">Acknowledged</option><option value="Pending">Pending</option></select></div>
       </div>
-      <DialogFooter><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></DialogFooter>
-    </DialogContent></Dialog>
+      <div className="flex gap-2"><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></div></div>}
     <Dialog open={!!viewing} onOpenChange={v=>!v&&setViewing(null)}><DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>View Discharge</DialogTitle></DialogHeader>{viewing&&<div className="grid sm:grid-cols-2 gap-3 text-sm">{Object.entries(viewing.data).map(([k,v])=><div key={k}><span className="text-muted-foreground text-xs">{k}:</span><div className="font-medium break-words">{String(v)||"—"}</div></div>)}</div>}<DialogFooter><Button variant="outline" onClick={()=>setViewing(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
   </>
 }
