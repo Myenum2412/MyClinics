@@ -38,7 +38,7 @@ import {
   ChartBarIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { Pill, Sparkles } from "lucide-react";
+import { Pill, Sparkles, HeartPulse } from "lucide-react";
 
 interface NavItem {
   title: string
@@ -99,6 +99,12 @@ const NAV_ITEMS: NavItem[] = [
     url: "/clinic/billing",
     icon: <ReceiptTextIcon className="size-6" />,
     roles: ["patient", "doctor", "staff", "clinic_admin"],
+  },
+  {
+    title: "Treatment",
+    url: "/clinic/complaints",
+    icon: <HeartPulse className="size-6" />,
+    roles: ["doctor", "staff", "clinic_admin"],
   },
   {
     title: "Pharmacy",
