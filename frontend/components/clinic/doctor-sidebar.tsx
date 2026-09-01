@@ -28,6 +28,7 @@ import {
   ClipboardDocumentCheckIcon as RecordsIcon,
   FolderOpenIcon,
 } from "@heroicons/react/24/outline";
+import { Sparkles } from "lucide-react";
 
 interface NavItem {
   title: string
@@ -83,6 +84,11 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     title: "Notifications",
     url: "/clinic/notifications",
     icon: <BellIcon className="size-6" />,
+  },
+  {
+    title: "AI Assistant",
+    url: "/clinic/ai-assistant",
+    icon: <Sparkles className="size-6" />,
   },
 ]
 

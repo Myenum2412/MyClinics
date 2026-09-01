@@ -31,6 +31,7 @@ import {
   Folder,
   Home,
   ReceiptText,
+  Sparkles,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -39,6 +40,7 @@ const NAV_ITEMS = [
   { title: "Prescriptions", url: "/clinic/patient/prescriptions", icon: <FileText className="size-5" /> },
   { title: "Medical Records", url: "/clinic/patient/medical-records", icon: <Folder className="size-5" /> },
   { title: "Bills & Invoices", url: "/clinic/patient/billing", icon: <ReceiptText className="size-5" /> },
+  { title: "AI Assistant", url: "/clinic/ai-assistant", icon: <Sparkles className="size-5" /> },
 ];
 
 function initials(name: string): string {

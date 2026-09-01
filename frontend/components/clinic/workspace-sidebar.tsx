@@ -38,7 +38,7 @@ import {
   ChartBarIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { Pill } from "lucide-react";
+import { Pill, Sparkles } from "lucide-react";
 
 interface NavItem {
   title: string
@@ -144,6 +144,12 @@ const NAV_ITEMS: NavItem[] = [
     url: "/clinic/leads",
     icon: <InboxIcon className="size-6" />,
     roles: ["staff", "clinic_admin"],
+  },
+  {
+    title: "AI Assistant",
+    url: "/clinic/ai-assistant",
+    icon: <Sparkles className="size-6" />,
+    roles: ["patient", "doctor", "staff", "clinic_admin"],
   },
 ]
 

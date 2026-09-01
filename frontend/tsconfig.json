@@ -22,6 +22,7 @@
       "@/*": ["./*"]
     }
   },
+  "exclude": ["agent"],
   "include": [
     "next-env.d.ts",
     "**/*.ts",
