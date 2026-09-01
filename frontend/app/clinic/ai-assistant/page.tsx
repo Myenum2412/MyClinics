@@ -61,7 +61,7 @@ export default function ClinicAiAssistantPage() {
       {/* Chat */}
       <Card className="flex-1 flex flex-col overflow-hidden">
         <div className="border-b px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2"><Sparkles className="size-4 text-primary" /><span className="font-semibold text-sm">AI Assistant</span><span className="text-xs text-muted-foreground">Eve + omni • {session.role}</span></div>
+          <div className="flex items-center gap-2"><Sparkles className="size-4 text-primary" /><span className="font-semibold text-sm">AI Assistant</span><span className="text-xs text-muted-foreground">omni • {session.role}</span></div>
           <Button size="sm" variant="outline" onClick={newChat}><Plus className="size-4" /> New chat</Button>
         </div>
         {!active ? (
@@ -94,7 +94,7 @@ export default function ClinicAiAssistantPage() {
                   </PromptInputAction>
                 </PromptInputActions>
               </PromptInput>
-              <p className="text-[10px] text-muted-foreground text-center mt-2">ChatGPT-style input • @nexus-ui/prompt-input • Eve browser-agent + omni Tanglish</p>
+              <p className="text-[10px] text-muted-foreground text-center mt-2">ChatGPT-style input • @nexus-ui/prompt-input • omni Tanglish</p>
             </div>
           </>
         )}
@@ -119,7 +119,7 @@ export default function ClinicAiAssistantPage() {
             ))}
           </div>
         </div>
-        <div className="border-t p-3 text-[11px] text-muted-foreground">Stored locally • also in Mongo `wa_conversations` for patients • Eve `agent/*` + `assistant-ui` Thread</div>
+        <div className="border-t p-3 text-[11px] text-muted-foreground">Stored locally • also in Mongo `wa_conversations` for patients</div>
       </Card>
     </div>
   );

@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-// Simple proxy to existing clinic AI (soul + omni) — Eve instructions in agent/instructions.md
+// Clinic AI — simple Tanglish-aware chat (omni backend). No browser-agent.
 export async function POST(req: NextRequest) {
   const { message } = await req.json();
-  // For now, echo with Tanglish-aware mock; replace with real Eve defineAgent run when ANTHROPIC_API_KEY set
-  const reply = message?.toLowerCase().includes("fees") ? "Fees 500 Rs da, follow-up 300 Rs 😊" : message?.toLowerCase().includes("goto") || message?.toLowerCase().includes("snapshot") ? "Browser tool ready: use browser_goto -> browser_snapshot -> browser_click/type. (Install: npx shadcn add @agentcn/eve/browser-agent)" : `Eve received: "${message?.slice(0,120)}" — I'm your clinic browser agent (model: anthropic/claude-sonnet-4-6 in agent/agent.ts). Tell me what page to open.`;
+  const lower = (message as string)?.toLowerCase() ?? "";
+  let reply: string;
+  if (lower.includes("fees")) reply = "Fees 500 Rs da, follow-up 300 Rs, video 400 Rs 😊";
+  else if (lower.includes("timing") || lower.includes("open")) reply = "Clinic open Mon-Sat 9 AM-6 PM, Sunday closed 😊";
+  else if (lower.includes("location") || lower.includes("enga")) reply = "Clinic 42 Green Park Road, MG Road, Kochi, Kerala 682016 😊";
+  else if (lower.includes("hi") && lower.length < 10) reply = "Hi! 😊 How can I help you today?";
+  else reply = `You said: "${(message as string)?.slice(0,120)}" — I'm your clinic assistant. Ask about fees, timing, location, or booking.`;
   return NextResponse.json({ reply });
 }
