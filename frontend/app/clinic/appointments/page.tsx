@@ -453,7 +453,7 @@ export default function AppointmentsPage() {
     });
   };
 
-  // WhatsApp logs fetching
+  // WhatsApp logs fetching — shows real error for debugging (myenumam@gmail.com: clc_2kImCGEGtiJuD61F)
   async function fetchNotificationLogs(appt: Appointment) {
     setSelectedApptForLogs(appt);
     setViewingLogs(true);
@@ -462,8 +462,11 @@ export default function AppointmentsPage() {
     try {
       const data = await getAppointmentNotifications(clinicId, appt.appointmentId);
       setLogs(data.notifications || []);
-    } catch {
-      toast.error("Error fetching notification delivery status");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Error fetching notification delivery status";
+      // Log for prod debugging; also surface to user
+      console.error("fetchNotificationLogs failed", { clinicId, appointmentId: appt.appointmentId, error: msg });
+      toast.error(msg);
     } finally {
       setLoadingLogs(false);
     }
