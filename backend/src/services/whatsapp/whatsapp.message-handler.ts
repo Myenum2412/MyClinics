@@ -211,12 +211,42 @@ async function executeAction(
   return null;
 }
 
+/**
+ * Checks if a phone belongs to a clinic patient (patients only storage).
+ * Matches last 10 digits against clc_patients.mobile and patients collections.
+ * If no patient match, returns false — caller should skip persisting.
+ */
+async function isPatientPhone(db: Db, phoneNumber: string): Promise<boolean> {
+  const digits = normalizeWhatsappId(phoneNumber).slice(-10);
+  if (digits.length < 8) return false;
+  const suffix = digits.slice(-8);
+  const regex = { $regex: suffix, $options: "" } as unknown as string;
+  // Check clc_patients (multi-tenant)
+  const hit1 = await db.collection("clc_patients").findOne({ mobile: regex } as never);
+  if (hit1) return true;
+  // Check legacy patients + clc_users with role patient (phone field)
+  const hit2 = await db.collection("patients").findOne({ phoneNumber: regex } as never);
+  if (hit2) return true;
+  const hit3 = await db.collection("clc_users").findOne({ role: "patient", phone: regex } as never);
+  if (hit3) return true;
+  return false;
+}
+
 async function saveTurn(
   organizationId: string,
   customer: WaCustomer,
   incoming: { messageId: string; message: string; reply: AgentReply; aiResponse: string; sentText: string }
 ): Promise<void> {
   const db = await getWhatsAppDb();
+  // Patients-only storage: skip persisting for non-patient numbers (e.g. spam/broadcast)
+  try {
+    if (!(await isPatientPhone(db, customer.phoneNumber))) {
+      logger.info("skip wa_conversations persist: not a patient", { phone: customer.phoneNumber.slice(-4) });
+      return;
+    }
+  } catch {
+    // on DB error, fall back to storing to avoid losing chats
+  }
   const now = nowFn();
   await saveConversation(db, {
     organizationId,
@@ -238,6 +268,92 @@ async function saveTurn(
   });
 }
 
+/** Persists even the fallback error case so incomplete chats can continue via history (`getRecentHistory`). */
+async function saveFallbackTurn(
+  organizationId: string,
+  customer: WaCustomer,
+  messageId: string,
+  effectiveText: string,
+  fallbackText: string
+): Promise<void> {
+  const db = await getWhatsAppDb();
+  try {
+    if (!(await isPatientPhone(db, customer.phoneNumber))) return;
+  } catch {}
+  const now = nowFn();
+  const fakeReply: AgentReply = {
+    reply: fallbackText,
+    intent: "none",
+    appointment: { customerName: null, doctorName: null, date: null, time: null },
+    state: "done",
+    action: null,
+  };
+  await saveConversation(db, {
+    organizationId,
+    customerId: customer.id,
+    whatsappMessageId: messageId,
+    direction: "incoming",
+    message: effectiveText,
+    aiResponse: fallbackText,
+    intent: "none",
+    timestamp: now,
+  });
+  await saveConversation(db, {
+    organizationId,
+    customerId: customer.id,
+    whatsappMessageId: messageId,
+    direction: "outgoing",
+    message: fallbackText,
+    timestamp: now,
+  });
+  // still touch for continuity
+  void touchCustomer(db, organizationId, customer.id).catch(() => {});
+}
+
+async function extractUserContent(
+  message: Message
+): Promise<{ text: string; multimodal: import("@/services/ai/agent.service").AgentUserContent | null }> {
+  const body = (message.body ?? "").trim();
+  // No media — plain text
+  if (!message.hasMedia) {
+    return { text: body, multimodal: null };
+  }
+  try {
+    const media = await message.downloadMedia();
+    if (!media?.data || !media?.mimetype) {
+      return { text: body, multimodal: null };
+    }
+    const dataUrl = `data:${media.mimetype};base64,${media.data}`;
+    // Image → send as image_url (omni vision)
+    if (media.mimetype.startsWith("image/")) {
+      const promptText = body || "What is in this image? Answer based on the image and help the patient accordingly.";
+      return {
+        text: `${promptText} [image attached]`,
+        multimodal: [
+          { type: "text", text: promptText },
+          { type: "image_url", image_url: { url: dataUrl } },
+        ],
+      };
+    }
+    // Voice / audio → send as audio_url for omni (falls back to text wrapper if model doesn't support raw audio)
+    if (media.mimetype.startsWith("audio/") || message.type === "ptt" || message.type === "audio") {
+      const promptText = body || "Transcribe this voice message and respond to its intent. The voice is from a clinic patient. Reply in the same language style (Tanglish if patient used Tanglish, else English).";
+      return {
+        text: `${promptText} [voice message attached: ${media.mimetype}]`,
+        multimodal: [
+          { type: "text", text: promptText },
+          { type: "audio_url", audio_url: { url: dataUrl } },
+        ],
+      };
+    }
+    // Other media (document, video) — treat as text with note
+    return { text: body ? `${body} [media: ${media.mimetype}]` : `[media: ${media.mimetype}]`, multimodal: null };
+  } catch (err) {
+    logger.warn("whatsapp media download failed", { error: err instanceof Error ? err.message : String(err) });
+    return { text: body, multimodal: null };
+  }
+}
+
 /**
  * Full WhatsApp → AI → backend pipeline for a single incoming message.
  */
@@ -245,7 +361,9 @@ export async function handleIncomingMessage(client: Client, message: Message): P
   const remote = message.from;
   const messageId = message.id?.id ?? `${remote}-${nowMs()}`;
 
-  if (message.fromMe || !message.body || isGroupMessage(message)) return;
+  if (message.fromMe || isGroupMessage(message)) return;
+  // Allow media messages even when body is empty (voice/image)
+  if (!message.body && !message.hasMedia) return;
   if (!dedupe(messageId)) return;
   if (!limiter.check(remote)) {
     await sendWithTimeout(client, remote, RATE_LIMIT_REPLY);
@@ -253,10 +371,16 @@ export async function handleIncomingMessage(client: Client, message: Message): P
   }
 
   const db = await getWhatsAppDb();
+  // Hoisted so catch can persist fallback and keep history continuity for incomplete chats
+  let orgForError: { id: string } | null = null;
+  let customerForError: WaCustomer | null = null;
+  let effectiveTextForError: string = "";
+  let messageIdForError: string = messageId;
 
   try {
     const botNumber = client.info?.me?.user ?? null;
     let org = (await findOrganizationByWhatsappNumber(db, botNumber)) ?? (await ensureDefaultOrganization(db));
+    orgForError = org;
     // For per-clinic notification numbers, use the clinic's name for AI replies (each clinic has its own WhatsApp)
     let clinicNameOverride: string | null = null;
     if (botNumber) {
@@ -289,11 +413,20 @@ export async function handleIncomingMessage(client: Client, message: Message): P
       phoneNumber,
       name: contactName,
     });
+    customerForError = customer;
+
+    // Extract text + media (voice/image) for omni model
+    const { text: effectiveText, multimodal } = await extractUserContent(message);
+    effectiveTextForError = effectiveText;
+    messageIdForError = messageId;
+    if (!effectiveText && !multimodal) return;
 
     logger.info("whatsapp incoming message", {
       organizationId: org.id,
       customerId: customer.id,
-      length: message.body.length,
+      length: effectiveText.length,
+      hasMedia: message.hasMedia,
+      type: (message as unknown as { type?: string }).type,
     });
 
     const [soul, memoryFacts, conversationSummary, history, aiContext] = await Promise.all([
@@ -320,7 +453,7 @@ export async function handleIncomingMessage(client: Client, message: Message): P
       knowledgeDocs: [],
     };
 
-    const trimmed = message.body.trim();
+    const trimmed = effectiveText.trim();
 
     // 1. Greetings skip retrieval but still go through the agent so the greeting
     //    itself comes from the clinic's soul.md — never from hardcoded defaults.
@@ -345,14 +478,18 @@ export async function handleIncomingMessage(client: Client, message: Message): P
     // document AND no relevant soul.md content, do not call the LLM at all.
     // The customer gets the configured fallback — the model never gets a
     // chance to answer from general knowledge.
+    // For voice/media the effectiveText already contains the transcription prompt, so boundary still applies.
+    // Exception: image/voice multimodal should always reach the LLM (vision/transcription) even if blocked.
+    const hasImageOrAudio = Array.isArray(multimodal) && multimodal.some((p) => (p as { type: string }).type !== "text");
     const blockedByBoundary =
+      !hasImageOrAudio &&
       hasFactualIntent(trimmed) &&
       knowledgeDocs.length === 0 &&
       contentRelevance(trimmed, soul.content) < SOUL_RELEVANCE_MIN_SCORE;
 
     const reply: AgentReply = blockedByBoundary
       ? makeFallbackReply(soul.fallbackReply)
-      : await runAgent(context, message.body);
+      : await runAgent(context, multimodal ?? effectiveText);
 
     const authorizedContextText = [
       context.soul,
@@ -400,10 +537,10 @@ export async function handleIncomingMessage(client: Client, message: Message): P
       });
     }
 
-    await extractAndStoreFacts(db, org.id, customer.id, message.body);
+    await extractAndStoreFacts(db, org.id, customer.id, effectiveText);
     await saveTurn(org.id, customer, {
       messageId,
-      message: message.body,
+      message: effectiveText,
       reply,
       aiResponse: sentText,
       sentText,
@@ -419,10 +556,17 @@ export async function handleIncomingMessage(client: Client, message: Message): P
     ) {
       logger.warn("whatsapp message processing failed", {
         remote,
-        error: err instanceof NvidiaApiError ? err.code : err.message,
+        error: err instanceof NvidiaApiError ? err.message : err instanceof Error ? err.message : String(err),
+        status: err instanceof NvidiaApiError ? err.status : undefined,
       });
     } else {
-      logger.error("whatsapp message processing failed", { remote });
+      logger.error("whatsapp message processing failed", { remote, error: err instanceof Error ? err.message : String(err) });
+    }
+    // Persist fallback so incomplete chats can continue with new chat via `getRecentHistory`
+    if (orgForError && customerForError) {
+      try {
+        await saveFallbackTurn(orgForError.id, customerForError, messageIdForError, effectiveTextForError || (message.body ?? ""), FALLBACK_REPLY);
+      } catch {}
     }
     try {
       if (!message.id?.fromMe) {

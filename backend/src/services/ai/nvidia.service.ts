@@ -20,19 +20,25 @@ export class NvidiaApiError extends Error {
   }
 }
 
+export type ChatContentPart =
+  | { type: "text"; text: string }
+  | { type: "image_url"; image_url: { url: string } }
+  | { type: "audio_url"; audio_url: { url: string } };
+
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  content: string | ChatContentPart[];
 }
 
 export interface CompleteOptions {
   temperature?: number;
   topP?: number;
   maxTokens?: number;
+  reasoningBudget?: number;
 }
 
-const MAX_ATTEMPTS = 2;
-const DEFAULT_TIMEOUT_MS = 30_000;
+const MAX_ATTEMPTS = 3;
+const DEFAULT_TIMEOUT_MS = 90_000;
 
 interface NvidiaConfig {
   apiKey: string;
@@ -84,6 +90,18 @@ async function requestOnce(
   options: CompleteOptions
 ): Promise<string> {
   const signal = AbortSignal.timeout(config.timeoutMs);
+  const payload: Record<string, unknown> = {
+    model: config.model,
+    temperature: options.temperature ?? 1,
+    top_p: options.topP ?? 0.95,
+    max_tokens: options.maxTokens ?? 8192,
+    stream: false,
+    messages,
+  };
+  // Omni reasoning model benefits from reasoning_budget; keep optional.
+  if (options.reasoningBudget !== undefined) {
+    payload.reasoning_budget = options.reasoningBudget;
+  }
   const res = await fetch(config.url, {
     method: "POST",
     headers: {
@@ -91,18 +109,13 @@ async function requestOnce(
       Authorization: `Bearer ${config.apiKey}`,
       Connection: "close",
     },
-    body: JSON.stringify({
-      model: config.model,
-      temperature: options.temperature ?? 1,
-      top_p: options.topP ?? 0.95,
-      max_tokens: options.maxTokens ?? 8192,
-      stream: false,
-      messages,
-    }),
+    body: JSON.stringify(payload),
     signal,
   });
 
   if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    logger.warn("nvidia api error body", { status: res.status, body: body.slice(0, 500) });
     throw new NvidiaApiError(`NVIDIA API error (${res.status})`, res.status);
   }
   return extractContent(await res.json());
@@ -121,7 +134,8 @@ export async function complete(
   options: CompleteOptions = {}
 ): Promise<string> {
   const config = getConfig();
-  const models = [config.model, ...config.fallbacks];
+  // When NVIDIA_MODEL_FALLBACKS is empty we still retry the primary model; do not throw on first timeout.
+  const models = config.fallbacks.length > 0 ? [config.model, ...config.fallbacks] : [config.model];
   let lastError: NvidiaApiError | null = null;
 
   for (const model of models) {
@@ -134,6 +148,11 @@ export async function complete(
           (err.name === "TimeoutError" || err.name === "AbortError");
 
         if (timedOut) {
+          // Single-model deployment (omni) — retry once before giving up instead of immediate throw.
+          if (models.length === 1 && attempt < MAX_ATTEMPTS) {
+            logger.warn("nvidia request timed out, retrying", { model, attempt });
+            continue;
+          }
           throw new NvidiaApiError(
             "NVIDIA request timed out",
             undefined,
@@ -144,9 +163,14 @@ export async function complete(
         if (err instanceof NvidiaApiError) {
           lastError = err;
           const retriable =
-            err.status === 429 || (err.status !== undefined && err.status >= 500);
+            err.status === 429 ||
+            err.status === 408 ||
+            (err.status !== undefined && err.status >= 500);
 
+          // 4xx (except 408/429) are not retriable and should not be masked as timeouts — surface immediately
+          // so the outer catch can send FALLBACK_REPLY with the real cause instead of generic timeout.
           if (!retriable) {
+            logger.warn("nvidia request failed (non-retriable)", { model, status: err.status });
             throw err;
           }
           if (attempt < MAX_ATTEMPTS) {
@@ -155,10 +179,20 @@ export async function complete(
               attempt,
               status: err.status,
             });
+            await new Promise((r) => setTimeout(r, 800 * attempt));
             continue;
           }
         } else {
           logger.warn("nvidia request failed (network)", { model, attempt });
+          if (attempt < MAX_ATTEMPTS) {
+            await new Promise((r) => setTimeout(r, 800 * attempt));
+            continue;
+          }
+          lastError = new NvidiaApiError(
+            err instanceof Error ? err.message : String(err),
+            undefined,
+            "network"
+          );
         }
       }
     }

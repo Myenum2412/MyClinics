@@ -139,11 +139,16 @@ export async function getConversationSummary(
   organizationId: string,
   customerId: string
 ): Promise<string | null> {
-  const doc = await db.collection(DB_COLLECTIONS.waCustomers).findOne(
-    { organizationId, customerId },
-    { projection: { conversationSummary: 1 } }
-  );
-  return doc?.conversationSummary ?? null;
+  try {
+    const { ObjectId } = await import("mongodb");
+    const doc = await db.collection(DB_COLLECTIONS.waCustomers).findOne(
+      { _id: new ObjectId(customerId), organizationId } as never,
+      { projection: { conversationSummary: 1 } }
+    );
+    return doc?.conversationSummary ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getRecentHistory(
@@ -182,11 +187,21 @@ async function unsummarizedCount(
   organizationId: string,
   customerId: string
 ): Promise<number> {
-  const customer = await db.collection(DB_COLLECTIONS.waCustomers).findOne(
-    { organizationId, customerId },
-    { projection: { lastSummaryAt: 1 } }
-  );
-  const since = customer?.lastSummaryAt ?? new Date(0);
+  let since = new Date(0);
+  try {
+    const { ObjectId } = await import("mongodb");
+    const customer = await db.collection(DB_COLLECTIONS.waCustomers).findOne(
+      { _id: new ObjectId(customerId), organizationId } as never,
+      { projection: { lastSummaryAt: 1 } }
+    );
+    since = (customer as { lastSummaryAt?: Date })?.lastSummaryAt ?? new Date(0);
+  } catch {
+    const customer = await db.collection(DB_COLLECTIONS.waCustomers).findOne(
+      { organizationId, customerId } as never,
+      { projection: { lastSummaryAt: 1 } }
+    );
+    since = (customer as { lastSummaryAt?: Date })?.lastSummaryAt ?? new Date(0);
+  }
   return db.collection(DB_COLLECTIONS.waConversations).countDocuments({
     organizationId,
     customerId,
@@ -232,16 +247,30 @@ export async function maybeSummarize(
       { temperature: 0.2, maxTokens: 400 }
     );
 
-    await db.collection(DB_COLLECTIONS.waCustomers).updateOne(
-      { organizationId, customerId },
-      {
-        $set: {
-          conversationSummary: summary.trim(),
-          lastSummaryAt: nowFn(),
-          updatedAt: nowFn(),
-        },
-      }
-    );
+    try {
+      const { ObjectId } = await import("mongodb");
+      await db.collection(DB_COLLECTIONS.waCustomers).updateOne(
+        { _id: new ObjectId(customerId), organizationId } as never,
+        {
+          $set: {
+            conversationSummary: summary.trim(),
+            lastSummaryAt: nowFn(),
+            updatedAt: nowFn(),
+          },
+        }
+      );
+    } catch {
+      await db.collection(DB_COLLECTIONS.waCustomers).updateOne(
+        { organizationId, customerId } as never,
+        {
+          $set: {
+            conversationSummary: summary.trim(),
+            lastSummaryAt: nowFn(),
+            updatedAt: nowFn(),
+          },
+        }
+      );
+    }
     logger.info("conversation summarized", { organizationId, customerId });
   } catch (err) {
     if (err instanceof NvidiaConfigError) return;
@@ -259,17 +288,32 @@ export async function appendAppointmentHistory(
   customerId: string,
   entry: { date: string; time: string; doctor: string; status: string; bookedAt: string }
 ): Promise<void> {
-  await db
-    .collection<{ appointmentHistory: WaCustomer["appointmentHistory"] }>(
-      DB_COLLECTIONS.waCustomers
-    )
-    .updateOne(
-      { organizationId, customerId },
-      {
-        $push: { appointmentHistory: entry },
-        $set: { updatedAt: nowFn() },
-      }
-    );
+  try {
+    const { ObjectId } = await import("mongodb");
+    await db
+      .collection<{ appointmentHistory: WaCustomer["appointmentHistory"] }>(
+        DB_COLLECTIONS.waCustomers
+      )
+      .updateOne(
+        { _id: new ObjectId(customerId), organizationId } as never,
+        {
+          $push: { appointmentHistory: entry },
+          $set: { updatedAt: nowFn() },
+        }
+      );
+  } catch {
+    await db
+      .collection<{ appointmentHistory: WaCustomer["appointmentHistory"] }>(
+        DB_COLLECTIONS.waCustomers
+      )
+      .updateOne(
+        { organizationId, customerId } as never,
+        {
+          $push: { appointmentHistory: entry },
+          $set: { updatedAt: nowFn() },
+        }
+      );
+  }
 }
 
 export type { WaCustomer };

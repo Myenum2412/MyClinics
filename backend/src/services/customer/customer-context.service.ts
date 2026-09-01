@@ -262,8 +262,17 @@ export async function touchCustomer(
   organizationId: string,
   customerId: string
 ): Promise<void> {
-  await db.collection(DB_COLLECTIONS.waCustomers).updateOne(
-    { organizationId, customerId },
-    { $set: { lastInteractionAt: nowFn() } }
-  );
+  try {
+    const { ObjectId } = await import("mongodb");
+    await db.collection(DB_COLLECTIONS.waCustomers).updateOne(
+      { _id: new ObjectId(customerId), organizationId } as never,
+      { $set: { lastInteractionAt: nowFn(), updatedAt: nowFn() } }
+    );
+  } catch {
+    // fallback to legacy field if ObjectId invalid
+    await db.collection(DB_COLLECTIONS.waCustomers).updateOne(
+      { organizationId, customerId } as never,
+      { $set: { lastInteractionAt: nowFn(), updatedAt: nowFn() } }
+    );
+  }
 }
