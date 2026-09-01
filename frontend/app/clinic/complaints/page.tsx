@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Search, Eye, Pencil, Trash2, Plus, Users } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { listPatients, type Patient } from "@/lib/clinic-api";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 
@@ -72,21 +73,24 @@ export default function TreatmentPage(){
 
 function TableSection({items, cols, sharedPatient, onView,onEdit,onDelete, onAdd}:{items:Entry[];cols:string[];sharedPatient:string;onView:(e:Entry)=>void;onEdit:(e:Entry)=>void;onDelete:(e:Entry)=>void;onAdd:()=>void}){
   const [q,setQ]=useState("");
+  const [selected,setSelected]=useState<Set<string>>(new Set());
   const filtered=useMemo(()=>{
     let a=items;
     if(sharedPatient) a=a.filter(i=> i.patient===sharedPatient);
     if(q) a=a.filter(i=> JSON.stringify(i).toLowerCase().includes(q.toLowerCase()));
     return a;
   },[items,q,sharedPatient]);
+  const allChecked = filtered.length>0 && filtered.every(i=> selected.has(i.id));
   return <div className="space-y-3">
     <div className="flex flex-wrap gap-2 items-center">
       <div className="relative flex-1 min-w-[200px]"><Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"/><Input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search..." className="pl-9 h-9"/></div>
-      <span className="text-xs text-muted-foreground">{filtered.length}/{items.length}</span>
+      <span className="text-xs text-muted-foreground">{filtered.length}/{items.length}{selected.size>0 && ` • ${selected.size} selected`}</span>
       <Button onClick={onAdd} className="h-9 gap-1.5 ml-auto"><Plus className="size-4"/>Add New</Button>
     </div>
     <Card className="shadow-sm"><CardContent className="p-0"><div className="overflow-x-auto"><Table>
-          <TableHeader><TableRow className="bg-muted/40">{cols.slice(0,4).map(c=><TableHead key={c} className="text-xs whitespace-nowrap">{c}</TableHead>)}<TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-          <TableBody>{filtered.length===0 ? <TableRow><TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">{items.length===0 ? "No entries yet — click Add New." : "No match."}</TableCell></TableRow> : filtered.map(it=><TableRow key={it.id} className="hover:bg-muted/30">
+          <TableHeader><TableRow className="bg-muted/40"><TableHead className="w-10"><Checkbox checked={allChecked} onCheckedChange={v=> setSelected(v ? new Set(filtered.map(i=>i.id)) : new Set())} /></TableHead>{cols.slice(0,4).map(c=><TableHead key={c} className="text-xs whitespace-nowrap">{c}</TableHead>)}<TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+          <TableBody>{filtered.length===0 ? <TableRow><TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">{items.length===0 ? "No entries yet — click Add New." : "No match."}</TableCell></TableRow> : filtered.map(it=><TableRow key={it.id} className="hover:bg-muted/30">
+            <TableCell><Checkbox checked={selected.has(it.id)} onCheckedChange={v=> setSelected(s=>{ const n=new Set(s); if(v) n.add(it.id); else n.delete(it.id); return n; })} /></TableCell>
             {cols.slice(0,4).map(c=> <TableCell key={c} className="text-xs max-w-[150px] truncate">{it.data[c]||"—"}</TableCell>)}
             <TableCell className="text-right"><div className="flex justify-end gap-0.5">
               <Button variant="ghost" size="icon" className="size-7" onClick={()=>onView(it)}><Eye className="size-3.5"/></Button>
