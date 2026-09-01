@@ -2,9 +2,11 @@ import type { StoredAppointment } from "@/services/ai/appointment.service";
 
 // The worker reaches the AI surface over HTTP on the API server (this
 // keeps the WhatsApp process isolated from dashboard modules, preserving the
-// AI_INTERNAL_TOKEN boundary). Defaults to the local API server port.
+// AI_INTERNAL_TOKEN boundary). Use BACKEND_URL for internal calls so APP_URL
+// can remain the public frontend URL (https://myclinic.myenum.in) for Google OAuth
+// redirect_uri — see google-oauth.ts frontendBaseUrl(). Defaults to localhost.
 const BASE_URL =
-  process.env.APP_URL ??
+  process.env.BACKEND_URL ??
   `http://localhost:${process.env.BACKEND_PORT ?? 3100}`;
 const TOKEN = process.env.AI_INTERNAL_TOKEN ?? "";
 
