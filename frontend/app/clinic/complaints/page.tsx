@@ -23,9 +23,9 @@ function useStore(key: string){
   return [items, save] as const;
 }
 
-const COLS_RECORD=["Patient Name / ID","Visit Date & Time","Doctor","Diagnosis","Symptoms / Findings","Treatment Given","Procedures Performed","Medicines Prescribed","Dosage & Duration","Doctor Notes","Follow-up Date","Attachments / Reports"];
+const COLS_RECORD=["Patient Name / ID","Visit Date & Time","Doctor","Diagnosis","Symptoms / Findings","Treatment Given","Procedures Performed","Medicines Prescribed","Dosage & Duration","Doctor Notes","Follow-up Date"];
 const COLS_PLAN=["Diagnosis / Clinical Impression","Treatment Objective","Planned Treatment","Procedures Required","Medicines","Investigations / Tests","Lifestyle / Care Instructions","Expected Outcome","Follow-up Schedule","Estimated Duration","Doctor's Remarks","Patient Consent"];
-const COLS_DISCHARGE=["Patient Details","Admission Date","Discharge Date","Final Diagnosis","Treatment Summary","Procedures Performed","Condition at Discharge","Medicines on Discharge","Dosage & Duration","Diet / Activity Instructions","Warning Signs","Follow-up Date","Next Appointment","Doctor's Signature","Patient / Attendant Acknowledgement"];
+const COLS_DISCHARGE=["Patient Details","Admission Date","Discharge Date","Final Diagnosis","Treatment Summary","Procedures Performed","Condition at Discharge","Medicines on Discharge","Dosage & Duration","Diet / Activity Instructions","Warning Signs","Follow-up Date","Next Appointment","Doctor's Signature"];
 
 export default function TreatmentPage(){
   const session = useRequireRole("staff" as any);
@@ -68,8 +68,8 @@ export default function TreatmentPage(){
           <TabsTrigger value="discharge">3. Discharge ({disItems.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="record" className="mt-4"><RecordTab sharedPatient={sharedPatient} patients={patients}/></TabsContent>
-        <TabsContent value="plan" className="mt-4"><PlanTab sharedPatient={sharedPatient}/></TabsContent>
-        <TabsContent value="discharge" className="mt-4"><DischargeTab sharedPatient={sharedPatient}/></TabsContent>
+        <TabsContent value="plan" className="mt-4"><PlanTab sharedPatient={sharedPatient} patients={patients}/></TabsContent>
+        <TabsContent value="discharge" className="mt-4"><DischargeTab sharedPatient={sharedPatient} patients={patients}/></TabsContent>
       </Tabs>
     </div>
   );
@@ -130,11 +130,8 @@ function RecordTab({sharedPatient, patients}:{sharedPatient:string;patients:Pati
       <div className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Patient *</Label>
-            <select value={v["Patient Name / ID"]} onChange={e=>setV({...v, ["Patient Name / ID"]:e.target.value})} className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm">
-              <option value="">Select patient</option>
-              {patients.map(p=> <option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}
-            </select>
-            <Input value={v["Patient Name / ID"]} onChange={e=>setV({...v, ["Patient Name / ID"]:e.target.value})} placeholder="Or type name" className="mt-2 h-9"/>
+            <Input list="patients-list" value={v["Patient Name / ID"]} onChange={e=>setV({...v, ["Patient Name / ID"]:e.target.value})} placeholder="Select or type patient" className="mt-1 h-9"/>
+            <datalist id="patients-list">{patients.map(p=> <option key={p.patientId} value={p.fullName} />)}</datalist>
           </div>
           <div><Label className="text-xs">Visit Date & Time</Label><Input type="datetime-local" value={v["Visit Date & Time"]} onChange={e=>setV({...v, ["Visit Date & Time"]:e.target.value})} className="mt-1 h-9"/></div>
         </div>
@@ -150,16 +147,13 @@ function RecordTab({sharedPatient, patients}:{sharedPatient:string;patients:Pati
           <div><Label className="text-xs">Dosage & Duration</Label><Textarea value={v["Dosage & Duration"]} onChange={e=>setV({...v, ["Dosage & Duration"]:e.target.value})} rows={2}/></div>
         </div>
         <div><Label className="text-xs">Doctor Notes</Label><Textarea value={v["Doctor Notes"]} onChange={e=>setV({...v, ["Doctor Notes"]:e.target.value})} rows={2}/></div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label className="text-xs">Follow-up Date</Label><Input type="date" value={v["Follow-up Date"]} onChange={e=>setV({...v, ["Follow-up Date"]:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Attachments / Reports</Label><Input value={v["Attachments / Reports"]} onChange={e=>setV({...v, ["Attachments / Reports"]:e.target.value})} className="mt-1 h-9"/></div>
-        </div>
+        <div><Label className="text-xs">Follow-up Date</Label><Input type="date" value={v["Follow-up Date"]} onChange={e=>setV({...v, ["Follow-up Date"]:e.target.value})} className="mt-1 h-9"/></div>
       </div>
       <div className="flex gap-2"><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></div></div>}
     <Dialog open={!!viewing} onOpenChange={v=>!v&&setViewing(null)}><DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>View Record</DialogTitle></DialogHeader>{viewing&&<div className="grid sm:grid-cols-2 gap-3 text-sm">{Object.entries(viewing.data).map(([k,v])=><div key={k}><span className="text-muted-foreground text-xs">{k}:</span><div className="font-medium break-words">{String(v)||"—"}</div></div>)}</div>}<DialogFooter><Button variant="outline" onClick={()=>setViewing(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
   </>
 }
-function PlanTab({sharedPatient}:{sharedPatient:string}){
+function PlanTab({sharedPatient, patients}:{sharedPatient:string;patients:Patient[]}){
   const [items,save]=useStore("treatment_plan");
   const [v,setV]=useState<Record<string,string>>(()=> Object.fromEntries(COLS_PLAN.map(c=>[c,""])));
   const [open,setOpen]=useState(false);
@@ -194,7 +188,7 @@ function PlanTab({sharedPatient}:{sharedPatient:string}){
     <Dialog open={!!viewing} onOpenChange={v=>!v&&setViewing(null)}><DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>View Plan</DialogTitle></DialogHeader>{viewing&&<div className="grid sm:grid-cols-2 gap-3 text-sm">{Object.entries(viewing.data).map(([k,v])=><div key={k}><span className="text-muted-foreground text-xs">{k}:</span><div className="font-medium break-words">{String(v)||"—"}</div></div>)}</div>}<DialogFooter><Button variant="outline" onClick={()=>setViewing(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
   </>
 }
-function DischargeTab({sharedPatient}:{sharedPatient:string}){
+function DischargeTab({sharedPatient, patients}:{sharedPatient:string;patients:Patient[]}){
   const [items,save]=useStore("treatment_discharge");
   const [v,setV]=useState<Record<string,string>>(()=> Object.fromEntries(COLS_DISCHARGE.map(c=>[c,""])));
   const [open,setOpen]=useState(false);
@@ -226,7 +220,6 @@ function DischargeTab({sharedPatient}:{sharedPatient:string}){
         <div><Label className="text-xs">Follow-up Date</Label><Input type="date" value={v["Follow-up Date"]} onChange={e=>SV("Follow-up Date", e.target.value)} className="mt-1 h-9"/></div>
         <div><Label className="text-xs">Next Appointment</Label><Input type="datetime-local" value={v["Next Appointment"]} onChange={e=>SV("Next Appointment", e.target.value)} className="mt-1 h-9"/></div>
         <div><Label className="text-xs">Doctor&apos;s Signature</Label><Input value={v["Doctor's Signature"]} onChange={e=>SV("Doctor's Signature", e.target.value)} className="mt-1 h-9"/></div>
-        <div><Label className="text-xs">Patient / Attendant Acknowledgement</Label><select value={v["Patient / Attendant Acknowledgement"]} onChange={e=>SV("Patient / Attendant Acknowledgement", e.target.value)} className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"><option value="">Select</option><option value="Acknowledged">Acknowledged</option><option value="Pending">Pending</option></select></div>
       </div>
       <div className="flex gap-2"><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></div></div>}
     <Dialog open={!!viewing} onOpenChange={v=>!v&&setViewing(null)}><DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>View Discharge</DialogTitle></DialogHeader>{viewing&&<div className="grid sm:grid-cols-2 gap-3 text-sm">{Object.entries(viewing.data).map(([k,v])=><div key={k}><span className="text-muted-foreground text-xs">{k}:</span><div className="font-medium break-words">{String(v)||"—"}</div></div>)}</div>}<DialogFooter><Button variant="outline" onClick={()=>setViewing(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
