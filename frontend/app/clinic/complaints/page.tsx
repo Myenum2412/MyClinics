@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Search, Eye, Pencil, Trash2, Plus, Users } from "lucide-react";
+import StatsTreatment from "@/components/stats-treatment";
 import { Checkbox } from "@/components/ui/checkbox";
 import { listPatients, type Patient } from "@/lib/clinic-api";
 import { useRequireRole } from "@/hooks/use-clinic-session";
@@ -56,6 +57,9 @@ export default function TreatmentPage(){
               {localPatients.map(p=> <option key={p} value={p}>{p}</option>)}
             </select>
         </div>
+      </div>
+      <div className="rounded-xl border bg-card p-2 shadow-sm">
+        <StatsTreatment />
       </div>
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap h-auto">
