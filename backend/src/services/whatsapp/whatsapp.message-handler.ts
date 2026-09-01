@@ -88,7 +88,7 @@ function dedupe(messageId: string): boolean {
 }
 
 function isGroupMessage(message: Message): boolean {
-  return message.from.endsWith("@g.us");
+  return message.from.endsWith("@g.us") || message.from === "status@broadcast" || message.from.endsWith("@broadcast");
 }
 
 async function getCachedContext(organizationId: string) {
