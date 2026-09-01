@@ -22,7 +22,6 @@ function useStore(key: string){
 }
 
 const COLS_RECORD=["Patient Name / ID","Visit Date & Time","Doctor","Diagnosis","Symptoms / Findings","Treatment Given","Procedures Performed","Medicines Prescribed","Dosage & Duration","Doctor Notes","Follow-up Date","Attachments / Reports"];
-const COLS_COMPLAINT=["Chief Complaint","Complaint Category","Location","Severity","Duration","Onset","Frequency","Associated Symptoms","Previous Treatment","Patient's Description","Doctor's Observation","Priority"];
 const COLS_PLAN=["Diagnosis / Clinical Impression","Treatment Objective","Planned Treatment","Procedures Required","Medicines","Investigations / Tests","Lifestyle / Care Instructions","Expected Outcome","Follow-up Schedule","Estimated Duration","Doctor's Remarks","Patient Consent"];
 const COLS_DISCHARGE=["Patient Details","Admission Date","Discharge Date","Final Diagnosis","Treatment Summary","Procedures Performed","Condition at Discharge","Medicines on Discharge","Dosage & Duration","Diet / Activity Instructions","Warning Signs","Follow-up Date","Next Appointment","Doctor's Signature","Patient / Attendant Acknowledgement"];
 
@@ -33,7 +32,6 @@ export default function TreatmentPage(){
   const [sharedPatient,setSharedPatient]=useState("");
   const [patients,setPatients]=useState<Patient[]>([]);
   const [recItems]=useStore("treatment_record");
-  const [cmpItems]=useStore("treatment_complaint");
   const [planItems]=useStore("treatment_plan");
   const [disItems]=useStore("treatment_discharge");
 
@@ -41,10 +39,10 @@ export default function TreatmentPage(){
 
   const localPatients = useMemo(()=>{
     const s=new Set<string>();
-    [...recItems, ...cmpItems, ...planItems, ...disItems].forEach(e=>{ if(e.patient) s.add(e.patient); });
+    [...recItems, ...planItems, ...disItems].forEach(e=>{ if(e.patient) s.add(e.patient); });
     patients.forEach(p=> s.add(p.fullName));
     return Array.from(s);
-  },[recItems,cmpItems,planItems,disItems,patients]);
+  },[recItems,planItems,disItems,patients]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -61,12 +59,10 @@ export default function TreatmentPage(){
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="record">1. Record ({recItems.length})</TabsTrigger>
-          <TabsTrigger value="complaint">2. Complaints ({cmpItems.length})</TabsTrigger>
           <TabsTrigger value="plan">3. Plan ({planItems.length})</TabsTrigger>
           <TabsTrigger value="discharge">4. Discharge ({disItems.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="record" className="mt-4"><RecordTab sharedPatient={sharedPatient} patients={patients}/></TabsContent>
-        <TabsContent value="complaint" className="mt-4"><ComplaintTab sharedPatient={sharedPatient}/></TabsContent>
         <TabsContent value="plan" className="mt-4"><PlanTab sharedPatient={sharedPatient}/></TabsContent>
         <TabsContent value="discharge" className="mt-4"><DischargeTab sharedPatient={sharedPatient}/></TabsContent>
       </Tabs>
@@ -149,41 +145,6 @@ function RecordTab({sharedPatient, patients}:{sharedPatient:string;patients:Pati
       </div>
       <div className="flex gap-2"><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></div></div>}
     <Dialog open={!!viewing} onOpenChange={v=>!v&&setViewing(null)}><DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>View Record</DialogTitle></DialogHeader>{viewing&&<div className="grid sm:grid-cols-2 gap-3 text-sm">{Object.entries(viewing.data).map(([k,v])=><div key={k}><span className="text-muted-foreground text-xs">{k}:</span><div className="font-medium break-words">{String(v)||"—"}</div></div>)}</div>}<DialogFooter><Button variant="outline" onClick={()=>setViewing(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
-  </>
-}
-function ComplaintTab({sharedPatient}:{sharedPatient:string}){
-  const [items,save]=useStore("treatment_complaint");
-  const [v,setV]=useState<Record<string,string>>(()=> Object.fromEntries(COLS_COMPLAINT.map(c=>[c,""])));
-  const [open,setOpen]=useState(false);
-  const [editing,setEditing]=useState<string|null>(null);
-  const [viewing,setViewing]=useState<Entry|null>(null);
-  const SV=(f:string,val:string)=> setV(prev=>({...prev,[f]:val??""}));
-  function submit(){
-    if(!v["Chief Complaint"].trim()) return toast.error("Chief Complaint required");
-    const patient=v["Chief Complaint"].slice(0,30);
-    if(editing) save(items.map(x=> x.id===editing? {...x, patient, data:{...v}}:x));
-    else save([{id:`CMP-${Date.now()}`, createdAt:new Date().toISOString(), patient, data:{...v}},...items]);
-    setV(Object.fromEntries(COLS_COMPLAINT.map(c=>[c,""]))); setEditing(null); setOpen(false); toast.success("Saved");
-  }
-  return <>
-    <TableSection items={items} cols={COLS_COMPLAINT} sharedPatient={sharedPatient} onView={setViewing} onEdit={e=>{setV({...e.data});setEditing(e.id);setOpen(true)}} onDelete={e=>save(items.filter(x=>x.id!==e.id))} onAdd={()=>{setV(Object.fromEntries(COLS_COMPLAINT.map(c=>[c,""])));setEditing(null);setOpen(true)}}/>
-    {open && <div className="rounded-xl border bg-card p-5 space-y-4"><h3 className="font-semibold text-sm">{editing?"Edit":"New"} Complaint</h3>
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="sm:col-span-2"><Label className="text-xs">Chief Complaint *</Label><Input value={v["Chief Complaint"]} onChange={e=>SV("Chief Complaint", e.target.value)} className="mt-1 h-9"/></div>
-        <div><Label className="text-xs">Complaint Category</Label><select value={v["Complaint Category"]} onChange={e=>SV("Complaint Category", e.target.value)} className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"><option value="">Select</option><option value="treatment">treatment</option><option value="staff">staff</option><option value="billing">billing</option><option value="facility">facility</option><option value="other">other</option></select></div>
-        <div><Label className="text-xs">Location</Label><Input value={v["Location"]} onChange={e=>SV("Location", e.target.value)} className="mt-1 h-9"/></div>
-        <div><Label className="text-xs">Severity</Label><select value={v["Severity"]} onChange={e=>SV("Severity", e.target.value)} className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"><option value="">Select</option><option value="mild">mild</option><option value="moderate">moderate</option><option value="severe">severe</option></select></div>
-        <div><Label className="text-xs">Duration</Label><Input value={v["Duration"]} onChange={e=>SV("Duration", e.target.value)} className="mt-1 h-9"/></div>
-        <div><Label className="text-xs">Onset</Label><Input type="date" value={v["Onset"]} onChange={e=>SV("Onset", e.target.value)} className="mt-1 h-9"/></div>
-        <div><Label className="text-xs">Frequency</Label><select value={v["Frequency"]} onChange={e=>SV("Frequency", e.target.value)} className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"><option value="">Select</option><option value="once">once</option><option value="intermittent">intermittent</option><option value="continuous">continuous</option></select></div>
-        <div><Label className="text-xs">Associated Symptoms</Label><Input value={v["Associated Symptoms"]} onChange={e=>SV("Associated Symptoms", e.target.value)} className="mt-1 h-9"/></div>
-        <div className="sm:col-span-2"><Label className="text-xs">Previous Treatment</Label><Input value={v["Previous Treatment"]} onChange={e=>SV("Previous Treatment", e.target.value)} className="mt-1 h-9"/></div>
-        <div className="sm:col-span-2"><Label className="text-xs">Patient&apos;s Description</Label><Textarea value={v["Patient's Description"]} onChange={e=>SV("Patient's Description", e.target.value)} rows={2}/></div>
-        <div className="sm:col-span-2"><Label className="text-xs">Doctor&apos;s Observation</Label><Textarea value={v["Doctor's Observation"]} onChange={e=>SV("Doctor's Observation", e.target.value)} rows={2}/></div>
-        <div><Label className="text-xs">Priority</Label><select value={v["Priority"]} onChange={e=>SV("Priority", e.target.value)} className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"><option value="">Select</option><option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option><option value="Emergency">Emergency</option></select></div>
-      </div>
-      <div className="flex gap-2"><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></div></div>}
-    <Dialog open={!!viewing} onOpenChange={v=>!v&&setViewing(null)}><DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>View Complaint</DialogTitle></DialogHeader>{viewing&&<div className="grid sm:grid-cols-2 gap-3 text-sm">{Object.entries(viewing.data).map(([k,v])=><div key={k}><span className="text-muted-foreground text-xs">{k}:</span><div className="font-medium break-words">{String(v)||"—"}</div></div>)}</div>}<DialogFooter><Button variant="outline" onClick={()=>setViewing(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
   </>
 }
 function PlanTab({sharedPatient}:{sharedPatient:string}){
