@@ -5,8 +5,8 @@ import { useClinicSession } from "@/hooks/use-clinic-session";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Sparkles, Plus, Trash2, MessageSquare, Clock, Send, Loader2 } from "lucide-react";
+import { Sparkles, Plus, Trash2, MessageSquare, Clock, Send, Loader2, Paperclip, Mic } from "lucide-react";
+import { PromptInput, PromptInputTextarea, PromptInputActions, PromptInputAction } from "@/components/nexus-ui/prompt-input";
 
 interface Msg { role: "user" | "assistant"; content: string }
 interface Chat { id: string; title: string; createdAt: string; messages: Msg[] }
@@ -38,9 +38,10 @@ export default function ClinicAiAssistantPage() {
   }
   function deleteChat(id: string) { setChats((p) => p.filter((c) => c.id !== id)); if (activeId === id) setActiveId(chats[0]?.id ?? null); }
 
-  async function send() {
-    if (!input.trim() || !active || sending) return;
-    const text = input.trim(); setInput(""); setSending(true);
+  async function send(value?: string) {
+    const text = (value ?? input).trim();
+    if (!text || !active || sending) return;
+    setInput(""); setSending(true);
     const updated = chats.map((c) => c.id === active.id ? { ...c, title: c.messages.length <= 1 ? text.slice(0, 30) : c.title, messages: [...c.messages, { role: "user" as const, content: text }] } : c);
     setChats(updated);
     try {
@@ -75,9 +76,25 @@ export default function ClinicAiAssistantPage() {
               ))}
               {sending && <div className="flex gap-2 text-xs text-muted-foreground"><Loader2 className="size-3 animate-spin" /> assistant thinking...</div>}
             </div>
-            <div className="border-t p-3 flex gap-2">
-              <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} placeholder='Ask: Hi / Fees evalavu bro? / Clinic enga irukku?' />
-              <Button onClick={send} disabled={sending}><Send className="size-4" /></Button>
+            {/* ChatGPT-style PromptInput from @nexus-ui/prompt-input */}
+            <div className="p-3 bg-background">
+              <PromptInput onSubmit={send} className="shadow-lg">
+                <PromptInputTextarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask anything — Hi / Fees evalavu bro? / Clinic enga irukku? (Shift+Enter for new line)"
+                />
+                <PromptInputActions>
+                  <div className="flex gap-1 text-muted-foreground">
+                    <PromptInputAction tooltip="Attach (soon)"><Button variant="ghost" size="icon" className="size-8 rounded-full" type="button"><Paperclip className="size-4" /></Button></PromptInputAction>
+                    <PromptInputAction tooltip="Voice (soon)"><Button variant="ghost" size="icon" className="size-8 rounded-full" type="button"><Mic className="size-4" /></Button></PromptInputAction>
+                  </div>
+                  <PromptInputAction tooltip="Send (Enter)">
+                    <Button size="icon" className="size-8 rounded-full" onClick={() => send()} disabled={sending || !input.trim()}>{sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}</Button>
+                  </PromptInputAction>
+                </PromptInputActions>
+              </PromptInput>
+              <p className="text-[10px] text-muted-foreground text-center mt-2">ChatGPT-style input • @nexus-ui/prompt-input • Eve browser-agent + omni Tanglish</p>
             </div>
           </>
         )}
