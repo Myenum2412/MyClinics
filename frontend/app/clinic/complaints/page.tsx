@@ -81,11 +81,15 @@ function TableSection({items, cols, sharedPatient, onView,onEdit,onDelete, onAdd
     return a;
   },[items,q,sharedPatient]);
   const allChecked = filtered.length>0 && filtered.every(i=> selected.has(i.id));
-  return <div className="space-y-3">
-    <div className="flex flex-wrap gap-2 items-center">
-      <div className="relative flex-1 min-w-[200px]"><Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"/><Input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search..." className="pl-9 h-9"/></div>
-      <span className="text-xs text-muted-foreground">{filtered.length}/{items.length}{selected.size>0 && ` • ${selected.size} selected`}</span>
-      <Button onClick={onAdd} className="h-9 gap-1.5 ml-auto"><Plus className="size-4"/>Add New</Button>
+  return <div className="space-y-4">
+    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div><h3 className="text-sm font-semibold">{cols[0].split("/")[0].trim()} Records</h3><p className="text-xs text-muted-foreground">{filtered.length} / {items.length} records{selected.size>0 && ` • ${selected.size} selected`}</p></div>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64"><Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"/><Input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search..." className="pl-9 h-9"/></div>
+          <Button onClick={onAdd} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>Add New</Button>
+        </div>
+      </div>
     </div>
     <Card className="shadow-sm"><CardContent className="p-0"><div className="overflow-x-auto"><Table>
           <TableHeader><TableRow className="bg-muted/40"><TableHead className="w-10"><Checkbox checked={allChecked} onCheckedChange={v=> setSelected(v ? new Set(filtered.map(i=>i.id)) : new Set())} /></TableHead>{cols.slice(0,4).map(c=><TableHead key={c} className="text-xs whitespace-nowrap">{c}</TableHead>)}<TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
