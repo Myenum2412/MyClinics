@@ -58,9 +58,9 @@ export default function TreatmentPage(){
       </div>
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="record">1. Record ({recItems.length})</TabsTrigger>
-          <TabsTrigger value="plan">3. Plan ({planItems.length})</TabsTrigger>
-          <TabsTrigger value="discharge">4. Discharge ({disItems.length})</TabsTrigger>
+          <TabsTrigger value="record">1. Treatment Record ({recItems.length})</TabsTrigger>
+          <TabsTrigger value="plan">2. Treatment Plan ({planItems.length})</TabsTrigger>
+          <TabsTrigger value="discharge">3. Discharge ({disItems.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="record" className="mt-4"><RecordTab sharedPatient={sharedPatient} patients={patients}/></TabsContent>
         <TabsContent value="plan" className="mt-4"><PlanTab sharedPatient={sharedPatient}/></TabsContent>
