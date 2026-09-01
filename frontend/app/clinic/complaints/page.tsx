@@ -88,12 +88,9 @@ function TableSection({items, cols, sharedPatient, onView,onEdit,onDelete, onAdd
       <span className="text-xs text-muted-foreground">{filtered.length}/{items.length}</span>
       <Button onClick={onAdd} className="h-9 gap-1.5 ml-auto"><Plus className="size-4"/>Add New</Button>
     </div>
-    <Card className="shadow-sm"><CardContent className="p-0">
-      {items.length===0 ? <p className="py-10 text-center text-sm text-muted-foreground">No entries yet — click Add New to create.</p>
-      : filtered.length===0 ? <p className="py-10 text-center text-sm text-muted-foreground">No match.</p>
-      : <div className="overflow-x-auto"><Table>
+    <Card className="shadow-sm"><CardContent className="p-0"><div className="overflow-x-auto"><Table>
           <TableHeader><TableRow className="bg-muted/40">{cols.slice(0,4).map(c=><TableHead key={c} className="text-xs whitespace-nowrap">{c}</TableHead>)}<TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-          <TableBody>{filtered.map(it=><TableRow key={it.id} className="hover:bg-muted/30">
+          <TableBody>{filtered.length===0 ? <TableRow><TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">{items.length===0 ? "No entries yet — click Add New." : "No match."}</TableCell></TableRow> : filtered.map(it=><TableRow key={it.id} className="hover:bg-muted/30">
             {cols.slice(0,4).map(c=> <TableCell key={c} className="text-xs max-w-[150px] truncate">{it.data[c]||"—"}</TableCell>)}
             <TableCell className="text-right"><div className="flex justify-end gap-0.5">
               <Button variant="ghost" size="icon" className="size-7" onClick={()=>onView(it)}><Eye className="size-3.5"/></Button>
@@ -101,8 +98,7 @@ function TableSection({items, cols, sharedPatient, onView,onEdit,onDelete, onAdd
               <Button variant="ghost" size="icon" className="size-7 text-destructive" onClick={()=>onDelete(it)}><Trash2 className="size-3.5"/></Button>
             </div></TableCell>
           </TableRow>)}</TableBody>
-        </Table></div>}
-    </CardContent></Card>
+        </Table></div></CardContent></Card>
   </div>
 }
 
