@@ -1,42 +1,46 @@
 "use client"
 
-import { useSyncExternalStore } from "react"
-import { useTheme } from "next-themes"
-import { MoonIcon, SunIcon } from "@heroicons/react/24/outline"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 
-const emptySubscribe = () => () => {}
-const useMounted = () =>
-  useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false
+function WhatsAppIcon({ connected }: { connected: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`size-5 ${connected ? "text-[#25D366]" : "text-red-500"}`} fill="currentColor" aria-hidden="true">
+      <path d="M19.05 4.94A9.91 9.91 0 0 0 12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.26-1.38a9.91 9.91 0 0 0 4.78 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.91-7.02zm-7.01 15.24h-.01a8.3 8.3 0 0 1-4.23-1.16l-.3-.18-3.12.82.83-3.04-.2-.31a8.25 8.25 0 0 1-1.27-4.4c0-4.58 3.72-8.3 8.3-8.3 2.22 0 4.3.86 5.87 2.43a8.26 8.26 0 0 1 2.43 5.87c0 4.58-3.72 8.3-8.3 8.3zm4.55-6.21c-.25-.12-1.47-.73-1.7-.81-.23-.09-.39-.12-.56.12-.17.25-.64.81-.78.98-.14.17-.29.19-.54.07-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.47-1.39-1.72-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.14.17-.25.25-.42.08-.17.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.42-.56-.43h-.48c-.17 0-.43.06-.66.31-.23.25-.86.84-.86 2.05s.88 2.38 1 2.54c.12.17 1.74 2.65 4.21 3.72.59.25 1.05.4 1.4.52.59.19 1.13.16 1.55.1.47-.07 1.47-.6 1.68-1.18.2-.58.2-1.08.14-1.18-.06-.11-.23-.17-.48-.29z" />
+    </svg>
   )
+}
 
 export function ThemeToggle({ className }: { className?: string }) {
-  const { resolvedTheme, setTheme } = useTheme()
-  const mounted = useMounted()
+  const [connected, setConnected] = useState(false)
 
-  if (!mounted) {
-    return (
-      <Button variant="ghost" size="icon-sm" className={className} aria-label="Toggle theme">
-        <span className="size-4 rounded-full bg-muted" />
-      </Button>
-    )
-  }
-
-  const isDark = resolvedTheme === "dark"
+  useEffect(() => {
+    let cancelled = false
+    async function check() {
+      try {
+        const clinicId = (() => {
+          try {
+            const raw = localStorage.getItem("clinic_session")
+            if (!raw) return null
+            return JSON.parse(raw)?.clinicId as string | null
+          } catch { return null }
+        })()
+        if (!clinicId) return
+        const res = await fetch(`/api/clinics/${clinicId}/whatsapp/session`, { cache: "no-store" })
+        if (!res.ok) return
+        const data = await res.json()
+        const status = data?.session?.status || data?.status
+        if (!cancelled) setConnected(status === "connected" || status === "open" || status === "ready")
+      } catch {}
+    }
+    check()
+    const id = setInterval(check, 30000)
+    return () => { cancelled = true; clearInterval(id) }
+  }, [])
 
   return (
-    <Button
-      variant="ghost"
-      size="icon-sm"
-      className={className}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-    >
-      {isDark ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />}
+    <Button variant="ghost" size="icon-sm" className={className} aria-label={connected ? "WhatsApp connected" : "WhatsApp not connected"} title={connected ? "WhatsApp connected" : "WhatsApp not connected — red"}>
+      <WhatsAppIcon connected={connected} />
     </Button>
   )
 }
