@@ -49,113 +49,64 @@ interface NavItem {
   children?: { title: string; url: string; match?: "exact" | "prefix"; roles?: ClinicRole[] }[]
 }
 
-const NAV_ITEMS: NavItem[] = [
+type NavGroup = { label: string; items: NavItem[] }
+
+const NAV_GROUPS: NavGroup[] = [
   {
-    title: "Dashboard",
-    url: "/clinic",
-    icon: <LayoutDashboardIcon className="size-6" />,
-    match: "exact",
-    roles: ["patient", "doctor", "staff", "clinic_admin"],
-  },
-  {
-    title: "Appointments",
-    url: "/clinic/appointments",
-    icon: <CalendarDaysIcon className="size-6" />,
-    match: "prefix",
-    roles: ["patient", "doctor", "staff", "clinic_admin"],
-  },
-  {
-    title: "Patients",
-    url: "/clinic/patients",
-    icon: <UsersIcon className="size-6" />,
-    roles: ["doctor", "staff", "clinic_admin"],
-  },
-  {
-    title: "Doctors",
-    url: "/clinic/doctors",
-    icon: <StethoscopeIcon className="size-6" />,
-    roles: ["doctor", "staff", "clinic_admin"],
-  },
-  {
-    title: "Medicine",
-    url: "/clinic/records",
-    icon: <RecordsIcon className="size-6" />,
-    roles: ["patient", "doctor", "staff", "clinic_admin"],
-  },
-  {
-    title: "Medical Record",
-    url: "/clinic/medical-record",
-    icon: <FolderOpenIcon className="size-6" />,
-    roles: ["patient", "doctor", "staff", "clinic_admin"],
-  },
-  {
-    title: "Prescriptions",
-    url: "/clinic/prescriptions",
-    icon: <PillIcon className="size-6" />,
-    roles: ["patient", "doctor", "staff", "clinic_admin"],
-  },
-  {
-    title: "Billing",
-    url: "/clinic/billing",
-    icon: <ReceiptTextIcon className="size-6" />,
-    roles: ["patient", "doctor", "staff", "clinic_admin"],
-  },
-  {
-    title: "Treatment",
-    url: "/clinic/complaints",
-    icon: <HeartPulse className="size-6" />,
-    roles: ["doctor", "staff", "clinic_admin"],
-  },
-  {
-    title: "Pharmacy",
-    url: "/clinic/pharmacy/medicines",
-    icon: <Pill className="size-6" />,
-    match: "prefix",
-    roles: ["clinic_admin", "pharmacy_manager", "pharmacist", "inventory_staff", "billing_staff"],
-    children: [
-      { title: "Medicines", url: "/clinic/pharmacy/medicines" },
-      { title: "Inventory", url: "/clinic/pharmacy/inventory" },
-      { title: "Stock History", url: "/clinic/pharmacy/stock-history" },
-      { title: "Purchases", url: "/clinic/pharmacy/purchases" },
-      { title: "Sales", url: "/clinic/pharmacy/sales" },
-      { title: "Suppliers", url: "/clinic/pharmacy/suppliers" },
+    label: "Navigation",
+    items: [
+      { title: "Dashboard", url: "/clinic", icon: <LayoutDashboardIcon className="size-5" />, match: "exact", roles: ["patient", "doctor", "staff", "clinic_admin"] },
     ],
   },
   {
-    title: "Reports",
-    url: "/clinic/reports",
-    icon: <ChartBarIcon className="size-6" />,
-    roles: ["staff", "clinic_admin"],
+    label: "Clinical",
+    items: [
+      { title: "Appointments", url: "/clinic/appointments", icon: <CalendarDaysIcon className="size-5" />, match: "prefix", roles: ["patient", "doctor", "staff", "clinic_admin"] },
+      { title: "Patients", url: "/clinic/patients", icon: <UsersIcon className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
+      { title: "Medical Records", url: "/clinic/medical-record", icon: <FolderOpenIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
+      { title: "Treatment", url: "/clinic/complaints", icon: <HeartPulse className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
+      { title: "Prescriptions", url: "/clinic/prescriptions", icon: <PillIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
+      { title: "Medicine", url: "/clinic/records", icon: <RecordsIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
+      {
+        title: "Pharmacy", url: "/clinic/pharmacy/medicines", icon: <Pill className="size-5" />, match: "prefix", roles: ["clinic_admin", "pharmacy_manager", "pharmacist", "inventory_staff", "billing_staff"],
+        children: [
+          { title: "Medicines", url: "/clinic/pharmacy/medicines" },
+          { title: "Inventory", url: "/clinic/pharmacy/inventory" },
+          { title: "Stock History", url: "/clinic/pharmacy/stock-history" },
+          { title: "Purchases", url: "/clinic/pharmacy/purchases" },
+          { title: "Sales", url: "/clinic/pharmacy/sales" },
+          { title: "Suppliers", url: "/clinic/pharmacy/suppliers" },
+        ],
+      },
+    ],
   },
   {
-    title: "Audit Logs",
-    url: "/clinic/audit-logs",
-    icon: <ClipboardListIcon className="size-6" />,
-    roles: ["clinic_admin"],
+    label: "Finance",
+    items: [
+      { title: "Billing", url: "/clinic/billing", icon: <ReceiptTextIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
+    ],
   },
   {
-    title: "Notifications",
-    url: "/clinic/notifications",
-    icon: <BellIcon className="size-6" />,
-    roles: ["doctor", "staff", "clinic_admin"],
+    label: "Insights",
+    items: [
+      { title: "Reports", url: "/clinic/reports", icon: <ChartBarIcon className="size-5" />, roles: ["staff", "clinic_admin"] },
+    ],
   },
   {
-    title: "Settings",
-    url: "/clinic/settings",
-    icon: <Settings2Icon className="size-6" />,
-    roles: ["staff", "clinic_admin"],
+    label: "Communication",
+    items: [
+      { title: "Notifications", url: "/clinic/notifications", icon: <BellIcon className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
+      { title: "AI Assistant", url: "/clinic/ai-assistant", icon: <Image src="/aidps.png" alt="AI" width={20} height={20} className="size-5 rounded-full object-cover" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
+    ],
   },
   {
-    title: "Leads",
-    url: "/clinic/leads",
-    icon: <InboxIcon className="size-6" />,
-    roles: ["staff", "clinic_admin"],
-  },
-  {
-    title: "AI Assistant",
-    url: "/clinic/ai-assistant",
-    icon: <Image src="/aidps.png" alt="AI" width={24} height={24} className="size-6 rounded-full object-cover" />,
-    roles: ["patient", "doctor", "staff", "clinic_admin"],
+    label: "Management",
+    items: [
+      { title: "Doctors", url: "/clinic/doctors", icon: <StethoscopeIcon className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
+      { title: "Leads", url: "/clinic/leads", icon: <InboxIcon className="size-5" />, roles: ["staff", "clinic_admin"] },
+      { title: "Audit Logs", url: "/clinic/audit-logs", icon: <ClipboardListIcon className="size-5" />, roles: ["clinic_admin"] },
+      { title: "Settings", url: "/clinic/settings", icon: <Settings2Icon className="size-5" />, roles: ["staff", "clinic_admin"] },
+    ],
   },
 ]
 
@@ -175,7 +126,6 @@ export function WorkspaceSidebar({
   clinicId: string
 }) {
   const pathname = usePathname()
-  const items = NAV_ITEMS.filter((item) => item.roles.includes(role))
   const [openMap, setOpenMap] = React.useState<Record<string, boolean>>({})
 
   return (
@@ -202,12 +152,16 @@ export function WorkspaceSidebar({
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="mb-0.5 px-3 text-[11px] font-semibold uppercase tracking-wider">
-            Navigation
-          </SidebarGroupLabel>
-          <SidebarMenu>
-            {items.map((item) => {
+        {NAV_GROUPS.map((group) => {
+          const visible = group.items.filter((i) => i.roles.includes(role))
+          if (visible.length === 0) return null
+          return (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel className="mb-0.5 px-3 text-[11px] font-semibold uppercase tracking-wider">
+                {group.label}
+              </SidebarGroupLabel>
+              <SidebarMenu>
+                {visible.map((item) => {
               const url = item.url === "/clinic/medical-record" && role === "patient"
                 ? "/clinic/patient/medical-records"
                 : item.url;
@@ -288,9 +242,11 @@ export function WorkspaceSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )
-            })}
-          </SidebarMenu>
-        </SidebarGroup>
+                })}
+              </SidebarMenu>
+            </SidebarGroup>
+          )
+        })}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} clinicId={clinicId} />
