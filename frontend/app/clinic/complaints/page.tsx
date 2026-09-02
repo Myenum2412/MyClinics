@@ -62,7 +62,16 @@ export default function TreatmentPage(){
         </div>
       </div>
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <StatsAppointments appointments={appointments} />
+        <div className="flex flex-col gap-1">
+          <h2 className="text-xl font-medium">Treatment Overview</h2>
+          <p className="text-sm text-muted-foreground">Records, plans, and discharge tracking — completion insights.</p>
+        </div>
+        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border bg-card p-4 shadow-2xs"><p className="text-sm font-medium">Total Records</p><p className="text-2xl font-bold">{recItems.length}</p><p className="text-xs text-muted-foreground">treatment records</p></div>
+          <div className="rounded-xl border bg-card p-4 shadow-2xs"><p className="text-sm font-medium">Treatment Plans</p><p className="text-2xl font-bold">{planItems.length}</p><p className="text-xs text-muted-foreground">active plans</p></div>
+          <div className="rounded-xl border bg-card p-4 shadow-2xs"><p className="text-sm font-medium">Discharges</p><p className="text-2xl font-bold">{disItems.length}</p><p className="text-xs text-muted-foreground">completed</p></div>
+          <div className="rounded-xl border bg-card p-4 shadow-2xs"><p className="text-sm font-medium">Total Patients</p><p className="text-2xl font-bold">{patients.length}</p><p className="text-xs text-muted-foreground">connected</p></div>
+        </div>
       </div>
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap h-auto">
