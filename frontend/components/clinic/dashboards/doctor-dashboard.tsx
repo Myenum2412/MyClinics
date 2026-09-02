@@ -229,18 +229,9 @@ function GreetingBanner({
 
         {/* Right: Quick Add + Medical Record */}
         <div className="flex items-center gap-3">
-          <div className="relative group/quick">
-            <button className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90">
-              <Plus className="size-4" /> Quick Add
-            </button>
-            <div className="absolute right-0 top-full z-20 hidden min-w-[200px] flex-col rounded-xl border bg-popover p-2 shadow-lg group-hover/quick:flex">
-              <Link href="/clinic/appointments" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">Appointments</Link>
-              <Link href="/clinic/complaints" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">Treatment</Link>
-              <Link href="/clinic/prescriptions" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">Prescription</Link>
-              <Link href="/clinic/pharmacy/medicines" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">Medicine</Link>
-              <Link href="/clinic/billing" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">Billing</Link>
-            </div>
-          </div>
+          <Link href="/clinic/quick-add" className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90">
+            <Plus className="size-4" /> Quick Add
+          </Link>
           <Link
             href="/clinic/medical-record"
             className="group flex w-fit items-center gap-3 rounded-xl border border-border/80 bg-background/80 px-5 py-4 shadow-md backdrop-blur-md transition-all duration-200 hover:border-primary/40 hover:bg-background hover:shadow-lg active:scale-[0.97]"
