@@ -60,8 +60,8 @@ export default function MetaIntegrationPage() {
   const [analytics, setAnalytics] = useState<MetaAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [appId, setAppId] = useState("1591554832378190");
-  const [appSecret, setAppSecret] = useState("75eed8b0a4734e0179ba416cf785131c");
+  const [appId, setAppId] = useState(process.env.NEXT_PUBLIC_META_APP_ID ?? "");
+  const [appSecret, setAppSecret] = useState(process.env.NEXT_PUBLIC_META_APP_SECRET ?? "");
   const [redirectUri, setRedirectUri] = useState("");
 
   const load = useCallback(async () => {
@@ -121,7 +121,7 @@ export default function MetaIntegrationPage() {
   async function handleConnect() {
     if (!clinicId) return;
     if (!connected && !appId.trim() && !appSecret.trim()) {
-      toast.error("Enter your Meta App ID and App Secret first — the server has no shared app. Paste the App ID 1591554832378190 and your App Secret, then Connect.");
+      toast.error("Enter your Meta App ID and App Secret first — the server has no shared app. Paste the App ID and App Secret, then Connect.");
       return;
     }
     if ((appId.trim() && !appSecret.trim()) || (!appId.trim() && appSecret.trim())) {
