@@ -159,7 +159,8 @@ export default function OrgMenuDashboardPage() {
               No clinics found.
             </p>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+            <Table className="min-w-[700px]">
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                   <TableHead>Clinic</TableHead>
@@ -214,6 +215,7 @@ export default function OrgMenuDashboardPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

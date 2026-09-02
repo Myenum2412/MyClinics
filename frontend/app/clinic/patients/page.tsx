@@ -732,7 +732,8 @@ export default function PatientsPage() {
             </div>
           ) : (
             <>
-              <Table>
+              <div className="overflow-x-auto -mx-6 px-6">
+              <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                     {visibleColumns.select && (
@@ -827,6 +828,7 @@ export default function PatientsPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
 
               {/* Pagination Controls */}
               {filteredItems.length > 0 && (
@@ -999,7 +1001,7 @@ function PatientForm({
             {form.profileImage ? "Change Photo" : "Upload Photo"}
           </Button>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Full name</Label>
             <Input value={form.fullName} onChange={(e) => set("fullName", e.target.value)} required minLength={2} />
@@ -1009,7 +1011,7 @@ function PatientForm({
             <Input value={form.mobile} onChange={(e) => set("mobile", e.target.value)} required minLength={8} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>WhatsApp Number</Label>
             <WhatsAppInput value={form.whatsapp} onChange={(v) => set("whatsapp", v)} />
@@ -1019,7 +1021,7 @@ function PatientForm({
             <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Gender</Label>
             <Select value={form.gender} onValueChange={(v) => set("gender", v)}>
@@ -1036,7 +1038,7 @@ function PatientForm({
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Date of birth</Label>
             <Input type="date" value={form.dateOfBirth} onChange={(e) => set("dateOfBirth", e.target.value)} />
@@ -1073,7 +1075,7 @@ function PatientForm({
           <Label>Allergies (comma separated)</Label>
           <Input value={form.allergies} onChange={(e) => set("allergies", e.target.value)} placeholder="Penicillin, Dust" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Height (cm)</Label>
             <Input value={form.height} onChange={(e) => set("height", e.target.value)} placeholder="170" />
@@ -1085,7 +1087,7 @@ function PatientForm({
         </div>
         <div className="border-t border-border pt-3">
           <p className="text-sm font-medium text-foreground mb-3">Vital Signs</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="grid gap-2">
               <Label>Blood Pressure</Label>
               <Input value={form.bloodPressure} onChange={(e) => set("bloodPressure", e.target.value)} placeholder="120/80 mmHg" />
@@ -1108,7 +1110,7 @@ function PatientForm({
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Occupation</Label>
             <Input value={form.occupation} onChange={(e) => set("occupation", e.target.value)} placeholder="Software Engineer" />
@@ -1129,7 +1131,7 @@ function PatientForm({
             </Select>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Record status</Label>
             <Select value={form.status} onValueChange={(v) => set("status", v)}>
@@ -1144,7 +1146,7 @@ function PatientForm({
           </div>
           <div />
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="grid gap-2">
             <Label>Emergency contact</Label>
             <Input value={form.emergencyContactName} onChange={(e) => set("emergencyContactName", e.target.value)} placeholder="Name" />
@@ -1162,7 +1164,7 @@ function PatientForm({
           <Label>Medical conditions</Label>
           <Input value={form.medicalConditions} onChange={(e) => set("medicalConditions", e.target.value)} placeholder="Diabetes, hypertension" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Previous surgeries</Label>
             <Input value={form.previousSurgeries} onChange={(e) => set("previousSurgeries", e.target.value)} />
@@ -1172,7 +1174,7 @@ function PatientForm({
             <Input value={form.currentMedications} onChange={(e) => set("currentMedications", e.target.value)} placeholder="Metformin 500mg" />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>ID type</Label>
             <Select value={form.idType} onValueChange={(v) => set("idType", v)}>
@@ -1193,7 +1195,7 @@ function PatientForm({
             <Input value={form.idNumber} onChange={(e) => set("idNumber", e.target.value)} placeholder="Aadhaar / PAN" />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Insurance provider</Label>
             <Input value={form.insuranceProvider} onChange={(e) => set("insuranceProvider", e.target.value)} />
@@ -1203,7 +1205,7 @@ function PatientForm({
             <Input value={form.insurancePolicyNumber} onChange={(e) => set("insurancePolicyNumber", e.target.value)} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Policy holder name</Label>
             <Input value={form.insurancePolicyHolderName} onChange={(e) => set("insurancePolicyHolderName", e.target.value)} />
@@ -1213,7 +1215,7 @@ function PatientForm({
             <Input type="date" value={form.insuranceValidTill} onChange={(e) => set("insuranceValidTill", e.target.value)} />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">
             <Label>Referred by</Label>
             <Input value={form.referredBy} onChange={(e) => set("referredBy", e.target.value)} placeholder="Dr. Sharma" />

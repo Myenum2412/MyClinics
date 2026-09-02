@@ -171,8 +171,8 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
           </div>
         </CardHeader>
         <CardContent className="p-0 pt-4">
-          <div className="overflow-hidden rounded-xl border border-border">
-          <Table>
+          <div className="overflow-x-auto rounded-xl border border-border">
+          <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                 <TableHead>Medicine</TableHead>

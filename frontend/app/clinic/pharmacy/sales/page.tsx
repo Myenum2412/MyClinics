@@ -119,7 +119,7 @@ export default function PharmacySalesPage() {
       </div>
 
       <Card className="rounded-xl border border-border bg-card shadow-sm">
-        <CardHeader className="flex-row items-center gap-3">
+        <CardHeader className="flex flex-wrap items-center gap-3">
           <Input
             placeholder="Search invoice # or patient"
             value={search}
@@ -138,8 +138,8 @@ export default function PharmacySalesPage() {
             </SelectContent>
           </Select>
         </CardHeader>
-        <CardContent>
-          <Table>
+        <CardContent className="overflow-x-auto">
+          <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Invoice #</TableHead>

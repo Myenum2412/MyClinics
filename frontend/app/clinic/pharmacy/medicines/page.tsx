@@ -203,8 +203,8 @@ export default function PharmacyMedicinesPage() {
       </Card>
 
       <Card>
-        <CardContent className="pt-5">
-          <Table>
+        <CardContent className="pt-5 overflow-x-auto">
+          <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                 <TableHead className="w-10">
