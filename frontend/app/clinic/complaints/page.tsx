@@ -93,16 +93,7 @@ export default function TreatmentPage(){
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div><h1 className="text-2xl font-bold tracking-tight">Treatment</h1></div>
-        <div className="flex items-center gap-2">
-          <Users className="size-4 text-muted-foreground"/>
-          <select value={sharedPatient || "__all"} onChange={e=> setSharedPatient(e.target.value==="__all"?"":e.target.value)} className="h-9 w-48 rounded-lg border border-input bg-background px-3 text-sm">
-              <option value="__all">All patients</option>
-              {localPatients.map(p=> <option key={p} value={p}>{p}</option>)}
-            </select>
-        </div>
-      </div>
+      <div><h1 className="text-2xl font-bold tracking-tight">Treatment</h1></div>
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} searchTerm={q} onSearchChange={(v)=>{setQ(v); setPage(0);}} action={<Button onClick={()=>startAdd("record")} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>Add Record</Button>} />
         {open && <div className="mt-6 rounded-xl border bg-card p-5 space-y-4">
