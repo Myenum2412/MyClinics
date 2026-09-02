@@ -19,6 +19,7 @@ import {
   queueCancel,
   queueComplete,
   queueNoShow,
+  queueReschedule,
   updateAppointment,
   getAppointmentNotifications,
 } from "@/lib/clinic-api";
@@ -27,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -94,7 +96,7 @@ import {
   Star,
 } from "lucide-react";
 
-const STATUSES: AppointmentStatus[] = ["scheduled", "completed", "cancelled", "no_show"];
+const STATUSES: AppointmentStatus[] = ["rescheduled", "completed", "cancelled", "no_show"];
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
   scheduled: "Scheduled",
@@ -371,25 +373,38 @@ export default function AppointmentsPage() {
     }
   }
 
+  const [rescheduleTarget, setRescheduleTarget] = useState<Appointment | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
+
   async function handleStatus(appointment: Appointment, status: AppointmentStatus) {
     if (!status) return;
+    if (status === "rescheduled") {
+      setRescheduleTarget(appointment);
+      setRescheduleDate(appointment.date);
+      setRescheduleTime(appointment.time);
+      return;
+    }
     const id = appointment.appointmentId;
     try {
-      // Queue-aware transitions notify the next waiting patient automatically.
-      if (status === "completed") {
-        await queueComplete(clinicId, id);
-      } else if (status === "no_show") {
-        await queueNoShow(clinicId, id);
-      } else if (status === "cancelled") {
-        await queueCancel(clinicId, id);
-      } else {
-        await updateAppointment(clinicId, id, { status });
-      }
+      if (status === "completed") await queueComplete(clinicId, id);
+      else if (status === "no_show") await queueNoShow(clinicId, id);
+      else if (status === "cancelled") await queueCancel(clinicId, id);
+      else await updateAppointment(clinicId, id, { status });
       toast.success(`Appointment marked ${STATUS_LABELS[status]}.`);
       loadData();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to update appointment");
     }
+  }
+  async function handleRescheduleConfirm() {
+    if (!rescheduleTarget || !rescheduleDate || !rescheduleTime) return toast.error("Date and time required");
+    try {
+      await queueReschedule(clinicId, rescheduleTarget.appointmentId, { date: rescheduleDate, time: rescheduleTime });
+      toast.success("Appointment rescheduled");
+      setRescheduleTarget(null);
+      loadData();
+    } catch (e) { toast.error(e instanceof Error ? e.message : "Failed to reschedule"); }
   }
 
   async function handleDelete(appointment: Appointment) {
@@ -1174,6 +1189,16 @@ export default function AppointmentsPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!rescheduleTarget} onOpenChange={v=> !v && setRescheduleTarget(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader><DialogTitle>Reschedule Appointment</DialogTitle><DialogDescription>Choose new date and time</DialogDescription></DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div><Label className="text-xs">Date *</Label><Input type="date" value={rescheduleDate} onChange={e=>setRescheduleDate(e.target.value)} className="mt-1 h-9"/></div>
+            <div><Label className="text-xs">Time *</Label><Input type="time" value={rescheduleTime} onChange={e=>setRescheduleTime(e.target.value)} className="mt-1 h-9"/></div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={()=>setRescheduleTarget(null)}>Cancel</Button><Button onClick={handleRescheduleConfirm}>Reschedule</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
       <ConfirmDeleteDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => {
