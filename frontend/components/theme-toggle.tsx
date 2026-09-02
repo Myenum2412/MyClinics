@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
+import { getSession } from "@/lib/clinic-api"
 
 function WhatsAppIcon({ connected }: { connected: boolean }) {
   return (
@@ -18,13 +18,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     let cancelled = false
     async function check() {
       try {
-        const clinicId = (() => {
-          try {
-            const raw = localStorage.getItem("clinic_session")
-            if (!raw) return null
-            return JSON.parse(raw)?.clinicId as string | null
-          } catch { return null }
-        })()
+        const clinicId = getSession()?.clinicId ?? null
         if (!clinicId) return
         const base = process.env.NEXT_PUBLIC_API_URL || ""
         const res = await fetch(`${base}/api/clinics/${clinicId}/whatsapp/session`, { cache: "no-store" })
