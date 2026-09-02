@@ -120,19 +120,22 @@ export default function MetaIntegrationPage() {
 
   async function handleConnect() {
     if (!clinicId) return;
-    if (!connected && !appId.trim() && !appSecret.trim()) {
+    // Auto-fill from env if inputs empty — permanent server default
+    const effectiveAppId = appId.trim() || process.env.NEXT_PUBLIC_META_APP_ID?.trim() || "";
+    const effectiveAppSecret = appSecret.trim() || process.env.NEXT_PUBLIC_META_APP_SECRET?.trim() || "";
+    if (!connected && !effectiveAppId && !effectiveAppSecret) {
       toast.error("Enter your Meta App ID and App Secret first — the server has no shared app. Paste the App ID and App Secret, then Connect.");
       return;
     }
-    if ((appId.trim() && !appSecret.trim()) || (!appId.trim() && appSecret.trim())) {
+    if ((effectiveAppId && !effectiveAppSecret) || (!effectiveAppId && effectiveAppSecret)) {
       toast.error("Provide both App ID and App Secret together.");
       return;
     }
     try {
       setBusy(true);
       const { authUrl } = await connectMeta(clinicId, {
-        appId: appId.trim() || undefined,
-        appSecret: appSecret.trim() || undefined,
+        appId: effectiveAppId || undefined,
+        appSecret: effectiveAppSecret || undefined,
         redirectUri: redirectUri.trim() || undefined,
       });
       window.open(authUrl, "metaOAuth", "width=600,height=800");
