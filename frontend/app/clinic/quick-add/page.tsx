@@ -18,6 +18,8 @@ export default function QuickAddPage(){
   const [doctors,setDoctors]=useState<Doctor[]>([]);
   const { getOptions } = useDropdownOptions(clinicId);
   const [sharedPatient,setSharedPatient]=useState("");
+  const [sharedDoctor,setSharedDoctor]=useState("");
+  const [sharedDate,setSharedDate]=useState(todayISO());
   useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients(r.items)).catch(()=>{}); listDoctors(clinicId,{limit:100}).then(r=>setDoctors(r.items)).catch(()=>{}); },[clinicId]);
 
   // Shared state for all forms — kept at page level for sync
@@ -29,6 +31,8 @@ export default function QuickAddPage(){
   const [bill,setBill]=useState({patient:"", invoiceDate:todayISO(), dueDate:"", paymentType:"cash", description:"Consultation", qty:"1", unitPrice:"", discount:"0", taxPercent:"0", amountPaid:"0", notes:"", internalNotes:"", reference:"", sendMethod:"whatsapp"});
 
   useEffect(()=>{ if(sharedPatient){ setAppt(s=>({...s, patient:sharedPatient})); setRec(s=>({...s, patient:sharedPatient})); setTreat(s=>({...s, patient:sharedPatient})); setRx(s=>({...s, patient:sharedPatient})); setBill(s=>({...s, patient:sharedPatient})); }},[sharedPatient]);
+  useEffect(()=>{ if(sharedDoctor){ setAppt(s=>({...s, doctor:sharedDoctor})); setRec(s=>({...s, doctor:sharedDoctor})); setTreat(s=>({...s, doctor:sharedDoctor})); setRx(s=>({...s, doctor:sharedDoctor})); }},[sharedDoctor]);
+  useEffect(()=>{ if(sharedDate){ setAppt(s=>({...s, date:sharedDate})); setRec(s=>({...s, visitDate:sharedDate})); setBill(s=>({...s, invoiceDate:sharedDate})); }},[sharedDate]);
 
   const visitTypes=getOptions("visit_types");
   const priorities=getOptions("appointment_priorities");
@@ -59,10 +63,14 @@ export default function QuickAddPage(){
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div><h1 className="text-2xl font-bold tracking-tight">Quick Add — Consolidated Form</h1><p className="text-sm text-muted-foreground">All fields from /records, /appointments, /complaints, /prescriptions, /billing — no missing data.</p></div>
-        <div className="flex items-center gap-2"><Label className="text-xs">Quick Patient</Label><select value={sharedPatient} onChange={e=>setSharedPatient(e.target.value)} className="h-9 w-48 rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select to auto-fill all</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-      </div>
+      <Card className="border-primary/20 bg-primary/5"><CardHeader><CardTitle className="text-base">Common Information — shared across all sections</CardTitle></CardHeader><CardContent>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div><Label className="text-xs">Patient * (common)</Label><select value={sharedPatient} onChange={e=>setSharedPatient(e.target.value)} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
+          <div><Label className="text-xs">Doctor (common)</Label><select value={sharedDoctor} onChange={e=>setSharedDoctor(e.target.value)} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select doctor</option>{doctors.map(d=><option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
+          <div><Label className="text-xs">Visit / Invoice Date (common)</Label><Input type="date" value={sharedDate} onChange={e=>setSharedDate(e.target.value)} className="mt-1 h-9"/></div>
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">Changing here auto-fills Patient/Doctor/Date in all 5 sections below — no duplicate entry needed.</p>
+      </CardContent></Card>
 
       {/* 1 Appointments */}
       <Card><CardHeader><CardTitle className="text-base">1. Appointments — /clinic/appointments</CardTitle></CardHeader><CardContent className="space-y-4">
