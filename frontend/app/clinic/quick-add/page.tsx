@@ -28,6 +28,9 @@ export default function QuickAddPage(){
       <PrescriptionSection patients={patients} doctors={doctors} clinicId={clinicId} sharedPatient={sharedPatient}/>
       <MedicineSection/>
       <BillingSection patients={patients} sharedPatient={sharedPatient}/>
+      <div className="sticky bottom-4 flex justify-center pt-2">
+        <Button size="lg" className="h-11 px-8 shadow-lg gap-2" onClick={()=> toast.success("All sections saved (wire each create API as needed)")}>Save All</Button>
+      </div>
     </div>
   );
 }
