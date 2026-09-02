@@ -120,6 +120,14 @@ export default function MetaIntegrationPage() {
 
   async function handleConnect() {
     if (!clinicId) return;
+    if (!connected && !appId.trim() && !appSecret.trim()) {
+      toast.error("Enter your Meta App ID and App Secret first — the server has no shared app. Paste the App ID 1591554832378190 and your App Secret, then Connect.");
+      return;
+    }
+    if ((appId.trim() && !appSecret.trim()) || (!appId.trim() && appSecret.trim())) {
+      toast.error("Provide both App ID and App Secret together.");
+      return;
+    }
     try {
       setBusy(true);
       const { authUrl } = await connectMeta(clinicId, {
@@ -129,7 +137,12 @@ export default function MetaIntegrationPage() {
       });
       window.open(authUrl, "metaOAuth", "width=600,height=800");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to start Meta connection");
+      const msg = err instanceof Error ? err.message : "Failed to start Meta connection";
+      if (msg.includes("not configured")) {
+        toast.error("Meta is not configured on server — paste your App ID and App Secret in the form above, then Connect. Your credentials are stored per-clinic and encrypted.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setBusy(false);
     }
