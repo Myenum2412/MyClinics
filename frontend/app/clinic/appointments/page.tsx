@@ -774,7 +774,7 @@ export default function AppointmentsPage() {
     <div className="flex flex-col gap-6">
       {/* Stats Section with action slot - Appointment Analytics with centered search */}
       {!loading && (
-        <div className="rounded-none border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsAppointments
             appointments={appointments}
             searchTerm={searchTerm}

@@ -97,7 +97,7 @@ export default function TreatmentPage(){
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="rounded-none border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} searchTerm={q} onSearchChange={(v)=>{setQ(v); setPage(0);}} action={<Button onClick={()=>startAdd("record")} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>Add Record</Button>} />
         {open && <div className="mt-6 rounded-xl border bg-card p-5 space-y-4">
           <h3 className="font-semibold text-sm">{editing?"Edit":"New"} Treatment — Record & Plan</h3>
