@@ -90,12 +90,9 @@ export default function TreatmentPage(){
         </div>
       </div>
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} searchTerm={q} onSearchChange={(v)=>{setQ(v); setPage(0);}} action={<Button onClick={()=>startAdd("record")} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>New Treatment</Button>} />
+        <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} searchTerm={q} onSearchChange={(v)=>{setQ(v); setPage(0);}} action={<Button onClick={()=>startAdd("record")} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>Add Record</Button>} />
         {open && <div className="mt-6 rounded-xl border bg-card p-5 space-y-4">
-          <div className="flex items-start gap-4">
-            <button onClick={()=>setOpen(false)} className="mt-1 inline-flex items-center justify-center rounded-lg p-2 hover:bg-muted"><span className="text-muted-foreground">‹</span></button>
-            <div><h3 className="text-2xl font-bold tracking-tight">{editing?"Edit":"New"} Appointment</h3><p className="mt-1 text-sm text-muted-foreground">Schedule a patient visit. Automated WhatsApp alerts will be instantly queued for both patient and doctor.</p></div>
-          </div>
+          <h3 className="font-semibold text-sm">{editing?"Edit":"New"} Treatment — Record & Plan</h3>
           <div className="space-y-4">
             <div className="grid sm:grid-cols-3 gap-4">
               <div><Label className="text-xs">Patient *</Label><select value={v["Patient"]||""} onChange={e=>SV("Patient", e.target.value)} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select patient</option>{patients.map(p=> <option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
