@@ -21,12 +21,6 @@ export default function StatsTreatment({ records, plans, discharges, patients }:
   return (
     <div className="flex w-full items-center justify-center p-6">
       <div className="w-full">
-        <h2 className="text-balance font-medium text-foreground text-xl">
-          Treatment Overview
-        </h2>
-        <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
-          Records, plans and discharge tracking — completion insights.
-        </p>
         <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {data.map((item) => (
             <Card className="p-4 shadow-2xs" key={item.name}>
