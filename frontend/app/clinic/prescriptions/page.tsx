@@ -164,15 +164,18 @@ export default function PrescriptionsPage() {
 
   const load = useCallback(() => {
     if (!clinicId) return;
-    Promise.all([
+    setLoading(true);
+    Promise.allSettled([
       listPrescriptions(clinicId, { limit: 50 }),
       listPatients(clinicId, { limit: 50 }),
       listDoctors(clinicId, { limit: 50 }),
     ])
-      .then(([prescRes, patientRes, docRes]) => {
-        setItems(prescRes.items);
-        setPatients(patientRes.items);
-        setDoctors(docRes.items);
+      .then((results) => {
+        const [prescRes, patientRes, docRes] = results;
+        if (prescRes.status === "fulfilled") setItems(prescRes.value.items);
+        else toast.error(prescRes.reason?.message || "Failed to load prescriptions");
+        if (patientRes.status === "fulfilled") setPatients(patientRes.value.items);
+        if (docRes.status === "fulfilled") setDoctors(docRes.value.items);
       })
       .then(() =>
         fetch(`${API_BASE_URL}/api/clinics/${clinicId}/prescriptions/notifications`)
@@ -180,7 +183,6 @@ export default function PrescriptionsPage() {
           .then((notifData) => {
             const map: Record<string, any> = {};
             (notifData.notifications || []).forEach((n: any) => {
-              // Keep the newest notification status per prescription
               const existing = map[n.prescriptionId];
               const nUpdated = parseDate(n.updatedAt);
               const existingUpdated = existing ? parseDate(existing.updatedAt) : null;
@@ -190,10 +192,8 @@ export default function PrescriptionsPage() {
             });
             setNotificationsMap(map);
           })
+          .catch(() => {})
       )
-      .catch(() => {
-        toast.error("Failed to load prescription dashboard data");
-      })
       .finally(() => setLoading(false));
   }, [clinicId]);
 
