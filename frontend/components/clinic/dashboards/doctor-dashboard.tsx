@@ -20,10 +20,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { KOLKATA_TZ, now, toLocalDateISO, parseLocalDate, addDays, formatDate, weekdayIndex } from "@/lib/datetime";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
@@ -231,21 +227,35 @@ function GreetingBanner({
           </p>
         </div>
 
-        {/* Right: Medical Record button */}
-        <Link
-          href="/clinic/medical-record"
-          className="group flex w-fit items-center gap-3 rounded-xl border border-border/80 bg-background/80 px-5 py-4 shadow-md backdrop-blur-md transition-all duration-200 hover:border-primary/40 hover:bg-background hover:shadow-lg active:scale-[0.97]"
-          title="Open medical records"
-        >
-          <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 border border-indigo-100">
-            <Folder className="size-5 text-indigo-600" />
+        {/* Right: Quick Add + Medical Record */}
+        <div className="flex items-center gap-3">
+          <div className="relative group/quick">
+            <button className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90">
+              <Plus className="size-4" /> Quick Add
+            </button>
+            <div className="absolute right-0 top-full z-20 hidden min-w-[200px] flex-col rounded-xl border bg-popover p-2 shadow-lg group-hover/quick:flex">
+              <Link href="/clinic/appointments" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">Appointments</Link>
+              <Link href="/clinic/complaints" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">Treatment</Link>
+              <Link href="/clinic/prescriptions" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">Prescription</Link>
+              <Link href="/clinic/pharmacy/medicines" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">Medicine</Link>
+              <Link href="/clinic/billing" className="rounded-lg px-3 py-2 text-sm hover:bg-muted">Billing</Link>
+            </div>
           </div>
-          <div className="text-left">
-            <p className="text-sm font-semibold text-foreground">Medical Record</p>
-            <p className="text-xs text-muted-foreground">View patient files</p>
-          </div>
-          <ArrowRight className="size-5 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5" />
-        </Link>
+          <Link
+            href="/clinic/medical-record"
+            className="group flex w-fit items-center gap-3 rounded-xl border border-border/80 bg-background/80 px-5 py-4 shadow-md backdrop-blur-md transition-all duration-200 hover:border-primary/40 hover:bg-background hover:shadow-lg active:scale-[0.97]"
+            title="Open medical records"
+          >
+            <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 border border-indigo-100">
+              <Folder className="size-5 text-indigo-600" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold text-foreground">Medical Record</p>
+              <p className="text-xs text-muted-foreground">View patient files</p>
+            </div>
+            <ArrowRight className="size-5 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5" />
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -449,40 +459,12 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     return buildAppointmentWeek(appointments, pMap, dMap, isDoctorRole);
   }, [appointments, patients, doctors, isDoctorRole]);
 
-function QuickAddDialog({ clinicId }: { clinicId: string }){
-  const [open,setOpen]=useState(false);
-  const [tab,setTab]=useState("patient");
-  const [form,setForm]=useState<Record<string,string>>({});
-  const SV=(k:string,v:string)=> setForm(s=>({...s,[k]:v}));
-  useEffect(()=>{ (window as any).__openQuickAdd=()=> setOpen(true); return ()=>{ delete (window as any).__openQuickAdd; } },[]);
-  async function handleSave(){
-    try{
-      if(tab==="patient") await (await import("@/lib/clinic-api")).createPatient(clinicId, { fullName: form.name, mobile: form.mobile, gender: form.gender||null });
-      else if(tab==="appointment") await (await import("@/lib/clinic-api")).createAppointment(clinicId, { patientId: form.patientId, doctorId: form.doctorId, date: form.date, time: form.time, reason: form.reason||null });
-      else if(tab==="prescription") await (await import("@/lib/clinic-api")).createPrescription(clinicId, { patientId: form.patientId, doctorId: form.doctorId||undefined, visitDate: form.date||new Date().toISOString().slice(0,10), medicines: [{name: form.medicine||"Medicine"}], notes: form.notes||null });
-      else if(tab==="billing") await (await import("@/lib/clinic-api")).createBill(clinicId, { patientId: form.patientId, items: [{description: form.item||"Consultation", quantity:1, unitPrice: Number(form.amount)||0, discount:0, taxPercent:0, lineTotal:0}], invoiceDate: new Date().toISOString() });
-      toast.success("Saved"); setOpen(false); setForm({});
-    } catch(e:any){ toast.error(e.message||"Failed"); }
-  }
-  return <Dialog open={open} onOpenChange={setOpen}><DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>Quick Add — All Forms Simplified</DialogTitle></DialogHeader>
-    <div className="flex gap-2 mb-3">{["patient","appointment","prescription","billing"].map(t=> <Button key={t} variant={tab===t?"default":"outline"} size="sm" onClick={()=>setTab(t)} className="capitalize">{t}</Button>)}</div>
-    {tab==="patient" && <div className="grid gap-3"><div><Label className="text-xs">Name *</Label><Input value={form.name||""} onChange={e=>SV("name",e.target.value)} className="mt-1 h-9"/></div><div><Label className="text-xs">Mobile *</Label><Input value={form.mobile||""} onChange={e=>SV("mobile",e.target.value)} className="mt-1 h-9"/></div><div><Label className="text-xs">Gender</Label><select value={form.gender||""} onChange={e=>SV("gender",e.target.value)} className="mt-1 h-9 w-full rounded-lg border border-input bg-background px-3 text-sm"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></div></div>}
-    {tab==="appointment" && <div className="grid gap-3"><div><Label className="text-xs">Patient ID *</Label><Input value={form.patientId||""} onChange={e=>SV("patientId",e.target.value)} placeholder="patientId" className="mt-1 h-9"/></div><div><Label className="text-xs">Doctor ID *</Label><Input value={form.doctorId||""} onChange={e=>SV("doctorId",e.target.value)} placeholder="doctorId" className="mt-1 h-9"/></div><div className="grid grid-cols-2 gap-3"><div><Label className="text-xs">Date</Label><Input type="date" value={form.date||""} onChange={e=>SV("date",e.target.value)} className="mt-1 h-9"/></div><div><Label className="text-xs">Time</Label><Input type="time" value={form.time||""} onChange={e=>SV("time",e.target.value)} className="mt-1 h-9"/></div></div><div><Label className="text-xs">Reason</Label><Input value={form.reason||""} onChange={e=>SV("reason",e.target.value)} className="mt-1 h-9"/></div></div>}
-    {tab==="prescription" && <div className="grid gap-3"><div><Label className="text-xs">Patient ID *</Label><Input value={form.patientId||""} onChange={e=>SV("patientId",e.target.value)} className="mt-1 h-9"/></div><div><Label className="text-xs">Medicine *</Label><Input value={form.medicine||""} onChange={e=>SV("medicine",e.target.value)} className="mt-1 h-9"/></div><div><Label className="text-xs">Notes</Label><Textarea value={form.notes||""} onChange={e=>SV("notes",e.target.value)} rows={2}/></div></div>}
-    {tab==="billing" && <div className="grid gap-3"><div><Label className="text-xs">Patient ID *</Label><Input value={form.patientId||""} onChange={e=>SV("patientId",e.target.value)} className="mt-1 h-9"/></div><div><Label className="text-xs">Item</Label><Input value={form.item||""} onChange={e=>SV("item",e.target.value)} className="mt-1 h-9"/></div><div><Label className="text-xs">Amount</Label><Input type="number" value={form.amount||""} onChange={e=>SV("amount",e.target.value)} className="mt-1 h-9"/></div></div>}
-    <DialogFooter><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={handleSave}>Save</Button></DialogFooter>
-  </DialogContent></Dialog>
-}
-
   return (
     <div className="w-full flex flex-col gap-6">
       {/* Greeting banner */}
       <GreetingBanner doctorName={session.name ?? "Doctor"} />
 
       {/* Section cards — stats-07 design */}
-      <div className="flex justify-end mb-3">
-        <Button onClick={()=> (window as any).__openQuickAdd?.()} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>Quick Add</Button>
-      </div>
       <div>
         <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {statsData.map((item) => (
@@ -510,8 +492,6 @@ function QuickAddDialog({ clinicId }: { clinicId: string }){
           ))}
         </dl>
       </div>
-
-      <QuickAddDialog clinicId={clinicId} />
 
       {/* Recent Appointments + Doctor Patients / Billing row */}
       <div className="grid gap-6 lg:grid-cols-2">
