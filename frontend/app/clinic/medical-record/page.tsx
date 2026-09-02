@@ -1967,13 +1967,13 @@ export default function MedicalRecordPage() {
     return (
       <div className="mt-6 space-y-6">
         {/* ── Hero patient card — Linear / Stripe premium ── */}
-        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)]">
+        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-violet-500/[0.04] pointer-events-none" />
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
           <div className="relative p-6 sm:p-7">
             <div className="flex flex-wrap items-start gap-5">
               <div className="relative">
-                <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-16 text-base ring-4 ring-background shadow-md" />
+                <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-16 text-base ring-4 ring-background" />
                 <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-card">
                   <ShieldCheck className="size-3 text-white" />
                 </span>
@@ -2003,7 +2003,7 @@ export default function MedicalRecordPage() {
 
         {/* ── Clinical overview — 3-up bento ── */}
         <div className="grid gap-4 lg:grid-cols-3">
-          <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:border-border">
+          <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-border">
             <div className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/10 transition" />
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Care timeline</p>
             <div className="mt-4 space-y-4">
@@ -2024,7 +2024,7 @@ export default function MedicalRecordPage() {
               </div>
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Medical history</p>
             <div className="mt-4 space-y-3">
               <div className="rounded-xl bg-muted/40 p-3">
@@ -2037,7 +2037,7 @@ export default function MedicalRecordPage() {
               </div>
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Current medications</p>
             <p className="mt-4 text-sm leading-relaxed text-foreground">{p.currentMedications || <span className="text-muted-foreground">No active medications</span>}</p>
             {p.currentMedications && <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground"><span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active regimen</div>}
@@ -2045,7 +2045,7 @@ export default function MedicalRecordPage() {
         </div>
 
         {/* ── Patient full details ── */}
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
           <div className="flex items-center gap-3 border-b border-border/60 px-5 py-4">
             <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Users className="size-4" /></span>
             <h3 className="text-sm font-semibold tracking-tight">Patient Details</h3>
@@ -2107,7 +2107,7 @@ export default function MedicalRecordPage() {
         </div>
 
         {/* Unified timeline — single card */}
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
           <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-4">
             <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600"><History className="size-4" /></span>
             <h3 className="text-sm font-semibold tracking-tight">Clinical Timeline</h3>
