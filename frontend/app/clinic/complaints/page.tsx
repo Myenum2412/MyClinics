@@ -11,9 +11,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Search, Eye, Pencil, Trash2, Plus, Users } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
-import StatsTreatment from "@/components/stats-treatment";
 import { Checkbox } from "@/components/ui/checkbox";
-import { listPatients, type Patient } from "@/lib/clinic-api";
+import { listPatients, listAppointments, type Patient, type Appointment } from "@/lib/clinic-api";
+import dynamic from "next/dynamic";
+const StatsAppointments = dynamic(() => import("@/components/stats-appointments"), { ssr: false });
 import { useRequireRole } from "@/hooks/use-clinic-session";
 
 type Entry = { id: string; createdAt: string; patient: string; data: Record<string,string> };
@@ -37,8 +38,9 @@ export default function TreatmentPage(){
   const [recItems]=useStore("treatment_record");
   const [planItems]=useStore("treatment_plan");
   const [disItems]=useStore("treatment_discharge");
+  const [appointments,setAppointments]=useState<Appointment[]>([]);
 
-  useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients(r.items)).catch(()=>{}); },[clinicId]);
+  useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients(r.items)).catch(()=>{}); listAppointments(clinicId,{limit:100}).then(r=>setAppointments(r.items)).catch(()=>{}); },[clinicId]);
 
   const localPatients = useMemo(()=>{
     const s=new Set<string>();
@@ -59,8 +61,8 @@ export default function TreatmentPage(){
             </select>
         </div>
       </div>
-      <div className="rounded-xl border bg-card p-2 shadow-sm">
-        <StatsTreatment />
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <StatsAppointments appointments={appointments} />
       </div>
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex-wrap h-auto">
