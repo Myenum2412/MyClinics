@@ -26,6 +26,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
+import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
+import { ChartContainer } from "@/components/ui/chart"
 import {
   Dialog,
   DialogContent,
@@ -145,13 +147,50 @@ export default function PharmacyMedicinesPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+      <div>
           <h1 className="text-2xl font-semibold tracking-tight">Medicines</h1>
           <p className="text-sm text-muted-foreground">Manage the pharmacy medicine master</p>
         </div>
-        <Button render={<Link href="/clinic/pharmacy/medicines/new" />}>Add Medicine</Button>
-      </div>
+
+
+      {(() => {
+        const total = medicines.length
+        const active = medicines.filter((m) => m.status === "active").length
+        const inactive = total - active
+        const lowReorder = medicines.filter((m) => (m.reorderLevel ?? 0) > 0 && (m.reorderLevel ?? 0) >= 10).length
+        const s = [
+          { name: "Total", percentage: Math.min(100, total), current: total, allowed: 100, allowedLabel: "medicines", fill: "var(--chart-1)" },
+          { name: "Active", percentage: total ? Math.round((active/total)*100) : 0, current: active, allowed: total, allowedLabel: "total", fill: "var(--chart-2)" },
+          { name: "Inactive", percentage: total ? Math.round((inactive/total)*100) : 0, current: inactive, allowed: total, allowedLabel: "total", fill: "var(--chart-3)" },
+          { name: "Reorder Set", percentage: total ? Math.round((lowReorder/total)*100) : 0, current: lowReorder, allowed: total, allowedLabel: "items", fill: "var(--chart-4)" },
+        ]
+        return (
+          <Card className="p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <h2 className="font-semibold text-sm">Medicines Overview</h2>
+              <Button render={<Link href="/clinic/pharmacy/medicines/new" />}>Add Medicine</Button>
+            </div>
+            <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {s.map((item) => (
+                <Card className="p-4 shadow-sm bg-card" key={item.name}>
+                  <CardContent className="flex items-center space-x-4 p-0">
+                    <div className="relative flex items-center justify-center">
+                      <ChartContainer className="h-[80px] w-[80px]" config={{ capacity: { label: item.name, color: item.fill } }}>
+                        <RadialBarChart barSize={6} data={[{ name: item.name, capacity: item.percentage }]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}>
+                          <PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0,100]} tick={false} type="number" />
+                          <RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill} />
+                        </RadialBarChart>
+                      </ChartContainer>
+                      <div className="absolute inset-0 flex items-center justify-center"><span className="font-semibold text-xs">{item.percentage}%</span></div>
+                    </div>
+                    <div><dt className="font-semibold text-sm leading-none mb-1">{item.name}</dt><dd className="text-muted-foreground text-xs">{String(item.current)} of {String(item.allowed)} {item.allowedLabel}</dd></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </dl>
+          </Card>
+        )
+      })()}
 
       <Card>
         <CardContent className="flex flex-wrap items-center gap-3 pt-5">

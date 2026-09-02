@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
+import { ChartContainer } from "@/components/ui/chart"
 import {
   Dialog,
   DialogContent,
@@ -108,6 +110,18 @@ export default function PharmacySuppliersPage() {
         </div>
         <Button render={<Link href="/clinic/pharmacy/suppliers/new" />}>Add Supplier</Button>
       </div>
+
+      {(() => {
+        const total = suppliers.length;
+        const active = suppliers.filter((s) => s.status === "active").length;
+        const stats = [
+          { name: "Total Suppliers", percentage: Math.min(100, total * 10), current: total, allowed: 10, allowedLabel: "suppliers", fill: "var(--chart-1)" },
+          { name: "Active", percentage: total ? Math.round((active / total) * 100) : 0, current: active, allowed: total, allowedLabel: "total", fill: "var(--chart-2)" },
+          { name: "Inactive", percentage: total ? Math.round(((total - active) / total) * 100) : 0, current: total - active, allowed: total, allowedLabel: "total", fill: "var(--chart-3)" },
+          { name: "With GST", percentage: total ? Math.round((suppliers.filter((s) => s.gstNumber).length / total) * 100) : 0, current: suppliers.filter((s) => s.gstNumber).length, allowed: total, allowedLabel: "total", fill: "var(--chart-4)" },
+        ];
+        return (<dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">{stats.map((item) => (<Card key={item.name} className="p-4 shadow-sm bg-card"><CardContent className="flex items-center space-x-4 p-0"><div className="relative flex items-center justify-center"><ChartContainer className="h-[80px] w-[80px]" config={{ capacity: { label: item.name, color: item.fill } }}><RadialBarChart barSize={6} data={[{ capacity: item.percentage }]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}><PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0, 100]} tick={false} type="number" /><RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill} /></RadialBarChart></ChartContainer><div className="absolute inset-0 flex items-center justify-center"><span className="font-semibold text-xs">{item.percentage}%</span></div></div><div><dt className="font-semibold text-sm mb-1">{item.name}</dt><dd className="text-muted-foreground text-xs">{String(item.current)} of {String(item.allowed)} {item.allowedLabel}</dd></div></CardContent></Card>))}</dl>);
+      })()}
 
       <Card className="rounded-xl border border-border bg-card shadow-sm">
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

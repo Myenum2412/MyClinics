@@ -10,6 +10,8 @@ import {
 } from "@/lib/clinic-api"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
+import { ChartContainer } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -165,7 +167,7 @@ export default function PharmacyStockHistoryPage() {
             Audit trail of every pharmacy stock movement
           </p>
         </div>
-        <Button variant="outline" onClick={resetFilters}>
+        {(() => {const total=movements.length;const today=new Date().toDateString();const todayCount=movements.filter(m=>new Date(m.createdAt).toDateString()===today).length;const purchases=movements.filter(m=>m.movementType==="purchase").length;const sales=movements.filter(m=>m.movementType==="sale").length;const s=[{name:"Total Movements",percentage:Math.min(100,total),current:total,allowed:500,allowedLabel:"records",fill:"var(--chart-1)"},{name:"Today",percentage:Math.min(100,todayCount),current:todayCount,allowed:20,allowedLabel:"today",fill:"var(--chart-2)"},{name:"Purchases",percentage:total?Math.round(purchases/total*100):0,current:purchases,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"Sales",percentage:total?Math.round(sales/total*100):0,current:sales,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];return (<Card className="p-4"><div className="flex flex-wrap items-center justify-between gap-2 mb-4"><h2 className="font-semibold text-sm">Movements Overview</h2><Button variant="outline" onClick={resetFilters}>Reset Filters</Button></div><dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">{s.map(item=>(<Card className="p-4 shadow-sm bg-card" key={item.name}><CardContent className="flex items-center space-x-4 p-0"><div className="relative flex items-center justify-center"><ChartContainer className="h-[80px] w-[80px]" config={{capacity:{label:item.name,color:item.fill}}}><RadialBarChart barSize={6} data={[{name:item.name,capacity:item.percentage}]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}><PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0,100]} tick={false} type="number" /><RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill} /></RadialBarChart></ChartContainer><div className="absolute inset-0 flex items-center justify-center"><span className="font-semibold text-xs">{item.percentage}%</span></div></div><div><dt className="font-semibold text-sm leading-none mb-1">{item.name}</dt><dd className="text-muted-foreground text-xs">{String(item.current)} of {String(item.allowed)} {item.allowedLabel}</dd></div></CardContent></Card>))}</dl></Card>)})()}<Button variant="outline" onClick={resetFilters}>
           Reset Filters
         </Button>
       </div>

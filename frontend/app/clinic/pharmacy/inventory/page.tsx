@@ -13,6 +13,8 @@ import {
 } from "@/lib/clinic-api"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
+import { ChartContainer } from "@/components/ui/chart"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -140,6 +142,7 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
         </div>
       </div>
 
+      {(() => {const total=rows.length;const inStock=rows.filter(r=>r.status==="in_stock").length;const lowStock=rows.filter(r=>r.status==="low_stock").length;const outStock=rows.filter(r=>r.status==="out_of_stock").length;const s=[{name:"Total Stock",percentage:Math.min(100,total),current:total,allowed:100,allowedLabel:"items",fill:"var(--chart-1)"},{name:"In Stock",percentage:total?Math.round(inStock/total*100):0,current:inStock,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Low Stock",percentage:total?Math.round(lowStock/total*100):0,current:lowStock,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"Out of Stock",percentage:total?Math.round(outStock/total*100):0,current:outStock,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];return (<Card className="p-4"><div className="flex flex-wrap items-center justify-between gap-2 mb-4"><h2 className="font-semibold text-sm">Inventory Overview</h2><div className="flex gap-2"><Button variant="outline" render={<Link href="/clinic/pharmacy/inventory/opening-stock" />}>Opening Stock</Button><Button variant="outline" onClick={()=>router.push("/clinic/pharmacy/stock-history")}>Stock History</Button></div></div><dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">{s.map(item=>(<Card className="p-4 shadow-sm bg-card" key={item.name}><CardContent className="flex items-center space-x-4 p-0"><div className="relative flex items-center justify-center"><ChartContainer className="h-[80px] w-[80px]" config={{capacity:{label:item.name,color:item.fill}}}><RadialBarChart barSize={6} data={[{name:item.name,capacity:item.percentage}]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}><PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0,100]} tick={false} type="number" /><RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill} /></RadialBarChart></ChartContainer><div className="absolute inset-0 flex items-center justify-center"><span className="font-semibold text-xs">{item.percentage}%</span></div></div><div><dt className="font-semibold text-sm leading-none mb-1">{item.name}</dt><dd className="text-muted-foreground text-xs">{String(item.current)} of {String(item.allowed)} {item.allowedLabel}</dd></div></CardContent></Card>))}</dl></Card>)})()}
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <CardHeader className="gap-3 px-0 pt-0">
           <CardTitle className="text-base">Stock</CardTitle>
