@@ -94,7 +94,7 @@ export default function TreatmentPage(){
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div><h1 className="text-2xl font-bold tracking-tight">Treatment</h1><p className="text-sm text-muted-foreground">Record + Plan in single table — connected to patients.</p></div>
+        <div><h1 className="text-2xl font-bold tracking-tight">Treatment</h1></div>
         <div className="flex items-center gap-2">
           <Users className="size-4 text-muted-foreground"/>
           <select value={sharedPatient || "__all"} onChange={e=> setSharedPatient(e.target.value==="__all"?"":e.target.value)} className="h-9 w-48 rounded-lg border border-input bg-background px-3 text-sm">
