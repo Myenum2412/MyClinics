@@ -50,7 +50,7 @@ export default function RgbNeoPredictionsPage() {
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {items.map((p, i) => (
-            <div key={i} className="rounded-xl border border-border bg-card p-4">
+            <div key={i} className="rounded-none border border-border bg-card p-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-mono">{p.clinicId}</span>
                 <span className={`rounded-md border px-2 py-0.5 text-xs font-semibold uppercase ${RISK_COLOR[p.risk]}`}>

@@ -617,7 +617,7 @@ export default function DoctorsPage() {
     <div className="flex flex-col gap-6">
       {/* Stats Section with action slot */}
       {!loading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-none border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
             title="Doctor Analytics"
             description="Doctor specializations, roster availability, and shift insights."

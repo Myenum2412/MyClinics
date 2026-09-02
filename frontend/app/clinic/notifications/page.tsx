@@ -190,7 +190,7 @@ export default function NotificationsPage() {
   return (
     <div className="flex flex-col gap-6">
       {!loading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-none border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
             title="Notification Analytics"
             description="WhatsApp alerts, automated reminders, and delivery log insights."

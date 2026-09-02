@@ -58,7 +58,7 @@ export default function RgbNeoClinicsPage() {
       ) : (
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {rows.map(({ clinic, health }) => (
-            <div key={clinic.clinicId} className="rounded-xl border border-border bg-card p-4">
+            <div key={clinic.clinicId} className="rounded-none border border-border bg-card p-4">
               <div className="flex items-center justify-between">
                 <p className="truncate text-sm font-medium">{clinic.name}</p>
                 <span className={cn("text-lg font-bold", health ? scoreTone(health.score) : "text-muted-foreground")}>

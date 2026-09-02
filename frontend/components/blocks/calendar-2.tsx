@@ -287,7 +287,7 @@ export default function CalendarBlock({
       )}
     >
       <div className={cn("w-full", !embedded && "max-w-xl")}>
-        <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="overflow-hidden rounded-none border border-border bg-card">
           <div className="flex items-center justify-between gap-4 px-4 py-3.5">
             <div className="flex items-center gap-3">
               <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">

@@ -416,7 +416,7 @@ export default function AccountPage() {
   if (loading || !clinic || !form) {
     if (!loading && (!clinic || !form)) {
       return (
-        <div className="mx-auto max-w-xl p-12 text-center my-12 rounded-xl border border-border bg-card shadow-sm">
+        <div className="mx-auto max-w-xl p-12 text-center my-12 rounded-none border border-border bg-card shadow-sm">
           <Building2 className="mx-auto size-12 text-muted-foreground opacity-50 mb-3" />
           <h2 className="text-xl font-bold text-foreground">Clinic Profile Unavailable</h2>
           <p className="mt-2 text-sm text-muted-foreground">

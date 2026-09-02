@@ -484,7 +484,7 @@ export default function BillingPage() {
     <div className="flex flex-col gap-6">
       {/* Metrics Section */}
       {!loading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-none border border-border bg-card p-6 shadow-sm">
           <StatsBilling
             bills={items}
             searchTerm={searchTerm}
@@ -907,7 +907,7 @@ function BillForm({
   }
 
   const sectionTitle = "text-sm font-semibold text-foreground flex items-center gap-2";
-  const sectionCard = "rounded-xl border border-border bg-card p-5 shadow-sm";
+  const sectionCard = "rounded-none border border-border bg-card p-5 shadow-sm";
   const fieldLabel = "text-xs font-medium text-muted-foreground mb-1";
 
   return (

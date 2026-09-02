@@ -561,7 +561,7 @@ export const FileUploadSystem = forwardRef<FileUploadSystemHandle, FileUploadSys
 
       {/* Upload Queue Panel / Drawer */}
       {queue.length > 0 && (
-        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden transition-all">
+        <div className="rounded-none border border-border bg-card shadow-sm overflow-hidden transition-all">
           <div className="flex items-center justify-between border-b border-border bg-muted/40 px-4 py-3">
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm text-foreground">

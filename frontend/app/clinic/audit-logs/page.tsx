@@ -156,7 +156,7 @@ export default function AuditLogsPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Top Header Section with StatsGeneric */}
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-none border border-border bg-card p-6 shadow-sm">
         <StatsGeneric
           title="Audit Log Analytics"
           description="Security audit trail, administrative actions, and data mutation logs."

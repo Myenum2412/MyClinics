@@ -367,7 +367,7 @@ export default function BusinessReportsPage() {
   return (
     <div className="flex flex-col gap-6 p-1">
       {/* Header with StatsGeneric matching exact design */}
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-none border border-border bg-card p-6 shadow-sm">
         <StatsGeneric
           title="Report Analytics"
           description="Clinic growth, revenue metrics, and performance analytics."

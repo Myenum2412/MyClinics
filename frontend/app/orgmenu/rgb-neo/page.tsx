@@ -76,27 +76,27 @@ export default function RgbNeoCommandCenter() {
       ) : overview ? (
         <>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-none border border-border bg-card p-4">
               <p className="text-xs uppercase text-muted-foreground">Monitored</p>
               <p className="text-2xl font-bold">{overview.monitoredClinics}</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-none border border-border bg-card p-4">
               <p className="text-xs uppercase text-muted-foreground">Healthy</p>
               <p className="text-2xl font-bold text-green-600">{overview.healthy}</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-none border border-border bg-card p-4">
               <p className="text-xs uppercase text-muted-foreground">Warning</p>
               <p className="text-2xl font-bold text-amber-600">{overview.warning}</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-none border border-border bg-card p-4">
               <p className="text-xs uppercase text-muted-foreground">Critical</p>
               <p className="text-2xl font-bold text-red-600">{overview.critical}</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-none border border-border bg-card p-4">
               <p className="text-xs uppercase text-muted-foreground">Active Incidents</p>
               <p className="text-2xl font-bold">{overview.activeIncidents}</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-none border border-border bg-card p-4">
               <p className="text-xs uppercase text-muted-foreground">Predicted Risks</p>
               <p className="text-2xl font-bold text-purple-600">{overview.predictedRisks}</p>
             </div>

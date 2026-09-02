@@ -79,7 +79,7 @@ export function NeoStatusMonitor({ clinicId }: { clinicId: string }) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       {statuses.slice(0, 8).map((s) => (
-        <div key={s.service} className="rounded-xl border border-border bg-card p-4">
+        <div key={s.service} className="rounded-none border border-border bg-card p-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className={cn("size-2.5 rounded-full", STATUS_DOT[s.status])} />

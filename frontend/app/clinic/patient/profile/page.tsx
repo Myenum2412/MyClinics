@@ -267,7 +267,7 @@ export default function PatientProfilePage() {
   if (loading || !patient || !form) {
     if (!loading && (!patient || !form)) {
       return (
-        <div className="mx-auto max-w-xl p-12 text-center my-12 rounded-xl border border-border bg-card shadow-sm">
+        <div className="mx-auto max-w-xl p-12 text-center my-12 rounded-none border border-border bg-card shadow-sm">
           <UserRound className="mx-auto size-12 text-muted-foreground opacity-50 mb-3" />
           <h2 className="text-xl font-bold text-foreground">Profile Unavailable</h2>
           <p className="mt-2 text-sm text-muted-foreground">

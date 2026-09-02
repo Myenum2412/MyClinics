@@ -41,19 +41,19 @@ export default function RgbNeoBusinessImpactPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-none border border-border bg-card p-4">
           <p className="text-xs uppercase text-muted-foreground">Business Incidents</p>
           <p className="text-2xl font-bold">{business.length}</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-none border border-border bg-card p-4">
           <p className="text-xs uppercase text-muted-foreground">High Impact</p>
           <p className="text-2xl font-bold text-red-600">{highImpact.length}</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-none border border-border bg-card p-4">
           <p className="text-xs uppercase text-muted-foreground">Active Business</p>
           <p className="text-2xl font-bold">{business.filter((i) => !["RESOLVED", "CLOSED"].includes(i.status)).length}</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-none border border-border bg-card p-4">
           <p className="text-xs uppercase text-muted-foreground">Categories</p>
           <p className="text-2xl font-bold">{new Set(business.map((i) => i.category)).size}</p>
         </div>

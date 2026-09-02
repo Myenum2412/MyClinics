@@ -539,7 +539,7 @@ export default function PrescriptionsPage() {
     <div className="flex flex-col gap-6">
       {/* Metrics Section */}
       {!loading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-none border border-border bg-card p-6 shadow-sm">
           <Stats07
             prescriptions={items}
             patients={patients}

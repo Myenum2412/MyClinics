@@ -150,7 +150,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
       </Card>
 
       {/* Stats */}
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-none border border-border bg-card p-6 shadow-sm">
         <StatsGeneric
           title="My Overview"
           description="Personalized schedule, patient roster, and daily visit insights."
@@ -159,7 +159,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
       </div>
 
       {/* Appointment Analytics Stats Card */}
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-none border border-border bg-card p-6 shadow-sm">
         <StatsAppointments appointments={allAppointments} />
       </div>
 
