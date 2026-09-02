@@ -32,8 +32,9 @@ export default function TreatmentPage(){
   const [patients,setPatients]=useState<Patient[]>([]);
   const [doctors,setDoctors]=useState<Doctor[]>([]);
   const [appointments,setAppointments]=useState<Appointment[]>([]);
+  const [prescriptions,setPrescriptions]=useState<any[]>([]);
   const [items,save]=useStore("treatment_combined");
-  useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients(r.items)).catch(()=>{}); listDoctors(clinicId,{limit:100}).then(r=>setDoctors(r.items)).catch(()=>{}); listAppointments(clinicId,{limit:100}).then(r=>setAppointments(r.items)).catch(()=>{}); },[clinicId]);
+  useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients(r.items)).catch(()=>{}); listDoctors(clinicId,{limit:100}).then(r=>setDoctors(r.items)).catch(()=>{}); listAppointments(clinicId,{limit:100}).then(r=>setAppointments(r.items)).catch(()=>{}); import("@/lib/clinic-api").then(m=> m.listPrescriptions(clinicId,{limit:100}).then(r=>setPrescriptions(r.items)).catch(()=>{})); },[clinicId]);
   const localPatients = useMemo(()=>{
     const s=new Set<string>();
     items.forEach(e=>{ if(e.patient) s.add(e.patient); });
@@ -50,6 +51,19 @@ export default function TreatmentPage(){
   const [formType,setFormType]=useState<"record"|"plan">("record");
   const [v,setV]=useState<Record<string,string>>({});
   const SV=(f:string,val:string)=> setV(prev=>({...prev,[f]:val??""}));
+  function onPatientSelect(name:string){
+    SV("Patient", name);
+    const p=patients.find(x=>x.fullName===name);
+    if(!p) return;
+    const appt=appointments.find(a=>a.patientId===p.patientId);
+    if(appt){ const val=appt.date+" "+appt.time; SV("Appointment", val); SV("Visit Date & Time", val); }
+    const doc=doctors.find(d=>d.doctorId===p.doctorId);
+    if(doc) SV("Doctor", doc.name);
+    const pres=prescriptions.find((pr:any)=>pr.patientId===p.patientId) as any;
+    if(pres){ const meds=pres.medicines?.map((m:any)=>m.name).join(", "); SV("Medicines Prescribed", meds); SV("Medicines", meds); if(pres.diagnosis){SV("Diagnosis", pres.diagnosis); SV("Diagnosis / Clinical Impression", pres.diagnosis);} }
+    SV("Follow-up Date", new Date(Date.now()+7*24*60*60*1000).toISOString().slice(0,10));
+    SV("Follow-up Schedule", "Follow-up in 7 days");
+  }
   function startAdd(type:"record"|"plan"){ setFormType(type); setV({}); setEditing(null); setOpen(true); }
   function startEdit(e:Entry){ setFormType(e.type); setV({...e.data}); setEditing(e.id); setOpen(true); }
   function submit(){
@@ -95,8 +109,8 @@ export default function TreatmentPage(){
           <h3 className="font-semibold text-sm">{editing?"Edit":"New"} Treatment — Record & Plan</h3>
           <div className="space-y-4">
             <div className="grid sm:grid-cols-3 gap-4">
-              <div><Label className="text-xs">Patient *</Label><select value={v["Patient"]||""} onChange={e=>SV("Patient", e.target.value)} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select patient</option>{patients.map(p=> <option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-              <div><Label className="text-xs">Appointment</Label><select value={v["Appointment"]||v["Visit Date & Time"]||""} onChange={e=>{SV("Appointment", e.target.value); SV("Visit Date & Time", e.target.value)}} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select appointment</option>{appointments.map(a=> <option key={a.appointmentId} value={`${a.date} ${a.time}`}>{a.date} {a.time} — {a.reason || a.appointmentId.slice(0,6)}</option>)}</select></div>
+              <div><Label className="text-xs">Patient *</Label><select value={v["Patient"]||""} onChange={e=> onPatientSelect(e.target.value)} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select patient</option>{patients.map(p=> <option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
+              <div><Label className="text-xs">Appointment</Label><select value={v["Appointment"]||v["Visit Date & Time"]||""} onChange={e=>{SV("Appointment", e.target.value); SV("Visit Date & Time", e.target.value)}} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select appointment</option>{appointments.map(a=> <option key={a.appointmentId} value={a.date+" "+a.time}>{a.date} {a.time} — {a.reason || a.appointmentId.slice(0,6)}</option>)}</select></div>
               <div><Label className="text-xs">Doctor</Label><select value={v["Doctor"]||""} onChange={e=>SV("Doctor", e.target.value)} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select doctor</option>{doctors.map(d=> <option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -104,7 +118,7 @@ export default function TreatmentPage(){
               <div><Label className="text-xs">Treatment Given / Objective</Label><select value={v["Treatment Given"]||v["Treatment Objective"]||""} onChange={e=>{SV("Treatment Given", e.target.value); SV("Treatment Objective", e.target.value)}} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select treatment</option><option value="Medication">Medication</option><option value="Therapy">Therapy</option><option value="Surgery">Surgery</option><option value="Observation">Observation</option></select></div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
-              <div><Label className="text-xs">Medicines</Label><select value={v["Medicines Prescribed"]||v["Medicines"]||""} onChange={e=>{SV("Medicines Prescribed", e.target.value); SV("Medicines", e.target.value)}} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select medicine</option><option value="Paracetamol">Paracetamol</option><option value="Antibiotic">Antibiotic</option><option value="Vitamin">Vitamin</option><option value="Other">Other</option></select></div>
+              <div><Label className="text-xs">Prescriptions</Label><select value={v["Medicines Prescribed"]||v["Medicines"]||""} onChange={e=>{SV("Medicines Prescribed", e.target.value); SV("Medicines", e.target.value)}} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select prescription</option>{prescriptions.map((pr:any)=> <option key={pr.prescriptionId} value={pr.medicines?.map((m:any)=>m.name).join(", ")}>{pr.medicines?.map((m:any)=>m.name).join(", ").slice(0,40) || pr.diagnosis || pr.prescriptionId.slice(0,6)}</option>)}<option value="Paracetamol">Paracetamol</option><option value="Antibiotic">Antibiotic</option><option value="Other">Other</option></select></div>
               <div><Label className="text-xs">Dosage & Duration</Label><select value={v["Dosage & Duration"]||""} onChange={e=>SV("Dosage & Duration", e.target.value)} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select dosage</option><option value="1x daily - 3 days">1x daily - 3 days</option><option value="2x daily - 5 days">2x daily - 5 days</option><option value="3x daily - 7 days">3x daily - 7 days</option></select></div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
