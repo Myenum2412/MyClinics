@@ -87,23 +87,24 @@ export default function TreatmentPage(){
             </select>
         </div>
       </div>
-      <div className="rounded-xl border border-border bg-card shadow-sm p-6">
-        <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} />
-        <div className="mt-6 flex flex-wrap gap-2 justify-end">
-          <Button onClick={()=>{setFormType("record"); setV({}); setEditing(null); setOpen(true); window.scrollTo({top: document.body.scrollHeight, behavior:"smooth"});}} className="h-9 gap-1.5"><Plus className="size-4"/>Add Treatment Record</Button>
-          <Button onClick={()=>{setFormType("plan"); setV({}); setEditing(null); setOpen(true); window.scrollTo({top: document.body.scrollHeight, behavior:"smooth"});}} variant="outline" className="h-9 gap-1.5"><Plus className="size-4"/>Add Treatment Plan</Button>
-        </div>
-      </div>
-
-      {/* Section card like /clinic/appointments */}
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div><h3 className="text-sm font-semibold">Treatment Records</h3><p className="text-xs text-muted-foreground">{filtered.length} / {items.length} records{selected.size>0 && ` • ${selected.size} selected`}</p></div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-64"><Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"/><Input value={q} onChange={e=>{setQ(e.target.value); setPage(0);}} placeholder="Search..." className="pl-9 h-9"/></div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div><h2 className="text-xl font-medium">Treatment Overview</h2><p className="text-sm text-muted-foreground">Records, plans and discharge tracking — completion insights.</p></div>
+          <div className="flex items-center gap-2 shrink-0">
             <Button onClick={()=>startAdd("record")} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>Add Record</Button>
             <Button onClick={()=>startAdd("plan")} variant="outline" className="h-9 gap-1.5"><Plus className="size-4"/>Add Plan</Button>
           </div>
+        </div>
+        <div className="mt-6">
+          <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} />
+        </div>
+      </div>
+
+      {/* Table search only — buttons removed (now in overview row) */}
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div><h3 className="text-sm font-semibold">Treatment Records</h3><p className="text-xs text-muted-foreground">{filtered.length} / {items.length} records{selected.size>0 && ` • ${selected.size} selected`}</p></div>
+          <div className="relative flex-1 sm:w-64 sm:ml-auto"><Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"/><Input value={q} onChange={e=>{setQ(e.target.value); setPage(0);}} placeholder="Search..." className="pl-9 h-9"/></div>
         </div>
       </div>
 
