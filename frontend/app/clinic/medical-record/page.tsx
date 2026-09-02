@@ -79,7 +79,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { TreatmentEmbedded } from "@/components/clinic/treatment-embedded";
 import {
   ArrowLeft,
   ArrowRight,
@@ -95,9 +94,7 @@ import {
   Folder,
   FolderPlus,
   FolderUp,
-  HeartPulse,
   History,
-  LayoutDashboard,
   Loader2,
   MoreHorizontal,
   Pencil,
@@ -757,7 +754,7 @@ export default function MedicalRecordPage() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   /** null = patient root; otherwise a folder id (default key or custom id). */
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
-  const [view, setView] = useState<"drive" | "overview" | "treatment">("drive");
+  const [view, setView] = useState<"drive" | "overview">("drive");
 
   const [search, setSearch] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -1481,21 +1478,17 @@ export default function MedicalRecordPage() {
         {/* ── Patient drive ── */}
         {selectedPatient && (
           <div className="mt-4">
-            <div className="inline-flex gap-1 rounded-full bg-muted/60 p-1 border shadow-sm">
-              {([
-                { id: "drive" as const, label: "Drive", Icon: Folder },
-                { id: "overview" as const, label: "Overview", Icon: LayoutDashboard },
-                { id: "treatment" as const, label: "Treatment", Icon: HeartPulse },
-              ]).map(({ id, label, Icon }) => (
+            <div className="flex gap-1 rounded-lg bg-muted/60 p-1">
+              {(["drive", "overview"] as const).map((v) => (
                 <button
-                  key={id}
+                  key={v}
                   type="button"
-                  onClick={() => setView(id)}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
-                    view === id ? "bg-background text-foreground shadow-md ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
+                  onClick={() => setView(v)}
+                  className={`flex-1 rounded-md px-4 py-1.5 text-sm font-medium transition ${
+                    view === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <Icon className="size-3.5" /> {label}
+                  {v === "drive" ? "Files" : "Overview"}
                 </button>
               ))}
             </div>
@@ -1633,10 +1626,8 @@ export default function MedicalRecordPage() {
                   </div>
                 )}
               </>
-            ) : view === "overview" ? (
-              overview && <OverviewPanel />
             ) : (
-              <div className="mt-4"><TreatmentEmbedded patients={patients} doctors={doctors} appointments={appointments.items} prescriptions={prescriptions} scopePatientName={selectedPatient?.fullName ?? null} /></div>
+              overview && <OverviewPanel />
             )}
           </div>
         )}
@@ -1973,150 +1964,146 @@ export default function MedicalRecordPage() {
     if (!selectedPatient || !overview) return null;
     const p = selectedPatient;
     return (
-      <div className="mt-5 space-y-5">
-        {/* Patient summary - premium */}
-        <Card className="rounded-2xl border shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden">
-          <div className="h-1.5 bg-gradient-to-r from-primary via-violet-500 to-primary/50" />
-          <CardContent className="p-6">
-            <div className="flex flex-wrap items-start gap-4">
-              <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-14 text-base ring-2 ring-primary/10" />
+      <div className="mt-6 space-y-6">
+        {/* ── Hero patient card — Linear / Stripe premium ── */}
+        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-violet-500/[0.04] pointer-events-none" />
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
+          <div className="relative p-6 sm:p-7">
+            <div className="flex flex-wrap items-start gap-5">
+              <div className="relative">
+                <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-16 text-base ring-4 ring-background shadow-md" />
+                <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-card">
+                  <ShieldCheck className="size-3 text-white" />
+                </span>
+              </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-xl font-bold tracking-tight text-foreground">{p.fullName}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {calculateAge(p.dateOfBirth) ?? "—"} yrs · {p.gender ?? "—"}
-                  {p.bloodGroup ? ` · Blood ${p.bloodGroup}` : ""}
+                <h2 className="text-[17px] font-semibold tracking-tight text-foreground">{p.fullName}</h2>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-[13px] leading-none text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">{calculateAge(p.dateOfBirth) ?? "—"} yrs</span>
+                  <span className="text-muted-foreground/40">·</span>
+                  <span className="capitalize">{p.gender ?? "—"}</span>
+                  {p.bloodGroup && <><span className="text-muted-foreground/40">·</span><span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-600 dark:bg-red-500/10 dark:text-red-400">{p.bloodGroup}</span></>}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {p.allergies.length > 0 ? (
-                    p.allergies.map((a, i) => (
-                      <Badge key={i} className="rounded-full bg-destructive/10 text-destructive hover:bg-destructive/10 border border-destructive/15">{a}</Badge>
-                    ))
-                  ) : (
-                    <Badge variant="secondary" className="rounded-full">No allergies on file</Badge>
-                  )}
+                  {p.allergies.length > 0 ? p.allergies.map((a, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 dark:border-amber-900/50 dark:bg-amber-500/10 dark:text-amber-400">{a}</span>
+                  )) : <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">● No allergies on file</span>}
                 </div>
+                {(p.address || p.city) && <p className="mt-3 max-w-xl text-[13px] leading-relaxed text-muted-foreground">{[p.address, p.city, p.state, p.pincode].filter(Boolean).join(", ")}</p>}
               </div>
-              <div className="rounded-xl bg-muted/40 px-3 py-2 text-sm text-muted-foreground border">
-                <p className="inline-flex items-center gap-1.5"><Stethoscope className="size-4 text-primary" /> {doctorName(p.doctorId)}</p>
-                {p.mobile && <p className="mt-1 inline-flex items-center gap-1.5"><Phone className="size-4 text-primary" /> {p.mobile}</p>}
+              <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 backdrop-blur-sm">
+                <span className="inline-flex items-center gap-2 text-[13px] font-medium text-foreground"><span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><Stethoscope className="size-3.5" /></span>{doctorName(p.doctorId)}</span>
+                {p.mobile && <span className="inline-flex items-center gap-2 text-[13px] text-muted-foreground"><span className="flex size-7 items-center justify-center rounded-lg bg-muted text-muted-foreground"><Phone className="size-3.5" /></span>{p.mobile}</span>}
               </div>
             </div>
-            {(p.address || p.city) && (
-              <p className="mt-4 text-sm text-muted-foreground">
-                {[p.address, p.city, p.state, p.pincode].filter(Boolean).join(", ")}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Clinical overview - premium */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          <Card className="rounded-2xl shadow-sm border hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-5">
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Last visit</p>
-              <p className="mt-2 text-lg font-semibold text-foreground">{overview.lastVisit ? formatDate(overview.lastVisit) : "No visits yet"}</p>
-              <div className="my-3 h-px bg-border" />
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground flex items-center gap-1.5"><CalendarDays className="size-3.5" />Next appointment</p>
-              {overview.nextAppointment ? (
-                <p className="mt-2 text-base font-semibold text-foreground">
-                  {formatDate(overview.nextAppointment.date)}
-                  <span className="ml-2 text-sm font-normal text-muted-foreground">{overview.nextAppointment.time}</span>
-                </p>
-              ) : (
-                <p className="mt-2 text-sm text-muted-foreground">No upcoming appointments</p>
-              )}
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl shadow-sm border hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-5">
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Medical history</p>
-              <div className="mt-3 space-y-3 text-sm text-foreground">
-                <div className="rounded-xl bg-muted/30 p-3 border">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Conditions</p>
-                  <p className="mt-1">{p.medicalConditions || "—"}</p>
-                </div>
-                <div className="rounded-xl bg-muted/30 p-3 border">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Surgeries</p>
-                  <p className="mt-1">{p.previousSurgeries || "—"}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="rounded-2xl shadow-sm border hover:shadow-md transition-shadow duration-200">
-            <CardContent className="p-5">
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Current medications</p>
-              <p className="mt-3 text-sm text-foreground leading-relaxed">{p.currentMedications || "—"}</p>
-            </CardContent>
-          </Card>
+          </div>
         </div>
 
-        {/* Upload timeline - premium */}
-        <Card className="rounded-2xl shadow-sm border">
-          <CardContent className="p-6">
-            <SectionHeading Icon={History} tint="text-primary" title="Upload Timeline" count={patientFiles.length} countLabel="upload" />
-            {overview.timeline.length === 0 ? (
-              <div className="mt-4 flex flex-col items-center gap-2 rounded-2xl border border-dashed bg-muted/20 py-10 text-center"><FileText className="size-8 text-muted-foreground/40" /><p className="text-sm text-muted-foreground">No documents uploaded yet.</p></div>
-            ) : (
-              <div className="mt-4 space-y-2">
-                {overview.timeline.map((f) => (
-                  <div key={f.fileId} className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5 hover:bg-muted/40 transition-colors duration-150">
-                    {fileIcon(f.mimeType, f.fileName)}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">{f.fileName}</p>
-                      <p className="text-xs text-muted-foreground">{formatDate(f.createdAt)} · {folderName(f.folder)}{f.uploadedByName ? ` · by ${f.uploadedByName}` : ""}{f.version > 1 ? ` · v${f.version}` : ""}</p>
-                    </div>
-                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10" onClick={() => handleDownload(f)} aria-label="Download"><Download className="size-4 text-primary" /></Button>
-                  </div>
-                ))}
+        {/* ── Clinical overview — 3-up bento ── */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-200 hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] hover:border-border">
+            <div className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/10 transition" />
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Care timeline</p>
+            <div className="mt-4 space-y-4">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Last visit</p>
+                <p className="mt-1 text-[15px] font-semibold tracking-tight text-foreground">{overview.lastVisit ? formatDate(overview.lastVisit) : "No visits yet"}</p>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <div className="h-px bg-border/60" />
+              <div>
+                <p className="text-xs font-medium text-muted-foreground">Next appointment</p>
+                {overview.nextAppointment ? (
+                  <div className="mt-1.5 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5">
+                    <CalendarDays className="size-3.5 text-primary" />
+                    <span className="text-sm font-semibold text-primary">{formatDate(overview.nextAppointment.date)}</span>
+                    <span className="text-xs text-primary/70">{overview.nextAppointment.time}</span>
+                  </div>
+                ) : <p className="mt-1 text-sm text-muted-foreground">No upcoming appointments</p>}
+              </div>
+            </div>
+          </div>
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Medical history</p>
+            <div className="mt-4 space-y-3">
+              <div className="rounded-xl bg-muted/40 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Conditions</p>
+                <p className="mt-1 text-sm leading-relaxed text-foreground">{p.medicalConditions || <span className="text-muted-foreground">— None on file</span>}</p>
+              </div>
+              <div className="rounded-xl bg-muted/40 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Surgeries</p>
+                <p className="mt-1 text-sm leading-relaxed text-foreground">{p.previousSurgeries || <span className="text-muted-foreground">— None on file</span>}</p>
+              </div>
+            </div>
+          </div>
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Current medications</p>
+            <p className="mt-4 text-sm leading-relaxed text-foreground">{p.currentMedications || <span className="text-muted-foreground">No active medications</span>}</p>
+            {p.currentMedications && <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground"><span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active regimen</div>}
+          </div>
+        </div>
+
+        {/* ── Upload timeline — premium list ── */}
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><History className="size-4" /></span>
+              <h3 className="text-sm font-semibold tracking-tight">Upload Timeline</h3>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">{patientFiles.length}</span>
+            </div>
+          </div>
+          {overview.timeline.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
+              <span className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><FileText className="size-6" /></span>
+              <p className="text-sm font-medium">No documents yet</p>
+              <p className="max-w-sm text-sm text-muted-foreground">Uploads for this patient will appear here in chronological order.</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border/50">
+              {overview.timeline.map((f) => (
+                <div key={f.fileId} className="group flex items-center gap-3 px-5 py-3.5 transition hover:bg-muted/40">
+                  <span className="flex size-9 items-center justify-center rounded-xl bg-muted group-hover:bg-background transition shadow-sm ring-1 ring-border/50">{fileIcon(f.mimeType, f.fileName)}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium leading-tight">{f.fileName}</p>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                      <span>{formatDate(f.createdAt)}</span><span className="size-1 rounded-full bg-border" /><span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px]">{folderName(f.folder)}</span>{f.uploadedByName && <><span className="size-1 rounded-full bg-border" /><span>by {f.uploadedByName}</span></>}{f.version > 1 && <Badge variant="secondary" className="h-5 rounded-full px-1.5 text-[10px]">v{f.version}</Badge>}
+                    </p>
+                  </div>
+                  <Button variant="ghost" size="icon" className="size-8 rounded-xl opacity-0 group-hover:opacity-100 transition" onClick={() => handleDownload(f)} aria-label="Download"><Download className="size-4" /></Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Visit history */}
         {overview.patientRecords.length > 0 && (
-          <div>
-            <SectionHeading
-              Icon={ClipboardList}
-              tint="text-primary"
-              title="Visit History"
-              count={overview.patientRecords.length}
-              countLabel="record"
-            />
-            <div className="mt-3 grid gap-3 lg:grid-cols-2">
-              {overview.patientRecords
-                .slice()
-                .sort((a, b) => b.visitDate.localeCompare(a.visitDate))
-                .slice(0, 6)
-                .map((r) => (
-                  <MedicineRecordCard
-                    key={r.recordId}
-                    record={r}
-                    doctorName={doctorName}
-                    onDownload={handleRecordAttachmentDownload}
-                  />
-                ))}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600"><ClipboardList className="size-4" /></span>
+              <h3 className="text-sm font-semibold tracking-tight">Visit History</h3>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">{overview.patientRecords.length}</span>
+              <div className="ml-auto h-px flex-1 bg-gradient-to-r from-border/60 to-transparent hidden sm:block" />
+            </div>
+            <div className="grid gap-3 lg:grid-cols-2">
+              {overview.patientRecords.slice().sort((a, b) => b.visitDate.localeCompare(a.visitDate)).slice(0, 6).map((r) => (
+                <MedicineRecordCard key={r.recordId} record={r} doctorName={doctorName} onDownload={handleRecordAttachmentDownload} />
+              ))}
             </div>
           </div>
         )}
-
         {overview.patientPrescriptions.length > 0 && (
-          <div>
-            <SectionHeading
-              Icon={Pill}
-              tint="text-emerald-600"
-              title="Prescriptions"
-              count={overview.patientPrescriptions.length}
-              countLabel="prescription"
-            />
-            <div className="mt-3 grid gap-3 lg:grid-cols-2">
-              {overview.patientPrescriptions
-                .slice()
-                .sort((a, b) => b.visitDate.localeCompare(a.visitDate))
-                .slice(0, 6)
-                .map((pr) => (
-                  <PrescriptionCard key={pr.prescriptionId} prescription={pr} doctorName={doctorName} />
-                ))}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600"><Pill className="size-4" /></span>
+              <h3 className="text-sm font-semibold tracking-tight">Prescriptions</h3>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">{overview.patientPrescriptions.length}</span>
+              <div className="ml-auto h-px flex-1 bg-gradient-to-r from-border/60 to-transparent hidden sm:block" />
+            </div>
+            <div className="grid gap-3 lg:grid-cols-2">
+              {overview.patientPrescriptions.slice().sort((a, b) => b.visitDate.localeCompare(a.visitDate)).slice(0, 6).map((pr) => (
+                <PrescriptionCard key={pr.prescriptionId} prescription={pr} doctorName={doctorName} />
+              ))}
             </div>
           </div>
         )}
