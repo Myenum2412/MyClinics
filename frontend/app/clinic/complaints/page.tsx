@@ -41,15 +41,19 @@ export default function TreatmentPage(){
     patients.forEach(p=> s.add(p.fullName));
     return Array.from(s);
   },[items,patients]);
-  const records = items.filter(i=>i.type==="record").length;
-  const plans = items.filter(i=>i.type==="plan").length;
-
   // form state
   const [open,setOpen]=useState(false);
   const [editing,setEditing]=useState<string|null>(null);
   const [viewing,setViewing]=useState<Entry|null>(null);
   const [formType,setFormType]=useState<"record"|"plan">("record");
   const [v,setV]=useState<Record<string,string>>({});
+  const selectedPatientId = useMemo(()=> patients.find(p=>p.fullName===(v["Patient"]||""))?.patientId ?? null,[patients, v]);
+  const filteredAppointments = useMemo(()=>{
+    if(!selectedPatientId) return [];
+    return appointments.filter(a=>a.patientId===selectedPatientId);
+  },[appointments, selectedPatientId]);
+  const records = items.filter(i=>i.type==="record").length;
+  const plans = items.filter(i=>i.type==="plan").length;
   const SV=(f:string,val:string)=> setV(prev=>({...prev,[f]:val??""}));
   function onPatientSelect(name:string){
     SV("Patient", name);
@@ -100,7 +104,7 @@ export default function TreatmentPage(){
           <div className="space-y-4">
             <div className="grid sm:grid-cols-3 gap-4">
               <div><Label className="text-xs">Patient *</Label><select value={v["Patient"]||""} onChange={e=> onPatientSelect(e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select patient</option>{patients.map(p=> <option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-              <div><Label className="text-xs">Appointment</Label><select value={v["Appointment"]||v["Visit Date & Time"]||""} onChange={e=>{SV("Appointment", e.target.value); SV("Visit Date & Time", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select appointment</option>{appointments.map(a=> <option key={a.appointmentId} value={a.date+" "+a.time}>{a.date} {a.time} — {a.reason || a.appointmentId.slice(0,6)}</option>)}</select></div>
+              <div><Label className="text-xs">Appointment</Label><select value={v["Appointment"]||v["Visit Date & Time"]||""} onChange={e=>{SV("Appointment", e.target.value); SV("Visit Date & Time", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">{!v["Patient"] ? "Select patient first" : filteredAppointments.length===0 ? "No appointments for this patient" : "Select appointment"}</option>{filteredAppointments.map(a=> <option key={a.appointmentId} value={a.date+" "+a.time}>{a.date} {a.time} — {a.reason || a.appointmentId.slice(0,6)}</option>)}</select></div>
               <div><Label className="text-xs">Doctor</Label><select value={v["Doctor"]||""} onChange={e=>SV("Doctor", e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select doctor</option>{doctors.map(d=> <option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">

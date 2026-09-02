@@ -79,6 +79,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TreatmentEmbedded } from "@/components/clinic/treatment-embedded";
 import {
   ArrowLeft,
   ArrowRight,
@@ -94,7 +95,9 @@ import {
   Folder,
   FolderPlus,
   FolderUp,
+  HeartPulse,
   History,
+  LayoutDashboard,
   Loader2,
   MoreHorizontal,
   Pencil,
@@ -754,7 +757,7 @@ export default function MedicalRecordPage() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   /** null = patient root; otherwise a folder id (default key or custom id). */
   const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
-  const [view, setView] = useState<"drive" | "overview">("drive");
+  const [view, setView] = useState<"drive" | "overview" | "treatment">("drive");
 
   const [search, setSearch] = useState("");
   const [dragging, setDragging] = useState(false);
@@ -1478,17 +1481,21 @@ export default function MedicalRecordPage() {
         {/* ── Patient drive ── */}
         {selectedPatient && (
           <div className="mt-4">
-            <div className="flex gap-1 rounded-lg bg-muted/60 p-1">
-              {(["drive", "overview"] as const).map((v) => (
+            <div className="inline-flex gap-1 rounded-full bg-muted/60 p-1 border shadow-sm">
+              {([
+                { id: "drive" as const, label: "Drive", Icon: Folder },
+                { id: "overview" as const, label: "Overview", Icon: LayoutDashboard },
+                { id: "treatment" as const, label: "Treatment", Icon: HeartPulse },
+              ]).map(({ id, label, Icon }) => (
                 <button
-                  key={v}
+                  key={id}
                   type="button"
-                  onClick={() => setView(v)}
-                  className={`flex-1 rounded-md px-4 py-1.5 text-sm font-medium transition ${
-                    view === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  onClick={() => setView(id)}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
+                    view === id ? "bg-background text-foreground shadow-md ring-1 ring-border" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {v === "drive" ? "Files" : "Overview"}
+                  <Icon className="size-3.5" /> {label}
                 </button>
               ))}
             </div>
@@ -1626,8 +1633,10 @@ export default function MedicalRecordPage() {
                   </div>
                 )}
               </>
-            ) : (
+            ) : view === "overview" ? (
               overview && <OverviewPanel />
+            ) : (
+              <div className="mt-4"><TreatmentEmbedded patients={patients} doctors={doctors} appointments={appointments.items} prescriptions={prescriptions} scopePatientName={selectedPatient?.fullName ?? null} /></div>
             )}
           </div>
         )}
@@ -1964,109 +1973,99 @@ export default function MedicalRecordPage() {
     if (!selectedPatient || !overview) return null;
     const p = selectedPatient;
     return (
-      <div className="mt-4 space-y-4">
-        {/* Patient summary */}
-        <Card>
-          <CardContent className="p-5">
+      <div className="mt-5 space-y-5">
+        {/* Patient summary - premium */}
+        <Card className="rounded-2xl border shadow-[0_4px_24px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="h-1.5 bg-gradient-to-r from-primary via-violet-500 to-primary/50" />
+          <CardContent className="p-6">
             <div className="flex flex-wrap items-start gap-4">
-              <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-14 text-base" />
+              <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-14 text-base ring-2 ring-primary/10" />
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-bold text-foreground">{p.fullName}</h2>
-                <p className="mt-0.5 text-sm text-muted-foreground">
+                <h2 className="text-xl font-bold tracking-tight text-foreground">{p.fullName}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                   {calculateAge(p.dateOfBirth) ?? "—"} yrs · {p.gender ?? "—"}
                   {p.bloodGroup ? ` · Blood ${p.bloodGroup}` : ""}
                 </p>
-                <div className="mt-2 flex flex-wrap gap-1.5">
+                <div className="mt-3 flex flex-wrap gap-1.5">
                   {p.allergies.length > 0 ? (
                     p.allergies.map((a, i) => (
-                      <Badge key={i} className="bg-destructive/10 text-destructive hover:bg-destructive/10">{a}</Badge>
+                      <Badge key={i} className="rounded-full bg-destructive/10 text-destructive hover:bg-destructive/10 border border-destructive/15">{a}</Badge>
                     ))
                   ) : (
-                    <Badge variant="secondary">No allergies on file</Badge>
+                    <Badge variant="secondary" className="rounded-full">No allergies on file</Badge>
                   )}
                 </div>
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="rounded-xl bg-muted/40 px-3 py-2 text-sm text-muted-foreground border">
                 <p className="inline-flex items-center gap-1.5"><Stethoscope className="size-4 text-primary" /> {doctorName(p.doctorId)}</p>
                 {p.mobile && <p className="mt-1 inline-flex items-center gap-1.5"><Phone className="size-4 text-primary" /> {p.mobile}</p>}
               </div>
             </div>
             {(p.address || p.city) && (
-              <p className="mt-3 text-sm text-muted-foreground">
+              <p className="mt-4 text-sm text-muted-foreground">
                 {[p.address, p.city, p.state, p.pincode].filter(Boolean).join(", ")}
               </p>
             )}
           </CardContent>
         </Card>
 
-        {/* Clinical overview */}
+        {/* Clinical overview - premium */}
         <div className="grid gap-4 lg:grid-cols-3">
-          <Card>
+          <Card className="rounded-2xl shadow-sm border hover:shadow-md transition-shadow duration-200">
             <CardContent className="p-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Last visit</p>
-              <p className="mt-1 text-lg font-semibold text-foreground">{overview.lastVisit ? formatDate(overview.lastVisit) : "No visits yet"}</p>
-              <p className="mt-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Next appointment</p>
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Last visit</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">{overview.lastVisit ? formatDate(overview.lastVisit) : "No visits yet"}</p>
+              <div className="my-3 h-px bg-border" />
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground flex items-center gap-1.5"><CalendarDays className="size-3.5" />Next appointment</p>
               {overview.nextAppointment ? (
-                <p className="mt-1 text-lg font-semibold text-foreground">
+                <p className="mt-2 text-base font-semibold text-foreground">
                   {formatDate(overview.nextAppointment.date)}
                   <span className="ml-2 text-sm font-normal text-muted-foreground">{overview.nextAppointment.time}</span>
                 </p>
               ) : (
-                <p className="mt-1 text-sm text-muted-foreground">No upcoming appointments</p>
+                <p className="mt-2 text-sm text-muted-foreground">No upcoming appointments</p>
               )}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl shadow-sm border hover:shadow-md transition-shadow duration-200">
             <CardContent className="p-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Medical history</p>
-              <div className="mt-2 space-y-2 text-sm text-foreground">
-                <div>
-                  <p className="font-medium text-muted-foreground">Conditions</p>
-                  <p>{p.medicalConditions || "—"}</p>
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Medical history</p>
+              <div className="mt-3 space-y-3 text-sm text-foreground">
+                <div className="rounded-xl bg-muted/30 p-3 border">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Conditions</p>
+                  <p className="mt-1">{p.medicalConditions || "—"}</p>
                 </div>
-                <div>
-                  <p className="font-medium text-muted-foreground">Surgeries</p>
-                  <p>{p.previousSurgeries || "—"}</p>
+                <div className="rounded-xl bg-muted/30 p-3 border">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Surgeries</p>
+                  <p className="mt-1">{p.previousSurgeries || "—"}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl shadow-sm border hover:shadow-md transition-shadow duration-200">
             <CardContent className="p-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Current medications</p>
-              <p className="mt-2 text-sm text-foreground">{p.currentMedications || "—"}</p>
+              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Current medications</p>
+              <p className="mt-3 text-sm text-foreground leading-relaxed">{p.currentMedications || "—"}</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Upload timeline */}
-        <Card>
-          <CardContent className="p-5">
-            <SectionHeading
-              Icon={History}
-              tint="text-primary"
-              title="Upload Timeline"
-              count={patientFiles.length}
-              countLabel="upload"
-            />
+        {/* Upload timeline - premium */}
+        <Card className="rounded-2xl shadow-sm border">
+          <CardContent className="p-6">
+            <SectionHeading Icon={History} tint="text-primary" title="Upload Timeline" count={patientFiles.length} countLabel="upload" />
             {overview.timeline.length === 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">No documents uploaded yet.</p>
+              <div className="mt-4 flex flex-col items-center gap-2 rounded-2xl border border-dashed bg-muted/20 py-10 text-center"><FileText className="size-8 text-muted-foreground/40" /><p className="text-sm text-muted-foreground">No documents uploaded yet.</p></div>
             ) : (
-              <div className="mt-3 space-y-2">
+              <div className="mt-4 space-y-2">
                 {overview.timeline.map((f) => (
-                  <div key={f.fileId} className="flex items-center gap-3">
+                  <div key={f.fileId} className="flex items-center gap-3 rounded-xl border bg-card px-3 py-2.5 hover:bg-muted/40 transition-colors duration-150">
                     {fileIcon(f.mimeType, f.fileName)}
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-foreground">{f.fileName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(f.createdAt)} · {folderName(f.folder)}
-                        {f.uploadedByName ? ` · by ${f.uploadedByName}` : ""}
-                        {f.version > 1 ? ` · v${f.version}` : ""}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{formatDate(f.createdAt)} · {folderName(f.folder)}{f.uploadedByName ? ` · by ${f.uploadedByName}` : ""}{f.version > 1 ? ` · v${f.version}` : ""}</p>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => handleDownload(f)} aria-label="Download">
-                      <Download className="size-4 text-primary" />
-                    </Button>
+                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10" onClick={() => handleDownload(f)} aria-label="Download"><Download className="size-4 text-primary" /></Button>
                   </div>
                 ))}
               </div>
