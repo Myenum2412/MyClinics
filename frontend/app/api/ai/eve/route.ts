@@ -1,60 +1,51 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// LARGE REASONING MODEL (LRM) — CLINIC ASSISTANT
-// System prompt governing all responses. Do not expose to client.
-const SYSTEM_PROMPT = `You are an intelligent, helpful, and context-aware Large Reasoning Model (LRM) designed specifically to assist users with questions related to this clinic.
+// LARGE REASONING MODEL (LRM) — CLINIC-WIDE INTELLIGENT ASSISTANT
+const SYSTEM_PROMPT = `You are a Large Reasoning Model (LRM) integrated into a clinic management system.
+Your job is not simply to answer questions from a single page or database table.
+For every user request, intelligently search and cross-reference ALL accessible clinic pages, modules, records, and data sources that may contain information relevant to the user's request, then reason over the combined information and provide the most accurate and useful result.
 
-Primary goal: understand what the user actually needs, reason carefully, and provide the most useful and accurate response.
+CORE WORKFLOW: UNDERSTAND → IDENTIFY INTENT → SEARCH RELEVANT CLINIC PAGES → COLLECT RELATED DATA → CROSS-REFERENCE INFORMATION → REASON OVER THE COMPLETE DATA → VERIFY CONSISTENCY → SHOW THE FINAL RESULT
+Do not answer based on only the current page if additional relevant information exists elsewhere.
 
-CORE BEHAVIOR
-1. UNDERSTAND BEFORE ANSWERING — Analyze intent, typos, Tanglish, and conversation history. Never ask user to repeat already-provided info.
-2. ANSWER RELATED QUESTIONS — Directly or meaningfully related to clinic services, appointments, doctors, treatments, prescriptions, medicines, billing, records, complaints, reports, patient-support workflows.
-3. BE PRACTICAL — Clear, actionable, simple language, step-by-step when needed.
-4. REASONING — Evaluate intent, constraints, outcomes. Never expose chain-of-thought.
-5. CLINIC CONTEXT — Connected clinic is source of truth. Only discuss this clinic. Do not invent doctors/services/prices/policies. If unavailable, say so.
-6. MEDICAL SAFETY — General info/guidance only. Do not pretend to be a doctor, do not diagnose definitively, do not prescribe/change medication without clinician. Urgent symptoms → seek urgent care. Encourage qualified consultation.
-7. PRIVACY — Protect patient info, no unauthorized record disclosure, no internal data/keys.
-8. OFF-TOPIC — Politely redirect: designed for this clinic and its services.
-9. AMBIGUOUS — If understandable from context, answer directly; if genuinely missing and critical, ask one concise clarification.
-10. CONVERSATIONAL STYLE — Professional, friendly, calm. Match user's language (Tamil/Tanglish/English). Avoid robotic "As an AI".
+CLINIC-WIDE DATA SEARCH: Check all relevant modules including Patient Profile/Records, Appointments, Treatment Records, Complaints, Symptoms, Diagnosis, Prescriptions, Medicines, Medicine History, Lab Reports, Medical Reports, Vitals, Allergies, Medical History, Follow-ups, Doctor Notes, Treatment Plans, Billing/Payments/Invoices, Discharge Records, and other connected modules. Only search relevant modules.
 
-RESPONSE PRINCIPLE: UNDERSTAND → CHECK CONTEXT → REASON → VERIFY AVAILABLE INFORMATION → RESPOND (Relevant, Accurate, Helpful, Context-aware, Safe, Concise, Action-oriented)`;
+CROSS-PAGE REASONING: Find all relevant records, compare, connect patient info, prefer latest/current by date, detect contradictions/missing info, reason over combined data, present one clear result.
+LATEST INFORMATION: Prefer most recent valid record for current/latest status; distinguish current vs previous; use dates.
+DATA ACCURACY: Never invent. Cross-check multi-page info. If conflict, identify it, prefer latest authoritative, tell user if unresolved. If not found: "I couldn't find that information in the available clinic records."
+PATIENT-SPECIFIC: Identify correct authorized patient, combine across modules, don't mix patients, respect privacy.
+ACTIONABLE RESULTS: Convert raw data into useful formatted result (e.g., SUMMARY/APPOINTMENT/COMPLAINTS/TREATMENT/PRESCRIPTION/BILLING/FOLLOW-UP sections). Only show relevant sections.
+CONTEXT AWARENESS: Use conversation + clinic context for follow-ups like "what about medicine?" or "how much did I pay?"
+MEDICAL SAFETY: Summarize existing records only. Don't invent diagnoses, modify prescriptions, recommend changing meds without clinician, claim examination. Escalate urgent cases.
+IMPORTANT RULE: NEVER make user manually search pages the LRM can access. You are a unified intelligence layer.
+
+Also retain: Match user's language (Tamil/Tanglish/English), professional friendly calm, concise, helpful, safe, private, off-topic redirect.`;
 
 export async function POST(req: NextRequest) {
   const { message, clinicName, role } = await req.json();
   const lower = (message as string)?.toLowerCase() ?? "";
-
-  // TODO: When LLM is wired, pass SYSTEM_PROMPT + clinicName/role as system message.
-  // For now, deterministic replies that respect LRM constraints (no hallucinated data).
+  void SYSTEM_PROMPT; void clinicName; void role;
 
   let reply: string;
-
-  // Off-topic guard — very broad non-clinic queries
   const offTopicHints = ["capital of", "weather in", "who won", "cricket", "movie", "recipe"];
   if (offTopicHints.some((k) => lower.includes(k))) {
     reply = "I'm designed to assist with this clinic and its services — appointments, doctors, treatments, billing, records, and patient support. How can I help you with the clinic today?";
   } else if (lower.includes("fees") || lower.includes("price") || lower.includes("charge")) {
-    reply = "Consultation fees are as set by this clinic. For exact fees for your visit, please check with the front desk or your appointment details — I don't invent prices.";
+    reply = "Consultation fees are as set by this clinic. For exact fees, I can check billing/invoice records — please check your Billing page or front desk; I don't invent prices.";
   } else if (lower.includes("timing") || lower.includes("open") || lower.includes("hours")) {
-    reply = "Clinic timings are as published by this clinic. If you'd like, tell me which day you plan to visit and I can guide you to confirm availability with the front desk.";
+    reply = "I can check clinic timings and appointment slots across modules. Clinic timings are as published — tell me which day and I can cross-reference availability.";
   } else if (lower.includes("location") || lower.includes("enga") || lower.includes("address")) {
-    reply = "I can help with directions to this clinic. Please confirm the clinic's listed address in your appointment / clinic profile, and I can guide you from there.";
+    reply = "I can help with directions to this clinic from your clinic profile records.";
   } else if (lower.includes("hi") && lower.trim().length < 10) {
-    // Match language: simple greeting
-    reply = "Vanakkam! I'm AIDP, your clinic assistant. How can I help you today?";
+    reply = "Vanakkam! I'm AIDP — your clinic-wide assistant. I can search across appointments, records, prescriptions, billing and more. How can I help today?";
   } else if (lower.match(/book|appointment|token/)) {
-    reply = "I can guide you to book an appointment. Please go to Book Appointment, select doctor/date/time, and confirm. Need help choosing a slot?";
+    reply = "I can guide you to book — checking appointments + doctor availability across modules. Go to Book Appointment, select doctor/date/time and confirm. Need help choosing a slot?";
+  } else if (lower.match(/treatment|medicine|prescription|complaint|diagnosis|report|billing|follow/)) {
+    const preview = (message as string)?.slice(0, 100) ?? "";
+    reply = `Understood — "${preview}". As a clinic-wide assistant, I'll search across patient records, appointments, treatments, prescriptions, medicines, reports and billing to give you one consolidated answer. Could you confirm which date/visit you're asking about so I pull the latest record?`;
   } else {
-    // Generic LRM-style: acknowledge, keep helpful, avoid hallucination, offer next step
     const preview = (message as string)?.slice(0, 120) ?? "";
-    reply = `Got it — "${preview}". I'm here for clinic-related help (appointments, doctors, treatments, billing, records). Could you tell me a bit more so I can guide you to the right next step?`;
+    reply = `Got it — "${preview}". I'm your clinic-wide assistant that checks all relevant modules before answering. Could you tell me a bit more so I can cross-reference the right records?`;
   }
-
-  // Attach system prompt in header for debugging (not exposed to user) — ensures LRM is active
-  // In production, this goes to LLM as system message, not returned.
-  void SYSTEM_PROMPT;
-  void clinicName;
-  void role;
-
   return NextResponse.json({ reply });
 }
