@@ -62,25 +62,12 @@ export default function ClinicAiAssistantPage() {
   );
 
   return (
-    <div className="flex flex-col gap-4 lg:gap-5">
-      {/* Page header — Linear/Stripe style */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-[22px] font-semibold tracking-tight">AI Assistant</h1>
-            <Badge variant="secondary" className="rounded-full text-[11px] font-medium h-5 px-2 bg-violet-50 text-violet-700 border border-violet-200">Tanglish</Badge>
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5 font-medium"><span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live</span>
-          </div>
-          <p className="text-[13px] text-muted-foreground">Ask in English or Tanglish — appointments, fees, timings. Powered by Meenu Care.</p>
-        </div>
-        <Button onClick={newChat} className="rounded-full h-9 px-4 bg-foreground text-background hover:bg-foreground/90 shadow-sm shrink-0">
-          <Plus className="size-4" /> New chat
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-12 gap-4 lg:gap-5 min-h-[calc(100vh-220px)]">
+    <div className="-m-4 sm:-m-6 lg:-mx-8 lg:-my-5 flex flex-col h-[calc(100vh-56px)] lg:h-[calc(100vh-56px)]">
+      <div className="flex-1 grid grid-cols-12 gap-0 min-h-0">
+        {/* New chat action — floating header button for empty state alternative */}
+        <div className="hidden" aria-hidden><Button onClick={newChat}>New chat</Button></div>
         {/* Main Chat */}
-        <div className="col-span-12 lg:col-span-8 flex flex-col rounded-2xl border bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] overflow-hidden">
+        <div className="col-span-12 lg:col-span-8 flex flex-col bg-card lg:border-r overflow-hidden min-h-0">
           {/* Toolbar */}
           <div className="h-[52px] shrink-0 flex items-center justify-between px-4 sm:px-5 border-b bg-card">
             <div className="flex items-center gap-3 min-w-0">
@@ -150,7 +137,7 @@ export default function ClinicAiAssistantPage() {
         </div>
 
         {/* Right History */}
-        <div className="col-span-12 lg:col-span-4 flex flex-col rounded-2xl border bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)] overflow-hidden lg:sticky lg:top-4 lg:h-[calc(100vh-160px)]">
+        <div className="col-span-12 lg:col-span-4 flex flex-col bg-card border-t lg:border-t-0 lg:border-l overflow-hidden min-h-0 lg:h-full">
           <div className="p-4 border-b space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[13px] font-semibold flex items-center gap-2"><History className="size-4" /> History</span>
