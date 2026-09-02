@@ -1,41 +1,8 @@
 'use client';
 
-import { ExternalLink } from 'lucide-react';
-import Link from 'next/link';
 import { PolarAngleAxis, RadialBar, RadialBarChart } from 'recharts';
 import { Card, CardContent } from '@/components/ui/card';
 import { type ChartConfig, ChartContainer } from '@/components/ui/chart';
-
-const data = [
-  {
-    name: 'Workspaces',
-    capacity: 20,
-    current: 1,
-    allowed: 5,
-    fill: 'var(--chart-1)',
-  },
-  {
-    name: 'Dashboards',
-    capacity: 10,
-    current: 2,
-    allowed: 20,
-    fill: 'var(--chart-2)',
-  },
-  {
-    name: 'Chart widgets',
-    capacity: 30,
-    current: 15,
-    allowed: 50,
-    fill: 'var(--chart-3)',
-  },
-  {
-    name: 'Storage',
-    capacity: 50,
-    current: 25,
-    allowed: 100,
-    fill: 'var(--chart-4)',
-  },
-];
 
 const chartConfig = {
   capacity: {
@@ -44,23 +11,21 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export default function Stats07() {
+export default function StatsTreatment({ records, plans, discharges, patients }: { records: number; plans: number; discharges: number; patients: number }) {
+  const data = [
+    { name: 'Treatment Records', capacity: Math.min(100, records * 10), current: records, allowed: 20, fill: 'var(--chart-1)' },
+    { name: 'Treatment Plans', capacity: Math.min(100, plans * 10), current: plans, allowed: 20, fill: 'var(--chart-2)' },
+    { name: 'Discharges', capacity: Math.min(100, discharges * 10), current: discharges, allowed: 20, fill: 'var(--chart-3)' },
+    { name: 'Patients', capacity: Math.min(100, patients * 5), current: patients, allowed: 50, fill: 'var(--chart-4)' },
+  ];
   return (
-    <div className="flex w-full items-center justify-center p-10">
+    <div className="flex w-full items-center justify-center p-6">
       <div className="w-full">
         <h2 className="text-balance font-medium text-foreground text-xl">
-          Plan overview
+          Treatment Overview
         </h2>
         <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">
-          You are currently on the{' '}
-          <span className="font-medium text-foreground">starter plan</span>.{' '}
-          <Link
-            className="inline-flex items-center gap-1 text-primary hover:underline hover:underline-offset-4"
-            href="#"
-          >
-            View other plans
-            <ExternalLink aria-hidden={true} className="size-4" />
-          </Link>
+          Records, plans and discharge tracking — completion insights.
         </p>
         <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {data.map((item) => (
