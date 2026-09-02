@@ -109,7 +109,7 @@ export default function PharmacySuppliersPage() {
         <Button render={<Link href="/clinic/pharmacy/suppliers/new" />}>Add Supplier</Button>
       </div>
 
-      <Card>
+      <Card className="rounded-xl border border-border bg-card shadow-sm">
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-base">Suppliers</CardTitle>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

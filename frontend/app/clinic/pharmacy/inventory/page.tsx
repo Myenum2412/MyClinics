@@ -140,8 +140,8 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
         </div>
       </div>
 
-      <Card>
-        <CardHeader className="gap-3">
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <CardHeader className="gap-3 px-0 pt-0">
           <CardTitle className="text-base">Stock</CardTitle>
           <div className="flex flex-wrap items-center gap-2">
             <Input
@@ -170,10 +170,11 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
             </Select>
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="p-0 pt-4">
+          <div className="overflow-hidden rounded-xl border border-border">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                 <TableHead>Medicine</TableHead>
                 <TableHead>Batch</TableHead>
                 <TableHead>Supplier</TableHead>
@@ -205,7 +206,7 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
                   <TableRow
                     key={inv.inventoryId}
                     onClick={() => setDetail(inv)}
-                    className="cursor-pointer"
+                    className="cursor-pointer hover:bg-muted/30 border-b border-border last:border-0"
                   >
                     <TableCell>
                       <div className="min-w-0">
@@ -230,8 +231,9 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
-      </Card>
+      </div>
 
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <DialogContent>

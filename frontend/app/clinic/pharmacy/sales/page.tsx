@@ -118,7 +118,7 @@ export default function PharmacySalesPage() {
         <Button render={<Link href="/clinic/pharmacy/sales/new" />}>New Sale</Button>
       </div>
 
-      <Card>
+      <Card className="rounded-xl border border-border bg-card shadow-sm">
         <CardHeader className="flex-row items-center gap-3">
           <Input
             placeholder="Search invoice # or patient"

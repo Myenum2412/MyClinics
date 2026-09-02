@@ -206,7 +206,7 @@ export default function PharmacyMedicinesPage() {
         <CardContent className="pt-5">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                 <TableHead className="w-10">
                   <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all" />
                 </TableHead>
@@ -234,7 +234,7 @@ export default function PharmacyMedicinesPage() {
                   </TableRow>
                 ))
               ) : medicines.length === 0 ? (
-                <TableRow>
+                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                   <TableCell colSpan={11} className="py-10 text-center text-muted-foreground">
                     No medicines found.
                   </TableCell>

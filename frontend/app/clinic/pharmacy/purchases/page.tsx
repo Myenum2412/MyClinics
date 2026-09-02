@@ -142,7 +142,7 @@ export default function PharmacyPurchasesPage() {
         </Button>
       </div>
 
-      <Card>
+      <Card className="rounded-xl border border-border bg-card shadow-sm">
         <CardHeader className="flex-row flex-wrap items-center gap-3">
           <CardTitle className="text-base">Purchase Orders</CardTitle>
           <div className="ml-auto flex flex-wrap items-center gap-2">

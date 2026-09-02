@@ -170,7 +170,7 @@ export default function PharmacyStockHistoryPage() {
         </Button>
       </div>
 
-      <Card>
+      <Card className="rounded-xl border border-border bg-card shadow-sm">
         <CardHeader>
           <CardTitle className="text-base">Filters</CardTitle>
         </CardHeader>
@@ -237,7 +237,7 @@ export default function PharmacyStockHistoryPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-xl border border-border bg-card shadow-sm">
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle className="text-base">
             Movements {!loading && <span className="text-muted-foreground">({filtered.length})</span>}
