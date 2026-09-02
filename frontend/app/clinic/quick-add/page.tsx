@@ -23,9 +23,12 @@ export default function QuickAddPage(){
   useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients(r.items)).catch(()=>{}); listDoctors(clinicId,{limit:100}).then(r=>setDoctors(r.items)).catch(()=>{}); },[clinicId]);
 
   // Shared state for all forms — kept at page level for sync
-  const [appt,setAppt]=useState({patient:"", doctor:"", department:"", visitType:"New Visit", date:todayISO(), time:"09:00", duration:"30", reason:"", priority:"Normal", symptoms:"", notes:"", reminder:"Same Day", whatsapp:"Yes", doctorNotify:"Yes"});
+  const [appt,setAppt]=useState({patient:"", doctor:"", department:"", visitType:"New Visit", date:todayISO(), time:"09:00", duration:"30", reason:"", priority:"Normal", status:"scheduled", symptoms:"", notes:"", reminder:"Same Day", whatsapp:"Yes", doctorNotify:"Yes"});
   const [rec,setRec]=useState({patient:"", visitDate:todayISO(), visitTime:"09:00", doctor:"", visitType:"New Visit", followUpDate:"", chiefComplaint:"", symptoms:"", diagnosis:"", icdCode:"", treatment:"", advice:"", bp:"", temp:"", pulse:"", allergies:"", labTests:"", internalNotes:""});
-  const [medRow,setMedRow]=useState({name:"", dosage:"", frequency:"", duration:"", instructions:""});
+  const [medicines,setMedicines]=useState([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]);
+  const addMedicine=()=> setMedicines(m=>[...m,{name:"", dosage:"", frequency:"", duration:"", instructions:""}]);
+  const removeMedicine=(i:number)=> setMedicines(m=> m.filter((_,idx)=> idx!==i));
+  const setMedicine=(i:number,patch:Partial<typeof medicines[0]>)=> setMedicines(m=> m.map((row,idx)=> idx===i? {...row,...patch}:row));
   const [treat,setTreat]=useState({patient:"", doctor:"", diagnosis:"", treatment:"", medicines:"", followUp:"", consent:""});
   const [rx,setRx]=useState({patient:"", doctor:"", diagnosis:"", medicine:"", dosage:"", frequency:"", duration:"", instructions:"", notes:""});
 
@@ -48,7 +51,8 @@ export default function QuickAddPage(){
         await createAppointment(clinicId,{patientId:pId(appt.patient)!, doctorId:dId(appt.doctor)!, date:appt.date, time:appt.time, reason:appt.reason, notes:appt.notes||null});
       }
       if(rec.patient && rec.diagnosis && rec.chiefComplaint){
-        await createRecord(clinicId,{patientId:pId(rec.patient)!, doctorId:dId(rec.doctor)!, visitDate:rec.visitDate, diagnosis:rec.diagnosis, symptoms:rec.symptoms||null, treatment:rec.treatment||null, notes:rec.advice||null, medicines: medRow.name ? [medRow] : []});
+        const validMeds = medicines.filter(m=> m.name.trim());
+        await createRecord(clinicId,{patientId:pId(rec.patient)!, doctorId:dId(rec.doctor)!, visitDate:rec.visitDate, diagnosis:rec.diagnosis, symptoms:rec.symptoms||null, treatment:rec.treatment||null, notes:rec.advice||null, medicines: validMeds});
       }
       if(rx.patient && rx.medicine){
         await createPrescription(clinicId,{patientId:pId(rx.patient)!, doctorId: rx.doctor? dId(rx.doctor):undefined, visitDate:todayISO(), diagnosis:rx.diagnosis||null, medicines:[{name:rx.medicine, dosage:rx.dosage, frequency:rx.frequency, duration:rx.duration, instructions:rx.instructions}], notes:rx.notes||null});
@@ -68,23 +72,17 @@ export default function QuickAddPage(){
         <p className="mt-2 text-xs text-muted-foreground">Changing here auto-fills Patient/Doctor/Date in all 5 sections below — no duplicate entry needed.</p>
       </CardContent></Card>
 
-      {/* 1 Appointments */}
-      <Card><CardHeader><CardTitle className="text-base">1. Appointments — /clinic/appointments</CardTitle></CardHeader><CardContent className="space-y-4">
+      {/* 1 Appointments — fill blanks, status change */}
+      <Card><CardHeader><CardTitle className="text-base">1. Appointments — fill blanks + change status</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label className="text-xs">Patient *</Label><select value={appt.patient} onChange={e=>setAppt({...appt,patient:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-          <div><Label className="text-xs">Doctor *</Label><select value={appt.doctor} onChange={e=>setAppt({...appt,doctor:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select doctor</option>{doctors.map(d=><option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
-          <div><Label className="text-xs">Department</Label><Input value={appt.department} onChange={e=>setAppt({...appt,department:e.target.value})} className="mt-1 h-9" placeholder="e.g. Cardiology"/></div>
-          <div><Label className="text-xs">Visit Type</Label><select value={appt.visitType} onChange={e=>setAppt({...appt,visitType:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm">{visitTypes.map(o=><option key={o} value={o}>{o}</option>)}</select></div>
+          <div><Label className="text-xs">Patient *</Label><select value={appt.patient} onChange={e=>setAppt({...appt,patient:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
+          <div><Label className="text-xs">Doctor *</Label><select value={appt.doctor} onChange={e=>setAppt({...appt,doctor:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select doctor</option>{doctors.map(d=><option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
           <div><Label className="text-xs">Date *</Label><Input type="date" value={appt.date} onChange={e=>setAppt({...appt,date:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Time *</Label><Input type="time" value={appt.time} onChange={e=>setAppt({...appt,time:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Duration</Label><select value={appt.duration} onChange={e=>setAppt({...appt,duration:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm">{durations.map(o=><option key={o} value={o}>{o} min</option>)}</select></div>
-          <div><Label className="text-xs">Priority</Label><select value={appt.priority} onChange={e=>setAppt({...appt,priority:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm">{priorities.map(o=><option key={o} value={o}>{o}</option>)}</select></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Reason for Visit *</Label><Input value={appt.reason} onChange={e=>setAppt({...appt,reason:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Symptoms</Label><Textarea value={appt.symptoms} onChange={e=>setAppt({...appt,symptoms:e.target.value})} rows={2}/></div>
-          <div><Label className="text-xs">Internal Notes</Label><Input value={appt.notes} onChange={e=>setAppt({...appt,notes:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Patient Reminder</Label><select value={appt.reminder} onChange={e=>setAppt({...appt,reminder:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm">{reminders.map(o=><option key={o} value={o}>{o}</option>)}</select></div>
-          <div><Label className="text-xs">WhatsApp Alert</Label><select value={appt.whatsapp} onChange={e=>setAppt({...appt,whatsapp:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option>Yes</option><option>No</option></select></div>
-          <div><Label className="text-xs">Doctor Notification</Label><select value={appt.doctorNotify} onChange={e=>setAppt({...appt,doctorNotify:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option>Yes</option><option>No</option></select></div>
+          <div><Label className="text-xs">Status</Label><select value={appt.status} onChange={e=>setAppt({...appt,status:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="scheduled">Scheduled</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="no_show">No Show</option></select></div>
+          <div><Label className="text-xs">Priority</Label><select value={appt.priority} onChange={e=>setAppt({...appt,priority:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm">{priorities.map(o=><option key={o} value={o}>{o}</option>)}</select></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Reason for Visit * — fill blanks</Label><Input value={appt.reason} onChange={e=>setAppt({...appt,reason:e.target.value})} className="mt-1 h-9" placeholder="e.g. Fever, follow-up..."/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Notes</Label><Input value={appt.notes} onChange={e=>setAppt({...appt,notes:e.target.value})} className="mt-1 h-9"/></div>
         </div>
       </CardContent></Card>
 
@@ -102,15 +100,20 @@ export default function QuickAddPage(){
           <div><Label className="text-xs">Diagnosis *</Label><Input value={rec.diagnosis} onChange={e=>setRec({...rec,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">ICD Code</Label><Input value={rec.icdCode} onChange={e=>setRec({...rec,icdCode:e.target.value})} placeholder="e.g. I10" className="mt-1 h-9"/></div>
         </div>
-        <div className="rounded-lg border p-3 space-y-2">
-          <p className="text-xs font-semibold">Medicines * (at least 1)</p>
-          <div className="grid sm:grid-cols-5 gap-2">
-            <select value={medRow.name} onChange={e=>setMedRow({...medRow,name:e.target.value})} className="h-9 rounded-none border border-border bg-card px-3 text-sm"><option value="">Medicine *</option>{medicinesOpts.map(m=><option key={m} value={m}>{m}</option>)}</select>
-            <Input value={medRow.dosage} onChange={e=>setMedRow({...medRow,dosage:e.target.value})} placeholder="Dosage *"/>
-            <Input value={medRow.frequency} onChange={e=>setMedRow({...medRow,frequency:e.target.value})} placeholder="Frequency *"/>
-            <Input value={medRow.duration} onChange={e=>setMedRow({...medRow,duration:e.target.value})} placeholder="Duration *"/>
-            <select value={medRow.instructions} onChange={e=>setMedRow({...medRow,instructions:e.target.value})} className="h-9 rounded-none border border-border bg-card px-3 text-sm"><option value="">Instructions</option>{medInstructions.map(i=><option key={i} value={i}>{i}</option>)}</select>
-          </div>
+        <div className="rounded-xl border p-3 space-y-3">
+          <div className="flex items-center justify-between"><p className="text-xs font-semibold">Medicines * (at least 1) — enterable + Add More</p><Button type="button" variant="outline" size="sm" onClick={addMedicine}>+ Add More</Button></div>
+          {medicines.map((med,i)=> (
+            <div key={i} className="grid sm:grid-cols-5 gap-2 items-end">
+              <select value={med.name} onChange={e=>setMedicine(i,{name:e.target.value})} className="h-9 rounded-xl border border-border bg-card px-3 text-sm"><option value="">Medicine *</option>{medicinesOpts.map(m=><option key={m} value={m}>{m}</option>)}</select>
+              <Input value={med.dosage} onChange={e=>setMedicine(i,{dosage:e.target.value})} placeholder="Dosage *"/>
+              <Input value={med.frequency} onChange={e=>setMedicine(i,{frequency:e.target.value})} placeholder="Frequency *"/>
+              <Input value={med.duration} onChange={e=>setMedicine(i,{duration:e.target.value})} placeholder="Duration *"/>
+              <div className="flex gap-1">
+                <select value={med.instructions} onChange={e=>setMedicine(i,{instructions:e.target.value})} className="h-9 flex-1 rounded-xl border border-border bg-card px-3 text-sm"><option value="">Instructions</option>{medInstructions.map(x=><option key={x} value={x}>{x}</option>)}</select>
+                {medicines.length>1 && <Button type="button" variant="ghost" size="sm" onClick={()=>removeMedicine(i)}>✕</Button>}
+              </div>
+            </div>
+          ))}
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2"><Label className="text-xs">Treatment / Procedures</Label><Textarea value={rec.treatment} onChange={e=>setRec({...rec,treatment:e.target.value})} rows={2}/></div>
