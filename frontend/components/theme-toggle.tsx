@@ -26,7 +26,8 @@ export function ThemeToggle({ className }: { className?: string }) {
           } catch { return null }
         })()
         if (!clinicId) return
-        const res = await fetch(`/api/clinics/${clinicId}/whatsapp/session`, { cache: "no-store" })
+        const base = process.env.NEXT_PUBLIC_API_URL || ""
+        const res = await fetch(`${base}/api/clinics/${clinicId}/whatsapp/session`, { cache: "no-store" })
         if (!res.ok) return
         const data = await res.json()
         const status = data?.session?.status || data?.status
@@ -39,8 +40,9 @@ export function ThemeToggle({ className }: { className?: string }) {
   }, [])
 
   return (
-    <Button variant="ghost" size="icon-sm" className={className} aria-label={connected ? "WhatsApp connected" : "WhatsApp not connected"} title={connected ? "WhatsApp connected" : "WhatsApp not connected — red"}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${connected ? "bg-[#25D366]/10 text-[#25D366] ring-[#25D366]/20" : "bg-red-50 text-red-600 ring-red-200"} ${className ?? ""}`} title={connected ? "WhatsApp connected" : "WhatsApp not connected"}>
       <WhatsAppIcon connected={connected} />
-    </Button>
+      {connected ? "Connected" : "Not connected"}
+    </span>
   )
 }
