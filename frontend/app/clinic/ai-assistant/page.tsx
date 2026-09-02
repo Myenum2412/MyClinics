@@ -33,7 +33,7 @@ export default function ClinicAiAssistantPage() {
 
   function newChat() {
     const id = Date.now().toString();
-    const chat: Chat = { id, title: "New chat", createdAt: new Date().toISOString(), messages: [{ role: "assistant", content: "Vanakkam! I'm your premium clinic assistant — Tanglish ready. How can I help today?" }] };
+    const chat: Chat = { id, title: "New chat", createdAt: new Date().toISOString(), messages: [{ role: "assistant", content: "Hello! I'm AIDP — your clinic assistant. Ask me about appointments, doctors, or clinic services." }] };
     setChats((p) => [chat, ...p]); setActiveId(id);
   }
   function deleteChat(id: string) { setChats((p) => p.filter((c) => c.id !== id)); if (activeId === id) setActiveId(null); }
@@ -71,7 +71,7 @@ export default function ClinicAiAssistantPage() {
           {/* Toolbar */}
           <div className="h-[52px] shrink-0 flex items-center justify-between px-4 sm:px-5 border-b bg-card">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="size-8 rounded-lg bg-foreground flex items-center justify-center shrink-0"><Bot className="size-4 text-background" /></div>
+              <img src="/aidp.jpeg" alt="AIDP" className="size-8 rounded-lg object-cover shrink-0 border" />
               <div className="min-w-0">
                 <p className="text-[13px] font-medium leading-none truncate">{active ? active.title : "No conversation selected"}</p>
                 <p className="text-[11px] text-muted-foreground hidden sm:block">Meenu Care • {session.role} • omni model</p>
@@ -85,7 +85,7 @@ export default function ClinicAiAssistantPage() {
 
           {!active ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-gradient-to-b from-background to-muted/20">
-              <div className="size-14 rounded-2xl bg-foreground flex items-center justify-center shadow-sm mb-5"><Sparkles className="size-6 text-background" /></div>
+              <img src="/aidp.jpeg" alt="AIDP" className="size-14 rounded-2xl object-cover shadow-sm mb-5 border" />
               <h2 className="text-[18px] font-semibold tracking-tight">How can I help today?</h2>
               <p className="text-[13px] text-muted-foreground max-w-[420px] mt-1.5 leading-relaxed">Chat about appointments, doctor availability, fees or clinic timings. Try Tanglish — “Fees evalavu bro?”</p>
               <div className="flex flex-wrap gap-2 justify-center mt-6 max-w-[520px]">
@@ -104,7 +104,7 @@ export default function ClinicAiAssistantPage() {
                 <div className="max-w-[720px] mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 space-y-5">
                   {active.messages.map((m, i) => (
                     <div key={i} className={m.role === "user" ? "flex justify-end" : "flex gap-3"}>
-                      {m.role === "assistant" && <div className="size-7 rounded-full bg-foreground flex items-center justify-center shrink-0 mt-0.5"><Sparkles className="size-3.5 text-background" /></div>}
+                      {m.role === "assistant" && <img src="/aidp.jpeg" alt="AIDP" className="size-7 rounded-full object-cover shrink-0 mt-0.5 border" />}
                       <div className={`max-w-[78%] rounded-2xl px-4 py-3 text-[13.5px] leading-[1.6] transition-all ${m.role === "user" ? "bg-foreground text-background rounded-br-md" : "bg-muted/60 border text-foreground rounded-bl-md"}`}>
                         {m.content}
                       </div>
@@ -112,7 +112,7 @@ export default function ClinicAiAssistantPage() {
                   ))}
                   {sending && (
                     <div className="flex gap-3">
-                      <div className="size-7 rounded-full bg-foreground flex items-center justify-center shrink-0"><Zap className="size-3.5 text-background" /></div>
+                      <img src="/aidp.jpeg" alt="AIDP" className="size-7 rounded-full object-cover shrink-0 border" />
                       <div className="bg-muted/60 border rounded-2xl rounded-bl-md px-4 py-3 text-[13px] flex items-center gap-2 text-muted-foreground">
                         <Loader2 className="size-3.5 animate-spin" /> Thinking…
                       </div>
