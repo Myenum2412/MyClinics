@@ -2105,16 +2105,16 @@ export default function MedicalRecordPage() {
           </div>
         </div>
 
-        {/* Visit history */}
+        {/* Visit history — 1 per row */}
         {overview.patientRecords.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600"><ClipboardList className="size-4" /></span>
               <h3 className="text-sm font-semibold tracking-tight">Visit History</h3>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">{overview.patientRecords.length}</span>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">{overview.patientRecords.length} {overview.patientRecords.length===1?"time":"times"}</span>
               <div className="ml-auto h-px flex-1 bg-gradient-to-r from-border/60 to-transparent hidden sm:block" />
             </div>
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3">
               {overview.patientRecords.slice().sort((a, b) => b.visitDate.localeCompare(a.visitDate)).slice(0, 6).map((r) => (
                 <MedicineRecordCard key={r.recordId} record={r} doctorName={doctorName} onDownload={handleRecordAttachmentDownload} />
               ))}
@@ -2126,16 +2126,54 @@ export default function MedicalRecordPage() {
             <div className="flex items-center gap-3">
               <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600"><Pill className="size-4" /></span>
               <h3 className="text-sm font-semibold tracking-tight">Prescriptions</h3>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">{overview.patientPrescriptions.length}</span>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">{overview.patientPrescriptions.length} {overview.patientPrescriptions.length===1?"time":"times"}</span>
               <div className="ml-auto h-px flex-1 bg-gradient-to-r from-border/60 to-transparent hidden sm:block" />
             </div>
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3">
               {overview.patientPrescriptions.slice().sort((a, b) => b.visitDate.localeCompare(a.visitDate)).slice(0, 6).map((pr) => (
                 <PrescriptionCard key={pr.prescriptionId} prescription={pr} doctorName={doctorName} />
               ))}
             </div>
           </div>
         )}
+        {/* Medicine — 1 per row */}
+        {(() => { const meds = overview.patientPrescriptions.flatMap(pr=>pr.medicines); if(meds.length===0) return null; return (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-sky-500/10 text-sky-600"><Pill className="size-4" /></span>
+              <h3 className="text-sm font-semibold tracking-tight">Medicine</h3>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">{meds.length} {meds.length===1?"time":"times"}</span>
+              <div className="ml-auto h-px flex-1 bg-gradient-to-r from-border/60 to-transparent hidden sm:block" />
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              {overview.patientPrescriptions.slice().sort((a,b)=>b.visitDate.localeCompare(a.visitDate)).slice(0,6).map(pr=> pr.medicines.map((m,i)=> (
+                <div key={pr.prescriptionId+String(i)} className="rounded-2xl border border-border/60 bg-card p-4">
+                  <p className="text-sm font-medium">{m.name}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{[m.dosage && `Dosage ${m.dosage}`, m.frequency, m.duration, m.instructions].filter(Boolean).join(" · ") || "—"} · {formatDate(pr.visitDate)} · {doctorName(pr.doctorId)}</p>
+                </div>
+              )))}
+            </div>
+          </div>
+        );})()}
+        {/* Treatment — 1 per row */}
+        {(() => { const treatments = overview.patientRecords.filter(r=>r.treatment); if(treatments.length===0) return null; return (
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600"><Stethoscope className="size-4" /></span>
+              <h3 className="text-sm font-semibold tracking-tight">Treatment</h3>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">{treatments.length} {treatments.length===1?"time":"times"}</span>
+              <div className="ml-auto h-px flex-1 bg-gradient-to-r from-border/60 to-transparent hidden sm:block" />
+            </div>
+            <div className="grid grid-cols-1 gap-3">
+              {treatments.slice().sort((a,b)=>b.visitDate.localeCompare(a.visitDate)).slice(0,6).map(r=> (
+                <div key={r.recordId} className="rounded-2xl border border-border/60 bg-card p-4">
+                  <p className="text-sm font-medium">{r.treatment}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{r.diagnosis} · {formatDate(r.visitDate)} · {doctorName(r.doctorId)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );})()}
       </div>
     );
   }
