@@ -87,8 +87,12 @@ export default function TreatmentPage(){
             </select>
         </div>
       </div>
-      <div className="rounded-xl border border-border bg-card shadow-sm">
+      <div className="rounded-xl border border-border bg-card shadow-sm p-6">
         <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} />
+        <div className="mt-6 flex flex-wrap gap-2 justify-end">
+          <Button onClick={()=>{setFormType("record"); setV({}); setEditing(null); setOpen(true); window.scrollTo({top: document.body.scrollHeight, behavior:"smooth"});}} className="h-9 gap-1.5"><Plus className="size-4"/>Add Treatment Record</Button>
+          <Button onClick={()=>{setFormType("plan"); setV({}); setEditing(null); setOpen(true); window.scrollTo({top: document.body.scrollHeight, behavior:"smooth"});}} variant="outline" className="h-9 gap-1.5"><Plus className="size-4"/>Add Treatment Plan</Button>
+        </div>
       </div>
 
       {/* Section card like /clinic/appointments */}
