@@ -159,7 +159,10 @@ export default function QuickAddPage(){
       </CardContent></Card>
 
 
-      <div className="sticky bottom-4 flex justify-center pt-2"><Button size="lg" className="h-11 px-8 shadow-lg" onClick={submitAll}>Save All — Quick Fill</Button></div>
+      <div className="sticky bottom-4 flex justify-center gap-3 pt-2">
+        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setAppt(s=>({...s, reason:"", notes:""})); setRec(s=>({...s, chiefComplaint:"", diagnosis:""})); toast.info("Cancelled"); }}>Cancel</Button>
+        <Button size="lg" className="h-11 px-8 shadow-lg" onClick={submitAll}>Save</Button>
+      </div>
     </div>
   );
 }
