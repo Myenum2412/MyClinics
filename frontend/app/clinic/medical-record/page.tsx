@@ -2043,37 +2043,66 @@ export default function MedicalRecordPage() {
           </div>
         </div>
 
-        {/* ── Upload timeline — premium list ── */}
+        {/* ── Patient full details ── */}
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-card shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
-            <div className="flex items-center gap-3">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><History className="size-4" /></span>
-              <h3 className="text-sm font-semibold tracking-tight">Upload Timeline</h3>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium tabular-nums">{patientFiles.length}</span>
-            </div>
+          <div className="flex items-center gap-3 border-b border-border/60 px-5 py-4">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Users className="size-4" /></span>
+            <h3 className="text-sm font-semibold tracking-tight">Patient Details</h3>
+            <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-medium ${p.status==="active" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-muted text-muted-foreground"}`}>{p.status}</span>
           </div>
-          {overview.timeline.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-              <span className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground"><FileText className="size-6" /></span>
-              <p className="text-sm font-medium">No documents yet</p>
-              <p className="max-w-sm text-sm text-muted-foreground">Uploads for this patient will appear here in chronological order.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-border/50">
-              {overview.timeline.map((f) => (
-                <div key={f.fileId} className="group flex items-center gap-3 px-5 py-3.5 transition hover:bg-muted/40">
-                  <span className="flex size-9 items-center justify-center rounded-xl bg-muted group-hover:bg-background transition shadow-sm ring-1 ring-border/50">{fileIcon(f.mimeType, f.fileName)}</span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium leading-tight">{f.fileName}</p>
-                    <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                      <span>{formatDate(f.createdAt)}</span><span className="size-1 rounded-full bg-border" /><span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px]">{folderName(f.folder)}</span>{f.uploadedByName && <><span className="size-1 rounded-full bg-border" /><span>by {f.uploadedByName}</span></>}{f.version > 1 && <Badge variant="secondary" className="h-5 rounded-full px-1.5 text-[10px]">v{f.version}</Badge>}
-                    </p>
-                  </div>
-                  <Button variant="ghost" size="icon" className="size-8 rounded-xl opacity-0 group-hover:opacity-100 transition" onClick={() => handleDownload(f)} aria-label="Download"><Download className="size-4" /></Button>
+          <div className="grid gap-6 p-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { label: "Contact", items: [
+                ["Mobile", p.mobile || "—"],
+                ["WhatsApp", p.whatsapp || "—"],
+                ["Email", p.email || "—"],
+                ["Emergency Contact", p.emergencyContactName ? `${p.emergencyContactName} (${p.emergencyContactRelationship || "—"}) · ${p.emergencyContactMobile || "—"}` : "—"],
+              ]},
+              { label: "Demographics", items: [
+                ["Date of Birth", p.dateOfBirth ? formatDate(p.dateOfBirth) : "—"],
+                ["Gender", p.gender || "—"],
+                ["Blood Group", p.bloodGroup || "—"],
+                ["Marital Status", p.maritalStatus || "—"],
+                ["Occupation", p.occupation || "—"],
+              ]},
+              { label: "Address", items: [
+                ["Address", p.address || "—"],
+                ["City / State", [p.city, p.state].filter(Boolean).join(", ") || "—"],
+                ["Pincode", p.pincode || "—"],
+                ["Referred By", p.referredBy || "—"],
+                ["How did you hear", p.howDidYouHear || "—"],
+              ]},
+              { label: "Vitals", items: [
+                ["Height", p.height || "—"],
+                ["Weight", p.weight || "—"],
+                ["Blood Pressure", p.bloodPressure || "—"],
+                ["Temperature", p.temperature || "—"],
+                ["Pulse / RR / SpO₂", [p.pulse && `Pulse ${p.pulse}`, p.respiratoryRate && `RR ${p.respiratoryRate}`, p.spo2 && `SpO₂ ${p.spo2}`].filter(Boolean).join(" · ") || "—"],
+              ]},
+              { label: "Identity & Insurance", items: [
+                ["ID", p.idType ? `${p.idType}: ${p.idNumber || "—"}` : "—"],
+                ["Insurance Provider", p.insuranceProvider || "—"],
+                ["Policy No.", p.insurancePolicyNumber || "—"],
+                ["Policy Holder", p.insurancePolicyHolderName || "—"],
+                ["Valid Till", p.insuranceValidTill ? formatDate(p.insuranceValidTill) : "—"],
+              ]},
+              { label: "Notes", items: [
+                ["Notes", p.notes || "—"],
+              ]},
+            ].map((section) => (
+              <div key={section.label} className="space-y-3">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{section.label}</p>
+                <div className="space-y-2.5">
+                  {section.items.map(([k, val]) => (
+                    <div key={k}>
+                      <p className="text-xs font-medium text-muted-foreground">{k}</p>
+                      <p className="mt-0.5 text-sm leading-relaxed text-foreground break-words">{val as string}</p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Visit history */}
