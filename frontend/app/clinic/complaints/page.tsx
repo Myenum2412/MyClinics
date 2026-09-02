@@ -88,16 +88,7 @@ export default function TreatmentPage(){
         </div>
       </div>
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div><h2 className="text-xl font-medium">Treatment Overview</h2><p className="text-sm text-muted-foreground">Records, plans and discharge tracking — completion insights.</p></div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button onClick={()=>startAdd("record")} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>Add Record</Button>
-            <Button onClick={()=>startAdd("plan")} variant="outline" className="h-9 gap-1.5"><Plus className="size-4"/>Add Plan</Button>
-          </div>
-        </div>
-        <div className="mt-6">
-          <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} />
-        </div>
+        <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} searchTerm={q} onSearchChange={(v)=>{setQ(v); setPage(0);}} action={<div className="flex items-center gap-2"><Button onClick={()=>startAdd("record")} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>Add Record</Button><Button onClick={()=>startAdd("plan")} variant="outline" className="h-9 gap-1.5"><Plus className="size-4"/>Add Plan</Button></div>} />
       </div>
 
       {/* Table search only — buttons removed (now in overview row) */}
