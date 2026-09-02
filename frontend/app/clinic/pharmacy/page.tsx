@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, AlertTriangle, TrendingUp, ShoppingCart, DollarSign, Calendar } from "lucide-react";
+import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
+import { ChartContainer } from "@/components/ui/chart";
 
 export default function PharmacyOverviewPage() {
   const session = useRequireRole("patient");
@@ -36,13 +37,14 @@ export default function PharmacyOverviewPage() {
 
   const medMap = new Map(medicines.map((m) => [m.medicineId, m]));
 
-  const stats = [
-    { label: "Total Medicines", value: dash?.totalMedicines ?? medicines.length, icon: Package },
-    { label: "Stock Value", value: `₹${(dash?.totalStockValue ?? 0).toLocaleString("en-IN")}`, icon: DollarSign },
-    { label: "Low Stock", value: dash?.lowStock ?? 0, icon: AlertTriangle },
-    { label: "Today Sales", value: `${dash?.todaySales.count ?? 0} (₹${(dash?.todaySales.value ?? 0).toLocaleString("en-IN")})`, icon: ShoppingCart },
-    { label: "Near Expiry", value: dash?.nearExpiry ?? 0, icon: Calendar },
-    { label: "Reorder Needed", value: dash?.reorderCount ?? 0, icon: TrendingUp },
+  // stats-07 style radial data — pharmacy metrics
+  const totalMeds = dash?.totalMedicines ?? medicines.length;
+  const stockVal = dash?.totalStockValue ?? 0;
+  const stats07 = [
+    { name: "Total Medicines", percentage: Math.min(100, totalMeds), current: totalMeds, allowed: 100, allowedLabel: "medicines", fill: "var(--chart-1)" },
+    { name: "Stock Value", percentage: Math.min(100, Math.round((stockVal / 100000) * 100)), current: `₹${stockVal.toLocaleString("en-IN")}`, allowed: "₹1L", allowedLabel: "target", fill: "var(--chart-2)" },
+    { name: "Low Stock", percentage: totalMeds ? Math.round(((dash?.lowStock ?? 0) / totalMeds) * 100) : 0, current: dash?.lowStock ?? 0, allowed: totalMeds, allowedLabel: "items", fill: "var(--chart-3)" },
+    { name: "Today Sales", percentage: Math.min(100, Math.round(((dash?.todaySales.count ?? 0) / 20) * 100)), current: dash?.todaySales.count ?? 0, allowed: 20, allowedLabel: `₹${(dash?.todaySales.value ?? 0).toLocaleString("en-IN")}`, fill: "var(--chart-4)" },
   ];
 
   return (
@@ -59,11 +61,27 @@ export default function PharmacyOverviewPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map((s) => (
-          <Card key={s.label}><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm font-medium">{s.label}</CardTitle><s.icon className="size-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{s.value}</div></CardContent></Card>
+      <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {stats07.map((item) => (
+          <Card className="p-4 shadow-sm bg-card" key={item.name}>
+            <CardContent className="flex items-center space-x-4 p-0">
+              <div className="relative flex items-center justify-center">
+                <ChartContainer className="h-[80px] w-[80px]" config={{ capacity: { label: item.name, color: item.fill } }}>
+                  <RadialBarChart barSize={6} data={[{ name: item.name, capacity: item.percentage }]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}>
+                    <PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0, 100]} tick={false} type="number" />
+                    <RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill} />
+                  </RadialBarChart>
+                </ChartContainer>
+                <div className="absolute inset-0 flex items-center justify-center"><span className="font-semibold text-xs text-foreground">{item.percentage}%</span></div>
+              </div>
+              <div>
+                <dt className="font-semibold text-foreground text-sm tracking-tight leading-none mb-1">{item.name}</dt>
+                <dd className="text-muted-foreground text-xs">{String(item.current)} of {String(item.allowed)} {item.allowedLabel}</dd>
+              </div>
+            </CardContent>
+          </Card>
         ))}
-      </div>
+      </dl>
 
       <Card>
         <CardHeader><CardTitle className="text-base">All Pharmacy Items Report</CardTitle></CardHeader>
