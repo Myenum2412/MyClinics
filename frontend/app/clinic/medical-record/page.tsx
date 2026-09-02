@@ -108,6 +108,7 @@ import {
   UploadCloud,
   Users,
 } from "lucide-react";
+import { Timeline, TimelineContent, TimelineDate, TimelineHeader, TimelineIndicator, TimelineItem, TimelineSeparator, TimelineTitle } from "@/components/reui/timeline";
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 
@@ -2118,33 +2119,34 @@ export default function MedicalRecordPage() {
             </div>
           </div>
           {(() => {
-            type TL = { date: string; kind: "visit"|"prescription"|"medicine"|"treatment"; el: ReactNode };
+            type TL = { date: string; kind: "visit"|"prescription"|"medicine"|"treatment"; title: string; el: ReactNode };
             const items: TL[] = [];
             overview.patientRecords.forEach(r=>{
-              items.push({ date: r.visitDate, kind: "visit", el: <MedicineRecordCard key={`v-${r.recordId}`} record={r} doctorName={doctorName} onDownload={handleRecordAttachmentDownload} /> });
-              if(r.treatment) items.push({ date: r.visitDate, kind: "treatment", el: <div key={`t-${r.recordId}`} className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-900/30 dark:bg-amber-500/5"><p className="text-sm font-medium flex items-center gap-2"><Stethoscope className="size-3.5 text-amber-600"/> {r.treatment}</p><p className="mt-1 text-xs text-muted-foreground">{r.diagnosis} · {doctorName(r.doctorId)}</p></div> });
+              items.push({ date: r.visitDate, kind: "visit", title: r.diagnosis || "Visit", el: <MedicineRecordCard key={`v-${r.recordId}`} record={r} doctorName={doctorName} onDownload={handleRecordAttachmentDownload} /> });
+              if(r.treatment) items.push({ date: r.visitDate, kind: "treatment", title: r.treatment, el: <div key={`t-${r.recordId}`} className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-900/30 dark:bg-amber-500/5"><p className="text-sm text-muted-foreground">{r.diagnosis} · {doctorName(r.doctorId)}</p></div> });
             });
             overview.patientPrescriptions.forEach(pr=>{
-              items.push({ date: pr.visitDate, kind: "prescription", el: <PrescriptionCard key={`p-${pr.prescriptionId}`} prescription={pr} doctorName={doctorName} /> });
-              pr.medicines.forEach((m,i)=> items.push({ date: pr.visitDate, kind: "medicine", el: <div key={`m-${pr.prescriptionId}-${i}`} className="rounded-xl border border-sky-200/60 bg-sky-50/50 p-4 dark:border-sky-900/30 dark:bg-sky-500/5"><p className="text-sm font-medium flex items-center gap-2"><Pill className="size-3.5 text-sky-600"/> {m.name}</p><p className="mt-1 text-xs text-muted-foreground">{[m.dosage && `Dosage ${m.dosage}`, m.frequency, m.duration, m.instructions].filter(Boolean).join(" · ") || "—"} · {doctorName(pr.doctorId)}</p></div> }));
+              items.push({ date: pr.visitDate, kind: "prescription", title: pr.diagnosis || "Prescription", el: <PrescriptionCard key={`p-${pr.prescriptionId}`} prescription={pr} doctorName={doctorName} /> });
+              pr.medicines.forEach((m,i)=> items.push({ date: pr.visitDate, kind: "medicine", title: m.name, el: <div key={`m-${pr.prescriptionId}-${i}`} className="rounded-xl border border-sky-200/60 bg-sky-50/50 p-3 dark:border-sky-900/30 dark:bg-sky-500/5"><p className="text-xs text-muted-foreground">{[m.dosage && `Dosage ${m.dosage}`, m.frequency, m.duration, m.instructions].filter(Boolean).join(" · ") || "—"} · {doctorName(pr.doctorId)}</p></div> }));
             });
             items.sort((a,b)=> b.date.localeCompare(a.date));
-            const icons = { visit: "bg-violet-500", prescription: "bg-emerald-500", medicine: "bg-sky-500", treatment: "bg-amber-500" } as const;
+            const dot = { visit: "bg-violet-500", prescription: "bg-emerald-500", medicine: "bg-sky-500", treatment: "bg-amber-500" } as const;
             if(items.length===0) return <p className="px-5 py-10 text-center text-sm text-muted-foreground">No clinical history yet.</p>;
             return (
-              <div className="relative px-5 py-6">
-                <div className="absolute left-[29px] top-6 bottom-6 w-px bg-gradient-to-b from-border via-border to-transparent" />
-                <div className="space-y-6">
+              <div className="px-5 py-6">
+                <Timeline defaultValue={items.length} className="w-full">
                   {items.slice(0,20).map((it, idx)=> (
-                    <div key={idx} className="relative flex gap-4">
-                      <span className={`relative z-10 flex size-3 shrink-0 items-center justify-center rounded-full ${icons[it.kind]} ring-4 ring-card mt-2`} />
-                      <div className="min-w-0 flex-1">
-                        <p className="mb-1.5 text-xs font-medium text-muted-foreground flex items-center gap-1.5"><span className="capitalize">{it.kind}</span><span className="size-1 rounded-full bg-border"/> {formatDate(it.date)}</p>
-                        {it.el}
-                      </div>
-                    </div>
+                    <TimelineItem key={idx} step={idx+1} className="sm:group-data-[orientation=vertical]/timeline:ms-32">
+                      <TimelineHeader>
+                        <TimelineSeparator />
+                        <TimelineDate className="sm:group-data-[orientation=vertical]/timeline:absolute sm:group-data-[orientation=vertical]/timeline:-left-32 sm:group-data-[orientation=vertical]/timeline:w-20 sm:group-data-[orientation=vertical]/timeline:text-right capitalize">{it.kind} · {formatDate(it.date)}</TimelineDate>
+                        <TimelineTitle className="capitalize flex items-center gap-2"><span className={`size-2 rounded-full ${dot[it.kind]}`} /> {it.title}</TimelineTitle>
+                        <TimelineIndicator className={`${dot[it.kind]} border-transparent`} />
+                      </TimelineHeader>
+                      <TimelineContent>{it.el}</TimelineContent>
+                    </TimelineItem>
                   ))}
-                </div>
+                </Timeline>
               </div>
             );
           })()}
