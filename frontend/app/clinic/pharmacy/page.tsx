@@ -55,7 +55,6 @@ export default function PharmacyOverviewPage() {
           <p className="text-sm text-muted-foreground">All pharmacy items — stock, pricing and status.</p>
         </div>
         <div className="flex gap-2 text-xs">
-          <Link href="/clinic/pharmacy/medicines" className="underline">Medicines</Link>
           <Link href="/clinic/pharmacy/inventory" className="underline">Inventory</Link>
           <Link href="/clinic/pharmacy/reports" className="underline">Reports</Link>
         </div>
