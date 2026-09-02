@@ -539,7 +539,13 @@ async function request<T>(
     getCache.clear();
   }
 
-  const res = await fetch(url, { ...init, headers, cache: "no-store" });
+  let res: Response;
+  try {
+    res = await fetch(url, { ...init, headers, cache: "no-store" });
+  } catch (e) {
+    const msg = e instanceof TypeError ? `Network error — cannot reach API at ${API_BASE || "proxy"} (${e.message}). Check backend at https://api.myclinic.myenum.in is up and CORS allows ${typeof window !== "undefined" ? window.location.origin : ""}.` : e instanceof Error ? e.message : "Network error";
+    throw new ClinicApiError(msg, 0, "NETWORK_ERROR");
+  }
 
   let data: unknown;
   try {
