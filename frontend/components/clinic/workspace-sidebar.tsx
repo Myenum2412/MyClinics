@@ -68,8 +68,9 @@ const NAV_GROUPS: NavGroup[] = [
       { title: "Prescriptions", url: "/clinic/prescriptions", icon: <PillIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
       { title: "Medicine", url: "/clinic/records", icon: <RecordsIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
       {
-        title: "Pharmacy", url: "/clinic/pharmacy/medicines", icon: <Pill className="size-5" />, match: "prefix", roles: ["clinic_admin", "pharmacy_manager", "pharmacist", "inventory_staff", "billing_staff"],
+        title: "Pharmacy", url: "/clinic/pharmacy", icon: <Pill className="size-5" />, match: "prefix", roles: ["clinic_admin", "pharmacy_manager", "pharmacist", "inventory_staff", "billing_staff"],
         children: [
+          { title: "Overview", url: "/clinic/pharmacy", match: "exact" },
           { title: "Medicines", url: "/clinic/pharmacy/medicines" },
           { title: "Inventory", url: "/clinic/pharmacy/inventory" },
           { title: "Stock History", url: "/clinic/pharmacy/stock-history" },

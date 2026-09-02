@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Package, AlertTriangle, TrendingUp, ShoppingCart, DollarSign, Calendar } from "lucide-react";
 
 export default function PharmacyOverviewPage() {
-  const session = useRequireRole("billing_staff");
+  const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
   const [dash, setDash] = React.useState<PharmacyDashboard | null>(null);
   const [medicines, setMedicines] = React.useState<PharmacyMedicine[]>([]);
