@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { listPatients, listDoctors, createAppointment, createRecord, createPrescription, createBill, type Patient, type Doctor } from "@/lib/clinic-api";
+import { listPatients, listDoctors, createAppointment, createRecord, createPrescription, type Patient, type Doctor } from "@/lib/clinic-api";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { todayISO } from "@/lib/datetime";
@@ -28,11 +28,10 @@ export default function QuickAddPage(){
   const [medRow,setMedRow]=useState({name:"", dosage:"", frequency:"", duration:"", instructions:""});
   const [treat,setTreat]=useState({patient:"", doctor:"", diagnosis:"", treatment:"", medicines:"", followUp:"", consent:""});
   const [rx,setRx]=useState({patient:"", doctor:"", diagnosis:"", medicine:"", dosage:"", frequency:"", duration:"", instructions:"", notes:""});
-  const [bill,setBill]=useState({patient:"", invoiceDate:todayISO(), dueDate:"", paymentType:"cash", description:"Consultation", qty:"1", unitPrice:"", discount:"0", taxPercent:"0", amountPaid:"0", notes:"", internalNotes:"", reference:"", sendMethod:"whatsapp"});
 
-  useEffect(()=>{ if(sharedPatient){ setAppt(s=>({...s, patient:sharedPatient})); setRec(s=>({...s, patient:sharedPatient})); setTreat(s=>({...s, patient:sharedPatient})); setRx(s=>({...s, patient:sharedPatient})); setBill(s=>({...s, patient:sharedPatient})); }},[sharedPatient]);
+  useEffect(()=>{ if(sharedPatient){ setAppt(s=>({...s, patient:sharedPatient})); setRec(s=>({...s, patient:sharedPatient})); setTreat(s=>({...s, patient:sharedPatient})); setRx(s=>({...s, patient:sharedPatient})); }},[sharedPatient]);
   useEffect(()=>{ if(sharedDoctor){ setAppt(s=>({...s, doctor:sharedDoctor})); setRec(s=>({...s, doctor:sharedDoctor})); setTreat(s=>({...s, doctor:sharedDoctor})); setRx(s=>({...s, doctor:sharedDoctor})); }},[sharedDoctor]);
-  useEffect(()=>{ if(sharedDate){ setAppt(s=>({...s, date:sharedDate})); setRec(s=>({...s, visitDate:sharedDate})); setBill(s=>({...s, invoiceDate:sharedDate})); }},[sharedDate]);
+  useEffect(()=>{ if(sharedDate){ setAppt(s=>({...s, date:sharedDate})); setRec(s=>({...s, visitDate:sharedDate})); }},[sharedDate]);
 
   const visitTypes=getOptions("visit_types");
   const priorities=getOptions("appointment_priorities");
@@ -53,9 +52,6 @@ export default function QuickAddPage(){
       }
       if(rx.patient && rx.medicine){
         await createPrescription(clinicId,{patientId:pId(rx.patient)!, doctorId: rx.doctor? dId(rx.doctor):undefined, visitDate:todayISO(), diagnosis:rx.diagnosis||null, medicines:[{name:rx.medicine, dosage:rx.dosage, frequency:rx.frequency, duration:rx.duration, instructions:rx.instructions}], notes:rx.notes||null});
-      }
-      if(bill.patient && bill.unitPrice){
-        await createBill(clinicId,{patientId:pId(bill.patient)!, items:[{description:bill.description, quantity:Number(bill.qty)||1, unitPrice:Number(bill.unitPrice), discount:Number(bill.discount), taxPercent:Number(bill.taxPercent), lineTotal:0}], invoiceDate:bill.invoiceDate, dueDate:bill.dueDate||null, paymentType:bill.paymentType, amountPaid:Number(bill.amountPaid), notes:bill.notes||null, internalNotes:bill.internalNotes||null, reference:bill.reference||null, sendMethod:bill.sendMethod});
       }
       toast.success("Quick Add — all filled sections saved");
     }catch(e:any){ toast.error(e.message); }
@@ -156,25 +152,6 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 5 Billing */}
-      <Card><CardHeader><CardTitle className="text-base">5. Billing — /clinic/billing</CardTitle></CardHeader><CardContent className="space-y-4">
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div><Label className="text-xs">Patient *</Label><select value={bill.patient} onChange={e=>setBill({...bill,patient:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-          <div><Label className="text-xs">Invoice Date *</Label><Input type="date" value={bill.invoiceDate} onChange={e=>setBill({...bill,invoiceDate:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Due Date</Label><Input type="date" value={bill.dueDate} onChange={e=>setBill({...bill,dueDate:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Payment Type *</Label><select value={bill.paymentType} onChange={e=>setBill({...bill,paymentType:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="cash">Cash</option><option value="upi">UPI</option><option value="card">Card</option><option value="other">Other</option></select></div>
-          <div><Label className="text-xs">Description *</Label><Input list="bill-desc" value={bill.description} onChange={e=>setBill({...bill,description:e.target.value})} className="mt-1 h-9"/><datalist id="bill-desc"><option value="Consultation"/><option value="Follow-up Consultation"/><option value="Lab Test"/><option value="Procedure"/><option value="Medicine"/></datalist></div>
-          <div><Label className="text-xs">Qty</Label><Input type="number" value={bill.qty} onChange={e=>setBill({...bill,qty:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Unit Price</Label><Input type="number" value={bill.unitPrice} onChange={e=>setBill({...bill,unitPrice:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Discount</Label><Input type="number" value={bill.discount} onChange={e=>setBill({...bill,discount:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Tax %</Label><Input type="number" value={bill.taxPercent} onChange={e=>setBill({...bill,taxPercent:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Amount Paid</Label><Input type="number" value={bill.amountPaid} onChange={e=>setBill({...bill,amountPaid:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Bill Notes</Label><Textarea value={bill.notes} onChange={e=>setBill({...bill,notes:e.target.value})} rows={2}/></div>
-          <div><Label className="text-xs">Internal Notes</Label><Textarea value={bill.internalNotes} onChange={e=>setBill({...bill,internalNotes:e.target.value})} rows={2}/></div>
-          <div><Label className="text-xs">Reference</Label><Input value={bill.reference} onChange={e=>setBill({...bill,reference:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Send Bill</Label><select value={bill.sendMethod} onChange={e=>setBill({...bill,sendMethod:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="whatsapp">WhatsApp</option><option value="email">Email</option><option value="none">Don&apos;t Send</option></select></div>
-        </div>
-      </CardContent></Card>
 
       <div className="sticky bottom-4 flex justify-center pt-2"><Button size="lg" className="h-11 px-8 shadow-lg" onClick={submitAll}>Save All — Quick Add</Button></div>
     </div>
