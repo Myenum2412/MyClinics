@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Search, Eye, Pencil, Trash2, Plus, Users } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
 import { Checkbox } from "@/components/ui/checkbox";
-import { listPatients, listDoctors, type Patient, type Doctor } from "@/lib/clinic-api";
+import { listPatients, listDoctors, listAppointments, type Patient, type Doctor, type Appointment } from "@/lib/clinic-api";
 import StatsTreatment from "@/components/stats-treatment";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 
@@ -31,8 +31,9 @@ export default function TreatmentPage(){
   const [sharedPatient,setSharedPatient]=useState("");
   const [patients,setPatients]=useState<Patient[]>([]);
   const [doctors,setDoctors]=useState<Doctor[]>([]);
+  const [appointments,setAppointments]=useState<Appointment[]>([]);
   const [items,save]=useStore("treatment_combined");
-  useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients(r.items)).catch(()=>{}); listDoctors(clinicId,{limit:100}).then(r=>setDoctors(r.items)).catch(()=>{}); },[clinicId]);
+  useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients(r.items)).catch(()=>{}); listDoctors(clinicId,{limit:100}).then(r=>setDoctors(r.items)).catch(()=>{}); listAppointments(clinicId,{limit:100}).then(r=>setAppointments(r.items)).catch(()=>{}); },[clinicId]);
   const localPatients = useMemo(()=>{
     const s=new Set<string>();
     items.forEach(e=>{ if(e.patient) s.add(e.patient); });
@@ -95,7 +96,7 @@ export default function TreatmentPage(){
           <div className="space-y-4">
             <div className="grid sm:grid-cols-3 gap-4">
               <div><Label className="text-xs">Patient *</Label><select value={v["Patient"]||""} onChange={e=>SV("Patient", e.target.value)} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select patient</option>{patients.map(p=> <option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-              <div><Label className="text-xs">Visit Date & Time</Label><Input type="datetime-local" value={v["Visit Date & Time"]||""} onChange={e=>SV("Visit Date & Time", e.target.value)} className="mt-1 h-9"/></div>
+              <div><Label className="text-xs">Appointment</Label><select value={v["Appointment"]||v["Visit Date & Time"]||""} onChange={e=>{SV("Appointment", e.target.value); SV("Visit Date & Time", e.target.value)}} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select appointment</option>{appointments.map(a=> <option key={a.appointmentId} value={`${a.date} ${a.time}`}>{a.date} {a.time} — {a.reason || a.appointmentId.slice(0,6)}</option>)}</select></div>
               <div><Label className="text-xs">Doctor</Label><select value={v["Doctor"]||""} onChange={e=>SV("Doctor", e.target.value)} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select doctor</option>{doctors.map(d=> <option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
