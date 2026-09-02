@@ -24,8 +24,16 @@ export function ThemeToggle({ className }: { className?: string }) {
         const res = await fetch(`${base}/api/clinics/${clinicId}/whatsapp/session`, { cache: "no-store" })
         if (!res.ok) return
         const data = await res.json()
-        const status = data?.session?.status || data?.status
-        if (!cancelled) setConnected(status === "connected" || status === "open" || status === "ready")
+        // supports both /api/whatsapp/session {session:{status}} and /api/clinics/:id/whatsapp/session {connected, stage}
+        const isConnected =
+          data?.connected === true ||
+          data?.session?.connected === true ||
+          data?.stage === "ready" ||
+          data?.stage === "authenticated" ||
+          data?.session?.stage === "ready" ||
+          ["connected", "open", "ready", "authenticated"].includes(data?.status) ||
+          ["connected", "open", "ready", "authenticated"].includes(data?.session?.status)
+        if (!cancelled) setConnected(isConnected)
       } catch {}
     }
     check()
