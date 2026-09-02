@@ -61,22 +61,25 @@ export default function QuickAddPage(){
     }catch(e:any){ toast.error(e.message); }
   }
 
+  const optimized = sharedPatient && sharedDoctor;
+
   return (
     <div className="flex flex-col gap-6">
-      <Card className="border-primary/20 bg-primary/5"><CardHeader><CardTitle className="text-base">Common Information — shared across all sections</CardTitle></CardHeader><CardContent>
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div><Label className="text-xs">Patient * (common)</Label><select value={sharedPatient} onChange={e=>setSharedPatient(e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-          <div><Label className="text-xs">Doctor (common)</Label><select value={sharedDoctor} onChange={e=>setSharedDoctor(e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select doctor</option>{doctors.map(d=><option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
-          <div><Label className="text-xs">Visit / Invoice Date (common)</Label><Input type="date" value={sharedDate} onChange={e=>setSharedDate(e.target.value)} className="mt-1 h-9"/></div>
+      {/* Premium header — patient optimized */}
+      <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-violet-500/5 p-6">
+        <h1 className="text-lg font-semibold tracking-tight">Quick Add — Fill blanks</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Select patient & doctor once — all cards below reuse them. No duplicate entry needed.</p>
+        <div className="mt-4 grid sm:grid-cols-3 gap-4">
+          <div><Label className="text-xs">Patient *</Label><select value={sharedPatient} onChange={e=>setSharedPatient(e.target.value)} className="mt-1 h-10 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
+          <div><Label className="text-xs">Doctor *</Label><select value={sharedDoctor} onChange={e=>setSharedDoctor(e.target.value)} className="mt-1 h-10 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select doctor</option>{doctors.map(d=><option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
+          <div><Label className="text-xs">Visit / Invoice Date</Label><Input type="date" value={sharedDate} onChange={e=>setSharedDate(e.target.value)} className="mt-1 h-10"/></div>
         </div>
-        <p className="mt-2 text-xs text-muted-foreground">Changing here auto-fills Patient/Doctor/Date in all 5 sections below — no duplicate entry needed.</p>
-      </CardContent></Card>
+        {optimized && <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">Optimized: {sharedPatient} · {sharedDoctor} · {sharedDate}</p>}
+      </div>
 
       {/* 1 Appointments — fill blanks, status change */}
-      <Card><CardHeader><CardTitle className="text-base">1. Appointments — fill blanks + change status</CardTitle></CardHeader><CardContent className="space-y-4">
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">1. Appointments {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient} · {sharedDoctor}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label className="text-xs">Patient *</Label><select value={appt.patient} onChange={e=>setAppt({...appt,patient:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-          <div><Label className="text-xs">Doctor *</Label><select value={appt.doctor} onChange={e=>setAppt({...appt,doctor:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select doctor</option>{doctors.map(d=><option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
           <div><Label className="text-xs">Date *</Label><Input type="date" value={appt.date} onChange={e=>setAppt({...appt,date:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Time *</Label><Input type="time" value={appt.time} onChange={e=>setAppt({...appt,time:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Status</Label><select value={appt.status} onChange={e=>setAppt({...appt,status:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="scheduled">Scheduled</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="no_show">No Show</option></select></div>
@@ -86,13 +89,11 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 2 Records */}
-      <Card><CardHeader><CardTitle className="text-base">2. Records — /clinic/records (Medicine)</CardTitle></CardHeader><CardContent className="space-y-4">
+      {/* 2 Records — optimized, no duplicate patient */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">2. Records — Medicine {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label className="text-xs">Patient *</Label><select value={rec.patient} onChange={e=>setRec({...rec,patient:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
           <div><Label className="text-xs">Visit date *</Label><Input type="date" value={rec.visitDate} onChange={e=>setRec({...rec,visitDate:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Visit time</Label><Input type="time" value={rec.visitTime} onChange={e=>setRec({...rec,visitTime:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Doctor *</Label><select value={rec.doctor} onChange={e=>setRec({...rec,doctor:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select doctor</option>{doctors.map(d=><option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
           <div><Label className="text-xs">Visit type *</Label><select value={rec.visitType} onChange={e=>setRec({...rec,visitType:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm">{visitTypes.map(o=><option key={o} value={o}>{o}</option>)}</select></div>
           <div><Label className="text-xs">Follow-up date</Label><Input type="date" value={rec.followUpDate} onChange={e=>setRec({...rec,followUpDate:e.target.value})} className="mt-1 h-9"/></div>
           <div className="sm:col-span-2"><Label className="text-xs">Chief complaint *</Label><Textarea value={rec.chiefComplaint} onChange={e=>setRec({...rec,chiefComplaint:e.target.value})} rows={2}/></div>
@@ -127,11 +128,9 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 3 Treatment */}
-      <Card><CardHeader><CardTitle className="text-base">3. Treatment — /clinic/complaints</CardTitle></CardHeader><CardContent className="space-y-4">
+      {/* 3 Treatment — optimized */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">3. Treatment {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label className="text-xs">Patient *</Label><select value={treat.patient} onChange={e=>setTreat({...treat,patient:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-          <div><Label className="text-xs">Doctor</Label><select value={treat.doctor} onChange={e=>setTreat({...treat,doctor:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select doctor</option>{doctors.map(d=><option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
           <div><Label className="text-xs">Diagnosis *</Label><Input value={treat.diagnosis} onChange={e=>setTreat({...treat,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Treatment</Label><Input value={treat.treatment} onChange={e=>setTreat({...treat,treatment:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Medicines</Label><select value={treat.medicines} onChange={e=>setTreat({...treat,medicines:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select</option>{medicinesOpts.slice(0,10).map(m=><option key={m} value={m}>{m}</option>)}</select></div>
@@ -140,11 +139,9 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 4 Prescription */}
-      <Card><CardHeader><CardTitle className="text-base">4. Prescription — /clinic/prescriptions</CardTitle></CardHeader><CardContent className="space-y-4">
+      {/* 4 Prescription — optimized */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">4. Prescription {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label className="text-xs">Patient *</Label><select value={rx.patient} onChange={e=>setRx({...rx,patient:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-          <div><Label className="text-xs">Doctor</Label><select value={rx.doctor} onChange={e=>setRx({...rx,doctor:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select doctor</option>{doctors.map(d=><option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
           <div><Label className="text-xs">Diagnosis</Label><Input value={rx.diagnosis} onChange={e=>setRx({...rx,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Medicine *</Label><select value={rx.medicine} onChange={e=>setRx({...rx,medicine:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select</option>{medicinesOpts.slice(0,10).map(m=><option key={m} value={m}>{m}</option>)}</select></div>
           <div><Label className="text-xs">Dosage</Label><Input value={rx.dosage} onChange={e=>setRx({...rx,dosage:e.target.value})} className="mt-1 h-9"/></div>
