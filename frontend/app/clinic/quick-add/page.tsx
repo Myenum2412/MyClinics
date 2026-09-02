@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { listPatients, listDoctors, createAppointment, createRecord, createPrescription, type Patient, type Doctor } from "@/lib/clinic-api";
+import { listPatients, listDoctors, listAppointments, updateAppointment, createAppointment, createRecord, createPrescription, type Patient, type Doctor, type Appointment } from "@/lib/clinic-api";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { todayISO } from "@/lib/datetime";
@@ -19,8 +19,17 @@ export default function QuickAddPage(){
   const { getOptions } = useDropdownOptions(clinicId);
   const [sharedPatient,setSharedPatient]=useState("");
   const [sharedDoctor,setSharedDoctor]=useState("");
-  const [sharedDate,setSharedDate]=useState(todayISO());
-  useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients(r.items)).catch(()=>{}); listDoctors(clinicId,{limit:100}).then(r=>setDoctors(r.items)).catch(()=>{}); },[clinicId]);
+  const [appointments,setAppointments]=useState<Appointment[]>([]);
+  useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients(r.items)).catch(()=>{}); listDoctors(clinicId,{limit:100}).then(r=>setDoctors(r.items)).catch(()=>{}); listAppointments(clinicId,{limit:100}).then(r=>setAppointments(r.items)).catch(()=>{}); },[clinicId]);
+  // auto-show doctor when patient selected
+  const onSharedPatient=(name:string)=>{
+    setSharedPatient(name);
+    const p=patients.find(x=>x.fullName===name);
+    if(p?.doctorId){
+      const doc=doctors.find(d=>d.doctorId===p.doctorId);
+      if(doc) setSharedDoctor(doc.name);
+    }
+  };
 
   // Shared state for all forms — kept at page level for sync
   const [appt,setAppt]=useState({patient:"", doctor:"", department:"", visitType:"New Visit", date:todayISO(), time:"09:00", duration:"30", reason:"", priority:"Normal", status:"scheduled", symptoms:"", notes:"", reminder:"Same Day", whatsapp:"Yes", doctorNotify:"Yes"});
@@ -34,7 +43,6 @@ export default function QuickAddPage(){
 
   useEffect(()=>{ if(sharedPatient){ setAppt(s=>({...s, patient:sharedPatient})); setRec(s=>({...s, patient:sharedPatient})); setTreat(s=>({...s, patient:sharedPatient})); setRx(s=>({...s, patient:sharedPatient})); }},[sharedPatient]);
   useEffect(()=>{ if(sharedDoctor){ setAppt(s=>({...s, doctor:sharedDoctor})); setRec(s=>({...s, doctor:sharedDoctor})); setTreat(s=>({...s, doctor:sharedDoctor})); setRx(s=>({...s, doctor:sharedDoctor})); }},[sharedDoctor]);
-  useEffect(()=>{ if(sharedDate){ setAppt(s=>({...s, date:sharedDate})); setRec(s=>({...s, visitDate:sharedDate})); }},[sharedDate]);
 
   const visitTypes=getOptions("visit_types");
   const priorities=getOptions("appointment_priorities");
@@ -68,25 +76,23 @@ export default function QuickAddPage(){
       {/* Premium header — patient optimized */}
       <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-violet-500/5 p-6">
         <h1 className="text-lg font-semibold tracking-tight">Quick Add — Fill blanks</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Select patient & doctor once — all cards below reuse them. No duplicate entry needed.</p>
-        <div className="mt-4 grid sm:grid-cols-3 gap-4">
-          <div><Label className="text-xs">Patient *</Label><select value={sharedPatient} onChange={e=>setSharedPatient(e.target.value)} className="mt-1 h-10 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-          <div><Label className="text-xs">Doctor *</Label><select value={sharedDoctor} onChange={e=>setSharedDoctor(e.target.value)} className="mt-1 h-10 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select doctor</option>{doctors.map(d=><option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
-          <div><Label className="text-xs">Visit / Invoice Date</Label><Input type="date" value={sharedDate} onChange={e=>setSharedDate(e.target.value)} className="mt-1 h-10"/></div>
+        <p className="mt-1 text-sm text-muted-foreground">Select patient — doctor auto-shows. All cards below reuse // no Visit/Invoice Date.</p>
+        <div className="mt-4 grid sm:grid-cols-2 gap-4">
+          <div><Label className="text-xs">Patient *</Label><select value={sharedPatient} onChange={e=>onSharedPatient(e.target.value)} className="mt-1 h-10 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
+          <div><Label className="text-xs">Doctor (auto)</Label><Input value={sharedDoctor} readOnly placeholder="Auto from patient" className="mt-1 h-10 bg-muted"/></div>
         </div>
-        {optimized && <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">Optimized: {sharedPatient} · {sharedDoctor} · {sharedDate}</p>}
+        {optimized && <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">Optimized: {sharedPatient} · {sharedDoctor}</p>}
       </div>
 
-      {/* 1 Appointments — fill blanks, status change */}
-      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">1. Appointments {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient} · {sharedDoctor}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label className="text-xs">Date *</Label><Input type="date" value={appt.date} onChange={e=>setAppt({...appt,date:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Time *</Label><Input type="time" value={appt.time} onChange={e=>setAppt({...appt,time:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Status</Label><select value={appt.status} onChange={e=>setAppt({...appt,status:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="scheduled">Scheduled</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="no_show">No Show</option></select></div>
-          <div><Label className="text-xs">Priority</Label><select value={appt.priority} onChange={e=>setAppt({...appt,priority:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm">{priorities.map(o=><option key={o} value={o}>{o}</option>)}</select></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Reason for Visit * — fill blanks</Label><Input value={appt.reason} onChange={e=>setAppt({...appt,reason:e.target.value})} className="mt-1 h-9" placeholder="e.g. Fever, follow-up..."/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Notes</Label><Input value={appt.notes} onChange={e=>setAppt({...appt,notes:e.target.value})} className="mt-1 h-9"/></div>
-        </div>
+      {/* 1 Appointments — table, status only */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">1. Appointments — select to change status {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient} · {sharedDoctor}</span>}</CardTitle></CardHeader><CardContent>
+        {(() => {
+          const pid = patients.find(p=>p.fullName===sharedPatient)?.patientId;
+          const appts = pid ? appointments.filter(a=>a.patientId===pid) : [];
+          if(!sharedPatient) return <p className="text-sm text-muted-foreground">Select patient above to see appointments.</p>;
+          if(appts.length===0) return <p className="text-sm text-muted-foreground">No appointments for this patient.</p>;
+          return <div className="overflow-hidden rounded-xl border"><table className="w-full text-sm"><thead className="bg-muted text-xs"><tr><th className="p-2 text-left">Date</th><th className="p-2 text-left">Time</th><th className="p-2 text-left">Reason</th><th className="p-2 text-left">Status</th></tr></thead><tbody>{appts.map(a=> <tr key={a.appointmentId} className="border-t"><td className="p-2">{a.date}</td><td className="p-2">{a.time}</td><td className="p-2">{a.reason||"—"}</td><td className="p-2"><select value={a.status} onChange={async e=>{ try{ await updateAppointment(clinicId,a.appointmentId,{status:e.target.value as any}); toast.success("Status updated"); const r=await listAppointments(clinicId,{limit:100}); setAppointments(r.items);}catch(err:any){ toast.error(err.message);} }} className="h-7 rounded-lg border bg-card px-2 text-xs"><option value="scheduled">Scheduled</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="no_show">No Show</option></select></td></tr>)}</tbody></table></div>;
+        })()}
       </CardContent></Card>
 
       {/* 2 Records — optimized, no duplicate patient */}
