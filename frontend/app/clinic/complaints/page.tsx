@@ -91,14 +91,6 @@ export default function TreatmentPage(){
         <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} searchTerm={q} onSearchChange={(v)=>{setQ(v); setPage(0);}} action={<div className="flex items-center gap-2"><Button onClick={()=>startAdd("record")} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>Add Record</Button><Button onClick={()=>startAdd("plan")} variant="outline" className="h-9 gap-1.5"><Plus className="size-4"/>Add Plan</Button></div>} />
       </div>
 
-      {/* Table search only — buttons removed (now in overview row) */}
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div><h3 className="text-sm font-semibold">Treatment Records</h3><p className="text-xs text-muted-foreground">{filtered.length} / {items.length} records{selected.size>0 && ` • ${selected.size} selected`}</p></div>
-          <div className="relative flex-1 sm:w-64 sm:ml-auto"><Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground"/><Input value={q} onChange={e=>{setQ(e.target.value); setPage(0);}} placeholder="Search..." className="pl-9 h-9"/></div>
-        </div>
-      </div>
-
       <Card className="shadow-sm"><CardContent className="p-0"><div className="overflow-x-auto"><Table>
             <TableHeader><TableRow className="bg-muted/40"><TableHead className="w-10"><Checkbox checked={allChecked} onCheckedChange={v=> setSelected(v ? new Set(filtered.map(i=>i.id)) : new Set())} /></TableHead>{COLS.map(c=><TableHead key={c} className="text-xs whitespace-nowrap">{c}</TableHead>)}<TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
             <TableBody>{paged.length===0 ? <TableRow><TableCell colSpan={COLS.length+2} className="py-16 text-center text-sm text-muted-foreground">{items.length===0 ? "No entries yet — click Add Record/Plan." : "No match."}</TableCell></TableRow> : paged.map(it=><TableRow key={it.id} className="hover:bg-muted/30">
