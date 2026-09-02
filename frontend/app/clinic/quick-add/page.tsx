@@ -53,7 +53,7 @@ export default function QuickAddPage(){
       if(rx.patient && rx.medicine){
         await createPrescription(clinicId,{patientId:pId(rx.patient)!, doctorId: rx.doctor? dId(rx.doctor):undefined, visitDate:todayISO(), diagnosis:rx.diagnosis||null, medicines:[{name:rx.medicine, dosage:rx.dosage, frequency:rx.frequency, duration:rx.duration, instructions:rx.instructions}], notes:rx.notes||null});
       }
-      toast.success("Quick Add — all filled sections saved");
+      toast.success("Quick Fill — all filled sections saved");
     }catch(e:any){ toast.error(e.message); }
   }
 
@@ -153,7 +153,7 @@ export default function QuickAddPage(){
       </CardContent></Card>
 
 
-      <div className="sticky bottom-4 flex justify-center pt-2"><Button size="lg" className="h-11 px-8 shadow-lg" onClick={submitAll}>Save All — Quick Add</Button></div>
+      <div className="sticky bottom-4 flex justify-center pt-2"><Button size="lg" className="h-11 px-8 shadow-lg" onClick={submitAll}>Save All — Quick Fill</Button></div>
     </div>
   );
 }

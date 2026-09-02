@@ -227,10 +227,10 @@ function GreetingBanner({
           </p>
         </div>
 
-        {/* Right: Quick Add + Medical Record */}
+        {/* Right: Quick Fill + Medical Record */}
         <div className="flex items-center gap-3">
           <Link href="/clinic/quick-add" className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90">
-            <Plus className="size-4" /> Quick Add
+            <Plus className="size-4" /> Quick Fill
           </Link>
           <Link
             href="/clinic/medical-record"
