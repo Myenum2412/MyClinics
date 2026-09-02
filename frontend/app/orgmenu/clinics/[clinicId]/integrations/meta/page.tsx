@@ -60,8 +60,8 @@ export default function MetaIntegrationPage() {
   const [analytics, setAnalytics] = useState<MetaAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [appId, setAppId] = useState("");
-  const [appSecret, setAppSecret] = useState("");
+  const [appId, setAppId] = useState("1591554832378190");
+  const [appSecret, setAppSecret] = useState("75eed8b0a4734e0179ba416cf785131c");
   const [redirectUri, setRedirectUri] = useState("");
 
   const load = useCallback(async () => {
