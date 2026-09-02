@@ -67,23 +67,34 @@ export default function MetaIntegrationPage() {
   const load = useCallback(async () => {
     if (!clinicId) return;
     try {
-      const [status, a, m, j, e, an] = await Promise.all([
-        getMetaStatus(clinicId),
+      const status = await getMetaStatus(clinicId).catch((err) => {
+        // Not configured yet is not a failure — show connect form
+        const msg = err instanceof Error ? err.message : "";
+        if (msg.includes("not configured") || msg.includes("No server defaults")) return { integration: null, health: null } as any;
+        throw err;
+      });
+      const [a, m, j, e, an] = await Promise.all([
         getMetaAssets(clinicId).catch(() => null),
         listCampaignMappings(clinicId).catch(() => ({ mappings: [] })),
         listMetaSyncJobs(clinicId).catch(() => ({ jobs: [] })),
         listMetaWebhookEvents(clinicId).catch(() => ({ events: [] })),
         getMetaAnalytics(clinicId).catch(() => null),
       ]);
-      setIntegration(status.integration);
-      setHealth(status.health);
+      setIntegration(status?.integration ?? null);
+      setHealth(status?.health ?? null);
       setAssets(a);
       setMappings(m.mappings);
       setJobs(j.jobs);
       setEvents(e.events);
       setAnalytics(an);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to load Meta integration");
+      const msg = err instanceof Error ? err.message : "Failed to load Meta integration";
+      // Surface inline instead of blocking the connect UI
+      if (msg.includes("not configured") || msg.includes("No server defaults")) {
+        setIntegration(null);
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
