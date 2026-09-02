@@ -28,7 +28,7 @@ import {
   ClipboardDocumentCheckIcon as RecordsIcon,
   FolderOpenIcon,
 } from "@heroicons/react/24/outline";
-import { HeartPulse, Sparkles } from "lucide-react";
+import { HeartPulse } from "lucide-react";
 
 interface NavItem {
   title: string
@@ -93,7 +93,7 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
   {
     title: "AI Assistant",
     url: "/clinic/ai-assistant",
-    icon: <Sparkles className="size-6" />,
+    icon: <Image src="/aidps.png" alt="AI" width={24} height={24} className="size-6 rounded-full object-cover" />,
   },
 ]
 

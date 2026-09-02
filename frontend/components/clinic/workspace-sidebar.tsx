@@ -38,7 +38,7 @@ import {
   ChartBarIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { Pill, Sparkles, HeartPulse } from "lucide-react";
+import { Pill, HeartPulse } from "lucide-react";
 
 interface NavItem {
   title: string
@@ -154,7 +154,7 @@ const NAV_ITEMS: NavItem[] = [
   {
     title: "AI Assistant",
     url: "/clinic/ai-assistant",
-    icon: <Sparkles className="size-6" />,
+    icon: <Image src="/aidps.png" alt="AI" width={24} height={24} className="size-6 rounded-full object-cover" />,
     roles: ["patient", "doctor", "staff", "clinic_admin"],
   },
 ]
