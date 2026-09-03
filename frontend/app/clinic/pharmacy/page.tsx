@@ -7,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, Boxes, AlertTriangle, Ban, Clock, ShoppingCart, Receipt, Truck, ArrowRight, Plus, History, FileText, Users, TrendingUp, Calendar } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Package, Boxes, AlertTriangle, Ban, Clock, ShoppingCart, Receipt, Truck, ArrowRight, Plus, History, TrendingUp, Calendar } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Pie, PieChart, Cell } from "recharts";
 
 export default function PharmacyOverviewPage() {
   const session = useRequireRole("patient");
@@ -65,6 +67,20 @@ export default function PharmacyOverviewPage() {
     ...(nearExpiry ? [{ label: "Nearing expiry", count: nearExpiry, href: "/clinic/pharmacy/inventory?status=near_expiry", color: "text-orange-600 bg-orange-50 border-orange-200", icon: Clock }] : []),
     ...(expired ? [{ label: "Expired medicines", count: expired, href: "/clinic/pharmacy/inventory?status=expired", color: "text-red-700 bg-red-50 border-red-200", icon: Ban }] : []),
     ...(pendingPurchases ? [{ label: "Pending purchases", count: pendingPurchases, href: "/clinic/pharmacy/purchases", color: "text-blue-600 bg-blue-50 border-blue-200", icon: ShoppingCart }] : []),
+  ];
+
+  const stockChartData = [
+    { name: "In Stock", value: inStock, fill: "var(--chart-1)" },
+    { name: "Low Stock", value: lowStock, fill: "var(--chart-4)" },
+    { name: "Out of Stock", value: outOfStock, fill: "var(--chart-5)" },
+    { name: "Near Expiry", value: nearExpiry, fill: "var(--chart-3)" },
+    { name: "Expired", value: expired, fill: "#ef4444" },
+  ].filter(d=>d.value>0);
+
+  const salesPurchaseData = [
+    { name: "Purchases", value: purchases.reduce((s:number,p:any)=>s+(p.total??0),0) },
+    { name: "Sales", value: sales.reduce((s:number,p:any)=>s+(p.total??0),0) },
+    { name: "Stock Value", value: dash?.totalStockValue ?? 0 },
   ];
 
   // recent activity combined
@@ -190,6 +206,28 @@ export default function PharmacyOverviewPage() {
           <CardContent>
             <div className="text-2xl font-bold">₹{(dash?.totalStockValue ?? 0).toLocaleString("en-IN")}</div>
             <p className="text-xs text-muted-foreground">Total inventory value • {dash?.reorderCount ?? lowStock} items need reorder</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Stock Status Distribution</CardTitle><CardDescription>Inventory by status</CardDescription></CardHeader>
+          <CardContent>
+            {stockChartData.length===0 ? <p className="text-xs text-muted-foreground text-center py-8">No data</p> : (
+              <ChartContainer config={{ value:{label:"Count"} }} className="h-[220px] w-full">
+                <PieChart><ChartTooltip content={<ChartTooltipContent/>}/><Pie data={stockChartData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80}>{stockChartData.map((e,i)=><Cell key={i} fill={e.fill}/>)}</Pie></PieChart>
+              </ChartContainer>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle className="text-sm">Purchases vs Sales vs Stock Value</CardTitle><CardDescription>Financial overview</CardDescription></CardHeader>
+          <CardContent>
+            <ChartContainer config={{ value:{label:"Amount", color:"var(--chart-2)"} }} className="h-[220px] w-full">
+              <BarChart data={salesPurchaseData}><CartesianGrid vertical={false}/><XAxis dataKey="name" tickLine={false} axisLine={false}/><YAxis tickLine={false} axisLine={false}/><ChartTooltip content={<ChartTooltipContent/>}/><Bar dataKey="value" fill="var(--chart-2)" radius={6}/></BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
