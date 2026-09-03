@@ -7,7 +7,9 @@ import { SiteFooter } from "@/components/site-footer";
 import AboutBlock from "@/components/blocks/about-3";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { HowItWorks } from "@/components/how-it-works";
+import { InfiniteMarquee } from "@/src/components/wensity/infinite-marquee";
 import { EasyChat } from "@/components/easy-chat";
+import { AnimateIn } from "@/components/animate-in";
 
 export default function Home() {
   return (
@@ -30,9 +32,23 @@ export default function Home() {
           </div>
         </div>
       </main>
-      <HowItWorks />
-      <EasyChat />
-      <AboutBlock />
+      <div className="w-full border-y bg-white py-4">
+        <InfiniteMarquee
+          speed={20}
+          items={[
+            <span key="1" className="text-sm font-semibold tracking-widest text-black">TRUSTED BY 500+ CLINICS</span>,
+            <span key="2" className="text-sm font-semibold tracking-widest text-black">•</span>,
+            <span key="3" className="text-sm font-semibold tracking-widest text-black">SECURE & COMPLIANT</span>,
+            <span key="4" className="text-sm font-semibold tracking-widest text-black">•</span>,
+            <span key="5" className="text-sm font-semibold tracking-widest text-black">24/7 SUPPORT</span>,
+            <span key="6" className="text-sm font-semibold tracking-widest text-black">•</span>,
+            <span key="7" className="text-sm font-semibold tracking-widest text-black">APPOINTMENTS • BILLING • REPORTS</span>,
+          ]}
+        />
+      </div>
+      <AnimateIn><HowItWorks /></AnimateIn>
+      <AnimateIn delay={0.1}><EasyChat /></AnimateIn>
+      <AnimateIn delay={0.15}><AboutBlock /></AnimateIn>
       <SiteFooter />
     </div>
   );
