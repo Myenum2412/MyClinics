@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import AboutBlock from "@/components/blocks/about-3";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { HowItWorks } from "@/components/how-it-works";
+import { InfiniteMarquee } from "@/src/components/wensity/infinite-marquee";
 
 export default function Home() {
   return (
@@ -29,6 +30,20 @@ export default function Home() {
           </div>
         </div>
       </main>
+      <div className="w-full border-y bg-white py-4">
+        <InfiniteMarquee
+          speed={20}
+          items={[
+            <span key="1" className="text-sm font-semibold tracking-widest text-black">TRUSTED BY 500+ CLINICS</span>,
+            <span key="2" className="text-sm font-semibold tracking-widest text-black">•</span>,
+            <span key="3" className="text-sm font-semibold tracking-widest text-black">SECURE & COMPLIANT</span>,
+            <span key="4" className="text-sm font-semibold tracking-widest text-black">•</span>,
+            <span key="5" className="text-sm font-semibold tracking-widest text-black">24/7 SUPPORT</span>,
+            <span key="6" className="text-sm font-semibold tracking-widest text-black">•</span>,
+            <span key="7" className="text-sm font-semibold tracking-widest text-black">APPOINTMENTS • BILLING • REPORTS</span>,
+          ]}
+        />
+      </div>
       <HowItWorks />
       <AboutBlock />
       <SiteFooter />
