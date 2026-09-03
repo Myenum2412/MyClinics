@@ -13,7 +13,7 @@ export function SiteFooter() {
       <div className="grid gap-8 md:grid-cols-2">
         <div className="max-w-sm">
           <Link href="/" className="inline-flex">
-            <Image src="/logo.png" alt="My Clinics" width={140} height={40} className="h-9 w-auto" />
+            <Image src="/logobg.png" alt="My Clinics" width={140} height={40} className="h-9 w-auto" />
           </Link>
           <p className="mt-3 text-sm text-black">
             Complete clinic management — appointments, medicines, billing & reports.

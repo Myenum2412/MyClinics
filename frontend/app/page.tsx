@@ -4,6 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import AboutBlock from "@/components/blocks/about-3";
 
 export default function Home() {
   return (
@@ -29,6 +30,7 @@ export default function Home() {
           </div>
         </div>
       </main>
+      <AboutBlock />
       <SiteFooter />
     </div>
   );
