@@ -420,7 +420,7 @@ export async function handleIncomingMessage(client: Client, message: Message): P
       const clinicSession = botNumber ? await db.collection("wa_clinic_sessions").findOne({ phone: botNumber }) : null;
       const clinicIdForAi = (clinicSession as any)?.clinicId;
       if (clinicIdForAi) {
-        const clinicSettings = await db.collection("clc_clinic_settings").findOne({ clinicId: clinicIdForAi } as any);
+        const clinicSettings = await db.collection("clc_settings").findOne({ clinicId: clinicIdForAi } as any);
         if (clinicSettings && (clinicSettings as any).aiAgentEnabled === false) {
           logger.info("whatsapp ai disabled for clinic", { clinicId: clinicIdForAi });
           return;

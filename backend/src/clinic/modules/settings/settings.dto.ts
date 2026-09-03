@@ -24,6 +24,7 @@ export const updateSettingsSchema = z.object({
   termsAndConditions: z.string().trim().max(1000).nullable().optional(),
   upiId: z.string().trim().max(100).nullable().optional(),
   qrCodeUrl: z.string().trim().max(200000).nullable().optional(),
+  aiAgentEnabled: z.boolean().optional(),
 });
 
 export type UpdateSettingsInput = z.infer<typeof updateSettingsSchema>;
@@ -42,4 +43,5 @@ export const DEFAULT_SETTINGS = {
   termsAndConditions: null,
   upiId: null,
   qrCodeUrl: null,
+  aiAgentEnabled: true,
 } as const;

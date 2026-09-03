@@ -15,6 +15,7 @@ export interface ClinicSettingsDoc extends ClinicDocument {
   termsAndConditions?: string | null;
   upiId?: string | null;
   qrCodeUrl?: string | null;
+  aiAgentEnabled?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,6 +35,7 @@ export function settingsToPublic(doc: ClinicSettingsDoc) {
     termsAndConditions: doc.termsAndConditions ?? null,
     upiId: doc.upiId ?? null,
     qrCodeUrl: doc.qrCodeUrl ?? null,
+    aiAgentEnabled: doc.aiAgentEnabled ?? true,
     updatedAt: doc.updatedAt,
   };
 }
