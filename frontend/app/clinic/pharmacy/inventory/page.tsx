@@ -130,7 +130,7 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Inventory</h1>
@@ -141,7 +141,9 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
         </div>
       </div>
 
-      {(() => {const total=rows.length;const inStock=rows.filter(r=>r.status==="in_stock").length;const lowStock=rows.filter(r=>r.status==="low_stock").length;const outStock=rows.filter(r=>r.status==="out_of_stock").length;const s=[{name:"Total Stock",percentage:Math.min(100,total),current:total,allowed:100,allowedLabel:"items",fill:"var(--chart-1)"},{name:"In Stock",percentage:total?Math.round(inStock/total*100):0,current:inStock,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Low Stock",percentage:total?Math.round(lowStock/total*100):0,current:lowStock,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"Out of Stock",percentage:total?Math.round(outStock/total*100):0,current:outStock,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];return (<PharmacyStats title="Inventory Overview" action={<><Button variant="outline" render={<Link href="/clinic/pharmacy/inventory/opening-stock" />}>Opening Stock</Button><Button variant="outline" onClick={()=>router.push("/clinic/pharmacy/stock-history")}>Stock History</Button></>} items={s} />)})()}
+      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        {(() => {const total=rows.length;const inStock=rows.filter(r=>r.status==="in_stock").length;const lowStock=rows.filter(r=>r.status==="low_stock").length;const outStock=rows.filter(r=>r.status==="out_of_stock").length;const s=[{name:"Total Stock",percentage:Math.min(100,total),current:total,allowed:100,allowedLabel:"items",fill:"var(--chart-1)"},{name:"In Stock",percentage:total?Math.round(inStock/total*100):0,current:inStock,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Low Stock",percentage:total?Math.round(lowStock/total*100):0,current:lowStock,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"Out of Stock",percentage:total?Math.round(outStock/total*100):0,current:outStock,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];return (<PharmacyStats title="Inventory Analytics" subtitle="Stock levels, expiries and reorder insights." searchTerm={search} onSearchChange={setSearch} searchPlaceholder="Search medicine..." action={<><Button variant="outline" render={<Link href="/clinic/pharmacy/inventory/opening-stock" />}>Opening Stock</Button><Button variant="outline" onClick={()=>router.push("/clinic/pharmacy/stock-history")}>Stock History</Button></>} items={s} />)})()}
+      </div>
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <CardHeader className="gap-3 px-0 pt-0">
           <CardTitle className="text-base">Stock</CardTitle>
