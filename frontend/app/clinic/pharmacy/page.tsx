@@ -99,55 +99,55 @@ export default function PharmacyOverviewPage() {
 
   return (
     <div className="w-full space-y-8 p-6 md:p-8 bg-gradient-to-b from-background to-muted/20 min-h-screen">
-      {/* Header — Linear/Stripe style */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs font-medium shadow-sm"><Sparkles className="size-3.5 text-primary"/>Pharmacy Command Center</div>
-          <h1 className="text-3xl font-semibold tracking-tight">Pharmacy Overview</h1>
-          <p className="text-sm text-muted-foreground max-w-xl">Unified view of stock, purchases, sales and suppliers. Every metric updates live from the underlying pharmacy modules.</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={()=>window.location.reload()} className="rounded-full shadow-sm">Refresh</Button>
-      </div>
-
-      {/* Alerts — premium banner */}
-      {alertItems.length > 0 && (
-        <Card className="rounded-2xl border-amber-200/60 bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/10 shadow-sm">
-          <CardHeader className="pb-3"><CardTitle className="text-sm flex items-center gap-2"><span className="flex size-7 items-center justify-center rounded-full bg-amber-500 text-white shadow"><AlertTriangle className="size-4"/></span>Attention Required <Badge variant="secondary" className="rounded-full">{alertItems.length}</Badge></CardTitle></CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            {alertItems.map((a)=>(
-              <Link key={a.label} href={a.href} className={`group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium shadow-sm transition-all hover:shadow hover:-translate-y-px ${a.color}`}>
-                <a.icon className="size-4"/>{a.label}: {a.count}<ArrowUpRight className="size-3.5 opacity-60 group-hover:opacity-100 transition"/>
-              </Link>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Inventory — stats-07, 1 row 6 columns */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold flex items-center gap-2"><Package className="size-4"/>Inventory</h2>
-          <Link href="/clinic/pharmacy/inventory" className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1">View Inventory <ArrowRight className="size-3"/></Link>
-        </div>
-        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {inventoryStats.map((item) => (
-            <Card key={item.name} className="p-4 rounded-2xl shadow-sm">
-              <CardContent className="flex items-center gap-3 p-0">
-                <div className="relative flex items-center justify-center shrink-0">
-                  <ChartContainer config={{ capacity:{label:item.name, color:item.fill} }} className="h-[80px] w-[80px]">
-                    <RadialBarChart barSize={6} data={[{...item, capacity:item.capacity}]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}>
-                      <PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0,100]} tick={false} type="number"/>
-                      <RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill}/>
-                    </RadialBarChart>
-                  </ChartContainer>
-                  <div className="absolute inset-0 flex items-center justify-center"><span className="font-semibold text-sm">{item.capacity}%</span></div>
-                </div>
-                <div className="min-w-0"><dt className="font-medium text-sm truncate">{item.name}</dt><dd className="text-xs text-muted-foreground">{item.current} of {item.allowed} {item.allowedLabel}</dd></div>
-              </CardContent>
-            </Card>
-          ))}
-        </dl>
-      </div>
+      {/* Header + Attention + Inventory — single card */}
+      <Card className="rounded-2xl shadow-sm overflow-hidden">
+        <CardContent className="p-6 space-y-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs font-medium shadow-sm"><Sparkles className="size-3.5 text-primary"/>Pharmacy Command Center</div>
+              <h1 className="text-3xl font-semibold tracking-tight">Pharmacy Overview</h1>
+              <p className="text-sm text-muted-foreground max-w-xl">Unified view of stock, purchases, sales and suppliers. Every metric updates live from the underlying pharmacy modules.</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={()=>window.location.reload()} className="rounded-full shadow-sm">Refresh</Button>
+          </div>
+          {alertItems.length > 0 && (
+            <div className="rounded-2xl border border-amber-200/60 bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/10 p-4">
+              <div className="flex items-center gap-2 text-sm font-semibold mb-3"><span className="flex size-7 items-center justify-center rounded-full bg-amber-500 text-white shadow"><AlertTriangle className="size-4"/></span>Attention Required <Badge variant="secondary" className="rounded-full">{alertItems.length}</Badge></div>
+              <div className="flex flex-wrap gap-2">
+                {alertItems.map((a)=>(
+                  <Link key={a.label} href={a.href} className={`group inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium shadow-sm transition-all hover:shadow hover:-translate-y-px ${a.color}`}>
+                    <a.icon className="size-4"/>{a.label}: {a.count}<ArrowUpRight className="size-3.5 opacity-60 group-hover:opacity-100 transition"/>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold flex items-center gap-2"><Package className="size-4"/>Inventory</h2>
+              <Link href="/clinic/pharmacy/inventory" className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1">View Inventory <ArrowRight className="size-3"/></Link>
+            </div>
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              {inventoryStats.map((item) => (
+                <Card key={item.name} className="p-4 rounded-2xl shadow-sm bg-muted/20">
+                  <CardContent className="flex items-center gap-3 p-0">
+                    <div className="relative flex items-center justify-center shrink-0">
+                      <ChartContainer config={{ capacity:{label:item.name, color:item.fill} }} className="h-[80px] w-[80px]">
+                        <RadialBarChart barSize={6} data={[{...item, capacity:item.capacity}]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}>
+                          <PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0,100]} tick={false} type="number"/>
+                          <RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill}/>
+                        </RadialBarChart>
+                      </ChartContainer>
+                      <div className="absolute inset-0 flex items-center justify-center"><span className="font-semibold text-sm">{item.capacity}%</span></div>
+                    </div>
+                    <div className="min-w-0"><dt className="font-medium text-sm truncate">{item.name}</dt><dd className="text-xs text-muted-foreground">{item.current} of {item.allowed} {item.allowedLabel}</dd></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </dl>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* KPI Grid — remaining sections */}
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
