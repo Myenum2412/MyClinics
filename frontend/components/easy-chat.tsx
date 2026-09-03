@@ -27,15 +27,15 @@ export function EasyChat() {
         </div>
         {/* Right: Text */}
         <div>
-          <span className="inline-block rounded-full bg-[#E3F2FD] px-3 py-1 text-xs font-semibold tracking-widest text-black">AI ASSISTANT</span>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-black">Meet Ai Root — <br />Healthcare, Just a Chat Away</h2>
+          <span className="inline-block rounded-full bg-[#E3F2FD] px-3 py-1 text-xs font-semibold tracking-widest text-black">CHAT WITH AI ROOT</span>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-black">Your Clinic, <br />in a WhatsApp Chat</h2>
           <p className="mt-3 text-sm leading-relaxed text-black/70">
-            No forms, no menus to learn. Simply chat with Ai Root like you would with a friend — WhatsApp-style. Book appointments, check prescriptions, or get reports — all in plain language.
+            Ai Root lives inside My Clinics and feels exactly like WhatsApp. No training needed — just chat. Patients book visits, doctors manage schedules, and everything stays organized.
           </p>
           <ul className="mt-4 space-y-2 text-sm text-black">
-            <li>✓ Natural language — type as you speak</li>
-            <li>✓ Instant confirmations & reminders</li>
-            <li>✓ Available 24/7 inside My Clinics</li>
+            <li>✓ Book & reschedule appointments in one message</li>
+            <li>✓ Prescriptions, bills & reports — instantly shared</li>
+            <li>✓ Same familiar WhatsApp experience your team loves</li>
           </ul>
         </div>
       </div>
