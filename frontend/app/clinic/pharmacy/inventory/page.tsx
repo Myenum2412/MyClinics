@@ -131,51 +131,22 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Inventory</h1>
-          <p className="text-sm text-muted-foreground">Track stock batches, levels and expiries</p>
+      {!loading && (
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          {(() => {const total=rows.length;const inStock=rows.filter(r=>r.status==="in_stock").length;const lowStock=rows.filter(r=>r.status==="low_stock").length;const outStock=rows.filter(r=>r.status==="out_of_stock").length;const s=[{name:"Total Stock",percentage:Math.min(100,total),current:total,allowed:100,allowedLabel:"items",fill:"var(--chart-1)"},{name:"In Stock",percentage:total?Math.round(inStock/total*100):0,current:inStock,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Low Stock",percentage:total?Math.round(lowStock/total*100):0,current:lowStock,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"Out of Stock",percentage:total?Math.round(outStock/total*100):0,current:outStock,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];return (<PharmacyStats title="Inventory Analytics" subtitle="Stock levels, expiries and reorder insights." searchTerm={search} onSearchChange={setSearch} searchPlaceholder="Search medicine..." action={<div className="flex items-center gap-2"><Button variant="outline" size="sm" className="h-9" onClick={()=>router.push("/clinic/pharmacy/stock-history")}>Stock History</Button><Button size="sm" className="h-9 shadow-sm" render={<Link href="/clinic/pharmacy/inventory/opening-stock" />}>Add Opening Stock</Button></div>} items={s} />)})()}
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button render={<Link href="/clinic/pharmacy/inventory/opening-stock" />}>Add Opening Stock</Button>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        {(() => {const total=rows.length;const inStock=rows.filter(r=>r.status==="in_stock").length;const lowStock=rows.filter(r=>r.status==="low_stock").length;const outStock=rows.filter(r=>r.status==="out_of_stock").length;const s=[{name:"Total Stock",percentage:Math.min(100,total),current:total,allowed:100,allowedLabel:"items",fill:"var(--chart-1)"},{name:"In Stock",percentage:total?Math.round(inStock/total*100):0,current:inStock,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Low Stock",percentage:total?Math.round(lowStock/total*100):0,current:lowStock,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"Out of Stock",percentage:total?Math.round(outStock/total*100):0,current:outStock,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];return (<PharmacyStats title="Inventory Analytics" subtitle="Stock levels, expiries and reorder insights." searchTerm={search} onSearchChange={setSearch} searchPlaceholder="Search medicine..." action={<><Button variant="outline" render={<Link href="/clinic/pharmacy/inventory/opening-stock" />}>Opening Stock</Button><Button variant="outline" onClick={()=>router.push("/clinic/pharmacy/stock-history")}>Stock History</Button></>} items={s} />)})()}
-      </div>
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <CardHeader className="gap-3 px-0 pt-0">
-          <CardTitle className="text-base">Stock</CardTitle>
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              placeholder="Search medicine"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-9 min-w-48 flex-1"
-            />
-            <Input
-              placeholder="Category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="h-9 w-44"
-            />
+      )}
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <div className="flex flex-wrap items-center gap-2 p-4 border-b border-border">
+            <Input placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} className="h-9 w-44" />
             <Select value={status} onValueChange={(v) => onStatusChange(v ?? "")}>
-              <SelectTrigger className="h-9 w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
+              <SelectTrigger className="h-9 w-40"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>{STATUS_OPTIONS.map((o) => (<SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>))}</SelectContent>
             </Select>
+            <span className="ml-auto text-xs text-muted-foreground tabular-nums">{rows.length} items</span>
           </div>
-        </CardHeader>
-        <CardContent className="p-0 pt-4">
-          <div className="overflow-x-auto rounded-xl border border-border">
+          <div className="overflow-x-auto">
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -192,19 +163,9 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
             </TableHeader>
             <TableBody>
               {loading ? (
-                Array.from({ length: 8 }).map((_, i) => (
-                  <TableRow key={i}>
-                    <TableCell colSpan={9}>
-                      <Skeleton className="h-6 w-full" />
-                    </TableCell>
-                  </TableRow>
-                ))
+                <TableRow><TableCell colSpan={9}><div className="space-y-2 p-4"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div></TableCell></TableRow>
               ) : rows.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
-                    No inventory found.
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={9}><div className="py-16 text-center"><p className="text-sm text-muted-foreground">No inventory found.</p></div></TableCell></TableRow>
               ) : (
                 rows.map((inv) => (
                   <TableRow
@@ -237,7 +198,7 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
           </Table>
           </div>
         </CardContent>
-      </div>
+      </Card>
 
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <DialogContent>
