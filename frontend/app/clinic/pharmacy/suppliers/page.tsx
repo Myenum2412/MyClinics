@@ -102,51 +102,29 @@ export default function PharmacySuppliersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Pharmacy Suppliers</h1>
-          <p className="text-sm text-muted-foreground">Manage medicine and drug suppliers</p>
+      {!loading && (
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+      {(() => {const total=suppliers.length;const active=suppliers.filter(s=>s.status==="active").length;const s=[{name:"Total Suppliers",percentage:Math.min(100,total*10),current:total,allowed:10,allowedLabel:"suppliers",fill:"var(--chart-1)"},{name:"Active",percentage:total?Math.round(active/total*100):0,current:active,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Inactive",percentage:total?Math.round((total-active)/total*100):0,current:total-active,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"With GST",percentage:total?Math.round(suppliers.filter(s=>s.gstNumber).length/total*100):0,current:suppliers.filter(s=>s.gstNumber).length,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];return (<PharmacyStats title="Suppliers Analytics" subtitle="Manage medicine and drug suppliers." searchTerm={search} onSearchChange={setSearch} searchPlaceholder="Search suppliers..." action={<Button size="sm" className="h-9 shadow-sm" render={<Link href="/clinic/pharmacy/suppliers/new" />}>Add Supplier</Button>} items={s} />)})()}
         </div>
-        <Button render={<Link href="/clinic/pharmacy/suppliers/new" />}>Add Supplier</Button>
-      </div>
+      )}
 
-      {(() => {const total=suppliers.length;const active=suppliers.filter(s=>s.status==="active").length;const s=[{name:"Total Suppliers",percentage:Math.min(100,total*10),current:total,allowed:10,allowedLabel:"suppliers",fill:"var(--chart-1)"},{name:"Active",percentage:total?Math.round(active/total*100):0,current:active,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Inactive",percentage:total?Math.round((total-active)/total*100):0,current:total-active,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"With GST",percentage:total?Math.round(suppliers.filter(s=>s.gstNumber).length/total*100):0,current:suppliers.filter(s=>s.gstNumber).length,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];return (<PharmacyStats title="Suppliers Overview" items={s} />)})()}
-
-      <Card className="rounded-xl border border-border bg-card shadow-sm">
-        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-base">Suppliers</CardTitle>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search suppliers…"
-              className="sm:w-64"
-            />
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <div className="flex flex-wrap items-center gap-2 p-4 border-b border-border">
+            <span className="text-sm font-medium">Suppliers <span className="text-muted-foreground">({filtered.length})</span></span>
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter((v as "all" | SupplierStatus) ?? "all")}>
-              <SelectTrigger className="sm:w-40">
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
+              <SelectTrigger className="h-9 w-40 ml-auto"><SelectValue placeholder="All statuses" /></SelectTrigger>
+              <SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent>
             </Select>
           </div>
-        </CardHeader>
-        <CardContent>
           {loading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
+            <div className="space-y-2 p-4"><div className="h-10 w-full animate-pulse rounded bg-muted" /><div className="h-10 w-full animate-pulse rounded bg-muted" /></div>
           ) : filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">No suppliers found.</p>
+            <div className="py-16 text-center"><p className="text-sm text-muted-foreground">No suppliers found.</p></div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto"><Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                   <TableHead>Name</TableHead>
                   <TableHead>Contact Person</TableHead>
                   <TableHead>Phone</TableHead>
@@ -159,7 +137,7 @@ export default function PharmacySuppliersPage() {
               </TableHeader>
               <TableBody>
                 {filtered.map((s) => (
-                  <TableRow key={s.supplierId}>
+                  <TableRow key={s.supplierId} className="hover:bg-muted/30 transition-colors">
                     <TableCell className="font-medium">{s.name}</TableCell>
                     <TableCell>{s.contactPerson ?? "—"}</TableCell>
                     <TableCell>{s.phone ?? "—"}</TableCell>
@@ -189,6 +167,7 @@ export default function PharmacySuppliersPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

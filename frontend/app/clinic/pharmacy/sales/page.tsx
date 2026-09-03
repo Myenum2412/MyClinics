@@ -111,14 +111,8 @@ export default function PharmacySalesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Pharmacy Sales</h1>
-          <p className="text-sm text-muted-foreground">Dispensing records and new sales</p>
-        </div>
-        <Button render={<Link href="/clinic/pharmacy/sales/new" />}>New Sale</Button>
-      </div>
-
+      {!loading && (
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
       {(() => {
         const total = sales.length;
         const completed = sales.filter((s) => s.status === "completed").length;
@@ -131,33 +125,24 @@ export default function PharmacySalesPage() {
           { name: "Today", percentage: Math.min(100, todayCount * 10), current: todayCount, allowed: 10, allowedLabel: "target", fill: "var(--chart-3)" },
           { name: "Revenue", percentage: Math.min(100, Math.round((totalVal / 50000) * 100)), current: `₹${totalVal.toLocaleString("en-IN")}`, allowed: "₹50K", allowedLabel: "target", fill: "var(--chart-4)" },
         ];
-        return (<PharmacyStats title="Sales Overview" items={stats} />);
+        return (<PharmacyStats title="Sales Analytics" subtitle="Dispensing records and new sales." searchTerm={search} onSearchChange={setSearch} searchPlaceholder="Search invoice # or patient..." action={<Button size="sm" className="h-9 shadow-sm" render={<Link href="/clinic/pharmacy/sales/new" />}>New Sale</Button>} items={stats} />);
       })()}
+        </div>
+      )}
 
-      <Card className="rounded-xl border border-border bg-card shadow-sm">
-        <CardHeader className="flex flex-wrap items-center gap-3">
-          <Input
-            placeholder="Search invoice # or patient"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="h-9 min-w-48 flex-1"
-          />
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter((v as "" | SaleStatus) ?? "")}>
-            <SelectTrigger className="h-9 w-40">
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All statuses</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-              <SelectItem value="refunded">Refunded</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardHeader>
-        <CardContent className="overflow-x-auto">
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <div className="flex flex-wrap items-center gap-2 p-4 border-b border-border">
+            <span className="text-sm font-medium">Sales <span className="text-muted-foreground">({filtered.length})</span></span>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter((v as "" | SaleStatus) ?? "")}>
+              <SelectTrigger className="h-9 w-40 ml-auto"><SelectValue placeholder="All statuses" /></SelectTrigger>
+              <SelectContent><SelectItem value="">All statuses</SelectItem><SelectItem value="completed">Completed</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem><SelectItem value="refunded">Refunded</SelectItem></SelectContent>
+            </Select>
+          </div>
+          <div className="overflow-x-auto">
           <Table className="min-w-[900px]">
             <TableHeader>
-              <TableRow>
+              <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                 <TableHead>Invoice #</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Patient</TableHead>
@@ -172,24 +157,12 @@ export default function PharmacySalesPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
-                    Loading sales…
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={10}><div className="space-y-2 p-4"><div className="h-10 w-full animate-pulse rounded bg-muted" /><div className="h-10 w-full animate-pulse rounded bg-muted" /></div></TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
-                    No sales found.
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={10}><div className="py-16 text-center"><p className="text-sm text-muted-foreground">No sales found.</p></div></TableCell></TableRow>
               ) : (
                 filtered.map((s) => (
-                  <TableRow
-                    key={s.saleId}
-                    className="cursor-pointer"
-                    onClick={() => openDetail(s)}
-                  >
+                  <TableRow key={s.saleId} className="cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => openDetail(s)}>
                     <TableCell className="font-medium">{s.invoiceNumber}</TableCell>
                     <TableCell>{new Date(s.saleDate).toLocaleDateString()}</TableCell>
                     <TableCell>{s.patientId ?? "Walk-in"}</TableCell>
@@ -205,6 +178,7 @@ export default function PharmacySalesPage() {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
 

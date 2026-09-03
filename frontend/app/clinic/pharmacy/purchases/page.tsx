@@ -133,50 +133,31 @@ export default function PharmacyPurchasesPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Purchases</h1>
-          <p className="text-sm text-muted-foreground">Goods receipts and supplier purchase orders</p>
-        </div>
-        <Button render={<Link href="/clinic/pharmacy/purchases/new" />}>
-          New Purchase
-        </Button>
-      </div>
-
+      {!loading && (
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
       {(() => {
         const total=purchases.length;const rec=purchases.filter(x=>x.status==="received").length;const draft=purchases.filter(x=>x.status==="draft").length;const canc=purchases.filter(x=>x.status==="cancelled").length;
         const s=[{name:"Total",percentage:Math.min(100,total),current:total,allowed:100,allowedLabel:"orders",fill:"var(--chart-1)"},{name:"Received",percentage:total?Math.round(rec/total*100):0,current:rec,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Draft",percentage:total?Math.round(draft/total*100):0,current:draft,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"Cancelled",percentage:total?Math.round(canc/total*100):0,current:canc,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];
-        return (<PharmacyStats title="Purchases Overview" action={<Button size="sm" variant="outline" render={<Link href="/clinic/pharmacy/purchases/new" />}>New Purchase</Button>} items={s} />)
+        return (<PharmacyStats title="Purchases Analytics" subtitle="Goods receipts and supplier purchase orders." searchTerm={search} onSearchChange={setSearch} searchPlaceholder="Search invoice / supplier..." action={<Button size="sm" className="h-9 shadow-sm" render={<Link href="/clinic/pharmacy/purchases/new" />}>New Purchase</Button>} items={s} />)
       })()}
+        </div>
+      )}
 
-      <Card className="rounded-xl border border-border bg-card shadow-sm">
-        <CardHeader className="flex-row flex-wrap items-center gap-3">
-          <CardTitle className="text-base">Purchase Orders</CardTitle>
-          <div className="ml-auto flex flex-wrap items-center gap-2">
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search invoice / supplier"
-              className="h-8 w-44"
-            />
+      <Card className="shadow-sm">
+        <CardContent className="p-0">
+          <div className="flex flex-wrap items-center gap-2 p-4 border-b border-border">
+            <span className="text-sm font-medium">Purchase Orders <span className="text-muted-foreground">({filtered.length})</span></span>
+            <div className="ml-auto flex items-center gap-2">
             <Select value={statusFilter} onValueChange={(v) => setStatusFilter((v as StatusFilter) ?? "")}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="All statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="received">Received</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
+              <SelectTrigger className="h-9 w-32"><SelectValue placeholder="All statuses" /></SelectTrigger>
+              <SelectContent><SelectItem value="">All</SelectItem><SelectItem value="draft">Draft</SelectItem><SelectItem value="received">Received</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent>
             </Select>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                   <TableHead>Invoice #</TableHead>
                   <TableHead>Supplier</TableHead>
                   <TableHead>Date</TableHead>
@@ -188,20 +169,12 @@ export default function PharmacyPurchasesPage() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                      Loading...
-                    </TableCell>
-                  </TableRow>
+                  <TableRow><TableCell colSpan={7}><div className="space-y-2 p-4"><div className="h-10 w-full animate-pulse rounded bg-muted" /><div className="h-10 w-full animate-pulse rounded bg-muted" /><div className="h-10 w-full animate-pulse rounded bg-muted" /></div></TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                      No purchases found.
-                    </TableCell>
-                  </TableRow>
+                  <TableRow><TableCell colSpan={7}><div className="py-16 text-center"><p className="text-sm text-muted-foreground">No purchases found.</p></div></TableCell></TableRow>
                 ) : (
                   filtered.map((p) => (
-                    <TableRow key={p.purchaseId}>
+                    <TableRow key={p.purchaseId} className="hover:bg-muted/30 transition-colors">
                       <TableCell className="font-medium">{p.invoiceNumber}</TableCell>
                       <TableCell>{supplierName(p.supplierId)}</TableCell>
                       <TableCell>
