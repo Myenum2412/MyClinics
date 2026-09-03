@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Zap, Layers, Triangle, Palette } from "lucide-react";
+import { Zap, Layers, Triangle, Palette, Heart, Calendar, Pill, Stethoscope, FileText, CreditCard, ClipboardList, Activity } from "lucide-react";
 
 function FloatIcon({ className, children }: { className: string; children: React.ReactNode }) {
   return (
@@ -15,14 +15,14 @@ function FloatIcon({ className, children }: { className: string; children: React
 export function OnePlatform() {
   return (
     <section className="relative flex w-full flex-col items-center justify-center overflow-hidden bg-white px-6 py-24">
-      <FloatIcon className="left-[5%] top-[20%]"><Layers className="size-5" /></FloatIcon>
-      <FloatIcon className="left-[25%] top-[5%]"><Zap className="size-5" /></FloatIcon>
-      <FloatIcon className="right-[25%] top-[10%]"><Palette className="size-5" /></FloatIcon>
-      <FloatIcon className="right-[5%] top-[20%]"><Triangle className="size-5 fill-current" /></FloatIcon>
-      <FloatIcon className="left-[7%] bottom-[20%]"><Palette className="size-5" /></FloatIcon>
-      <FloatIcon className="left-[24%] bottom-[5%]"><Palette className="size-5" /></FloatIcon>
-      <FloatIcon className="right-[25%] bottom-[5%]"><Layers className="size-5" /></FloatIcon>
-      <FloatIcon className="right-[7%] bottom-[25%]"><Zap className="size-5" /></FloatIcon>
+      <FloatIcon className="left-[5%] top-[20%]"><Calendar className="size-5" /></FloatIcon>
+      <FloatIcon className="left-[25%] top-[5%]"><Heart className="size-5" /></FloatIcon>
+      <FloatIcon className="right-[25%] top-[10%]"><Pill className="size-5" /></FloatIcon>
+      <FloatIcon className="right-[5%] top-[20%]"><Stethoscope className="size-5" /></FloatIcon>
+      <FloatIcon className="left-[7%] bottom-[20%]"><FileText className="size-5" /></FloatIcon>
+      <FloatIcon className="left-[24%] bottom-[5%]"><Activity className="size-5" /></FloatIcon>
+      <FloatIcon className="right-[25%] bottom-[5%]"><CreditCard className="size-5" /></FloatIcon>
+      <FloatIcon className="right-[7%] bottom-[25%]"><ClipboardList className="size-5" /></FloatIcon>
 
       <div className="relative z-10 flex max-w-xl flex-col items-center text-center">
         <h2 className="text-3xl font-bold tracking-tight text-black">One Platform, All Your Tools</h2>
