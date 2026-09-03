@@ -53,8 +53,8 @@ export function SiteHeader() {
         </Button>
         <Separator orientation="vertical" className="hidden h-5 sm:block" />
         <RainbowButton className="hidden sm:inline-flex" style={{ "--color-1": "#E3F2FD", "--color-2": "#90CAF9", "--color-3": "#E3F2FD", "--color-4": "#90CAF9", "--color-5": "#E3F2FD" } as React.CSSProperties}>
-          <Link href="/login" className="flex items-center gap-1.5 text-black">
-            Start Free Trial <ArrowRight data-icon="inline-end" aria-hidden="true" />
+          <Link href="/login" className="flex items-center gap-1.5 text-white">
+            Start Free Trial <ArrowRight className="text-white" data-icon="inline-end" aria-hidden="true" />
           </Link>
         </RainbowButton>
 
@@ -88,7 +88,7 @@ export function SiteHeader() {
                 Sign In
               </Button>
               <RainbowButton className="w-full" style={{ "--color-1": "#E3F2FD", "--color-2": "#90CAF9", "--color-3": "#E3F2FD", "--color-4": "#90CAF9", "--color-5": "#E3F2FD" } as React.CSSProperties}>
-                <Link href="/login" className="flex items-center gap-1.5 text-black">Start Free Trial <ArrowRight data-icon="inline-end" /></Link>
+                <Link href="/login" className="flex items-center gap-1.5 text-white">Start Free Trial <ArrowRight className="text-white" data-icon="inline-end" /></Link>
               </RainbowButton>
             </SheetFooter>
           </SheetContent>
