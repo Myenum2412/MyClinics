@@ -25,12 +25,12 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="w-full bg-gray-50 px-6 py-20">
+    <section className="w-full px-6 py-20" style={{ backgroundColor: "#E3F2FD" }}>
       <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2">
         <div>
-          <span className="inline-block rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold tracking-widest text-gray-600">HOW IT WORKS</span>
-          <h2 className="mt-4 text-4xl font-bold tracking-tight">Up and running<br />in four steps</h2>
-          <p className="mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+          <span className="inline-block rounded-full bg-white px-3 py-1 text-xs font-semibold tracking-widest text-black">HOW IT WORKS</span>
+          <h2 className="mt-4 text-4xl font-bold tracking-tight text-black">Up and running<br />in four steps</h2>
+          <p className="mt-4 max-w-md text-sm leading-relaxed text-black">
             My Clinics is designed for momentum. Go from sign-up to full team collaboration without a single support ticket.
           </p>
         </div>
@@ -38,12 +38,12 @@ export function HowItWorks() {
           {steps.map((s, i) => (
             <div key={s.title} className="relative flex gap-4 pb-10 last:pb-0">
               {i < steps.length - 1 && <span className="absolute left-5 top-10 h-full w-px bg-border" aria-hidden />}
-              <span className="relative z-10 flex size-10 shrink-0 items-center justify-center rounded-lg border bg-white shadow-sm">
-                <s.icon className="size-4" />
+              <span className="relative z-10 flex size-10 shrink-0 items-center justify-center rounded-lg border bg-white shadow-sm text-black">
+                <s.icon className="size-4 text-black" />
               </span>
               <div>
-                <h3 className="text-sm font-semibold">{s.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{s.desc}</p>
+                <h3 className="text-sm font-semibold text-black">{s.title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-black">{s.desc}</p>
               </div>
             </div>
           ))}
