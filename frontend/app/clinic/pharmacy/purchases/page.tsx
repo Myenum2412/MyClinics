@@ -32,8 +32,7 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
-import { ChartContainer } from "@/components/ui/chart"
+import { PharmacyStats } from "@/components/pharmacy-stats"
 import {
   Table,
   TableBody,
@@ -142,7 +141,7 @@ export default function PharmacyPurchasesPage() {
       {(() => {
         const total=purchases.length;const rec=purchases.filter(x=>x.status==="received").length;const draft=purchases.filter(x=>x.status==="draft").length;const canc=purchases.filter(x=>x.status==="cancelled").length;
         const s=[{name:"Total",percentage:Math.min(100,total),current:total,allowed:100,allowedLabel:"orders",fill:"var(--chart-1)"},{name:"Received",percentage:total?Math.round(rec/total*100):0,current:rec,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Draft",percentage:total?Math.round(draft/total*100):0,current:draft,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"Cancelled",percentage:total?Math.round(canc/total*100):0,current:canc,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];
-        return (<Card className="p-4"><div className="flex flex-wrap items-center justify-between gap-2 mb-4"><h2 className="font-semibold text-sm">Purchases Overview</h2><Button render={<Link href="/clinic/pharmacy/purchases/new" />}>New Purchase</Button></div><dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">{s.map(item=>(<Card className="p-4 shadow-sm bg-card" key={item.name}><CardContent className="flex items-center space-x-4 p-0"><div className="relative flex items-center justify-center"><ChartContainer className="h-[80px] w-[80px]" config={{capacity:{label:item.name,color:item.fill}}}><RadialBarChart barSize={6} data={[{name:item.name,capacity:item.percentage}]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}><PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0,100]} tick={false} type="number" /><RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill} /></RadialBarChart></ChartContainer><div className="absolute inset-0 flex items-center justify-center"><span className="font-semibold text-xs">{item.percentage}%</span></div></div><div><dt className="font-semibold text-sm leading-none mb-1">{item.name}</dt><dd className="text-muted-foreground text-xs">{String(item.current)} of {String(item.allowed)} {item.allowedLabel}</dd></div></CardContent></Card>))}</dl></Card>)
+        return (<PharmacyStats title="Purchases Overview" action={<Button render={<Link href="/clinic/pharmacy/purchases/new" />}>New Purchase</Button>} items={s} />)
       })()}
         <Button render={<Link href="/clinic/pharmacy/purchases/new" />}>
           New Purchase

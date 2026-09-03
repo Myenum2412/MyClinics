@@ -15,8 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
-import { ChartContainer } from "@/components/ui/chart"
+import { PharmacyStats } from "@/components/pharmacy-stats"
 import {
   Select,
   SelectContent,
@@ -132,13 +131,7 @@ export default function PharmacySalesPage() {
           { name: "Today", percentage: Math.min(100, todayCount * 10), current: todayCount, allowed: 10, allowedLabel: "target", fill: "var(--chart-3)" },
           { name: "Revenue", percentage: Math.min(100, Math.round((totalVal / 50000) * 100)), current: `₹${totalVal.toLocaleString("en-IN")}`, allowed: "₹50K", allowedLabel: "target", fill: "var(--chart-4)" },
         ];
-        return (
-          <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {stats.map((item) => (
-              <Card key={item.name} className="p-4 shadow-sm bg-card"><CardContent className="flex items-center space-x-4 p-0"><div className="relative flex items-center justify-center"><ChartContainer className="h-[80px] w-[80px]" config={{ capacity: { label: item.name, color: item.fill } }}><RadialBarChart barSize={6} data={[{ capacity: item.percentage }]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}><PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0, 100]} tick={false} type="number" /><RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill} /></RadialBarChart></ChartContainer><div className="absolute inset-0 flex items-center justify-center"><span className="font-semibold text-xs">{item.percentage}%</span></div></div><div><dt className="font-semibold text-sm mb-1">{item.name}</dt><dd className="text-muted-foreground text-xs">{String(item.current)} of {String(item.allowed)} {item.allowedLabel}</dd></div></CardContent></Card>
-            ))}
-          </dl>
-        );
+        return (<PharmacyStats title="Sales Overview" items={stats} />);
       })()}
 
       <Card className="rounded-xl border border-border bg-card shadow-sm">
