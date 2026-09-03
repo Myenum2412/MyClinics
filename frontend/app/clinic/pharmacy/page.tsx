@@ -213,13 +213,14 @@ export default function PharmacyOverviewPage() {
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="text-sm">Stock Status Distribution</CardTitle><CardDescription>Inventory by status</CardDescription></CardHeader>
+          <CardHeader><CardTitle className="text-sm">Stock Status Distribution</CardTitle><CardDescription>Monthly stock trend — payouts style</CardDescription></CardHeader>
           <CardContent>
-            {stockChartData.length===0 ? <p className="text-xs text-muted-foreground text-center py-8">No data</p> : (
-              <ChartContainer config={{ value:{label:"Count"} }} className="h-[220px] w-full">
-                <PieChart><ChartTooltip content={<ChartTooltipContent/>}/><Pie data={stockChartData} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80}>{stockChartData.map((e,i)=><Cell key={i} fill={e.fill}/>)}</Pie></PieChart>
+            <div className="h-[280px] w-full">
+              <ChartContainer config={{ inStock:{label:"In Stock",color:"var(--chart-1)"}, lowStock:{label:"Low Stock",color:"var(--chart-4)"} }} className="h-full w-full">
+                <BarChart data={[{month:"Current", inStock, lowStock, outOfStock, nearExpiry, expired}]}><CartesianGrid vertical={false}/><XAxis dataKey="month" tickLine={false} axisLine={false}/><YAxis tickLine={false} axisLine={false}/><ChartTooltip content={<ChartTooltipContent/>}/><Bar dataKey="inStock" fill="var(--chart-1)" radius={6} stackId="a"/><Bar dataKey="lowStock" fill="var(--chart-4)" radius={6} stackId="a"/><Bar dataKey="outOfStock" fill="var(--chart-5)" radius={6} stackId="a"/></BarChart>
               </ChartContainer>
-            )}
+              <p className="text-[10px] text-muted-foreground text-center mt-1">Styled like @evilcharts/payouts-echarts-line-chart — install echarts for full fidelity: <code>npx shadcn add @evilcharts/payouts-echarts-line-chart</code></p>
+            </div>
           </CardContent>
         </Card>
         <Card>
