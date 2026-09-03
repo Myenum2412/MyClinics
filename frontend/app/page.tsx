@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   return (
@@ -26,12 +27,15 @@ export default function Home() {
           in one place.
         </p>
         <div className="flex gap-4">
-          <Button asChild size="lg">
-            <Link href="/login">Sign In</Link>
-          </Button>
-          <Button asChild variant="secondary" size="lg">
-            <Link href="/clinic">Go to Clinic</Link>
-          </Button>
+          <Link href="/login" className={cn(buttonVariants({ size: "lg" }))}>
+            Sign In
+          </Link>
+          <Link
+            href="/clinic"
+            className={cn(buttonVariants({ variant: "secondary", size: "lg" }))}
+          >
+            Go to Clinic
+          </Link>
         </div>
       </div>
     </div>
