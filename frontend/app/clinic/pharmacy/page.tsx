@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Package, Boxes, AlertTriangle, Ban, Clock, ShoppingCart, Receipt, Truck, ArrowRight, Plus, History, TrendingUp, Calendar, Sparkles, ArrowUpRight } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
 
 export default function PharmacyOverviewPage() {
   const session = useRequireRole("patient");
@@ -59,6 +59,15 @@ export default function PharmacyOverviewPage() {
   const activeSuppliers = suppliers.filter((s:any)=>s.status==="active").length;
   const pendingPurchases = purchases.filter((p:any)=>p.status==="draft").length;
   const todaySales = dash?.todaySales;
+
+  const inventoryStats = [
+    { name: "Total Items", capacity: Math.min(100, totalMeds), current: totalMeds, allowed: Math.max(totalMeds, 10), allowedLabel: "items", fill: "var(--chart-1)" },
+    { name: "Available Units", capacity: Math.min(100, Math.round((availableStock/1000)*100)), current: availableStock, allowed: 1000, allowedLabel: "units", fill: "var(--chart-2)" },
+    { name: "In Stock", capacity: totalMeds?Math.round((inStock/totalMeds)*100):0, current: inStock, allowed: totalMeds, allowedLabel: "items", fill: "var(--chart-1)" },
+    { name: "Low Stock", capacity: totalMeds?Math.round((lowStock/totalMeds)*100):0, current: lowStock, allowed: totalMeds, allowedLabel: "items", fill: "var(--chart-4)" },
+    { name: "Out of Stock", capacity: totalMeds?Math.round((outOfStock/totalMeds)*100):0, current: outOfStock, allowed: totalMeds, allowedLabel: "items", fill: "var(--chart-5)" },
+    { name: "Expiring", capacity: totalMeds?Math.round(((nearExpiry+expired)/Math.max(totalMeds,1))*100):0, current: nearExpiry+expired, allowed: totalMeds, allowedLabel: "items", fill: "#f97316" },
+  ];
 
   const alertItems: { label: string; count: number; href: string; color: string; icon: any }[] = [
     ...(lowStock ? [{ label: "Low-stock", count: lowStock, href: "/clinic/pharmacy/inventory?status=low_stock", color: "text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-950/30", icon: AlertTriangle }] : []),
@@ -126,10 +135,35 @@ export default function PharmacyOverviewPage() {
         </Card>
       )}
 
-      {/* KPI Grid — 5 overview sections as premium cards */}
+      {/* Inventory — stats-07, 1 row 6 columns */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold flex items-center gap-2"><Package className="size-4"/>Inventory</h2>
+          <Link href="/clinic/pharmacy/inventory" className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1">View Inventory <ArrowRight className="size-3"/></Link>
+        </div>
+        <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          {inventoryStats.map((item) => (
+            <Card key={item.name} className="p-4 rounded-2xl shadow-sm">
+              <CardContent className="flex items-center gap-3 p-0">
+                <div className="relative flex items-center justify-center shrink-0">
+                  <ChartContainer config={{ capacity:{label:item.name, color:item.fill} }} className="h-[80px] w-[80px]">
+                    <RadialBarChart barSize={6} data={[{...item, capacity:item.capacity}]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}>
+                      <PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0,100]} tick={false} type="number"/>
+                      <RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill}/>
+                    </RadialBarChart>
+                  </ChartContainer>
+                  <div className="absolute inset-0 flex items-center justify-center"><span className="font-semibold text-sm">{item.capacity}%</span></div>
+                </div>
+                <div className="min-w-0"><dt className="font-medium text-sm truncate">{item.name}</dt><dd className="text-xs text-muted-foreground">{item.current} of {item.allowed} {item.allowedLabel}</dd></div>
+              </CardContent>
+            </Card>
+          ))}
+        </dl>
+      </div>
+
+      {/* KPI Grid — remaining sections */}
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {[
-          { title:"Inventory", icon:Package, href:"/clinic/pharmacy/inventory", stats:[["Total Items",totalMeds],["Available",availableStock],["In Stock",inStock],["Low",lowStock],["Out",outOfStock],["Expiring",nearExpiry+expired]] },
           { title:"Stock Activity", icon:History, href:"/clinic/pharmacy/stock-history", custom:true },
           { title:"Purchases", icon:ShoppingCart, href:"/clinic/pharmacy/purchases", stats:[["Total",purchases.length],["Pending",pendingPurchases]] },
           { title:"Sales", icon:Receipt, href:"/clinic/pharmacy/sales", stats:[["Total",sales.length],["Today",todaySales?.count ?? 0]] },
