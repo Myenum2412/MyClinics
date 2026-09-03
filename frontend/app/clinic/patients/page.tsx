@@ -56,6 +56,7 @@ import { useDropdownOptions } from "@/lib/dropdown-options";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye } from "lucide-react";
+import { TableFilters } from "@/components/clinic/table-filters";
 import dynamic from "next/dynamic";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import { patientStatusTone } from "@/lib/status-styles";
@@ -174,11 +175,14 @@ export default function PatientsPage() {
   const [credentials, setCredentials] = useState<{ patientName: string; email: string; password: string } | null>(null);
   const [resending, setResending] = useState(false);
 
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [genderFilter, setGenderFilter] = useState("all");
+
   // Pagination & selection states
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [visibleColumns] = useState<Record<string, boolean>>({
+  const [visibleColumns, setVisibleColumns] = useState<Record<string, boolean>>({
     select: true,
     name: true,
     mobile: true,
@@ -400,19 +404,16 @@ export default function PatientsPage() {
     }
   };
 
-  // Client-side search filtering
+  // Client-side search + filter
   const filteredItems = useMemo(() => {
-    if (!q) return items;
     const lower = q.toLowerCase();
     return items.filter((p) => {
-      return (
-        p.fullName.toLowerCase().includes(lower) ||
-        (p.email && p.email.toLowerCase().includes(lower)) ||
-        p.mobile.includes(lower) ||
-        (p.city && p.city.toLowerCase().includes(lower))
-      );
+      const matchesSearch = !q || p.fullName.toLowerCase().includes(lower) || (p.email && p.email.toLowerCase().includes(lower)) || p.mobile.includes(lower) || (p.city && p.city.toLowerCase().includes(lower));
+      const matchesStatus = statusFilter === "all" || p.status === statusFilter;
+      const matchesGender = genderFilter === "all" || p.gender === genderFilter;
+      return matchesSearch && matchesStatus && matchesGender;
     });
-  }, [items, q]);
+  }, [items, q, statusFilter, genderFilter]);
 
   // Pagination calculation
   const totalPages = Math.ceil(filteredItems.length / pageSize);
@@ -716,6 +717,22 @@ export default function PatientsPage() {
           </div>
         </div>
       )}
+
+      <TableFilters
+        searchValue={q}
+        onSearchChange={(v) => { setQ(v); setCurrentPage(1); }}
+        searchPlaceholder="Search name, mobile, email, city..."
+        filters={[
+          { key: "status", label: "Status", options: [{ label: "Active", value: "active" }, { label: "Inactive", value: "inactive" }] },
+          { key: "gender", label: "Gender", options: [{ label: "Male", value: "male" }, { label: "Female", value: "female" }, { label: "Other", value: "other" }] },
+        ]}
+        filterValues={{ status: statusFilter, gender: genderFilter }}
+        onFilterChange={(k, v) => { if (k === "status") setStatusFilter(v); if (k === "gender") setGenderFilter(v); setCurrentPage(1); }}
+        onClearAll={() => { setStatusFilter("all"); setGenderFilter("all"); }}
+        columns={[{ key: "name", label: "Name" }, { key: "mobile", label: "Mobile" }, { key: "email", label: "Email" }, { key: "doctor", label: "Doctor" }, { key: "status", label: "Status" }]}
+        visibleColumns={visibleColumns}
+        onToggleColumn={(k, v) => setVisibleColumns((prev) => ({ ...prev, [k]: v }))}
+      />
 
       {/* Main card containing listing */}
       <Card className="border-border shadow-sm">
