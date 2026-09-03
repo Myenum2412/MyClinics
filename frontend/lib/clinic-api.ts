@@ -543,8 +543,19 @@ async function request<T>(
   try {
     res = await fetch(url, { ...init, headers, cache: "no-store" });
   } catch (e) {
-    const msg = e instanceof TypeError ? `Network error — cannot reach API at ${API_BASE || "proxy"} (${e.message}). Check backend at https://api.myclinic.myenum.in is up and CORS allows ${typeof window !== "undefined" ? window.location.origin : ""}.` : e instanceof Error ? e.message : "Network error";
-    throw new ClinicApiError(msg, 0, "NETWORK_ERROR");
+    // Fallback: if direct API_BASE fetch failed, retry via same-origin proxy (avoids CORS/network issues on Vercel)
+    if (API_BASE && url.startsWith(API_BASE)) {
+      try {
+        const proxyUrl = url.slice(API_BASE.length);
+        res = await fetch(proxyUrl, { ...init, headers, cache: "no-store" });
+      } catch (e2) {
+        const msg = e instanceof TypeError ? `Network error — cannot reach API at ${API_BASE || "proxy"} (${e instanceof Error ? e.message : ""}). Retried via proxy also failed. Check backend at https://api.myclinic.myenum.in is up and CORS allows ${typeof window !== "undefined" ? window.location.origin : ""}.` : e instanceof Error ? e.message : "Network error";
+        throw new ClinicApiError(msg, 0, "NETWORK_ERROR");
+      }
+    } else {
+      const msg = e instanceof TypeError ? `Network error — cannot reach API at ${API_BASE || "proxy"} (${e.message}). Check backend at https://api.myclinic.myenum.in is up and CORS allows ${typeof window !== "undefined" ? window.location.origin : ""}.` : e instanceof Error ? e.message : "Network error";
+      throw new ClinicApiError(msg, 0, "NETWORK_ERROR");
+    }
   }
 
   let data: unknown;
