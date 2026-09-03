@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 
@@ -8,22 +9,24 @@ const columns = [
 
 export function SiteFooter() {
   return (
-    <footer className="w-full border-t border-white/10 bg-white/10 backdrop-blur-md px-4 py-10 sm:px-6 text-white">
+    <footer className="w-full border-t bg-white px-4 py-10 sm:px-6 text-black">
       <div className="grid gap-8 md:grid-cols-2">
         <div className="max-w-sm">
-          <Link href="/" className="text-lg font-bold tracking-tight">My Clinics</Link>
-          <p className="mt-3 text-sm text-white/70">
+          <Link href="/" className="inline-flex">
+            <Image src="/logo.png" alt="My Clinics" width={140} height={40} className="h-9 w-auto" />
+          </Link>
+          <p className="mt-3 text-sm text-black">
             Complete clinic management — appointments, medicines, billing & reports.
           </p>
         </div>
         <div className="grid grid-cols-2 gap-8">
           {columns.map((col) => (
             <div key={col.title}>
-              <h3 className="text-sm font-bold tracking-tight">{col.title}</h3>
+              <h3 className="text-sm font-bold tracking-tight text-black">{col.title}</h3>
               <ul className="mt-3 flex flex-col gap-2">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    <Link href={link.href} className="text-sm text-white/70 hover:text-white">
+                    <Link href={link.href} className="text-sm text-black hover:text-black/70">
                       {link.label}
                     </Link>
                   </li>
@@ -34,7 +37,7 @@ export function SiteFooter() {
         </div>
       </div>
       <Separator className="mt-10" />
-      <p className="pt-6 text-sm text-white/60">&copy; 2026 My Clinics. All rights reserved.</p>
+      <p className="pt-6 text-sm text-black">&copy; 2026 My Clinics. All rights reserved.</p>
     </footer>
   );
 }
