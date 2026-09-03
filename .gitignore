@@ -46,6 +46,7 @@ next-env.d.ts
 .wwebjs_cache/
 
 # backend
+/frontend/node_modules
 /backend/node_modules/
 /backend/whatsapp-session/
 
