@@ -35,8 +35,13 @@ export function EasyChat() {
           <ul className="mt-4 space-y-2 text-sm text-black">
             <li>✓ Book & reschedule appointments in one message</li>
             <li>✓ Prescriptions, bills & reports — instantly shared</li>
+            <li>✓ Smart reminders & follow-ups — never miss a visit</li>
+            <li>✓ Secure & private — your data stays protected</li>
             <li>✓ Same familiar WhatsApp experience your team loves</li>
           </ul>
+          <p className="mt-4 text-sm leading-relaxed text-black/70">
+            From first consultation to post-treatment care, Ai Root keeps the conversation flowing. Patients feel at home, staff saves hours every week.
+          </p>
         </div>
       </div>
     </section>
