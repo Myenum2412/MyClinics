@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -51,14 +52,11 @@ export function SiteHeader() {
           Sign In
         </Button>
         <Separator orientation="vertical" className="hidden h-5 sm:block" />
-        <Button
-          render={<Link href="/login" />}
-          nativeButton={false}
-          className="hidden sm:inline-flex"
-        >
-          Start Free Trial
-          <ArrowRight data-icon="inline-end" aria-hidden="true" />
-        </Button>
+        <RainbowButton className="hidden sm:inline-flex" style={{ "--color-1": "#E3F2FD", "--color-2": "#90CAF9", "--color-3": "#E3F2FD", "--color-4": "#90CAF9", "--color-5": "#E3F2FD" } as React.CSSProperties}>
+          <Link href="/login" className="flex items-center gap-1.5 text-black">
+            Start Free Trial <ArrowRight data-icon="inline-end" aria-hidden="true" />
+          </Link>
+        </RainbowButton>
 
         <Sheet>
           <SheetTrigger
@@ -89,9 +87,9 @@ export function SiteHeader() {
               <Button render={<Link href="/login" />} nativeButton={false} variant="ghost" className="w-full">
                 Sign In
               </Button>
-              <Button render={<Link href="/login" />} nativeButton={false} className="w-full">
-                Start Free Trial <ArrowRight data-icon="inline-end" />
-              </Button>
+              <RainbowButton className="w-full" style={{ "--color-1": "#E3F2FD", "--color-2": "#90CAF9", "--color-3": "#E3F2FD", "--color-4": "#90CAF9", "--color-5": "#E3F2FD" } as React.CSSProperties}>
+                <Link href="/login" className="flex items-center gap-1.5 text-black">Start Free Trial <ArrowRight data-icon="inline-end" /></Link>
+              </RainbowButton>
             </SheetFooter>
           </SheetContent>
         </Sheet>
