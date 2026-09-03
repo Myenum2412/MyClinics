@@ -8,6 +8,7 @@ import AboutBlock from "@/components/blocks/about-3";
 import { AuroraText } from "@/components/ui/aurora-text";
 import { HowItWorks } from "@/components/how-it-works";
 import { InfiniteMarquee } from "@/src/components/wensity/infinite-marquee";
+import { EasyChat } from "@/components/easy-chat";
 
 export default function Home() {
   return (
@@ -45,6 +46,7 @@ export default function Home() {
         />
       </div>
       <HowItWorks />
+      <EasyChat />
       <AboutBlock />
       <SiteFooter />
     </div>
