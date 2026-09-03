@@ -46,7 +46,7 @@ export default function PharmacyOverviewPage() {
   }, [clinicId]);
 
   if (!session) return null;
-  if (loading) return <div className="mx-auto max-w-[1280px] p-8 space-y-4"><Skeleton className="h-28 w-full rounded-2xl" /><Skeleton className="h-[420px] w-full rounded-2xl" /></div>;
+  if (loading) return <div className="w-full p-8 space-y-4"><Skeleton className="h-28 w-full rounded-2xl" /><Skeleton className="h-[420px] w-full rounded-2xl" /></div>;
 
   const totalMeds = dash?.totalMedicines ?? inventory.length;
   const lowStock = dash?.lowStock ?? inventory.filter((i:any)=>i.status==="low_stock").length;
@@ -89,7 +89,7 @@ export default function PharmacyOverviewPage() {
   ].sort((a,b)=> new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0,8);
 
   return (
-    <div className="mx-auto max-w-[1280px] space-y-8 p-6 md:p-8 bg-gradient-to-b from-background to-muted/20 min-h-screen">
+    <div className="w-full space-y-8 p-6 md:p-8 bg-gradient-to-b from-background to-muted/20 min-h-screen">
       {/* Header — Linear/Stripe style */}
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div className="space-y-2">
