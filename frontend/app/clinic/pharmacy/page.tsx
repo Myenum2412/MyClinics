@@ -109,18 +109,6 @@ export default function PharmacyOverviewPage() {
         <Button variant="outline" size="sm" onClick={()=>window.location.reload()} className="rounded-full shadow-sm">Refresh</Button>
       </div>
 
-      {/* Quick Actions — pill actions */}
-      <Card className="rounded-2xl border shadow-sm backdrop-blur">
-        <CardContent className="flex flex-wrap gap-2.5 p-5">
-          <Link href="/clinic/pharmacy/medicines/new"><Button size="sm" className="rounded-full gap-1.5 shadow-sm"><Plus className="size-4"/>Add Medicine</Button></Link>
-          <Link href="/clinic/pharmacy/inventory/opening-stock"><Button size="sm" variant="outline" className="rounded-full gap-1.5"><Boxes className="size-4"/>Add Stock</Button></Link>
-          <Link href="/clinic/pharmacy/purchases/new"><Button size="sm" variant="outline" className="rounded-full gap-1.5"><ShoppingCart className="size-4"/>Record Purchase</Button></Link>
-          <Link href="/clinic/pharmacy/sales/new"><Button size="sm" variant="outline" className="rounded-full gap-1.5"><Receipt className="size-4"/>Record Sale</Button></Link>
-          <Link href="/clinic/pharmacy/suppliers/new"><Button size="sm" variant="outline" className="rounded-full gap-1.5"><Truck className="size-4"/>Add Supplier</Button></Link>
-          <Link href="/clinic/pharmacy/stock-history"><Button size="sm" variant="ghost" className="rounded-full gap-1.5"><History className="size-4"/>Stock History</Button></Link>
-        </CardContent>
-      </Card>
-
       {/* Alerts — premium banner */}
       {alertItems.length > 0 && (
         <Card className="rounded-2xl border-amber-200/60 bg-gradient-to-br from-amber-50 to-orange-50/50 dark:from-amber-950/20 dark:to-orange-950/10 shadow-sm">
