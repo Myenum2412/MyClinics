@@ -1,31 +1,28 @@
 "use client";
 import Image from "next/image";
 
-function Bubble({ children, variant = "incoming" }: { children: React.ReactNode; variant?: "incoming" | "outgoing" }) {
-  return (
-    <div className={`flex w-full ${variant === "outgoing" ? "justify-end" : "justify-start"}`}>
-      <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${variant === "outgoing" ? "bg-[#E3F2FD] text-black rounded-br-none" : "bg-gray-100 text-black rounded-bl-none"}`}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
 export function EasyChat() {
   return (
     <section className="w-full bg-white px-6 py-16">
       <div className="mx-auto grid w-full max-w-6xl gap-10 md:grid-cols-2 md:items-center">
-        {/* Left: Chat */}
-        <div className="flex items-start gap-3 rounded-2xl border bg-gray-50 p-6">
-          <div className="flex flex-col items-center gap-1 shrink-0">
-            <Image src="/aidps.png" alt="Ai Root" width={56} height={56} className="size-12 rounded-full object-cover border-2 border-[#E3F2FD]" />
-            <span className="text-xs font-semibold text-black">Ai Root</span>
-            <span className="flex items-center gap-1 text-[10px] text-green-600"><span className="size-1.5 rounded-full bg-green-500" /> Online</span>
+        {/* Left: WhatsApp UI */}
+        <div className="mx-auto w-full max-w-sm overflow-hidden rounded-3xl border shadow-xl">
+          <div className="flex items-center gap-3 bg-[#075E54] px-4 py-3 text-white">
+            <Image src="/aidps.png" alt="Ai Root" width={40} height={40} className="size-9 rounded-full object-cover" />
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold">Ai Root</span>
+              <span className="text-xs opacity-80">online</span>
+            </div>
           </div>
-          <div className="flex flex-1 flex-col gap-3">
-            <Bubble>👋 Hi, I&apos;m <b>Ai Root</b>! Just tell me what you need.</Bubble>
-            <Bubble variant="outgoing">Book an appointment for tomorrow 10 AM</Bubble>
-            <Bubble>✅ Done! Appointment with Dr. Sharma — tomorrow 10:00 AM. I&apos;ll remind you.</Bubble>
+          <div className="flex flex-col gap-2 bg-[#E5DDD5] bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-repeat p-4 min-h-[320px]">
+            <div className="max-w-[80%] rounded-lg rounded-tl-none bg-white px-3 py-2 text-sm shadow">👋 Hi, I&apos;m <b>Ai Root</b>! Just tell me what you need.</div>
+            <div className="max-w-[80%] self-end rounded-lg rounded-tr-none bg-[#DCF8C6] px-3 py-2 text-sm shadow">Book an appointment for tomorrow 10 AM</div>
+            <div className="max-w-[80%] rounded-lg rounded-tl-none bg-white px-3 py-2 text-sm shadow">✅ Done! Appointment with Dr. Sharma — tomorrow 10:00 AM. I&apos;ll remind you.</div>
+            <span className="mx-auto mt-2 rounded-full bg-white/80 px-2 py-0.5 text-[10px] text-gray-600">TODAY</span>
+          </div>
+          <div className="flex items-center gap-2 bg-[#F0F0F0] p-3">
+            <span className="flex-1 rounded-full bg-white px-4 py-2 text-sm text-gray-400">Type a message</span>
+            <span className="flex size-9 items-center justify-center rounded-full bg-[#25D366] text-white">➤</span>
           </div>
         </div>
         {/* Right: Text */}
@@ -33,7 +30,7 @@ export function EasyChat() {
           <span className="inline-block rounded-full bg-[#E3F2FD] px-3 py-1 text-xs font-semibold tracking-widest text-black">AI ASSISTANT</span>
           <h2 className="mt-3 text-3xl font-bold tracking-tight text-black">Meet Ai Root — <br />Healthcare, Just a Chat Away</h2>
           <p className="mt-3 text-sm leading-relaxed text-black/70">
-            No forms, no menus to learn. Simply chat with Ai Root like you would with a friend. Book appointments, check prescriptions, or get reports — all in plain language. Fast, friendly, and always available.
+            No forms, no menus to learn. Simply chat with Ai Root like you would with a friend — WhatsApp-style. Book appointments, check prescriptions, or get reports — all in plain language.
           </p>
           <ul className="mt-4 space-y-2 text-sm text-black">
             <li>✓ Natural language — type as you speak</li>
