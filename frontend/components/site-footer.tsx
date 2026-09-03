@@ -8,11 +8,11 @@ const columns = [
 
 export function SiteFooter() {
   return (
-    <footer className="w-full border-t bg-background px-4 py-10 sm:px-6">
+    <footer className="w-full border-t border-white/10 bg-white/10 backdrop-blur-md px-4 py-10 sm:px-6 text-white">
       <div className="grid gap-8 md:grid-cols-2">
         <div className="max-w-sm">
           <Link href="/" className="text-lg font-bold tracking-tight">My Clinics</Link>
-          <p className="mt-3 text-sm text-muted-foreground">
+          <p className="mt-3 text-sm text-white/70">
             Complete clinic management — appointments, medicines, billing & reports.
           </p>
         </div>
@@ -23,7 +23,7 @@ export function SiteFooter() {
               <ul className="mt-3 flex flex-col gap-2">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    <Link href={link.href} className="text-sm text-muted-foreground hover:text-foreground">
+                    <Link href={link.href} className="text-sm text-white/70 hover:text-white">
                       {link.label}
                     </Link>
                   </li>
@@ -34,7 +34,7 @@ export function SiteFooter() {
         </div>
       </div>
       <Separator className="mt-10" />
-      <p className="pt-6 text-sm text-muted-foreground">&copy; 2026 My Clinics. All rights reserved.</p>
+      <p className="pt-6 text-sm text-white/60">&copy; 2026 My Clinics. All rights reserved.</p>
     </footer>
   );
 }

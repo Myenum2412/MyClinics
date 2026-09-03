@@ -21,7 +21,7 @@ const navLinks = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 flex h-16 w-full items-center border-b border-border bg-background/80 backdrop-blur px-6">
+    <header className="flex h-16 w-full items-center border-b border-white/10 bg-white/10 backdrop-blur-md px-6 text-white">
       <Link href="/" className="flex shrink-0 items-center gap-2.5">
         <span className="text-base font-bold tracking-tight">My Clinics</span>
       </Link>

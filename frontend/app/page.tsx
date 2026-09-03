@@ -7,12 +7,15 @@ import { SiteFooter } from "@/components/site-footer";
 
 export default function Home() {
   return (
-    <div className="flex min-h-svh flex-col">
-      <SiteHeader />
-      <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 py-16 text-center">
-        <Image src="/bghome.png" alt="Background" fill priority className="object-cover" />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="relative z-10 flex flex-col items-center gap-8">
+    <div className="relative min-h-svh w-full overflow-hidden">
+      {/* Full-screen background */}
+      <Image src="/bghome.png" alt="Background" fill priority className="object-cover" />
+      <div className="absolute inset-0 bg-black/40" />
+
+      {/* Overlay layout */}
+      <div className="relative z-10 flex min-h-svh flex-col">
+        <SiteHeader />
+        <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-16 text-center">
           <h1 className="text-4xl font-bold tracking-tight text-white md:text-5xl">
             Welcome to My Clinics
           </h1>
@@ -28,8 +31,8 @@ export default function Home() {
             </Link>
           </div>
         </div>
+        <SiteFooter />
       </div>
-      <SiteFooter />
     </div>
   );
 }
