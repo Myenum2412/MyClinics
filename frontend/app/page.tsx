@@ -10,6 +10,7 @@ import { HowItWorks } from "@/components/how-it-works";
 import { InfiniteMarquee } from "@/src/components/wensity/infinite-marquee";
 import { EasyChat } from "@/components/easy-chat";
 import { AnimateIn } from "@/components/animate-in";
+import { OnePlatform } from "@/components/one-platform";
 
 export default function Home() {
   return (
@@ -47,6 +48,7 @@ export default function Home() {
         />
       </div>
       <AnimateIn><HowItWorks /></AnimateIn>
+      <AnimateIn delay={0.05}><OnePlatform /></AnimateIn>
       <AnimateIn delay={0.1}><EasyChat /></AnimateIn>
       <AnimateIn delay={0.15}><AboutBlock /></AnimateIn>
       <SiteFooter />
