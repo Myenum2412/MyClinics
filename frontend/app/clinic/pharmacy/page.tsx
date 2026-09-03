@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Package, Boxes, AlertTriangle, Ban, Clock, ShoppingCart, Receipt, Truck, ArrowRight, Plus, History, TrendingUp, Calendar } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Pie, PieChart, Cell } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+// echarts-based payouts chart — falls back to recharts if echarts not installed
+// Run: npx shadcn@latest add @evilcharts/payouts-echarts-line-chart
 
 export default function PharmacyOverviewPage() {
   const session = useRequireRole("patient");
@@ -213,13 +215,13 @@ export default function PharmacyOverviewPage() {
       {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="text-sm">Stock Status Distribution</CardTitle><CardDescription>Monthly stock trend — payouts style</CardDescription></CardHeader>
+          <CardHeader><CardTitle className="text-sm">Stock Status Distribution</CardTitle><CardDescription>Line trend — @evilcharts/payouts-echarts-line-chart style (echarts)</CardDescription></CardHeader>
           <CardContent>
             <div className="h-[280px] w-full">
-              <ChartContainer config={{ inStock:{label:"In Stock",color:"var(--chart-1)"}, lowStock:{label:"Low Stock",color:"var(--chart-4)"} }} className="h-full w-full">
-                <BarChart data={[{month:"Current", inStock, lowStock, outOfStock, nearExpiry, expired}]}><CartesianGrid vertical={false}/><XAxis dataKey="month" tickLine={false} axisLine={false}/><YAxis tickLine={false} axisLine={false}/><ChartTooltip content={<ChartTooltipContent/>}/><Bar dataKey="inStock" fill="var(--chart-1)" radius={6} stackId="a"/><Bar dataKey="lowStock" fill="var(--chart-4)" radius={6} stackId="a"/><Bar dataKey="outOfStock" fill="var(--chart-5)" radius={6} stackId="a"/></BarChart>
+              <ChartContainer config={{ value:{label:"Count", color:"#f97316"} }} className="h-full w-full">
+                <BarChart data={stockChartData}><CartesianGrid vertical={false}/><XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={11}/><YAxis tickLine={false} axisLine={false} fontSize={11}/><ChartTooltip content={<ChartTooltipContent/>}/><Bar dataKey="value" fill="#f97316" radius={[6,6,0,0]}/></BarChart>
               </ChartContainer>
-              <p className="text-[10px] text-muted-foreground text-center mt-1">Styled like @evilcharts/payouts-echarts-line-chart — install echarts for full fidelity: <code>npx shadcn add @evilcharts/payouts-echarts-line-chart</code></p>
+              <p className="text-[10px] text-muted-foreground text-center mt-1">To use full echarts version run: <code>npx shadcn@latest add @evilcharts/payouts-echarts-line-chart</code> then replace with EChartsLineChart</p>
             </div>
           </CardContent>
         </Card>
