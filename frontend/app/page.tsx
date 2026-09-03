@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import AboutBlock from "@/components/blocks/about-3";
+import { AuroraText } from "@/components/ui/aurora-text";
 
 export default function Home() {
   return (
@@ -28,13 +29,16 @@ export default function Home() {
 
         {/* Hero Content */}
         <div className="relative z-10 flex w-full max-w-4xl flex-col items-center gap-8 px-6 text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl lg:text-7xl">
-            Welcome to My Clinics
+          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+            <span className="text-white">Your Health,</span>{" "}
+            <AuroraText colors={["#60A5FA", "#34D399", "#A78BFA", "#F472B6"]} speed={1.2}>
+              Simplified
+            </AuroraText>
           </h1>
 
           <p className="max-w-2xl text-base leading-relaxed text-white/90 sm:text-lg md:text-xl">
-            Manage appointments, prescriptions, billing and medical reports —
-            all in one place.
+            Book appointments in seconds, access prescriptions instantly, and keep all your
+            medical records safe — one trusted place for your family&apos;s healthcare.
           </p>
 
           {/* Buttons */}
