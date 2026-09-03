@@ -6,6 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import AboutBlock from "@/components/blocks/about-3";
 import { AuroraText } from "@/components/ui/aurora-text";
+import { HowItWorks } from "@/components/how-it-works";
 
 export default function Home() {
   return (
@@ -28,6 +29,7 @@ export default function Home() {
           </div>
         </div>
       </main>
+      <HowItWorks />
       <AboutBlock />
       <SiteFooter />
     </div>
