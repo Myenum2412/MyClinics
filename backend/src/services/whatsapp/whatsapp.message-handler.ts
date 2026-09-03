@@ -415,6 +415,19 @@ export async function handleIncomingMessage(client: Client, message: Message): P
     });
     customerForError = customer;
 
+    // AI Agent toggle — per-clinic setting (clinic_settings.aiAgentEnabled)
+    try {
+      const clinicSession = botNumber ? await db.collection("wa_clinic_sessions").findOne({ phone: botNumber }) : null;
+      const clinicIdForAi = (clinicSession as any)?.clinicId;
+      if (clinicIdForAi) {
+        const clinicSettings = await db.collection("clc_clinic_settings").findOne({ clinicId: clinicIdForAi } as any);
+        if (clinicSettings && (clinicSettings as any).aiAgentEnabled === false) {
+          logger.info("whatsapp ai disabled for clinic", { clinicId: clinicIdForAi });
+          return;
+        }
+      }
+    } catch {}
+
     // Extract text + media (voice/image) for omni model
     const { text: effectiveText, multimodal } = await extractUserContent(message);
     effectiveTextForError = effectiveText;

@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import {
   ListPlus,
   Pencil,
@@ -69,6 +70,8 @@ export default function SettingsPage() {
   const [waSession, setWaSession] = useState<ClinicWhatsappSession | null>(null);
   const [waLoading, setWaLoading] = useState(true);
   const [waAction, setWaAction] = useState<"connect" | "disconnect" | "logout" | null>(null);
+  const [aiAgentEnabled, setAiAgentEnabled] = useState(true);
+  const [aiAgentSaving, setAiAgentSaving] = useState(false);
 
   // General settings state
   const [settings, setSettings] = useState<ClinicSettings | null>(null);
@@ -100,6 +103,7 @@ export default function SettingsPage() {
           setTermsDraft(settingsRes.termsAndConditions ?? "");
           setQrCodeDraft(settingsRes.qrCodeUrl ?? "");
           setBillingEditing(false);
+          setAiAgentEnabled((settingsRes as any).aiAgentEnabled ?? true);
         } else {
           // Nothing saved yet — start straight in edit mode.
           setBillingEditing(true);
@@ -424,6 +428,29 @@ export default function SettingsPage() {
                   Powered by WhatsApp Integration · last update{" "}
                    {waSession?.updatedAt ? formatTimeOnly(waSession.updatedAt) : "—"}
                 </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle className="text-base">AI Agent</CardTitle></CardHeader>
+              <CardContent className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-medium text-sm">Enable WhatsApp AI Agent</p>
+                  <p className="text-xs text-muted-foreground">When off, the bot will not auto-reply to WhatsApp messages. Notifications still work.</p>
+                </div>
+                <Switch checked={aiAgentEnabled} disabled={!canEdit || aiAgentSaving} onCheckedChange={async (v) => {
+                  if (!session?.clinicId) return;
+                  setAiAgentSaving(true);
+                  const prev = aiAgentEnabled;
+                  setAiAgentEnabled(v);
+                  try {
+                    const updated = await updateClinicSettings(session.clinicId, { aiAgentEnabled: v } as any);
+                    setSettings(updated);
+                    toast.success(v ? "AI Agent enabled" : "AI Agent disabled");
+                  } catch (e) {
+                    setAiAgentEnabled(prev);
+                    toast.error(e instanceof Error ? e.message : "Failed to update");
+                  } finally { setAiAgentSaving(false); }
+                }} />
               </CardContent>
             </Card>
 
