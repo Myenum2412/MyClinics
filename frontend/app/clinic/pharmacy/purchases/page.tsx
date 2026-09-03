@@ -138,15 +138,16 @@ export default function PharmacyPurchasesPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Purchases</h1>
           <p className="text-sm text-muted-foreground">Goods receipts and supplier purchase orders</p>
         </div>
-      {(() => {
-        const total=purchases.length;const rec=purchases.filter(x=>x.status==="received").length;const draft=purchases.filter(x=>x.status==="draft").length;const canc=purchases.filter(x=>x.status==="cancelled").length;
-        const s=[{name:"Total",percentage:Math.min(100,total),current:total,allowed:100,allowedLabel:"orders",fill:"var(--chart-1)"},{name:"Received",percentage:total?Math.round(rec/total*100):0,current:rec,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Draft",percentage:total?Math.round(draft/total*100):0,current:draft,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"Cancelled",percentage:total?Math.round(canc/total*100):0,current:canc,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];
-        return (<PharmacyStats title="Purchases Overview" action={<Button render={<Link href="/clinic/pharmacy/purchases/new" />}>New Purchase</Button>} items={s} />)
-      })()}
         <Button render={<Link href="/clinic/pharmacy/purchases/new" />}>
           New Purchase
         </Button>
       </div>
+
+      {(() => {
+        const total=purchases.length;const rec=purchases.filter(x=>x.status==="received").length;const draft=purchases.filter(x=>x.status==="draft").length;const canc=purchases.filter(x=>x.status==="cancelled").length;
+        const s=[{name:"Total",percentage:Math.min(100,total),current:total,allowed:100,allowedLabel:"orders",fill:"var(--chart-1)"},{name:"Received",percentage:total?Math.round(rec/total*100):0,current:rec,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Draft",percentage:total?Math.round(draft/total*100):0,current:draft,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"Cancelled",percentage:total?Math.round(canc/total*100):0,current:canc,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];
+        return (<PharmacyStats title="Purchases Overview" action={<Button size="sm" variant="outline" render={<Link href="/clinic/pharmacy/purchases/new" />}>New Purchase</Button>} items={s} />)
+      })()}
 
       <Card className="rounded-xl border border-border bg-card shadow-sm">
         <CardHeader className="flex-row flex-wrap items-center gap-3">
