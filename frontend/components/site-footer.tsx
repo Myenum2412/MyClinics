@@ -1,16 +1,40 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-const columns = [
-  { title: "Product", links: ["Blocks", "Templates", "Pricing", "Changelog"] },
-  { title: "Resources", links: ["Docs", "Guides", "Support", "API"] },
-  { title: "Company", links: ["About", "Blog", "Careers", "Contact"] },
+const columns: { title: string; links: { label: string; href: string }[] }[] = [
+  {
+    title: "Product",
+    links: [
+      { label: "Home", href: "/" },
+      { label: "Features", href: "/#features" },
+      { label: "Pricing", href: "/#pricing" },
+      { label: "Changelog", href: "/changelog" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "Docs", href: "#" },
+      { label: "Guides", href: "#" },
+      { label: "Support", href: "#" },
+      { label: "API", href: "#" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About", href: "#" },
+      { label: "Careers", href: "/careers" },
+      { label: "Contact", href: "/#contact" },
+    ],
+  },
 ];
 
 const socials = [
-  { label: "GitHub", icon: GithubMark },
-  { label: "X", icon: XMark },
-  { label: "Discord", icon: DiscordMark },
+  { label: "GitHub", icon: GithubMark, href: "#" },
+  { label: "X", icon: XMark, href: "#" },
+  { label: "Discord", icon: DiscordMark, href: "#" },
 ];
 
 export function SiteFooter() {
@@ -20,13 +44,17 @@ export function SiteFooter() {
       <footer className="w-full px-4 py-10 sm:px-6 bg-background text-foreground">
         <div className="grid gap-8 md:grid-cols-2">
           <div className="max-w-sm">
-            <a href="#" className="flex items-center gap-2.5">
+            <Link href="/" className="flex items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logobg.png" alt="My Clinics" className="size-10 object-contain shrink-0" />
               <span className="text-2xl font-bold tracking-tight">My Clinics</span>
-            </a>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Everything your team needs to build, ship, and scale.
+            </Link>
+            <p className="mt-3 text-sm text-muted-foreground">Everything your team needs to build, ship, and scale.</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Careers? Send resume to{" "}
+              <a href="mailto:developer@myenum.in" className="underline hover:text-foreground">
+                developer@myenum.in
+              </a>
             </p>
           </div>
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
@@ -35,10 +63,13 @@ export function SiteFooter() {
                 <h3 className="font-heading text-sm font-bold tracking-tight">{col.title}</h3>
                 <ul className="mt-3 flex flex-col gap-2">
                   {col.links.map((link) => (
-                    <li key={link}>
-                      <a href="#" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
-                        {link}
-                      </a>
+                    <li key={link.label}>
+                      <Link
+                        href={link.href}
+                        className="text-sm text-muted-foreground transition-colors hover:text-foreground hover:underline"
+                      >
+                        {link.label}
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -56,7 +87,7 @@ export function SiteFooter() {
                 variant="outline"
                 size="icon-sm"
                 aria-label={social.label}
-                render={<a href="#" />}
+                render={<a href={social.href} />}
                 nativeButton={false}
                 className="rounded-lg text-muted-foreground hover:text-foreground"
               >
