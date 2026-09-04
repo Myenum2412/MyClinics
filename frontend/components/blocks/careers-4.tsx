@@ -13,12 +13,10 @@ import {
   Mail,
   HeartPulse,
   Rocket,
-  Users,
   ShieldCheck,
   Clock3,
   Globe,
   GraduationCap,
-  Stethoscope,
 } from "lucide-react";
 import { JOBS, RESUME_EMAIL } from "@/lib/careers";
 
@@ -54,24 +52,6 @@ const benefits = [
     icon: ShieldCheck,
     title: "Ownership & Trust",
     desc: "Equity, transparent culture and clinic-grade data responsibility.",
-  },
-];
-
-const values = [
-  {
-    icon: Stethoscope,
-    title: "Clinic Obsessed",
-    desc: "We start from the front desk, not the tech. Every feature answers a real clinic need.",
-  },
-  {
-    icon: Users,
-    title: "Own the Outcome",
-    desc: "We hand off results, not tasks. If it ships with our name, we stand behind it.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Default to Trust",
-    desc: "Security, privacy and reliability are the floor, not a feature toggle.",
   },
 ];
 
@@ -206,25 +186,6 @@ export default function CareersBlock() {
               </a>{" "}
               with subject “Role — Your Name”. We reply within 3 working days.
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* More content: values, benefits, life */}
-      <section className="w-full bg-white px-6 py-14">
-        <div className="mx-auto w-full max-w-3xl">
-          <h2 className="font-heading text-2xl font-bold tracking-tight text-[#0D47A1]">Why My Clinics?</h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            We build for doctors and patients, not demos. Small team, large ownership, real impact.
-          </p>
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            {values.map((v) => (
-              <div key={v.title} className="rounded-xl border border-[#E3F2FD] bg-[#E3F2FD]/20 p-4">
-                <v.icon className="size-6 text-[#0D47A1]" />
-                <h3 className="mt-3 font-semibold text-sm">{v.title}</h3>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{v.desc}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>

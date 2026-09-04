@@ -178,10 +178,6 @@ export function CardSwapSection() {
               View demo
             </Button>
           </div>
-          <p className="text-xs text-white/60">
-            Separate background colour (#0D47A1) isolates this interactive section from
-            the rest of the landing page.
-          </p>
         </div>
 
         {/* Right  CardSwap visual */}
