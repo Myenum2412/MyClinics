@@ -1,25 +1,25 @@
-import { UserPlus, Settings2, Users, Rocket } from "lucide-react";
+import { Building2, Stethoscope, MessageCircle, LayoutDashboard } from "lucide-react";
 
 const steps = [
   {
-    icon: UserPlus,
-    title: "Create your account",
-    desc: "Sign up in under two minutes, no credit card required. Your workspace is ready the moment you confirm your email.",
+    icon: Building2,
+    title: "Register your clinic",
+    desc: "Create your clinic in under 2 minutes — get your Clinic ID (clc_...), set hours, address and WhatsApp number. No credit card required.",
   },
   {
-    icon: Settings2,
-    title: "Configure your workflow",
-    desc: "Choose from pre-built templates or define your own pipeline. My Clinics adapts to how your team already works.",
+    icon: Stethoscope,
+    title: "Add doctors & services",
+    desc: "Add doctors, consultation fees and time slots. My Clinics enables city-filtered booking, patient records and prescriptions instantly.",
   },
   {
-    icon: Users,
-    title: "Invite your team",
-    desc: "Send role-based invites in bulk. Colleagues join with a single click and inherit the right permissions automatically.",
+    icon: MessageCircle,
+    title: "Patients book on WhatsApp",
+    desc: "Share your link — patients book, reschedule or cancel on WhatsApp 24/7. Our AI assistant answers from your soul.md, sends reminders and turn alerts.",
   },
   {
-    icon: Rocket,
-    title: "Ship with confidence",
-    desc: "Run automated checks, review the audit trail, and deploy, knowing My Clinics has your back at every stage.",
+    icon: LayoutDashboard,
+    title: "Run everything from one dashboard",
+    desc: "Manage live queue, billing & GST invoices, prescriptions, R2 reports and audit logs — fully isolated per clinic with role-based access.",
   },
 ];
 
@@ -29,9 +29,9 @@ export function HowItWorks() {
       <div className="mx-auto grid max-w-6xl gap-12 md:grid-cols-2">
         <div>
           <span className="inline-block rounded-full bg-white px-3 py-1 text-xs font-semibold tracking-widest text-black">HOW IT WORKS</span>
-          <h2 className="mt-4 text-4xl font-bold tracking-tight text-black">Up and running<br />in four steps</h2>
+          <h2 className="mt-4 text-4xl font-bold tracking-tight text-black">Clinic live<br />in four steps</h2>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-black">
-            My Clinics is designed for momentum. Go from sign-up to full team collaboration without a single support ticket.
+            From signup to first appointment in minutes. MyClinics automates your front desk with WhatsApp booking, reminders and live queue — while you stay in control from one dashboard.
           </p>
         </div>
         <div className="relative flex flex-col">
