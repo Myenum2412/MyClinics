@@ -1220,6 +1220,39 @@ export function deletePrescription(
   });
 }
 
+export function createQuickAdd(
+  clinicId: string,
+  input: {
+    patientId: string;
+    doctorId: string;
+    appointment?: { date: string; time: string; reason: string; notes?: string | null; department?: string; visitType?: string; duration?: string; priority?: string } | null;
+    record?: {
+      visitDate: string;
+      visitTime?: string;
+      diagnosis: string;
+      chiefComplaint: string;
+      symptoms?: string | null;
+      treatment?: string | null;
+      advice?: string | null;
+      icdCode?: string | null;
+      bp?: string | null;
+      temp?: string | null;
+      pulse?: string | null;
+      allergies?: string | null;
+      labTests?: string | null;
+      internalNotes?: string | null;
+      followUpDate?: string | null;
+      medicines: Array<{ name: string; dosage?: string; frequency?: string; duration?: string; instructions?: string }>;
+    } | null;
+    prescription?: { diagnosis?: string | null; medicine: string; dosage?: string | null; frequency?: string | null; duration?: string | null; instructions?: string | null; notes?: string | null; visitDate?: string } | null;
+  }
+): Promise<{ ok: true; appointment?: any; record?: any; prescription?: any; notification: { queued: boolean } }> {
+  return request(tenantPath(clinicId, "/quick-add"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
 // ── Billing ────────────────────────────────────────────────────────────────
 
 export function listBills(

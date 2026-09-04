@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { listPatients, listDoctors, listAppointments, updateAppointment, createAppointment, createRecord, createPrescription, type Patient, type Doctor, type Appointment } from "@/lib/clinic-api";
+import { listPatients, listDoctors, listAppointments, updateAppointment, createQuickAdd, type Patient, type Doctor, type Appointment } from "@/lib/clinic-api";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { todayISO } from "@/lib/datetime";
@@ -55,17 +55,34 @@ export default function QuickAddPage(){
     try{
       const pId=(name:string)=> patients.find(p=>p.fullName===name)?.patientId;
       const dId=(name:string)=> doctors.find(d=>d.name===name)?.doctorId;
+      const patientId = pId(sharedPatient) ?? pId(appt.patient) ?? pId(rec.patient) ?? pId(rx.patient);
+      const doctorId = dId(sharedDoctor) ?? dId(appt.doctor) ?? dId(rec.doctor) ?? dId(rx.doctor);
+      if(!patientId || !doctorId){
+        toast.error("Select patient and doctor");
+        return;
+      }
+      const payload: any = { patientId, doctorId };
       if(appt.patient && appt.doctor && appt.date && appt.time && appt.reason){
-        await createAppointment(clinicId,{patientId:pId(appt.patient)!, doctorId:dId(appt.doctor)!, date:appt.date, time:appt.time, reason:appt.reason, notes:appt.notes||null});
+        payload.appointment = { date: appt.date, time: appt.time, reason: appt.reason, notes: appt.notes||null, department: appt.department, visitType: appt.visitType, duration: appt.duration, priority: appt.priority };
       }
       if(rec.patient && rec.diagnosis && rec.chiefComplaint){
         const validMeds = medicines.filter(m=> m.name.trim());
-        await createRecord(clinicId,{patientId:pId(rec.patient)!, doctorId:dId(rec.doctor)!, visitDate:rec.visitDate, diagnosis:rec.diagnosis, symptoms:rec.symptoms||null, treatment:rec.treatment||null, notes:rec.advice||null, medicines: validMeds});
+        if(validMeds.length===0){
+          toast.error("Add at least one medicine for Records");
+          return;
+        }
+        payload.record = { visitDate: rec.visitDate, visitTime: rec.visitTime, diagnosis: rec.diagnosis, chiefComplaint: rec.chiefComplaint, symptoms: rec.symptoms||null, treatment: rec.treatment||null, advice: rec.advice||null, icdCode: rec.icdCode||null, bp: rec.bp||null, temp: rec.temp||null, pulse: rec.pulse||null, allergies: rec.allergies||null, labTests: rec.labTests||null, internalNotes: rec.internalNotes||null, followUpDate: rec.followUpDate||null, medicines: validMeds };
       }
       if(rx.patient && rx.medicine){
-        await createPrescription(clinicId,{patientId:pId(rx.patient)!, doctorId: rx.doctor? dId(rx.doctor):undefined, visitDate:todayISO(), diagnosis:rx.diagnosis||null, medicines:[{name:rx.medicine, dosage:rx.dosage, frequency:rx.frequency, duration:rx.duration, instructions:rx.instructions}], notes:rx.notes||null});
+        payload.prescription = { diagnosis: rx.diagnosis||null, medicine: rx.medicine, dosage: rx.dosage||null, frequency: rx.frequency||null, duration: rx.duration||null, instructions: rx.instructions||null, notes: rx.notes||null, visitDate: todayISO() };
       }
-      toast.success("Quick Fill — all filled sections saved");
+      if(!payload.appointment && !payload.record && !payload.prescription){
+        toast.error("Fill at least one section (Appointment, Records or Prescription)");
+        return;
+      }
+      // Single submit — backend creates all and sends ONE consolidated WhatsApp notification with full data (quick-add only)
+      await createQuickAdd(clinicId, payload);
+      toast.success("Quick Fill — all filled sections saved and single notification sent");
     }catch(e:any){ toast.error(e.message); }
   }
 
