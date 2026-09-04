@@ -114,14 +114,6 @@ export const companyLinks2: LinkItemType[] = [
 		),
 	},
 	{
-		label: "Blog",
-		href: "#",
-		icon: (
-			<LeafIcon
-			/>
-		),
-	},
-	{
 		label: "Help Center",
 		href: "#",
 		icon: (

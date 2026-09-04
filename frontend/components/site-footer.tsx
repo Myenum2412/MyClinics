@@ -5,7 +5,6 @@ const productLinks = [
 	{ label: "Home", href: "/" },
 	{ label: "Features", href: "/#features" },
 	{ label: "FAQs", href: "/#faqs" },
-	{ label: "Blog", href: "/blog" },
 	{ label: "Changelog", href: "/changelog" },
 ];
 

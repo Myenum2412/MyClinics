@@ -18,7 +18,6 @@ const navLinks = [
   { label: "Solutions", href: "#" },
   { label: "Pricing", href: "#" },
   { label: "Docs", href: "#" },
-  { label: "Blog", href: "#" },
 ]
 
 export default function HeaderBlock() {

@@ -1,7 +1,5 @@
 import type { MetadataRoute } from "next";
 
-import { CATALOG } from "@/lib/blog-catalog";
-import { ARTICLES } from "@/lib/blog-posts";
 import { now as nowDate } from "@/lib/datetime";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myclinic.myenum.in";
@@ -9,7 +7,7 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myclinic.myenum.in";
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = nowDate();
 
-  const staticRoutes = ["", "/blog", "/privacy", "/terms", "/login"].map(
+  const staticRoutes = ["", "/privacy", "/terms", "/login", "/changelog"].map(
     (path) => ({
       url: `${SITE}${path}`,
       lastModified: now,
@@ -18,14 +16,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })
   );
 
-  const blogRoutes = [...ARTICLES.map((a) => a.slug), ...CATALOG.map((c) => c.slug)].map(
-    (slug) => ({
-      url: `${SITE}/blog/${slug}`,
-      lastModified: now,
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    })
-  );
-
-  return [...staticRoutes, ...blogRoutes];
+  return staticRoutes;
 }
