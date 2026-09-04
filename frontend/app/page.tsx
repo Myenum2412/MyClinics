@@ -51,10 +51,10 @@ export default function Home() {
       </div>
       <CardSwapSection />
       <AnimateIn><HowItWorks /></AnimateIn>
-      <AnimateIn delay={0.05}><OnePlatform /></AnimateIn>
-      <PricingModern />
       <AnimateIn delay={0.1}><EasyChat /></AnimateIn>
       <AnimateIn delay={0.15}><AboutBlock /></AnimateIn>
+      <AnimateIn delay={0.05}><OnePlatform /></AnimateIn>
+      <PricingModern />
       <SiteFooter />
     </div>
   );
