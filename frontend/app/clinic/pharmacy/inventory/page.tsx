@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import { Suspense } from "react"
@@ -61,7 +61,7 @@ function statusVariant(status: PharmacyInventory["status"]): "default" | "second
 }
 
 function fmtDate(v: string | null): string {
-  if (!v) return ""
+  if (!v) return "—"
   const d = new Date(v)
   if (Number.isNaN(d.getTime())) return v
   return d.toLocaleDateString()
@@ -83,8 +83,8 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
 
   const supplierName = React.useCallback(
     (id: string | null) => {
-      if (!id) return ""
-      return suppliers.find((s) => s.supplierId === id)?.name ?? ""
+      if (!id) return "—"
+      return suppliers.find((s) => s.supplierId === id)?.name ?? "—"
     },
     [suppliers]
   )
@@ -218,13 +218,13 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
               <Field label="Selling Price" value={fmtMoney(detail.sellingPrice)} />
               <Field label="Expiry" value={fmtDate(detail.expiryDate)} />
               <Field label="Manufacturing" value={fmtDate(detail.manufacturingDate)} />
-              <Field label="Storage Location" value={detail.storageLocation ?? ""} />
+              <Field label="Storage Location" value={detail.storageLocation ?? "—"} />
               <Field
                 label="Status"
                 value={<Badge variant={statusVariant(detail.status)}>{detail.status.replace(/_/g, " ")}</Badge>}
               />
-              <Field label="Category" value={detail.category ?? ""} />
-              <Field label="Barcode" value={detail.barcode ?? ""} />
+              <Field label="Category" value={detail.category ?? "—"} />
+              <Field label="Barcode" value={detail.barcode ?? "—"} />
             </div>
           )}
           <DialogFooter>

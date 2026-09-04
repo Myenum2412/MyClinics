@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { CLINIC_TOKEN_KEY } from "@/lib/clinic-api";
@@ -64,7 +64,7 @@ function securityHeaders(res: NextResponse): NextResponse {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Hard block for source maps  they leak file paths and original source.
+  // Hard block for source maps — they leak file paths and original source.
   // The bookmarklet you ran fetches every <script src> and greps for
   // quoted "/..." strings; with maps disabled there is no map to fetch, but
   // this is defence-in-depth for any stray .map that reaches the edge.

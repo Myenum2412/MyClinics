@@ -1,4 +1,4 @@
-﻿---
+---
 Title: Clinic Management Software Pricing in India 2026: Complete Cost Breakdown
 Category: Buying Guide
 Excerpt: Real pricing in ₹ for Indian clinics: subscription vs perpetual, hidden costs, GST, and which tier fits your practice size.
@@ -25,11 +25,11 @@ ReadTime: 12 Min Read
 
 Three factors make India pricing unique:
 
-**1. Per-doctor vs per-clinic licensing**  Most Indian vendors (Practo Ray, KareXpert, DocPulse, EasyClinic) charge per doctor per month. A 5-doctor clinic pays 5× the single-doctor price. My Clinics uses per-clinic pricing  same cost whether you have 1 or 10 doctors.
+**1. Per-doctor vs per-clinic licensing** — Most Indian vendors (Practo Ray, KareXpert, DocPulse, EasyClinic) charge per doctor per month. A 5-doctor clinic pays 5× the single-doctor price. My Clinics uses per-clinic pricing — same cost whether you have 1 or 10 doctors.
 
-**2. GST adds 18% on top**  A ₹5,000/month plan costs ₹5,900/month. Annual plans: ₹5,000 × 12 = ₹60,000 + ₹10,800 GST = ₹70,800/year.
+**2. GST adds 18% on top** — A ₹5,000/month plan costs ₹5,900/month. Annual plans: ₹5,000 × 12 = ₹60,000 + ₹10,800 GST = ₹70,800/year.
 
-**3. WhatsApp Business API is extra**  Meta charges per conversation. Most vendors pass this through at ₹0.50–1.50 per message. For 500 appointments/month with 3 reminders each: ~₹750–2,250/month extra.
+**3. WhatsApp Business API is extra** — Meta charges per conversation. Most vendors pass this through at ₹0.50–1.50 per message. For 500 appointments/month with 3 reminders each: ~₹750–2,250/month extra.
 
 ## Total Cost of Ownership Calculator (India)
 
@@ -89,22 +89,22 @@ Monthly Base Plan:          ₹______
 
 ## What Drives Price Up in India
 
-1. **Multi-location**  Each branch often needs separate license
-2. **Inventory/pharmacy module**  +₹2,000–5,000/month
-3. **Lab integration (bidirectional)**  +₹3,000–8,000/month
-4. **Patient app (branded)**  +₹5,000–15,000 one-time + maintenance
-5. **Insurance/TPA module**  +₹3,000–10,000/month
-6. **Custom mobile app**  ₹2–10L development + ₹20,000+/month maintenance
+1. **Multi-location** — Each branch often needs separate license
+2. **Inventory/pharmacy module** — +₹2,000–5,000/month
+3. **Lab integration (bidirectional)** — +₹3,000–8,000/month
+4. **Patient app (branded)** — +₹5,000–15,000 one-time + maintenance
+5. **Insurance/TPA module** — +₹3,000–10,000/month
+6. **Custom mobile app** — ₹2–10L development + ₹20,000+/month maintenance
 
 ## Questions to Ask Every Vendor (India Edition)
 
-1. **"Is pricing per clinic or per doctor?"**  Per-doctor kills margins as you grow.
-2. **"What's included in base vs add-on?"**  WhatsApp, SMS, reports, API.
-3. **"Show me the GST invoice format."**  Must auto-generate compliant invoices.
-4. **"ABDM/ABHA integration  live or roadmap?"**  Many claim "coming soon" for years.
-6. **"Data export format and cost on exit?"**  CSV/JSON free? Or paid extraction?
-7. **"Support hours in IST?"**  9–6 IST vs 24/7 vs "email only."
-8. **"Annual price increase clause?"**  Get it capped in writing (e.g., max 5% YoY).
+1. **"Is pricing per clinic or per doctor?"** — Per-doctor kills margins as you grow.
+2. **"What's included in base vs add-on?"** — WhatsApp, SMS, reports, API.
+3. **"Show me the GST invoice format."** — Must auto-generate compliant invoices.
+4. **"ABDM/ABHA integration — live or roadmap?"** — Many claim "coming soon" for years.
+6. **"Data export format and cost on exit?"** — CSV/JSON free? Or paid extraction?
+7. **"Support hours in IST?"** — 9–6 IST vs 24/7 vs "email only."
+8. **"Annual price increase clause?"** — Get it capped in writing (e.g., max 5% YoY).
 
 ## Decision Framework by Clinic Stage
 
@@ -164,7 +164,7 @@ A: For SaaS (services): 10% TDS under Section 194J if annual payment >₹30,000.
 A: My Clinics generates invoices with UPI QR (Bharat QR) and payment links. Patients pay via any UPI app. Auto-reconciliation included.
 
 **Q: Can software handle multiple consultation fees (OPD/IPD/Emergency)?**
-A: Yes. My Clinics supports unlimited fee types per doctor. Configure OPD ₹500, Follow-up ₹300, Emergency ₹1,000, Teleconsult ₹400  each with own GST rate.
+A: Yes. My Clinics supports unlimited fee types per doctor. Configure OPD ₹500, Follow-up ₹300, Emergency ₹1,000, Teleconsult ₹400 — each with own GST rate.
 
 **Q: Does it work offline during internet outages?**
 A: My Clinics caches last 7 days locally. Appointments, prescriptions work offline. Syncs when connection returns. Critical for Tier-2/3 clinics with unreliable connectivity.
@@ -173,4 +173,4 @@ A: My Clinics caches last 7 days locally. Appointments, prescriptions work offli
 
 Indian clinic software pricing is opaque by design. Vendors quote low per-doctor rates that scale painfully. **Calculate per-clinic annual TCO including GST, WhatsApp, and add-ons before comparing.**
 
-My Clinics keeps it simple: one price per clinic, unlimited doctors, WhatsApp included, Indian compliance native. [Start your 30-day trial](/signup) with your Clinic ID  no card required.
+My Clinics keeps it simple: one price per clinic, unlimited doctors, WhatsApp included, Indian compliance native. [Start your 30-day trial](/signup) with your Clinic ID — no card required.

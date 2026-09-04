@@ -1,4 +1,4 @@
-﻿import type { NextConfig } from "next";
+import type { NextConfig } from "next";
 
 // All /api/* traffic is proxied to the standalone API server (Fastify).
 // The Clinic API (`/api/clinics/*`) authenticates with JWT bearer tokens,
@@ -13,13 +13,13 @@ const BACKEND_URL =
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
-  // Never ship browser source maps  they leak original file paths and
+  // Never ship browser source maps — they leak original file paths and
   // source code to anyone who runs the bookmarklet / DevTools. The build
   // output (.next/build/*.map) is server-only.
   productionBrowserSourceMaps: false,
   async headers() {
     return [
-      // Favicons / manifest  never serve stale icons after an update.
+      // Favicons / manifest — never serve stale icons after an update.
       // Browsers + service workers cache /favicon.ico aggressively; a short
       // max-age + must-revalidate forces a conditional GET on every visit so
       // updated icons (regenerated from public/logo.png) appear immediately.
@@ -51,7 +51,7 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex" },
         ],
       },
-      // Never index Next internals or private app areas  the bookmarklet you
+      // Never index Next internals or private app areas — the bookmarklet you
       // ran greps every quoted "/..." string out of JS/HTML; these paths are
       // required for the browser to function but must not be crawled/indexed.
       {
@@ -63,7 +63,7 @@ const nextConfig: NextConfig = {
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
       {
-        // Security headers for every route  reduces fingerprinting and
+        // Security headers for every route — reduces fingerprinting and
         // mitigates the information disclosure the bookmarklet relies on.
         source: "/:path*",
         headers: [

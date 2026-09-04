@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import Image from "next/image"
@@ -38,7 +38,7 @@ interface NavItem {
 }
 
 /**
- * Doctor workspace sidebar  a dedicated navigation for the `doctor` role.
+ * Doctor workspace sidebar — a dedicated navigation for the `doctor` role.
  * Only the modules a doctor can use are listed here; every data view is
  * scoped server-side to the doctor's own patients/appointments (see
  * PatientRepository / AppointmentRepository doctor scope).

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -182,7 +182,7 @@ function GreetingBanner({
 }) {
   const greeting = useMemo(() => getGreeting(), []);
 
-  // Friendly first name  strip "Dr." prefix if present
+  // Friendly first name — strip "Dr." prefix if present
   const firstName = doctorName.replace(/^dr\.?\s*/i, "").split(" ")[0];
 
   return (
@@ -455,7 +455,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
       {/* Greeting banner */}
       <GreetingBanner doctorName={session.name ?? "Doctor"} />
 
-      {/* Section cards  stats-07 design */}
+      {/* Section cards — stats-07 design */}
       <div>
         <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {statsData.map((item) => (

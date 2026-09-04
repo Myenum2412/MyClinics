@@ -1,4 +1,4 @@
-﻿// Reusable branded icons  same SVG used in Login + "Join our community" sections
+// Reusable branded icons — same SVG used in Login + "Join our community" sections
 // Update hrefs via NEXT_PUBLIC_WHATSAPP_URL / NEXT_PUBLIC_DISCORD_URL or edit COMMUNITY_LINKS below.
 
 export const COMMUNITY_LINKS = {
@@ -16,7 +16,7 @@ export function WhatsAppIcon({
   className?: string;
   size?: number;
 }) {
-  // Official WhatsApp mark from Simple Icons (MIT)  verified against https://cdn.jsdelivr.net/npm/simple-icons@v14/icons/whatsapp.svg
+  // Official WhatsApp mark from Simple Icons (MIT) — verified against https://cdn.jsdelivr.net/npm/simple-icons@v14/icons/whatsapp.svg
   return (
     <svg
       viewBox="0 0 24 24"
@@ -41,7 +41,7 @@ export function DiscordIcon({
   className?: string;
   size?: number;
 }) {
-  // Official Discord mark from Simple Icons (CC0)  https://cdn.jsdelivr.net/npm/simple-icons@v14/icons/discord.svg
+  // Official Discord mark from Simple Icons (CC0) — https://cdn.jsdelivr.net/npm/simple-icons@v14/icons/discord.svg
   return (
     <svg
       viewBox="0 0 24 24"

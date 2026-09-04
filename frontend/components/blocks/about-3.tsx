@@ -1,4 +1,4 @@
-﻿import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Compass, ShieldCheck, Lightbulb, Users, Heart, Sparkles } from "lucide-react"
 
 /** Props a call site may pass through to an icon. */

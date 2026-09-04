@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
@@ -794,7 +794,7 @@ export default function PatientsPage() {
                         </TableCell>
                       )}
                       {visibleColumns.mobile && <TableCell className="text-muted-foreground">{p.mobile}</TableCell>}
-                      {visibleColumns.email && <TableCell className="text-muted-foreground">{p.email ?? ""}</TableCell>}
+                      {visibleColumns.email && <TableCell className="text-muted-foreground">{p.email ?? "—"}</TableCell>}
                       {visibleColumns.doctor && !isDoctor && (
                         <TableCell>
                           <DoctorSelect

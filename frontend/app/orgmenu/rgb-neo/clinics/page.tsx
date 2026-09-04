@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { toast } from "sonner";
@@ -62,7 +62,7 @@ export default function RgbNeoClinicsPage() {
               <div className="flex items-center justify-between">
                 <p className="truncate text-sm font-medium">{clinic.name}</p>
                 <span className={cn("text-lg font-bold", health ? scoreTone(health.score) : "text-muted-foreground")}>
-                  {health ? `${health.score}` : ""}
+                  {health ? `${health.score}` : "—"}
                 </span>
               </div>
               <p className="font-mono text-xs text-muted-foreground">{clinic.clinicId}</p>

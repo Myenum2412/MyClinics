@@ -1,4 +1,4 @@
-﻿# New Patient Registration Form  Frontend Implementation
+# New Patient Registration Form — Frontend Implementation
 
 ## 📋 Overview
 
@@ -12,15 +12,15 @@ A comprehensive, production-ready patient registration form for clinic managemen
 ## ✨ Key Features
 
 ### Form Sections (9 Total)
-1. **Patient Information**  Demographics and vital stats
-2. **Address**  Geographic location details
-3. **Emergency Contact**  Crisis contact information
-4. **Medical Information**  Allergies, conditions, medications
-5. **Identification**  ID proof and verification
-6. **Account & Portal Access**  Login credentials and access control
-7. **Insurance**  Insurance policy information
-8. **Additional Information**  Referrals, source, internal notes
-9. **Attachments**  Document upload (placeholder for future)
+1. **Patient Information** — Demographics and vital stats
+2. **Address** — Geographic location details
+3. **Emergency Contact** — Crisis contact information
+4. **Medical Information** — Allergies, conditions, medications
+5. **Identification** — ID proof and verification
+6. **Account & Portal Access** — Login credentials and access control
+7. **Insurance** — Insurance policy information
+8. **Additional Information** — Referrals, source, internal notes
+9. **Attachments** — Document upload (placeholder for future)
 
 ### Validation
 - ✅ Indian mobile number format (10-digit)
@@ -101,9 +101,9 @@ const [errors, setErrors] = useState<Record<string, string>>({});
 ```
 User Input
   ↓
-handleChange()  Updates state, clears field error
+handleChange() — Updates state, clears field error
   ↓
-validateForm()  Called on Save click
+validateForm() — Called on Save click
   ↓
 If valid → API call → Success → Redirect
 If invalid → Show errors → User fixes
@@ -455,12 +455,12 @@ const HOW_DID_YOU_HEAR = [
 - `sonner` (toast notifications)
 
 ### UI Components (from shadcn/ui)
-- `Button`  Action buttons
-- `Card`  Section containers
-- `Input`  Text input fields
-- `Label`  Field labels
-- `Textarea`  Large text areas
-- `Select`  Dropdown menus
+- `Button` — Action buttons
+- `Card` — Section containers
+- `Input` — Text input fields
+- `Label` — Field labels
+- `Textarea` — Large text areas
+- `Select` — Dropdown menus
 
 ### Hooks
 - `useRouter` (Next.js navigation)
@@ -470,7 +470,7 @@ const HOW_DID_YOU_HEAR = [
 - `useRequireRole` (Role-based auth)
 
 ### Icons
-- `lucide-react`  ChevronLeft, AlertCircle, CheckCircle, Plus
+- `lucide-react` — ChevronLeft, AlertCircle, CheckCircle, Plus
 
 ---
 
@@ -516,17 +516,17 @@ const HOW_DID_YOU_HEAR = [
 ## 📚 Related Files
 
 ### Updated
-- `/app/clinic/patients/page.tsx`  Added link to `/new` page
+- `/app/clinic/patients/page.tsx` — Added link to `/new` page
 
 ### Used
-- `/components/clinic/pickers.tsx`  DoctorSelect component
-- `/lib/clinic-api.ts`  API client (createPatient)
-- `/hooks/use-clinic-session.ts`  Auth hook
+- `/components/clinic/pickers.tsx` — DoctorSelect component
+- `/lib/clinic-api.ts` — API client (createPatient)
+- `/hooks/use-clinic-session.ts` — Auth hook
 
 ### New Documentation
-- `NEW_PATIENT_REGISTRATION_GUIDE.md`  System guide for admins
-- `NEW_PATIENT_REGISTRATION_CHECKLIST.md`  Implementation checklist
-- `PATIENT_REGISTRATION_STAFF_GUIDE.md`  User guide for clinic staff
+- `NEW_PATIENT_REGISTRATION_GUIDE.md` — System guide for admins
+- `NEW_PATIENT_REGISTRATION_CHECKLIST.md` — Implementation checklist
+- `PATIENT_REGISTRATION_STAFF_GUIDE.md` — User guide for clinic staff
 
 ---
 

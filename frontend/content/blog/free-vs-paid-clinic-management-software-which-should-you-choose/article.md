@@ -1,4 +1,4 @@
-﻿---
+---
 Title: Free vs Paid Clinic Management Software: Which Should You Choose?
 Category: Buying Guide
 Excerpt: Budgets, features and contracts: a confident framework for free vs paid clinic management software, and where My Clinics stands.
@@ -32,7 +32,7 @@ There is also a compounding effect worth naming. Clinics that digitise early acc
 
 Circulate the scorecard among staff who will use the system; their totals reveal the true winner quickly.
 
-Vendors demo their strengths; buyers should demo their own workflows. Write ten real scenarios  new registration, walk-in squeeze-in, follow-up with old reports, pending payment chase  and score every product against them.
+Vendors demo their strengths; buyers should demo their own workflows. Write ten real scenarios — new registration, walk-in squeeze-in, follow-up with old reports, pending payment chase — and score every product against them.
 
 Weight scenarios by frequency. A feature used daily deserves more than a feature admired annually.
 
@@ -42,13 +42,13 @@ Add license, per-user fees, messaging charges, setup and training time, and the 
 
 Ask what triggers upgrades: record counts, users, features? Surprise thresholds are how affordable software becomes expensive.
 
-Include exit costs too  export effort and data portability determine whether switching later is a decision or a hostage situation.
+Include exit costs too — export effort and data portability determine whether switching later is a decision or a hostage situation.
 
 ## Security questions that sort vendors fast
 
 Encryption standards, backup cadence and breach history belong in writing, not verbal reassurance.
 
-For Indian clinics, WhatsApp automation and local support hours deserve explicit verification  both are operationally decisive.
+For Indian clinics, WhatsApp automation and local support hours deserve explicit verification — both are operationally decisive.
 
 "How is our data isolated from other clinics?" "Show me the audit log." "What happens to our data if we cancel?" Strong vendors answer precisely; weak ones answer enthusiastically.
 
@@ -62,11 +62,11 @@ Measure onboarding time-to-value: how many days until the desk prefers the new s
 
 ## Negotiating and starting smart
 
-Annual pricing usually beats monthly once you are confident  but only commit after a genuine trial, however persuasive the discount.
+Annual pricing usually beats monthly once you are confident — but only commit after a genuine trial, however persuasive the discount.
 
 Get export format, response-time commitments and included training in writing alongside the contract.
 
-Then onboard deliberately using a phased plan: scheduling first, records next, billing last  the sequence that has worked for thousands of clinics.
+Then onboard deliberately using a phased plan: scheduling first, records next, billing last — the sequence that has worked for thousands of clinics.
 
 ## Step-by-step playbook
 
@@ -74,21 +74,21 @@ Then onboard deliberately using a phased plan: scheduling first, records next, b
 
 **Step 2. Phase the rollout.** Contract with a plan: scheduling week one, records week two, billing week three, review at thirty days.
 
-**Step 3. Write the scenario scorecard.** Ten real workflows weighted by frequency  your yardstick for every demo you attend.
+**Step 3. Write the scenario scorecard.** Ten real workflows weighted by frequency — your yardstick for every demo you attend.
 
 **Step 4. Demand a realistic trial.** Your patient shape, your booking week, your billing cycle; toy data conceals everything important.
 
-**Step 5. Interrogate security in writing.** Isolation model, encryption, audit logs, export terms  precise answers or walk away.
+**Step 5. Interrogate security in writing.** Isolation model, encryption, audit logs, export terms — precise answers or walk away.
 
 **Step 6. Compute total cost.** License, users, messaging add-ons, training hours and switchover tax, compared against expected no-show savings.
 
 ## Common mistakes to avoid
 
-- Trial-free annual commits  discounts tempt; a genuine trial protects years ahead.
-- Big-bang go-lives  phased adoption catches issues while they are cheap to fix.
-- Attending demos without a scorecard  vendors steer unprepared buyers toward their strengths.
-- Comparing sticker prices only  add-ons, user tiers and messaging fees hide in plain sight.
-- Accepting verbal security claims  isolation, encryption and export belong in writing.
+- Trial-free annual commits — discounts tempt; a genuine trial protects years ahead.
+- Big-bang go-lives — phased adoption catches issues while they are cheap to fix.
+- Attending demos without a scorecard — vendors steer unprepared buyers toward their strengths.
+- Comparing sticker prices only — add-ons, user tiers and messaging fees hide in plain sight.
+- Accepting verbal security claims — isolation, encryption and export belong in writing.
 
 ## Quick checklist
 
@@ -113,17 +113,17 @@ Q: How many vendors should we trial?
 A: Three maximum with identical scenarios; more options create analysis paralysis, not insight.
 
 Q: When should we sign the contract?
-A: After a realistic trial, written security answers and an export clause  in that order.
+A: After a realistic trial, written security answers and an export clause — in that order.
 
 Q: Is free software viable for clinics?
-A: For very small practices, sometimes  verify export freedom and isolation before committing either way.
+A: For very small practices, sometimes — verify export freedom and isolation before committing either way.
 
 Q: Annual or monthly billing?
 A: Monthly until proven, annual once convinced; negotiate training inclusion rather than deeper discounts.
 
 Q: What one feature predicts satisfaction?
-A: Reminder automation  its effects show in weeks and touch revenue directly.
+A: Reminder automation — its effects show in weeks and touch revenue directly.
 
 ## Final takeaway
 
-Change sticks when it is boring, incremental and visibly rewarded. That is the philosophy behind everything above, and behind how My Clinics itself works: sensible defaults, strict data isolation, and automation for the repetitive middle of clinic life so your team can focus on the human parts. Your move  step one is closer than it looks.
+Change sticks when it is boring, incremental and visibly rewarded. That is the philosophy behind everything above, and behind how My Clinics itself works: sensible defaults, strict data isolation, and automation for the repetitive middle of clinic life so your team can focus on the human parts. Your move — step one is closer than it looks.

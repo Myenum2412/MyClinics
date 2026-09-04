@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -475,7 +475,7 @@ export default function BusinessReportsPage() {
                 </tbody>
               </table>
             </div>
-          ) : <p className="text-xs text-muted-foreground">Not enough data  add doctors and appointments.</p>}
+          ) : <p className="text-xs text-muted-foreground">Not enough data — add doctors and appointments.</p>}
         </CardContent>
       </Card>
 
@@ -496,7 +496,7 @@ export default function BusinessReportsPage() {
                 );
               })}
             </div>
-          ) : <p className="text-xs text-muted-foreground">Not enough data  no billed services in period.</p>}
+          ) : <p className="text-xs text-muted-foreground">Not enough data — no billed services in period.</p>}
         </CardContent>
       </Card>
 
@@ -505,8 +505,8 @@ export default function BusinessReportsPage() {
         <Card className="border-border bg-card">
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><UserCheck className="size-4 text-primary" /> Patient Retention & Loyalty</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">First → Second visit</span><span className="font-medium">{patients.length > 1 ? `${Math.round((returningPatients / Math.max(1, totalPatients)) * 100)}%` : ""}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Avg visits / patient</span><span className="font-medium">{totalPatients ? (totalAppts / totalPatients).toFixed(1) : ""}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">First → Second visit</span><span className="font-medium">{patients.length > 1 ? `${Math.round((returningPatients / Math.max(1, totalPatients)) * 100)}%` : "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Avg visits / patient</span><span className="font-medium">{totalPatients ? (totalAppts / totalPatients).toFixed(1) : "—"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Inactive 30d+</span><span className="font-medium">{patients.filter(p => { const d = parseDate(p.createdAt); return !!d && d.getTime() < daysAgo(30).getTime(); }).length} patients</span></div>
             <p className="text-xs text-muted-foreground">Action: Create follow-up list for patients with no visit in 30/60/90 days (available via patient list).</p>
           </CardContent>
@@ -532,7 +532,7 @@ export default function BusinessReportsPage() {
                 ));
               })()}
             </div>
-            <p className="mt-3 text-xs text-muted-foreground">Biggest drop-off highlighted  focus follow-up and billing conversion.</p>
+            <p className="mt-3 text-xs text-muted-foreground">Biggest drop-off highlighted — focus follow-up and billing conversion.</p>
           </CardContent>
         </Card>
       </div>
@@ -541,18 +541,18 @@ export default function BusinessReportsPage() {
         <Card className="border-border bg-card">
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Clock className="size-4 text-primary" /> Capacity & Operational Efficiency</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Peak hours</span><span className="font-medium">{peakHours.map(p => p.hour).join(", ") || ""}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Peak weekdays</span><span className="font-medium">{peakWeekdays.map(p => p.day).join(", ") || ""}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Avg daily appts</span><span className="font-medium">{totalAppts ? (totalAppts / Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000))).toFixed(1) : ""}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Capacity utilization</span><span className="font-medium">{doctors.length && totalAppts ? `${Math.round((totalAppts / (doctors.length * 8 * Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000)))) * 100)}%` : ""}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Peak hours</span><span className="font-medium">{peakHours.map(p => p.hour).join(", ") || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Peak weekdays</span><span className="font-medium">{peakWeekdays.map(p => p.day).join(", ") || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Avg daily appts</span><span className="font-medium">{totalAppts ? (totalAppts / Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000))).toFixed(1) : "—"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Capacity utilization</span><span className="font-medium">{doctors.length && totalAppts ? `${Math.round((totalAppts / (doctors.length * 8 * Math.max(1, Math.ceil((end.getTime() - start.getTime()) / 86400000)))) * 100)}%` : "—"}</span></div>
           </CardContent>
         </Card>
         <Card className="border-border bg-card">
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><CreditCard className="size-4 text-primary" /> Billing & Payment Intelligence</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between"><span className="text-muted-foreground">Collection rate</span><span className="font-medium">{totalRevenue ? `${Math.round((totalPaid / totalRevenue) * 100)}%` : ""}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Collection rate</span><span className="font-medium">{totalRevenue ? `${Math.round((totalPaid / totalRevenue) * 100)}%` : "—"}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Outstanding &gt;30d</span><span className="font-medium text-amber-700">{formatINR(bills.filter(b => { const inv = parseDate(b.invoiceDate); return b.balanceDue > 0 && !!inv && inv.getTime() < daysAgo(30).getTime(); }).reduce((s, b) => s + b.balanceDue, 0))}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Avg payment delay</span><span className="font-medium"></span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Avg payment delay</span><span className="font-medium">—</span></div>
             <p className="text-xs text-muted-foreground">Tip: Enable UPI QR and automated reminders for overdue &gt;30d.</p>
           </CardContent>
         </Card>
@@ -561,11 +561,11 @@ export default function BusinessReportsPage() {
       <Card className="border-border bg-card">
         <CardHeader><CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="size-4 text-primary" /> Forecasting (Estimates)</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm">
-          <p className="text-xs text-muted-foreground">Based on last 3 periods moving average  labeled as estimates, not guaranteed.</p>
+          <p className="text-xs text-muted-foreground">Based on last 3 periods moving average — labeled as estimates, not guaranteed.</p>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Next month revenue</p><p className="text-lg font-bold">{formatINR(Math.round((totalRevenue + prevRevenue) / 2))} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
             <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Next month appts</p><p className="text-lg font-bold">{Math.round((totalAppts + apptsPrev.length) / 2)} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
-            <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Patient growth</p><p className="text-lg font-bold">{newPatients ? `${Math.round(((newPatients - patients.filter(p => { const d = parseDate(p.createdAt); return !!d && d >= prevStart && d <= prevEnd; }).length) / Math.max(1, newPatients)) * 100)}%` : ""} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
+            <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Patient growth</p><p className="text-lg font-bold">{newPatients ? `${Math.round(((newPatients - patients.filter(p => { const d = parseDate(p.createdAt); return !!d && d >= prevStart && d <= prevEnd; }).length) / Math.max(1, newPatients)) * 100)}%` : "—"} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
           </div>
         </CardContent>
       </Card>
@@ -579,7 +579,7 @@ export default function BusinessReportsPage() {
               <>
                 <p className="text-4xl font-extrabold tracking-tight text-foreground">{healthScore} <span className="text-lg text-muted-foreground">/ 100</span></p>
                 <p className="mt-1 text-sm font-medium" style={{ color: healthScore >= 80 ? "#16a34a" : healthScore >= 60 ? "#f59e0b" : "#ef4444" }}>{healthScore >= 80 ? "Healthy" : healthScore >= 60 ? "Stable" : "Needs attention"}</p>
-                <p className="mt-2 text-xs text-muted-foreground">Weighted: revenue growth, completion, retention, collection, service diversity. No arbitrary scores  documented above.</p>
+                <p className="mt-2 text-xs text-muted-foreground">Weighted: revenue growth, completion, retention, collection, service diversity. No arbitrary scores — documented above.</p>
               </>
             ) : <p className="text-xs text-muted-foreground">Not enough data</p>}
           </CardContent>
@@ -595,7 +595,7 @@ export default function BusinessReportsPage() {
                 </Button>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Powered by NVIDIA minimax-m3  analyzes your real clinic data, no fake statistics.</p>
+            <p className="text-xs text-muted-foreground mt-1">Powered by NVIDIA minimax-m3 — analyzes your real clinic data, no fake statistics.</p>
           </CardHeader>
           <CardContent className="space-y-3">
             {(aiInsights ?? recommendations).length ? (aiInsights ?? recommendations).map((r, i) => (
@@ -607,8 +607,8 @@ export default function BusinessReportsPage() {
                 <p className="mt-1 text-xs text-muted-foreground">{r.detail}</p>
                 <p className="mt-1 text-xs font-medium text-foreground">→ {r.action}</p>
               </div>
-            )) : <p className="text-xs text-muted-foreground">No issues detected  clinic is performing well. Click Generate AI Insights for NVIDIA-powered analysis.</p>}
-            {aiInsights && <p className="text-xs text-muted-foreground text-center">AI generated via minimax-m3 from your real data  {label}</p>}
+            )) : <p className="text-xs text-muted-foreground">No issues detected — clinic is performing well. Click Generate AI Insights for NVIDIA-powered analysis.</p>}
+            {aiInsights && <p className="text-xs text-muted-foreground text-center">AI generated via minimax-m3 from your real data — {label}</p>}
           </CardContent>
         </Card>
       </div>
@@ -640,14 +640,14 @@ export default function BusinessReportsPage() {
         <Card className="border-border bg-card">
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Target className="size-4 text-emerald-600" /> Business Opportunities</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
-            {revenueByService[0] && <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">Promote <span className="font-semibold">{revenueByService[0].name}</span>  top revenue {formatINR(revenueByService[0].value)}</div>}
-            {peakHours[0] && <div className="rounded-lg border border-border px-3 py-2">Fill off-peak slots  peak {peakHours[0].hour}, offer discount {peakHours[peakHours.length - 1]?.hour ?? "off-peak"}</div>}
-            <div className="rounded-lg border border-border px-3 py-2">Increase portal adoption  enable online booking for returning patients</div>
+            {revenueByService[0] && <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2">Promote <span className="font-semibold">{revenueByService[0].name}</span> — top revenue {formatINR(revenueByService[0].value)}</div>}
+            {peakHours[0] && <div className="rounded-lg border border-border px-3 py-2">Fill off-peak slots — peak {peakHours[0].hour}, offer discount {peakHours[peakHours.length - 1]?.hour ?? "off-peak"}</div>}
+            <div className="rounded-lg border border-border px-3 py-2">Increase portal adoption — enable online booking for returning patients</div>
           </CardContent>
         </Card>
       </div>
 
-      <p className="text-center text-xs text-muted-foreground">All metrics calculated from this clinic's own data (bills, appointments, patients, doctors)  tenant-isolated, no fake data. Where insufficient, shows “Not enough data”.</p>
+      <p className="text-center text-xs text-muted-foreground">All metrics calculated from this clinic's own data (bills, appointments, patients, doctors) — tenant-isolated, no fake data. Where insufficient, shows “Not enough data”.</p>
     </div>
   );
 }

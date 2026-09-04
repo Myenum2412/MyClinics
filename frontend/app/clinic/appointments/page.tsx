@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -468,7 +468,7 @@ export default function AppointmentsPage() {
     });
   };
 
-  // WhatsApp logs fetching  shows real error for debugging (myenumam@gmail.com: clc_2kImCGEGtiJuD61F)
+  // WhatsApp logs fetching — shows real error for debugging (myenumam@gmail.com: clc_2kImCGEGtiJuD61F)
   async function fetchNotificationLogs(appt: Appointment) {
     setSelectedApptForLogs(appt);
     setViewingLogs(true);
@@ -746,7 +746,7 @@ export default function AppointmentsPage() {
                                 {hDoctor?.name || h.doctorId}
                               </TableCell>
                               <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
-                                {h.reason || ""}
+                                {h.reason || "—"}
                               </TableCell>
                               <TableCell>
                                 <span
@@ -932,7 +932,7 @@ export default function AppointmentsPage() {
                                 {a.priority && <Star className="size-3 fill-primary" />}
                               </span>
                             ) : (
-                              <span className="text-xs text-muted-foreground"></span>
+                              <span className="text-xs text-muted-foreground">—</span>
                             );
                           })()}
                         </TableCell>
@@ -982,7 +982,7 @@ export default function AppointmentsPage() {
 
                         {visibleColumns.reason && (
                           <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
-                            {a.reason || ""}
+                            {a.reason || "—"}
                           </TableCell>
                         )}
 

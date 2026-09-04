@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -680,7 +680,7 @@ export default function RecordsPage() {
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Medicine Record</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Saved record details  review or update the visit information
+                  Saved record details — review or update the visit information
                 </p>
               </div>
             </div>
@@ -876,12 +876,12 @@ export default function RecordsPage() {
                       )}
                       {visibleColumns.symptoms && (
                         <TableCell className="max-w-40 truncate text-muted-foreground">
-                          {r.symptoms ?? ""}
+                          {r.symptoms ?? "—"}
                         </TableCell>
                       )}
                       {visibleColumns.treatment && (
                         <TableCell className="max-w-40 truncate text-muted-foreground">
-                          {r.treatment ?? ""}
+                          {r.treatment ?? "—"}
                         </TableCell>
                       )}
                       <TableCell className="text-right pr-6">
@@ -1105,7 +1105,7 @@ function RecordForm({
     const dName = (id: string) => doctors.find((d) => d.doctorId === id)?.name ?? "";
     return appointments.map((a) => ({
       value: a.appointmentId,
-      label: `${pName(a.patientId)}  ${formatDate(a.date)}, ${formatTime(a.time)}${dName(a.doctorId) ? ` · ${dName(a.doctorId)}` : ""}`,
+      label: `${pName(a.patientId)} — ${formatDate(a.date)}, ${formatTime(a.time)}${dName(a.doctorId) ? ` · ${dName(a.doctorId)}` : ""}`,
     }));
   }, [appointments, patients, doctors]);
 
@@ -1570,19 +1570,19 @@ function RecordForm({
           <div>
             <p className="text-xs text-muted-foreground">Patient</p>
             <p className="mt-0.5 truncate font-medium text-foreground">
-              {selectedPatient?.fullName || ""}
+              {selectedPatient?.fullName || "—"}
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Doctor</p>
             <p className="mt-0.5 truncate font-medium text-foreground">
-              {selectedDoctor?.name || ""}
+              {selectedDoctor?.name || "—"}
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Visit date</p>
             <p className="mt-0.5 font-medium text-foreground">
-              {form.visitDate ? formatDate(form.visitDate) : ""}
+              {form.visitDate ? formatDate(form.visitDate) : "—"}
               {form.visitTime ? `, ${formatTime(form.visitTime)}` : ""}
             </p>
           </div>

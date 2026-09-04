@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import { toast } from "sonner";
@@ -345,7 +345,7 @@ export default function DoctorsPage() {
                 doctorId: editing.doctorId,
               });
             }
-            toast.success("Doctor updated  new login password sent via WhatsApp");
+            toast.success("Doctor updated — new login password sent via WhatsApp");
           } catch (e) {
             toast.error(
               `Doctor updated, but the password could not be reset: ${
@@ -727,9 +727,9 @@ export default function DoctorsPage() {
                           </TableCell>
                         )}
                       {visibleColumns.specialization && <TableCell className="text-muted-foreground">{d.specialization}</TableCell>}
-                      {visibleColumns.phone && <TableCell className="text-muted-foreground">{d.phone ?? ""}</TableCell>}
-                      {visibleColumns.email && <TableCell className="text-muted-foreground">{d.email ?? ""}</TableCell>}
-                      {visibleColumns.fee && <TableCell className="text-muted-foreground font-medium">{d.fee != null ? `₹${d.fee}` : ""}</TableCell>}
+                      {visibleColumns.phone && <TableCell className="text-muted-foreground">{d.phone ?? "—"}</TableCell>}
+                      {visibleColumns.email && <TableCell className="text-muted-foreground">{d.email ?? "—"}</TableCell>}
+                      {visibleColumns.fee && <TableCell className="text-muted-foreground font-medium">{d.fee != null ? `₹${d.fee}` : "—"}</TableCell>}
                       {visibleColumns.status && (
                         <TableCell>
                           <Badge
@@ -985,7 +985,7 @@ function DoctorForm({
           <div>
             <p className="text-sm font-medium text-foreground">Doctor Photo</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Click the avatar to upload a profile photo (JPG, PNG  Max 2MB)
+              Click the avatar to upload a profile photo (JPG, PNG — Max 2MB)
             </p>
           </div>
           <input

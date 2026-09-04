@@ -1,4 +1,4 @@
-﻿import crypto from "crypto"
+import crypto from "crypto"
 import fs from "fs"
 import path from "path"
 
@@ -104,6 +104,6 @@ ${lines
   )
   .join("\n")}
 ${logoSvg}
-<text x="70" y="594" font-family="Segoe UI,Arial,sans-serif" font-size="22" fill="${pal.card}" opacity="0.85">My Clinics  Healthcare above the clouds</text>
+<text x="70" y="594" font-family="Segoe UI,Arial,sans-serif" font-size="22" fill="${pal.card}" opacity="0.85">My Clinics — Healthcare above the clouds</text>
 </svg>`
 }

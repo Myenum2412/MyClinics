@@ -1,4 +1,4 @@
-﻿import { formatDate as formatDateKolkata } from "@/lib/datetime";
+import { formatDate as formatDateKolkata } from "@/lib/datetime";
 
 export { formatDateKolkata as formatDate };
 
@@ -9,7 +9,7 @@ export { formatDateKolkata as formatDate };
 export function formatTime(
   time: string | null | undefined
 ): string {
-  if (!time) return "";
+  if (!time) return "—";
   const [h, m] = time.split(":").map(Number);
   if (Number.isNaN(h) || Number.isNaN(m)) return time;
   const suffix = h >= 12 ? "PM" : "AM";

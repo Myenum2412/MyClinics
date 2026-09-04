@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRequireRole } from "@/hooks/use-clinic-session";
@@ -76,10 +76,10 @@ export default function PatientMedicineRecordsPage() {
                     <p className="font-medium text-foreground">Dr. {record.doctorId?.slice(0, 8) || "Unknown"}</p>
                   </TableCell>
                   <TableCell>
-                    <p className="text-muted-foreground max-w-xs truncate">{record.diagnosis || ""}</p>
+                    <p className="text-muted-foreground max-w-xs truncate">{record.diagnosis || "—"}</p>
                   </TableCell>
                   <TableCell>
-                    <p className="text-sm text-muted-foreground max-w-xs truncate">{record.notes || ""}</p>
+                    <p className="text-sm text-muted-foreground max-w-xs truncate">{record.notes || "—"}</p>
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" className="gap-1.5">

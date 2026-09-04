@@ -1,4 +1,4 @@
-﻿import type { Metadata, Viewport } from "next";
+import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import PwaRegister from "@/components/pwa-register";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -7,11 +7,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "My Clinics  Clinic Management, Appointments & Patient Records",
-    template: "%s  My Clinics",
+    default: "My Clinics — Clinic Management, Appointments & Patient Records",
+    template: "%s — My Clinics",
   },
   description:
-    "My Clinics is a complete clinic management platform for doctors and patients  book appointments, manage medicines, track billing and store medical reports securely.",
+    "My Clinics is a complete clinic management platform for doctors and patients — book appointments, manage medicines, track billing and store medical reports securely.",
   applicationName: "My Clinics",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

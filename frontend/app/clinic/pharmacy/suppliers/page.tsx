@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
@@ -139,11 +139,11 @@ export default function PharmacySuppliersPage() {
                 {filtered.map((s) => (
                   <TableRow key={s.supplierId} className="hover:bg-muted/30 transition-colors">
                     <TableCell className="font-medium">{s.name}</TableCell>
-                    <TableCell>{s.contactPerson ?? ""}</TableCell>
-                    <TableCell>{s.phone ?? ""}</TableCell>
-                    <TableCell>{s.email ?? ""}</TableCell>
-                    <TableCell>{s.gstNumber ?? ""}</TableCell>
-                    <TableCell>{s.drugLicenseNumber ?? ""}</TableCell>
+                    <TableCell>{s.contactPerson ?? "—"}</TableCell>
+                    <TableCell>{s.phone ?? "—"}</TableCell>
+                    <TableCell>{s.email ?? "—"}</TableCell>
+                    <TableCell>{s.gstNumber ?? "—"}</TableCell>
+                    <TableCell>{s.drugLicenseNumber ?? "—"}</TableCell>
                     <TableCell>
                       <Badge variant={s.status === "active" ? "secondary" : "outline"}>
                         {s.status}

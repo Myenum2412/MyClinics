@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { toast } from "sonner";
@@ -38,7 +38,7 @@ export default function RgbNeoAiPage() {
       <div>
         <h1 className="text-xl font-semibold">AI Incident Assistant</h1>
         <p className="text-sm text-muted-foreground">
-          Ask in natural language. Answers are built from real RGB Neo telemetry  never invented.
+          Ask in natural language. Answers are built from real RGB Neo telemetry — never invented.
         </p>
       </div>
 

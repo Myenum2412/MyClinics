@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Client-side API helper for the multi-tenant Clinic API.
  *
  * The Clinic API authenticates with a JWT bearer token issued by
@@ -7,7 +7,7 @@
  * localStorage (for API calls) AND mirrored in a non-httpOnly cookie
  * (so the Next.js proxy can verify sessions server-side for route
  * protection). Every tenant request is scoped to the caller's clinic
- * server-side  the URL clinicId is never trusted on its own.
+ * server-side — the URL clinicId is never trusted on its own.
  */
 
 import { nowMs } from "./datetime";
@@ -25,7 +25,7 @@ export type ClinicRole =
   | "staff"
   | "patient";
 
-/** Role hierarchy  higher roles pass `requireRoles(min)` gates. */
+/** Role hierarchy — higher roles pass `requireRoles(min)` gates. */
 export const ROLE_PRIORITY: Record<ClinicRole, number> = {
   platform_admin: 7,
   clinic_admin: 6,
@@ -496,7 +496,7 @@ export function storeSessionToken(token: string, ttlSeconds: number): void {
 /**
  * API base for browser-side calls. In production the browser talks to the
  * API gateway directly (CORS-enabled) instead of round-tripping through the
- * Vercel proxy  that halves latency on every request. Falls back to the
+ * Vercel proxy — that halves latency on every request. Falls back to the
  * same-origin proxy when unset (local dev).
  */
 const API_BASE =
@@ -549,11 +549,11 @@ async function request<T>(
         const proxyUrl = url.slice(API_BASE.length);
         res = await fetch(proxyUrl, { ...init, headers, cache: "no-store" });
       } catch (e2) {
-        const msg = e instanceof TypeError ? `Network error  cannot reach API at ${API_BASE || "proxy"} (${e instanceof Error ? e.message : ""}). Retried via proxy also failed. Check backend at https://api.myclinic.myenum.in is up and CORS allows ${typeof window !== "undefined" ? window.location.origin : ""}.` : e instanceof Error ? e.message : "Network error";
+        const msg = e instanceof TypeError ? `Network error — cannot reach API at ${API_BASE || "proxy"} (${e instanceof Error ? e.message : ""}). Retried via proxy also failed. Check backend at https://api.myclinic.myenum.in is up and CORS allows ${typeof window !== "undefined" ? window.location.origin : ""}.` : e instanceof Error ? e.message : "Network error";
         throw new ClinicApiError(msg, 0, "NETWORK_ERROR");
       }
     } else {
-      const msg = e instanceof TypeError ? `Network error  cannot reach API at ${API_BASE || "proxy"} (${e.message}). Check backend at https://api.myclinic.myenum.in is up and CORS allows ${typeof window !== "undefined" ? window.location.origin : ""}.` : e instanceof Error ? e.message : "Network error";
+      const msg = e instanceof TypeError ? `Network error — cannot reach API at ${API_BASE || "proxy"} (${e.message}). Check backend at https://api.myclinic.myenum.in is up and CORS allows ${typeof window !== "undefined" ? window.location.origin : ""}.` : e instanceof Error ? e.message : "Network error";
       throw new ClinicApiError(msg, 0, "NETWORK_ERROR");
     }
   }
@@ -1283,7 +1283,7 @@ export async function downloadBillPdf(
       const data = await res.json();
       error = (data as { error?: string }).error ?? error;
     } catch {
-      // non-JSON error body  keep the default message
+      // non-JSON error body — keep the default message
     }
     throw new ClinicApiError(error, res.status);
   }
@@ -1324,7 +1324,7 @@ export interface MedicalRecordFile {
   patientName: string;
   patientPhone: string | null;
   fileName: string;
-  /** Folder key  default folder key ("prescriptions", "lab-reports", …) or a custom folder id. */
+  /** Folder key — default folder key ("prescriptions", "lab-reports", …) or a custom folder id. */
   folder: string;
   mimeType: string | null;
   size: number;
@@ -1532,7 +1532,7 @@ export async function getAvatarUrl(
       return { url: objectUrl };
     }
   } catch {
-    // ignore  fall back to initials below
+    // ignore — fall back to initials below
   }
   return { url: null };
 }
@@ -1808,7 +1808,7 @@ export interface WhatsappSession {
   qr: { dataUrl: string; generatedAt: string } | null;
 }
 
-/** Live WhatsApp session state  bypasses the GET cache for polling. */
+/** Live WhatsApp session state — bypasses the GET cache for polling. */
 export function getWhatsappSession(): Promise<WhatsappSession> {
   return request("/api/whatsapp/session", { cache: "no-store" });
 }
@@ -1839,14 +1839,14 @@ export function getClinicWhatsappSession(clinicId: string): Promise<ClinicWhatsa
   return request(tenantPath(clinicId, "/whatsapp/session"), { cache: "no-store" });
 }
 
-/** Starts (or re-pairs) this clinic's WhatsApp connection  the QR appears within a few seconds. */
+/** Starts (or re-pairs) this clinic's WhatsApp connection — the QR appears within a few seconds. */
 export function connectClinicWhatsapp(clinicId: string): Promise<{ ok: true; status: string }> {
   return request(tenantPath(clinicId, "/whatsapp/session/connect"), { method: "POST" });
 }
 
 /**
  * Stops this clinic's WhatsApp connection. With `logout` the paired device is
- * unlinked and the session wiped  the next connect requires a fresh QR scan.
+ * unlinked and the session wiped — the next connect requires a fresh QR scan.
  */
 export function disconnectClinicWhatsapp(
   clinicId: string,
@@ -1889,7 +1889,7 @@ export interface WhatsappBroadcastResult {
 
 /**
  * Sends a WhatsApp notification (optionally with attachments) to the given
- * patients  or every active patient when `allPatients` is set. Multipart
+ * patients — or every active patient when `allPatients` is set. Multipart
  * upload, so attachments travel inline with the form fields.
  */
 export async function sendWhatsappBroadcast(

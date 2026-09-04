@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -129,10 +129,10 @@ export default function LeadsPage() {
               <TableBody>
                 {leads.map((l) => (
                   <TableRow key={l.leadId} className="cursor-pointer" onClick={() => router.push(`/clinic/leads/${l.leadId}`)}>
-                    <TableCell className="font-medium">{l.name ?? ""}</TableCell>
+                    <TableCell className="font-medium">{l.name ?? "—"}</TableCell>
                     <TableCell><Badge className="bg-muted text-muted-foreground">{l.source}</Badge></TableCell>
-                    <TableCell>{l.phone ?? ""}</TableCell>
-                    <TableCell>{l.email ?? ""}</TableCell>
+                    <TableCell>{l.phone ?? "—"}</TableCell>
+                    <TableCell>{l.email ?? "—"}</TableCell>
                     <TableCell><Badge>{l.status}</Badge></TableCell>
                     <TableCell>{l.priority}</TableCell>
                     <TableCell className="text-right text-xs text-muted-foreground">View</TableCell>

@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 import { useEffect } from "react";
 
 /**
  * Registers the service worker shipped from /public/sw.js.
  *
- * Runs only in production builds and only in the browser  Next dev mode
+ * Runs only in production builds and only in the browser — Next dev mode
  * bypasses SW registration to keep HMR reliable.
  */
 export default function PwaRegister() {
@@ -18,7 +18,7 @@ export default function PwaRegister() {
       navigator.serviceWorker
         .register("/sw.js", { scope: "/" })
         .catch(() => {
-          /* ignore  PWA features are progressive, never blocking */
+          /* ignore — PWA features are progressive, never blocking */
         });
     };
 

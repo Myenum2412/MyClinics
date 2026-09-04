@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { Search } from 'lucide-react';
 import { PolarAngleAxis, RadialBar, RadialBarChart } from 'recharts';
@@ -25,7 +25,7 @@ export default function StatsTreatment({ records, plans, discharges, patients, s
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="shrink-0">
           <h2 className="text-balance font-medium text-foreground text-xl">Treatment Overview</h2>
-          <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">Records, plans and discharge tracking  completion insights.</p>
+          <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">Records, plans and discharge tracking — completion insights.</p>
         </div>
         {onSearchChange !== undefined && (
           <div className="flex-1 flex justify-center px-4">

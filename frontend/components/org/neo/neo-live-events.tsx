@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { RadioIcon } from "lucide-react";
@@ -16,7 +16,7 @@ const SEV_DOT: Record<string, string> = {
 
 /**
  * Real-time event stream. Polls the backend event stream on an interval and
- * animates new entries in. Never fabricates events  when the backend has none,
+ * animates new entries in. Never fabricates events — when the backend has none,
  * it shows an honest empty state.
  */
 export function NeoLiveEvents({ limit = 40, intervalMs = 5000 }: { limit?: number; intervalMs?: number }) {

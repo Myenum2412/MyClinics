@@ -1,4 +1,4 @@
-﻿export type ArticleSection = { id: string; title: string; body: string[] }
+export type ArticleSection = { id: string; title: string; body: string[] }
 
 export type Article = {
   slug: string
@@ -41,7 +41,7 @@ const inputs: ArticleInput[] = [
         id: "why-isolation-matters",
         title: "Why isolation matters",
         body: [
-          "When multiple clinics share one platform, the biggest risk isn't downtime  it's leakage. A patient's history, prescriptions and bills are deeply personal, and a clinic's books are confidential business data.",
+          "When multiple clinics share one platform, the biggest risk isn't downtime — it's leakage. A patient's history, prescriptions and bills are deeply personal, and a clinic's books are confidential business data.",
           "That's why My Clinics was designed around a simple promise: everything your clinic creates lives inside your clinic's boundary, and nothing crosses it.",
         ],
       },
@@ -57,7 +57,7 @@ const inputs: ArticleInput[] = [
         id: "how-queries-are-scoped",
         title: "How every query is scoped",
         body: [
-          "Isolation isn't a filter you remember to apply  it's enforced in the data layer. Every read and write in our API resolves the caller's clinic session first and scopes the query to that clinic.",
+          "Isolation isn't a filter you remember to apply — it's enforced in the data layer. Every read and write in our API resolves the caller's clinic session first and scopes the query to that clinic.",
           "Staff accounts can only see their own clinic's workspace. Patients can only see their own records inside the patient portal. There is no query path that returns another clinic's data.",
         ],
       },
@@ -74,7 +74,7 @@ const inputs: ArticleInput[] = [
         title: "What this means for you",
         body: [
           "You get the economics of a shared platform with the privacy posture of a dedicated install: encrypted transport, encryption at rest, hashed passwords and strict tenant walls.",
-          "If you ever leave, your data export belongs to you  complete, portable and free of anyone else's records.",
+          "If you ever leave, your data export belongs to you — complete, portable and free of anyone else's records.",
         ],
       },
     ],
@@ -103,7 +103,7 @@ const inputs: ArticleInput[] = [
         title: "Step 1: Create your clinic account",
         body: [
           "Go to the sign-up page and choose \"Create Account\". Enter your name, clinic email and a strong password, or click \"Continue with Google\" to use your Google account in one tap.",
-          "Pick a password with at least eight characters mixing letters, numbers and symbols. Passwords are stored as cryptographic hashes  nobody at My Clinics can read them.",
+          "Pick a password with at least eight characters mixing letters, numbers and symbols. Passwords are stored as cryptographic hashes — nobody at My Clinics can read them.",
         ],
       },
       {
@@ -111,7 +111,7 @@ const inputs: ArticleInput[] = [
         title: "Step 2: Note your Clinic ID",
         body: [
           "The moment your clinic is created, My Clinics generates a unique Clinic ID and shows it on screen. This ID is the identity of your clinic inside the platform.",
-          "Copy it and keep it safe  you'll share it with your staff so they join the right workspace, and with patients who need to find your clinic. Losing access to it makes onboarding staff harder, so treat it like your clinic's account number.",
+          "Copy it and keep it safe — you'll share it with your staff so they join the right workspace, and with patients who need to find your clinic. Losing access to it makes onboarding staff harder, so treat it like your clinic's account number.",
         ],
       },
       {
@@ -119,7 +119,7 @@ const inputs: ArticleInput[] = [
         title: "Step 3: Sign in to your workspace",
         body: [
           "After sign-up you're redirected to the login page. Sign in with the credentials you just created, or use Google sign-in.",
-          "You'll land in your clinic workspace  the dashboard showing today's appointments, your doctors, patients and recent activity. Everything you see here belongs only to your clinic.",
+          "You'll land in your clinic workspace — the dashboard showing today's appointments, your doctors, patients and recent activity. Everything you see here belongs only to your clinic.",
         ],
       },
       {
@@ -135,7 +135,7 @@ const inputs: ArticleInput[] = [
         title: "Step 5: Add your patients",
         body: [
           "From the Patients page, register each patient with their name, age, gender, blood group, contact number and any known allergies or medical history.",
-          "The more complete the profile, the better  doctors see this context during consultations, and emergency details like blood group are visible at a glance.",
+          "The more complete the profile, the better — doctors see this context during consultations, and emergency details like blood group are visible at a glance.",
         ],
       },
       {
@@ -150,7 +150,7 @@ const inputs: ArticleInput[] = [
         id: "step-7-whatsapp-assistant",
         title: "Step 7: Turn on the WhatsApp assistant",
         body: [
-          "Connect your clinic's WhatsApp number from Settings. Patients message your clinic the way they already message everyone else  the assistant understands their request and books the appointment for them.",
+          "Connect your clinic's WhatsApp number from Settings. Patients message your clinic the way they already message everyone else — the assistant understands their request and books the appointment for them.",
           "Automatic confirmations and reminders go out over WhatsApp, cutting no-shows without your staff lifting a finger. Patients can ask the assistant to stop reminders anytime.",
         ],
       },
@@ -158,7 +158,7 @@ const inputs: ArticleInput[] = [
         id: "step-8-records-prescriptions-billing",
         title: "Step 8: Records, prescriptions and billing",
         body: [
-          "During consultations, doctors issue digital prescriptions and attach reports  lab results, scans and documents upload straight into the patient's record. Bills are generated against each visit with medicine and service line items.",
+          "During consultations, doctors issue digital prescriptions and attach reports — lab results, scans and documents upload straight into the patient's record. Bills are generated against each visit with medicine and service line items.",
           "Patients see their own prescriptions, reports and bills in the patient portal, so follow-ups don't turn into front-desk phone calls. Monthly reports summarise visits, revenue and patient flow for the whole clinic.",
         ],
       },
@@ -167,7 +167,7 @@ const inputs: ArticleInput[] = [
         title: "Troubleshooting & support",
         body: [
           "Didn't receive a confirmation? Check spam, and confirm the email on the account is correct. Google sign-in failing usually means the Google account differs from the one used at sign-up.",
-          "For anything else, reach out through the contact details on your clinic dashboard  support can see your Clinic ID context and resolve issues faster when you quote it.",
+          "For anything else, reach out through the contact details on your clinic dashboard — support can see your Clinic ID context and resolve issues faster when you quote it.",
         ],
       },
     ],
@@ -188,14 +188,14 @@ const inputs: ArticleInput[] = [
         title: "The drop-off problem",
         body: [
           "Most online booking funnels lose patients between \"find the website\" and \"confirm the slot\". Every extra app download or account creation sheds people who simply wanted to see a doctor.",
-          "WhatsApp removes that entire funnel  the conversation happens where your patients already are.",
+          "WhatsApp removes that entire funnel — the conversation happens where your patients already are.",
         ],
       },
       {
         id: "how-it-works",
         title: "How it works",
         body: [
-          "A patient messages your clinic's number. The assistant identifies the doctor or service they need, offers open slots, and confirms the booking  all in chat.",
+          "A patient messages your clinic's number. The assistant identifies the doctor or service they need, offers open slots, and confirms the booking — all in chat.",
           "Confirmations and reminders are sent automatically, and patients stay in control of the messages they receive.",
         ],
       },
@@ -203,7 +203,7 @@ const inputs: ArticleInput[] = [
         id: "what-clinics-see",
         title: "What clinics see",
         body: [
-          "Bookings made over WhatsApp appear instantly on your Appointments board alongside online and walk-in bookings  one calendar, zero double entry.",
+          "Bookings made over WhatsApp appear instantly on your Appointments board alongside online and walk-in bookings — one calendar, zero double entry.",
           "Clinics running reminders report fewer empty slots and calmer mornings at the front desk.",
         ],
       },
@@ -224,7 +224,7 @@ const inputs: ArticleInput[] = [
         id: "starting-point",
         title: "Starting point",
         body: [
-          "Shared databases with per-row tenancy are efficient  and dangerous if even one query forgets its scope. For health records we wanted forgetting to be impossible.",
+          "Shared databases with per-row tenancy are efficient — and dangerous if even one query forgets its scope. For health records we wanted forgetting to be impossible.",
           "Our answer was to make the tenant boundary part of the data-access layer itself rather than a discipline expected of every feature.",
         ],
       },
@@ -269,7 +269,7 @@ const inputs: ArticleInput[] = [
         id: "week-2-opening-online-booking",
         title: "Week 2: Opening online booking",
         body: [
-          "Online booking switched on with real availability. The first day brought eleven online bookings  most from existing patients who preferred not to call.",
+          "Online booking switched on with real availability. The first day brought eleven online bookings — most from existing patients who preferred not to call.",
           "Front-desk workload shifted from answering phones to welcoming arrivals.",
         ],
       },
@@ -278,7 +278,7 @@ const inputs: ArticleInput[] = [
         title: "Week 4: The habit forms",
         body: [
           "With WhatsApp reminders active, no-shows dropped noticeably. Prescriptions, reports and bills were fully digital, and patients began expecting their documents in the portal.",
-          "Thirty days in, the clinic runs on one system end to end  and the paper diary is a drawer relic.",
+          "Thirty days in, the clinic runs on one system end to end — and the paper diary is a drawer relic.",
         ],
       },
     ],
@@ -289,7 +289,7 @@ const inputs: ArticleInput[] = [
     image:
       "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
     excerpt:
-      "What we encrypt, how we rotate keys, and why passwords are hashed and never readable  even by us.",
+      "What we encrypt, how we rotate keys, and why passwords are hashed and never readable — even by us.",
     author: { name: "Priya Nair", initials: "PN", img: 44 },
     date: "Apr 19, 2026",
     readTime: "4 Min Read",
@@ -299,7 +299,7 @@ const inputs: ArticleInput[] = [
         title: "In transit",
         body: [
           "All traffic to My Clinics runs over TLS. Appointment changes, prescription edits and document downloads are encrypted between your browser and our servers.",
-          "Internal service communication follows the same rule  plaintext hops are not allowed anywhere in the pipeline.",
+          "Internal service communication follows the same rule — plaintext hops are not allowed anywhere in the pipeline.",
         ],
       },
       {
@@ -314,7 +314,7 @@ const inputs: ArticleInput[] = [
         id: "credentials-and-access",
         title: "Credentials and access",
         body: [
-          "Passwords are stored as cryptographic hashes and are never readable in plain text  by staff, by support, or by us. Sessions expire, and privileged actions land in audit logs.",
+          "Passwords are stored as cryptographic hashes and are never readable in plain text — by staff, by support, or by us. Sessions expire, and privileged actions land in audit logs.",
           "Encryption is the floor, not the ceiling: tenant isolation and role-based access decide who can reach data even when they can technically connect.",
         ],
       },
@@ -343,7 +343,7 @@ const inputs: ArticleInput[] = [
         id: "one-timeline",
         title: "One timeline",
         body: [
-          "Now every visit, prescription, uploaded report and bill attaches to the patient's timeline in order. Open the patient, see the story  newest first.",
+          "Now every visit, prescription, uploaded report and bill attaches to the patient's timeline in order. Open the patient, see the story — newest first.",
           "Documents preview inline, so verifying a lab report doesn't mean downloading anything.",
         ],
       },
@@ -372,7 +372,7 @@ const inputs: ArticleInput[] = [
         id: "plain-language-intent",
         title: "Plain language, real intent",
         body: [
-          "\"My son has rashes and fever since yesterday\" is how patients describe problems  not department names. The assistant parses intent from everyday language.",
+          "\"My son has rashes and fever since yesterday\" is how patients describe problems — not department names. The assistant parses intent from everyday language.",
           "It maps the need to the right doctor in that clinic's roster, considering specialisation and availability.",
         ],
       },
@@ -380,7 +380,7 @@ const inputs: ArticleInput[] = [
         id: "matching-and-booking",
         title: "Matching and booking",
         body: [
-          "Once matched, the assistant proposes open slots and completes the booking in the same conversation  no forms, no redirects.",
+          "Once matched, the assistant proposes open slots and completes the booking in the same conversation — no forms, no redirects.",
           "The reservation appears on the clinic's board instantly, tagged with the source so staff know it came through chat.",
         ],
       },

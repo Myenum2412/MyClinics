@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,23 +43,23 @@ export default function OrgInfoPage() {
             <dl className="grid gap-2 text-sm sm:grid-cols-2">
               <div className="flex justify-between gap-4">
                 <dt className="text-muted-foreground">Name</dt>
-                <dd>{org.name ?? ""}</dd>
+                <dd>{org.name ?? "—"}</dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-muted-foreground">Email</dt>
-                <dd>{org.email ?? ""}</dd>
+                <dd>{org.email ?? "—"}</dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-muted-foreground">Phone</dt>
-                <dd>{org.phone ?? ""}</dd>
+                <dd>{org.phone ?? "—"}</dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-muted-foreground">Website</dt>
-                <dd>{org.website ?? ""}</dd>
+                <dd>{org.website ?? "—"}</dd>
               </div>
               <div className="flex justify-between gap-4 sm:col-span-2">
                 <dt className="text-muted-foreground">Address</dt>
-                <dd>{org.address ?? ""}</dd>
+                <dd>{org.address ?? "—"}</dd>
               </div>
               {org.description && (
                 <div className="sm:col-span-2">

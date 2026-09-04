@@ -1,11 +1,11 @@
-﻿import { Suspense } from "react";
+import { Suspense } from "react";
 import { ClinicSignupForm } from "@/components/clinic-signup-form";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Create Your Clinic",
   description:
-    "Create your clinic  one secure multi-tenant workspace with strict data isolation. Your Clinic ID is generated at signup.",
+    "Create your clinic — one secure multi-tenant workspace with strict data isolation. Your Clinic ID is generated at signup.",
 };
 
 export default function ClinicSignupPage() {

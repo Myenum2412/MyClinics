@@ -1,4 +1,4 @@
-﻿import { CATALOG } from "@/lib/blog-catalog";
+import { CATALOG } from "@/lib/blog-catalog";
 import { ARTICLES } from "@/lib/blog-posts";
 
 export const runtime = "nodejs";
@@ -10,7 +10,7 @@ export async function GET() {
   const lines: string[] = [
     "# My Clinics",
     "",
-    "> My Clinics is a secure multi-tenant clinic management platform for doctors and clinics  appointments, WhatsApp booking, patient records, digital prescriptions, billing and reports, with strict data isolation between clinics.",
+    "> My Clinics is a secure multi-tenant clinic management platform for doctors and clinics — appointments, WhatsApp booking, patient records, digital prescriptions, billing and reports, with strict data isolation between clinics.",
     "",
     `## Blog articles (${ARTICLES.length + CATALOG.length})`,
     "",

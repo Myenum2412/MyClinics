@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ export interface InfiniteMarqueeProps {
   speed?: number;
   /** Animation direction. */
   direction?: "left" | "right";
-  /** Pause the loop when the cursor enters. Off by default  most marketing
+  /** Pause the loop when the cursor enters. Off by default — most marketing
    *  marquees should keep moving so they never feel "stuck" mid-page. */
   pauseOnHover?: boolean;
   /** Tailwind gap class between items, e.g. "gap-10". */
@@ -51,7 +51,7 @@ export function InfiniteMarquee({
       <div
         className={cn(
           "flex w-max items-center will-change-transform",
-          // Honour the OS reduced-motion preference  freeze the loop.
+          // Honour the OS reduced-motion preference — freeze the loop.
           "motion-reduce:![animation:none]",
           gap
         )}
@@ -76,7 +76,7 @@ export function InfiniteMarquee({
             </div>
           ))}
         </div>
-        {/* Duplicate  exactly once  for the seamless wrap at -50%. */}
+        {/* Duplicate — exactly once — for the seamless wrap at -50%. */}
         <div className={cn("flex shrink-0 items-center", gap)} aria-hidden>
           {items.map((node, i) => (
             <div key={`b-${i}`} className="shrink-0">

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
@@ -416,7 +416,7 @@ export function PatientForm({
   const renderViewField = (label: string, value: string | undefined | null) => (
     <div className="space-y-2">
       <Label className="text-sm font-medium text-foreground">{label}</Label>
-      <div className="text-foreground">{value || ""}</div>
+      <div className="text-foreground">{value || "—"}</div>
     </div>
   );
 
@@ -429,7 +429,7 @@ export function PatientForm({
             {renderViewField("Mobile Number", form.mobile)}
             {renderViewField("WhatsApp Number", form.whatsapp)}
             {renderViewField("Email", form.email)}
-            {renderViewField("Gender", form.gender ? form.gender.charAt(0).toUpperCase() + form.gender.slice(1) : "")}
+            {renderViewField("Gender", form.gender ? form.gender.charAt(0).toUpperCase() + form.gender.slice(1) : "—")}
             {renderViewField("Date of Birth", form.dateOfBirth)}
             {renderViewField("Blood Group", form.bloodGroup)}
             {renderViewField("Height (cm)", form.height)}
@@ -441,11 +441,11 @@ export function PatientForm({
 
         <SectionCard title="2. Vital Signs">
           <div className="grid gap-4 md:grid-cols-2">
-            {renderViewField("Blood Pressure", form.bloodPressure ? `${form.bloodPressure} mmHg` : "")}
-            {renderViewField("Temperature", form.temperature ? `${form.temperature} °C` : "")}
-            {renderViewField("Pulse / Heart Rate", form.pulse ? `${form.pulse} bpm` : "")}
-            {renderViewField("Respiratory Rate", form.respiratoryRate ? `${form.respiratoryRate} /min` : "")}
-            {renderViewField("SpO₂ (Oxygen Saturation)", form.spo2 ? `${form.spo2} %` : "")}
+            {renderViewField("Blood Pressure", form.bloodPressure ? `${form.bloodPressure} mmHg` : "—")}
+            {renderViewField("Temperature", form.temperature ? `${form.temperature} °C` : "—")}
+            {renderViewField("Pulse / Heart Rate", form.pulse ? `${form.pulse} bpm` : "—")}
+            {renderViewField("Respiratory Rate", form.respiratoryRate ? `${form.respiratoryRate} /min` : "—")}
+            {renderViewField("SpO₂ (Oxygen Saturation)", form.spo2 ? `${form.spo2} %` : "—")}
           </div>
         </SectionCard>
 
@@ -509,7 +509,7 @@ export function PatientForm({
           </div>
           <div className="space-y-2">
             <Label className="text-sm font-medium text-foreground">Internal Notes</Label>
-            <div className="text-foreground">{form.notes || ""}</div>
+            <div className="text-foreground">{form.notes || "—"}</div>
           </div>
         </SectionCard>
 
@@ -524,7 +524,7 @@ export function PatientForm({
                       <span className="text-xs text-muted-foreground">({(a.size / 1024).toFixed(1)} KB)</span>
                     </div>
                   ))
-                : ""}
+                : "—"}
             </div>
           </div>
         </SectionCard>
@@ -581,7 +581,7 @@ export function PatientForm({
           <div>
             <p className="text-sm font-medium text-foreground">Patient Photo</p>
             <p className="mt-0.5 text-xs text-muted-foreground">
-              Click the avatar to upload a profile photo (JPG, PNG  Max 2MB)
+              Click the avatar to upload a profile photo (JPG, PNG — Max 2MB)
             </p>
             {profileImage && (
               <p className="mt-1 truncate text-xs text-primary">{profileImage.name}</p>
@@ -651,7 +651,7 @@ export function PatientForm({
             placeholder="john@example.com"
             helperText={
               portalEnabled
-                ? "Required  this is the patient's portal login username"
+                ? "Required — this is the patient's portal login username"
                 : undefined
             }
             disabled={isViewMode}
@@ -761,7 +761,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="2. Vital Signs" description="Optional  captured at registration, editable anytime">
+      <SectionCard title="2. Vital Signs" description="Optional — captured at registration, editable anytime">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             label="Blood Pressure"
@@ -941,7 +941,7 @@ export function PatientForm({
 
       <SectionCard
         title="6. Identification"
-        description="Optional  only fill if required by your clinic"
+        description="Optional — only fill if required by your clinic"
       >
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="ID Proof Type" name="idType" error={errors.idType} disabled={isViewMode}>
@@ -982,7 +982,7 @@ export function PatientForm({
           >
             {isViewMode ? (
               <div className="border border-border rounded-md px-3 py-2 text-foreground bg-muted">
-                {form.doctorId || ""}
+                {form.doctorId || "—"}
               </div>
             ) : (
               <DoctorComboBox
@@ -1103,7 +1103,7 @@ export function PatientForm({
 
       <SectionCard
         title="8. Insurance"
-        description="Optional  add if the patient has health insurance"
+        description="Optional — add if the patient has health insurance"
       >
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
@@ -1186,7 +1186,7 @@ export function PatientForm({
           <Textarea
             value={form.notes}
             onChange={(e) => handleChange("notes", e.target.value)}
-            placeholder="Internal notes  visible only to authorized clinic staff"
+            placeholder="Internal notes — visible only to authorized clinic staff"
             rows={3}
             className="border-border"
             disabled={isViewMode}
@@ -1213,7 +1213,7 @@ export function PatientForm({
                       <span className="text-xs text-muted-foreground">({(a.size / 1024).toFixed(1)} KB)</span>
                     </div>
                   ))
-                : ""}
+                : "—"}
             </div>
           </div>
         ) : (

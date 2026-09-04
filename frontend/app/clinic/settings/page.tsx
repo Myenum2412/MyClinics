@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -50,13 +50,13 @@ function upiAppLinks(upiId: string): { label: string; href: string }[] {
 }
 
 const STAGE_LABEL: Record<string, string> = {
-  unconfigured: "Not connected yet  link this clinic's WhatsApp number",
+  unconfigured: "Not connected yet — link this clinic's WhatsApp number",
   idle: "Starting…",
   qr: "Scan the QR below to connect WhatsApp",
-  authenticated: "Authenticated  preparing…",
-  ready: "Connected  notifications are active",
-  disconnected: "Disconnected  press Connect to go back online",
-  error: "Connection error  if your phone showed 'Can't Link New Devices right now', remove a linked device (WhatsApp → Settings → Linked devices, max 4), update WhatsApp, wait 1 min, then scan a fresh QR within 20s",
+  authenticated: "Authenticated — preparing…",
+  ready: "Connected — notifications are active",
+  disconnected: "Disconnected — press Connect to go back online",
+  error: "Connection error — if your phone showed 'Can't Link New Devices right now', remove a linked device (WhatsApp → Settings → Linked devices, max 4), update WhatsApp, wait 1 min, then scan a fresh QR within 20s",
 };
 
 export default function SettingsPage() {
@@ -81,7 +81,7 @@ export default function SettingsPage() {
   const [termsDraft, setTermsDraft] = useState("");
   const [qrCodeDraft, setQrCodeDraft] = useState("");
   const [savingBilling, setSavingBilling] = useState(false);
-  /** Toggled by clicking the "UPI Payment QR Code" heading  reveals app deep links. */
+  /** Toggled by clicking the "UPI Payment QR Code" heading — reveals app deep links. */
   const [showUpiAppLinks, setShowUpiAppLinks] = useState(false);
   /** false = read-only view of the saved details; true = editable form. */
   const [billingEditing, setBillingEditing] = useState(false);
@@ -105,7 +105,7 @@ export default function SettingsPage() {
           setBillingEditing(false);
           setAiAgentEnabled((settingsRes as any).aiAgentEnabled ?? true);
         } else {
-          // Nothing saved yet  start straight in edit mode.
+          // Nothing saved yet — start straight in edit mode.
           setBillingEditing(true);
         }
       })
@@ -373,7 +373,7 @@ export default function SettingsPage() {
                     <p className="max-w-sm text-sm font-medium text-primary">
                       Open WhatsApp on your phone → Settings → Linked devices → Link a device,
                       then scan this QR with THIS clinic&apos;s phone. QR refreshes every few
-                      seconds  scan within 20 seconds. If your phone shows &apos;Can&apos;t Link New Devices right now&apos;, remove an old linked device (max 4) and update WhatsApp first.
+                      seconds — scan within 20 seconds. If your phone shows &apos;Can&apos;t Link New Devices right now&apos;, remove an old linked device (max 4) and update WhatsApp first.
                     </p>
                     {canEdit && (
                       <Button
@@ -396,15 +396,15 @@ export default function SettingsPage() {
                     </p>
                     <p className="max-w-sm text-sm text-muted-foreground">
                       {waSession === null
-                        ? "The status service is not reachable right now. The WhatsApp worker may be down  check pm2 status on the server (myclinic-whatsapp), then reload this page."
+                        ? "The status service is not reachable right now. The WhatsApp worker may be down — check pm2 status on the server (myclinic-whatsapp), then reload this page."
                         : stage === "error"
                           ? "If your phone showed 'Can't Link New Devices right now': WhatsApp allows max 4 linked devices. Remove one (WhatsApp → Settings → Linked devices), update WhatsApp to latest, wait 1 minute, then click Connect again and scan the fresh QR within 20 seconds."
                           : stage === "unconfigured" || stage === "disconnected"
-                            ? "Link this clinic's own WhatsApp number to send appointment reminders and patient notifications from it. Each clinic connects its own number separately  this QR is unique to the current clinic."
+                            ? "Link this clinic's own WhatsApp number to send appointment reminders and patient notifications from it. Each clinic connects its own number separately — this QR is unique to the current clinic."
                             : stage === "idle"
-                              ? "Starting WhatsApp for this clinic… QR will appear shortly. Each clinic connects separately  this QR is only for the current clinic. If QR doesn't appear in 20s, click Retry Connect."
+                              ? "Starting WhatsApp for this clinic… QR will appear shortly. Each clinic connects separately — this QR is only for the current clinic. If QR doesn't appear in 20s, click Retry Connect."
                               : stage === "authenticated"
-                                ? "Authenticated for this clinic  preparing WhatsApp…"
+                                ? "Authenticated for this clinic — preparing WhatsApp…"
                                 : "Make sure the WhatsApp worker is running on the server (pm2: myclinic-whatsapp) and a Chromium browser is available."}
                     </p>
                     {(stage === "idle" || stage === "authenticated") && (
@@ -426,7 +426,7 @@ export default function SettingsPage() {
                 )}
                 <p className="text-xs text-muted-foreground">
                   Powered by WhatsApp Integration · last update{" "}
-                   {waSession?.updatedAt ? formatTimeOnly(waSession.updatedAt) : ""}
+                   {waSession?.updatedAt ? formatTimeOnly(waSession.updatedAt) : "—"}
                 </p>
               </CardContent>
             </Card>
@@ -478,7 +478,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               {!billingEditing && settings ? (
-                /* ── VIEW MODE  saved details ── */
+                /* ── VIEW MODE — saved details ── */
                 <div className="space-y-5">
                   <p className="text-sm text-muted-foreground">
                     These details are printed on every generated invoice PDF.
@@ -696,7 +696,7 @@ export default function SettingsPage() {
             <CardContent>
               <p className="mb-4 text-sm text-muted-foreground">
                 Manage the options available in the dropdowns across the app. Add new values or
-                remove existing ones  changes apply to every form and filter using that dropdown.
+                remove existing ones — changes apply to every form and filter using that dropdown.
               </p>
               {dropdownsLoading ? (
                 <div className="space-y-4">

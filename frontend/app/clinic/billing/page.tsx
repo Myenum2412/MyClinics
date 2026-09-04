@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -108,7 +108,7 @@ export default function BillingPage() {
   const clinicId = session?.clinicId ?? "";
   const router = useRouter();
 
-  // Doctors do not have access to billing  redirect them to the dashboard.
+  // Doctors do not have access to billing — redirect them to the dashboard.
   useEffect(() => {
     if (session?.role === "doctor") {
       router.replace("/clinic");
@@ -527,7 +527,7 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Chart below section card  real data only */}
+      {/* Chart below section card — real data only */}
       {!loading && (
         <Card className="border-border shadow-sm overflow-hidden">
           <CardContent className="p-0">

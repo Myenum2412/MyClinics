@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip, Cell, ResponsiveContainer } from "recharts";
@@ -310,7 +310,7 @@ export function BillingOverviewCard({ bills, loading }: BillingOverviewCardProps
             >
               <p className={`text-[10px] font-medium ${d.isToday ? "text-indigo-600" : "text-muted-foreground"}`}>{d.label}</p>
               <p className={`mt-1 text-xs font-bold tabular-nums ${d.isToday ? "text-indigo-600" : "text-[#0f172a]"}`}>
-                {d.total === 0 ? "" : formatFullINR(d.total)}
+                {d.total === 0 ? "—" : formatFullINR(d.total)}
               </p>
               {d.isToday && <p className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-indigo-600">Today</p>}
             </div>

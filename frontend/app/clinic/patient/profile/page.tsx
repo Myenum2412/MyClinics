@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -122,12 +122,12 @@ function patientToForm(p: Patient): FormState {
 }
 
 function orDash(value: string | number | null | undefined): string {
-  if (value === null || value === undefined || value === "") return "";
+  if (value === null || value === undefined || value === "") return "—";
   return String(value);
 }
 
 function memberSince(createdAt: string | undefined): string {
-  if (!createdAt) return "";
+  if (!createdAt) return "—";
   return formatMonthYear(createdAt);
 }
 
@@ -158,7 +158,7 @@ function Field({
       {children ? (
         children
       ) : (
-        <p className="text-sm font-medium text-foreground">{value ?? ""}</p>
+        <p className="text-sm font-medium text-foreground">{value ?? "—"}</p>
       )}
     </div>
   );
@@ -292,7 +292,7 @@ export default function PatientProfilePage() {
     );
   }
 
-  const locationLabel = [patient.city, patient.state].filter(Boolean).join(", ") || "";
+  const locationLabel = [patient.city, patient.state].filter(Boolean).join(", ") || "—";
   const joinedDateLabel = `Member since ${memberSince(patient.createdAt)}`;
   const clinicName = clinic?.name || "Meenu Care";
   const stats = [
@@ -928,7 +928,7 @@ export default function PatientProfilePage() {
                           {clinic.website}
                         </a>
                       ) : (
-                        ""
+                        "—"
                       )
                     }
                   />
@@ -944,7 +944,7 @@ export default function PatientProfilePage() {
                         clinic?.profile?.pincode,
                       ]
                         .filter(Boolean)
-                        .join(", ") || ""
+                        .join(", ") || "—"
                     }
                   />
                   <Field

@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import * as React from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
@@ -214,7 +214,7 @@ export default function PharmacySalesPage() {
                     {detail.items.map((it: PharmacySaleItem, i) => (
                       <TableRow key={i}>
                         <TableCell>{medicineById.get(it.medicineId)?.name ?? it.medicineId}</TableCell>
-                        <TableCell>{it.batchNumber ?? ""}</TableCell>
+                        <TableCell>{it.batchNumber ?? "—"}</TableCell>
                         <TableCell className="tabular-nums">{it.quantity}</TableCell>
                         <TableCell className="tabular-nums">{fmtMoney(it.unitPrice)}</TableCell>
                         <TableCell className="tabular-nums">{fmtMoney(it.discount)}</TableCell>

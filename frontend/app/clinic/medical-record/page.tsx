@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -704,10 +704,10 @@ function PrescriptionCard({
               {prescription.medicines.map((m, i) => (
                 <tr key={i}>
                   <td className="px-3 py-2 font-medium text-foreground">{m.name}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{m.dosage ?? ""}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{m.frequency ?? ""}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{m.duration ?? ""}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{m.instructions ?? ""}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{m.dosage ?? "—"}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{m.frequency ?? "—"}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{m.duration ?? "—"}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{m.instructions ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -811,7 +811,7 @@ export default function MedicalRecordPage() {
           console.error("[medical-record] failed to load:", failed, reason);
           toast.error(
             failed.length === calls.length
-              ? "Failed to load medical records  check your session and try again"
+              ? "Failed to load medical records — check your session and try again"
               : `Some sections failed to load: ${failed.join(", ")}`
           );
         }
@@ -853,7 +853,7 @@ export default function MedicalRecordPage() {
 
   const doctorName = useCallback(
     (doctorId: string | null): string =>
-      doctors.find((d) => d.doctorId === doctorId)?.name ?? "",
+      doctors.find((d) => d.doctorId === doctorId)?.name ?? "—",
     [doctors]
   );
 
@@ -992,12 +992,12 @@ export default function MedicalRecordPage() {
       let waLarge = 0;
       for (const file of Array.from(fileList)) {
         if (file.size > MAX_FILE_BYTES) {
-          toast.error(`${file.name} exceeds 25MB  skipped`);
+          toast.error(`${file.name} exceeds 25MB — skipped`);
           failed += 1;
           continue;
         }
         if (!isAllowedFile(file)) {
-          toast.error(`${file.name}  only PDF, DOCX, XLSX, JPG, PNG, TIFF and DICOM files are allowed`);
+          toast.error(`${file.name} — only PDF, DOCX, XLSX, JPG, PNG, TIFF and DICOM files are allowed`);
           failed += 1;
           continue;
         }
@@ -1022,7 +1022,7 @@ export default function MedicalRecordPage() {
           msg += `. WhatsApp copy sent to ${name}${waLarge > 0 ? " (large file shared as a portal link)" : ""}`;
         }
         if (waSkippedNoPhone > 0) {
-          msg += `. ${waSkippedNoPhone} file${waSkippedNoPhone === 1 ? "" : "s"} had no WhatsApp number on file  no copy sent`;
+          msg += `. ${waSkippedNoPhone} file${waSkippedNoPhone === 1 ? "" : "s"} had no WhatsApp number on file — no copy sent`;
         }
         if (waFailed > 0) {
           msg += `. Couldn't queue the WhatsApp copy for ${waFailed} file${waFailed === 1 ? "" : "s"}`;
@@ -1269,12 +1269,12 @@ export default function MedicalRecordPage() {
         return;
       }
       if (!isAllowedFile(next)) {
-        toast.error(`${next.name}  only PDF, DOCX, XLSX, JPG, PNG, TIFF and DICOM files are allowed`);
+        toast.error(`${next.name} — only PDF, DOCX, XLSX, JPG, PNG, TIFF and DICOM files are allowed`);
         return;
       }
       try {
         const updated = await uploadMedicalRecordFileVersion(clinicId, file.fileId, next);
-        toast.success(`"${updated.fileName}" updated to v${updated.version}  a copy was sent to WhatsApp`);
+        toast.success(`"${updated.fileName}" updated to v${updated.version} — a copy was sent to WhatsApp`);
         setVersionInput(null);
         void refresh();
       } catch (err) {
@@ -1458,9 +1458,9 @@ export default function MedicalRecordPage() {
                           {p.fullName}
                         </p>
                         <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-                          <span>{calculateAge(p.dateOfBirth) ?? ""} yrs</span>
+                          <span>{calculateAge(p.dateOfBirth) ?? "—"} yrs</span>
                           <span>·</span>
-                          <span>{p.gender ?? ""}</span>
+                          <span>{p.gender ?? "—"}</span>
                           <span>·</span>
                           <span className="inline-flex items-center gap-1"><Phone className="size-3" />{p.mobile}</span>
                         </p>
@@ -1794,7 +1794,7 @@ export default function MedicalRecordPage() {
           <DialogHeader>
             <DialogTitle>Upload new version</DialogTitle>
             <DialogDescription>
-              Replace the content of &quot;{versionInput?.fileName}&quot;  older versions stay in history.
+              Replace the content of &quot;{versionInput?.fileName}&quot; — older versions stay in history.
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-3 rounded-lg border border-dashed border-border p-6">
@@ -1920,7 +1920,7 @@ export default function MedicalRecordPage() {
                         <TableCell className="text-sm whitespace-nowrap">{formatDate(a.date)}</TableCell>
                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{formatTime(a.time)}</TableCell>
                         <TableCell className="text-sm">{doctorName(a.doctorId)}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{a.reason || ""}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{a.reason || "—"}</TableCell>
                         <TableCell>
                           <Select
                             value={a.status}
@@ -1966,7 +1966,7 @@ export default function MedicalRecordPage() {
     const p = selectedPatient;
     return (
       <div className="mt-6 space-y-6">
-        {/* ── Hero patient card  Linear / Stripe premium ── */}
+        {/* ── Hero patient card — Linear / Stripe premium ── */}
         <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-violet-500/[0.04] pointer-events-none" />
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
@@ -1981,9 +1981,9 @@ export default function MedicalRecordPage() {
               <div className="min-w-0 flex-1">
                 <h2 className="text-[17px] font-semibold tracking-tight text-foreground">{p.fullName}</h2>
                 <p className="mt-1 flex flex-wrap items-center gap-2 text-[13px] leading-none text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">{calculateAge(p.dateOfBirth) ?? ""} yrs</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">{calculateAge(p.dateOfBirth) ?? "—"} yrs</span>
                   <span className="text-muted-foreground/40">·</span>
-                  <span className="capitalize">{p.gender ?? ""}</span>
+                  <span className="capitalize">{p.gender ?? "—"}</span>
                   {p.bloodGroup && <><span className="text-muted-foreground/40">·</span><span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-600 dark:bg-red-500/10 dark:text-red-400">{p.bloodGroup}</span></>}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
@@ -2001,7 +2001,7 @@ export default function MedicalRecordPage() {
           </div>
         </div>
 
-        {/* ── Clinical overview  3-up bento ── */}
+        {/* ── Clinical overview — 3-up bento ── */}
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-border">
             <div className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/10 transition" />
@@ -2029,11 +2029,11 @@ export default function MedicalRecordPage() {
             <div className="mt-4 space-y-3">
               <div className="rounded-xl bg-muted/40 p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Conditions</p>
-                <p className="mt-1 text-sm leading-relaxed text-foreground">{p.medicalConditions || <span className="text-muted-foreground"> None on file</span>}</p>
+                <p className="mt-1 text-sm leading-relaxed text-foreground">{p.medicalConditions || <span className="text-muted-foreground">— None on file</span>}</p>
               </div>
               <div className="rounded-xl bg-muted/40 p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Surgeries</p>
-                <p className="mt-1 text-sm leading-relaxed text-foreground">{p.previousSurgeries || <span className="text-muted-foreground"> None on file</span>}</p>
+                <p className="mt-1 text-sm leading-relaxed text-foreground">{p.previousSurgeries || <span className="text-muted-foreground">— None on file</span>}</p>
               </div>
             </div>
           </div>
@@ -2054,41 +2054,41 @@ export default function MedicalRecordPage() {
           <div className="grid gap-6 p-5 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { label: "Contact", items: [
-                ["Mobile", p.mobile || ""],
-                ["WhatsApp", p.whatsapp || ""],
-                ["Email", p.email || ""],
-                ["Emergency Contact", p.emergencyContactName ? `${p.emergencyContactName} (${p.emergencyContactRelationship || ""}) · ${p.emergencyContactMobile || ""}` : ""],
+                ["Mobile", p.mobile || "—"],
+                ["WhatsApp", p.whatsapp || "—"],
+                ["Email", p.email || "—"],
+                ["Emergency Contact", p.emergencyContactName ? `${p.emergencyContactName} (${p.emergencyContactRelationship || "—"}) · ${p.emergencyContactMobile || "—"}` : "—"],
               ]},
               { label: "Demographics", items: [
-                ["Date of Birth", p.dateOfBirth ? formatDate(p.dateOfBirth) : ""],
-                ["Gender", p.gender || ""],
-                ["Blood Group", p.bloodGroup || ""],
-                ["Marital Status", p.maritalStatus || ""],
-                ["Occupation", p.occupation || ""],
+                ["Date of Birth", p.dateOfBirth ? formatDate(p.dateOfBirth) : "—"],
+                ["Gender", p.gender || "—"],
+                ["Blood Group", p.bloodGroup || "—"],
+                ["Marital Status", p.maritalStatus || "—"],
+                ["Occupation", p.occupation || "—"],
               ]},
               { label: "Address", items: [
-                ["Address", p.address || ""],
-                ["City / State", [p.city, p.state].filter(Boolean).join(", ") || ""],
-                ["Pincode", p.pincode || ""],
-                ["Referred By", p.referredBy || ""],
-                ["How did you hear", p.howDidYouHear || ""],
+                ["Address", p.address || "—"],
+                ["City / State", [p.city, p.state].filter(Boolean).join(", ") || "—"],
+                ["Pincode", p.pincode || "—"],
+                ["Referred By", p.referredBy || "—"],
+                ["How did you hear", p.howDidYouHear || "—"],
               ]},
               { label: "Vitals", items: [
-                ["Height", p.height || ""],
-                ["Weight", p.weight || ""],
-                ["Blood Pressure", p.bloodPressure || ""],
-                ["Temperature", p.temperature || ""],
-                ["Pulse / RR / SpO₂", [p.pulse && `Pulse ${p.pulse}`, p.respiratoryRate && `RR ${p.respiratoryRate}`, p.spo2 && `SpO₂ ${p.spo2}`].filter(Boolean).join(" · ") || ""],
+                ["Height", p.height || "—"],
+                ["Weight", p.weight || "—"],
+                ["Blood Pressure", p.bloodPressure || "—"],
+                ["Temperature", p.temperature || "—"],
+                ["Pulse / RR / SpO₂", [p.pulse && `Pulse ${p.pulse}`, p.respiratoryRate && `RR ${p.respiratoryRate}`, p.spo2 && `SpO₂ ${p.spo2}`].filter(Boolean).join(" · ") || "—"],
               ]},
               { label: "Identity & Insurance", items: [
-                ["ID", p.idType ? `${p.idType}: ${p.idNumber || ""}` : ""],
-                ["Insurance Provider", p.insuranceProvider || ""],
-                ["Policy No.", p.insurancePolicyNumber || ""],
-                ["Policy Holder", p.insurancePolicyHolderName || ""],
-                ["Valid Till", p.insuranceValidTill ? formatDate(p.insuranceValidTill) : ""],
+                ["ID", p.idType ? `${p.idType}: ${p.idNumber || "—"}` : "—"],
+                ["Insurance Provider", p.insuranceProvider || "—"],
+                ["Policy No.", p.insurancePolicyNumber || "—"],
+                ["Policy Holder", p.insurancePolicyHolderName || "—"],
+                ["Valid Till", p.insuranceValidTill ? formatDate(p.insuranceValidTill) : "—"],
               ]},
               { label: "Notes", items: [
-                ["Notes", p.notes || ""],
+                ["Notes", p.notes || "—"],
               ]},
             ].map((section) => (
               <div key={section.label} className="space-y-3">
@@ -2106,7 +2106,7 @@ export default function MedicalRecordPage() {
           </div>
         </div>
 
-        {/* Unified timeline  single card */}
+        {/* Unified timeline — single card */}
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
           <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-4">
             <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600"><History className="size-4" /></span>
@@ -2127,7 +2127,7 @@ export default function MedicalRecordPage() {
             });
             overview.patientPrescriptions.forEach(pr=>{
               items.push({ date: pr.visitDate, kind: "prescription", title: pr.diagnosis || "Prescription", el: <PrescriptionCard key={`p-${pr.prescriptionId}`} prescription={pr} doctorName={doctorName} /> });
-              pr.medicines.forEach((m,i)=> items.push({ date: pr.visitDate, kind: "medicine", title: m.name, el: <div key={`m-${pr.prescriptionId}-${i}`} className="rounded-xl border border-sky-200/60 bg-sky-50/50 p-3 dark:border-sky-900/30 dark:bg-sky-500/5"><p className="text-xs text-muted-foreground">{[m.dosage && `Dosage ${m.dosage}`, m.frequency, m.duration, m.instructions].filter(Boolean).join(" · ") || ""} · {doctorName(pr.doctorId)}</p></div> }));
+              pr.medicines.forEach((m,i)=> items.push({ date: pr.visitDate, kind: "medicine", title: m.name, el: <div key={`m-${pr.prescriptionId}-${i}`} className="rounded-xl border border-sky-200/60 bg-sky-50/50 p-3 dark:border-sky-900/30 dark:bg-sky-500/5"><p className="text-xs text-muted-foreground">{[m.dosage && `Dosage ${m.dosage}`, m.frequency, m.duration, m.instructions].filter(Boolean).join(" · ") || "—"} · {doctorName(pr.doctorId)}</p></div> }));
             });
             items.sort((a,b)=> b.date.localeCompare(a.date));
             const dot = { visit: "bg-violet-500", prescription: "bg-emerald-500", medicine: "bg-sky-500", treatment: "bg-amber-500" } as const;

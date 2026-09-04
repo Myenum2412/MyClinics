@@ -1,4 +1,4 @@
-﻿---
+---
 Title: Digital Prescription vs Handwritten Prescription: What Changes?
 Category: Prescriptions
 Excerpt: Cleaner prescriptions and faster follow-ups: understand Digital Prescription vs Handwritten Prescription with the digital workflow My Clinics provides out of the box.
@@ -26,21 +26,21 @@ If you run or work in a clinic today, Digital Prescription vs Handwritten Prescr
 
 ## Why this matters in 2026
 
-Three forces make this urgent right now. First, patient expectations have moved online  people book restaurants and taxis in seconds and increasingly expect clinics to behave the same way. Second, staff costs keep rising while good front-desk help gets harder to retain, so every saved manual minute compounds. Third, data privacy scrutiny is growing, and paper registers scattered around a clinic are the hardest thing to protect.
+Three forces make this urgent right now. First, patient expectations have moved online — people book restaurants and taxis in seconds and increasingly expect clinics to behave the same way. Second, staff costs keep rising while good front-desk help gets harder to retain, so every saved manual minute compounds. Third, data privacy scrutiny is growing, and paper registers scattered around a clinic are the hardest thing to protect.
 
 ## From handwriting to structure
 
-Illegible handwriting is a punchline until it causes a pharmacy call-back  then it is a delay, an annoyed patient and a broken consultation flow. Typed, structured prescriptions end the problem at source.
+Illegible handwriting is a punchline until it causes a pharmacy call-back — then it is a delay, an annoyed patient and a broken consultation flow. Typed, structured prescriptions end the problem at source.
 
 Structure brings safety rails: dosage formats that cannot be ambiguous, allergy cross-checks against the record, and medicine names picked from lists rather than invented.
 
-Each prescription binds to its visit, so context  indication, related report, previous regimen  travels with it forever.
+Each prescription binds to its visit, so context — indication, related report, previous regimen — travels with it forever.
 
 ## Faster prescribing in the room
 
 Patients receive copies digitally in their portal, ending the "I lost the slip" loop that used to consume phone time at the desk.
 
-Pharmacy hand-off improves immediately  legible, itemised, unambiguous  and pharmacists notice the difference within days.
+Pharmacy hand-off improves immediately — legible, itemised, unambiguous — and pharmacists notice the difference within days.
 
 Speed matters between patients. Templates and favourites let common regimens repeat in two clicks; adjustments remain explicit and auditable.
 
@@ -56,13 +56,13 @@ Comparing prescriptions across visits reveals adherence stories: chronic medicin
 
 Cloud storage shifts durability from filing cabinets and luck to encrypted, replicated infrastructure with backups nobody forgets to run.
 
-Retention rules become configuration rather than physical storage anxiety  records persist for as long as regulation and sense demand, then expire cleanly.
+Retention rules become configuration rather than physical storage anxiety — records persist for as long as regulation and sense demand, then expire cleanly.
 
 Access remains governed: only authorised roles in your clinic can open a prescription, and every access lands in the audit trail.
 
 ## Bringing the team along
 
-Standardise the essential fields  drug, dose, frequency, duration, instructions  and leave personal style intact everywhere else.
+Standardise the essential fields — drug, dose, frequency, duration, instructions — and leave personal style intact everywhere else.
 
 Review the first hundred digital prescriptions together. Small template tweaks there remove friction for the next ten thousand.
 
@@ -84,11 +84,11 @@ Doctors vary in enthusiasm for new tools. Pair each senior doctor with a tech-co
 
 ## Common mistakes to avoid
 
-- Skipping allergy cross-checks  the record knows; let it warn before dispensing errors happen.
-- Issuing outside the visit context  orphan prescriptions lose indication, reports and billing linkage.
-- Forgetting patient delivery  portal copies eliminate the lost-slip loop; enable them by default.
-- No template maintenance  refine favourites after the first hundred scripts or speed gains stall.
-- Recreating paper habits on screen  typed freeform paragraphs repeat illegibility digitally; use structured picks.
+- Skipping allergy cross-checks — the record knows; let it warn before dispensing errors happen.
+- Issuing outside the visit context — orphan prescriptions lose indication, reports and billing linkage.
+- Forgetting patient delivery — portal copies eliminate the lost-slip loop; enable them by default.
+- No template maintenance — refine favourites after the first hundred scripts or speed gains stall.
+- Recreating paper habits on screen — typed freeform paragraphs repeat illegibility digitally; use structured picks.
 
 ## Quick checklist
 
@@ -119,11 +119,11 @@ Q: Do prescriptions sync with billing?
 A: Items flow onto invoices where configured, so medication charges never rely on memory.
 
 Q: How long are prescriptions stored?
-A: Indefinitely by default, encrypted and retrievable in seconds  retention rules remain configurable.
+A: Indefinitely by default, encrypted and retrievable in seconds — retention rules remain configurable.
 
 Q: Can pharmacists read the printouts?
-A: Legible, itemised printouts are welcomed by pharmacies  clearer than handwriting by definition.
+A: Legible, itemised printouts are welcomed by pharmacies — clearer than handwriting by definition.
 
 ## Final takeaway
 
-Digital Prescription vs Handwritten Prescription rewards clinics that treat it as a sequence of small, deliberate upgrades rather than a single dramatic overhaul. Pick the first step above, schedule it, and let the results argue for the next one. When you are ready, My Clinics can have your clinic booking online within days  the setup walkthrough lives right here on the blog.
+Digital Prescription vs Handwritten Prescription rewards clinics that treat it as a sequence of small, deliberate upgrades rather than a single dramatic overhaul. Pick the first step above, schedule it, and let the results argue for the next one. When you are ready, My Clinics can have your clinic booking online within days — the setup walkthrough lives right here on the blog.
