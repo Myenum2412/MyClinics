@@ -46,7 +46,7 @@ export function SiteFooter() {
           <div className="max-w-sm">
             <Link href="/" className="flex items-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logobg.png" alt="My Clinics" className="h-12 w-auto object-contain shrink-0" />
+              <img src="/logobg.png" alt="My Clinics" className="h-20 w-auto object-contain shrink-0" />
             </Link>
             <p className="mt-3 text-sm text-muted-foreground">Everything your team needs to build, ship, and scale.</p>
             <p className="mt-2 text-xs text-muted-foreground">

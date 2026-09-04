@@ -22,7 +22,7 @@ export default function FooterBlock() {
           <div className="max-w-sm">
             <a href="#" className="flex items-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logobg.png" alt="My Clinics" className="h-12 w-auto object-contain shrink-0" />
+              <img src="/logobg.png" alt="My Clinics" className="h-20 w-auto object-contain shrink-0" />
             </a>
             <p className="mt-3 text-sm text-muted-foreground">
               Everything your team needs to build, ship, and scale.

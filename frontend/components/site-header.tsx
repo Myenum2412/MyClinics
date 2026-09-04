@@ -25,7 +25,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 flex h-16 w-full items-center border-b border-border bg-white px-6 text-black">
       <Link href="/" className="flex shrink-0 items-center">
-        <Image src="/logobg.png" alt="My Clinics" width={160} height={48} className="h-12 w-auto object-contain" priority />
+        <Image src="/logobg.png" alt="My Clinics" width={180} height={54} className="h-16 w-auto object-contain" priority />
       </Link>
 
       <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
@@ -68,7 +68,7 @@ export function SiteHeader() {
           <SheetContent side="right" className="w-full sm:max-w-xs">
             <SheetHeader>
               <SheetTitle className="flex items-center">
-                <Image src="/logobg.png" alt="My Clinics" width={140} height={40} className="h-12 w-auto object-contain" />
+                <Image src="/logobg.png" alt="My Clinics" width={160} height={48} className="h-16 w-auto object-contain" />
               </SheetTitle>
             </SheetHeader>
             <nav className="flex flex-col px-2">

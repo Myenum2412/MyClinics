@@ -26,7 +26,7 @@ export default function HeaderBlock() {
       <header className="relative flex h-16 w-full items-center border-b border-border px-6">
         <a href="#" className="flex shrink-0 items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logobg.png" alt="My Clinics" className="h-12 w-auto object-contain shrink-0" />
+          <img src="/logobg.png" alt="My Clinics" className="h-16 w-auto object-contain shrink-0" />
         </a>
 
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
@@ -75,7 +75,7 @@ export default function HeaderBlock() {
               <SheetHeader>
                 <SheetTitle className="flex items-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/logobg.png" alt="My Clinics" className="h-10 w-auto object-contain shrink-0" />
+                  <img src="/logobg.png" alt="My Clinics" className="h-16 w-auto object-contain shrink-0" />
                 </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col px-2">
