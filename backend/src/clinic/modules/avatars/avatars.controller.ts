@@ -47,6 +47,11 @@ export class AvatarController {
         if (mime === "image/jpeg" || mime === "image/jpg") contentType = "image/jpeg";
         else if (mime === "image/png") contentType = "image/png";
         else throw new BadRequestError("Only JPG or PNG images are allowed");
+        // SEC-005: magic byte check to prevent MIME spoof (e.g. SVG as PNG)
+        const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47;
+        const isJpg = buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
+        if (contentType === "image/png" && !isPng) throw new BadRequestError("Invalid PNG file");
+        if (contentType === "image/jpeg" && !isJpg) throw new BadRequestError("Invalid JPEG file");
       }
     }
 

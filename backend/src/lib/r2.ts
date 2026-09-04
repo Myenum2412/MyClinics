@@ -88,18 +88,40 @@ export async function objectExists(key: string): Promise<boolean> {
   }
 }
 
+const SAFE_INLINE_TYPES = new Set(["application/pdf", "image/jpeg", "image/png", "image/tiff"]);
+
+function sanitizeContentType(input: string | null | undefined): string | undefined {
+  if (!input) return undefined;
+  const ct = input.toLowerCase().trim().split(";")[0].trim();
+  // Only allow known safe types; otherwise force application/octet-stream
+  if (SAFE_INLINE_TYPES.has(ct) || ct.startsWith("video/")) return ct;
+  // For other types, use generic binary to prevent sniff XSS
+  if (ct === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      ct === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+      ct === "application/dicom" || ct === "application/dcm") return ct;
+  return "application/octet-stream";
+}
+
 export async function getDownloadUrl(
   key: string,
   expiresIn = 3600,
-  contentType?: string | null
+  contentType?: string | null,
+  options?: { disposition?: "inline" | "attachment"; fileName?: string }
 ) {
   const { bucket } = r2Config();
+  const safeType = sanitizeContentType(contentType);
+  // Default to attachment to prevent stored XSS (SEC-006). Only allow inline for safe types.
+  const disposition = options?.disposition ?? "attachment";
+  const fileName = options?.fileName ? options.fileName.replace(/[^a-zA-Z0-9._-]/g, "_") : undefined;
+  const contentDisposition = disposition === "inline" && safeType && SAFE_INLINE_TYPES.has(safeType)
+    ? `inline${fileName ? `; filename="${fileName}"` : ""}`
+    : `attachment${fileName ? `; filename="${fileName}"` : ""}`;
   const command = new GetObjectCommand({
     Bucket: bucket,
     Key: key,
-    ResponseContentDisposition: "inline",
+    ResponseContentDisposition: contentDisposition,
     ResponseCacheControl: "no-store",
-    ...(contentType ? { ResponseContentType: contentType } : {}),
+    ...(safeType ? { ResponseContentType: safeType } : {}),
   });
   return getSignedUrl(getR2(), command, { expiresIn });
 }

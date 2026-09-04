@@ -2,7 +2,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Db } from "mongodb";
 import { getMedicalRecordsDb } from "@/lib/db-pools";
 import { BadRequestError, UnauthorizedError } from "@/clinic/core/errors";
-import { isAllowedUpload } from "@/clinic/core/upload-guard";
+import { isAllowedUploadWithMagic } from "@/clinic/core/upload-guard";
 import {
   MedicalRecordService,
   medicalRecordFileToPublic,
@@ -43,7 +43,7 @@ export class MedicalRecordController {
 
     if (!patientId) throw new BadRequestError("patientId is required");
     if (!data || data.length === 0) throw new BadRequestError("A file is required");
-    if (!isAllowedUpload(fileName, mimeType)) {
+    if (!isAllowedUploadWithMagic(fileName, mimeType, data)) {
       throw new BadRequestError(
         "Unsupported file type. Only PDF, DOCX, XLSX, JPG, PNG, TIFF, DICOM and video files (MP4, WebM, QuickTime) are allowed."
       );

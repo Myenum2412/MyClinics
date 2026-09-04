@@ -121,24 +121,33 @@ export class AppointmentService {
     await this.backfillMissingTokens(clinicId, input.doctorId, input.date, session);
     const tokenNumber = await generateTokenNumber(this.db, clinicId, input.doctorId, input.date, session);
 
-    const appointment = await this.repo(ctx).insert({
-      appointmentId: generateAppointmentId(),
-      patientId: input.patientId,
-      doctorId: input.doctorId,
-      date: input.date,
-      time: input.time,
-      status: "scheduled",
-      reason: input.reason ?? null,
-      notes: input.notes ?? null,
-      createdBy: ctx.userId,
-      queueStatus: "waiting",
-      tokenNumber,
-      session,
-      priority: false,
-      checkedInAt: nowFn(),
-      notifiedStages: [],
-      queueHistory: [{ status: "waiting", at: nowFn(), by: ctx.userId }],
-    } as never);
+    let appointment: WithId<AppointmentDoc>;
+    try {
+      appointment = await this.repo(ctx).insert({
+        appointmentId: generateAppointmentId(),
+        patientId: input.patientId,
+        doctorId: input.doctorId,
+        date: input.date,
+        time: input.time,
+        status: "scheduled",
+        reason: input.reason ?? null,
+        notes: input.notes ?? null,
+        createdBy: ctx.userId,
+        queueStatus: "waiting",
+        tokenNumber,
+        session,
+        priority: false,
+        checkedInAt: nowFn(),
+        notifiedStages: [],
+        queueHistory: [{ status: "waiting", at: nowFn(), by: ctx.userId }],
+      } as never);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("E11000") || msg.includes("duplicate")) {
+        throw new ConflictError("The doctor already has an appointment at this time");
+      }
+      throw e;
+    }
 
     void indexEntity("appointment", clinicId, appointment.appointmentId, appointment).catch(() => {});
 

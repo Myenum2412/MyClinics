@@ -1,4 +1,5 @@
 import { now as nowFn } from "@/clinic/core/datetime";
+import { escapeRegex } from "@/clinic/core/pagination";
 import type { Db, WithId } from "mongodb";
 import type { PatientDoc } from "@/clinic/modules/patients/patients.schema";
 
@@ -64,12 +65,13 @@ export class PatientRepository {
     if (query.doctorId) filter.doctorId = query.doctorId;
     if (query.status) filter.status = query.status;
     if (query.q) {
+      const safeQ = escapeRegex(query.q);
       filter.$or = [
-        { fullName: { $regex: query.q, $options: "i" } },
-        { mobile: { $regex: query.q, $options: "i" } },
-        { email: { $regex: query.q, $options: "i" } },
-        { city: { $regex: query.q, $options: "i" } },
-        { state: { $regex: query.q, $options: "i" } },
+        { fullName: { $regex: safeQ, $options: "i" } },
+        { mobile: { $regex: safeQ, $options: "i" } },
+        { email: { $regex: safeQ, $options: "i" } },
+        { city: { $regex: safeQ, $options: "i" } },
+        { state: { $regex: safeQ, $options: "i" } },
       ];
     }
     const scoped = this.scoped(filter);

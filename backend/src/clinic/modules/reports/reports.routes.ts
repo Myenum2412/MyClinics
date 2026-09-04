@@ -21,7 +21,7 @@ export function registerReportsRoutes(app: FastifyInstance): void {
     { preHandler: [requireClinicAccess, requireRoles("staff")] },
     async (request, reply) => {
       const { clinicId } = request.params as { clinicId: string };
-      return reply.send({ ok: true, clinicId, message: "Use POST /ai-insights with metrics. NVIDIA_MODEL=" + (process.env.NVIDIA_MODEL ?? "minimaxai/minimax-m3") });
+      return reply.send({ ok: true, clinicId, message: "Use POST /ai-insights with metrics." });
     }
   );
 }

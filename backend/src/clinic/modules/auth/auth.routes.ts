@@ -56,11 +56,5 @@ export function registerProtectedAuthRoutes(app: FastifyInstance): void {
     controller.me(request, reply)
   );
 
-  // Logout is a no-op server-side (stateless JWT); it exists so the client
-  // can trigger an audit entry for the session end.
-  app.post("/api/clinics/auth/logout", async (request, reply) => {
-    const ctx = request.clinic;
-    void ctx;
-    return reply.send({ ok: true });
-  });
+  app.post("/api/clinics/auth/logout", async (request, reply) => controller.logout(request, reply));
 }

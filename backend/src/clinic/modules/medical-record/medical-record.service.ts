@@ -17,6 +17,7 @@ import {
   uploadToR2,
   copyObjectInR2,
 } from "@/lib/r2";
+import { escapeRegex } from "@/clinic/core/pagination";
 import { enqueueClinicNotification } from "@/services/whatsapp/notification.service";
 import type { PatientDoc } from "@/clinic/modules/patients/patients.schema";
 import {
@@ -516,11 +517,11 @@ export class MedicalRecordService {
       matchQuery.patientId = ctx.patientId;
     }
 
-    // Apply filters
+    // Apply filters — SEC-011: escape regex, cap length
     if (filter.patientId) matchQuery.patientId = filter.patientId;
     if (filter.folder) matchQuery.folder = filter.folder;
     if (filter.q) {
-      matchQuery.fileName = { $regex: filter.q, $options: "i" };
+      matchQuery.fileName = { $regex: escapeRegex(filter.q), $options: "i" };
     }
     if (filter.type) {
       const t = filter.type.toLowerCase();

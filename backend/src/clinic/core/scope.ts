@@ -22,6 +22,7 @@ import {
   requestMeta,
 } from "@/clinic/core/context";
 import { AUTH_LIMITER, API_LIMITER, enforceLimit } from "@/clinic/core/rate-limiter";
+import { isRevoked } from "@/clinic/core/revocation";
 
 interface ActiveUser {
   userId: string;
@@ -128,12 +129,31 @@ export function applyClinicScope(app: FastifyInstance): void {
       throw new UnauthorizedError("Invalid or expired token");
     }
 
+    // SEC-003: check revocation list (logout, refresh reuse, deactivation)
+    if (verified.jti && (await isRevoked(verified.jti))) {
+      throw new UnauthorizedError("Session has been revoked");
+    }
+
     const active = await loadActiveClinicUser(verified);
     if (!active || !active.clinicActive || !active.userActive) {
       throw new UnauthorizedError("Account is not active");
     }
 
     const { ip, userAgent } = requestMeta(request);
+    // CSRF double-submit check for cookie-auth mutating requests (SEC-002)
+    const method = request.method.toUpperCase();
+    const isMutating = method !== "GET" && method !== "HEAD" && method !== "OPTIONS";
+    const hasBearer = Boolean(extractBearer(request));
+    if (isMutating && !hasBearer) {
+      const cookies = (request as unknown as { cookies?: Record<string, string> }).cookies ?? {};
+      const csrfCookie = cookies["clinic_csrf"];
+      const csrfHeader = request.headers["x-csrf-token"] as string | undefined;
+      // If client sent cookie auth, require matching CSRF token
+      if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
+        throw new ForbiddenError("CSRF validation failed");
+      }
+    }
+
     const clinic: ClinicContext = {
       userId: active.userId,
       clinicId: active.clinicId,
@@ -235,7 +255,8 @@ export async function allowStaffOrOwnPatient(
  * Async so it can be used directly as a route preHandler.
  */
 export async function limitAuth(request: FastifyRequest): Promise<void> {
-  enforceLimit(AUTH_LIMITER, `auth:${request.ip ?? "unknown"}`);
+  const { enforceLimitAsync } = await import("@/clinic/core/rate-limiter");
+  await enforceLimitAsync(AUTH_LIMITER, `auth:${request.ip ?? "unknown"}`);
 }
 
 /** Drops the cached tenant-user record so the next request revalidates. */

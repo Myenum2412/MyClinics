@@ -1,13 +1,13 @@
 /**
  * Client-side API helper for the multi-tenant Clinic API.
  *
- * The Clinic API authenticates with a JWT bearer token issued by
- * `POST /api/clinics/auth/signup` and `POST /api/clinics/auth/login`.
- * The token embeds clinicId + role + doctorId/patientId, is stored in
- * localStorage (for API calls) AND mirrored in a non-httpOnly cookie
- * (so the Next.js proxy can verify sessions server-side for route
- * protection). Every tenant request is scoped to the caller's clinic
- * server-side — the URL clinicId is never trusted on its own.
+ * The Clinic API authenticates via httpOnly Secure cookies issued by
+ * `POST /api/clinics/auth/*` (SEC-002 fix). Tokens are NO LONGER
+ * stored in localStorage or JS-readable cookies. Browser sends the
+ * `clinic_token` httpOnly cookie automatically (credentials:'include').
+ * A non-httpOnly `clinic_csrf` double-submit cookie is sent via
+ * `X-CSRF-Token` header for mutating requests. Every tenant request is
+ * still scoped server-side — the URL clinicId is never trusted.
  */
 
 import { nowMs } from "./datetime";
@@ -457,14 +457,12 @@ function sessionFromToken(token: string): ClinicSession | null {
   };
 }
 
-export function getStoredToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(CLINIC_TOKEN_KEY);
-}
+let inMemoryToken: string | null = null;
 
-export function getSession(): ClinicSession | null {
-  const token = getStoredToken();
-  return token ? sessionFromToken(token) : null;
+export function getStoredToken(): string | null {
+  // Deprecated: tokens are now httpOnly. Return in-memory fallback for current tab only.
+  if (typeof window === "undefined") return null;
+  return inMemoryToken;
 }
 
 function isTokenExpired(token: string): boolean {
@@ -474,21 +472,31 @@ function isTokenExpired(token: string): boolean {
   return !exp || exp * 1000 <= nowMs() + 30_000;
 }
 
-function setToken(token: string, ttlSeconds: number): void {
-  localStorage.setItem(CLINIC_TOKEN_KEY, token);
-  const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; secure" : "";
-  document.cookie = `${CLINIC_TOKEN_KEY}=${token}; path=/; max-age=${ttlSeconds}; samesite=lax${secure}`;
+function setToken(token: string, _ttlSeconds: number): void {
+  // SEC-002: do NOT persist to localStorage or JS cookie. Keep only in-memory for backward-compat Authorization header.
+  // The httpOnly cookie is set by the server via Set-Cookie; JS must not set it.
+  inMemoryToken = token;
 }
 
 export function clearSession(): void {
-  localStorage.removeItem(CLINIC_TOKEN_KEY);
-  const secure = typeof window !== "undefined" && window.location.protocol === "https:" ? "; secure" : "";
-  document.cookie = `${CLINIC_TOKEN_KEY}=; path=/; max-age=0; samesite=lax${secure}`;
+  inMemoryToken = null;
+  if (typeof window !== "undefined") {
+    // Clear in-memory and ask server to clear httpOnly cookies via logout endpoint.
+    // Also clear any legacy localStorage cookie for migration.
+    try { localStorage.removeItem(CLINIC_TOKEN_KEY); } catch {}
+    document.cookie = `${CLINIC_TOKEN_KEY}=; path=/; max-age=0; samesite=strict`;
+  }
 }
 
 /** Stores an externally issued session token (e.g. Google OAuth callback). */
 export function storeSessionToken(token: string, ttlSeconds: number): void {
   setToken(token, ttlSeconds > 0 ? ttlSeconds : 24 * 3600);
+}
+
+function getCsrfToken(): string | null {
+  if (typeof document === "undefined") return null;
+  const m = document.cookie.match(/(?:^|; )clinic_csrf=([^;]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
 }
 
 // ── Request core ───────────────────────────────────────────────────────────
@@ -518,6 +526,12 @@ async function request<T>(
   };
   const token = typeof window !== "undefined" ? getStoredToken() : null;
   if (token) headers.Authorization = `Bearer ${token}`;
+  // CSRF double-submit for cookie-auth mutating requests
+  const csrf = getCsrfToken();
+  const method = (init.method ?? "GET").toUpperCase();
+  if (csrf && method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
+    headers["X-CSRF-Token"] = csrf;
+  }
 
   // Only set Content-Type for an actual JSON payload. Sending
   // "application/json" on a bodyless request (e.g. DELETE) makes the server
@@ -528,7 +542,6 @@ async function request<T>(
   }
 
   const url = `${API_BASE}${path}`;
-  const method = (init.method ?? "GET").toUpperCase();
   const cacheKey = `${method} ${url}`;
   const skipCache = init.cache === "no-store";
 
@@ -541,13 +554,13 @@ async function request<T>(
 
   let res: Response;
   try {
-    res = await fetch(url, { ...init, headers, cache: "no-store" });
+    res = await fetch(url, { ...init, headers, cache: "no-store", credentials: "include" });
   } catch (e) {
     // Fallback: if direct API_BASE fetch failed, retry via same-origin proxy (avoids CORS/network issues on Vercel)
     if (API_BASE && url.startsWith(API_BASE)) {
       try {
         const proxyUrl = url.slice(API_BASE.length);
-        res = await fetch(proxyUrl, { ...init, headers, cache: "no-store" });
+        res = await fetch(proxyUrl, { ...init, headers, cache: "no-store", credentials: "include" });
       } catch (e2) {
         const msg = e instanceof TypeError ? `Network error — cannot reach API at ${API_BASE || "proxy"} (${e instanceof Error ? e.message : ""}). Retried via proxy also failed. Check backend at https://api.myclinic.myenum.in is up and CORS allows ${typeof window !== "undefined" ? window.location.origin : ""}.` : e instanceof Error ? e.message : "Network error";
         throw new ClinicApiError(msg, 0, "NETWORK_ERROR");
@@ -587,32 +600,58 @@ async function request<T>(
 }
 
 async function slideSession(): Promise<boolean> {
-  const token = getStoredToken();
-  if (!token) return false;
   try {
     const { token: fresh, tokenExpiresInSeconds } = await request<{
       token: string;
       tokenExpiresInSeconds?: number;
     }>("/api/clinics/auth/refresh", {
       method: "POST",
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({}),
+      // cookie-based refresh – no body token needed
     });
-    setToken(fresh, tokenExpiresInSeconds ?? 12 * 60 * 60);
+    if (fresh) setToken(fresh, tokenExpiresInSeconds ?? 12 * 60 * 60);
     return true;
   } catch {
-    clearSession();
-    return false;
+    // Fallback to legacy body token if cookie refresh failed
+    const token = getStoredToken();
+    if (!token) return false;
+    try {
+      const { token: fresh2, tokenExpiresInSeconds: ttl2 } = await request<{
+        token: string;
+        tokenExpiresInSeconds?: number;
+      }>("/api/clinics/auth/refresh", {
+        method: "POST",
+        body: JSON.stringify({ token }),
+      });
+      setToken(fresh2, ttl2 ?? 12 * 60 * 60);
+      return true;
+    } catch {
+      clearSession();
+      return false;
+    }
   }
 }
 
-/** Returns the current session, sliding the token if it is about to expire. */
+/** Returns the current session, fetching from server (httpOnly cookie). */
 export async function ensureSession(): Promise<ClinicSession | null> {
-  const token = getStoredToken();
-  if (!token) return null;
-  if (isTokenExpired(token)) {
-    if (!(await slideSession())) return null;
+  try {
+    const s = await request<ClinicSession>("/api/clinics/auth/me", { cache: "no-store" });
+    return s;
+  } catch {
+    // Fallback: try local decode for legacy in-memory token
+    const token = getStoredToken();
+    if (token && !isTokenExpired(token)) return sessionFromToken(token);
+    if (token) {
+      if (await slideSession()) return sessionFromToken(getStoredToken()!);
+    }
+    return null;
   }
-  return sessionFromToken(getStoredToken()!);
+}
+
+export function getSession(): ClinicSession | null {
+  // Synchronous legacy accessor – prefer ensureSession() async.
+  const token = getStoredToken();
+  return token ? sessionFromToken(token) : null;
 }
 
 /** Tenant-scoped helper: throws a clear error when clinicId is missing. */
@@ -1304,11 +1343,14 @@ export async function downloadBillPdf(
   const token = typeof window !== "undefined" ? getStoredToken() : null;
   const headers: Record<string, string> = {};
   if (token) headers.Authorization = `Bearer ${token}`;
+  const csrf = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )clinic_csrf=([^;]+)/)?.[1] : null;
+  if (csrf) headers["X-CSRF-Token"] = decodeURIComponent(csrf);
 
   const res = await fetch(`${API_BASE}${tenantPath(clinicId, `/billing/${billId}/pdf`)}`, {
     method: "GET",
     headers,
     cache: "no-store",
+    credentials: "include",
   });
   if (!res.ok) {
     let error = `Download failed (${res.status})`;

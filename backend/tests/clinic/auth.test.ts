@@ -94,10 +94,11 @@ describe("AuthService", () => {
     });
     const service = new AuthService(db);
     const login = await service.login({ email: "admina@test.com", password: "secret" }, { ip: null, userAgent: null });
-    const refreshed = await service.refresh(login.token);
-    expect(typeof refreshed).toBe("string");
-    expect(refreshed.length).toBeGreaterThan(0);
-    expect(refreshed).not.toBe(login.token);
+    const refreshed = await service.refresh(login.token) as unknown as { token: string; tokenExpiresInSeconds: number } | string;
+    const refreshedToken = typeof refreshed === "string" ? refreshed : refreshed.token;
+    expect(typeof refreshedToken).toBe("string");
+    expect(refreshedToken.length).toBeGreaterThan(0);
+    expect(refreshedToken).not.toBe(login.token);
   });
 
   it("refresh rejects a token whose clinic no longer matches the user record", async () => {

@@ -258,11 +258,11 @@ function keywordScore(query: string, content: string): number {
   let hits = 0;
   for (const token of queryTokens) {
     const norm = normalizeToken(token);
+    // SEC: removed overly permissive substring `ct.includes(token) || token.includes(ct)` which caused false positives (e.g. qwerty matching we)
     if (
       contentTokens.has(token) ||
       normalizedContent.has(norm) ||
-      contentJoined.includes(` ${token} `) ||
-      [...contentTokens].some((ct) => ct.includes(token) || token.includes(ct))
+      contentJoined.includes(` ${token} `)
     ) {
       hits++;
     }

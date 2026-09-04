@@ -16,7 +16,7 @@ import { AuthService } from "@/clinic/modules/auth/auth.service";
 import {
   buildAuthorizationUrl,
   consumeGoogleSignupTicket,
-  consumeStateToken,
+  consumeStateWithVerifier,
   exchangeCodeForTokens,
   fetchGoogleUserInfo,
   frontendBaseUrl,
@@ -24,6 +24,8 @@ import {
   issueGoogleSignupTicket,
   issueStateToken,
 } from "@/clinic/modules/auth/google-oauth";
+import { clearClinicAuthCookies, setClinicAuthCookies } from "@/clinic/core/cookies";
+import { accessTokenTtlSeconds } from "@/clinic/core/jwt";
 
 const GOOGLE_CALLBACK_PATH = "/api/clinics/auth/google/callback";
 
@@ -35,6 +37,8 @@ export class AuthController {
     }
     const db = await getDb();
     const result = await new AuthService(db).signup(parsed.data);
+    setClinicAuthCookies(reply, result.token, result.tokenExpiresInSeconds);
+    // Return token in body for backward-compat (frontend will ignore and rely on httpOnly cookie)
     return reply.code(201).send(result);
   }
 
@@ -48,7 +52,7 @@ export class AuthController {
     if (!parsed.success) {
       throw new BadRequestError(parsed.error.issues[0]?.message ?? "Invalid signup data");
     }
-    const email = consumeGoogleSignupTicket(parsed.data.gticket);
+    const email = await consumeGoogleSignupTicket(parsed.data.gticket);
     if (!email) {
       throw new BadRequestError(
         "Your Google sign-in session expired — please click Continue with Google again"
@@ -60,6 +64,7 @@ export class AuthController {
       adminName: parsed.data.adminName,
       email,
     });
+    setClinicAuthCookies(reply, result.token, result.tokenExpiresInSeconds);
     return reply.code(201).send(result);
   }
 
@@ -71,17 +76,20 @@ export class AuthController {
     const db = await getDb();
     const { ip, userAgent } = requestMeta(request);
     const result = await new AuthService(db).login(parsed.data, { ip, userAgent });
+    setClinicAuthCookies(reply, result.token, result.tokenExpiresInSeconds);
     return reply.send(result);
   }
 
   async refresh(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
-    const parsed = refreshSchema.safeParse(request.body);
-    if (!parsed.success) {
-      throw new BadRequestError("Token is required");
-    }
+    // Accept token from body (legacy) or from httpOnly cookie (new). Prefer cookie.
+    const cookieToken = (request.cookies as Record<string, string> | undefined)?.clinic_token;
+    const bodyToken = (request.body as { token?: string } | null)?.token;
+    const raw = cookieToken ?? bodyToken;
+    if (!raw) throw new BadRequestError("Token is required");
     const db = await getDb();
-    const token = await new AuthService(db).refresh(parsed.data.token);
-    return reply.send({ token, tokenExpiresInSeconds: undefined });
+    const { token, tokenExpiresInSeconds } = await new AuthService(db).refresh(raw);
+    setClinicAuthCookies(reply, token, tokenExpiresInSeconds);
+    return reply.send({ token, tokenExpiresInSeconds });
   }
 
   async me(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
@@ -98,6 +106,18 @@ export class AuthController {
     });
   }
 
+  async logout(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (ctx?.tokenId) {
+      const { revokeJti } = await import("@/clinic/core/revocation");
+      // Revoke until original expiry (use TTL from jwt if available)
+      const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // fallback 24h
+      await revokeJti(ctx.tokenId, expiresAt);
+    }
+    clearClinicAuthCookies(reply);
+    return reply.send({ ok: true });
+  }
+
   /** Starts Google OAuth: redirects the browser to Google's consent screen. */
   async googleLogin(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const config = googleConfig();
@@ -107,9 +127,9 @@ export class AuthController {
     const query = request.query as { from?: string };
     const from = query.from === "signup" ? "signup" : "login";
     const redirectUri = `${frontendBaseUrl(request)}${GOOGLE_CALLBACK_PATH}`;
-    return reply.redirect(
-      buildAuthorizationUrl(config.clientId, redirectUri, issueStateToken(from))
-    );
+    const state = await issueStateToken(from);
+    const url = await buildAuthorizationUrl(config.clientId, redirectUri, state);
+    return reply.redirect(url);
   }
 
   /** Google redirects back here with `?code=...&state=...`. */
@@ -123,8 +143,9 @@ export class AuthController {
     const query = request.query as { code?: string; state?: string; error?: string };
     if (query.error) return fail("google_denied");
     if (typeof query.code !== "string" || !query.code) return fail("google_callback");
-    const from = typeof query.state === "string" ? consumeStateToken(query.state) : null;
-    if (!from) return fail("google_state");
+    const stateRes = typeof query.state === "string" ? await consumeStateWithVerifier(query.state) : null;
+    if (!stateRes) return fail("google_state");
+    const from = stateRes.from;
 
     const redirectUri = `${base}${GOOGLE_CALLBACK_PATH}`;
     let email: string;
@@ -134,7 +155,8 @@ export class AuthController {
         config.clientId,
         config.clientSecret,
         query.code,
-        redirectUri
+        redirectUri,
+        stateRes.verifier
       );
       const info = await fetchGoogleUserInfo(tokens.access_token);
       if (!info.email || info.email_verified !== true) {
@@ -150,14 +172,13 @@ export class AuthController {
       const db = await getDb();
       const { ip, userAgent } = requestMeta(request);
       const result = await new AuthService(db).loginWithGoogle(email, { ip, userAgent });
-      const expires = result.tokenExpiresInSeconds ?? 24 * 3600;
-      return reply.redirect(
-        `${base}/login?google_token=${encodeURIComponent(result.token)}&google_expires=${expires}`
-      );
+      // Set httpOnly cookie and redirect without token in URL (prevents token leak in logs/referrer)
+      setClinicAuthCookies(reply, result.token, result.tokenExpiresInSeconds ?? 24 * 3600);
+      return reply.redirect(`${base}/clinic`);
     } catch (error) {
       if (error instanceof UnauthorizedError) {
         if (from === "signup") {
-          const ticket = issueGoogleSignupTicket(email);
+          const ticket = await issueGoogleSignupTicket(email);
           return reply.redirect(
             `${base}/signup/clinic?error=google_no_account&email=${encodeURIComponent(email)}` +
               `&name=${encodeURIComponent(googleName ?? "")}&gticket=${ticket}`

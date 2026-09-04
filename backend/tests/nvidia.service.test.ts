@@ -70,7 +70,7 @@ describe("nvidia.service", () => {
       name: "NvidiaApiError",
       status: 500,
     });
-    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(fetch).toHaveBeenCalledTimes(3);
   });
 
   it("maps a timeout to a typed timeout error", async () => {
@@ -80,7 +80,7 @@ describe("nvidia.service", () => {
       name: "NvidiaApiError",
       code: "timeout",
     });
-    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(fetch).toHaveBeenCalledTimes(3);
   });
 
   it("rejects an invalid response body", async () => {

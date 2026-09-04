@@ -371,13 +371,18 @@ export class AuthService {
     };
   }
 
-  /** Re-issues a fresh token from a still-valid one (sliding expiry). */
+  /** Re-issues a fresh token from a still-valid one (rotation + revocation). */
   async refresh(token: string) {
     let verified: Awaited<ReturnType<typeof verifyClinicToken>>;
     try {
       verified = await verifyClinicToken(token);
     } catch {
       throw new UnauthorizedError("Session is no longer valid");
+    }
+    // Check revocation first (logout / reuse detection)
+    const { isRevoked, revokeJti } = await import("@/clinic/core/revocation");
+    if (verified.jti && (await isRevoked(verified.jti))) {
+      throw new UnauthorizedError("Session has been revoked");
     }
     const user = await this.repo.findUserById(verified.userId);
     if (!user || user.status !== "active") {
@@ -397,13 +402,18 @@ export class AuthService {
       patientId: user.patientId,
     });
 
+    // Rotate: revoke the old jti so reuse is detected (SEC-003)
+    if (verified.jti) {
+      await revokeJti(verified.jti, verified.expiresAt * 1000);
+    }
+
     await writeAudit(this.db, userToCtx(user), {
       action: "refresh",
       entity: "user",
       entityId: user.userId,
     });
 
-    return fresh;
+    return { token: fresh, tokenExpiresInSeconds: accessTokenTtlSeconds() };
   }
 
   private async issueToken(payload: ClinicTokenPayload): Promise<string> {

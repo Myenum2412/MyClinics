@@ -57,54 +57,155 @@ export function frontendBaseUrl(request: {
 }
 
 // ── One-time state tokens (CSRF protection) ────────────────────────────────
+// SEC-014: persist to Mongo/Valkey for horizontal scale + PKCE. In-memory Map is fallback for tests.
+const pendingStates = new Map<string, { exp: number; from: "login" | "signup"; verifier?: string }>();
+const signupTickets = new Map<string, { exp: number; email: string }>();
 
-const pendingStates = new Map<string, { exp: number; from: "login" | "signup" }>();
+async function persistState(state: string, from: "login" | "signup", verifier?: string): Promise<void> {
+  try {
+    const { getDb } = await import("@/lib/db-pools");
+    const db = await getDb();
+    await db.collection("clc_google_oauth_states").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }).catch(() => {});
+    await db.collection("clc_google_oauth_states").insertOne({ state, from, verifier: verifier ?? null, expiresAt: new Date(nowMs() + STATE_TTL_MS), createdAt: new Date() });
+  } catch {}
+}
+async function fetchAndDeleteState(state: string): Promise<{ from: "login" | "signup"; verifier?: string } | null> {
+  try {
+    const { getDb } = await import("@/lib/db-pools");
+    const db = await getDb();
+    const doc = await db.collection("clc_google_oauth_states").findOneAndDelete({ state });
+    if (doc) {
+      if ((doc.expiresAt as Date).getTime() >= nowMs()) return { from: doc.from, verifier: doc.verifier ?? undefined };
+      return null;
+    }
+  } catch {}
+  return null;
+}
 
-export function issueStateToken(from: "login" | "signup" = "login"): string {
+export async function issueStateToken(from: "login" | "signup" = "login"): Promise<string> {
   const state = randomBytes(24).toString("hex");
-  pendingStates.set(state, { exp: nowMs() + STATE_TTL_MS, from });
+  // PKCE verifier
+  const verifier = randomBytes(32).toString("hex");
+  pendingStates.set(state, { exp: nowMs() + STATE_TTL_MS, from, verifier });
   if (pendingStates.size > 1000) {
     const now = nowMs();
     for (const [key, entry] of pendingStates) {
       if (entry.exp < now) pendingStates.delete(key);
     }
   }
+  await persistState(state, from, verifier);
   return state;
 }
 
 /** Returns the flow origin ("login" | "signup") the state was issued for, or null. */
-export function consumeStateToken(state: string): "login" | "signup" | null {
+export async function consumeStateToken(state: string): Promise<"login" | "signup" | null> {
+  // Prefer DB, fallback to memory
+  const dbRes = await fetchAndDeleteState(state);
+  if (dbRes) return dbRes.from;
   const entry = pendingStates.get(state);
   if (!entry) return null;
   pendingStates.delete(state);
   return entry.exp >= nowMs() ? entry.from : null;
 }
 
-// ── One-time Google signup tickets ─────────────────────────────────────────
-// A passwordless clinic can only be created for an email Google actually
-// verified. The OAuth callback (which sees the verified email) mints a
-// short-lived, single-use ticket; the client submits it back with the
-// signup request and the backend maps it to the email.
+export async function consumeStateWithVerifier(state: string): Promise<{ from: "login" | "signup"; verifier?: string } | null> {
+  const dbRes = await fetchAndDeleteState(state);
+  if (dbRes) return dbRes;
+  const entry = pendingStates.get(state);
+  if (!entry) return null;
+  pendingStates.delete(state);
+  if (entry.exp < nowMs()) return null;
+  return { from: entry.from, verifier: entry.verifier };
+}
 
-const signupTickets = new Map<string, { exp: number; email: string }>();
+// ── One-time Google signup tickets ─────────────────────────────────────────
+
+async function persistTicket(ticket: string, email: string): Promise<void> {
+  try {
+    const { getDb } = await import("@/lib/db-pools");
+    const db = await getDb();
+    await db.collection("clc_google_signup_tickets").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }).catch(() => {});
+    await db.collection("clc_google_signup_tickets").insertOne({ ticket, email, expiresAt: new Date(nowMs() + STATE_TTL_MS), createdAt: new Date() });
+  } catch {}
+}
 
 export function issueGoogleSignupTicket(email: string): string {
   const ticket = randomBytes(24).toString("hex");
   signupTickets.set(ticket, { exp: nowMs() + STATE_TTL_MS, email });
+  void persistTicket(ticket, email);
   return ticket;
+}
+export async function issueGoogleSignupTicketAsync(email: string): Promise<string> {
+  return issueGoogleSignupTicket(email);
 }
 
 /** Returns the verified email the ticket was minted for, or null. */
-export function consumeGoogleSignupTicket(ticket: string): string | null {
+export async function consumeGoogleSignupTicket(ticket: string): Promise<string | null> {
+  try {
+    const { getDb } = await import("@/lib/db-pools");
+    const db = await getDb();
+    const doc = await db.collection("clc_google_signup_tickets").findOneAndDelete({ ticket });
+    if (doc && (doc.expiresAt as Date).getTime() >= nowMs()) return doc.email as string;
+  } catch {}
   const entry = signupTickets.get(ticket);
   if (!entry) return null;
   signupTickets.delete(ticket);
   return entry.exp >= nowMs() ? entry.email : null;
 }
 
+// Backward-compat sync wrappers for tests (do not persist)
+export function issueStateTokenSync(from: "login" | "signup" = "login"): string {
+  const state = randomBytes(24).toString("hex");
+  pendingStates.set(state, { exp: nowMs() + STATE_TTL_MS, from });
+  return state;
+}
+export function consumeStateTokenSync(state: string): "login" | "signup" | null {
+  const entry = pendingStates.get(state);
+  if (!entry) return null;
+  pendingStates.delete(state);
+  return entry.exp >= nowMs() ? entry.from : null;
+}
+
 // ── Google calls ───────────────────────────────────────────────────────────
 
-export function buildAuthorizationUrl(
+function base64url(buf: Buffer): string {
+  return buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+export async function buildAuthorizationUrl(
+  clientId: string,
+  redirectUri: string,
+  state: string
+): Promise<string> {
+  // Try to retrieve PKCE verifier for this state
+  let verifier: string | undefined;
+  const mem = pendingStates.get(state);
+  if (mem?.verifier) verifier = mem.verifier;
+  else {
+    try {
+      const { getDb } = await import("@/lib/db-pools");
+      const db = await getDb();
+      const doc = await db.collection("clc_google_oauth_states").findOne({ state });
+      verifier = doc?.verifier ?? undefined;
+    } catch {}
+  }
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: "code",
+    scope: "openid email profile",
+    state,
+    prompt: "select_account",
+  });
+  if (verifier) {
+    const challenge = base64url(require("node:crypto").createHash("sha256").update(verifier).digest());
+    params.set("code_challenge", challenge);
+    params.set("code_challenge_method", "S256");
+  }
+  return `${GOOGLE_AUTH_URL}?${params.toString()}`;
+}
+
+export function buildAuthorizationUrlSync(
   clientId: string,
   redirectUri: string,
   state: string
@@ -124,7 +225,8 @@ export async function exchangeCodeForTokens(
   clientId: string,
   clientSecret: string,
   code: string,
-  redirectUri: string
+  redirectUri: string,
+  codeVerifier?: string
 ): Promise<GoogleTokens> {
   const body = new URLSearchParams({
     client_id: clientId,
@@ -133,6 +235,7 @@ export async function exchangeCodeForTokens(
     redirect_uri: redirectUri,
     grant_type: "authorization_code",
   });
+  if (codeVerifier) body.set("code_verifier", codeVerifier);
   const res = await fetch(GOOGLE_TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
