@@ -1,17 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import {
   CalendarCheck,
   FileText,
   Receipt,
-  ArrowUpRight,
   ShieldCheck,
   Clock3,
 } from "lucide-react";
 
 import { CardSwap } from "@/components/ui/card-swap";
-import { Button } from "@/components/ui/button";
 
 export function CardSwapSection() {
   const cards = [
@@ -161,23 +158,7 @@ export function CardSwapSection() {
               Billing & reports without spreadsheets
             </li>
           </ul>
-          <div className="flex items-center gap-3 pt-2">
-            <Button
-              render={<Link href="/signup/clinic" />}
-              nativeButton={false}
-              className="bg-white text-[#0D47A1] hover:bg-white/90"
-            >
-              Start free <ArrowUpRight data-icon="inline-end" className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              render={<Link href="/login" />}
-              nativeButton={false}
-              className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
-            >
-              View demo
-            </Button>
-          </div>
+
         </div>
 
         {/* Right  CardSwap visual */}
