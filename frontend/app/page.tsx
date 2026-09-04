@@ -49,11 +49,9 @@ export default function Home() {
           ]}
         />
       </div>
-      {/* Card Swap showcase  separate background colour (#0D47A1)  npx shadcn add https://sveltebits.xyz/r/card-swap.json (ported to React) */}
       <CardSwapSection />
       <AnimateIn><HowItWorks /></AnimateIn>
       <AnimateIn delay={0.05}><OnePlatform /></AnimateIn>
-      {/* Pricing  npx smoothui-cli add pricing-2 adapted to INR starting at ₹7,000/mo with 3 yearly plans */}
       <PricingModern />
       <AnimateIn delay={0.1}><EasyChat /></AnimateIn>
       <AnimateIn delay={0.15}><AboutBlock /></AnimateIn>
