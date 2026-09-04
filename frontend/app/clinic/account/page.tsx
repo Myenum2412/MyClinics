@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -182,7 +182,7 @@ function formOf(clinic: Clinic): FormState {
 }
 
 function orDash(value: string | number | null | undefined): string {
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return "";
   return String(value);
 }
 
@@ -202,7 +202,7 @@ const DAY_NAMES = [
 
 /** Convert a 24-hour "HH:mm" value into a 12-hour "h:mm AM/PM" label. */
 function formatTime12h(value: string | null | undefined): string {
-  if (!value) return "—";
+  if (!value) return "";
   const match = /^(\d{1,2}):(\d{2})$/.exec(value);
   if (!match) return value;
   const hours = Number(match[1]);
@@ -442,10 +442,10 @@ export default function AccountPage() {
   }
 
   const locationLabel =
-    [profile.city, profile.state].filter(Boolean).join(", ") || "—";
+    [profile.city, profile.state].filter(Boolean).join(", ") || "";
   const joinedDateLabel = clinic.createdAt
     ? `Joined ${formatMonthYear(clinic.createdAt)}`
-    : "Joined —";
+    : "Joined ";
   const handleLabel = clinic.email || clinic.slug || clinic.clinicId;
   const bioText = clinic.description || "No description provided.";
   const stats = [
@@ -564,7 +564,7 @@ export default function AccountPage() {
                   {clinic.website}
                 </a>
               ) : (
-                "—"
+                ""
               )}
             </li>
             <li className="flex items-center gap-2.5 text-sm text-muted-foreground">
@@ -1064,7 +1064,7 @@ export default function AccountPage() {
                               className="inline-flex items-center gap-1.5 rounded-full border border-[#E3F2FD] bg-[#E3F2FD]/60 px-3 py-1.5 text-sm text-muted-foreground"
                             >
                               <Icon className="size-4 opacity-50" />
-                              {label}: —
+                              {label}: 
                             </span>
                           )
                         )}

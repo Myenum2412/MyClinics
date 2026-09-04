@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import { CloudShader } from "@/components/ui/cloud-shader";
 import type { Metadata } from "next";
@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "Privacy Policy for My Clinics — how we collect, use and protect your personal and health information.",
+    "Privacy Policy for My Clinics  how we collect, use and protect your personal and health information.",
 };
 
 function Section({
@@ -63,7 +63,7 @@ export default function PrivacyPage() {
             <p>
               This Privacy Policy explains how My Clinics (the &quot;Service&quot;)
               collects, uses and protects personal and health information when
-              you use the platform — including the patient portal, the
+              you use the platform  including the patient portal, the
               doctor/staff portal, the website and the WhatsApp assistant. By
               using the Service, you agree to the practices described here,
               alongside our{" "}
@@ -171,7 +171,7 @@ export default function PrivacyPage() {
 
           <Section title="6. Sharing Your Information">
             <p>
-              Your information is shared only within your clinic — with the
+              Your information is shared only within your clinic  with the
               doctors and staff directly involved in your care. Staff can see
               only the data of their own clinic; patients can see only their
               own records. We do not sell your personal or health information

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
@@ -184,8 +184,8 @@ export default function OrgMenuDashboardPage() {
                       </Link>
                     </TableCell>
                     <TableCell className="font-mono text-xs">{c.clinicId}</TableCell>
-                    <TableCell>{c.email ?? "—"}</TableCell>
-                    <TableCell>{c.phone ?? "—"}</TableCell>
+                    <TableCell>{c.email ?? ""}</TableCell>
+                    <TableCell>{c.phone ?? ""}</TableCell>
                     <TableCell>{formatDate(c.createdAt)}</TableCell>
                     <TableCell>
                       <Badge

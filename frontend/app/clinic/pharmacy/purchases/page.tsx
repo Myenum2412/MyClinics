@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import * as React from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
@@ -72,7 +72,7 @@ export default function PharmacyPurchasesPage() {
   const [detail, setDetail] = React.useState<PharmacyPurchase | null>(null)
 
   const supplierName = React.useCallback(
-    (id: string | null) => suppliers.find((s) => s.supplierId === id)?.name ?? "—",
+    (id: string | null) => suppliers.find((s) => s.supplierId === id)?.name ?? "",
     [suppliers]
   )
 
@@ -178,7 +178,7 @@ export default function PharmacyPurchasesPage() {
                       <TableCell className="font-medium">{p.invoiceNumber}</TableCell>
                       <TableCell>{supplierName(p.supplierId)}</TableCell>
                       <TableCell>
-                        {p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString() : "—"}
+                        {p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString() : ""}
                       </TableCell>
                       <TableCell>{p.items.length}</TableCell>
                       <TableCell className="tabular-nums">{fmtMoney(p.total)}</TableCell>
@@ -247,8 +247,8 @@ export default function PharmacyPurchasesPage() {
                         <TableCell>{it.batchNumber}</TableCell>
                         <TableCell className="tabular-nums">{it.quantity}</TableCell>
                         <TableCell className="tabular-nums">{fmtMoney(it.unitPrice)}</TableCell>
-                        <TableCell>{it.expiryDate ? new Date(it.expiryDate).toLocaleDateString() : "—"}</TableCell>
-                        <TableCell>{it.storageLocation ?? "—"}</TableCell>
+                        <TableCell>{it.expiryDate ? new Date(it.expiryDate).toLocaleDateString() : ""}</TableCell>
+                        <TableCell>{it.storageLocation ?? ""}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

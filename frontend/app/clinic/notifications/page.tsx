@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -213,7 +213,7 @@ export default function NotificationsPage() {
                       <DialogHeader>
                         <DialogTitle>Send notification</DialogTitle>
                         <DialogDescription>
-                          Send a WhatsApp notification to selected patients — or all patients — with optional attachments.
+                          Send a WhatsApp notification to selected patients  or all patients  with optional attachments.
                         </DialogDescription>
                       </DialogHeader>
                       <NotificationForm clinicId={clinicId} saving={saving} onSave={handleSend} />

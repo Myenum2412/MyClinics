@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
 import { useClinicSession } from "@/hooks/use-clinic-session";
@@ -34,7 +34,7 @@ export default function ClinicAiAssistantPage() {
 
   function newChat() {
     const id = Date.now().toString();
-    const chat: Chat = { id, title: "New chat", createdAt: new Date().toISOString(), messages: [{ role: "assistant", content: "Hello! I'm AIDP — your clinic assistant. Ask me about appointments, doctors, or clinic services." }] };
+    const chat: Chat = { id, title: "New chat", createdAt: new Date().toISOString(), messages: [{ role: "assistant", content: "Hello! I'm AIDP  your clinic assistant. Ask me about appointments, doctors, or clinic services." }] };
     setChats((p) => [chat, ...p]); setActiveId(id);
   }
   function deleteChat(id: string) { setChats((p) => p.filter((c) => c.id !== id)); if (activeId === id) setActiveId(null); }
@@ -65,7 +65,7 @@ export default function ClinicAiAssistantPage() {
   return (
     <div className="-m-4 sm:-m-6 lg:-mx-8 lg:-my-5 flex flex-col h-[calc(100vh-56px)] lg:h-[calc(100vh-56px)]">
       <div className="flex-1 grid grid-cols-12 gap-0 min-h-0">
-        {/* New chat action — floating header button for empty state alternative */}
+        {/* New chat action  floating header button for empty state alternative */}
         <div className="hidden" aria-hidden><Button onClick={newChat}>New chat</Button></div>
         {/* Main Chat */}
         <div className="col-span-12 lg:col-span-8 flex flex-col bg-card lg:border-r overflow-hidden min-h-0">
@@ -88,7 +88,7 @@ export default function ClinicAiAssistantPage() {
             <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-gradient-to-b from-background to-muted/20">
               <div className="size-14 rounded-2xl overflow-hidden shadow-sm mb-5 border bg-muted"><Image src="/aidps.png" alt="AIDP" width={56} height={56} className="size-14 object-cover" /></div>
               <h2 className="text-[18px] font-semibold tracking-tight">How can I help today?</h2>
-              <p className="text-[13px] text-muted-foreground max-w-[420px] mt-1.5 leading-relaxed">Chat about appointments, doctor availability, fees or clinic timings. Try Tanglish — “Fees evalavu bro?”</p>
+              <p className="text-[13px] text-muted-foreground max-w-[420px] mt-1.5 leading-relaxed">Chat about appointments, doctor availability, fees or clinic timings. Try Tanglish  “Fees evalavu bro?”</p>
               <div className="flex flex-wrap gap-2 justify-center mt-6 max-w-[520px]">
                 {SUGGESTIONS.map((s) => (
                   <button key={s} onClick={() => { newChat(); setTimeout(() => setInput(s), 100); }} className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-background border text-[13px] font-medium hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -124,7 +124,7 @@ export default function ClinicAiAssistantPage() {
               <div className="p-3 sm:p-4 border-t bg-muted/20">
                 <div className="max-w-[720px] mx-auto">
                   <PromptInput onSubmit={send} className="rounded-2xl bg-background border shadow-sm focus-within:shadow-md focus-within:border-foreground/10 transition-all">
-                    <PromptInputTextarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask anything — Hi / Fees evalavu bro? (Shift+Enter new line)" className="text-[14px] min-h-[44px] placeholder:text-muted-foreground/70" />
+                    <PromptInputTextarea value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask anything  Hi / Fees evalavu bro? (Shift+Enter new line)" className="text-[14px] min-h-[44px] placeholder:text-muted-foreground/70" />
                     <PromptInputActions className="px-2 pb-2">
                       <span className="text-[11px] text-muted-foreground hidden sm:inline-flex items-center gap-1"><kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px] font-medium">↵</kbd> send • <kbd className="px-1 py-0.5 rounded border bg-muted text-[10px] font-medium">⇧ ↵</kbd> new line</span>
                       <Button size="icon" onClick={() => send()} disabled={sending || !input.trim()} className="size-8 rounded-full bg-foreground text-background hover:bg-foreground/90 disabled:opacity-40 ml-auto"><ArrowUp className="size-4" /></Button>
@@ -165,7 +165,7 @@ export default function ClinicAiAssistantPage() {
                       <Trash2 className="size-3.5" />
                     </button>
                   </div>
-                  <p className={`text-xs truncate mt-1 leading-relaxed ${activeId === c.id ? "text-white/70" : "text-muted-foreground"}`}>{c.messages[c.messages.length - 1]?.content.slice(0, 64) ?? "—"}</p>
+                  <p className={`text-xs truncate mt-1 leading-relaxed ${activeId === c.id ? "text-white/70" : "text-muted-foreground"}`}>{c.messages[c.messages.length - 1]?.content.slice(0, 64) ?? ""}</p>
                   <div className={`flex items-center gap-1.5 text-[11px] mt-2 ${activeId === c.id ? "text-white/50" : "text-muted-foreground"}`}>
                     <Clock className="size-3" /> {new Date(c.createdAt).toLocaleDateString()} • {c.messages.length} msgs
                   </div>

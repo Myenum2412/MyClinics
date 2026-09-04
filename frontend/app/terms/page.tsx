@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import { CloudShader } from "@/components/ui/cloud-shader";
 import type { Metadata } from "next";
@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description:
-    "Terms of Service for My Clinics — the rules that govern your use of our clinic management platform.",
+    "Terms of Service for My Clinics  the rules that govern your use of our clinic management platform.",
 };
 
 function Section({
@@ -101,8 +101,8 @@ export default function TermsPage() {
           <Section title="4. Medical Disclaimer">
             <p>
               The Service stores and organises health information but is not a
-              medical service. Content on the Service — including
-              prescriptions, diagnoses and reports — is provided by licensed
+              medical service. Content on the Service  including
+              prescriptions, diagnoses and reports  is provided by licensed
               healthcare professionals and is not a substitute for professional
               medical advice, diagnosis or treatment. Always seek the advice of
               a qualified provider with any questions you may have about a
@@ -116,7 +116,7 @@ export default function TermsPage() {
               Appointment availability, timings and doctors are subject to
               change at the clinic&apos;s discretion. You agree to attend booked
               appointments on time and to cancel or reschedule with reasonable
-              notice — through your account, by calling the clinic, or by
+              notice  through your account, by calling the clinic, or by
               messaging the WhatsApp assistant. The clinic may mark missed
               appointments as no-shows and may apply its own cancellation
               policy.
@@ -183,7 +183,7 @@ export default function TermsPage() {
 
           <Section title="11. Acceptable Use">
             <p>
-              You agree not to misuse the Service — for example, by attempting
+              You agree not to misuse the Service  for example, by attempting
               to access other users&apos; data, interfering with the Service&apos;s
               operation, impersonating others, or using the Service for
               unlawful purposes. The clinic may suspend or terminate accounts

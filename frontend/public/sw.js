@@ -1,4 +1,4 @@
-/* MyClinics service worker — basic offline shell.
+﻿/* MyClinics service worker  basic offline shell.
  *
  * Strategy:
  *   - Install: precache a tiny shell (icons + manifest + offline page).

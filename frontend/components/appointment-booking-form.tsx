@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, MapPin, Search, Stethoscope } from "lucide-react";
@@ -179,7 +179,7 @@ export function AppointmentBookingForm({ className }: AppointmentBookingFormProp
         <div className="text-left">
           <h2 className="text-lg font-bold text-foreground">Book an appointment</h2>
           <p className="text-sm text-muted-foreground">
-            Pick your city and state — we&apos;ll create your patient account and
+            Pick your city and state  we&apos;ll create your patient account and
             send your login details on WhatsApp.
           </p>
         </div>

@@ -1,4 +1,4 @@
-import {
+﻿import {
 	Accordion,
 	AccordionContent,
 	AccordionItem,
@@ -10,19 +10,19 @@ const faqs = [
 		value: "faq-account",
 		question: "Do I need an account to book an appointment?",
 		answer:
-			"Yes — a patient account keeps your appointments and records in one place. You can sign in with Google in a single click.",
+			"Yes  a patient account keeps your appointments and records in one place. You can sign in with Google in a single click.",
 	},
 	{
 		value: "faq-whatsapp",
 		question: "Can I book through WhatsApp?",
 		answer:
-			"Absolutely. Message the clinic on WhatsApp at any hour — the assistant checks availability and confirms your slot instantly, even when the front desk is closed.",
+			"Absolutely. Message the clinic on WhatsApp at any hour  the assistant checks availability and confirms your slot instantly, even when the front desk is closed.",
 	},
 	{
 		value: "faq-safety",
 		question: "Is my health data safe?",
 		answer:
-			"Your records are encrypted in transit and at rest. Only your clinic's care team can access them — never other clinics, never third parties.",
+			"Your records are encrypted in transit and at rest. Only your clinic's care team can access them  never other clinics, never third parties.",
 	},
 	{
 		value: "faq-cancel",
@@ -34,7 +34,7 @@ const faqs = [
 		value: "faq-history",
 		question: "Can I see my past prescriptions and reports?",
 		answer:
-			"Yes. Every prescription and every report your clinic uploads stays in your record — searchable and available whenever you need them.",
+			"Yes. Every prescription and every report your clinic uploads stays in your record  searchable and available whenever you need them.",
 	},
 	{
 		value: "faq-setup",

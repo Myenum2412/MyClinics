@@ -1,7 +1,7 @@
----
+﻿---
 Title: GST-Compliant Clinic Billing Software in India: 2026 Guide
 Category: Buying Guide
-Excerpt: HSN/SAC codes, GST invoice formats, UPI QR payments, TDS/TCS rules — everything Indian clinics need for compliant billing without the spreadsheet chaos.
+Excerpt: HSN/SAC codes, GST invoice formats, UPI QR payments, TDS/TCS rules  everything Indian clinics need for compliant billing without the spreadsheet chaos.
 AuthorName: Marcus Webb
 AuthorInitials: MW
 AuthorImg: 12
@@ -13,7 +13,7 @@ ReadTime: 10 Min Read
 
 ## TL;DR
 
-- **Healthcare services**: Exempt from GST (Notification 12/2017) — but **medicines, implants, diagnostics are taxable**
+- **Healthcare services**: Exempt from GST (Notification 12/2017)  but **medicines, implants, diagnostics are taxable**
 - **Your software must**: Auto-apply correct GST rate per line item, generate GST-compliant invoices, handle UPI QR, file GSTR-1 data
 - **Critical codes**: Medicines HSN 3004 (12%), Implants HSN 9021 (12%), Diagnostics SAC 9993 (18%)
 - **My Clinics**: Native GST engine, UPI QR on every invoice, GSTR-1 export, TDS/TCS ready
@@ -99,7 +99,7 @@ UPI QR Contains:
 
 ## TDS / TCS Implications for Clinics
 
-### TDS (Tax Deducted at Source) — You Deduct
+### TDS (Tax Deducted at Source)  You Deduct
 
 | Payment Type | Section | Rate | Threshold | Applies to Clinic? |
 |---|---|---|---|---|
@@ -110,7 +110,7 @@ UPI QR Contains:
 
 **Software must**: Track vendor PAN, auto-calculate TDS, generate Form 16A, file 26Q.
 
-### TCS (Tax Collected at Source) — You Collect
+### TCS (Tax Collected at Source)  You Collect
 
 | Sale Type | Section | Rate | Threshold |
 |---|---|---|---|
@@ -153,7 +153,7 @@ Auto-populated from GSTR-1. Software should give you:
 | **Missing UPI QR >₹500** | Penalty ₹25K per invoice | Auto-generated on every invoice |
 | **Wrong place of supply (teleconsult)** | IGST vs CGST/SGST mismatch | Patient location = POS for services |
 | **Not reversing ITC on exempt services** | Section 17(2) reversal needed | Auto-calc: ITC only on taxable inputs |
-| **Composition scheme error** | Clinics NOT eligible | Block composition — healthcare is services |
+| **Composition scheme error** | Clinics NOT eligible | Block composition  healthcare is services |
 | **No invoice series per FY** | Sequencing violation | Auto-reset April 1 |
 
 ---
@@ -202,8 +202,8 @@ Your software is only as good as your medicine master data.
 - [ ] ITC claimed only on taxable inputs (rent, equipment, software)
 - [ ] Exempt supply (consultations) separated in GSTR-3B Table 3.1(d)
 - [ ] Credit notes for rejected claims linked to original invoices
-- [ ] Advance receipts (patient deposits) — GST on receipt basis
-- [ ] Doctor visiting fees — TDS deducted, Form 16A issued
+- [ ] Advance receipts (patient deposits)  GST on receipt basis
+- [ ] Doctor visiting fees  TDS deducted, Form 16A issued
 - [ ] Annual return (GSTR-9) data ready from monthly exports
 
 ---
@@ -247,7 +247,7 @@ A: Yes, under Notification 12/2017-Central Tax (Rate), Sr. No. 74: "Services by 
 A: You're liable for 18% + interest + penalty. Department audits clinics specifically for this.
 
 **Q: Can I use composition scheme for my clinic?**
-A: No. Composition scheme (Section 10) is for **goods** suppliers turnover <₹1.5Cr. Healthcare is **services** — not eligible.
+A: No. Composition scheme (Section 10) is for **goods** suppliers turnover <₹1.5Cr. Healthcare is **services**  not eligible.
 
 **Q: Do I need e-invoicing (IRN)?**
 A: Only if aggregate turnover >₹10Cr (from FY 2024–25). Most clinics exempt. My Clinics Enterprise is IRN-ready.
@@ -256,10 +256,10 @@ A: Only if aggregate turnover >₹10Cr (from FY 2024–25). Most clinics exempt.
 A: GST on **receipt basis** for advances. Issue receipt voucher with GST. Adjust against final invoice.
 
 **Q: What about free samples / doctor gifts from pharma?**
-A: No GST if genuine free sample (no consideration). But if "buy 10 get 1 free" — GST on 11 units.
+A: No GST if genuine free sample (no consideration). But if "buy 10 get 1 free"  GST on 11 units.
 
 **Q: Can I issue consolidated invoice for daily OPD?**
-A: For B2C small (<₹2.5L), yes — state-wise daily summary allowed. But individual invoices better for patient records.
+A: For B2C small (<₹2.5L), yes  state-wise daily summary allowed. But individual invoices better for patient records.
 
 **Q: What if patient refuses to give GSTIN for corporate billing?**
 A: Treat as B2C. Corporate cannot claim ITC without GSTIN on invoice.
@@ -295,6 +295,6 @@ Print this. Stick at billing counter.
 
 ## Final Takeaway
 
-GST for clinics isn't optional — it's the difference between clean audits and ₹50K+ penalties. **The right software makes it invisible**: every invoice compliant, every return export ready, every payment auto-reconciled via UPI.
+GST for clinics isn't optional  it's the difference between clean audits and ₹50K+ penalties. **The right software makes it invisible**: every invoice compliant, every return export ready, every payment auto-reconciled via UPI.
 
-My Clinics builds Indian GST logic into the core — not a plugin, not an afterthought. [Try it free for 30 days](/signup) with your actual medicine master and see GSTR-1 export in action.
+My Clinics builds Indian GST logic into the core  not a plugin, not an afterthought. [Try it free for 30 days](/signup) with your actual medicine master and see GSTR-1 export in action.

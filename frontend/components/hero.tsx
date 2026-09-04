@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { ArrowUpRightIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export function HeroSection() {
 
 				<p className="text-balance text-center text-foreground/80 text-xs md:text-base">
 					My Clinics bundles appointments, health records, prescriptions,
-					billing and reports into one secure dashboard — while a WhatsApp
+					billing and reports into one secure dashboard  while a WhatsApp
 					assistant books your patients around the clock.
 				</p>
 

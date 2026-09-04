@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { Button } from "@/components/ui/button";
@@ -30,8 +30,8 @@ const STATUS_STYLE: Record<Status, string> = {
 };
 
 const MOCK = [
-  { id: "CMP-1024", category: "treatment" as Category, title: "Pain after procedure not addressed", status: "in_review" as Status, date: "28 Aug 2026", response: "We have escalated to Dr. Ajay — you’ll get a call within 24h." },
-  { id: "CMP-1019", category: "waiting" as Category, title: "45 min wait beyond appointment time", status: "resolved" as Status, date: "20 Aug 2026", response: "Apologies — slot timing revised. Thank you for feedback!" },
+  { id: "CMP-1024", category: "treatment" as Category, title: "Pain after procedure not addressed", status: "in_review" as Status, date: "28 Aug 2026", response: "We have escalated to Dr. Ajay  you’ll get a call within 24h." },
+  { id: "CMP-1019", category: "waiting" as Category, title: "45 min wait beyond appointment time", status: "resolved" as Status, date: "20 Aug 2026", response: "Apologies  slot timing revised. Thank you for feedback!" },
 ];
 
 export default function PatientComplaintsPage() {
@@ -48,7 +48,7 @@ export default function PatientComplaintsPage() {
     if (!title.trim() || !details.trim()) { toast.error("Please fill subject and details"); return; }
     const next = { id: `CMP-${1000 + items.length + 1}`, category, title: title.trim(), status: "open" as Status, date: "01 Sep 2026", response: "" };
     setItems([next, ...items]);
-    toast.success("Complaint submitted — clinic will review shortly");
+    toast.success("Complaint submitted  clinic will review shortly");
     setTitle(""); setDetails("");
   }
 
@@ -73,7 +73,7 @@ export default function PatientComplaintsPage() {
         {/* Form */}
         <form onSubmit={submit} className="lg:col-span-3 rounded-[20px] border border-purple-100/80 bg-white p-5 sm:p-6 shadow-2xs space-y-4">
           <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2"><MessageSquare className="size-4 text-indigo-600" /> Submit a complaint</h2>
-          <p className="text-xs text-slate-500 -mt-2">Be specific — include date, doctor/staff involved, and what happened. This helps us resolve faster.</p>
+          <p className="text-xs text-slate-500 -mt-2">Be specific  include date, doctor/staff involved, and what happened. This helps us resolve faster.</p>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -88,9 +88,9 @@ export default function PatientComplaintsPage() {
               <Select value={severity} onValueChange={(v) => setSeverity(v ?? "medium")}>
                 <SelectTrigger className="mt-1 h-10 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">Low — suggestion</SelectItem>
-                  <SelectItem value="medium">Medium — concern</SelectItem>
-                  <SelectItem value="high">High — urgent</SelectItem>
+                  <SelectItem value="low">Low  suggestion</SelectItem>
+                  <SelectItem value="medium">Medium  concern</SelectItem>
+                  <SelectItem value="high">High  urgent</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -144,7 +144,7 @@ export default function PatientComplaintsPage() {
               </div>
             </div>
           ))}
-          {items.length===0 && <p className="rounded-2xl border border-dashed p-8 text-center text-sm text-slate-500">No complaints yet — we hope it stays that way!</p>}
+          {items.length===0 && <p className="rounded-2xl border border-dashed p-8 text-center text-sm text-slate-500">No complaints yet  we hope it stays that way!</p>}
         </div>
       </div>
     </div>

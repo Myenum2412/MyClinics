@@ -1,4 +1,4 @@
-import type React from "react";
+﻿import type React from "react";
 import { cn } from "@/lib/utils";
 import {
 	BellIcon,
@@ -116,9 +116,9 @@ function ReminderIllustration() {
 				className="absolute top-1/2 bottom-1/2 left-2.5 w-px bg-border"
 			/>
 			{[
-				"Tomorrow · 09:30 — Anita S.",
-				"Tomorrow · 11:00 — Rahul V.",
-				"Fri · 09:30 — Meera P.",
+				"Tomorrow · 09:30  Anita S.",
+				"Tomorrow · 11:00  Rahul V.",
+				"Fri · 09:30  Meera P.",
 			].map((t) => (
 				<div className="relative flex items-center gap-2" key={t}>
 					<span className="absolute -left-[18px] size-2 rounded-full bg-primary/50 ring-4 ring-background" />
@@ -156,7 +156,7 @@ const features: FeatureType[] = [
 	{
 		title: "Bookings on autopilot",
 		subtitle:
-			"Patients message your clinic on WhatsApp any time. The AI assistant checks availability and books the visit — even when the front desk is closed.",
+			"Patients message your clinic on WhatsApp any time. The AI assistant checks availability and books the visit  even when the front desk is closed.",
 		icon: <CalendarCheckIcon />,
 		span: "md:col-span-2",
 		illustration: <ChatIllustration />,
@@ -171,7 +171,7 @@ const features: FeatureType[] = [
 	{
 		title: "Billing minus spreadsheets",
 		subtitle:
-			"Bills as PDFs, payment tracking and revenue at a glance — no ledgers, no manual math.",
+			"Bills as PDFs, payment tracking and revenue at a glance  no ledgers, no manual math.",
 		icon: <ReceiptTextIcon />,
 		illustration: <BillingIllustration />,
 	},

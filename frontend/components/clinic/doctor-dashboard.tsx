@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -43,7 +43,7 @@ function ApptStatus({ status }: { status: string }) {
 }
 
 /**
- * Doctor dashboard — every fetch is scoped server-side to the signed-in
+ * Doctor dashboard  every fetch is scoped server-side to the signed-in
  * doctor (PatientRepository / AppointmentRepository / PrescriptionRepository
  * inject `doctorId: ctx.doctorId` for the `doctor` role), so this view only
  * ever shows the doctor's OWN patients, appointments and prescriptions.
@@ -141,7 +141,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                 Doctor Dashboard
               </CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Welcome back — here is your schedule, your patients, and your prescriptions.
+                Welcome back  here is your schedule, your patients, and your prescriptions.
                 You can only see data for patients assigned to you.
               </p>
             </div>
@@ -213,7 +213,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                         <span>{patientLookup[a.patientId] ?? a.patientId}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{a.reason ?? "—"}</TableCell>
+                    <TableCell>{a.reason ?? ""}</TableCell>
                     <TableCell>
                       <ApptStatus status={a.status} />
                     </TableCell>
@@ -235,7 +235,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                 My Patients
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Patients assigned to you — only their details are shown.
+                Patients assigned to you  only their details are shown.
               </p>
             </div>
             <Link href="/clinic/patients">
@@ -273,7 +273,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{p.mobile}</TableCell>
-                    <TableCell className="text-muted-foreground">{p.email ?? "—"}</TableCell>
+                    <TableCell className="text-muted-foreground">{p.email ?? ""}</TableCell>
                     <TableCell>
                       <Badge
                         className={
@@ -338,7 +338,7 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
                         <span>{patientLookup[pr.patientId] ?? pr.patientId}</span>
                       </div>
                     </TableCell>
-                    <TableCell>{pr.diagnosis ?? "—"}</TableCell>
+                    <TableCell>{pr.diagnosis ?? ""}</TableCell>
                     <TableCell>{pr.medicines.length} medicine(s)</TableCell>
                   </TableRow>
                 ))}

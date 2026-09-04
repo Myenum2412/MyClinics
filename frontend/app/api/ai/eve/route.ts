@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 
-// LARGE REASONING MODEL (LRM) — CLINIC-WIDE INTELLIGENT ASSISTANT
+// LARGE REASONING MODEL (LRM)  CLINIC-WIDE INTELLIGENT ASSISTANT
 const SYSTEM_PROMPT = `You are a Large Reasoning Model (LRM) integrated into a clinic management system.
 Your job is not simply to answer questions from a single page or database table.
 For every user request, intelligently search and cross-reference ALL accessible clinic pages, modules, records, and data sources that may contain information relevant to the user's request, then reason over the combined information and provide the most accurate and useful result.
@@ -29,23 +29,23 @@ export async function POST(req: NextRequest) {
   let reply: string;
   const offTopicHints = ["capital of", "weather in", "who won", "cricket", "movie", "recipe"];
   if (offTopicHints.some((k) => lower.includes(k))) {
-    reply = "I'm designed to assist with this clinic and its services — appointments, doctors, treatments, billing, records, and patient support. How can I help you with the clinic today?";
+    reply = "I'm designed to assist with this clinic and its services  appointments, doctors, treatments, billing, records, and patient support. How can I help you with the clinic today?";
   } else if (lower.includes("fees") || lower.includes("price") || lower.includes("charge")) {
-    reply = "Consultation fees are as set by this clinic. For exact fees, I can check billing/invoice records — please check your Billing page or front desk; I don't invent prices.";
+    reply = "Consultation fees are as set by this clinic. For exact fees, I can check billing/invoice records  please check your Billing page or front desk; I don't invent prices.";
   } else if (lower.includes("timing") || lower.includes("open") || lower.includes("hours")) {
-    reply = "I can check clinic timings and appointment slots across modules. Clinic timings are as published — tell me which day and I can cross-reference availability.";
+    reply = "I can check clinic timings and appointment slots across modules. Clinic timings are as published  tell me which day and I can cross-reference availability.";
   } else if (lower.includes("location") || lower.includes("enga") || lower.includes("address")) {
     reply = "I can help with directions to this clinic from your clinic profile records.";
   } else if (lower.includes("hi") && lower.trim().length < 10) {
-    reply = "Vanakkam! I'm AIDP — your clinic-wide assistant. I can search across appointments, records, prescriptions, billing and more. How can I help today?";
+    reply = "Vanakkam! I'm AIDP  your clinic-wide assistant. I can search across appointments, records, prescriptions, billing and more. How can I help today?";
   } else if (lower.match(/book|appointment|token/)) {
-    reply = "I can guide you to book — checking appointments + doctor availability across modules. Go to Book Appointment, select doctor/date/time and confirm. Need help choosing a slot?";
+    reply = "I can guide you to book  checking appointments + doctor availability across modules. Go to Book Appointment, select doctor/date/time and confirm. Need help choosing a slot?";
   } else if (lower.match(/treatment|medicine|prescription|complaint|diagnosis|report|billing|follow/)) {
     const preview = (message as string)?.slice(0, 100) ?? "";
-    reply = `Understood — "${preview}". As a clinic-wide assistant, I'll search across patient records, appointments, treatments, prescriptions, medicines, reports and billing to give you one consolidated answer. Could you confirm which date/visit you're asking about so I pull the latest record?`;
+    reply = `Understood  "${preview}". As a clinic-wide assistant, I'll search across patient records, appointments, treatments, prescriptions, medicines, reports and billing to give you one consolidated answer. Could you confirm which date/visit you're asking about so I pull the latest record?`;
   } else {
     const preview = (message as string)?.slice(0, 120) ?? "";
-    reply = `Got it — "${preview}". I'm your clinic-wide assistant that checks all relevant modules before answering. Could you tell me a bit more so I can cross-reference the right records?`;
+    reply = `Got it  "${preview}". I'm your clinic-wide assistant that checks all relevant modules before answering. Could you tell me a bit more so I can cross-reference the right records?`;
   }
   return NextResponse.json({ reply });
 }

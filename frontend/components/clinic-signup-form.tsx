@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -120,7 +120,7 @@ export function ClinicSignupForm({
             {created.clinicId}
           </button>
           <p className="mt-2 text-xs text-black">
-            {copied ? "Copied to clipboard! ✓" : "Click to copy. Keep it safe — it identifies your tenant."}
+            {copied ? "Copied to clipboard! ✓" : "Click to copy. Keep it safe  it identifies your tenant."}
           </p>
         </div>
 
@@ -177,7 +177,7 @@ export function ClinicSignupForm({
             </h1>
             <FieldDescription className="text-black">
               {gticket
-                ? "Your Google account is verified. Pick a clinic name and you're done — no password needed."
+                ? "Your Google account is verified. Pick a clinic name and you're done  no password needed."
                 : "Your Clinic ID is generated automatically at signup."}
             </FieldDescription>
           </div>

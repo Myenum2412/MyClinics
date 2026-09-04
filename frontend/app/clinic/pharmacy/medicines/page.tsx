@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import * as React from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
@@ -289,11 +289,11 @@ export default function PharmacyMedicinesPage() {
                       />
                     </TableCell>
                     <TableCell className="font-medium">{m.name}</TableCell>
-                    <TableCell>{m.genericName ?? "—"}</TableCell>
-                    <TableCell>{m.category ?? "—"}</TableCell>
-                    <TableCell>{m.strength ?? "—"}</TableCell>
-                    <TableCell>{m.manufacturer ?? "—"}</TableCell>
-                    <TableCell>{m.batchNumber ?? "—"}</TableCell>
+                    <TableCell>{m.genericName ?? ""}</TableCell>
+                    <TableCell>{m.category ?? ""}</TableCell>
+                    <TableCell>{m.strength ?? ""}</TableCell>
+                    <TableCell>{m.manufacturer ?? ""}</TableCell>
+                    <TableCell>{m.batchNumber ?? ""}</TableCell>
                     <TableCell className="tabular-nums">{m.reorderLevel}</TableCell>
                     <TableCell className="tabular-nums">{fmtMoney(m.sellingPrice)}</TableCell>
                     <TableCell>

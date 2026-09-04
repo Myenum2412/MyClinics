@@ -1,11 +1,11 @@
-import type { MetadataRoute } from "next";
+﻿import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "My Clinics — Clinic Management",
+    name: "My Clinics  Clinic Management",
     short_name: "My Clinics",
     description:
-      "Complete clinic management platform — appointments, patient records, billing and reports.",
+      "Complete clinic management platform  appointments, patient records, billing and reports.",
     start_url: "/",
     scope: "/",
     display: "standalone",

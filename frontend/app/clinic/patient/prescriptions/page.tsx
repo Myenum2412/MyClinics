@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRequireRole } from "@/hooks/use-clinic-session";
@@ -77,7 +77,7 @@ export default function PatientPrescriptionsPage() {
                     <p className="font-medium text-foreground">Dr. {presc.doctorId?.slice(0, 8) || "Unknown"}</p>
                   </TableCell>
                   <TableCell>
-                    <p className="text-muted-foreground max-w-xs truncate">{presc.diagnosis || "—"}</p>
+                    <p className="text-muted-foreground max-w-xs truncate">{presc.diagnosis || ""}</p>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">

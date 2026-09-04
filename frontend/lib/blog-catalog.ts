@@ -1,4 +1,4 @@
-export type Cluster =
+﻿export type Cluster =
   | "Clinic Software"
   | "Appointments"
   | "Records"
@@ -151,12 +151,12 @@ function excerptFor(cluster: Cluster, title: string) {
   const short = title.replace(/^(How to|How|The Complete Guide to|What Is|Best)\s+/i, "").replace(/\?$/, "")
   const frames: Record<Cluster, string[]> = {
     "Clinic Software": [
-      `A practical, doctor-friendly walkthrough of ${short} — what it involves, what it costs you in time today, and how a platform like My Clinics makes it effortless.`,
+      `A practical, doctor-friendly walkthrough of ${short}  what it involves, what it costs you in time today, and how a platform like My Clinics makes it effortless.`,
       `Everything doctors should know about ${short}: benefits, common pitfalls, and the exact workflow clinics follow with My Clinics.`,
     ],
     Appointments: [
       `Cut confusion at the front desk. Learn how ${short} works day to day, and how My Clinics keeps every slot, doctor and patient in sync.`,
-      `A step-by-step look at ${short} — plus scheduling habits and My Clinics features that keep waiting rooms calm.`,
+      `A step-by-step look at ${short}  plus scheduling habits and My Clinics features that keep waiting rooms calm.`,
     ],
     Records: [
       `Patient files without paper chases. This guide breaks down ${short} and shows how My Clinics organises records so nothing gets lost.`,
@@ -168,7 +168,7 @@ function excerptFor(cluster: Cluster, title: string) {
     ],
     Billing: [
       `Fewer errors, faster payments. Understand ${short} and how clinics automate it end to end with My Clinics billing.`,
-      `A clear explanation of ${short} — with the billing reports, invoices and payment tracking My Clinics generates automatically.`,
+      `A clear explanation of ${short}  with the billing reports, invoices and payment tracking My Clinics generates automatically.`,
     ],
     WhatsApp: [
       `Meet patients where they already are. Learn ${short} and how the My Clinics WhatsApp assistant does the heavy lifting.`,
@@ -176,19 +176,19 @@ function excerptFor(cluster: Cluster, title: string) {
     ],
     AI: [
       `Your front desk, always on. This guide explains ${short} and where an AI assistant like the one built into My Clinics fits best.`,
-      `Practical, non-hyped answers on ${short} — with concrete ways My Clinics puts AI to work on bookings and patient queries.`,
+      `Practical, non-hyped answers on ${short}  with concrete ways My Clinics puts AI to work on bookings and patient queries.`,
     ],
     "Organic Social": [
-      `Grow without an ad budget. A doctor-focused playbook covering ${short} — organic social only, on foundations My Clinics already gives you.`,
+      `Grow without an ad budget. A doctor-focused playbook covering ${short}  organic social only, on foundations My Clinics already gives you.`,
       `Simple, repeatable organic-social tactics for ${short}, powered by the booking and follow-up systems inside My Clinics.`,
     ],
     Specialties: [
       `Not all clinics work the same way. See what matters most in ${short.toLowerCase()}, and how My Clinics adapts to the specialty.`,
-      `Feature checklists and real workflows for ${short.toLowerCase()} — evaluated through the lens of running your practice on My Clinics.`,
+      `Feature checklists and real workflows for ${short.toLowerCase()}  evaluated through the lens of running your practice on My Clinics.`,
     ],
     "Buying Guide": [
       `Budgets, features, contracts: make a confident decision about ${short.toLowerCase()}. Includes a comparison framework and where My Clinics stands.`,
-      `Before you sign anything, read this breakdown of ${short.toLowerCase()} — pricing models, must-have features, and how My Clinics compares.`,
+      `Before you sign anything, read this breakdown of ${short.toLowerCase()}  pricing models, must-have features, and how My Clinics compares.`,
     ],
   }
   const options = frames[cluster]

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
@@ -278,7 +278,7 @@ export default function AuditLogsPage() {
                       </TableCell>
                     )}
                     {visibleColumns.actorUserId && (
-                      <TableCell className="text-foreground font-medium">{a.actorUserId ?? "—"}</TableCell>
+                      <TableCell className="text-foreground font-medium">{a.actorUserId ?? ""}</TableCell>
                     )}
                     {visibleColumns.action && (
                       <TableCell>
@@ -291,11 +291,11 @@ export default function AuditLogsPage() {
                       <TableCell className="text-muted-foreground">{a.entity}</TableCell>
                     )}
                     {visibleColumns.entityId && (
-                      <TableCell className="max-w-32 truncate text-muted-foreground">{a.entityId ?? "—"}</TableCell>
+                      <TableCell className="max-w-32 truncate text-muted-foreground">{a.entityId ?? ""}</TableCell>
                     )}
                     {visibleColumns.metadata && (
                       <TableCell className="max-w-56 truncate text-xs text-muted-foreground font-mono">
-                        {a.metadata ? JSON.stringify(a.metadata) : "—"}
+                        {a.metadata ? JSON.stringify(a.metadata) : ""}
                       </TableCell>
                     )}
                   </TableRow>

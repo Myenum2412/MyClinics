@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useCallback, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -96,7 +96,7 @@ function matchesAccept(file: File, accept: string[]): boolean {
     if (a.endsWith("/*")) {
       const prefix = a.slice(0, -1)
       if (file.type.startsWith(prefix)) return true
-      // Browser reported no MIME type — fall back to the file extension.
+      // Browser reported no MIME type  fall back to the file extension.
       return file.type === "" && mimeCategoryFromExtension(file.name) === prefix
     }
     if (a.startsWith(".")) return file.name.toLowerCase().endsWith(a.toLowerCase())

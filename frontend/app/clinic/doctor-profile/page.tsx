@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -85,7 +85,7 @@ const SPECIALIZATIONS = [
 ];
 
 function orDash(value: string | number | null | undefined): string {
-  if (value === null || value === undefined || value === "") return "—";
+  if (value === null || value === undefined || value === "") return "";
   return String(value);
 }
 
@@ -308,10 +308,10 @@ export default function DoctorProfilePage() {
   }
 
   const docName = doctor?.name || session?.name || "Doctor";
-  const docEmail = doctor?.email || session?.email || "—";
+  const docEmail = doctor?.email || session?.email || "";
   const docSpecialization = doctor?.specialization || "General Medicine";
   const docQualification = doctor?.qualification || "MBBS";
-  const docExp = doctor?.experienceYears ? `${doctor.experienceYears} Years` : "—";
+  const docExp = doctor?.experienceYears ? `${doctor.experienceYears} Years` : "";
   const stats = [
     { label: "Experience", value: docExp },
     { label: "Qualification", value: docQualification },
@@ -437,7 +437,7 @@ export default function DoctorProfilePage() {
             </li>
             <li className="flex items-center gap-2.5 text-sm text-muted-foreground">
               <MapPin className="size-4 shrink-0" aria-hidden="true" />
-              {[doctor?.city, doctor?.state].filter(Boolean).join(", ") || clinic?.address || "Address —"}
+              {[doctor?.city, doctor?.state].filter(Boolean).join(", ") || clinic?.address || "Address "}
             </li>
             <li className="flex items-center gap-2.5 text-sm text-muted-foreground">
               <ShieldCheck className="size-4 shrink-0" aria-hidden="true" />
@@ -819,11 +819,11 @@ export default function DoctorProfilePage() {
                 </div>
                 <FieldGrid cols={3}>
                   <Field label="Clinic Name" value={clinic?.name ?? "My Clinic"} />
-                  <Field label="Clinic Code / Slug" value={clinic?.slug ?? clinic?.clinicId ?? "—"} />
+                  <Field label="Clinic Code / Slug" value={clinic?.slug ?? clinic?.clinicId ?? ""} />
                   <Field label="Clinic Status" value={clinic?.status ?? "active"} />
-                  <Field label="Clinic Phone" value={clinic?.phone ?? "—"} />
-                  <Field label="Clinic Email" value={clinic?.email ?? "—"} />
-                  <Field label="Clinic Website" value={clinic?.website ?? "—"} />
+                  <Field label="Clinic Phone" value={clinic?.phone ?? ""} />
+                  <Field label="Clinic Email" value={clinic?.email ?? ""} />
+                  <Field label="Clinic Website" value={clinic?.website ?? ""} />
                   <Field label="Clinic Address" className="col-span-3" value={clinic?.address ?? "Address not updated"} />
                   <Field label="Working Hours" value={clinic?.settings?.workingHours ? `${clinic.settings.workingHours.open} – ${clinic.settings.workingHours.close}` : "9:00 AM – 6:00 PM"} />
                   <Field label="Slot Duration" value={`${clinic?.settings?.slotMinutes ?? 15} minutes`} />

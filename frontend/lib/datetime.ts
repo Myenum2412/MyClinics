@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Central, timezone-safe date/time helpers for the My Clinics app.
  *
  * Every clinic in this product operates on Indian Standard Time (Asia/Kolkata,
@@ -40,7 +40,7 @@ export function parseDate(value: DateInput): Date | null {
 /** "15 Jan 2024" in Asia/Kolkata. Falls back to the raw string when unparseable. */
 export function formatDate(value: DateInput): string {
   const d = parseDate(value);
-  if (!d) return typeof value === "string" ? value : "—";
+  if (!d) return typeof value === "string" ? value : "";
   return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
     month: "short",
@@ -52,7 +52,7 @@ export function formatDate(value: DateInput): string {
 /** "15 Jan 2024, 10:17 AM" in Asia/Kolkata. */
 export function formatDateTime(value: DateInput): string {
   const d = parseDate(value);
-  if (!d) return typeof value === "string" ? value : "—";
+  if (!d) return typeof value === "string" ? value : "";
   return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
     month: "short",
@@ -67,7 +67,7 @@ export function formatDateTime(value: DateInput): string {
 /** "10:17 AM" in Asia/Kolkata. */
 export function formatTimeOnly(value: DateInput): string {
   const d = parseDate(value);
-  if (!d) return "—";
+  if (!d) return "";
   return new Intl.DateTimeFormat("en-IN", {
     hour: "numeric",
     minute: "2-digit",
@@ -124,7 +124,7 @@ export function daysAgo(n: number): Date {
 /** "January 2024" in Asia/Kolkata. */
 export function formatMonthYear(value: DateInput): string {
   const d = parseDate(value);
-  if (!d) return typeof value === "string" ? value : "—";
+  if (!d) return typeof value === "string" ? value : "";
   return new Intl.DateTimeFormat("en-IN", {
     month: "long",
     year: "numeric",

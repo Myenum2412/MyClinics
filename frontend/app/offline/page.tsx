@@ -1,5 +1,5 @@
-export const metadata = {
-  title: "Offline — My Clinics",
+﻿export const metadata = {
+  title: "Offline  My Clinics",
 };
 
 export default function OfflinePage() {
@@ -9,7 +9,7 @@ export default function OfflinePage() {
         <h1 className="text-2xl font-semibold">You&apos;re offline</h1>
         <p className="text-sm text-muted-foreground">
           My Clinics couldn&apos;t reach the network. Cached pages will still
-          work — check your connection and try again.
+          work  check your connection and try again.
         </p>
       </div>
     </main>

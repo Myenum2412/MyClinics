@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import {
@@ -58,7 +58,7 @@ export function CardSwapSection() {
               All records, one place
             </h3>
             <p className="text-sm leading-relaxed text-slate-600">
-              Prescriptions, lab reports & visit history — encrypted and
+              Prescriptions, lab reports & visit history  encrypted and
               clinic-isolated.
             </p>
           </div>
@@ -100,7 +100,7 @@ export function CardSwapSection() {
 
   return (
     <section className="relative overflow-hidden border-y bg-[#0D47A1] py-12 md:py-20">
-      {/* Separate background layers — distinct from rest of page */}
+      {/* Separate background layers  distinct from rest of page */}
       <div
         aria-hidden="true"
         className="absolute inset-0"
@@ -129,14 +129,14 @@ export function CardSwapSection() {
         <div className="order-2 flex flex-col gap-5 md:order-1">
           <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur">
             <span className="size-2 rounded-full bg-[#90CAF9] animate-pulse" />
-            Live preview — auto-cycles every 5s
+            Live preview  auto-cycles every 5s
           </div>
           <h2 className="font-heading text-3xl font-bold leading-tight text-white md:text-4xl">
             Everything your clinic
             <span className="block text-[#90CAF9]">needs, stacked.</span>
           </h2>
           <p className="max-w-xl text-sm leading-relaxed text-white/80 md:text-base">
-            Three cards, one stack — appointments, records and billing. The
+            Three cards, one stack  appointments, records and billing. The
             <span className="font-semibold text-white"> Card Swap</span> animation
             cycles them with a skewed perspective (GSAP) so patients instantly
             see the value.
@@ -152,7 +152,7 @@ export function CardSwapSection() {
               <span className="flex size-5 items-center justify-center rounded-full bg-white/15">
                 <ShieldCheck className="size-3" />
               </span>
-              Bank-grade isolation — your clinic&apos;s data stays yours
+              Bank-grade isolation  your clinic&apos;s data stays yours
             </li>
             <li className="flex items-center gap-2">
               <span className="flex size-5 items-center justify-center rounded-full bg-white/15">
@@ -184,7 +184,7 @@ export function CardSwapSection() {
           </p>
         </div>
 
-        {/* Right — CardSwap visual */}
+        {/* Right  CardSwap visual */}
         <div className="order-1 relative flex h-[340px] items-center justify-center overflow-visible md:order-2 md:h-[480px]">
           {/* subtle glow behind stack */}
           <div

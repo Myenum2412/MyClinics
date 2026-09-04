@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState, useMemo } from "react";
 import { toast } from "sonner";
@@ -741,7 +741,7 @@ export default function PrescriptionsPage() {
                             <div className="flex items-center gap-2.5">
                               <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={p.doctorId} name={doctor?.name || "Unknown Doctor"} />
                               <span className="text-xs text-foreground font-medium">
-                                {doctor?.name ?? "—"}
+                                {doctor?.name ?? ""}
                               </span>
                             </div>
                           </TableCell>
@@ -749,7 +749,7 @@ export default function PrescriptionsPage() {
 
                         {visibleColumns.diagnosis && (
                           <TableCell className="max-w-44 truncate text-xs text-muted-foreground">
-                            {p.diagnosis ?? "—"}
+                            {p.diagnosis ?? ""}
                           </TableCell>
                         )}
 

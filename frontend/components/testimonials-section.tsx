@@ -1,4 +1,4 @@
-import type React from "react";
+﻿import type React from "react";
 
 type TestimonialType = {
 	name: string;
@@ -80,7 +80,7 @@ const testimonials: TestimonialType[] = [
 		name: "Dr. Arjun Mehta",
 		role: "General physician",
 		quote:
-			"Setup took twenty minutes. No servers, no IT person — it just works.",
+			"Setup took twenty minutes. No servers, no IT person  it just works.",
 	},
 	{
 		name: "Priya Nair",
@@ -116,7 +116,7 @@ const testimonials: TestimonialType[] = [
 		name: "Dr. Farhan Ali",
 		role: "Physiotherapist",
 		quote:
-			"Session notes, reports and invoices in one flow — my admin time is nearly zero.",
+			"Session notes, reports and invoices in one flow  my admin time is nearly zero.",
 	},
 ];
 

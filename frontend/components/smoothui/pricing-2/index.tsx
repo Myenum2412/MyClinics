@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { cn } from "@/lib/utils";
 import SmoothButton from "@/components/smoothui/smooth-button";
@@ -120,7 +120,7 @@ export function PricingModern() {
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-balance text-foreground/70 text-lg">
               Pick monthly for flexibility or yearly for 2 months free. All plans
-              include secure, multi-tenant isolation — your data stays yours.
+              include secure, multi-tenant isolation  your data stays yours.
             </p>
             <div className="my-10 flex flex-col items-center gap-3">
               <div

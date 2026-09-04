@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import * as React from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
@@ -37,7 +37,7 @@ const TYPE_BADGE: Record<string, BadgeVariant> = {
 const PAGE_SIZE = 25
 function fmtDate(iso: string): string {
   const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return "—"
+  if (Number.isNaN(d.getTime())) return ""
   return d.toLocaleString(undefined, { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" })
 }
 
@@ -195,15 +195,15 @@ export default function PharmacyStockHistoryPage() {
                         <TableRow key={mv.movementId} className="hover:bg-muted/30">
                           <TableCell className="tabular-nums">{fmtDate(mv.createdAt)}</TableCell>
                           <TableCell className="font-medium">{name}</TableCell>
-                          <TableCell>{mv.batchNumber || "—"}</TableCell>
+                          <TableCell>{mv.batchNumber || ""}</TableCell>
                           <TableCell><Badge variant={TYPE_BADGE[mv.movementType] ?? "secondary"}>{mv.movementType.replace(/_/g, " ")}</Badge></TableCell>
                           <TableCell className="text-right tabular-nums">{mv.quantityBefore}</TableCell>
                           <TableCell className={`text-right font-medium tabular-nums ${changedColor}`}>{changed >= 0 ? "+" : ""}{changed}</TableCell>
                           <TableCell className="text-right tabular-nums">{mv.quantityAfter}</TableCell>
-                          <TableCell>{mv.referenceInvoice || "—"}</TableCell>
-                          <TableCell>{mv.party || "—"}</TableCell>
-                          <TableCell>{mv.performedBy || "—"}</TableCell>
-                          <TableCell className="max-w-[16rem] truncate">{mv.reason || mv.notes || "—"}</TableCell>
+                          <TableCell>{mv.referenceInvoice || ""}</TableCell>
+                          <TableCell>{mv.party || ""}</TableCell>
+                          <TableCell>{mv.performedBy || ""}</TableCell>
+                          <TableCell className="max-w-[16rem] truncate">{mv.reason || mv.notes || ""}</TableCell>
                         </TableRow>
                       )
                     })}

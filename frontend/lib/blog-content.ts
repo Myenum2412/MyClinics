@@ -158,11 +158,11 @@ const CLUSTER_SECTIONS: Record<Cluster, Blueprint[]> = {
   ],
   "Organic Social": [
     { t: s => `Organic beats paid when the basics exist`, p: s => [
-      `${s} succeeds without ad spend because organic social rewards two things clinics already own: genuine expertise and real patient stories. Platforms distribute content that earns saves, shares and replies — not content that simply pays.`,
+      `${s} succeeds without ad spend because organic social rewards two things clinics already own: genuine expertise and real patient stories. Platforms distribute content that earns saves, shares and replies  not content that simply pays.`,
       `The trade is patience for permanence. A reel that answers a common patient question keeps collecting views months later, while an ad stops the moment the budget does.`,
     ]},
     { t: () => `Pick two platforms, not five`, p: () => [
-      `Spreading thin kills organic reach. Instagram plus one more channel — WhatsApp status or YouTube Shorts — covers how most patients discover local clinics.`,
+      `Spreading thin kills organic reach. Instagram plus one more channel  WhatsApp status or YouTube Shorts  covers how most patients discover local clinics.`,
       `Consistency on two platforms outperforms sporadic posting everywhere. Choose based on where your actual patients spend time, not on trends.`,
     ]},
     { t: () => `Content pillars keep posting effortless`, p: () => [
@@ -171,11 +171,11 @@ const CLUSTER_SECTIONS: Record<Cluster, Blueprint[]> = {
     ]},
     { t: () => `Patient questions are your content calendar`, p: () => [
       `Every question asked twice at the desk deserves a post. Keep a running log; each entry becomes a reel script, carousel or story poll.`,
-      `This content ranks in local search too — patients literally type these questions into Google, and helpful posts answer before competitors do.`,
+      `This content ranks in local search too  patients literally type these questions into Google, and helpful posts answer before competitors do.`,
     ]},
     { t: () => `Engagement is half the work`, p: () => [
       `Replying to comments and DMs within a day signals both algorithms and humans that the account is alive and cared for.`,
-      `Fifteen minutes of daily engagement — thoughtful replies, resharing patient reviews to stories — compounds into community faster than any posting volume.`,
+      `Fifteen minutes of daily engagement  thoughtful replies, resharing patient reviews to stories  compounds into community faster than any posting volume.`,
     ]},
   ],
   Specialties: [
@@ -279,13 +279,13 @@ const FAQ_BANK: Record<Cluster, [string, string][]> = {
     ["Is patient data shared with the AI?", "No. Within My Clinics, AI operates strictly inside your clinic's isolated tenant boundary."],
   ],
   "Organic Social": [
-    ["Which platform is best for clinics?","Instagram for reach and trust, WhatsApp status for your existing patients — start there before adding anything else."],
+    ["Which platform is best for clinics?","Instagram for reach and trust, WhatsApp status for your existing patients  start there before adding anything else."],
     ["How often should a clinic post?","Three to four quality posts a week beats daily filler; consistency trains both algorithms and audience."],
     ["What if we can't show patient faces?","Educational reels, myth-busters, desk-side tips and team introductions work without exposing any patient."],
-    ["Does organic social really bring patients?","Yes over months — it builds familiarity and trust so local searches convert; pair it with online booking to capture intent."],
+    ["Does organic social really bring patients?","Yes over months  it builds familiarity and trust so local searches convert; pair it with online booking to capture intent."],
     ["Are hashtags still useful?","Locally relevant ones help discovery modestly; content quality and saves matter far more now."],
-    ["How do we handle a negative comment?","Respond calmly, move details to DMs, resolve genuinely — visible professionalism wins the audience watching."],
-    ["How do followers become bookings?","Every post carries a booking path — link in bio, WhatsApp CTA — so interest has somewhere to go instantly."],
+    ["How do we handle a negative comment?","Respond calmly, move details to DMs, resolve genuinely  visible professionalism wins the audience watching."],
+    ["How do followers become bookings?","Every post carries a booking path  link in bio, WhatsApp CTA  so interest has somewhere to go instantly."],
   ],
   Specialties: [
     ["Can software handle procedure-based appointments?", "Yes â€” slot lengths and pricing can differ per procedure type in My Clinics."],

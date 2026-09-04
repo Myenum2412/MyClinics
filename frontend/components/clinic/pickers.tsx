@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { listDoctors, listPatients } from "@/lib/clinic-api";
@@ -96,7 +96,7 @@ export function DoctorSelect({
 }
 
 /**
- * Searchable doctor combobox — type to filter, click to select.
+ * Searchable doctor combobox  type to filter, click to select.
  */
 export function DoctorComboBox({
   clinicId,

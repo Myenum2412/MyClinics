@@ -1,4 +1,4 @@
----
+﻿---
 Title: How to Store Patient Prescriptions Safely in the Cloud
 Category: Prescriptions
 Excerpt: Cleaner prescriptions and faster follow-ups: understand Store Patient Prescriptions Safely in the Cloud with the digital workflow My Clinics provides out of the box.
@@ -30,9 +30,9 @@ There is also a compounding effect worth naming. Clinics that digitise early acc
 
 ## From handwriting to structure
 
-Each prescription binds to its visit, so context — indication, related report, previous regimen — travels with it forever.
+Each prescription binds to its visit, so context  indication, related report, previous regimen  travels with it forever.
 
-Illegible handwriting is a punchline until it causes a pharmacy call-back — then it is a delay, an annoyed patient and a broken consultation flow. Typed, structured prescriptions end the problem at source.
+Illegible handwriting is a punchline until it causes a pharmacy call-back  then it is a delay, an annoyed patient and a broken consultation flow. Typed, structured prescriptions end the problem at source.
 
 Structure brings safety rails: dosage formats that cannot be ambiguous, allergy cross-checks against the record, and medicine names picked from lists rather than invented.
 
@@ -42,7 +42,7 @@ Speed matters between patients. Templates and favourites let common regimens rep
 
 Patients receive copies digitally in their portal, ending the "I lost the slip" loop that used to consume phone time at the desk.
 
-Pharmacy hand-off improves immediately — legible, itemised, unambiguous — and pharmacists notice the difference within days.
+Pharmacy hand-off improves immediately  legible, itemised, unambiguous  and pharmacists notice the difference within days.
 
 ## History-aware follow-ups
 
@@ -58,13 +58,13 @@ Access remains governed: only authorised roles in your clinic can open a prescri
 
 Cloud storage shifts durability from filing cabinets and luck to encrypted, replicated infrastructure with backups nobody forgets to run.
 
-Retention rules become configuration rather than physical storage anxiety — records persist for as long as regulation and sense demand, then expire cleanly.
+Retention rules become configuration rather than physical storage anxiety  records persist for as long as regulation and sense demand, then expire cleanly.
 
 ## Bringing the team along
 
 Doctors vary in enthusiasm for new tools. Pair each senior doctor with a tech-comfortable colleague for the first week; peer support converts faster than training videos.
 
-Standardise the essential fields — drug, dose, frequency, duration, instructions — and leave personal style intact everywhere else.
+Standardise the essential fields  drug, dose, frequency, duration, instructions  and leave personal style intact everywhere else.
 
 Review the first hundred digital prescriptions together. Small template tweaks there remove friction for the next ten thousand.
 
@@ -84,11 +84,11 @@ Review the first hundred digital prescriptions together. Small template tweaks t
 
 ## Common mistakes to avoid
 
-- Skipping allergy cross-checks — the record knows; let it warn before dispensing errors happen.
-- Issuing outside the visit context — orphan prescriptions lose indication, reports and billing linkage.
-- Forgetting patient delivery — portal copies eliminate the lost-slip loop; enable them by default.
-- No template maintenance — refine favourites after the first hundred scripts or speed gains stall.
-- Recreating paper habits on screen — typed freeform paragraphs repeat illegibility digitally; use structured picks.
+- Skipping allergy cross-checks  the record knows; let it warn before dispensing errors happen.
+- Issuing outside the visit context  orphan prescriptions lose indication, reports and billing linkage.
+- Forgetting patient delivery  portal copies eliminate the lost-slip loop; enable them by default.
+- No template maintenance  refine favourites after the first hundred scripts or speed gains stall.
+- Recreating paper habits on screen  typed freeform paragraphs repeat illegibility digitally; use structured picks.
 
 ## Quick checklist
 
@@ -103,7 +103,7 @@ Review the first hundred digital prescriptions together. Small template tweaks t
 
 ## How My Clinics helps
 
-My Clinics was built around exactly these problems. One multi-tenant workspace carries appointments, records, prescriptions, billing and reports, with every clinic isolated behind its own Clinic ID — your data never mixes with anyone else's.
+My Clinics was built around exactly these problems. One multi-tenant workspace carries appointments, records, prescriptions, billing and reports, with every clinic isolated behind its own Clinic ID  your data never mixes with anyone else's.
 
 WhatsApp booking, automated reminders and an AI assistant ship built-in, so the front desk spends its day with patients instead of paperwork. Most clinics complete setup in days using the step-by-step account guide on this blog.
 
@@ -119,11 +119,11 @@ Q: Do prescriptions sync with billing?
 A: Items flow onto invoices where configured, so medication charges never rely on memory.
 
 Q: How long are prescriptions stored?
-A: Indefinitely by default, encrypted and retrievable in seconds — retention rules remain configurable.
+A: Indefinitely by default, encrypted and retrievable in seconds  retention rules remain configurable.
 
 Q: Can pharmacists read the printouts?
-A: Legible, itemised printouts are welcomed by pharmacies — clearer than handwriting by definition.
+A: Legible, itemised printouts are welcomed by pharmacies  clearer than handwriting by definition.
 
 ## Final takeaway
 
-Change sticks when it is boring, incremental and visibly rewarded. That is the philosophy behind everything above, and behind how My Clinics itself works: sensible defaults, strict data isolation, and automation for the repetitive middle of clinic life so your team can focus on the human parts. Your move — step one is closer than it looks.
+Change sticks when it is boring, incremental and visibly rewarded. That is the philosophy behind everything above, and behind how My Clinics itself works: sensible defaults, strict data isolation, and automation for the repetitive middle of clinic life so your team can focus on the human parts. Your move  step one is closer than it looks.

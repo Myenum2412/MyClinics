@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -124,7 +124,7 @@ export default function PatientMedicalRecordsPage() {
   }, [previewFile?.mimeType]);
 
   function formatBytes(bytes: number): string {
-    if (!bytes) return "—";
+    if (!bytes) return "";
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
@@ -183,7 +183,7 @@ const orphanFiles = files.filter(
                       <TableCell className="text-sm whitespace-nowrap">{formatDate(a.date)}</TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{formatTime(a.time)}</TableCell>
                       <TableCell className="text-sm">{doctorName(doctors, a.doctorId)}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{a.reason || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{a.reason || ""}</TableCell>
                       <TableCell>
                         <Badge className={APPT_STATUS_CLASS[a.status] ?? "bg-muted text-muted-foreground"} variant="outline">
                           {a.status.replace("_", " ")}
@@ -356,9 +356,9 @@ const orphanFiles = files.filter(
                       <TableCell className="text-sm">
                         <p className="font-medium text-foreground">Dr. {record.doctorId?.slice(0, 8) || "Unknown"}</p>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{record.diagnosis || "—"}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{record.symptoms || "—"}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{record.treatment || "—"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{record.diagnosis || ""}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{record.symptoms || ""}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{record.treatment || ""}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

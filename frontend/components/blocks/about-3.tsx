@@ -1,4 +1,4 @@
-import { Card, CardContent } from "@/components/ui/card"
+﻿import { Card, CardContent } from "@/components/ui/card"
 import { Compass, ShieldCheck, Lightbulb, Users, Heart, Sparkles } from "lucide-react"
 
 /** Props a call site may pass through to an icon. */
@@ -19,7 +19,7 @@ const values = [
     ),
     title: "Default to trust",
     description:
-      "Security, privacy, and reliability are not features you toggle — they are the floor we build everything on.",
+      "Security, privacy, and reliability are not features you toggle  they are the floor we build everything on.",
   },
   {
     icon: (p: IconProps) => (
@@ -67,7 +67,7 @@ export default function AboutBlock() {
             The principles behind every decision
           </h2>
           <p className="mt-4 text-base text-muted-foreground">
-            A short list we actually use — in reviews, in hiring, and in the
+            A short list we actually use  in reviews, in hiring, and in the
             hard calls where trade-offs matter most.
           </p>
         </div>

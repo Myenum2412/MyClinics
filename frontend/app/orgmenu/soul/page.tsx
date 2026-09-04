@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -67,7 +67,7 @@ export default function OrgSoulPage() {
           Assistant Soul (soul.md)
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          The system prompt that drives the WhatsApp AI assistant. It defines the clinic&apos;s story, voice, services and knowledge boundary. Only organization admins can edit it — all clinics share this soul.
+          The system prompt that drives the WhatsApp AI assistant. It defines the clinic&apos;s story, voice, services and knowledge boundary. Only organization admins can edit it  all clinics share this soul.
         </p>
       </div>
 

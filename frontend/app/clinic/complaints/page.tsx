@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -100,11 +100,11 @@ export default function TreatmentPage(){
       <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
         <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} searchTerm={q} onSearchChange={(v)=>{setQ(v); setPage(0);}} action={<Button onClick={()=>startAdd("record")} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>Add Record</Button>} />
         {open && <div className="mt-6 rounded-xl border bg-card p-5 space-y-4">
-          <h3 className="font-semibold text-sm">{editing?"Edit":"New"} Treatment — Record & Plan</h3>
+          <h3 className="font-semibold text-sm">{editing?"Edit":"New"} Treatment  Record & Plan</h3>
           <div className="space-y-4">
             <div className="grid sm:grid-cols-3 gap-4">
               <div><Label className="text-xs">Patient *</Label><select value={v["Patient"]||""} onChange={e=> onPatientSelect(e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select patient</option>{patients.map(p=> <option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
-              <div><Label className="text-xs">Appointment</Label><select value={v["Appointment"]||v["Visit Date & Time"]||""} onChange={e=>{SV("Appointment", e.target.value); SV("Visit Date & Time", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">{!v["Patient"] ? "Select patient first" : filteredAppointments.length===0 ? "No appointments for this patient" : "Select appointment"}</option>{filteredAppointments.map(a=> <option key={a.appointmentId} value={a.date+" "+a.time}>{a.date} {a.time} — {a.reason || a.appointmentId.slice(0,6)}</option>)}</select></div>
+              <div><Label className="text-xs">Appointment</Label><select value={v["Appointment"]||v["Visit Date & Time"]||""} onChange={e=>{SV("Appointment", e.target.value); SV("Visit Date & Time", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">{!v["Patient"] ? "Select patient first" : filteredAppointments.length===0 ? "No appointments for this patient" : "Select appointment"}</option>{filteredAppointments.map(a=> <option key={a.appointmentId} value={a.date+" "+a.time}>{a.date} {a.time}  {a.reason || a.appointmentId.slice(0,6)}</option>)}</select></div>
               <div><Label className="text-xs">Doctor</Label><select value={v["Doctor"]||""} onChange={e=>SV("Doctor", e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select doctor</option>{doctors.map(d=> <option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
@@ -127,15 +127,15 @@ export default function TreatmentPage(){
 
       <Card className="shadow-sm"><CardContent className="p-0"><div className="overflow-x-auto"><Table>
             <TableHeader><TableRow className="bg-muted/40"><TableHead className="w-10"><Checkbox checked={allChecked} onCheckedChange={v=> setSelected(v ? new Set(filtered.map(i=>i.id)) : new Set())} /></TableHead>{COLS.map(c=><TableHead key={c} className="text-xs whitespace-nowrap">{c}</TableHead>)}<TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-            <TableBody>{paged.length===0 ? <TableRow><TableCell colSpan={COLS.length+2} className="py-16 text-center text-sm text-muted-foreground">{items.length===0 ? "No entries yet — click Add Record/Plan." : "No match."}</TableCell></TableRow> : paged.map(it=><TableRow key={it.id} className="hover:bg-muted/30">
+            <TableBody>{paged.length===0 ? <TableRow><TableCell colSpan={COLS.length+2} className="py-16 text-center text-sm text-muted-foreground">{items.length===0 ? "No entries yet  click Add Record/Plan." : "No match."}</TableCell></TableRow> : paged.map(it=><TableRow key={it.id} className="hover:bg-muted/30">
               <TableCell><Checkbox checked={selected.has(it.id)} onCheckedChange={v=> setSelected(s=>{ const n=new Set(s); if(v) n.add(it.id); else n.delete(it.id); return n; })} /></TableCell>
               <TableCell className="text-xs">{it.patient}</TableCell>
-              <TableCell className="text-xs">{it.data["Visit Date & Time"] || it.data["Visit Date"] || "—"}</TableCell>
-              <TableCell className="text-xs">{it.data["Doctor"] || "—"}</TableCell>
-              <TableCell className="text-xs max-w-[150px] truncate">{it.data["Diagnosis"] || it.data["Diagnosis / Clinical Impression"] || "—"}</TableCell>
-              <TableCell className="text-xs max-w-[150px] truncate">{it.data["Treatment Given"] || it.data["Treatment Objective"] || "—"}</TableCell>
-              <TableCell className="text-xs max-w-[150px] truncate">{it.data["Medicines Prescribed"] || it.data["Medicines"] || "—"}</TableCell>
-              <TableCell className="text-xs">{it.data["Follow-up Date"] || it.data["Follow-up Schedule"] || "—"}</TableCell>
+              <TableCell className="text-xs">{it.data["Visit Date & Time"] || it.data["Visit Date"] || ""}</TableCell>
+              <TableCell className="text-xs">{it.data["Doctor"] || ""}</TableCell>
+              <TableCell className="text-xs max-w-[150px] truncate">{it.data["Diagnosis"] || it.data["Diagnosis / Clinical Impression"] || ""}</TableCell>
+              <TableCell className="text-xs max-w-[150px] truncate">{it.data["Treatment Given"] || it.data["Treatment Objective"] || ""}</TableCell>
+              <TableCell className="text-xs max-w-[150px] truncate">{it.data["Medicines Prescribed"] || it.data["Medicines"] || ""}</TableCell>
+              <TableCell className="text-xs">{it.data["Follow-up Date"] || it.data["Follow-up Schedule"] || ""}</TableCell>
               <TableCell><span className={`rounded-full px-2 py-0.5 text-xs ${it.type==="record"?"bg-blue-50 text-blue-700":"bg-emerald-50 text-emerald-700"}`}>{it.type}</span></TableCell>
               <TableCell className="text-right"><div className="flex justify-end gap-0.5">
                 <Button variant="ghost" size="icon" className="size-7" onClick={()=>setViewing(it)}><Eye className="size-3.5"/></Button>
@@ -147,7 +147,7 @@ export default function TreatmentPage(){
 
 
 
-      <Dialog open={!!viewing} onOpenChange={v=>!v&&setViewing(null)}><DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>View {viewing?.type}</DialogTitle></DialogHeader>{viewing&&<div className="grid sm:grid-cols-2 gap-3 text-sm">{Object.entries(viewing.data).map(([k,v])=><div key={k}><span className="text-muted-foreground text-xs">{k}:</span><div className="font-medium break-words">{String(v)||"—"}</div></div>)}</div>}<DialogFooter><Button variant="outline" onClick={()=>setViewing(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
+      <Dialog open={!!viewing} onOpenChange={v=>!v&&setViewing(null)}><DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-y-auto"><DialogHeader><DialogTitle>View {viewing?.type}</DialogTitle></DialogHeader>{viewing&&<div className="grid sm:grid-cols-2 gap-3 text-sm">{Object.entries(viewing.data).map(([k,v])=><div key={k}><span className="text-muted-foreground text-xs">{k}:</span><div className="font-medium break-words">{String(v)||""}</div></div>)}</div>}<DialogFooter><Button variant="outline" onClick={()=>setViewing(null)}>Close</Button></DialogFooter></DialogContent></Dialog>
     </div>
   );
 }

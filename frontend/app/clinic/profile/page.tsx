@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -87,7 +87,7 @@ function formatTime(value: string | undefined, fallback = "9:00 AM") {
 }
 
 function memberSince(createdAt: string | undefined): string {
-  if (!createdAt) return "—";
+  if (!createdAt) return "";
   return formatMonthYear(createdAt);
 }
 
@@ -95,7 +95,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-right text-sm font-medium text-foreground">{value || "—"}</span>
+      <span className="text-right text-sm font-medium text-foreground">{value || ""}</span>
     </div>
   );
 }
@@ -349,7 +349,7 @@ export default function ClinicProfilePage() {
             </div>
             <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
               <span className="font-mono text-xs">
-                ID: {clinic?.slug ?? clinic?.clinicId ?? "—"}
+                ID: {clinic?.slug ?? clinic?.clinicId ?? ""}
               </span>
               <span className="flex items-center gap-1.5">
                 <CalendarDays className="size-3.5" />
@@ -375,10 +375,10 @@ export default function ClinicProfilePage() {
                       href={href}
                       className="block truncate text-sm font-medium text-foreground hover:text-sky-600 hover:underline"
                     >
-                      {value || "—"}
+                      {value || ""}
                     </a>
                   ) : (
-                    <p className="truncate text-sm font-medium text-foreground">{value || "—"}</p>
+                    <p className="truncate text-sm font-medium text-foreground">{value || ""}</p>
                   )}
                 </div>
               </div>

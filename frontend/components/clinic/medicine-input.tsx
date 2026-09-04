@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 
-/** Static suggestions for prescription fields — free text is always allowed. */
+/** Static suggestions for prescription fields  free text is always allowed. */
 export const DOSAGE_SUGGESTIONS = [
   "1 Tablet",
   "2 Tablets",

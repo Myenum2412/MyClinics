@@ -1,4 +1,4 @@
-import Image from "next/image";
+﻿import Image from "next/image";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ export default function Home() {
             <AuroraText colors={["#60A5FA", "#34D399", "#A78BFA", "#F472B6"]} speed={1.2}>Simplified</AuroraText>
           </h1>
           <p className="max-w-2xl text-base leading-relaxed text-white/90 sm:text-lg md:text-xl">
-            Book appointments in seconds, access prescriptions instantly, and keep all your medical records safe — one trusted place for your family&apos;s healthcare.
+            Book appointments in seconds, access prescriptions instantly, and keep all your medical records safe  one trusted place for your family&apos;s healthcare.
           </p>
           <div className="flex flex-col gap-4 sm:flex-row">
             <Link href="/login" className={cn(buttonVariants({ size: "lg" }), "min-w-[140px]")}>Sign In</Link>
@@ -49,11 +49,11 @@ export default function Home() {
           ]}
         />
       </div>
-      {/* Card Swap showcase — separate background colour (#0D47A1) — npx shadcn add https://sveltebits.xyz/r/card-swap.json (ported to React) */}
+      {/* Card Swap showcase  separate background colour (#0D47A1)  npx shadcn add https://sveltebits.xyz/r/card-swap.json (ported to React) */}
       <CardSwapSection />
       <AnimateIn><HowItWorks /></AnimateIn>
       <AnimateIn delay={0.05}><OnePlatform /></AnimateIn>
-      {/* Pricing — npx smoothui-cli add pricing-2 adapted to INR starting at ₹7,000/mo with 3 yearly plans */}
+      {/* Pricing  npx smoothui-cli add pricing-2 adapted to INR starting at ₹7,000/mo with 3 yearly plans */}
       <PricingModern />
       <AnimateIn delay={0.1}><EasyChat /></AnimateIn>
       <AnimateIn delay={0.15}><AboutBlock /></AnimateIn>

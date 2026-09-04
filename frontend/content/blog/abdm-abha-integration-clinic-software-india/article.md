@@ -1,4 +1,4 @@
----
+﻿---
 Title: ABDM/ABHA Integration for Clinic Software in India: 2026 Complete Guide
 Category: Buying Guide
 Excerpt: Ayushman Bharat Digital Mission compliance: what ABHA linkage means, which software has live integration, and how to implement without disrupting your practice.
@@ -17,7 +17,7 @@ ReadTime: 11 Min Read
 - **ABDM** = The digital infrastructure (registries, gateways, consent manager)
 - **Your clinic software must**: Create ABHA, link records, push to Health Information Exchange (HIE), honor consent
 - **Live integration (Aug 2026)**: My Clinics, KareXpert, MocDoc, HealthPlix, eka.care
-- **Claiming "ABDM ready" ≠ live** — demand sandbox + production demo
+- **Claiming "ABDM ready" ≠ live**  demand sandbox + production demo
 
 ---
 
@@ -32,10 +32,10 @@ ReadTime: 11 Min Read
 ├─────────────────────────────────────────────────────────────┤
 │  ABDM GATEWAYS (Government)                                 │
 │  ├─ ABHA Registry (create/verify ID)                        │
-│  ├─ Health Facility Registry (HFR) — your clinic registration│
-│  ├─ Health Professional Registry (HPR) — your doctors       │
-│  ├─ Drug Registry — medicine codes                          │
-│  └─ Consent Manager — patient approval flow                 │
+│  ├─ Health Facility Registry (HFR)  your clinic registration│
+│  ├─ Health Professional Registry (HPR)  your doctors       │
+│  ├─ Drug Registry  medicine codes                          │
+│  └─ Consent Manager  patient approval flow                 │
 ├─────────────────────────────────────────────────────────────┤
 │  HEALTH INFORMATION EXCHANGE (HIE)                          │
 │  └─ FHIR-standard records flow between providers            │
@@ -123,28 +123,28 @@ Ask vendor to show **live in their sandbox** (not screenshots):
 ## Implementation Roadmap for Your Clinic
 
 ### Phase 1: Foundation (Week 1–2)
-1. **Register on HFR** — Visit `hfr.abdm.gov.in`, get Facility ID
-2. **Register doctors on HPR** — Each doctor gets 14-digit HPR ID
-3. **Configure in software** — Enter HFR ID, HPR IDs in clinic settings
-4. **Test ABHA creation** — 10 patients, both Aadhaar OTP + demographic
+1. **Register on HFR**  Visit `hfr.abdm.gov.in`, get Facility ID
+2. **Register doctors on HPR**  Each doctor gets 14-digit HPR ID
+3. **Configure in software**  Enter HFR ID, HPR IDs in clinic settings
+4. **Test ABHA creation**  10 patients, both Aadhaar OTP + demographic
 
 ### Phase 2: Workflow Integration (Week 3–4)
-1. **Make ABHA mandatory at registration** — Add field, train front desk
-2. **Link ABHA to every visit** — Auto-attach on appointment check-in
-3. **Prescription FHIR mapping** — Map your medicine master to SNOMED-CT
-4. **Lab report upload** — Ensure PDF + structured data both push
+1. **Make ABHA mandatory at registration**  Add field, train front desk
+2. **Link ABHA to every visit**  Auto-attach on appointment check-in
+3. **Prescription FHIR mapping**  Map your medicine master to SNOMED-CT
+4. **Lab report upload**  Ensure PDF + structured data both push
 
 ### Phase 3: Consent & Exchange (Week 5–6)
-1. **Enable consent manager** — Patient sees requests on ABHA app
-2. **Test HIE pull** — Request records from a partner hospital
-3. **Train doctors** — "External records" badge in timeline
-4. **Audit log review** — Verify every share/access is logged
+1. **Enable consent manager**  Patient sees requests on ABHA app
+2. **Test HIE pull**  Request records from a partner hospital
+3. **Train doctors**  "External records" badge in timeline
+4. **Audit log review**  Verify every share/access is logged
 
 ### Phase 4: Go Live & Monitor (Week 7+)
-1. **Soft launch** — One doctor, one week
+1. **Soft launch**  One doctor, one week
 2. **Measure**: ABHA coverage %, consent success rate, HIE push success
-3. **Full rollout** — All doctors, all workflows
-4. **Monthly audit** — Compliance dashboard
+3. **Full rollout**  All doctors, all workflows
+4. **Monthly audit**  Compliance dashboard
 
 ---
 
@@ -173,7 +173,7 @@ Ask vendor to show **live in their sandbox** (not screenshots):
 | **SNOMED-CT / NDC** | Medicine codes | `387458008` (Metformin 500mg) |
 | **FHIR R4** | Record exchange format | Bundle of Encounter, Condition, MedicationRequest |
 
-**My Clinics handles all mapping internally** — you prescribe "Metformin 500mg BD", we send correct SNOMED/NDC codes.
+**My Clinics handles all mapping internally**  you prescribe "Metformin 500mg BD", we send correct SNOMED/NDC codes.
 
 ---
 
@@ -217,7 +217,7 @@ Ask vendor to show **live in their sandbox** (not screenshots):
 
 ## Patient Communication Script (Front Desk)
 
-> **Hindi**: "Sir/Ma'am, sarkar ne nayi health ID shuru ki hai — ABHA card. Ye aapka permanent health record banayega. Hospital, clinic, lab — kahin bhi jao, aapki reports, medicines, history ek jagah milenge. Aadhaar se 30 second mein banta hai. Bana doon?"
+> **Hindi**: "Sir/Ma'am, sarkar ne nayi health ID shuru ki hai  ABHA card. Ye aapka permanent health record banayega. Hospital, clinic, lab  kahin bhi jao, aapki reports, medicines, history ek jagah milenge. Aadhaar se 30 second mein banta hai. Bana doon?"
 >
 > **English**: "The government has launched a digital health ID called ABHA. It creates a lifetime health record accessible at any hospital, clinic, or lab across India. Takes 30 seconds with Aadhaar. Shall I create yours?"
 >
@@ -246,7 +246,7 @@ A: Typically 2–10 seconds. Async. Patient gets notification when complete.
 A: Yes, if they're ABDM-enabled (most major ones are) and patient consents.
 
 **Q: What about data privacy / DPDP Act?**
-A: ABDM consent manager is DPDP-compliant by design. Your software must not store consent — only reference the consent artefact ID.
+A: ABDM consent manager is DPDP-compliant by design. Your software must not store consent  only reference the consent artefact ID.
 
 **Q: Will this increase my workload?**
 A: Initial setup: 2–3 hours. Ongoing: <30 seconds per new patient (ABHA create). Net time saved: fewer repeat tests, faster referrals, insurance claims auto-populate.
@@ -255,21 +255,21 @@ A: Initial setup: 2–3 hours. Ongoing: <30 seconds per new patient (ABHA create
 
 ## My Clinics ABDM Advantage
 
-1. **Native, not bolted-on** — Built on FHIR from day one
-2. **Zero add-on cost** — Included in Practice plan (₹7,999/mo)
-3. **Sandbox + production** — Test in ABDM sandbox, go live same config
-4. **Indian language support** — Consent screens in Hindi, Tamil, Telugu, Marathi, Bengali
-5. **Offline-first** — Queue ABHA creates, sync when online
-6. **NABH-ready audit logs** — One-click export for assessors
+1. **Native, not bolted-on**  Built on FHIR from day one
+2. **Zero add-on cost**  Included in Practice plan (₹7,999/mo)
+3. **Sandbox + production**  Test in ABDM sandbox, go live same config
+4. **Indian language support**  Consent screens in Hindi, Tamil, Telugu, Marathi, Bengali
+5. **Offline-first**  Queue ABHA creates, sync when online
+6. **NABH-ready audit logs**  One-click export for assessors
 
 ---
 
 ## Next Steps
 
-1. **Check your HFR/HPR status** — `hfr.abdm.gov.in` / `hpr.abdm.gov.in`
-2. **Ask your vendor for live sandbox demo** — Not slides, actual API calls
-3. **Run 10-patient pilot** — Measure time, success rate, patient feedback
-4. **Compare TCO** — ABDM add-on costs vs included (My Clinics: ₹0 extra)
+1. **Check your HFR/HPR status**  `hfr.abdm.gov.in` / `hpr.abdm.gov.in`
+2. **Ask your vendor for live sandbox demo**  Not slides, actual API calls
+3. **Run 10-patient pilot**  Measure time, success rate, patient feedback
+4. **Compare TCO**  ABDM add-on costs vs included (My Clinics: ₹0 extra)
 
 [Start ABDM-ready trial with My Clinics →](/signup)
 

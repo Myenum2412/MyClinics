@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import * as React from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
@@ -74,7 +74,7 @@ export default function PharmacyReportsPage() {
         setSuppliers(s.items)
       })
       .catch(() => {
-        /* ignore — selects remain empty */
+        /* ignore  selects remain empty */
       })
     return () => {
       active = false
@@ -124,7 +124,7 @@ export default function PharmacyReportsPage() {
           <CardTitle className="text-base">Report Parameters</CardTitle>
           <CardDescription>
             The report is generated server-side in CSV or PDF format with full
-            multi-tenant isolation — only data for this clinic is included.
+            multi-tenant isolation  only data for this clinic is included.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">

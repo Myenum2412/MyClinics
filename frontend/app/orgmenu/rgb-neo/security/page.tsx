@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { toast } from "sonner";
@@ -30,7 +30,7 @@ export default function RgbNeoSecurityPage() {
       <div>
         <h1 className="text-xl font-semibold">Security Monitoring</h1>
         <p className="text-sm text-muted-foreground">
-          Authentication failures, suspicious activity and unauthorized access — independent severity and escalation
+          Authentication failures, suspicious activity and unauthorized access  independent severity and escalation
         </p>
       </div>
       {loading ? (
