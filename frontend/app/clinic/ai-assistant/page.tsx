@@ -5,11 +5,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AssistantRuntimeProvider, useLocalRuntime } from "@assistant-ui/react";
 import type { ChatModelAdapter } from "@assistant-ui/react";
 import { Thread } from "@/components/thread.aui";
+import { ThreadList } from "@/components/thread-list.aui";
 import Image from "next/image";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Command } from "lucide-react";
+import { Command, History } from "lucide-react";
 
-function AIAssistantRuntime({ role }: { role?: string }) {
+function ClinicAssistantLayout({ role }: { role?: string }) {
   const adapter: ChatModelAdapter = {
     async run({ messages, abortSignal }) {
       const lastUser = [...messages].reverse().find((m) => m.role === "user");
@@ -75,7 +76,30 @@ function AIAssistantRuntime({ role }: { role?: string }) {
 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
-      <Thread components={{ Welcome: ClinicWelcome }} />
+      <div className="flex flex-1 min-h-0 overflow-hidden flex-col lg:flex-row">
+        {/* Left history — assistant-ui ThreadList */}
+        <aside className="w-full lg:w-[300px] xl:w-[340px] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r bg-card overflow-hidden max-h-[45vh] lg:max-h-none lg:h-full">
+          <div className="px-3 py-3 border-b shrink-0 bg-card">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <History className="size-4 text-muted-foreground" />
+              History
+              <span className="ml-auto text-xs font-normal text-muted-foreground hidden lg:inline">assistant-ui threads</span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 hidden lg:block">Search, rename, archive or delete conversations</p>
+          </div>
+          <div className="flex-1 overflow-auto p-2">
+            <ThreadList />
+          </div>
+          <div className="p-3 border-t bg-muted/30 text-[11px] text-muted-foreground flex items-center gap-1.5 shrink-0">
+            <span className="size-1.5 rounded-full bg-emerald-500" /> Threads stored in-memory • rename & archive supported
+          </div>
+        </aside>
+
+        {/* Right chat — assistant-ui Thread */}
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-background">
+          <Thread components={{ Welcome: ClinicWelcome }} />
+        </div>
+      </div>
     </AssistantRuntimeProvider>
   );
 }
@@ -118,8 +142,8 @@ export default function ClinicAiAssistantPage() {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <AIAssistantRuntime role={session.role} />
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+          <ClinicAssistantLayout role={session.role} />
         </div>
 
         <div className="shrink-0 border-t bg-muted/20 px-4 py-2 text-center">
