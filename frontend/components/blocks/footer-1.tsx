@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator"
 const columns = [
   { title: "Product", links: ["Blocks", "Templates", "Pricing", "Changelog"] },
   { title: "Resources", links: ["Docs", "Guides", "Support", "API"] },
-  { title: "Company", links: ["About", "Careers", "Contact"] },
+  { title: "Company", links: ["About", "Blog", "Careers", "Contact"] },
 ]
 
 const socials = [

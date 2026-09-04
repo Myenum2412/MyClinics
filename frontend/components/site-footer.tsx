@@ -1,124 +1,107 @@
-import Link from "next/link";
-import { now } from "@/lib/datetime";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
-const productLinks = [
-	{ label: "Home", href: "/" },
-	{ label: "Features", href: "/#features" },
-	{ label: "FAQs", href: "/#faqs" },
-	{ label: "Changelog", href: "/changelog" },
+const columns = [
+  { title: "Product", links: ["Blocks", "Templates", "Pricing", "Changelog"] },
+  { title: "Resources", links: ["Docs", "Guides", "Support", "API"] },
+  { title: "Company", links: ["About", "Blog", "Careers", "Contact"] },
 ];
 
-const accountLinks = [
-	{ label: "Sign in", href: "/login" },
-	{ label: "Get started", href: "/signup/clinic" },
+const socials = [
+  { label: "GitHub", icon: GithubMark },
+  { label: "X", icon: XMark },
+  { label: "Discord", icon: DiscordMark },
 ];
-
-const legalLinks = [
-	{ label: "Privacy", href: "/privacy" },
-	{ label: "Terms", href: "/terms" },
-];
-
-function LinkColumn({
-	title,
-	links,
-}: {
-	title: string;
-	links: { label: string; href: string }[];
-}) {
-	return (
-		<div>
-			<h4 className="mb-2 text-muted-foreground text-xs tracking-wide">
-				{title}
-			</h4>
-			<ul className="space-y-2 text-sm">
-				{links.map((link) => (
-					<li key={link.href}>
-						<Link
-							className="text-muted-foreground/80 transition hover:text-foreground hover:underline"
-							href={link.href}
-						>
-							{link.label}
-						</Link>
-					</li>
-				))}
-			</ul>
-		</div>
-	);
-}
-
-const WHATSAPP_CHANNEL_URL = "https://whatsapp.com/channel/0029Vb9076JJ93wXGP5ILx0b";
-const DISCORD_INVITE_URL = "https://discord.gg/F9h2CHpnh";
-
-function WhatsAppIcon(props: React.SVGProps<SVGSVGElement>) {
-	return (
-		<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-			<path d="M19.11 4.94A9.91 9.91 0 0 0 12.04 2a9.91 9.91 0 0 0-8.6 14.93L2 22l5.2-1.36a9.91 9.91 0 0 0 4.84 1.24h.01a9.91 9.91 0 0 0 7.06-16.94ZM12.04 20.4a8.13 8.13 0 0 1-4.15-1.13l-.3-.18-3.09.81.82-3-.19-.31a8.13 8.13 0 0 1 6.91-12.79 8.13 8.13 0 0 1 5.76 13.88 8.13 8.13 0 0 1-5.76 2.72Zm4.46-6.08c-.25-.12-1.47-.73-1.7-.81s-.39-.12-.56.12-.64.81-.79.97-.29.19-.54.06a6.86 6.86 0 0 1-2-1.23 7.7 7.7 0 0 1-1.42-1.77c-.15-.25 0-.39.11-.51s.25-.29.37-.43a1.7 1.7 0 0 0 .25-.43.48.48 0 0 0-.02-.44c-.06-.12-.56-1.35-.77-1.85s-.4-.43-.56-.44h-.48a.92.92 0 0 0-.66.31 2.78 2.78 0 0 0-.87 2.06 4.83 4.83 0 0 0 1 2.6 11 11 0 0 0 4.24 3.74c.59.26 1.05.41 1.41.53a3.4 3.4 0 0 0 1.56.1c.48-.07 1.47-.6 1.68-1.18a1 1 0 0 0 .07-.68c-.06-.11-.23-.17-.47-.29Z" />
-		</svg>
-	);
-}
-
-function DiscordIcon(props: React.SVGProps<SVGSVGElement>) {
-	return (
-		<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" {...props}>
-			<path d="M20.317 4.369A19.79 19.79 0 0 0 15.2 2.88a13.5 13.5 0 0 0-.57 1.17 18.1 18.1 0 0 0-5.26 0 13.5 13.5 0 0 0-.58-1.17 19.74 19.74 0 0 0-5.12 1.49 19.94 19.94 0 0 0-3.39 13.49 19.83 19.83 0 0 0 6 3.03 14.1 14.1 0 0 0 1.2-1.96 12.96 12.96 0 0 1-1.9-.93l.4-.31a13.9 13.9 0 0 0 10.54 0l.4.31a12.96 12.96 0 0 1-1.9.93 14.1 14.1 0 0 0 1.2 1.96 19.82 19.82 0 0 0 6-3.03 19.94 19.94 0 0 0-3.39-13.49ZM9.545 15.57c-1.06 0-1.94-.98-1.94-2.18s.86-2.18 1.94-2.18c1.07 0 1.95.98 1.94 2.18s-.87 2.18-1.94 2.18Zm4.91 0c-1.06 0-1.94-.98-1.94-2.18s.86-2.18 1.94-2.18c1.07 0 1.95.98 1.94 2.18s-.87 2.18-1.94 2.18Z" />
-		</svg>
-	);
-}
 
 export function SiteFooter() {
-	return (
-		<footer className="border-t text-xs md:text-sm">
-			<div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-10 md:grid-cols-3">
-				<div className="flex flex-col pt-1 md:col-span-2">
-					<Link className="w-fit rounded-md p-1 hover:bg-muted dark:hover:bg-muted/50" href="/">
-						{/* eslint-disable-next-line @next/next/no-img-element */}
-						<img
-							src="/logobg.png"
-							alt="My Clinics logo"
-							className="size-9 object-contain"
-						/>
-					</Link>
-					<p className="mt-3 mb-6 max-w-[220px] text-muted-foreground">
-						Less paperwork. More patients.
-					</p>
-					<div className="flex items-center gap-3">
-						<a
-							href={WHATSAPP_CHANNEL_URL}
-							target="_blank"
-							rel="noopener noreferrer"
-							aria-label="Join our WhatsApp Channel"
-							title="WhatsApp Channel"
-							className="inline-flex size-9 items-center justify-center rounded-full border bg-background text-muted-foreground transition hover:bg-[#25D366] hover:text-white hover:border-[#25D366] hover:shadow-sm"
-						>
-							<WhatsAppIcon className="size-5" />
-						</a>
-						<a
-							href={DISCORD_INVITE_URL}
-							target="_blank"
-							rel="noopener noreferrer"
-							aria-label="Join our Discord"
-							title="Discord"
-							className="inline-flex size-9 items-center justify-center rounded-full border bg-background text-muted-foreground transition hover:bg-[#5865F2] hover:text-white hover:border-[#5865F2] hover:shadow-sm"
-						>
-							<DiscordIcon className="size-5" />
-						</a>
-					</div>
-				</div>
+  return (
+    <>
+      <Separator />
+      <footer className="w-full px-4 py-10 sm:px-6 bg-background text-foreground">
+        <div className="grid gap-8 md:grid-cols-2">
+          <div className="max-w-sm">
+            <a href="#" className="flex items-center gap-2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+                className="size-6 shrink-0 text-primary"
+              >
+                <rect x="3" y="3" width="8" height="8" transform="rotate(-6 7 7)" />
+                <rect x="3" y="13" width="8" height="8" transform="rotate(5 7 17)" />
+                <rect x="13" y="13" width="8" height="8" transform="rotate(-4 17 17)" />
+                <rect x="13" y="3" width="8" height="8" transform="rotate(15 17 7)" />
+              </svg>
+              <span className="text-lg font-bold tracking-tight">Acme</span>
+            </a>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Everything your team needs to build, ship, and scale.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+            {columns.map((col) => (
+              <div key={col.title}>
+                <h3 className="font-heading text-sm font-bold tracking-tight">{col.title}</h3>
+                <ul className="mt-3 flex flex-col gap-2">
+                  {col.links.map((link) => (
+                    <li key={link}>
+                      <a href="#" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
+                        {link}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+        <Separator className="mt-10" />
+        <div className="flex flex-col items-start gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">&copy; 2026 Acme. All rights reserved.</p>
+          <div className="flex items-center gap-2">
+            {socials.map((social) => (
+              <Button
+                key={social.label}
+                variant="outline"
+                size="icon-sm"
+                aria-label={social.label}
+                render={<a href="#" />}
+                nativeButton={false}
+                className="rounded-lg text-muted-foreground hover:text-foreground"
+              >
+                <social.icon className="size-4" aria-hidden="true" />
+              </Button>
+            ))}
+          </div>
+        </div>
+      </footer>
+      <Separator />
+    </>
+  );
+}
 
-				<div className="grid grid-cols-2 gap-10 md:pr-10">
-					<LinkColumn links={productLinks} title="Product" />
-					<div className="space-y-10">
-						<LinkColumn links={accountLinks} title="Account" />
-						<LinkColumn links={legalLinks} title="Legal" />
-					</div>
-				</div>
-			</div>
+type MarkProps = React.ComponentProps<"svg"> & { size?: number | string };
 
-			<div className="border-t py-4">
-				<p className="text-center text-muted-foreground">
-					© {now().getFullYear()} My Clinics. All rights reserved.
-				</p>
-			</div>
-		</footer>
-	);
+function DiscordMark({ size = 24, ...props }: MarkProps) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M19.3034 5.33716C17.9344 4.71103 16.4805 4.2547 14.9629 4C14.7719 4.32899 14.5596 4.77471 14.411 5.12492C12.7969 4.89144 11.1944 4.89144 9.60255 5.12492C9.45397 4.77471 9.2311 4.32899 9.05068 4C7.52251 4.2547 6.06861 4.71103 4.70915 5.33716C1.96053 9.39111 1.21766 13.3495 1.5891 17.2549C3.41443 18.5815 5.17612 19.388 6.90701 19.9187C7.33151 19.3456 7.71356 18.73 8.04255 18.0827C7.41641 17.8492 6.82211 17.5627 6.24904 17.2231C6.39762 17.117 6.5462 17.0003 6.68416 16.8835C10.1438 18.4648 13.8911 18.4648 17.3082 16.8835C17.4568 17.0003 17.5948 17.117 17.7434 17.2231C17.1703 17.5627 16.576 17.8492 15.9499 18.0827C16.2789 18.73 16.6609 19.3456 17.0854 19.9187C18.8152 19.388 20.5875 18.5815 22.4033 17.2549C22.8596 12.7341 21.6806 8.80747 19.3034 5.33716ZM8.5201 14.8459C7.48007 14.8459 6.63107 13.9014 6.63107 12.7447C6.63107 11.5879 7.45884 10.6434 8.5201 10.6434C9.57071 10.6434 10.4303 11.5879 10.4091 12.7447C10.4091 13.9014 9.57071 14.8459 8.5201 14.8459ZM15.4936 14.8459C14.4535 14.8459 13.6034 13.9014 13.6034 12.7447C13.6034 11.5879 14.4323 10.6434 15.4936 10.6434C16.5442 10.6434 17.4038 11.5879 17.3825 12.7447C17.3825 13.9014 16.5548 14.8459 15.4936 14.8459Z" />
+    </svg>
+  );
+}
+
+function GithubMark({ size = 24, ...props }: MarkProps) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M12.001 2C6.47598 2 2.00098 6.475 2.00098 12C2.00098 16.425 4.86348 20.1625 8.83848 21.4875C9.33848 21.575 9.52598 21.275 9.52598 21.0125C9.52598 20.775 9.51348 19.9875 9.51348 19.15C7.00098 19.6125 6.35098 18.5375 6.15098 17.975C6.03848 17.6875 5.55098 16.8 5.12598 16.5625C4.77598 16.375 4.27598 15.9125 5.11348 15.9C5.90098 15.8875 6.46348 16.625 6.65098 16.925C7.55098 18.4375 8.98848 18.0125 9.56348 17.75C9.65098 17.1 9.91348 16.6625 10.201 16.4125C7.97598 16.1625 5.65098 15.3 5.65098 11.475C5.65098 10.3875 6.03848 9.4875 6.67598 8.7875C6.57598 8.5375 6.22598 7.5125 6.77598 6.1375C6.77598 6.1375 7.61348 5.875 9.52598 7.1625C10.326 6.9375 11.176 6.825 12.026 6.825C12.876 6.825 13.726 6.9375 14.526 7.1625C16.4385 5.8625 17.276 6.1375 17.276 6.1375C17.826 7.5125 17.476 8.5375 17.376 8.7875C18.0135 9.4875 18.401 10.375 18.401 11.475C18.401 15.3125 16.0635 16.1625 13.8385 16.4125C14.201 16.725 14.5135 17.325 14.5135 18.2625C14.5135 19.6 14.501 20.675 14.501 21.0125C14.501 21.275 14.6885 21.5875 15.1885 21.4875C19.259 20.1133 21.9999 16.2963 22.001 12C22.001 6.475 17.526 2 12.001 2Z" />
+    </svg>
+  );
+}
+
+function XMark({ size = 24, ...props }: MarkProps) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M17.6874 3.0625L12.6907 8.77425L8.37045 3.0625H2.11328L9.58961 12.8387L2.50378 20.9375H5.53795L11.0068 14.6886L15.7863 20.9375H21.8885L14.095 10.6342L20.7198 3.0625H17.6874ZM16.6232 19.1225L5.65436 4.78217H7.45745L18.3034 19.1225H16.6232Z" />
+    </svg>
+  );
 }
