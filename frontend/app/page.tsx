@@ -35,17 +35,19 @@ export default function Home() {
           </div>
         </div>
       </main>
-      <div className="w-full border-y bg-white py-4">
+      <div className="w-full border-y bg-white py-4 overflow-hidden">
         <InfiniteMarquee
-          speed={20}
+          speed={28}
+          gap="gap-10"
+          fade={false}
           items={[
-            <span key="1" className="text-sm font-semibold tracking-widest text-black">TRUSTED BY 500+ CLINICS</span>,
+            <span key="1" className="text-sm font-semibold tracking-widest text-black whitespace-nowrap">TRUSTED BY 500+ CLINICS</span>,
             <span key="2" className="text-sm font-semibold tracking-widest text-black">•</span>,
-            <span key="3" className="text-sm font-semibold tracking-widest text-black">SECURE & COMPLIANT</span>,
+            <span key="3" className="text-sm font-semibold tracking-widest text-black whitespace-nowrap">SECURE & COMPLIANT</span>,
             <span key="4" className="text-sm font-semibold tracking-widest text-black">•</span>,
-            <span key="5" className="text-sm font-semibold tracking-widest text-black">24/7 SUPPORT</span>,
+            <span key="5" className="text-sm font-semibold tracking-widest text-black whitespace-nowrap">24/7 SUPPORT</span>,
             <span key="6" className="text-sm font-semibold tracking-widest text-black">•</span>,
-            <span key="7" className="text-sm font-semibold tracking-widest text-black">APPOINTMENTS • BILLING • REPORTS</span>,
+            <span key="7" className="text-sm font-semibold tracking-widest text-black whitespace-nowrap">APPOINTMENTS • BILLING • REPORTS</span>,
           ]}
         />
       </div>

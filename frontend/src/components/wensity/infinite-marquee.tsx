@@ -42,15 +42,15 @@ export function InfiniteMarquee({
       className={cn(
         "group/marquee relative w-full overflow-hidden",
         fade && [
-          "[mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]",
-          "[-webkit-mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]",
+          "[mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]",
+          "[-webkit-mask-image:linear-gradient(to_right,transparent,black_4%,black_96%,transparent)]",
         ],
         className
       )}
     >
       <div
         className={cn(
-          "flex w-max items-center will-change-transform",
+          "flex w-max items-center will-change-transform whitespace-nowrap",
           // Honour the OS reduced-motion preference — freeze the loop.
           "motion-reduce:![animation:none]",
           gap
@@ -71,7 +71,7 @@ export function InfiniteMarquee({
         {/* Original strip */}
         <div className={cn("flex shrink-0 items-center", gap)} aria-hidden={false}>
           {items.map((node, i) => (
-            <div key={`a-${i}`} className="shrink-0">
+            <div key={`a-${i}`} className="shrink-0 whitespace-nowrap">
               {node}
             </div>
           ))}
@@ -79,7 +79,22 @@ export function InfiniteMarquee({
         {/* Duplicate — exactly once — for the seamless wrap at -50%. */}
         <div className={cn("flex shrink-0 items-center", gap)} aria-hidden>
           {items.map((node, i) => (
-            <div key={`b-${i}`} className="shrink-0">
+            <div key={`b-${i}`} className="shrink-0 whitespace-nowrap">
+              {node}
+            </div>
+          ))}
+        </div>
+        {/* Extra copies to guarantee viewport fill on ultra-wide screens */}
+        <div className={cn("flex shrink-0 items-center", gap)} aria-hidden>
+          {items.map((node, i) => (
+            <div key={`c-${i}`} className="shrink-0 whitespace-nowrap">
+              {node}
+            </div>
+          ))}
+        </div>
+        <div className={cn("flex shrink-0 items-center", gap)} aria-hidden>
+          {items.map((node, i) => (
+            <div key={`d-${i}`} className="shrink-0 whitespace-nowrap">
               {node}
             </div>
           ))}

@@ -123,10 +123,10 @@ export function CardSwapSection() {
 
       <div className="relative z-10 mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-4 md:grid-cols-2 md:gap-8 md:px-6">
         {/* Left copy */}
-        <div className="order-2 flex flex-col gap-5 md:order-1">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur">
-            <span className="size-2 rounded-full bg-[#90CAF9] animate-pulse" />
-            Live preview  auto-cycles every 5s
+        <div className="order-2 flex min-w-0 flex-col gap-5 md:order-1">
+          <div className="inline-flex w-fit max-w-full shrink-0 items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur whitespace-nowrap">
+            <span className="size-2 shrink-0 rounded-full bg-[#90CAF9] animate-pulse" />
+            Live preview — auto-cycles every 5s
           </div>
           <h2 className="font-heading text-3xl font-bold leading-tight text-white md:text-4xl">
             Everything your clinic

@@ -146,14 +146,16 @@
       transform: translateX(100%);
     }
   }
-  @keyframes wensity-marquee-x {
-    from { transform: translate3d(0, 0, 0); }
-    to { transform: translate3d(-50%, 0, 0); }
-  }
-  @keyframes wensity-marquee-x-reverse {
-    from { transform: translate3d(-50%, 0, 0); }
-    to { transform: translate3d(0, 0, 0); }
-  }
+}
+
+/* marquee keyframes — must be outside @theme so Tailwind emits them globally */
+@keyframes wensity-marquee-x {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes wensity-marquee-x-reverse {
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
 }
 
 :root {
