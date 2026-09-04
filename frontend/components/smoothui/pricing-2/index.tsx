@@ -52,7 +52,7 @@ export function PricingModern() {
       href: "/signup/clinic",
       features: [
         "1 Clinic",
-        "Up to 3 Doctors",
+        "Up to 6 Doctors",
         "1,000 Patients",
         "Appointment & WhatsApp booking",
         "Billing & Invoices",
