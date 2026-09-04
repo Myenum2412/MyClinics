@@ -226,8 +226,36 @@ export async function queueAppointmentNotifications(
       });
       return;
     }
-    await db.collection("clc_appointment_notifications").insertMany(notificationsToInsert);
-    logger.info("Successfully queued appointment notifications", { appointmentId, count: notificationsToInsert.length });
+
+    // Deduplication: ensure single send per form submit — skip if identical pending/enqueued exists within last 5 minutes
+    const fiveMinsAgo = new Date(Date.now() - 5 * 60_000);
+    const deduped: typeof notificationsToInsert = [];
+    for (const n of notificationsToInsert) {
+      const exists = await db.collection("clc_appointment_notifications").findOne({
+        clinicId: n.clinicId,
+        appointmentId: n.appointmentId,
+        recipientId: n.recipientId,
+        type: n.type,
+        action: n.action,
+        status: { $in: ["pending", "enqueued", "processing"] },
+        createdAt: { $gte: fiveMinsAgo },
+      } as any);
+      if (!exists) deduped.push(n);
+      else
+        logger.info("appointment notification deduped (single send per form submit)", {
+          appointmentId,
+          clinicId,
+          recipientId: n.recipientId,
+          action: n.action,
+          type: n.type,
+        });
+    }
+    if (!deduped.length) {
+      logger.info("All appointment notifications deduped — single send enforced", { appointmentId });
+      return;
+    }
+    await db.collection("clc_appointment_notifications").insertMany(deduped);
+    logger.info("Successfully queued appointment notifications", { appointmentId, count: deduped.length });
   } catch (err) {
     logger.error("Failed to queue appointment notifications", { appointmentId, error: err });
   }

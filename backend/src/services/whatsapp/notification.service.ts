@@ -59,6 +59,31 @@ export async function enqueueNotification(
   const remoteId = toWhatsAppRemoteId(phone);
   if (!remoteId) return { queued: false, remoteId: null };
 
+  // Deduplication: skip if an identical queued/processing notification exists within the last 60 seconds
+  // This prevents double-send on form double-submit, retries, or broadcast loops that enqueue the same message to same recipient.
+  const dedupeWindowMs = 60_000;
+  const since = new Date(Date.now() - dedupeWindowMs);
+  const existing = await db.collection(NOTIFICATIONS_COLLECTION).findOne({
+    organizationId,
+    clinicId: clinicId ?? null,
+    remoteId,
+    type,
+    message,
+    status: { $in: ["queued", "processing"] },
+    createdAt: { $gte: since },
+    // media must match as well (if one has media and other doesn't, they are different)
+    ...(media ? { mediaFilename: media.filename } : { mediaFilename: { $exists: false } }),
+  } as any);
+  if (existing) {
+    logger.info("whatsapp notification deduped (single send per form submit)", {
+      clinicId: clinicId ?? null,
+      organizationId,
+      type,
+      remoteId,
+    });
+    return { queued: false, remoteId };
+  }
+
   await db.collection(NOTIFICATIONS_COLLECTION).insertOne({
     type,
     organizationId,
