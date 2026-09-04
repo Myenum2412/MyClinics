@@ -118,20 +118,6 @@ export default function CareersBlock() {
             </a>
             <span className="text-white/70 text-xs">Reply within 3 days • Equal opportunity</span>
           </div>
-          <div className="mt-8 grid grid-cols-3 gap-4 border-t border-white/15 pt-6 text-center">
-            <div>
-              <p className="text-2xl font-bold">500+</p>
-              <p className="text-xs text-white/70">Clinics live</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{JOBS.length}</p>
-              <p className="text-xs text-white/70">Open roles</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold">Remote</p>
-              <p className="text-xs text-white/70">India friendly</p>
-            </div>
-          </div>
         </div>
       </section>
 
