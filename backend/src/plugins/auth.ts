@@ -8,6 +8,7 @@ import { getSessionUser, type SessionUser } from "@/lib/auth-token";
 import { canAccessBilling } from "@/lib/roles";
 import { verifyClinicToken } from "@/clinic/core/jwt";
 import { logger } from "@/lib/logger";
+import { timingSafeEqual as cryptoTimingSafeEqual, createHmac } from "node:crypto";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -56,29 +57,22 @@ export function requireInternalToken(
   }
   const auth = request.headers.authorization ?? "";
   const expected = `Bearer ${configured}`;
-  const { timingSafeEqual: tse } = require("node:crypto") as typeof import("node:crypto");
   const a = Buffer.from(auth);
   const b = Buffer.from(expected);
-  const equal = a.length === b.length && tse(a, b);
+  const equal = a.length === b.length && cryptoTimingSafeEqual(a, b);
   if (equal) return true;
-  // SEC-013: accept per-clinic derived token: HKDF(AI_INTERNAL_TOKEN, clinicId|organizationId) for tenant isolation
+  // SEC-013: accept per-clinic derived token for tenant isolation
   try {
     const body = request.body as { organizationId?: string; clinicId?: string } | null;
     const url = new URL(request.url, "http://localhost");
     const orgFromQuery = url.searchParams.get("organizationId") ?? url.searchParams.get("clinicId");
     const clinicHint = body?.organizationId ?? body?.clinicId ?? orgFromQuery ?? "";
     if (clinicHint) {
-      const { hkdf } = require("@panva/hkdf") as typeof import("@panva/hkdf");
-      // Derive deterministically: hkdf("sha256", configured, clinicHint, "MyClinics AI per-clinic token", 32).hex
-      // For now accept if caller provides hkdf-derived token (worker can migrate)
-      // We compute expected derived and compare
-      // Note: async hkdf, use sync fallback via crypto
-      const crypto = require("node:crypto") as typeof import("node:crypto");
-      const derived = crypto.createHmac("sha256", configured).update(clinicHint).digest("hex").slice(0, 64);
+      const derived = createHmac("sha256", configured).update(clinicHint).digest("hex").slice(0, 64);
       const expectedDerived = `Bearer ${derived}`;
       const ad = Buffer.from(auth);
       const bd = Buffer.from(expectedDerived);
-      if (ad.length === bd.length && tse(ad, bd)) return true;
+      if (ad.length === bd.length && cryptoTimingSafeEqual(ad, bd)) return true;
     }
   } catch {}
   reply.code(401).send({ error: "Unauthorized" });
@@ -118,18 +112,16 @@ export function requireCronSecret(
 }
 
 function timingSafeEqual(a: string, b: string): boolean {
-  const { timingSafeEqual: tse } = require("node:crypto") as typeof import("node:crypto");
   const ab = Buffer.from(a);
   const bb = Buffer.from(b);
   if (ab.length !== bb.length) {
-    // Still compare to avoid timing leak on length, but fail
     const len = Math.max(ab.length, bb.length);
     const pa = Buffer.alloc(len, 0); ab.copy(pa);
     const pb = Buffer.alloc(len, 0); bb.copy(pb);
-    tse(pa, pb);
+    cryptoTimingSafeEqual(pa, pb);
     return false;
   }
-  return tse(ab, bb);
+  return cryptoTimingSafeEqual(ab, bb);
 }
 
 /** True when the request carries a valid session (401 reply otherwise). */

@@ -1,5 +1,6 @@
 import { RateLimitError } from "@/clinic/core/errors";
 import { nowMs } from "@/clinic/core/datetime";
+import Redis from "ioredis";
 
 interface Bucket {
   hits: number[];
@@ -83,13 +84,12 @@ export const AUTH_LIMITER = new SlidingWindowLimiter(60_000, 10);
 export const API_LIMITER = new SlidingWindowLimiter(60_000, 600);
 
 // Attempt distributed limit via Valkey if configured; fallback to in-memory.
-let redisForLimit: import("ioredis").default | null = null;
-function getRedisForLimit(): import("ioredis").default | null {
+let redisForLimit: Redis | null = null;
+function getRedisForLimit(): Redis | null {
   const url = process.env.VALKEY_URL ?? process.env.REDIS_URL;
   if (!url) return null;
   if (redisForLimit) return redisForLimit;
   try {
-    const Redis = require("ioredis").default as typeof import("ioredis").default;
     redisForLimit = new Redis(url, {
       enableOfflineQueue: false,
       connectTimeout: 500,

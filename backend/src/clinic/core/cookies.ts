@@ -29,7 +29,7 @@ export function setClinicAuthCookies(
     path: "/",
     httpOnly: true,
     secure,
-    sameSite: "strict",
+    sameSite: "lax",
     maxAge: ttlSeconds,
     domain,
   });
@@ -40,7 +40,7 @@ export function setClinicAuthCookies(
     path: "/",
     httpOnly: false,
     secure,
-    sameSite: "strict",
+    sameSite: "lax",
     maxAge: ttlSeconds,
     domain,
   });
@@ -50,8 +50,8 @@ export function clearClinicAuthCookies(reply: FastifyReply): void {
   const isProd = process.env.NODE_ENV === "production";
   const secure = isSecureRequest(isProd);
   const domain = isProd ? ".myenum.in" : undefined;
-  void reply.clearCookie(CLINIC_TOKEN_COOKIE, { path: "/", domain, secure, sameSite: "strict" });
-  void reply.clearCookie(CSRF_COOKIE, { path: "/", domain, secure, sameSite: "strict" });
+  void reply.clearCookie(CLINIC_TOKEN_COOKIE, { path: "/", domain, secure, sameSite: "lax" });
+  void reply.clearCookie(CSRF_COOKIE, { path: "/", domain, secure, sameSite: "lax" });
 }
 
 function generateCsrfToken(): string {

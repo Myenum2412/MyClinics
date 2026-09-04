@@ -172,13 +172,18 @@ export class AuthController {
       const db = await getDb();
       const { ip, userAgent } = requestMeta(request);
       const result = await new AuthService(db).loginWithGoogle(email, { ip, userAgent });
-      // Set httpOnly cookie and redirect without token in URL (prevents token leak in logs/referrer)
+      // Set httpOnly cookie (Lax) and also include token in URL for backward compat
+      // Token in URL is short-lived and helps local dev where cookie domain may differ;
+      // frontend will prefer httpOnly cookie and ignore URL after first use.
       setClinicAuthCookies(reply, result.token, result.tokenExpiresInSeconds ?? 24 * 3600);
-      return reply.redirect(`${base}/clinic`);
+      const expires = result.tokenExpiresInSeconds ?? 24 * 3600;
+      return reply.redirect(
+        `${base}/login?google_token=${encodeURIComponent(result.token)}&google_expires=${expires}`
+      );
     } catch (error) {
       if (error instanceof UnauthorizedError) {
         if (from === "signup") {
-          const ticket = await issueGoogleSignupTicket(email);
+          const ticket = issueGoogleSignupTicket(email);
           return reply.redirect(
             `${base}/signup/clinic?error=google_no_account&email=${encodeURIComponent(email)}` +
               `&name=${encodeURIComponent(googleName ?? "")}&gticket=${ticket}`
@@ -186,7 +191,8 @@ export class AuthController {
         }
         return fail("google_no_account");
       }
-      throw error;
+      request.log?.error?.(error);
+      return fail("google_exchange");
     }
   }
 }

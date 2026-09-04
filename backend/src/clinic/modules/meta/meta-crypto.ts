@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, randomBytes, createHash } from "node:crypto";
 
 /**
  * Encryption helper for Meta integration secrets (long-lived access tokens,
@@ -25,7 +25,6 @@ function resolveKey(): Buffer {
 }
 
 function createHash32(input: string): Buffer {
-  const { createHash } = require("node:crypto");
   return createHash("sha256").update(input).digest();
 }
 

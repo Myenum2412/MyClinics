@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 import { nowMs } from "@/clinic/core/datetime";
 
 /**
@@ -198,7 +198,7 @@ export async function buildAuthorizationUrl(
     prompt: "select_account",
   });
   if (verifier) {
-    const challenge = base64url(require("node:crypto").createHash("sha256").update(verifier).digest());
+    const challenge = base64url(createHash("sha256").update(verifier).digest());
     params.set("code_challenge", challenge);
     params.set("code_challenge_method", "S256");
   }
