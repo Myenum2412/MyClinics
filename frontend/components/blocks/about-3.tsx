@@ -7,42 +7,42 @@ const values = [
     icon: (p: IconProps) => <HeartPulse {...p} />,
     title: "Patients first, paperwork second",
     description:
-      "We automate booking, reminders and billing so doctors focus on care — not admin. Every feature is measured by minutes saved at the front desk.",
+      "Care comes before admin. We handle bookings, reminders and records so doctors and staff can focus on patients, not paperwork.",
     accent: "bg-[#E3F2FD] text-[#0D47A1] border-[#90CAF9]/30",
   },
   {
     icon: (p: IconProps) => <ShieldCheck {...p} />,
-    title: "Privacy is the foundation",
+    title: "Trust is the foundation",
     description:
-      "Tenant-isolated by clinicId, RBAC (clinic_admin → staff → patient), audit logs and encrypted R2 storage. Your clinic's data never leaves your clinic.",
+      "Patient privacy and data security are never compromised. Your clinic's information stays safe, private and always in your control.",
     accent: "bg-[#0D47A1] text-white border-transparent",
   },
   {
     icon: (p: IconProps) => <MessageCircle {...p} />,
-    title: "WhatsApp-first, human always",
+    title: "Care where patients are",
     description:
-      "Patients live on WhatsApp. Our AI books, reschedules and answers 24/7 — grounded strictly in your soul.md + knowledge base, never hallucinating.",
+      "Patients prefer WhatsApp — so do we. Bookings, answers and reminders happen where patients already chat, with human support behind it.",
     accent: "bg-[#E3F2FD] text-[#0D47A1] border-[#90CAF9]/30",
   },
   {
     icon: (p: IconProps) => <ClipboardCheck {...p} />,
-    title: "Built for the front desk",
+    title: "Built for busy clinics",
     description:
-      "We shadow reception before we ship. If it doesn't cut no-shows, queues or phone load, we don't build it. Live counters and turn alerts included.",
+      "Designed for how small clinics actually work — reducing waiting time, missed appointments and phone load without extra effort.",
     accent: "bg-white text-[#0D47A1] border-[#90CAF9]/30",
   },
   {
     icon: (p: IconProps) => <Zap {...p} />,
-    title: "Simple staff can run",
+    title: "Simple for everyone",
     description:
-      "Clinic live in minutes, usable without training. One-click prescriptions, GST-ready invoices and a queue anyone can understand on day one.",
+      "No complex training needed. Staff and patients can use MyClinics from day one — for appointments, bills or medical history.",
     accent: "bg-[#E3F2FD] text-[#0D47A1] border-[#90CAF9]/30",
   },
   {
     icon: (p: IconProps) => <BadgeCheck {...p} />,
-    title: "Own every outcome",
+    title: "We own every visit",
     description:
-      "We ship results, not tasks. Reminders sent, queues renumbered, audit trails written — and we stand behind every automated WhatsApp message.",
+      "From first appointment to follow-up care, we ensure every patient journey is smooth, on time and cared for till the end.",
     accent: "bg-[#0D47A1] text-white border-transparent",
   },
 ]
@@ -70,8 +70,8 @@ export default function AboutBlock() {
             Care is the system — <span className="text-[#2196F3]">not the paperwork</span>
           </h2>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-[#0D47A1]/70">
-            Principles we use in every review, hire and hard tradeoff — from WhatsApp booking to
-            billing. Built for how small clinics actually run, not how decks say they should.
+            The values that guide MyClinics every day — from how we support clinics to how we
+            care for every patient&apos;s experience.
           </p>
         </div>
 
@@ -102,7 +102,7 @@ export default function AboutBlock() {
 
         <div className="mt-8 flex flex-wrap items-center gap-3 text-xs font-medium text-[#0D47A1]/60">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 border border-[#E3F2FD] shadow-sm">
-            <ShieldCheck className="size-3.5 text-[#0D47A1]" /> Tenant-isolated & audited
+            <ShieldCheck className="size-3.5 text-[#0D47A1]" /> Private & secure
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 border border-[#E3F2FD] shadow-sm">
             <MessageCircle className="size-3.5 text-[#2196F3]" /> WhatsApp + Web booking
