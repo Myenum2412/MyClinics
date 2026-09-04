@@ -24,10 +24,9 @@ export default function HeaderBlock() {
   return (
     <section className="flex min-h-svh w-full flex-col bg-background text-foreground">
       <header className="relative flex h-16 w-full items-center border-b border-border px-6">
-        <a href="#" className="flex shrink-0 items-center gap-2.5">
+        <a href="#" className="flex shrink-0 items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logobg.png" alt="My Clinics" className="size-10 object-contain shrink-0" />
-          <span className="text-2xl font-bold tracking-tight">My Clinics</span>
+          <img src="/logobg.png" alt="My Clinics" className="h-12 w-auto object-contain shrink-0" />
         </a>
 
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
@@ -74,10 +73,9 @@ export default function HeaderBlock() {
             </SheetTrigger>
             <SheetContent side="right" className="w-full sm:max-w-xs">
               <SheetHeader>
-                <SheetTitle className="flex items-center gap-2.5">
+                <SheetTitle className="flex items-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/logobg.png" alt="My Clinics" className="size-8 object-contain shrink-0" />
-                  <span className="text-2xl font-bold tracking-tight">My Clinics</span>
+                  <img src="/logobg.png" alt="My Clinics" className="h-10 w-auto object-contain shrink-0" />
                 </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col px-2">

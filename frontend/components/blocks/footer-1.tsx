@@ -20,10 +20,9 @@ export default function FooterBlock() {
       <footer className="w-full px-4 py-10 sm:px-6">
         <div className="grid gap-8 md:grid-cols-2">
           <div className="max-w-sm">
-            <a href="#" className="flex items-center gap-2.5">
+            <a href="#" className="flex items-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logobg.png" alt="My Clinics" className="size-10 object-contain shrink-0" />
-              <span className="text-2xl font-bold tracking-tight">My Clinics</span>
+              <img src="/logobg.png" alt="My Clinics" className="h-12 w-auto object-contain shrink-0" />
             </a>
             <p className="mt-3 text-sm text-muted-foreground">
               Everything your team needs to build, ship, and scale.

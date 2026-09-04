@@ -44,10 +44,9 @@ export function SiteFooter() {
       <footer className="w-full px-4 py-10 sm:px-6 bg-background text-foreground">
         <div className="grid gap-8 md:grid-cols-2">
           <div className="max-w-sm">
-            <Link href="/" className="flex items-center gap-2.5">
+            <Link href="/" className="flex items-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logobg.png" alt="My Clinics" className="size-10 object-contain shrink-0" />
-              <span className="text-2xl font-bold tracking-tight">My Clinics</span>
+              <img src="/logobg.png" alt="My Clinics" className="h-12 w-auto object-contain shrink-0" />
             </Link>
             <p className="mt-3 text-sm text-muted-foreground">Everything your team needs to build, ship, and scale.</p>
             <p className="mt-2 text-xs text-muted-foreground">

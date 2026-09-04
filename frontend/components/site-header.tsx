@@ -24,9 +24,8 @@ const navLinks = [
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 flex h-16 w-full items-center border-b border-border bg-white px-6 text-black">
-      <Link href="/" className="flex shrink-0 items-center gap-2">
-        <Image src="/logobg.png" alt="My Clinics" width={140} height={40} className="h-10 w-auto object-contain" priority />
-        <span className="hidden text-2xl font-bold tracking-tight text-black sm:inline">My Clinics</span>
+      <Link href="/" className="flex shrink-0 items-center">
+        <Image src="/logobg.png" alt="My Clinics" width={160} height={48} className="h-12 w-auto object-contain" priority />
       </Link>
 
       <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
@@ -68,9 +67,8 @@ export function SiteHeader() {
           </SheetTrigger>
           <SheetContent side="right" className="w-full sm:max-w-xs">
             <SheetHeader>
-              <SheetTitle className="flex items-center gap-2">
-                <Image src="/logobg.png" alt="My Clinics" width={120} height={32} className="h-10 w-auto object-contain" />
-                <span className="text-2xl font-bold tracking-tight">My Clinics</span>
+              <SheetTitle className="flex items-center">
+                <Image src="/logobg.png" alt="My Clinics" width={140} height={40} className="h-12 w-auto object-contain" />
               </SheetTitle>
             </SheetHeader>
             <nav className="flex flex-col px-2">
