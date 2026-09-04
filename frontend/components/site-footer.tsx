@@ -20,19 +20,10 @@ export function SiteFooter() {
       <footer className="w-full px-4 py-10 sm:px-6 bg-background text-foreground">
         <div className="grid gap-8 md:grid-cols-2">
           <div className="max-w-sm">
-            <a href="#" className="flex items-center gap-2">
-              <svg
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-                className="size-6 shrink-0 text-primary"
-              >
-                <rect x="3" y="3" width="8" height="8" transform="rotate(-6 7 7)" />
-                <rect x="3" y="13" width="8" height="8" transform="rotate(5 7 17)" />
-                <rect x="13" y="13" width="8" height="8" transform="rotate(-4 17 17)" />
-                <rect x="13" y="3" width="8" height="8" transform="rotate(15 17 7)" />
-              </svg>
-              <span className="text-lg font-bold tracking-tight">Acme</span>
+            <a href="#" className="flex items-center gap-2.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logobg.png" alt="My Clinics" className="size-10 object-contain shrink-0" />
+              <span className="text-2xl font-bold tracking-tight">My Clinics</span>
             </a>
             <p className="mt-3 text-sm text-muted-foreground">
               Everything your team needs to build, ship, and scale.
@@ -57,7 +48,7 @@ export function SiteFooter() {
         </div>
         <Separator className="mt-10" />
         <div className="flex flex-col items-start gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">&copy; 2026 Acme. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">&copy; 2026 My Clinics. All rights reserved.</p>
           <div className="flex items-center gap-2">
             {socials.map((social) => (
               <Button

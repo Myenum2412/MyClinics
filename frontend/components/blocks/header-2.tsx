@@ -25,36 +25,9 @@ export default function HeaderBlock() {
     <section className="flex min-h-svh w-full flex-col bg-background text-foreground">
       <header className="relative flex h-16 w-full items-center border-b border-border px-6">
         <a href="#" className="flex shrink-0 items-center gap-2.5">
-          <svg
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            aria-hidden="true"
-            className="size-6 shrink-0 text-primary"
-          >
-            <rect x="3" y="3" width="8" height="8" transform="rotate(-6 7 7)" />
-            <rect
-              x="3"
-              y="13"
-              width="8"
-              height="8"
-              transform="rotate(5 7 17)"
-            />
-            <rect
-              x="13"
-              y="13"
-              width="8"
-              height="8"
-              transform="rotate(-4 17 17)"
-            />
-            <rect
-              x="13"
-              y="3"
-              width="8"
-              height="8"
-              transform="rotate(15 17 7)"
-            />
-          </svg>
-          <span className="text-base font-bold tracking-tight">Acme</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logobg.png" alt="My Clinics" className="size-10 object-contain shrink-0" />
+          <span className="text-2xl font-bold tracking-tight">My Clinics</span>
         </a>
 
         <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 md:flex">
@@ -102,42 +75,9 @@ export default function HeaderBlock() {
             <SheetContent side="right" className="w-full sm:max-w-xs">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2.5">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden="true"
-                    className="size-5 shrink-0 text-primary"
-                  >
-                    <rect
-                      x="3"
-                      y="3"
-                      width="8"
-                      height="8"
-                      transform="rotate(-6 7 7)"
-                    />
-                    <rect
-                      x="3"
-                      y="13"
-                      width="8"
-                      height="8"
-                      transform="rotate(5 7 17)"
-                    />
-                    <rect
-                      x="13"
-                      y="13"
-                      width="8"
-                      height="8"
-                      transform="rotate(-4 17 17)"
-                    />
-                    <rect
-                      x="13"
-                      y="3"
-                      width="8"
-                      height="8"
-                      transform="rotate(15 17 7)"
-                    />
-                  </svg>
-                  Acme
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/logobg.png" alt="My Clinics" className="size-8 object-contain shrink-0" />
+                  <span className="text-2xl font-bold tracking-tight">My Clinics</span>
                 </SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col px-2">
