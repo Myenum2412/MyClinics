@@ -47,7 +47,6 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/api/", "/admin/", "/clinic/", "/orgmenu/", "/_next/"],
       },
       ...AI_CRAWLERS.map((userAgent) => ({
         userAgent,
