@@ -541,40 +541,6 @@ export default function AccountPage() {
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">@{handleLabel}</p>
-          {/* Public URL — every clinic is publicly discoverable at /c/[slug] */}
-          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-primary/15 bg-primary/[0.04] px-3 py-2">
-            <Globe className="size-4 shrink-0 text-primary" />
-            <span className="text-xs font-medium text-muted-foreground">Public profile:</span>
-            <a
-              href={`/c/${encodeURIComponent(clinic.slug || clinic.clinicId)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="truncate text-xs font-semibold text-primary hover:underline"
-            >
-              {typeof window !== "undefined" ? `${window.location.origin}/c/${clinic.slug || clinic.clinicId}` : `/c/${clinic.slug || clinic.clinicId}`}
-            </a>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="ml-auto h-7 gap-1 text-xs"
-              onClick={() => {
-                const url = `${window.location.origin}/c/${clinic.slug || clinic.clinicId}`;
-                navigator.clipboard.writeText(url);
-                toast.success("Public link copied");
-              }}
-            >
-              <LinkIcon className="size-3.5" />
-              Copy link
-            </Button>
-            <a
-              href={`/c/${encodeURIComponent(clinic.slug || clinic.clinicId)}`}
-              target="_blank"
-              rel="noreferrer"
-              className="ml-1 inline-flex h-7 items-center justify-center rounded-lg border border-input bg-background px-2.5 text-xs font-medium hover:bg-muted"
-            >
-              View public page
-            </a>
-          </div>
           <p className="mt-3 text-sm/relaxed text-foreground/80">{bioText}</p>
 
           <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">

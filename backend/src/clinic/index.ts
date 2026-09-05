@@ -27,7 +27,6 @@ import {
   registerPlatformMetaRoutes,
   registerPublicMetaRoutes,
 } from "@/clinic/modules/meta/meta.routes";
-import { registerPublicClinicRoutes } from "@/clinic/modules/clinics/public-clinics.routes";
 import { registerNeoRoutes } from "@/neo";
 
 /**
@@ -46,8 +45,6 @@ import { registerNeoRoutes } from "@/neo";
  */
 export function registerClinicApi(app: FastifyInstance): void {
   registerPublicAuthRoutes(app);
-  // Public clinic profiles — unauthenticated SEO/directory pages (GET /api/public/clinics/*)
-  registerPublicClinicRoutes(app);
   // Public Meta endpoints (OAuth callback + webhook) live OUTSIDE the
   // clinic-scope middleware — they resolve the clinic from the oauth state
   // or the Meta asset id, never from a caller-supplied value.
