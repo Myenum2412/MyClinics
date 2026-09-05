@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { DoctorController } from "@/clinic/modules/doctors/doctors.controller";
+import { DoctorAnalyticsController } from "@/clinic/modules/doctors/doctor-analytics.controller";
 import {
   requireClinicAccess,
   requireRoles,
@@ -17,6 +18,7 @@ import {
  */
 export function registerDoctorRoutes(app: FastifyInstance): void {
   const controller = new DoctorController();
+  const analyticsController = new DoctorAnalyticsController();
 
   app.get(
     "/api/clinics/:clinicId/doctors",
@@ -28,6 +30,12 @@ export function registerDoctorRoutes(app: FastifyInstance): void {
     "/api/clinics/:clinicId/doctors",
     { preHandler: [requireClinicAccess, requireRoles("clinic_admin")] },
     async (request, reply) => controller.create(request, reply)
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/doctors/:doctorId/overview",
+    { preHandler: [requireClinicAccess, requireRoles("patient")] },
+    async (request, reply) => analyticsController.getOverview(request, reply)
   );
 
   app.get(

@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Activity,
   Award,
   BadgeCheck,
   Briefcase,
@@ -66,6 +67,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { DoctorOverviewAnalytics } from "@/src/components/clinic/doctor-overview-analytics";
 
 const DAYS_OF_WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -561,6 +563,24 @@ export default function DoctorProfilePage() {
                   </Field>
                 </FieldGrid>
               </div>
+
+              <Separator />
+
+              {/* Doctor Performance Dashboard — calculated from actual appointments, billing, and patient records */}
+              {targetDoctorId && clinicId ? (
+                <div>
+                  <div className="mb-3 flex items-center gap-2">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                      <Activity className="size-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">Performance Overview</h3>
+                      <p className="text-xs text-muted-foreground">Workload, visits, revenue & profitability — derived from appointments, billing and patient records</p>
+                    </div>
+                  </div>
+                  <DoctorOverviewAnalytics clinicId={clinicId} doctorId={targetDoctorId} />
+                </div>
+              ) : null}
             </TabsContent>
 
             {/* TAB 2: CONTACT & ADDRESS */}

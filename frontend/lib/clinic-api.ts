@@ -1079,6 +1079,82 @@ export function deleteDoctor(clinicId: string, doctorId: string): Promise<{ ok: 
   });
 }
 
+// ── Doctor Overview Analytics ────────────────────────────────────────────
+
+export interface DoctorOverviewRange {
+  from: string;
+  to: string;
+}
+
+export interface DoctorOverviewSummary {
+  patientsAssigned: number;
+  patientsHandled: number;
+  patientsHandledAllTime: number;
+  totalAppointments: number;
+  completed: number;
+  cancelled: number;
+  noShow: number;
+  scheduled: number;
+  confirmed: number;
+  rescheduled: number;
+  completionRate: number;
+  noShowRate: number;
+  cancellationRate: number;
+  avgPerDay: number;
+  totalRevenue: number;
+  totalBilled: number;
+  totalPaid: number;
+  outstanding: number;
+  avgInvoice: number;
+  revenuePerAppointment: number;
+  profit: number;
+  profitMargin: number;
+  billsCount: number;
+  billsPaid: number;
+  billsIssued: number;
+  billsDraft: number;
+  billsVoid: number;
+}
+
+export interface DoctorOverviewDaily {
+  date: string;
+  appointments: number;
+  completed: number;
+  cancelled: number;
+  noShow: number;
+  revenue: number;
+  patients: number;
+}
+
+export interface DoctorOverviewResult {
+  doctor: Doctor;
+  range: DoctorOverviewRange;
+  summary: DoctorOverviewSummary;
+  trends: { daily: DoctorOverviewDaily[] };
+  breakdown: {
+    byStatus: { status: string; count: number; percent: number }[];
+    byQueueStatus: { status: string; count: number }[];
+    byPaymentStatus: { status: string; count: number; amount: number }[];
+  };
+  recent: {
+    appointments: { appointmentId: string; patientId: string; date: string; time: string; status: string; queueStatus: string | null; reason: string | null }[];
+    bills: { billId: string; billNumber: string; patientId: string; total: number; amountPaid: number; balanceDue: number; status: string; paymentStatus: string; invoiceDate: string }[];
+    patients: { patientId: string; fullName: string; mobile: string; gender: string | null; status: string }[];
+  };
+}
+
+export function getDoctorOverview(
+  clinicId: string,
+  doctorId: string,
+  query: { from?: string; to?: string } = {}
+): Promise<DoctorOverviewResult> {
+  const params = new URLSearchParams();
+  if (query.from) params.set("from", query.from);
+  if (query.to) params.set("to", query.to);
+  const qs = params.toString();
+  return request(tenantPath(clinicId, `/doctors/${doctorId}/overview${qs ? `?${qs}` : ""}`), { cache: "no-store" });
+}
+
 // ── Users (clinic accounts) ────────────────────────────────────────────────
 
 export interface ClinicUser {

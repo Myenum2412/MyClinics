@@ -39,7 +39,9 @@ import {
   User,
   Camera,
   AlertCircle,
+  Activity,
 } from "lucide-react";
+import { DoctorOverviewAnalytics } from "@/src/components/clinic/doctor-overview-analytics";
 import dynamic from "next/dynamic";
 
 const StatsGeneric = dynamic(() => import("@/components/stats-generic"), {
@@ -600,13 +602,26 @@ export default function DoctorsPage() {
         </div>
 
         <div className="px-4 py-8 sm:px-6 lg:px-8">
-          <div className="space-y-6">
+          <div className="space-y-8">
             <DoctorForm
               initial={doctorToForm(viewing)}
               isEdit={true}
               saving={false}
               readOnly={true}
             />
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                  <Activity className="size-4 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-foreground">Performance Overview</h2>
+                  <p className="text-xs text-muted-foreground">Workload, revenue & profitability — from actual appointments, billing and patient records</p>
+                </div>
+              </div>
+              <DoctorOverviewAnalytics clinicId={clinicId} doctorId={viewing.doctorId} />
+            </div>
           </div>
         </div>
       </div>
