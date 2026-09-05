@@ -601,16 +601,10 @@ export default function DoctorsPage() {
           </div>
         </div>
 
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
-          <div className="space-y-8">
-            <DoctorForm
-              initial={doctorToForm(viewing)}
-              isEdit={true}
-              saving={false}
-              readOnly={true}
-            />
-
-            <div className="space-y-4">
+        <div className="px-4 py-6 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
+            {/* Left — Performance Overview */}
+            <div className="space-y-4 lg:col-span-7 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto lg:pr-1">
               <div className="flex items-center gap-2">
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
                   <Activity className="size-4 text-primary" />
@@ -621,6 +615,24 @@ export default function DoctorsPage() {
                 </div>
               </div>
               <DoctorOverviewAnalytics clinicId={clinicId} doctorId={viewing.doctorId} />
+            </div>
+
+            {/* Right — View Doctor */}
+            <div className="lg:col-span-5 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto">
+              <div className="rounded-xl border border-border bg-card">
+                <div className="border-b border-border px-4 py-3">
+                  <h2 className="text-sm font-semibold text-foreground">Doctor Details</h2>
+                  <p className="text-xs text-muted-foreground">Profile, fee and schedule — read only</p>
+                </div>
+                <div className="p-4">
+                  <DoctorForm
+                    initial={doctorToForm(viewing)}
+                    isEdit={true}
+                    saving={false}
+                    readOnly={true}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
