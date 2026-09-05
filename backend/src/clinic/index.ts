@@ -28,6 +28,7 @@ import {
   registerPublicMetaRoutes,
 } from "@/clinic/modules/meta/meta.routes";
 import { registerNeoRoutes } from "@/neo";
+import { registerEventStreamRoutes } from "@/clinic/modules/events/events.routes";
 
 /**
  * Clinic (multi-tenant) API entry point.
@@ -81,5 +82,6 @@ export function registerClinicApi(app: FastifyInstance): void {
     registerPharmacyRoutes(tenantApi);
     registerPlatformMetaRoutes(tenantApi);
     registerNeoRoutes(tenantApi);
+    registerEventStreamRoutes(tenantApi);
   });
 }

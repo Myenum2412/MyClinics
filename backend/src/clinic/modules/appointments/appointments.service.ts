@@ -32,6 +32,7 @@ import {
 import { queueAppointmentNotifications } from "@/services/whatsapp/appointment-notification.service";
 import { logger } from "@/lib/logger";
 import { indexEntity, removeEntity } from "@/services/search/indexer";
+import { emitClinicEvent } from "@/lib/rx/event-bus";
 
 export class AppointmentService {
   constructor(private readonly db: Db) {}
@@ -169,6 +170,10 @@ export class AppointmentService {
     // 1-hour-ahead scheduled time is reached (queued above), so no per-appointment
     // scheduler is required.
 
+    // ReactiveX: push to live SSE subscribers (queue tables, dashboards)
+    emitClinicEvent("appointment.created", clinicId, { appointmentId: appointment.appointmentId, patientId: input.patientId, doctorId: input.doctorId, date: input.date, time: input.time }, ctx.userId);
+    emitClinicEvent("queue.updated", clinicId, { reason: "appointment.created", date: input.date, doctorId: input.doctorId }, ctx.userId);
+
     return appointment;
   }
 
@@ -268,6 +273,12 @@ export class AppointmentService {
       // Reminder delivery is handled by the every-minute /api/cron/reminders poll.
     }
 
+    // ReactiveX events
+    const updatedClinicId = requireClinicOf(ctx);
+    const eventType = patch.status === "cancelled" ? "appointment.cancelled" as const : "appointment.updated" as const;
+    emitClinicEvent(eventType, updatedClinicId, { appointmentId, patch }, ctx.userId);
+    emitClinicEvent("queue.updated", updatedClinicId, { reason: eventType, appointmentId }, ctx.userId);
+
     return updated ?? existing;
   }
 
@@ -281,6 +292,9 @@ export class AppointmentService {
     void removeEntity("appointment", requireClinicOf(ctx), appointmentId).catch(() => {});
 
     await queueAppointmentNotifications(this.db, requireClinicOf(ctx), appointmentId, "cancelled");
+
+    emitClinicEvent("appointment.cancelled", requireClinicOf(ctx), { appointmentId, date: existing.date, time: existing.time }, ctx.userId);
+    emitClinicEvent("queue.updated", requireClinicOf(ctx), { reason: "appointment.cancelled", appointmentId }, ctx.userId);
 
     await writeAudit(this.db, ctx, {
       action: "delete",
@@ -337,6 +351,8 @@ export class AppointmentService {
     await this.assertQueueAccess(ctx, appointmentId);
     const updated = await checkIn(this.db, clinicId, appointmentId, ctx, priority);
     await this.auditQueue(ctx, "queue_check_in", appointmentId, { priority });
+    emitClinicEvent("appointment.checked_in", clinicId, { appointmentId, priority }, ctx.userId);
+    emitClinicEvent("queue.updated", clinicId, { reason: "check_in", appointmentId }, ctx.userId);
     return updated;
   }
 
@@ -352,6 +368,8 @@ export class AppointmentService {
     if (result.appointmentId) {
       await this.auditQueue(ctx, "queue_call_next", result.appointmentId, {});
     }
+    emitClinicEvent("appointment.called", clinicId, { appointmentId: result.appointmentId, doctorId: effectiveDoctor, date }, ctx.userId);
+    emitClinicEvent("queue.updated", clinicId, { reason: "call_next", appointmentId: result.appointmentId, doctorId: effectiveDoctor, date }, ctx.userId);
     return result;
   }
 
@@ -363,6 +381,7 @@ export class AppointmentService {
     await this.assertQueueAccess(ctx, appointmentId);
     const updated = await startConsultationToken(this.db, clinicId, appointmentId, ctx);
     await this.auditQueue(ctx, "queue_start_consultation", appointmentId, {});
+    emitClinicEvent("queue.updated", clinicId, { reason: "start_consultation", appointmentId }, ctx.userId);
     return updated;
   }
 
@@ -374,6 +393,7 @@ export class AppointmentService {
     await this.assertQueueAccess(ctx, appointmentId);
     const updated = await skipToken(this.db, clinicId, appointmentId, ctx);
     await this.auditQueue(ctx, "queue_skip", appointmentId, {});
+    emitClinicEvent("queue.updated", clinicId, { reason: "skip", appointmentId }, ctx.userId);
     return updated;
   }
 
@@ -385,6 +405,7 @@ export class AppointmentService {
     await this.assertQueueAccess(ctx, appointmentId);
     const updated = await recallToken(this.db, clinicId, appointmentId, ctx);
     await this.auditQueue(ctx, "queue_recall", appointmentId, {});
+    emitClinicEvent("queue.updated", clinicId, { reason: "recall", appointmentId }, ctx.userId);
     return updated;
   }
 
@@ -396,6 +417,8 @@ export class AppointmentService {
     await this.assertQueueAccess(ctx, appointmentId);
     const updated = await completeToken(this.db, clinicId, appointmentId, ctx);
     await this.auditQueue(ctx, "queue_complete", appointmentId, {});
+    emitClinicEvent("appointment.completed", clinicId, { appointmentId }, ctx.userId);
+    emitClinicEvent("queue.updated", clinicId, { reason: "complete", appointmentId }, ctx.userId);
     return updated;
   }
 
@@ -407,6 +430,7 @@ export class AppointmentService {
     await this.assertQueueAccess(ctx, appointmentId);
     const updated = await markNoShowToken(this.db, clinicId, appointmentId, ctx);
     await this.auditQueue(ctx, "queue_no_show", appointmentId, {});
+    emitClinicEvent("queue.updated", clinicId, { reason: "no_show", appointmentId }, ctx.userId);
     return updated;
   }
 
@@ -418,6 +442,8 @@ export class AppointmentService {
     await this.assertQueueAccess(ctx, appointmentId);
     const updated = await cancelQueueToken(this.db, clinicId, appointmentId, ctx);
     await this.auditQueue(ctx, "queue_cancel", appointmentId, {});
+    emitClinicEvent("appointment.cancelled", clinicId, { appointmentId }, ctx.userId);
+    emitClinicEvent("queue.updated", clinicId, { reason: "cancel", appointmentId }, ctx.userId);
     return updated;
   }
 
@@ -431,6 +457,8 @@ export class AppointmentService {
     await this.assertQueueAccess(ctx, appointmentId);
     const updated = await rescheduleQueueToken(this.db, clinicId, appointmentId, ctx, date, time);
     await this.auditQueue(ctx, "queue_reschedule", appointmentId, { date, time });
+    emitClinicEvent("appointment.updated", clinicId, { appointmentId, date, time }, ctx.userId);
+    emitClinicEvent("queue.updated", clinicId, { reason: "reschedule", appointmentId, date, time }, ctx.userId);
     return updated;
   }
 
