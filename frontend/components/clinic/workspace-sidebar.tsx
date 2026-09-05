@@ -144,9 +144,11 @@ export function WorkspaceSidebar({
             <span className="truncate text-[15px] font-semibold leading-tight tracking-tight text-sidebar-foreground">
               {clinicName}
             </span>
-            <span className="truncate text-xs font-medium leading-tight text-muted-foreground capitalize">
-              {role}
-            </span>
+            {role !== "clinic_admin" && (
+              <span className="truncate text-xs font-medium leading-tight text-muted-foreground capitalize">
+                {role.replace("_", " ")}
+              </span>
+            )}
           </div>
         </div>
       </SidebarHeader>
