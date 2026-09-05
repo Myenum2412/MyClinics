@@ -42,6 +42,7 @@ import {
   Activity,
 } from "lucide-react";
 import { DoctorOverviewAnalytics } from "@/src/components/clinic/doctor-overview-analytics";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import dynamic from "next/dynamic";
 
 const StatsGeneric = dynamic(() => import("@/components/stats-generic"), {
@@ -602,9 +603,19 @@ export default function DoctorsPage() {
         </div>
 
         <div className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
-            {/* Left — Performance Overview */}
-            <div className="space-y-4 lg:col-span-7 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto lg:pr-1">
+          <Tabs defaultValue="performance" className="gap-4">
+            <TabsList className="w-full bg-[#E3F2FD]">
+              <TabsTrigger value="performance" className="flex-1 flex items-center gap-1.5">
+                <Activity className="size-4" />
+                Performance Overview
+              </TabsTrigger>
+              <TabsTrigger value="details" className="flex-1 flex items-center gap-1.5">
+                <User className="size-4" />
+                View Doctor
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="performance" className="flex flex-col gap-4">
               <div className="flex items-center gap-2">
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
                   <Activity className="size-4 text-primary" />
@@ -615,10 +626,9 @@ export default function DoctorsPage() {
                 </div>
               </div>
               <DoctorOverviewAnalytics clinicId={clinicId} doctorId={viewing.doctorId} />
-            </div>
+            </TabsContent>
 
-            {/* Right — View Doctor */}
-            <div className="lg:col-span-5 lg:sticky lg:top-[72px] lg:max-h-[calc(100vh-88px)] lg:overflow-y-auto">
+            <TabsContent value="details" className="flex flex-col gap-4">
               <div className="rounded-xl border border-border bg-card">
                 <div className="border-b border-border px-4 py-3">
                   <h2 className="text-sm font-semibold text-foreground">Doctor Details</h2>
@@ -633,8 +643,8 @@ export default function DoctorsPage() {
                   />
                 </div>
               </div>
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     );
