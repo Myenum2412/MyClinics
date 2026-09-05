@@ -736,6 +736,60 @@ export function updateOwnClinic(
   });
 }
 
+// ── Public clinic profiles (no auth) ─────────────────────────────────────
+
+export interface PublicClinic {
+  clinicId: string;
+  slug: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  website: string | null;
+  description: string | null;
+  status: string;
+  settings: {
+    workingHours: { open: string; close: string; days?: string | null };
+    weeklySchedule?: WeeklyScheduleDay[] | null;
+    timezone: string;
+  };
+  profile: ClinicProfile | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function getPublicClinic(identifier: string): Promise<PublicClinic> {
+  const id = encodeURIComponent(identifier);
+  // No credentials needed — public endpoint bypasses auth entirely.
+  // Use direct fetch without tenantPath/request wrapper to avoid auth headers.
+  const url = `${API_BASE}/api/public/clinics/${id}`;
+  return fetch(url, { cache: "no-store" }).then(async (res) => {
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new ClinicApiError((data as { error?: string }).error ?? `Clinic not found (${res.status})`, res.status);
+    return data as PublicClinic;
+  });
+}
+
+export function listPublicClinics(query: { q?: string; city?: string; state?: string; limit?: number; skip?: number } = {}): Promise<PageResult<PublicClinic>> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.city) params.set("city", query.city);
+  if (query.state) params.set("state", query.state);
+  params.set("limit", String(query.limit ?? 50));
+  if (query.skip) params.set("skip", String(query.skip));
+  const url = `${API_BASE}/api/public/clinics?${params}`;
+  return fetch(url, { cache: "no-store" }).then(async (res) => {
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new ClinicApiError((data as { error?: string }).error ?? `Request failed (${res.status})`, res.status);
+    const body = data as { items: PublicClinic[]; total: number };
+    return { items: body.items, total: body.total };
+  });
+}
+
+export function getPublicClinicAvatarUrl(clinicId: string): string {
+  return `${API_BASE}/api/public/clinics/${encodeURIComponent(clinicId)}/avatar`;
+}
+
 // ── Patients ───────────────────────────────────────────────────────────────
 
 export function listPatients(
