@@ -60,7 +60,7 @@ export function SiteHeader() {
           Sign In
         </Button>
         <Separator orientation="vertical" className={cn("hidden h-5 sm:block", scrolled && "hidden sm:hidden")} />
-        <RainbowButton className="hidden sm:inline-flex" style={{ "--color-1": "#E3F2FD", "--color-2": "#90CAF9", "--color-3": "#E3F2FD", "--color-4": "#90CAF9", "--color-5": "#E3F2FD" } as React.CSSProperties}>
+        <RainbowButton className="hidden sm:inline-flex" style={{ "--color-1": "#DBEAFE", "--color-2": "#2563EB", "--color-3": "#3B82F6", "--color-4": "#1D4ED8", "--color-5": "#60A5FA" } as React.CSSProperties}>
           <Link href="/login" className="flex items-center gap-1.5 text-white">
             Start Free Trial <ArrowRight className="text-white" data-icon="inline-end" aria-hidden="true" />
           </Link>
@@ -95,7 +95,7 @@ export function SiteHeader() {
               <Button render={<Link href="/login" />} nativeButton={false} variant="ghost" className="w-full">
                 Sign In
               </Button>
-              <RainbowButton className="w-full" style={{ "--color-1": "#E3F2FD", "--color-2": "#90CAF9", "--color-3": "#E3F2FD", "--color-4": "#90CAF9", "--color-5": "#E3F2FD" } as React.CSSProperties}>
+              <RainbowButton className="w-full" style={{ "--color-1": "#DBEAFE", "--color-2": "#2563EB", "--color-3": "#3B82F6", "--color-4": "#1D4ED8", "--color-5": "#60A5FA" } as React.CSSProperties}>
                 <Link href="/login" className="flex items-center gap-1.5 text-white">Start Free Trial <ArrowRight className="text-white" data-icon="inline-end" /></Link>
               </RainbowButton>
             </SheetFooter>
