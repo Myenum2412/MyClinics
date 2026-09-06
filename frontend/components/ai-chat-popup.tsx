@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
-import { Bot, Send, Sparkles, X } from "lucide-react";
+import Image from "next/image";
+import { Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Msg = { role: "user" | "ai"; text: string };
@@ -47,9 +48,13 @@ export function AiChatPopup() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="AI Chat"
-        className="fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition hover:scale-105 hover:bg-primary/90"
+        className="fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg ring-1 ring-border transition hover:scale-105"
       >
-        {open ? <X className="size-6" /> : <Bot className="size-7" />}
+        {open ? (
+          <X className="size-6 text-foreground" />
+        ) : (
+          <Image src="/aidps.png" alt="AI Root" width={56} height={56} className="size-14 object-cover" />
+        )}
       </button>
 
       {/* Popup */}
@@ -57,9 +62,7 @@ export function AiChatPopup() {
         <div className="fixed bottom-24 right-6 z-50 flex h-[420px] w-[90vw] max-w-[360px] flex-col overflow-hidden rounded-2xl border bg-background shadow-2xl">
           {/* Header - AI Root */}
           <div className="flex items-center gap-2 bg-primary px-4 py-3 text-primary-foreground">
-            <div className="flex size-8 items-center justify-center rounded-full bg-white/20">
-              <Sparkles className="size-4" />
-            </div>
+            <Image src="/aidps.png" alt="AI Root avatar" width={32} height={32} className="size-8 rounded-full object-cover bg-white" />
             <div className="flex-1">
               <p className="text-sm font-semibold">AI Root</p>
               <p className="text-xs opacity-80">Clinic-wide assistant</p>
@@ -72,7 +75,10 @@ export function AiChatPopup() {
           {/* Messages */}
           <div ref={listRef} className="flex-1 overflow-y-auto space-y-3 p-4">
             {messages.map((m, i) => (
-              <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+              <div key={i} className={m.role === "user" ? "flex justify-end" : "flex items-start gap-2"}>
+                {m.role === "ai" && (
+                  <Image src="/aidps.png" alt="AI" width={24} height={24} className="mt-1 size-6 shrink-0 rounded-full object-cover ring-1 ring-border" />
+                )}
                 <div
                   className={
                     m.role === "user"
