@@ -18,9 +18,9 @@ import {
 import { ArrowRight, Menu } from "lucide-react";
 
 const navLinks = [
-  { label: "Features", href: "#features" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Contact", href: "#contact" },
+  { label: "Features", href: "/#features" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 export function SiteHeader() {
