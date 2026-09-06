@@ -32,7 +32,6 @@ export const metadata: Metadata = {
       "Book doctor appointments online in under a minute. All-in-one clinic management software with WhatsApp & AI booking.",
   },
 };
-import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import AboutBlock from "@/components/blocks/about-3";
 import { HowItWorks } from "@/components/how-it-works";
