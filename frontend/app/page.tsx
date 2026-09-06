@@ -32,6 +32,7 @@ export const metadata: Metadata = {
       "Book doctor appointments online in under a minute. All-in-one clinic management software with WhatsApp & AI booking.",
   },
 };
+import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import AboutBlock from "@/components/blocks/about-3";
 import { HowItWorks } from "@/components/how-it-works";
@@ -45,6 +46,7 @@ import HeroSection from "@/components/hero-section-1";
 export default function Home() {
   return (
     <div className="flex min-h-svh flex-col">
+      <SiteHeader />
       <HeroSection />
       <div className="w-full border-y bg-white py-4 overflow-hidden">
         <InfiniteMarquee
