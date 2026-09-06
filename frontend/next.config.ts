@@ -95,7 +95,13 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
+    // /api/auth is handled locally by next-auth — must not be proxied.
+    // Next.js evaluates rewrites in order, so the specific rule wins.
     return [
+      {
+        source: "/api/auth/:path*",
+        destination: "/api/auth/:path*",
+      },
       {
         source: "/api/:path*",
         destination: `${BACKEND_URL}/api/:path*`,
