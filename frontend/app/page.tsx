@@ -47,8 +47,6 @@ import { AnimateIn } from "@/components/animate-in";
 import { OnePlatform } from "@/components/one-platform";
 import { CardSwapSection } from "@/components/card-swap-section";
 import { PricingModern } from "@/components/smoothui/pricing-2";
-import { AiChatPopup } from "@/components/ai-chat-popup";
-
 export default function Home() {
   return (
     <div className="flex min-h-svh flex-col">
@@ -93,7 +91,6 @@ export default function Home() {
       <PricingModern />
       <AnimateIn delay={0.05}><OnePlatform /></AnimateIn>
       <SiteFooter />
-      <AiChatPopup />
     </div>
   );
 }

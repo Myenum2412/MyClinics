@@ -10,6 +10,7 @@ const QUICK = ["Book appointment", "Clinic timings", "Fees", "Location"];
 
 export function AiChatPopup() {
   const [open, setOpen] = React.useState(false);
+  const [showNudge, setShowNudge] = React.useState(false);
   const [input, setInput] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [messages, setMessages] = React.useState<Msg[]>([
@@ -20,6 +21,13 @@ export function AiChatPopup() {
   React.useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+
+  // Proactive nudge while visiting site
+  React.useEffect(() => {
+    const t = setTimeout(() => { if (!open) setShowNudge(true); }, 4000);
+    return () => clearTimeout(t);
+  }, [open]);
+  React.useEffect(() => { if (open) setShowNudge(false); }, [open]);
 
   async function send(text?: string) {
     const msg = (text ?? input).trim();
@@ -44,18 +52,26 @@ export function AiChatPopup() {
 
   return (
     <>
-      {/* Floating button */}
-      <button
-        onClick={() => setOpen((v) => !v)}
-        aria-label="AI Chat"
-        className="fixed bottom-6 right-6 z-50 flex size-14 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg ring-1 ring-border transition hover:scale-105"
-      >
-        {open ? (
-          <X className="size-6 text-foreground" />
-        ) : (
-          <Image src="/aidps.png" alt="AI Root" width={56} height={56} className="size-14 object-cover" />
+      {/* Floating button + proactive bubble */}
+      <div className="fixed bottom-6 right-6 z-50 flex items-end gap-3">
+        {showNudge && !open && (
+          <div className="hidden sm:flex max-w-[220px] animate-in fade-in slide-in-from-bottom-2 rounded-2xl border bg-background px-3 py-2 text-xs shadow-lg">
+            👋 Hi! I&apos;m AI Root — ask me anything about the clinic!
+            <button onClick={() => setShowNudge(false)} className="ml-2 shrink-0 text-muted-foreground hover:text-foreground"><X className="size-3" /></button>
+          </div>
         )}
-      </button>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-label="AI Chat"
+          className="flex size-14 items-center justify-center overflow-hidden rounded-full bg-white shadow-lg ring-1 ring-border transition hover:scale-105"
+        >
+          {open ? (
+            <X className="size-6 text-foreground" />
+          ) : (
+            <Image src="/aidps.png" alt="AI Root" width={56} height={56} className="size-14 object-cover" />
+          )}
+        </button>
+      </div>
 
       {/* Popup */}
       {open && (
