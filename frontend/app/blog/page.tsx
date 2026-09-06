@@ -4,8 +4,8 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
-  title: "Blog — Resources and Insights | My Clinics",
-  description: "The latest industry news, interviews, technologies, and resources from My Clinics.",
+  title: "Clinic Management Insights & Healthcare Tips | My Clinics Blog",
+  description: "Expert insights on clinic management, patient care, healthcare technology, WhatsApp automation, and running a successful modern clinic with My Clinics.",
 };
 
 type Article = {
@@ -22,29 +22,29 @@ type Article = {
 
 const featuredArticle: Article = {
   id: "featured",
-  title: 'Improve your design skills: Develop an "eye" for design',
-  summary: 'Tools and trends change, but good design is timeless. Learn how to quickly develop an "eye" for design.',
+  title: "How WhatsApp Automation is Transforming Patient Appointments in 2025",
+  summary: "Discover how clinics using WhatsApp AI assistants have reduced no-shows by 40% and cut front-desk workload in half — without adding staff.",
   href: "#",
-  category: "Design",
-  thumbnailUrl: "https://www.untitledui.com/marketing/blog-featured-post-01.webp",
-  publishedAt: "10 April 2025",
-  author: { name: "Amélie Laurent", avatarUrl: "https://www.untitledui.com/images/avatars/amelie-laurent?fm=webp&q=80" },
-  tags: ["Design", "Research", "Presentation"],
+  category: "Technology",
+  thumbnailUrl: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1200&q=80&auto=format&fit=crop",
+  publishedAt: "28 Aug 2025",
+  author: { name: "Dr. Priya Sharma", avatarUrl: "https://www.untitledui.com/images/avatars/amelie-laurent?fm=webp&q=80" },
+  tags: ["WhatsApp AI", "Automation", "Patient Experience"],
 };
 
 const articles: Article[] = [
-  { id: "1", title: "UX review presentations", summary: "How do you create compelling presentations that wow your colleagues and impress your managers?", href: "#", category: "Design", thumbnailUrl: "https://www.untitledui.com/marketing/spirals.webp", publishedAt: "20 Jan 2025", author: { name: "Olivia Rhye", avatarUrl: "https://www.untitledui.com/images/avatars/olivia-rhye?fm=webp&q=80" }, tags: ["Design","Research","Presentation"] },
-  { id: "2", title: "Migrating to Linear 101", summary: "Linear helps streamline software projects, sprints, tasks, and bug tracking. Here's how to get started.", href: "#", category: "Product", thumbnailUrl: "https://www.untitledui.com/marketing/conversation.webp", publishedAt: "19 Jan 2025", author: { name: "Phoenix Baker", avatarUrl: "https://www.untitledui.com/images/avatars/phoenix-baker?fm=webp&q=80" }, tags: ["Product","Tools","SaaS"] },
-  { id: "3", title: "Building your API stack", summary: "The rise of RESTful APIs has been met by a rise in tools for creating, testing, and managing them.", href: "#", category: "Software Engineering", thumbnailUrl: "https://www.untitledui.com/blog/two-mobile-shapes-pattern.webp", publishedAt: "18 Jan 2025", author: { name: "Lana Steiner", avatarUrl: "https://www.untitledui.com/images/avatars/lana-steiner?fm=webp&q=80" }, tags: ["Software Development","Tools"] },
-  { id: "3.5", title: "Bill Walsh leadership lessons", summary: "Like to know the secrets of transforming a 2-14 team into a 3x Super Bowl winning Dynasty?", href: "#", category: "Product", thumbnailUrl: "https://www.untitledui.com/blog/two-people.webp", publishedAt: "17 Jan 2025", author: { name: "Alec Whitten", avatarUrl: "https://www.untitledui.com/images/avatars/alec-whitten?fm=webp&q=80" }, tags: ["Leadership","Management"] },
-  { id: "4", title: "PM mental models", summary: "Mental models are simple expressions of complex processes or relationships.", href: "#", category: "Product", thumbnailUrl: "https://www.untitledui.com/marketing/smiling-girl-6.webp", publishedAt: "16 Jan 2025", author: { name: "Demi Wilkinson", avatarUrl: "https://www.untitledui.com/images/avatars/demi-wilkinson?fm=webp&q=80" }, tags: ["Product","Research","Frameworks"] },
-  { id: "5", title: "What is wireframing?", summary: "Introduction to Wireframing and its Principles. Learn from the best in the industry.", href: "#", category: "Design", thumbnailUrl: "https://www.untitledui.com/marketing/wireframing-layout.webp", publishedAt: "15 Jan 2025", author: { name: "Candice Wu", avatarUrl: "https://www.untitledui.com/images/avatars/candice-wu?fm=webp&q=80" }, tags: ["Design","Research"] },
-  { id: "6", title: "How collaboration makes us better designers", summary: "Collaboration can make our teams stronger, and our individual designs better.", href: "#", category: "Design", thumbnailUrl: "https://www.untitledui.com/marketing/two-people.webp", publishedAt: "14 Jan 2025", author: { name: "Natali Craig", avatarUrl: "https://www.untitledui.com/images/avatars/natali-craig?fm=webp&q=80" }, tags: ["Design","Research"] },
-  { id: "7", title: "Our top 10 Javascript frameworks to use", summary: "JavaScript frameworks make development easy with extensive features and functionalities.", href: "#", category: "Product", thumbnailUrl: "https://www.untitledui.com/marketing/workspace-5.webp", publishedAt: "13 Jan 2025", author: { name: "Drew Cano", avatarUrl: "https://www.untitledui.com/images/avatars/drew-cano?fm=webp&q=80" }, tags: ["Software Development","Tools","SaaS"] },
-  { id: "8", title: "Podcast: Creating a better CX Community", summary: "Starting a community doesn't need to be complicated, but how do you get started?", href: "#", category: "Customer Success", thumbnailUrl: "https://www.untitledui.com/marketing/sythesize.webp", publishedAt: "12 Jan 2025", author: { name: "Orlando Diggs", avatarUrl: "https://www.untitledui.com/images/avatars/orlando-diggs?fm=webp&q=80" }, tags: ["Podcasts","Customer Success"] },
+  { id: "1", title: "5 Ways to Reduce Patient No-Shows Without Extra Staff", summary: "Automated reminders, turn alerts, and smart scheduling can dramatically reduce missed appointments. Here's how top clinics do it.", href: "#", category: "Clinic Operations", thumbnailUrl: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&q=80&auto=format&fit=crop", publishedAt: "22 Aug 2025", author: { name: "Olivia Rhye", avatarUrl: "https://www.untitledui.com/images/avatars/olivia-rhye?fm=webp&q=80" }, tags: ["Operations", "Patient Retention", "Scheduling"] },
+  { id: "2", title: "EMR vs Paper Records: Why Clinics Are Going Digital", summary: "Learn how electronic medical records improve accuracy, save time, and keep patient data secure and instantly accessible.", href: "#", category: "Technology", thumbnailUrl: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80&auto=format&fit=crop", publishedAt: "19 Aug 2025", author: { name: "Phoenix Baker", avatarUrl: "https://www.untitledui.com/images/avatars/phoenix-baker?fm=webp&q=80" }, tags: ["EMR", "Digital Health", "Clinic Software"] },
+  { id: "3", title: "The Complete Guide to Clinic Billing & GST Compliance", summary: "Simplify invoicing, track payments, and stay GST-compliant with modern billing workflows built for Indian clinics.", href: "#", category: "Billing & Finance", thumbnailUrl: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80&auto=format&fit=crop", publishedAt: "15 Aug 2025", author: { name: "Lana Steiner", avatarUrl: "https://www.untitledui.com/images/avatars/lana-steiner?fm=webp&q=80" }, tags: ["Billing", "GST", "Finance"] },
+  { id: "4", title: "Managing Your Clinic Queue: From Chaos to Real-Time Flow", summary: "Live queue counters and automatic turn alerts eliminate waiting-room confusion and keep patients informed on WhatsApp.", href: "#", category: "Clinic Operations", thumbnailUrl: "https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?w=800&q=80&auto=format&fit=crop", publishedAt: "12 Aug 2025", author: { name: "Alec Whitten", avatarUrl: "https://www.untitledui.com/images/avatars/alec-whitten?fm=webp&q=80" }, tags: ["Queue Management", "Operations"] },
+  { id: "5", title: "WhatsApp vs Phone Calls: What Patients Actually Prefer", summary: "Survey data from 500+ clinics shows why 78% of patients prefer WhatsApp booking over calling the front desk.", href: "#", category: "Patient Care", thumbnailUrl: "https://images.unsplash.com/photo-1584439375510-f1803a0d9ddb?w=800&q=80&auto=format&fit=crop", publishedAt: "08 Aug 2025", author: { name: "Demi Wilkinson", avatarUrl: "https://www.untitledui.com/images/avatars/demi-wilkinson?fm=webp&q=80" }, tags: ["WhatsApp", "Patient Experience", "Research"] },
+  { id: "6", title: "How to Choose the Right Clinic Management Software", summary: "From appointment scheduling to pharmacy and reports — a checklist for selecting software that actually fits your clinic.", href: "#", category: "Technology", thumbnailUrl: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80&auto=format&fit=crop", publishedAt: "04 Aug 2025", author: { name: "Candice Wu", avatarUrl: "https://www.untitledui.com/images/avatars/candice-wu?fm=webp&q=80" }, tags: ["Software", "Buyer's Guide"] },
+  { id: "7", title: "Prescription Management: Reduce Errors, Save Time", summary: "Digital prescriptions linked to your medicine database mean faster dispensing, fewer errors, and happier patients.", href: "#", category: "Patient Care", thumbnailUrl: "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=800&q=80&auto=format&fit=crop", publishedAt: "01 Aug 2025", author: { name: "Natali Craig", avatarUrl: "https://www.untitledui.com/images/avatars/natali-craig?fm=webp&q=80" }, tags: ["Prescriptions", "Pharmacy", "Safety"] },
+  { id: "8", title: "AI in Small Clinics: Practical Uses Beyond the Hype", summary: "You don't need an enterprise budget to use AI. See how small clinics use AI to answer patient queries 24/7 on WhatsApp.", href: "#", category: "Technology", thumbnailUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80&auto=format&fit=crop", publishedAt: "28 Jul 2025", author: { name: "Drew Cano", avatarUrl: "https://www.untitledui.com/images/avatars/drew-cano?fm=webp&q=80" }, tags: ["AI", "Automation", "WhatsApp"] },
+  { id: "9", title: "Building Patient Trust: Communication That Retains", summary: "From appointment confirmations to follow-up care — how consistent WhatsApp communication builds long-term patient loyalty.", href: "#", category: "Patient Care", thumbnailUrl: "https://images.unsplash.com/photo-1551601651-2a8555a104e2?w=800&q=80&auto=format&fit=crop", publishedAt: "24 Jul 2025", author: { name: "Orlando Diggs", avatarUrl: "https://www.untitledui.com/images/avatars/orlando-diggs?fm=webp&q=80" }, tags: ["Patient Retention", "Communication"] },
 ];
 
-const tabs = ["View all", "Design", "Product", "Software Engineering", "Customer Success"];
+const tabs = ["View all", "Clinic Operations", "Technology", "Patient Care", "Billing & Finance"];
 
 function BlogCard({ article }: { article: Article }) {
   return (
@@ -80,9 +80,9 @@ export default function BlogPage() {
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-7xl px-4 md:px-8">
           <div className="max-w-3xl">
-            <span className="text-sm font-semibold text-violet-600 md:text-base">Our blog</span>
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Resources and insights</h1>
-            <p className="mt-4 text-lg text-muted-foreground md:text-xl">The latest industry news, interviews, technologies, and resources.</p>
+            <span className="text-sm font-semibold text-violet-600 md:text-base">My Clinics Blog</span>
+            <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-5xl">Insights for modern clinics</h1>
+            <p className="mt-4 text-lg text-muted-foreground md:text-xl">Expert articles on clinic management, patient care, healthcare technology, and growing your practice.</p>
           </div>
         </div>
       </section>
@@ -145,6 +145,16 @@ export default function BlogPage() {
             <li key={a.id}><BlogCard article={a} /></li>
           ))}
         </ul>
+
+        {/* Newsletter CTA */}
+        <div className="rounded-2xl bg-violet-600 px-8 py-12 text-center md:py-16">
+          <h2 className="text-2xl font-semibold text-white md:text-3xl">Get clinic growth tips in your inbox</h2>
+          <p className="mx-auto mt-3 max-w-xl text-white/80">Join 2,000+ clinic owners receiving weekly insights on operations, patient care, and healthcare technology.</p>
+          <form className="mx-auto mt-6 flex max-w-md gap-2" onSubmit={e => e.preventDefault()}>
+            <input type="email" placeholder="Enter your email" className="flex-1 rounded-lg bg-white px-4 py-2.5 text-sm outline-none" />
+            <button type="submit" className="rounded-lg bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800">Subscribe</button>
+          </form>
+        </div>
 
         {/* Simple pagination */}
         <div className="flex items-center justify-center gap-2 border-t pt-8">
