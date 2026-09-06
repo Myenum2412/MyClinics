@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { RainbowButton } from "@/components/ui/rainbow-button";
 import { Separator } from "@/components/ui/separator";
+import { useScroll } from "@/hooks/use-scroll";
+import { cn } from "@/lib/utils";
 import {
   Sheet,
   SheetClose,
@@ -22,8 +24,14 @@ const navLinks = [
 ];
 
 export function SiteHeader() {
+  const scrolled = useScroll(10);
   return (
-    <header className="sticky top-0 z-50 flex h-16 w-full items-center border-b border-border bg-white px-6 text-black">
+    <header
+      className={cn(
+        "sticky top-0 z-50 flex h-16 w-full items-center border border-transparent bg-white px-6 text-black transition-all duration-300",
+        scrolled && "top-2 mx-auto max-w-3xl rounded-full border-border bg-white/95 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-white/80"
+      )}
+    >
       <Link href="/" className="flex shrink-0 items-center">
         <Image src="/logobg.png" alt="My Clinics" width={180} height={54} className="h-16 w-auto object-contain" priority />
       </Link>
