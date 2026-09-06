@@ -55,11 +55,11 @@ export function SiteHeader() {
           render={<Link href="/login" />}
           nativeButton={false}
           variant="ghost"
-          className="hidden sm:inline-flex text-black hover:text-black"
+          className={cn("hidden sm:inline-flex text-black hover:text-black transition-all", scrolled && "hidden sm:hidden")}
         >
           Sign In
         </Button>
-        <Separator orientation="vertical" className="hidden h-5 sm:block" />
+        <Separator orientation="vertical" className={cn("hidden h-5 sm:block", scrolled && "hidden sm:hidden")} />
         <RainbowButton className="hidden sm:inline-flex" style={{ "--color-1": "#E3F2FD", "--color-2": "#90CAF9", "--color-3": "#E3F2FD", "--color-4": "#90CAF9", "--color-5": "#E3F2FD" } as React.CSSProperties}>
           <Link href="/login" className="flex items-center gap-1.5 text-white">
             Start Free Trial <ArrowRight className="text-white" data-icon="inline-end" aria-hidden="true" />
