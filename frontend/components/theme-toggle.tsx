@@ -40,7 +40,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       } catch {}
     }
     check()
-    const id = setInterval(check, 30000)
+    const id = setInterval(check, 5000)
     return () => { cancelled = true; clearInterval(id) }
   }, [])
 
