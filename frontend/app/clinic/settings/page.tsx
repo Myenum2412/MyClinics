@@ -116,7 +116,9 @@ export default function SettingsPage() {
     try {
       const res = await getClinicWhatsappSession(clinicId);
       setWaSession(res);
-    } catch {
+      if (process.env.NODE_ENV !== "production") console.log("[WA]", res.stage, !!res.qr);
+    } catch (e) {
+      console.error("[WA] poll failed", e);
       setWaSession(null);
     } finally {
       setWaLoading(false);
@@ -415,7 +417,10 @@ export default function SettingsPage() {
                     <div className="flex size-[264px] items-center justify-center rounded-lg border border-dashed border-border bg-muted/20">
                       <span className="size-6 animate-spin rounded-full border-2 border-primary/30 border-t-primary inline-block" />
                     </div>
-                    <p className="text-sm text-muted-foreground">Generating QR…</p>
+                    <p className="text-sm text-muted-foreground">
+                      {stage === "idle" ? "Starting browser… (10-15s)" : stage === "error" ? "Retrying…" : "Generating QR…"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">If QR never appears, worker is down — SSH EC2: `pm2 status` then `pm2 logs myclinic-whatsapp --lines 80`</p>
                     {canEdit && (
                       <Button type="button" disabled={waAction !== null} onClick={() => void handleConnect()}>
                         {waAction === "connect" ? "Starting…" : "Generate QR"}
