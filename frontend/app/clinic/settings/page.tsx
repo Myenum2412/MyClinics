@@ -399,41 +399,16 @@ export default function SettingsPage() {
                     )}
                   </>
                 ) : (
-                  <div className="flex flex-col items-center gap-3 py-8">
-                    <span className="flex size-14 items-center justify-center rounded-full bg-warning/10 text-2xl">
-                      {stage === "idle" || stage === "authenticated" ? "⏳" : "⚠️"}
-                    </span>
-                    <p className="font-medium text-warning">
-                      {STAGE_LABEL[stage] ?? "WhatsApp unavailable"}
-                    </p>
-                    <p className="max-w-sm text-sm text-muted-foreground">
-                      {waSession === null
-                        ? "The status service is not reachable right now. The WhatsApp worker may be down — check pm2 status on the server (myclinic-whatsapp), then reload this page."
-                        : stage === "error"
-                          ? "If your phone showed 'Can't Link New Devices right now': WhatsApp allows max 4 linked devices. Remove one (WhatsApp → Settings → Linked devices), update WhatsApp to latest, wait 1 minute, then click Connect again and scan the fresh QR within 20 seconds."
-                          : stage === "unconfigured" || stage === "disconnected"
-                            ? "Link this clinic's own WhatsApp number to send appointment reminders and patient notifications from it. Each clinic connects its own number separately — this QR is unique to the current clinic."
-                            : stage === "idle"
-                              ? "Starting WhatsApp for this clinic… QR will appear shortly. Each clinic connects separately — this QR is only for the current clinic. If QR doesn't appear in 20s, click Retry Connect."
-                              : stage === "authenticated"
-                                ? "Authenticated for this clinic — preparing WhatsApp…"
-                                : "Make sure the WhatsApp worker is running on the server (pm2: myclinic-whatsapp) and a Chromium browser is available."}
-                    </p>
-                    {(stage === "idle" || stage === "authenticated") && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="size-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary inline-block" />
-                        Waiting for this clinic's QR…
-                      </div>
+                  <div className="flex flex-col items-center gap-4 py-4">
+                    <div className="flex size-[264px] items-center justify-center rounded-lg border border-dashed border-border bg-muted/20">
+                      <span className="size-6 animate-spin rounded-full border-2 border-primary/30 border-t-primary inline-block" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Generating QR…</p>
+                    {canEdit && (
+                      <Button type="button" disabled={waAction !== null} onClick={() => void handleConnect()}>
+                        {waAction === "connect" ? "Starting…" : "Generate QR"}
+                      </Button>
                     )}
-                    {canEdit &&
-                      (stage === "unconfigured" ||
-                        stage === "disconnected" ||
-                        stage === "error" ||
-                        stage === "idle") && (
-                        <Button type="button" disabled={waAction !== null} onClick={() => void handleConnect()}>
-                          {waAction === "connect" ? "Starting…" : stage === "idle" ? "Retry Connect" : "Connect WhatsApp"}
-                        </Button>
-                      )}
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">
