@@ -36,7 +36,7 @@ import {
   QrCode,
 } from "lucide-react";
 
-const WHATSAPP_POLL_MS = 2_000;
+const WHATSAPP_POLL_MS = 1_000;
 
 /** Deep links that open the saved UPI ID in the user's payment app. */
 function upiAppLinks(upiId: string): { label: string; href: string }[] {
@@ -152,7 +152,7 @@ export default function SettingsPage() {
     // Auto-retry if stuck on idle/qr-less for >12s (worker may have not emitted qr yet)
     if (hasQr || waSession?.connected) return;
     if (s === "idle" || s === "unconfigured" || s === "disconnected" || s === "error") {
-      if (Date.now() - lastConnectAt.current > 12_000 && waAction === null) {
+      if (Date.now() - lastConnectAt.current > 6_000 && waAction === null) {
         lastConnectAt.current = Date.now();
         void handleConnect();
       }
