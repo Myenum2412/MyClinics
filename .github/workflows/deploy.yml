@@ -1,7 +1,8 @@
-name: Auto Deploy
+name: Auto Deploy (Vercel + AWS)
 on:
   push:
     branches: [main]
+
 jobs:
   vercel:
     runs-on: ubuntu-latest
@@ -13,18 +14,60 @@ jobs:
           vercel-org-id: team_dc7W4dvpm5VOkH4vHgVrIc9F
           vercel-project-id: prj_xdBCIcujyZxESXuPdscb9yemKvOv
           vercel-args: --prod
-  backend:
+
+  backend-aws:
     runs-on: ubuntu-latest
-    if: ${{ secrets.EC2_HOST != '' }}
+    # Runs via AWS SSM — no inbound SSH needed, uses IAM role on EC2
+    if: ${{ secrets.AWS_ROLE_TO_ASSUME != '' || secrets.AWS_ACCESS_KEY_ID != '' }}
+    permissions:
+      id-token: write
+      contents: read
     steps:
-      - name: Deploy backend to EC2
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION || 'ap-southeast-2' }}
+
+      - name: Deploy backend via SSM
+        run: |
+          INSTANCE_ID=${{ secrets.AWS_EC2_INSTANCE_ID }}
+          # Fallback: resolve instance ID from IP if not set
+          if [ -z "$INSTANCE_ID" ]; then
+            INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=ip-address,Values=${{ secrets.EC2_HOST }}" --query "Reservations[0].Instances[0].InstanceId" --output text)
+          fi
+          echo "Deploying to $INSTANCE_ID"
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=[
+              "cd /home/ubuntu/myclinics-backend 2>/dev/null || cd ~/MyClinics",
+              "git pull origin main",
+              "npm ci --prefix backend || npm install --prefix backend",
+              "pm2 restart myclinic-api myclinic-whatsapp --update-env || pm2 restart all",
+              "pm2 save",
+              "pm2 status"
+            ]' \
+            --query "Command.CommandId" --output text)
+          echo "SSM CommandId: $CMD_ID"
+          aws ssm wait command-executed --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" || true
+          aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" --query "StandardOutputContent" --output text | tail -n 100
+
+  backend-ssh-fallback:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.EC2_HOST != '' && secrets.AWS_ROLE_TO_ASSUME == '' && secrets.AWS_ACCESS_KEY_ID == '' }}
+    steps:
+      - name: Deploy backend via SSH (fallback)
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          username: ${{ secrets.EC2_USER || 'ubuntu' }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/myclinics-backend || cd ~/MyClinics
+            cd /home/ubuntu/myclinics-backend 2>/dev/null || cd ~/MyClinics
             git pull origin main
             npm ci --prefix backend || npm install --prefix backend
             pm2 restart myclinic-api myclinic-whatsapp --update-env || pm2 restart all
