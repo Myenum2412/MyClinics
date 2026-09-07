@@ -133,17 +133,29 @@ export default function SettingsPage() {
     return () => clearInterval(timer);
   }, [pollWhatsapp, session?.clinicId]);
 
-  // Auto-show QR: if clinic has no whatsapp session (unconfigured/disconnected), auto-trigger connect once
+  // Auto-show QR: if clinic has no whatsapp session (unconfigured/disconnected), auto-trigger connect
   const autoConnectTried = useRef(false);
+  const lastConnectAt = useRef(0);
   useEffect(() => {
     if (!session?.clinicId || !canEdit || waLoading) return;
-    if (autoConnectTried.current) return;
     const s = waSession?.stage;
-    if (s === "unconfigured" || s === "disconnected") {
+    const hasQr = !!waSession?.qr;
+    // First try
+    if (!autoConnectTried.current && (s === "unconfigured" || s === "disconnected")) {
       autoConnectTried.current = true;
+      lastConnectAt.current = Date.now();
       void handleConnect();
+      return;
     }
-  }, [session?.clinicId, canEdit, waLoading, waSession?.stage]);
+    // Auto-retry if stuck on idle/qr-less for >12s (worker may have not emitted qr yet)
+    if (hasQr || waSession?.connected) return;
+    if (s === "idle" || s === "unconfigured" || s === "disconnected" || s === "error") {
+      if (Date.now() - lastConnectAt.current > 12_000 && waAction === null) {
+        lastConnectAt.current = Date.now();
+        void handleConnect();
+      }
+    }
+  }, [session?.clinicId, canEdit, waLoading, waSession?.stage, waSession?.qr, waAction]);
 
   async function handleConnect() {
     if (!session?.clinicId) return;
