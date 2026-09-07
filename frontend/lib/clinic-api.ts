@@ -705,13 +705,24 @@ export async function login(input: {
 }
 
 export async function logout(): Promise<void> {
-  const token = getStoredToken();
+  // Always hit backend to clear httpOnly cookies (Domain=.myenum.in); inMemoryToken may be null after reload
   try {
-    if (token) await request("/api/clinics/auth/logout", { method: "POST" });
+    await request("/api/clinics/auth/logout", { method: "POST" });
   } catch {
-    // server-side logout is best-effort (audit only)
+    // best-effort — also try without auth if first fails
+    try {
+      await fetch("/api/clinics/auth/logout", { method: "POST", credentials: "include", cache: "no-store" });
+    } catch {}
   }
   clearSession();
+  // Also clear httpOnly cookies via JS-accessible max-age=0 for .myenum.in (fallback if fetch failed)
+  if (typeof document !== "undefined") {
+    const expires = "expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    for (const name of [CLINIC_TOKEN_KEY, "clinic_csrf"]) {
+      document.cookie = `${name}=; Path=/; ${expires}; SameSite=Lax`;
+      document.cookie = `${name}=; Path=/; Domain=.myenum.in; ${expires}; SameSite=Lax; Secure`;
+    }
+  }
 }
 
 export async function fetchMe(): Promise<ClinicSession> {

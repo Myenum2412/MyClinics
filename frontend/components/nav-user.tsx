@@ -51,6 +51,7 @@ export function NavUser({
   const handleLogout = async () => {
     await logout()
     router.replace("/login")
+    router.refresh()
   }
 
   const avatar = clinicId ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import {
@@ -132,6 +132,18 @@ export default function SettingsPage() {
     }, WHATSAPP_POLL_MS);
     return () => clearInterval(timer);
   }, [pollWhatsapp, session?.clinicId]);
+
+  // Auto-show QR: if clinic has no whatsapp session (unconfigured/disconnected), auto-trigger connect once
+  const autoConnectTried = useRef(false);
+  useEffect(() => {
+    if (!session?.clinicId || !canEdit || waLoading) return;
+    if (autoConnectTried.current) return;
+    const s = waSession?.stage;
+    if (s === "unconfigured" || s === "disconnected") {
+      autoConnectTried.current = true;
+      void handleConnect();
+    }
+  }, [session?.clinicId, canEdit, waLoading, waSession?.stage]);
 
   async function handleConnect() {
     if (!session?.clinicId) return;
