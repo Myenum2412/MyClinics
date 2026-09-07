@@ -181,6 +181,10 @@ function wireEvents(db: Db, session: ManagedSession): void {
     setSessionStage(clinicId, "disconnected");
     logger.warn("clinic whatsapp disconnected", { clinicId, reason: String(reason) });
     void upsertSessionConfig(db, clinicId, { lastDisconnectedAt: nowFn() }).catch(() => {});
+    if (String(reason) === "LOGOUT") {
+      logger.info("clinic whatsapp logged out - waiting for manual reconnect", { clinicId });
+      return;
+    }
     scheduleReconnect(db, session);
   });
 
