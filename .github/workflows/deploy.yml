@@ -1,0 +1,31 @@
+name: Auto Deploy
+on:
+  push:
+    branches: [main]
+jobs:
+  vercel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: team_dc7W4dvpm5VOkH4vHgVrIc9F
+          vercel-project-id: prj_xdBCIcujyZxESXuPdscb9yemKvOv
+          vercel-args: --prod
+  backend:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.EC2_HOST != '' }}
+    steps:
+      - name: Deploy backend to EC2
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/myclinics-backend || cd ~/MyClinics
+            git pull origin main
+            npm ci --prefix backend || npm install --prefix backend
+            pm2 restart myclinic-api myclinic-whatsapp --update-env || pm2 restart all
+            pm2 save
