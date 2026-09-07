@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getSession, getStoredToken } from "@/lib/clinic-api"
+import { getClinicWhatsappSession, getSession } from "@/lib/clinic-api"
 
 function WhatsAppIcon({ connected }: { connected: boolean }) {
   return (
@@ -20,22 +20,11 @@ export function ThemeToggle({ className }: { className?: string }) {
       try {
         const clinicId = getSession()?.clinicId ?? null
         if (!clinicId) return
-        const base = process.env.NEXT_PUBLIC_API_URL || ""
-        const token = getStoredToken()
-        const headers: Record<string,string> = {}
-        if (token) headers["Authorization"] = `Bearer ${token}`
-        const res = await fetch(`${base}/api/clinics/${clinicId}/whatsapp/session`, { cache: "no-store", headers })
-        if (!res.ok) return
-        const data = await res.json()
-        // supports both /api/whatsapp/session {session:{status}} and /api/clinics/:id/whatsapp/session {connected, stage}
+        const data = await getClinicWhatsappSession(clinicId)
         const isConnected =
           data?.connected === true ||
-          data?.session?.connected === true ||
           data?.stage === "ready" ||
-          data?.stage === "authenticated" ||
-          data?.session?.stage === "ready" ||
-          ["connected", "open", "ready", "authenticated"].includes(data?.status) ||
-          ["connected", "open", "ready", "authenticated"].includes(data?.session?.status)
+          data?.stage === "authenticated"
         if (!cancelled) setConnected(isConnected)
       } catch {}
     }
