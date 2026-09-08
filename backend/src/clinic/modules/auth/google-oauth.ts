@@ -93,7 +93,8 @@ export async function issueStateToken(from: "login" | "signup" = "login"): Promi
       if (entry.exp < now) pendingStates.delete(key);
     }
   }
-  await persistState(state, from, verifier);
+  // Don't block redirect to Google on DB write - persist in background
+  void persistState(state, from, verifier);
   return state;
 }
 
@@ -240,6 +241,7 @@ export async function exchangeCodeForTokens(
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: body.toString(),
+    signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) {
     throw new Error(`Google token exchange failed (${res.status})`);
@@ -256,6 +258,7 @@ export async function fetchGoogleUserInfo(
 ): Promise<GoogleUserInfo> {
   const res = await fetch(GOOGLE_USERINFO_URL, {
     headers: { Authorization: `Bearer ${accessToken}` },
+    signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) {
     throw new Error(`Google userinfo failed (${res.status})`);
