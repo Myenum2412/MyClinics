@@ -6,6 +6,9 @@ on:
 jobs:
   vercel:
     runs-on: ubuntu-latest
+    # Skipped if VERCEL_TOKEN missing — project already auto-deploys via Vercel's native GitHub integration (see Vercel Dashboard → Settings → Git)
+    # Keep this job only if you need a custom CLI deploy; otherwise native integration handles `push to main → prod deploy`.
+    if: ${{ secrets.VERCEL_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: amondnet/vercel-action@v25
