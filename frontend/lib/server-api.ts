@@ -27,6 +27,8 @@ export async function apiFetch<T = { error?: string }>(
       ...(cookie ? { cookie } : {}),
     },
     cache: "no-store",
+    // Prevent hanging if backend is cold/down - let pages render with fallback
+    signal: init?.signal ?? AbortSignal.timeout(2000),
   });
   let data: T;
   try {

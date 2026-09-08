@@ -8,9 +8,12 @@ import { DEFAULT_CLINIC_NAME } from "@/lib/clinic-name-client";
  */
 export const getClinicName = cache(async (): Promise<string> => {
   try {
-    const res = await apiFetch<{ company?: { name?: string | null } }>(
-      "/api/organization"
-    );
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 1500);
+    const res = await apiFetch<{ company?: { name?: string | null } }>("/api/organization", {
+      signal: controller.signal,
+    });
+    clearTimeout(t);
     const name = res.data?.company?.name?.trim();
     if (name) return name;
   } catch {

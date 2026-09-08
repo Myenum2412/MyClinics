@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { LoginForm } from "@/components/login-form";
-import { getClinicName } from "@/lib/clinic-name";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -15,7 +14,8 @@ export default async function LoginPage({
   searchParams: Promise<{ callbackUrl?: string }>;
 }) {
   const { callbackUrl } = await searchParams;
-  const clinicName = await getClinicName();
+  // Don't block render on backend fetch - use instant fallback, LoginForm hydrates real name client-side
+  const clinicName = process.env.ORG_NAME?.trim() || "My Clinic";
 
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden p-6 md:p-10 bg-slate-50">
