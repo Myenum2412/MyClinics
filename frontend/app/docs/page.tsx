@@ -13,32 +13,34 @@ const sections = [
     id: "overview",
     title: "Overview",
     body: [
-      "Creating an account on My Clinics takes less than a minute. Whether you are a clinic owner setting up your practice or a patient booking care, the same simple flow gets you started.",
-      "This guide walks through each step — from signing up to verifying your details — so you can start booking or managing appointments right away.",
+      "Think of your My Clinics account as your front desk — patients use it to book visits, clinics use it to run the day. Creating one takes less than a minute and you only do it once.",
+      "Below is how to create your account in plain language, and how the system works behind the scenes to keep your bookings and records in one place.",
     ],
   },
   {
-    id: "clinic-signup",
-    title: "Create a clinic account",
+    id: "how-to-create",
+    title: "How to create your account",
     body: [
-      "Go to the homepage and click Create Account or Sign Up. Enter your clinic name, your name, email, and a password. Optionally add your clinic phone number.",
-      "After submitting, you will be signed in automatically. Complete your clinic profile by adding address, doctors, and departments so patients can find and book you.",
+      "1. Open My Clinics and click Create Account. Type your clinic name (if you run a clinic), your full name, email, and choose a password. You can also tap Continue with Google to sign up instantly.",
+      "2. Click Sign Up. You will be signed in right away — no waiting for an email. If you added a phone number, we use it only to send appointment reminders and WhatsApp updates.",
+      "3. For patients: you can also create an account the first time you book. Just enter your name, phone, and email while booking — we create your profile automatically.",
     ],
   },
   {
-    id: "patient-signup",
-    title: "Create a patient account",
+    id: "how-it-works",
+    title: "How it works (in human language)",
     body: [
-      "Patients are created when you book for the first time or via the patient portal sign-up. Provide your name, phone number, and email to create your profile.",
-      "Your appointments, prescriptions, and medical records will be linked to this account so you can access them anytime.",
+      "Once your account is created, My Clinics remembers who you are. When a patient books, we save the date, time, and doctor in one calendar so the clinic sees it instantly and the patient gets a confirmation.",
+      "Your appointments, prescriptions, medical files, and bills are all linked to your account — like a folder with your name on it. When you sign in, you open that folder and everything is there. Clinics see only their own patients, patients see only their own records.",
+      "If you forget your password, tap Forgot Password and we send a reset link to your email. Signing in with Google works the same way — we just ask Google to confirm it is you, so you do not need a new password.",
     ],
   },
   {
-    id: "verify",
-    title: "Verify and sign in",
+    id: "next-steps",
+    title: "What to do next",
     body: [
-      "Use your email and password to sign in on the Login page. You can also continue with Google for faster access.",
-      "If you forget your password, use Forgot Password to reset it via email. Once signed in, you can book appointments, manage your clinic, or view your health records without signing in again.",
+      "Clinic owners: add your address, doctors, and working hours in the dashboard so patients can find you and book online or on WhatsApp.",
+      "Patients: try booking a test appointment — pick a doctor, choose a time, and you will see the confirmation and a reminder before your visit.",
     ],
   },
 ];
