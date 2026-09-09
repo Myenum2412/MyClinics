@@ -14,6 +14,11 @@ export default function Page() {
           <li>Link WhatsApp in Settings → WhatsApp by scanning the QR code.</li><li>Patients message 'Need appointment tomorrow morning' on WhatsApp — the assistant checks free slots and suggests times.</li><li>Patient confirms → appointment is created automatically with token and reminder — front desk that never sleeps.</li>
         </ol>
       </div>
+      <div className="mt-6 rounded-lg border p-5">
+        <p className="text-sm font-semibold">Detailed Example</p>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Follow the steps above with real data. For instance, if you create a new entry, fill all required fields, double-check the details, then save. You will see a success message and the new item appears in the list immediately. Try editing it — the change is logged and visible to your team right away. If something looks wrong, use the history or audit trail to review what changed and when.</p>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Tip: use the search and filters at the top of the list to find your new entry quickly. Everything you create is scoped to your clinic — other clinics never see it.</p>
+      </div>
       <div className="mt-6 rounded-lg border bg-muted/30 px-4 py-3 text-sm">
         <span className="font-semibold">How it works:</span> Everything is saved to your clinic workspace instantly. You see only your clinic data, and each role (patient, doctor, admin) sees only what they are allowed to — like separate locked drawers.
       </div>
