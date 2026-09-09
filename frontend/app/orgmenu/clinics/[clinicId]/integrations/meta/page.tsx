@@ -138,7 +138,19 @@ export default function MetaIntegrationPage() {
         appSecret: effectiveAppSecret || undefined,
         redirectUri: redirectUri.trim() || undefined,
       });
-      window.open(authUrl, "metaOAuth", "width=600,height=800");
+      const popup = window.open(authUrl, "metaOAuth", "width=600,height=800");
+      // Poll for popup close — handles OAuth completing in popup that redirects opener
+      if (popup) {
+        const timer = setInterval(async () => {
+          if (popup.closed) {
+            clearInterval(timer);
+            await load();
+          }
+        }, 800);
+        setTimeout(() => clearInterval(timer), 120_000);
+        // Also listen for message/redirect from opener navigation
+        window.addEventListener("focus", () => { void load(); }, { once: true });
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to start Meta connection";
       if (msg.includes("not configured")) {
@@ -156,7 +168,11 @@ export default function MetaIntegrationPage() {
     try {
       setBusy(true);
       const { authUrl } = await reconnectMeta(clinicId);
-      window.open(authUrl, "metaOAuth", "width=600,height=800");
+      const popup2 = window.open(authUrl, "metaOAuth", "width=600,height=800");
+      if (popup2) {
+        const t = setInterval(async () => { if (popup2.closed) { clearInterval(t); await load(); } }, 800);
+        setTimeout(() => clearInterval(t), 120_000);
+      }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to reconnect Meta");
     } finally {

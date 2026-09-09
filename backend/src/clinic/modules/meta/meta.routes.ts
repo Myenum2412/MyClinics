@@ -124,8 +124,13 @@ export function registerPublicMetaRoutes(app: FastifyInstance): void {
     const auth = new MetaAuthService(db);
     const result = await auth.handleCallback(query.code, query.state);
     const frontend = process.env.FRONTEND_URL?.replace(/\/$/, "") || "http://localhost:3456";
-    return reply.redirect(
-      `${frontend}/orgmenu/clinics/${result.clinicId}?meta=connected`
+    const target = `${frontend}/orgmenu/clinics/${result.clinicId}/integrations/meta?meta=connected`;
+    // If opened as popup (window.open), notify opener and close; otherwise redirect.
+    return reply.type("text/html").send(
+      `<html><body><script>
+        try { if (window.opener) { window.opener.location.href = ${JSON.stringify(target)}; window.opener.focus(); } } catch(e) {}
+        if (window.opener) window.close(); else window.location.href = ${JSON.stringify(target)};
+      </script><p>Meta connected — <a href="${target}">continue</a></p></body></html>`
     );
   });
 
