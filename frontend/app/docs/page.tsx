@@ -16,6 +16,16 @@ const toc = [
 export default function DocsPage() {
   return (
     <div className="flex">
+      <aside className="hidden w-52 shrink-0 p-6 lg:block">
+        <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground">On This Page</p>
+        <nav className="mt-3 flex flex-col gap-2 border-l pl-4 text-sm">
+          {toc.map((i) => (
+            <a key={i.id} href={`#${i.id}`} className="text-muted-foreground hover:text-foreground">
+              {i.title}
+            </a>
+          ))}
+        </nav>
+      </aside>
       <main className="min-w-0 flex-1 px-6 py-10 lg:px-10">
           <p className="text-sm font-medium text-primary">Get started with My Clinics</p>
           <h1 className="mt-2 font-heading text-4xl font-bold tracking-tight">Quickstart</h1>
@@ -112,16 +122,6 @@ export default function DocsPage() {
             </ul>
           </section>
       </main>
-      <aside className="hidden w-52 shrink-0 p-6 lg:block">
-        <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground">On This Page</p>
-        <nav className="mt-3 flex flex-col gap-2 border-l pl-4 text-sm">
-          {toc.map((i) => (
-            <a key={i.id} href={`#${i.id}`} className="text-muted-foreground hover:text-foreground">
-              {i.title}
-            </a>
-          ))}
-        </nav>
-      </aside>
     </div>
   );
 }
