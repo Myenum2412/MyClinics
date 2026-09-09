@@ -124,4 +124,5 @@ export default function DocsPage() {
       </aside>
     </div>
   );
+}
 
