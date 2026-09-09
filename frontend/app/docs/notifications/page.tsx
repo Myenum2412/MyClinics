@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Notifications — My Clinics Docs",
-  description: "Stay updated with alerts and reminders.",
+  description: "Alerts for bookings, cancellations, and system events.",
 };
 export default function Page() {
   return (
     <div className="px-6 py-10 lg:px-10">
       <h1 className="font-heading text-3xl font-bold tracking-tight">Notifications</h1>
-      <p className="mt-3 max-w-2xl text-muted-foreground">Stay updated with alerts and reminders.</p>
-      <div className="mt-6 rounded-lg border bg-muted/30 p-5">
-        <p className="text-sm font-semibold">Purpose</p>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">System alerts for bookings, cancellations, and WhatsApp status. Example: 'New appointment — Riya at 10 AM'. Purpose: never miss a change.</p>
+      <p className="mt-3 max-w-2xl text-muted-foreground">Alerts for bookings, cancellations, and system events.</p>
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold">How to create / use Notifications</h2>
+        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-foreground/90">
+          <li>Open Notifications from the sidebar — see unread alerts like 'New appointment — Riya at 10 AM'.</li><li>Click an alert to jump to the related appointment or patient.</li><li>Mark as read or clear — never miss a change.</li>
+        </ol>
       </div>
-      <div className="mt-6 rounded-lg border p-5">
-        <p className="text-sm font-semibold">Example</p>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground"> 'New appointment — Riya at 10 AM'. Purpose: never miss a change.</p>
+      <div className="mt-6 rounded-lg border bg-muted/30 px-4 py-3 text-sm">
+        <span className="font-semibold">How it works:</span> Everything is saved to your clinic workspace instantly. You see only your clinic data, and each role (patient, doctor, admin) sees only what they are allowed to — like separate locked drawers.
       </div>
-      <p className="mt-6 text-sm text-muted-foreground">How it works: open this page from the app sidebar — Notifications — and you will see the data for your clinic only. Everything is saved instantly and appears for the right role (patient, doctor, admin).</p>
+      <div className="mt-4 rounded-lg border px-4 py-3 text-sm">
+        <span className="font-semibold">Tip:</span> Open this from the app sidebar → Notifications. If you do not see it, your role may not have access — ask your clinic admin.
+      </div>
     </div>
   );
 }

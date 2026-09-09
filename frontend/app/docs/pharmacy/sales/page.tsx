@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Sales — My Clinics Docs",
-  description: "Dispense medicines and record sales.",
+  description: "Dispense medicines and auto-update stock.",
 };
 export default function Page() {
   return (
     <div className="px-6 py-10 lg:px-10">
       <h1 className="font-heading text-3xl font-bold tracking-tight">Sales</h1>
-      <p className="mt-3 max-w-2xl text-muted-foreground">Dispense medicines and record sales.</p>
-      <div className="mt-6 rounded-lg border bg-muted/30 p-5">
-        <p className="text-sm font-semibold">Purpose</p>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">Sell medicines to patients and update stock automatically. Example: sale of 2 strips → stock reduces, bill generated. Purpose: link sales to billing.</p>
+      <p className="mt-3 max-w-2xl text-muted-foreground">Dispense medicines and auto-update stock.</p>
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold">How to create / use Sales</h2>
+        <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-foreground/90">
+          <li>Open Sales → New Sale → select patient/medicines and quantity.</li><li>Confirm — stock reduces instantly, bill is generated and linked to the patient.</li><li>Example: sale of 2 strips → stock 100→98, bill created.</li>
+        </ol>
       </div>
-      <div className="mt-6 rounded-lg border p-5">
-        <p className="text-sm font-semibold">Example</p>
-        <p className="mt-1 text-sm leading-relaxed text-muted-foreground"> sale of 2 strips → stock reduces, bill generated. Purpose: link sales to billing.</p>
+      <div className="mt-6 rounded-lg border bg-muted/30 px-4 py-3 text-sm">
+        <span className="font-semibold">How it works:</span> Everything is saved to your clinic workspace instantly. You see only your clinic data, and each role (patient, doctor, admin) sees only what they are allowed to — like separate locked drawers.
       </div>
-      <p className="mt-6 text-sm text-muted-foreground">How it works: open this page from the app sidebar — Sales — and you will see the data for your clinic only. Everything is saved instantly and appears for the right role (patient, doctor, admin).</p>
+      <div className="mt-4 rounded-lg border px-4 py-3 text-sm">
+        <span className="font-semibold">Tip:</span> Open this from the app sidebar → Sales. If you do not see it, your role may not have access — ask your clinic admin.
+      </div>
     </div>
   );
 }
