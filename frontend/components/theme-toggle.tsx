@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getClinicWhatsappSession, getSession } from "@/lib/clinic-api"
+import { ensureSession, getClinicWhatsappSession } from "@/lib/clinic-api"
 
 function WhatsAppIcon({ connected }: { connected: boolean }) {
   return (
@@ -18,7 +18,8 @@ export function ThemeToggle({ className }: { className?: string }) {
     let cancelled = false
     async function check() {
       try {
-        const clinicId = getSession()?.clinicId ?? null
+        const session = await ensureSession()
+        const clinicId = session?.clinicId ?? null
         if (!clinicId) return
         const data = await getClinicWhatsappSession(clinicId)
         const isConnected =
