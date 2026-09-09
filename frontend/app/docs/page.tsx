@@ -1,90 +1,149 @@
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import type { Metadata } from "next";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "How to Create an Account — My Clinics Docs",
-  description: "Step-by-step guide to creating your My Clinics account — sign up as a clinic or patient, verify your details, and get started in under a minute.",
+  title: "Quickstart — My Clinics Docs",
+  description: "Get started with My Clinics — create your clinic or patient account in under a minute and start booking appointments.",
 };
 
-const sections = [
-  {
-    id: "overview",
-    title: "Overview",
-    body: [
-      "Think of your My Clinics account as your front desk — patients use it to book visits, clinics use it to run the day. Creating one takes less than a minute and you only do it once.",
-      "Below is how to create your account in plain language, and how the system works behind the scenes to keep your bookings and records in one place.",
-    ],
-  },
-  {
-    id: "how-to-create",
-    title: "How to create your account",
-    body: [
-      "1. Open My Clinics and click Create Account. Type your clinic name (if you run a clinic), your full name, email, and choose a password. You can also tap Continue with Google to sign up instantly.",
-      "2. Click Sign Up. You will be signed in right away — no waiting for an email. If you added a phone number, we use it only to send appointment reminders and WhatsApp updates.",
-      "3. For patients: you can also create an account the first time you book. Just enter your name, phone, and email while booking — we create your profile automatically.",
-    ],
-  },
-  {
-    id: "how-it-works",
-    title: "How it works (in human language)",
-    body: [
-      "Once your account is created, My Clinics remembers who you are. When a patient books, we save the date, time, and doctor in one calendar so the clinic sees it instantly and the patient gets a confirmation.",
-      "Your appointments, prescriptions, medical files, and bills are all linked to your account — like a folder with your name on it. When you sign in, you open that folder and everything is there. Clinics see only their own patients, patients see only their own records.",
-      "If you forget your password, tap Forgot Password and we send a reset link to your email. Signing in with Google works the same way — we just ask Google to confirm it is you, so you do not need a new password.",
-    ],
-  },
-  {
-    id: "next-steps",
-    title: "What to do next",
-    body: [
-      "Clinic owners: add your address, doctors, and working hours in the dashboard so patients can find you and book online or on WhatsApp.",
-      "Patients: try booking a test appointment — pick a doctor, choose a time, and you will see the confirmation and a reminder before your visit.",
-    ],
-  },
+const toc = [
+  { id: "overview", title: "Overview" },
+  { id: "ways-to-start", title: "Ways to get started" },
+  { id: "clinic-account", title: "Create a clinic account" },
+  { id: "patient-account", title: "Create a patient account" },
+  { id: "what-happens-next", title: "What happens next" },
 ];
 
 export default function DocsPage() {
   return (
     <div className="flex min-h-svh flex-col">
       <SiteHeader />
-      <main className="flex-1">
-        <section className="mx-auto w-full max-w-4xl px-6 py-16">
-          <Badge variant="secondary" className="mb-4">
-            Docs
-          </Badge>
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-balance">
-            How to create an account
-          </h1>
-          <p className="mt-3 max-w-2xl text-muted-foreground">Get started with My Clinics in under a minute.</p>
+      <div className="mx-auto flex w-full max-w-7xl flex-1">
+        {/* Left nav - like openrouter */}
+        <aside className="hidden w-64 shrink-0 border-r bg-muted/20 p-6 md:block">
+          <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">Documentation</p>
+          <nav className="mt-4 flex flex-col gap-1 text-sm">
+            <Link href="/docs" className="rounded-md bg-accent px-3 py-2 font-medium">
+              Quickstart
+            </Link>
+            <span className="px-3 py-1 text-muted-foreground">How to create an account</span>
+            <span className="px-3 py-1 text-muted-foreground">Booking appointments</span>
+            <span className="px-3 py-1 text-muted-foreground">WhatsApp booking</span>
+          </nav>
+        </aside>
 
-          <div className="mt-10 flex flex-col gap-10 md:flex-row md:gap-12">
-            <aside className="hidden w-52 shrink-0 md:block">
-              <p className="mb-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">On This Page</p>
-              <nav className="flex flex-col border-l border-border">
-                {sections.map((s) => (
-                  <a key={s.id} href={`#${s.id}`} className="-ml-px border-l border-transparent py-1.5 pl-4 text-sm text-muted-foreground hover:text-foreground">
-                    {s.title}
-                  </a>
-                ))}
-              </nav>
-            </aside>
-            <div className="flex min-w-0 flex-1 flex-col gap-10">
-              {sections.map((section) => (
-                <section key={section.id} id={section.id} className="scroll-mt-20">
-                  <h2 className="font-heading text-xl font-semibold tracking-tight">{section.title}</h2>
-                  <div className="mt-3 flex flex-col gap-4 text-[15px]/relaxed text-foreground/80">
-                    {section.body.map((p, i) => (
-                      <p key={i}>{p}</p>
-                    ))}
-                  </div>
-                </section>
-              ))}
+        {/* Center article */}
+        <main className="min-w-0 flex-1 px-6 py-10 lg:px-10">
+          <p className="text-sm font-medium text-primary">Get started with My Clinics</p>
+          <h1 className="mt-2 font-heading text-4xl font-bold tracking-tight">Quickstart</h1>
+          <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
+            Create your account once, then book or manage appointments from one place. No paperwork, no
+            waiting room calls — just pick a doctor, choose a time, and you are confirmed.
+          </p>
+
+          <section id="ways-to-start" className="mt-10 scroll-mt-20">
+            <h2 className="text-lg font-semibold">Ways to get started</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Pick the path that fits you:</p>
+            <div className="mt-4 overflow-hidden rounded-lg border">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-muted/50 text-xs uppercase tracking-widest text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3">Approach</th>
+                    <th className="px-4 py-3">Best for</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  <tr>
+                    <td className="px-4 py-3 font-medium">
+                      <a href="#clinic-account" className="text-primary hover:underline">
+                        Clinic account
+                      </a>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">Doctors, admins running a practice</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 font-medium">
+                      <a href="#patient-account" className="text-primary hover:underline">
+                        Patient account
+                      </a>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">Anyone booking care for themselves or family</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-3 font-medium">Continue with Google</td>
+                    <td className="px-4 py-3 text-muted-foreground">Fastest — one tap, no password to remember</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-          </div>
-        </section>
-      </main>
+            <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+              <span className="font-semibold">Tip:</span> You can create a patient account while booking — just enter your name, phone, and email at checkout and we make the profile for you.
+            </div>
+          </section>
+
+          <hr className="my-10" />
+
+          <section id="clinic-account" className="scroll-mt-20">
+            <h2 className="font-heading text-2xl font-semibold tracking-tight">Create a clinic account</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              This is for clinic owners and staff who want to manage appointments, patients, and billing.
+            </p>
+            <ol className="mt-4 list-decimal space-y-3 pl-5 text-[15px] leading-relaxed text-foreground/90">
+              <li>
+                Click <span className="font-medium">Create Account</span> on the homepage. Enter your clinic name, your name, email, and a password.
+              </li>
+              <li>
+                Click <span className="font-medium">Sign Up</span>. You are signed in immediately — no email verification wait.
+              </li>
+              <li>
+                Add your clinic details: address, doctors, departments, and working hours. This is how patients find you when they search.
+              </li>
+            </ol>
+            <div className="mt-4 rounded-lg border bg-muted/30 px-4 py-3 text-sm">
+              <span className="font-semibold">How it works:</span> We create a private workspace for your clinic. Only your team can see your patients and appointments — like a locked cabinet with your clinic&apos;s name on it.
+            </div>
+          </section>
+
+          <hr className="my-10" />
+
+          <section id="patient-account" className="scroll-mt-20">
+            <h2 className="font-heading text-2xl font-semibold tracking-tight">Create a patient account</h2>
+            <ol className="mt-4 list-decimal space-y-3 pl-5 text-[15px] leading-relaxed text-foreground/90">
+              <li>Go to Book Appointment, pick a doctor, date, and time.</li>
+              <li>At checkout, enter your name, phone, and email.</li>
+              <li>Confirm — your profile is created and your appointment is saved to it automatically.</li>
+            </ol>
+            <div className="mt-4 rounded-lg border bg-muted/30 px-4 py-3 text-sm">
+              <span className="font-semibold">How it works:</span> Your appointments, prescriptions, lab reports, and bills are linked to your account. Sign in anytime to see them — everything stays together, even if you book on WhatsApp next time.
+            </div>
+          </section>
+
+          <hr className="my-10" />
+
+          <section id="what-happens-next" className="scroll-mt-20">
+            <h2 className="font-heading text-2xl font-semibold tracking-tight">What happens next</h2>
+            <ul className="mt-4 list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-foreground/90">
+              <li>Sign in with your email and password, or tap Continue with Google.</li>
+              <li>Forgot your password? Click Forgot Password and we send a reset link to your email.</li>
+              <li>Clinics: start adding appointments — patients will get WhatsApp reminders automatically before their visit.</li>
+            </ul>
+          </section>
+        </main>
+
+        {/* Right TOC - On This Page left? keep on right like openrouter, but user wanted left */}
+        <aside className="hidden w-64 shrink-0 p-6 lg:block">
+          <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground">On This Page</p>
+          <nav className="mt-3 flex flex-col gap-2 border-l pl-4 text-sm">
+            {toc.map((i) => (
+              <a key={i.id} href={`#${i.id}`} className="text-muted-foreground hover:text-foreground">
+                {i.title}
+              </a>
+            ))}
+          </nav>
+        </aside>
+      </div>
       <SiteFooter />
     </div>
   );
