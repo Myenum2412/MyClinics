@@ -1,7 +1,4 @@
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Quickstart — My Clinics Docs",
@@ -18,24 +15,8 @@ const toc = [
 
 export default function DocsPage() {
   return (
-    <div className="flex min-h-svh flex-col">
-      <SiteHeader />
-      <div className="mx-auto flex w-full max-w-7xl flex-1">
-        {/* Left nav - like openrouter */}
-        <aside className="hidden w-64 shrink-0 border-r bg-muted/20 p-6 md:block">
-          <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">Documentation</p>
-          <nav className="mt-4 flex flex-col gap-1 text-sm">
-            <Link href="/docs" className="rounded-md bg-accent px-3 py-2 font-medium">
-              Quickstart
-            </Link>
-            <span className="px-3 py-1 text-muted-foreground">How to create an account</span>
-            <span className="px-3 py-1 text-muted-foreground">Booking appointments</span>
-            <span className="px-3 py-1 text-muted-foreground">WhatsApp booking</span>
-          </nav>
-        </aside>
-
-        {/* Center article */}
-        <main className="min-w-0 flex-1 px-6 py-10 lg:px-10">
+    <div className="flex">
+      <main className="min-w-0 flex-1 px-6 py-10 lg:px-10">
           <p className="text-sm font-medium text-primary">Get started with My Clinics</p>
           <h1 className="mt-2 font-heading text-4xl font-bold tracking-tight">Quickstart</h1>
           <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-muted-foreground">
@@ -130,21 +111,17 @@ export default function DocsPage() {
               <li>Clinics: start adding appointments — patients will get WhatsApp reminders automatically before their visit.</li>
             </ul>
           </section>
-        </main>
-
-        {/* Right TOC - On This Page left? keep on right like openrouter, but user wanted left */}
-        <aside className="hidden w-64 shrink-0 p-6 lg:block">
-          <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground">On This Page</p>
-          <nav className="mt-3 flex flex-col gap-2 border-l pl-4 text-sm">
-            {toc.map((i) => (
-              <a key={i.id} href={`#${i.id}`} className="text-muted-foreground hover:text-foreground">
-                {i.title}
-              </a>
-            ))}
-          </nav>
-        </aside>
-      </div>
-      <SiteFooter />
+      </main>
+      <aside className="hidden w-52 shrink-0 p-6 lg:block">
+        <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground">On This Page</p>
+        <nav className="mt-3 flex flex-col gap-2 border-l pl-4 text-sm">
+          {toc.map((i) => (
+            <a key={i.id} href={`#${i.id}`} className="text-muted-foreground hover:text-foreground">
+              {i.title}
+            </a>
+          ))}
+        </nav>
+      </aside>
     </div>
   );
-}
+
