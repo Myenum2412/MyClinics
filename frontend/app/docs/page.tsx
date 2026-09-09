@@ -60,6 +60,16 @@ export default function DocsPage() {
           <p className="mt-3 max-w-2xl text-muted-foreground">Get started with My Clinics in under a minute.</p>
 
           <div className="mt-10 flex flex-col gap-10 md:flex-row md:gap-12">
+            <aside className="hidden w-52 shrink-0 md:block">
+              <p className="mb-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">On This Page</p>
+              <nav className="flex flex-col border-l border-border">
+                {sections.map((s) => (
+                  <a key={s.id} href={`#${s.id}`} className="-ml-px border-l border-transparent py-1.5 pl-4 text-sm text-muted-foreground hover:text-foreground">
+                    {s.title}
+                  </a>
+                ))}
+              </nav>
+            </aside>
             <div className="flex min-w-0 flex-1 flex-col gap-10">
               {sections.map((section) => (
                 <section key={section.id} id={section.id} className="scroll-mt-20">
@@ -72,16 +82,6 @@ export default function DocsPage() {
                 </section>
               ))}
             </div>
-            <aside className="hidden w-52 shrink-0 md:block">
-              <p className="mb-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">On This Page</p>
-              <nav className="flex flex-col border-l border-border">
-                {sections.map((s) => (
-                  <a key={s.id} href={`#${s.id}`} className="-ml-px border-l border-transparent py-1.5 pl-4 text-sm text-muted-foreground hover:text-foreground">
-                    {s.title}
-                  </a>
-                ))}
-              </nav>
-            </aside>
           </div>
         </section>
       </main>
