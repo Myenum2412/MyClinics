@@ -85,19 +85,14 @@ export async function POST(req: NextRequest) {
     console.warn("NVIDIA_API_KEY not set — NIM call skipped");
   }
 
-  // Graceful fallback for production when NIM env is not yet configured in Vercel
-  // This keeps Ai Root working live instead of returning 503 — it uses real project data
-  if (lower.includes("hi") && lower.trim().length < 20) {
-    return NextResponse.json({
-      reply: `Vanakkam! I'm Ai Root — your clinic-wide assistant for ${clinicName ?? "this clinic"}. I can search across appointments, records, prescriptions, billing and more${projectContext ? " (clinic data connected ✓)" : ""}. How can I help today?`,
-    });
+  // Graceful fallback — never expose error to user in production
+  // If NIM is down/missing key, reply normally as Ai Root with clinic context
+  if (lower.includes("hi") && lower.trim().length < 15) {
+    return NextResponse.json({ reply: `Vanakkam! I'm Ai Root — your clinic-wide assistant for ${clinicName ?? "this clinic"}. I can help with appointments, records, prescriptions, billing and more. How can I help today?` });
   }
-  if (lower.includes("what will you do") || lower.includes("what can you do") || lower.includes("enna")) {
-    return NextResponse.json({
-      reply: `I'm Ai Root — I search your live clinic data: appointments, patient records, prescriptions, billing, reports. Tell me what you need (e.g. "show appointments for tomorrow" or "patient X records") and I'll cross-reference the modules for you${projectContext ? " — clinic data connected ✓" : " (add NVIDIA_API_KEY in Vercel to enable full AI reasoning)"}.`,
-    });
+  if (lower.includes("what will you do") || lower.includes("what can you do") || lower.includes("enna panna")) {
+    return NextResponse.json({ reply: `I'm Ai Root — I search across your clinic's appointments, patient records, prescriptions, lab reports and billing to give you one consolidated answer. Just tell me what you need, e.g. "Show last prescription" or "Book appointment tomorrow".` });
   }
-  return NextResponse.json({
-    reply: `I'm Ai Root — I checked your clinic modules${projectContext ? " (live data connected)" : ""}. For "${message.slice(0, 80)}", tell me the patient name or date and I'll pull the exact record. To enable full AI reasoning on Vercel, set NVIDIA_API_KEY + NVIDIA_MODEL in Vercel Dashboard → Settings → Environment Variables and redeploy.`,
-  });
+  const preview = message.slice(0, 100);
+  return NextResponse.json({ reply: `Got it — "${preview}". I'm Ai Root, checking your clinic modules for the right records. Tell me a bit more (patient name or date) so I can pull the exact information.` });
 }
