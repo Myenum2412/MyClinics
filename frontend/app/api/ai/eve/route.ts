@@ -24,33 +24,60 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ reply: "I'm designed to assist with this clinic and its services — appointments, doctors, treatments, billing, records, and patient support. How can I help you with the clinic today?" });
   }
 
-  // Try to use real project data: fetch clinic context + forward to backend AI if available
+  // Clinic-scoped data fetch: ONLY current clinicId, never other clinics. Modules: Appointment, Patients, Medical Records, Treatment, Prescriptions, Medicine
   let projectContext = "";
+  const headers: Record<string, string> = {};
+  const cookie = (() => { try { return (typeof req !== "undefined" && (req as unknown as { headers: { get(n: string): string | null } }).headers.get("cookie")) ?? ""; } catch { return ""; } })();
+  if (cookie) headers.cookie = cookie;
+  // Helper to fetch clinic-scoped JSON with auth cookie
+  async function fetchClinic(path: string): Promise<unknown | null> {
+    if (!clinicId) return null;
+    try {
+      const r = await fetch(`${BACKEND_URL}/api/clinics/${clinicId}${path}`, { headers, cache: "no-store" });
+      if (!r.ok) return null;
+      return await r.json();
+    } catch { return null; }
+  }
   try {
-    // Forward cookies for auth
-    const cookie = req.headers.get("cookie") ?? "";
-    // Try backend AI agent if configured
-    if (process.env.AI_INTERNAL_TOKEN && clinicId) {
-      const aiRes = await fetch(`${BACKEND_URL}/api/ai/context?organizationId=${encodeURIComponent(clinicId)}`, {
-        headers: { "X-Internal-Token": process.env.AI_INTERNAL_TOKEN, cookie },
-        cache: "no-store",
-      });
-      if (aiRes.ok) {
-        const ctx = await aiRes.json();
-        projectContext = `Clinic context: ${JSON.stringify(ctx).slice(0, 2000)}`;
+    const wantsPatients = /patient|people|person|name|mobile|phone/i.test(message);
+    const wantsAppt = /appointment|book|slot|token|queue|schedule|visit/i.test(message);
+    const wantsRecords = /record|medical|report|lab|file|document/i.test(message);
+    const wantsTreatment = /treatment|diagnosis|complaint|symptom/i.test(message);
+    const wantsPresc = /prescription|medicine|drug|tablet|dose|dosage/i.test(message);
+    const wantsMedicine = wantsPresc || /pharmacy|stock|inventory/i.test(message);
+    const fetchAll = !wantsPatients && !wantsAppt && !wantsRecords && !wantsTreatment && !wantsPresc;
+
+    const tasks: Promise<void>[] = [];
+    let ctxParts: string[] = [];
+
+    // Always fetch clinic header (name/settings) scoped to clinicId
+    tasks.push((async () => {
+      if (process.env.AI_INTERNAL_TOKEN && clinicId) {
+        const aiRes = await fetch(`${BACKEND_URL}/api/ai/context?organizationId=${encodeURIComponent(clinicId)}`, {
+          headers: { "X-Internal-Token": process.env.AI_INTERNAL_TOKEN, cookie: headers.cookie ?? "" },
+          cache: "no-store",
+        }).catch(() => null);
+        if (aiRes?.ok) {
+          const ctx = await aiRes.json().catch(() => null);
+          if (ctx) ctxParts.push(`Clinic header: ${JSON.stringify(ctx).slice(0, 800)}`);
+          return;
+        }
       }
-    }
-    // Fallback: fetch clinic info via same-origin proxy if no internal token
-    if (!projectContext && clinicId) {
-      const clinicRes = await fetch(`${BACKEND_URL}/api/clinics/${clinicId}`, {
-        headers: { cookie },
-        cache: "no-store",
-      }).catch(() => null);
-      if (clinicRes?.ok) {
-        const clinic = await clinicRes.json();
-        projectContext = `Clinic: ${clinic.name ?? clinicName ?? ""} | ${JSON.stringify(clinic.settings ?? {}).slice(0, 800)}`;
-      }
-    }
+      const clinic = (await fetchClinic("")) as { name?: string; settings?: unknown } | null;
+      if (clinic) ctxParts.push(`Clinic: ${clinic.name ?? clinicName ?? clinicId} | ${JSON.stringify((clinic as unknown as { settings?: unknown }).settings ?? {}).slice(0, 600)}`);
+    })());
+
+    if (wantsPatients || fetchAll) tasks.push(fetchClinic("/patients?limit=5").then(d => { if (d) ctxParts.push(`Patients (this clinic only, sample 5): ${JSON.stringify(d).slice(0, 1500)}`); }));
+    if (wantsAppt || fetchAll) tasks.push(fetchClinic("/appointments?limit=5").then(d => { if (d) ctxParts.push(`Appointments (this clinic only): ${JSON.stringify(d).slice(0, 1500)}`); }));
+    if (wantsRecords || fetchAll) tasks.push(fetchClinic("/medical-record?limit=5").then(d => { if (d) ctxParts.push(`Medical Records (this clinic): ${JSON.stringify(d).slice(0, 1500)}`); }));
+    if (wantsTreatment || fetchAll) tasks.push(fetchClinic("/medicine?limit=5").then(d => { if (d) ctxParts.push(`Treatment/Medicine Records (this clinic): ${JSON.stringify(d).slice(0, 1500)}`); }));
+    if (wantsPresc) tasks.push(fetchClinic("/prescriptions?limit=5").then(d => { if (d) ctxParts.push(`Prescriptions (this clinic): ${JSON.stringify(d).slice(0, 1500)}`); }));
+    if (wantsMedicine) tasks.push(fetchClinic("/pharmacy/medicines?limit=5").then(d => { if (d) ctxParts.push(`Pharmacy Medicines (this clinic): ${JSON.stringify(d).slice(0, 1500)}`); }));
+
+    await Promise.all(tasks);
+    // Enforce clinic isolation in prompt
+    projectContext = `CLINIC_ID=${clinicId ?? "unknown"} — use ONLY this clinic's data. Never use other clinics.\n` + ctxParts.join("\n");
+    if (!clinicId) projectContext = "No clinicId provided — cannot access clinic data. Ask user to open a clinic first.";
   } catch {
     // non-blocking
   }
@@ -58,7 +85,7 @@ export async function POST(req: NextRequest) {
   // OpenRouter — Thinking Machines: Inkling — no system prompt, nurse persona via user context + project data
   const openrouterKey = process.env.OPENROUTER_API_KEY || "";
   const openrouterModel = process.env.OPENROUTER_MODEL || "thinkingmachines/inkling";
-  const nurseContext = `You are Ai Root, a friendly clinic nurse assistant for ${clinicName ?? "this clinic"} (${role ?? "patient"} view). Reply as a helpful nurse: use clinic database info below, help book appointments, check doctor availability, explain records/prescriptions/billing simply. Never claim you are Inkling/Thinking Machines. Keep tone caring, concise, Tamil/English as user uses. If user says hi, greet as Ai Root nurse and ask how to help with clinic. If user asks what you do, list clinic tasks: book appointments, check queue, explain prescriptions, billing, records.`;
+  const nurseContext = `You are Ai Root, a friendly clinic nurse assistant for ${clinicName ?? "this clinic"} (${role ?? "patient"} view, CLINIC_ID=${clinicId ?? "unknown"}). Rules: Use ONLY this clinic's data below (Appointment, Patients, Medical Records, Treatment, Prescriptions, Medicine). Never use other clinics' data. You can also help fill forms — when user wants to create appointment/patient/record/prescription, collect required fields and confirm before creating, then tell frontend to autofill the form. Reply as caring nurse, concise, Tamil/English as user uses. If asked who you are, say Ai Root nurse for this clinic, not Inkling. If asked what you do, list: book appointments, manage patients, show medical records/treatment/prescriptions/medicine, and fill forms for this clinic only.`;
   try {
     const userContent = `${nurseContext}\n${projectContext ? projectContext + "\n" : ""}User: ${message}`;
     const messages = [
