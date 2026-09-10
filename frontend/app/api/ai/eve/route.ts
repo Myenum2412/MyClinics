@@ -55,52 +55,51 @@ export async function POST(req: NextRequest) {
     // non-blocking
   }
 
-  // Direct NVIDIA NIM — no system prompt, just project data + user message
-  const nvidiaKey = process.env.NVIDIA_API_KEY;
-  const nvidiaModel = process.env.NVIDIA_MODEL || "meta/llama-3.1-70b-instruct";
-  if (nvidiaKey) {
-    try {
-      const userContent = projectContext ? `${projectContext}\n\nUser: ${message}` : message;
-      const messages = [
-        ...(conversationHistory ?? []),
-        { role: "user", content: userContent },
-      ];
-      const r = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${nvidiaKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: nvidiaModel, messages, max_tokens: 1024, temperature: 0.4 }),
-      });
-      if (r.ok) {
-        const j = await r.json();
-        const reply = j.choices?.[0]?.message?.content?.trim();
-        if (reply) return NextResponse.json({ reply });
-      } else {
-        const errText = await r.text().catch(() => "");
-        console.error("NIM error", r.status, errText.slice(0, 500));
-      }
-    } catch (e) {
-      console.error("NIM fetch failed", e);
+  // OpenRouter — Thinking Machines: Inkling (https://openrouter.ai/docs/quickstart)
+  const openrouterKey = process.env.OPENROUTER_API_KEY || "";
+  const openrouterModel = process.env.OPENROUTER_MODEL || "thinkingmachines/inkling";
+  try {
+    const userContent = projectContext ? `${projectContext}\n\nUser: ${message}` : message;
+    const messages = [
+      ...(conversationHistory ?? []),
+      { role: "user", content: userContent },
+    ];
+    const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${openrouterKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://myclinic.myenum.in",
+        "X-Title": "MyClinics Ai Root",
+      },
+      body: JSON.stringify({ model: openrouterModel, messages, max_tokens: 1024, temperature: 0.4 }),
+    });
+    if (r.ok) {
+      const j = await r.json();
+      const reply = j.choices?.[0]?.message?.content?.trim();
+      if (reply) return NextResponse.json({ reply });
+    } else {
+      const errText = await r.text().catch(() => "");
+      console.error("OpenRouter error", r.status, errText.slice(0, 500));
     }
-  } else {
-    console.warn("NVIDIA_API_KEY not set — NIM call skipped");
+  } catch (e) {
+    console.error("OpenRouter fetch failed", e);
   }
 
-  // Production fallback when NIM key not set on Vercel: try backend NIM proxy, then project-aware reasonable reply (no canned Vanakkam)
-  if (!nvidiaKey) {
-    try {
-      const proxyRes = await fetch(`${BACKEND_URL}/api/ai/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(process.env.AI_INTERNAL_TOKEN ? { "X-Internal-Token": process.env.AI_INTERNAL_TOKEN } : {}) },
-        body: JSON.stringify({ message, clinicName, role, clinicId, conversationHistory, projectContext }),
-        cache: "no-store",
-      });
-      if (proxyRes.ok) {
-        const pj = await proxyRes.json();
-        if (pj.reply) return NextResponse.json({ reply: pj.reply });
-      }
-    } catch {}
-  }
-  // Last resort: project-aware reasonable answer without exposing error
+  // Fallback via backend proxy (backend also uses OpenRouter)
+  try {
+    const proxyRes = await fetch(`${BACKEND_URL}/api/ai/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(process.env.AI_INTERNAL_TOKEN ? { "X-Internal-Token": process.env.AI_INTERNAL_TOKEN } : {}) },
+      body: JSON.stringify({ message, clinicName, role, clinicId, conversationHistory, projectContext }),
+      cache: "no-store",
+    });
+    if (proxyRes.ok) {
+      const pj = await proxyRes.json();
+      if (pj.reply) return NextResponse.json({ reply: pj.reply });
+    }
+  } catch {}
+
   const ctxHint = projectContext ? ` (clinic data: ${projectContext.slice(0, 300)})` : "";
   return NextResponse.json({ reply: `Ai Root here — I checked your clinic modules${ctxHint ? " with live data" : ""}. For "${message.slice(0, 80)}", I need a bit more detail (patient name or date) to pull the exact records from appointments, prescriptions, or billing. What would you like me to look up?` });
 }
