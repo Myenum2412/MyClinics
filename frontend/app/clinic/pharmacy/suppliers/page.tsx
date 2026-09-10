@@ -55,7 +55,7 @@ export default function PharmacySuppliersPage() {
     listSuppliers(clinicId, { limit: 1000 })
       .then((res) => {
         if (!active) return
-        setSuppliers(res.items)
+        setSuppliers((res as any)?.items ?? [])
       })
       .catch((err: unknown) => {
         toast.error(err instanceof Error ? err.message : "Failed to load suppliers")

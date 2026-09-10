@@ -308,8 +308,8 @@ export const FileUploadSystem = forwardRef<FileUploadSystemHandle, FileUploadSys
       }
 
       // Method B: Check e.clipboardData.items for copied images / screenshots / blobs
-      if (clipboardData.items && clipboardData.items.length > 0) {
-        for (let i = 0; i < clipboardData.items.length; i++) {
+      if (clipboardData.items && (clipboardData.items ?? []).length > 0) {
+        for (let i = 0; i < (clipboardData.items ?? []).length; i++) {
           const item = clipboardData.items[i];
           if (item.kind === "file") {
             const file = item.getAsFile();

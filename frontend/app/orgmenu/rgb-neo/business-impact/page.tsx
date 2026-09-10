@@ -15,7 +15,7 @@ export default function RgbNeoBusinessImpactPage() {
     (async () => {
       try {
         const res = await getOrgIncidents({ limit: 200 });
-        setItems(res.items);
+        setItems((res as any)?.items ?? []);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load");
         toast.error("Failed to load business impact");

@@ -196,13 +196,13 @@ export default function AppointmentsPage() {
   // Mappers
   const patientMap = useMemo(() => {
     const map = new Map<string, Patient>();
-    for (const p of patients) map.set(p.patientId, p);
+    for (const p of (patients ?? [])) map.set(p.patientId, p);
     return map;
   }, [patients]);
 
   const doctorMap = useMemo(() => {
     const map = new Map<string, Doctor>();
-    for (const d of doctors) map.set(d.doctorId, d);
+    for (const d of (doctors ?? [])) map.set(d.doctorId, d);
     return map;
   }, [doctors]);
 
@@ -217,7 +217,7 @@ export default function AppointmentsPage() {
       if (h < 17) return "afternoon";
       return "evening";
     };
-    for (const a of appointments) {
+    for (const a of (appointments ?? [])) {
       const session = (a.session as string) ?? deriveSession(a.time);
       const key = `${a.doctorId}|${a.date}|${session}`;
       if (!groups.has(key)) groups.set(key, []);
@@ -244,17 +244,17 @@ export default function AppointmentsPage() {
       listDoctors(clinicId, { limit: 50 }),
     ]).then(([apptsRes, patientsRes, doctorsRes]) => {
       if (apptsRes.status === "fulfilled") {
-        setAppointments(apptsRes.value.items);
+        setAppointments((apptsRes.value as any)?.items ?? []);
       } else {
         toast.error("Failed to load appointments");
       }
       if (patientsRes.status === "fulfilled") {
-        setPatients(patientsRes.value.items);
+        setPatients((patientsRes.value as any)?.items ?? []);
       } else {
         toast.error("Failed to load patients");
       }
       if (doctorsRes.status === "fulfilled") {
-        setDoctors(doctorsRes.value.items);
+        setDoctors((doctorsRes.value as any)?.items ?? []);
       } else {
         toast.error("Failed to load doctors");
       }
@@ -280,9 +280,9 @@ export default function AppointmentsPage() {
     })
       .then((res) => {
         if (cancelled) return;
-        const items = res.items
-          .filter((a) => a.appointmentId !== selectedAppt.appointmentId)
-          .sort((a, b) =>
+        const items = ((res as any)?.items ?? [])
+          .filter((a: Appointment) => a.appointmentId !== selectedAppt.appointmentId)
+          .sort((a: Appointment, b: Appointment) =>
             `${b.date} ${b.time}`.localeCompare(`${a.date} ${a.time}`)
           );
         setHistory(items);

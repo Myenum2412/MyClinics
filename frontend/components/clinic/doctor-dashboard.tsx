@@ -64,10 +64,10 @@ export function DoctorDashboard({ clinicId }: { clinicId: string }) {
       listAppointments(clinicId, { limit: 50 }),
     ])
       .then(([p, a, pr, allA]) => {
-        setPatients(p.items);
-        setAppointments(a.items);
-        setPrescriptions(pr.items);
-        setAllAppointments(allA.items);
+        setPatients((p as any)?.items ?? []);
+        setAppointments((a as any)?.items ?? []);
+        setPrescriptions((pr as any)?.items ?? []);
+        setAllAppointments((allA as any)?.items ?? []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));

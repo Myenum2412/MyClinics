@@ -172,10 +172,10 @@ export default function PrescriptionsPage() {
     ])
       .then((results) => {
         const [prescRes, patientRes, docRes] = results;
-        if (prescRes.status === "fulfilled") setItems(prescRes.value.items);
+        if (prescRes.status === "fulfilled") setItems((prescRes.value as any)?.items ?? []);
         else toast.error(prescRes.reason?.message || "Failed to load prescriptions");
-        if (patientRes.status === "fulfilled") setPatients(patientRes.value.items);
-        if (docRes.status === "fulfilled") setDoctors(docRes.value.items);
+        if (patientRes.status === "fulfilled") setPatients((patientRes.value as any)?.items ?? []);
+        if (docRes.status === "fulfilled") setDoctors((docRes.value as any)?.items ?? []);
       })
       .then(() =>
         fetch(`${API_BASE_URL}/api/clinics/${clinicId}/prescriptions/notifications`)
@@ -756,15 +756,15 @@ export default function PrescriptionsPage() {
                         {visibleColumns.medicines && (
                           <TableCell className="max-w-52">
                             <ul className="list-disc pl-4 text-[11px] text-muted-foreground leading-tight space-y-0.5">
-                              {p.medicines.slice(0, 2).map((m, i) => (
+                              {(p.medicines ?? []).slice(0, 2).map((m, i) => (
                                 <li key={i} className="truncate">
                                   <span className="font-semibold text-foreground/80">{m.name}</span>{" "}
                                   {m.dosage && `(${m.dosage})`}
                                 </li>
                               ))}
-                              {p.medicines.length > 2 && (
+                              {(p.medicines ?? []).length > 2 && (
                                 <li className="list-none text-[10px] text-primary/80 font-medium pl-0">
-                                  +{p.medicines.length - 2} more items
+                                  +{(p.medicines ?? []).length - 2} more items
                                 </li>
                               )}
                             </ul>

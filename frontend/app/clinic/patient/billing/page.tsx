@@ -25,7 +25,7 @@ export default function PatientBillingPage() {
     if (!session?.clinicId) return;
     myBills(session.clinicId)
       .then((res) => {
-        setBills(res.items);
+        setBills((res as any)?.items ?? []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -106,8 +106,8 @@ export default function PatientBillingPage() {
                         {item.description} × {item.quantity}
                       </div>
                     ))}
-                    {bill.items && bill.items.length > 2 && (
-                      <p className="text-xs text-muted-foreground">+{bill.items.length - 2} more</p>
+                    {bill.items && (bill.items ?? []).length > 2 && (
+                      <p className="text-xs text-muted-foreground">+{(bill.items ?? []).length - 2} more</p>
                     )}
                   </TableCell>
                   <TableCell className="font-medium text-foreground">₹{bill.total.toLocaleString("en-IN")}</TableCell>

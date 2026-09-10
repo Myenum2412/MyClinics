@@ -189,20 +189,20 @@ export default function ClinicProfilePage() {
         if (!active) return;
         setClinic(c);
         setStats({
-          patients: p.total,
-          apptsToday: a.total,
-          doctors: d.total,
-          staff: s.total,
-          revenue: b.items.reduce((sum, bill) => sum + (bill.total ?? 0), 0),
-          invoices: b.total,
+          patients: (p as any)?.total ?? 0,
+          apptsToday: (a as any)?.total ?? 0,
+          doctors: (d as any)?.total ?? 0,
+          staff: (s as any)?.total ?? 0,
+          revenue: ((b as any)?.items ?? []).reduce((sum: number, bill: any) => sum + (bill.total ?? 0), 0),
+          invoices: (b as any)?.total ?? 0,
         });
         const found = Array.from(
           new Set(
-            d.items
-              .map((doc) => doc.specialization?.trim())
-              .filter((value): value is string => Boolean(value))
+            (((d as any)?.items ?? []) as any[])
+              .map((doc: any) => doc.specialization?.trim())
+              .filter((value: any): value is string => Boolean(value))
           )
-        ).slice(0, 5);
+        ).slice(0, 5) as string[];
         if (found.length > 0) setSpecialties(found);
       })
       .catch(() => {

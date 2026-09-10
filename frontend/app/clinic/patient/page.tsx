@@ -117,10 +117,10 @@ export default function PatientPortalDashboard() {
       if (patient?.fullName) {
         setFirstName(patient.fullName.trim().split(/\s+/)[0]);
       }
-      setAppointments(apptRes.items);
+      setAppointments((apptRes as any)?.items ?? []);
       setFiles(filesRes.files);
-      setPrescriptions(presRes.items);
-      setDoctors(docsRes.items);
+      setPrescriptions((presRes as any)?.items ?? []);
+      setDoctors((docsRes as any)?.items ?? []);
     } catch {
       // keep fallback states
     } finally {

@@ -78,8 +78,8 @@ export default function PharmacyMedicinesPage() {
         listSuppliers(clinicId, { limit: 500 }),
       ])
         .then(([m, s]) => {
-          setMedicines(m.items)
-          setSuppliers(s.items)
+          setMedicines((m as any)?.items ?? [])
+          setSuppliers((s as any)?.items ?? [])
         })
         .catch((e: unknown) => {
           toast.error(e instanceof Error ? e.message : "Failed to load medicines")

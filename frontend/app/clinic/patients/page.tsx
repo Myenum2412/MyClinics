@@ -198,9 +198,9 @@ export default function PatientsPage() {
       listAppointments(clinicId, { limit: 50 }),
     ])
       .then(([patientRes, apptRes]) => {
-        if (patientRes.status === "fulfilled") setItems(patientRes.value.items);
+        if (patientRes.status === "fulfilled") setItems((patientRes.value as any)?.items ?? []);
         else toast.error("Failed to load patients");
-        if (apptRes.status === "fulfilled") setApptItems(apptRes.value.items);
+        if (apptRes.status === "fulfilled") setApptItems((apptRes.value as any)?.items ?? []);
         setCurrentPage(1);
         setSelectedIds(new Set());
       })

@@ -68,8 +68,8 @@ export function PurchaseForm({
   React.useEffect(() => {
     Promise.all([listSuppliers(clinicId, { limit: 500 }), listMedicines(clinicId, { limit: 500 })])
       .then(([s, m]) => {
-        setSuppliers(s.items)
-        setMedicines(m.items)
+        setSuppliers((s as any)?.items ?? [])
+        setMedicines((m as any)?.items ?? [])
       })
       .catch((e: unknown) => {
         toast.error(e instanceof Error ? e.message : "Failed to load reference data")
@@ -224,7 +224,7 @@ export function PurchaseForm({
                       <Input value={it.storageLocation ?? ""} onChange={(e) => updateItem(idx, { storageLocation: e.target.value })} placeholder="Shelf" />
                     </TableCell>
                     <TableCell className="w-10">
-                      <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(idx)} disabled={form.items.length === 1}>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => removeItem(idx)} disabled={(form.items ?? []).length === 1}>
                         Remove
                       </Button>
                     </TableCell>

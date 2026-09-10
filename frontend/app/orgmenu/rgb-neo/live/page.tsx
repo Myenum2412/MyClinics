@@ -15,7 +15,7 @@ export default function RgbNeoLivePage() {
   React.useEffect(() => {
     listAllClinics({ limit: 200 })
       .then((res) => {
-        setClinics(res.items);
+        setClinics((res as any)?.items ?? []);
         if (res.items[0]) setSelected(res.items[0].clinicId);
       })
       .catch(() => undefined)

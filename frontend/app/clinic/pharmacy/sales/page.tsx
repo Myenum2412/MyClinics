@@ -68,8 +68,8 @@ export default function PharmacySalesPage() {
         listSales(clinicId, { limit: 500 }),
         listMedicines(clinicId, { limit: 2000 }),
       ])
-      setSales(s.items)
-      setMedicines(m.items)
+      setSales((s as any)?.items ?? [])
+      setMedicines((m as any)?.items ?? [])
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to load sales")
     } finally {
@@ -166,7 +166,7 @@ export default function PharmacySalesPage() {
                     <TableCell className="font-medium">{s.invoiceNumber}</TableCell>
                     <TableCell>{new Date(s.saleDate).toLocaleDateString()}</TableCell>
                     <TableCell>{s.patientId ?? "Walk-in"}</TableCell>
-                    <TableCell>{s.items.length}</TableCell>
+                    <TableCell>{(s.items ?? []).length}</TableCell>
                     <TableCell className="tabular-nums">{fmtMoney(s.subtotal)}</TableCell>
                     <TableCell className="tabular-nums">{fmtMoney(s.discount)}</TableCell>
                     <TableCell className="tabular-nums">{fmtMoney(s.taxAmount)}</TableCell>

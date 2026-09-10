@@ -60,8 +60,8 @@ export default function PharmacyStockHistoryPage() {
     Promise.all([listMovements(clinicId, { limit: 500 }), listMedicines(clinicId, { limit: 500 })])
       .then(([m, meds]) => {
         if (!active) return
-        setMovements(m.items)
-        setMedicines(meds.items)
+        setMovements((m as any)?.items ?? [])
+        setMedicines((meds as any)?.items ?? [])
       })
       .catch((err: unknown) => { toast.error(err instanceof Error ? err.message : "Failed to load stock history") })
       .finally(() => active && setLoading(false))

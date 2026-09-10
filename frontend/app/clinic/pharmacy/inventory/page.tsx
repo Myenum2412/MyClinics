@@ -98,7 +98,7 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
       category: category || undefined,
       limit: 500,
     })
-      .then((res) => setRows(res.items))
+      .then((res) => setRows((res as any)?.items ?? []))
       .catch((e: unknown) => {
         toast.error(e instanceof Error ? e.message : "Failed to load inventory")
       })
@@ -111,7 +111,7 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
     listSuppliers(clinicId, { limit: 500 })
       .then((s) => {
         if (!active) return
-        setSuppliers(s.items)
+        setSuppliers((s as any)?.items ?? [])
       })
       .catch(() => {})
     return () => {

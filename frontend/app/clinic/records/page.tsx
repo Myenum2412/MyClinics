@@ -337,7 +337,7 @@ export default function RecordsPage() {
         });
 
         setPatientLookup(map);
-        setItems(recordRes.items);
+        setItems((recordRes as any)?.items ?? []);
         setCurrentPage(1);
         setSelectedIds(new Set());
       })
@@ -1031,9 +1031,9 @@ function RecordForm({
           listDoctors(clinicId, { limit: 50 }),
           listAppointments(clinicId, { limit: 50 }),
         ]);
-        setPatients(pRes.items);
-        setDoctors(dRes.items);
-        setAppointments(aRes.items);
+        setPatients((pRes as any)?.items ?? []);
+        setDoctors((dRes as any)?.items ?? []);
+        setAppointments((aRes as any)?.items ?? []);
       } catch {
         toast.error("Failed to load patient/doctor lists");
       } finally {

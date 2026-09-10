@@ -180,7 +180,7 @@ export default function DoctorProfilePage() {
       }
       if (!docData) {
         const list = await listDoctors(clinicId, { limit: 10 });
-        if (list.items.length > 0) {
+        if ((list.items ?? []).length > 0) {
           docData = list.items[0];
         }
       }

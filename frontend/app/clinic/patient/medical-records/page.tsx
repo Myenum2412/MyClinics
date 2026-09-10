@@ -80,11 +80,11 @@ export default function PatientMedicalRecordsPage() {
           ? listMedicalRecordFolders(session.clinicId, session.patientId)
           : Promise.resolve({ folders: [] }),
       ]);
-      setRecords(recordsRes.items);
+      setRecords((recordsRes as any)?.items ?? []);
       setAppointments(
         apptRes.items.sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time))
       );
-      setDoctors(docsRes.items);
+      setDoctors((docsRes as any)?.items ?? []);
       setFiles(filesRes.files);
       setFolders(foldersRes.folders);
     } catch {

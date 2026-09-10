@@ -57,7 +57,7 @@ export default function OrgClinicDetailPage() {
     if (!clinicId) return;
     setLoadingPatients(true);
     listPatients(clinicId, { limit: 100 })
-      .then((res) => setPatients(res.items))
+      .then((res) => setPatients((res as any)?.items ?? []))
       .catch(() => toast.error("Failed to load patients"))
       .finally(() => setLoadingPatients(false));
   }, [clinicId]);

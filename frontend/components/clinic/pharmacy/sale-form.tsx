@@ -56,7 +56,7 @@ export function SaleForm({
 
   React.useEffect(() => {
     listMedicines(clinicId, { limit: 2000 })
-      .then((m) => setMedicines(m.items))
+      .then((m) => setMedicines((m as any)?.items ?? []))
       .catch((e: unknown) => {
         toast.error(e instanceof Error ? e.message : "Failed to load medicines")
       })

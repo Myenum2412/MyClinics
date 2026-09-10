@@ -157,10 +157,10 @@ export default function BusinessReportsPage() {
     setLoading(true);
     Promise.allSettled([listBills(clinicId, { limit: 200 }), listAppointments(clinicId, { limit: 200 }), listPatients(clinicId, { limit: 200 }), listDoctors(clinicId, { limit: 100 })])
       .then(([b, a, p, d]) => {
-        if (b.status === "fulfilled") setBills(b.value.items);
-        if (a.status === "fulfilled") setAppointments(a.value.items);
-        if (p.status === "fulfilled") setPatients(p.value.items);
-        if (d.status === "fulfilled") setDoctors(d.value.items);
+        if (b.status === "fulfilled") setBills((b.value as any)?.items ?? []);
+        if (a.status === "fulfilled") setAppointments((a.value as any)?.items ?? []);
+        if (p.status === "fulfilled") setPatients((p.value as any)?.items ?? []);
+        if (d.status === "fulfilled") setDoctors((d.value as any)?.items ?? []);
         if (b.status === "rejected" || a.status === "rejected" || p.status === "rejected") toast.error("Some report data failed to load");
       })
       .finally(() => setLoading(false));
@@ -176,8 +176,8 @@ export default function BusinessReportsPage() {
   const patientsInRange = useMemo(() => patients.filter(p => { const d = parseDate(p.createdAt); return !!d ? d >= start && d <= end : false; }), [patients, start, end]);
 
   // ── Executive Overview ──────────────────────────────────────────────────
-  const totalRevenue = billsInRange.reduce((s, b) => s + b.total, 0);
-  const prevRevenue = billsPrev.reduce((s, b) => s + b.total, 0);
+  const totalRevenue = (billsInRange ?? []).reduce((s, b) => s + (b.total ?? 0), 0);
+  const prevRevenue = (billsPrev ?? []).reduce((s, b) => s + (b.total ?? 0), 0);
   const revenueGrowth = pct(totalRevenue, prevRevenue);
   const totalPaid = billsInRange.reduce((s, b) => s + (b.amountPaid ?? 0), 0);
   const outstanding = billsInRange.reduce((s, b) => s + (b.balanceDue ?? 0), 0);
@@ -200,22 +200,22 @@ export default function BusinessReportsPage() {
   // ── Revenue by doctor / service / payment ───────────────────────────────
   const revenueByDoctor = useMemo(() => {
     const map = new Map<string, number>();
-    for (const b of billsInRange) {
+    for (const b of (billsInRange ?? [])) {
       const doc = doctors.find(d => d.doctorId === b.doctorId)?.name ?? b.doctorId ?? "Unknown";
-      map.set(doc, (map.get(doc) ?? 0) + b.total);
+      map.set(doc, (map.get(doc) ?? 0) + (b.total ?? 0));
     }
     return [...map.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 5);
   }, [billsInRange, doctors]);
 
   const revenueByService = useMemo(() => {
     const map = new Map<string, number>();
-    for (const b of billsInRange) for (const it of b.items) map.set(it.description, (map.get(it.description) ?? 0) + it.lineTotal);
+    for (const b of billsInRange) for (const it of (b.items ?? [])) map.set(it.description, (map.get(it.description) ?? 0) + (it.lineTotal ?? 0));
     return [...map.entries()].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 5);
   }, [billsInRange]);
 
   const revenueByPayment = useMemo(() => {
     const map = new Map<string, number>();
-    for (const b of billsInRange) map.set(b.paymentType ?? "other", (map.get(b.paymentType ?? "other") ?? 0) + b.total);
+    for (const b of (billsInRange ?? [])) map.set(b.paymentType ?? "other", (map.get(b.paymentType ?? "other") ?? 0) + (b.total ?? 0));
     return [...map.entries()].map(([name, value]) => ({ name, value }));
   }, [billsInRange]);
 

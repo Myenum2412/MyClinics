@@ -251,7 +251,7 @@ export default function DoctorsPage() {
     if (!clinicId) return;
     listDoctors(clinicId, { limit: 100 })
       .then((res) => {
-        setItems(res.items);
+        setItems((res as any)?.items ?? []);
         setCurrentPage(1);
         setSelectedIds(new Set());
       })

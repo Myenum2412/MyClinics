@@ -25,7 +25,7 @@ export default function PatientPrescriptionsPage() {
     if (!session?.clinicId) return;
     myPrescriptions(session.clinicId)
       .then((res) => {
-        setPrescriptions(res.items);
+        setPrescriptions((res as any)?.items ?? []);
         setLoading(false);
       })
       .catch(() => setLoading(false));

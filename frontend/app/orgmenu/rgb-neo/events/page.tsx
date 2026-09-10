@@ -21,7 +21,7 @@ export default function RgbNeoEventsPage() {
   const load = React.useCallback(async () => {
     try {
       const res = await getOrgEvents({ limit: 100, severity: severity === "all" ? undefined : severity });
-      setItems(res.items);
+      setItems((res as any)?.items ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load events");
       toast.error("Failed to load events");

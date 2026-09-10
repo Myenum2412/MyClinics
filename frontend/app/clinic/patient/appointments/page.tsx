@@ -88,8 +88,8 @@ export default function PatientAppointmentsPage() {
       if (patient) {
         setPatients([patient]);
       }
-      setDoctors(docsRes.items);
-      setAppointments(apptRes.items);
+      setDoctors((docsRes as any)?.items ?? []);
+      setAppointments((apptRes as any)?.items ?? []);
     } catch {
       toast.error("Failed to load appointment details");
     } finally {

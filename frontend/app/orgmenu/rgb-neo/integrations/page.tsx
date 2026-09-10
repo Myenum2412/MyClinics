@@ -31,7 +31,7 @@ export default function RgbNeoIntegrationsPage() {
   React.useEffect(() => {
     listAllClinics({ limit: 200 })
       .then((res) => {
-        setClinics(res.items);
+        setClinics((res as any)?.items ?? []);
         if (res.items[0]) setSelected(res.items[0].clinicId);
       })
       .catch(() => undefined)
@@ -43,7 +43,7 @@ export default function RgbNeoIntegrationsPage() {
     (async () => {
       try {
         const r = await getClinicStatus(selected);
-        setStatuses(r.items);
+        setStatuses((r as any)?.items ?? []);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed");
       }

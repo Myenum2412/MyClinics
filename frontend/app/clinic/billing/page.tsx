@@ -160,8 +160,8 @@ export default function BillingPage() {
         });
 
         setPatientLookup(map);
-        setPatients(patientsRes.items);
-        setItems(billsRes.items);
+        setPatients((patientsRes as any)?.items ?? []);
+        setItems((billsRes as any)?.items ?? []);
         setSelectedIds(new Set());
         setPageIndex(0);
       })
@@ -653,7 +653,7 @@ export default function BillingPage() {
                       <TableCell className="text-muted-foreground">{formatDate(b.createdAt)}</TableCell>
                     )}
                     {visibleColumns.itemsCount && (
-                      <TableCell className="text-muted-foreground font-medium">{b.items.length}</TableCell>
+                      <TableCell className="text-muted-foreground font-medium">{(b.items ?? []).length}</TableCell>
                     )}
                     {visibleColumns.total && (
                       <TableCell className="font-semibold text-foreground">
@@ -799,7 +799,7 @@ function BillForm({
   const [dueDate, setDueDate] = useState(initial?.dueDate?.slice(0, 10) ?? "");
   const [paymentType, setPaymentType] = useState<PaymentType>(initial?.paymentType ?? "cash");
   const [items, setItems] = useState<BillFormItem[]>(
-    initial && initial.items.length > 0
+    initial && (initial.items ?? []).length > 0
       ? initial.items.map((it) => ({
           description: it.description,
           quantity: String(it.quantity),

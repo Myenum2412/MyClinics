@@ -97,7 +97,7 @@ export function MedicineForm({
 
   React.useEffect(() => {
     listSuppliers(clinicId, { limit: 500 })
-      .then((s) => setSuppliers(s.items))
+      .then((s) => setSuppliers((s as any)?.items ?? []))
       .catch(() => {})
     if (id) {
       setLoading(true)

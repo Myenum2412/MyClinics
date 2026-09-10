@@ -795,12 +795,12 @@ export default function MedicalRecordPage() {
     Promise.allSettled(calls.map(([, p]) => p))
       .then((results) => {
         const [p, d, f, fo, r, pr, ap] = results;
-        if (p.status === "fulfilled") setPatients((p.value as PageResult<Patient>).items);
-        if (d.status === "fulfilled") setDoctors((d.value as PageResult<Doctor>).items);
-        if (f.status === "fulfilled") setFiles((f.value as { files: MedicalRecordFile[] }).files);
-        if (fo.status === "fulfilled") setFolders((fo.value as { folders: MedicalRecordFolder[] }).folders);
-        if (r.status === "fulfilled") setRecords((r.value as PageResult<MedicineRecord>).items);
-        if (pr.status === "fulfilled") setPrescriptions((pr.value as PageResult<Prescription>).items);
+        if (p.status === "fulfilled") setPatients(((p.value as any)?.items ?? []));
+        if (d.status === "fulfilled") setDoctors(((d.value as any)?.items ?? []));
+        if (f.status === "fulfilled") setFiles(((f.value as any)?.files ?? []));
+        if (fo.status === "fulfilled") setFolders(((fo.value as any)?.folders ?? []));
+        if (r.status === "fulfilled") setRecords(((r.value as any)?.items ?? []));
+        if (pr.status === "fulfilled") setPrescriptions(((pr.value as any)?.items ?? []));
         if (ap.status === "fulfilled") {
           const a = ap.value as PageResult<Appointment>;
           setAppointments({ items: a.items, total: a.total });

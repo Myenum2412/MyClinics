@@ -20,7 +20,7 @@ export default function RgbNeoIncidentsPage() {
         limit: 100,
         severity: severity === "all" ? undefined : severity,
       });
-      setItems(res.items);
+      setItems((res as any)?.items ?? []);
       setTotal(res.total);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load incidents");

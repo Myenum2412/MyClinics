@@ -24,7 +24,7 @@ export default function PatientMedicineRecordsPage() {
     if (!session?.clinicId) return;
     myRecords(session.clinicId)
       .then((res) => {
-        setRecords(res.items);
+        setRecords((res as any)?.items ?? []);
         setLoading(false);
       })
       .catch(() => setLoading(false));

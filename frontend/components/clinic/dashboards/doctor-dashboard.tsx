@@ -351,23 +351,23 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
       promises.push(listBills(clinicId, { limit: 50 }));
     }
 
-    Promise.allSettled(promises)
+     Promise.allSettled(promises)
       .then(([apptRes, patientRes, doctorRes, rxRes, billRes]) => {
         if (!active) return;
         if (apptRes.status === "fulfilled") {
-          setAppointments(apptRes.value.items);
+          setAppointments((apptRes.value as any)?.items ?? []);
         }
         if (patientRes.status === "fulfilled") {
-          setPatients(patientRes.value.items);
+          setPatients((patientRes.value as any)?.items ?? []);
         }
         if (doctorRes.status === "fulfilled") {
-          setDoctors(doctorRes.value.items);
+          setDoctors((doctorRes.value as any)?.items ?? []);
         }
         if (rxRes && rxRes.status === "fulfilled") {
-          setPrescriptions(rxRes.value.items);
+          setPrescriptions((rxRes.value as any)?.items ?? []);
         }
         if (billRes && billRes.status === "fulfilled") {
-          setBills(billRes.value.items);
+          setBills((billRes.value as any)?.items ?? []);
         }
       })
       .finally(() => {
@@ -380,7 +380,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
 
   // Stats section cards
   const chartConfig = { capacity: { label: "Capacity", color: "hsl(var(--primary))" } } satisfies ChartConfig;
-  const totalRevenue = bills.reduce((s, b) => (b.status !== "void" ? s + b.total : s), 0);
+  const totalRevenue = (bills ?? []).reduce((s, b) => (b.status !== "void" ? s + (b.total ?? 0) : s), 0);
 
   const statsData = isDoctorRole
     ? [
@@ -432,7 +432,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           name: "Revenue",
           current: totalRevenue,
           allowed: Math.max(totalRevenue, 1),
-          capacity: totalRevenue ? Math.min(100, Math.round((bills.filter(b => b.status === "paid").reduce((s, b) => s + b.total, 0) / Math.max(1, totalRevenue)) * 100)) : 0,
+          capacity: totalRevenue ? Math.min(100, Math.round(((bills ?? []).filter(b => b.status === "paid").reduce((s, b) => s + (b.total ?? 0), 0) / Math.max(1, totalRevenue)) * 100)) : 0,
           fill: "var(--chart-3)",
         },
         {

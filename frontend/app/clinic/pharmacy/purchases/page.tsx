@@ -85,9 +85,9 @@ export default function PharmacyPurchasesPage() {
         listSuppliers(clinicId, { limit: 500 }),
         listMedicines(clinicId, { limit: 500 }),
       ])
-      setPurchases(p.items)
-      setSuppliers(s.items)
-      setMedicines(m.items)
+      setPurchases((p as any)?.items ?? [])
+      setSuppliers((s as any)?.items ?? [])
+      setMedicines((m as any)?.items ?? [])
     } catch {
       toast.error("Failed to load purchases")
     } finally {
@@ -180,7 +180,7 @@ export default function PharmacyPurchasesPage() {
                       <TableCell>
                         {p.purchaseDate ? new Date(p.purchaseDate).toLocaleDateString() : "—"}
                       </TableCell>
-                      <TableCell>{p.items.length}</TableCell>
+                      <TableCell>{(p.items ?? []).length}</TableCell>
                       <TableCell className="tabular-nums">{fmtMoney(p.total)}</TableCell>
                       <TableCell>
                         <StatusBadge status={p.status} />
@@ -222,7 +222,7 @@ export default function PharmacyPurchasesPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-sm">
                 <StatusBadge status={detail.status} />
-                <span className="text-muted-foreground">Items: {detail.items.length}</span>
+                <span className="text-muted-foreground">Items: {(detail.items ?? []).length}</span>
                 <span className="ml-auto font-medium tabular-nums">{fmtMoney(detail.total)}</span>
               </div>
 

@@ -46,7 +46,7 @@ export default function OrgMenuDashboardPage() {
       q: q || undefined,
       limit: 100,
     })
-      .then((res) => setItems(res.items))
+      .then((res) => setItems((res as any)?.items ?? []))
       .catch(() => toast.error("Failed to load clinics"))
       .finally(() => setLoading(false));
   }, [statusFilter, q]);

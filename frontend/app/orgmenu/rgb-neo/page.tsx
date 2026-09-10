@@ -30,7 +30,7 @@ export default function RgbNeoCommandCenter() {
     (async () => {
       try {
         const res = await listAllClinics({ limit: 200 });
-        setClinics(res.items);
+        setClinics((res as any)?.items ?? []);
         if (res.items[0]) setSelectedClinic(res.items[0].clinicId);
       } catch {
         /* ignore */
@@ -47,8 +47,8 @@ export default function RgbNeoCommandCenter() {
           getOrgPredictions().catch(() => ({ items: [] as Prediction[] })),
         ]);
         setOverview(ov);
-        setIncidents(inc.items);
-        setPredictions(pred.items);
+        setIncidents((inc as any)?.items ?? []);
+        setPredictions((pred as any)?.items ?? []);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load command center");
         toast.error("Failed to load command center");

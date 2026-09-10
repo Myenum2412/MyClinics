@@ -62,7 +62,7 @@ export default function NotificationsPage() {
     if (!clinicId) return;
     listNotifications(clinicId, { limit: 100 })
       .then((res) => {
-        setItems(res.items);
+        setItems((res as any)?.items ?? []);
         setUnread(res.unread);
         setPageIndex(0);
       })
@@ -321,7 +321,7 @@ function NotificationForm({
     let cancelled = false;
     listPatients(clinicId, { status: "active", limit: 100 })
       .then((res) => {
-        if (!cancelled) setPatients(res.items);
+        if (!cancelled) setPatients((res as any)?.items ?? []);
       })
       .catch(() => {
         if (!cancelled) toast.error("Failed to load patients");

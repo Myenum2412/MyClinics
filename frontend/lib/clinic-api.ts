@@ -654,10 +654,10 @@ export function getSession(): ClinicSession | null {
   return token ? sessionFromToken(token) : null;
 }
 
-/** Tenant-scoped helper: throws a clear error when clinicId is missing. */
+/** Tenant-scoped helper: returns dummy path when clinicId missing (prevents sync throw in Promise arrays). */
 function tenantPath(clinicId: string | null, suffix: string): string {
   if (!clinicId) {
-    throw new ClinicApiError("No clinic in session", 400, "NO_CLINIC");
+    return `/api/clinics/_missing${suffix}`;
   }
   return `/api/clinics/${clinicId}${suffix}`;
 }

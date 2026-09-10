@@ -63,7 +63,7 @@ export default function AuditLogsPage() {
       limit: 50,
     })
       .then((res) => {
-        setItems(res.items);
+        setItems((res as any)?.items ?? []);
         setSelectedIds(new Set());
         setPageIndex(0);
       })

@@ -70,8 +70,8 @@ export default function PharmacyReportsPage() {
     ])
       .then(([m, s]) => {
         if (!active) return
-        setMedicines(m.items)
-        setSuppliers(s.items)
+        setMedicines((m as any)?.items ?? [])
+        setSuppliers((s as any)?.items ?? [])
       })
       .catch(() => {
         /* ignore — selects remain empty */

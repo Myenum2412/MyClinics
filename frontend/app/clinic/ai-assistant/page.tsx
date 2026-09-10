@@ -63,10 +63,10 @@ function ClinicAssistantLayout({ role }: { role?: string }) {
   const ClinicWelcome = () => (
     <div className="aui-thread-welcome-root mb-6 flex flex-col items-center px-4 text-center">
       <div className="size-14 rounded-2xl overflow-hidden shadow-sm mb-4 border bg-muted">
-        <Image src="/aidps.png" alt="AIDP" width={56} height={56} className="size-14 object-cover" />
+        <Image src="/aidps.png" alt="Ai Root" width={56} height={56} className="size-14 object-cover" />
       </div>
       <h1 className="aui-thread-welcome-message-inner text-base font-semibold tracking-tight">
-        AIDP — your clinic assistant
+        Ai Root — your clinic assistant
       </h1>
       <p className="text-sm text-muted-foreground max-w-[420px] mt-1.5 leading-relaxed">
         Chat about appointments, doctor availability, fees or clinic timings. Try Tanglish — “Fees evalavu bro?”
@@ -123,10 +123,10 @@ export default function ClinicAiAssistantPage() {
         <div className="h-[52px] shrink-0 flex items-center justify-between px-4 sm:px-5 border-b bg-card">
           <div className="flex items-center gap-3 min-w-0">
             <div className="size-8 rounded-lg overflow-hidden shrink-0 border bg-muted">
-              <Image src="/aidps.png" alt="AIDP" width={32} height={32} className="size-8 object-cover" />
+              <Image src="/aidps.png" alt="Ai Root" width={32} height={32} className="size-8 object-cover" />
             </div>
             <div className="min-w-0">
-              <p className="text-[13px] font-medium leading-none truncate">AIDP Clinic Assistant</p>
+              <p className="text-[13px] font-medium leading-none truncate">Ai Root Clinic Assistant</p>
               <p className="text-[11px] text-muted-foreground hidden sm:block">
                 Meenu Care • {session.role} • omni • assistant-ui
               </p>

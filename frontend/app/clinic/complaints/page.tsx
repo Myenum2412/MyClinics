@@ -34,7 +34,7 @@ export default function TreatmentPage(){
   const [appointments,setAppointments]=useState<Appointment[]>([]);
   const [prescriptions,setPrescriptions]=useState<any[]>([]);
   const [items,save]=useStore("treatment_combined");
-  useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients(r.items)).catch(()=>{}); listDoctors(clinicId,{limit:100}).then(r=>setDoctors(r.items)).catch(()=>{}); listAppointments(clinicId,{limit:100}).then(r=>setAppointments(r.items)).catch(()=>{}); import("@/lib/clinic-api").then(m=> m.listPrescriptions(clinicId,{limit:100}).then(r=>setPrescriptions(r.items)).catch(()=>{})); },[clinicId]);
+  useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients((r as any)?.items ?? [])).catch(()=>{}); listDoctors(clinicId,{limit:100}).then(r=>setDoctors((r as any)?.items ?? [])).catch(()=>{}); listAppointments(clinicId,{limit:100}).then(r=>setAppointments((r as any)?.items ?? [])).catch(()=>{}); import("@/lib/clinic-api").then(m=> m.listPrescriptions(clinicId,{limit:100}).then(r=>setPrescriptions((r as any)?.items ?? [])).catch(()=>{})); },[clinicId]);
   const localPatients = useMemo(()=>{
     const s=new Set<string>();
     items.forEach(e=>{ if(e.patient) s.add(e.patient); });
