@@ -248,4 +248,33 @@ export function registerAiRoutes(app: FastifyInstance): void {
       });
     }
   });
+
+  // Generic chat proxy for Eve frontend — uses backend's NVIDIA_API_KEY so Vercel env missing still works
+  app.post("/api/ai/chat", async (request, reply) => {
+    const body = request.body as { message?: string; projectContext?: string; conversationHistory?: { role: string; content: string }[] };
+    const message = body?.message?.trim();
+    if (!message) return reply.code(400).send({ error: "message required" });
+    const nvidiaKey = process.env.NVIDIA_API_KEY;
+    const nvidiaModel = process.env.NVIDIA_MODEL || "meta/llama-3.1-70b-instruct";
+    if (!nvidiaKey) return reply.code(503).send({ error: "AI not configured" });
+    try {
+      const userContent = body.projectContext ? `${body.projectContext}\n\nUser: ${message}` : message;
+      const messages = [...(body.conversationHistory ?? []), { role: "user", content: userContent }];
+      const r = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${nvidiaKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: nvidiaModel, messages, max_tokens: 1024, temperature: 0.4 }),
+      });
+      if (!r.ok) {
+        const t = await r.text().catch(() => "");
+        return reply.code(502).send({ error: `NIM ${r.status}: ${t.slice(0, 300)}` });
+      }
+      const j = await r.json() as { choices?: { message?: { content?: string } }[] };
+      const replyText = j.choices?.[0]?.message?.content?.trim();
+      if (!replyText) return reply.code(502).send({ error: "Empty AI response" });
+      return reply.send({ reply: replyText });
+    } catch (err) {
+      return reply.code(500).send({ error: String(err) });
+    }
+  });
 }

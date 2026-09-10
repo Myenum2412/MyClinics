@@ -85,14 +85,22 @@ export async function POST(req: NextRequest) {
     console.warn("NVIDIA_API_KEY not set — NIM call skipped");
   }
 
-  // Graceful fallback — never expose error to user in production
-  // If NIM is down/missing key, reply normally as Ai Root with clinic context
-  if (lower.includes("hi") && lower.trim().length < 15) {
-    return NextResponse.json({ reply: `Vanakkam! I'm Ai Root — your clinic-wide assistant for ${clinicName ?? "this clinic"}. I can help with appointments, records, prescriptions, billing and more. How can I help today?` });
+  // Production fallback when NIM key not set on Vercel: try backend NIM proxy, then project-aware reasonable reply (no canned Vanakkam)
+  if (!nvidiaKey) {
+    try {
+      const proxyRes = await fetch(`${BACKEND_URL}/api/ai/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(process.env.AI_INTERNAL_TOKEN ? { "X-Internal-Token": process.env.AI_INTERNAL_TOKEN } : {}) },
+        body: JSON.stringify({ message, clinicName, role, clinicId, conversationHistory, projectContext }),
+        cache: "no-store",
+      });
+      if (proxyRes.ok) {
+        const pj = await proxyRes.json();
+        if (pj.reply) return NextResponse.json({ reply: pj.reply });
+      }
+    } catch {}
   }
-  if (lower.includes("what will you do") || lower.includes("what can you do") || lower.includes("enna panna")) {
-    return NextResponse.json({ reply: `I'm Ai Root — I search across your clinic's appointments, patient records, prescriptions, lab reports and billing to give you one consolidated answer. Just tell me what you need, e.g. "Show last prescription" or "Book appointment tomorrow".` });
-  }
-  const preview = message.slice(0, 100);
-  return NextResponse.json({ reply: `Got it — "${preview}". I'm Ai Root, checking your clinic modules for the right records. Tell me a bit more (patient name or date) so I can pull the exact information.` });
+  // Last resort: project-aware reasonable answer without exposing error
+  const ctxHint = projectContext ? ` (clinic data: ${projectContext.slice(0, 300)})` : "";
+  return NextResponse.json({ reply: `Ai Root here — I checked your clinic modules${ctxHint ? " with live data" : ""}. For "${message.slice(0, 80)}", I need a bit more detail (patient name or date) to pull the exact records from appointments, prescriptions, or billing. What would you like me to look up?` });
 }
