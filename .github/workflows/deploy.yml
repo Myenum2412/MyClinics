@@ -4,6 +4,12 @@ on:
     branches: [main]
 
 jobs:
+  noop:
+    runs-on: ubuntu-latest
+    if: ${{ always() }}
+    steps:
+      - run: echo "Deploy workflow — Vercel handles frontend via native GitHub integration; backend requires AWS/EC2 secrets to run."
+
   vercel:
     runs-on: ubuntu-latest
     # Skipped if VERCEL_TOKEN missing — project already auto-deploys via Vercel's native GitHub integration (see Vercel Dashboard → Settings → Git)
@@ -33,7 +39,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION || 'ap-southeast-2' }}
+          aws-region: ap-southeast-2
 
       - name: Deploy backend via SSM
         run: |
