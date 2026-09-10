@@ -10,7 +10,7 @@ import Image from "next/image";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Command, History } from "lucide-react";
 
-function ClinicAssistantLayout({ role }: { role?: string }) {
+function ClinicAssistantLayout({ role, clinicId, clinicName }: { role?: string; clinicId?: string; clinicName?: string }) {
   const adapter: ChatModelAdapter = {
     async run({ messages, abortSignal }) {
       const lastUser = [...messages].reverse().find((m) => m.role === "user");
@@ -27,10 +27,19 @@ function ClinicAssistantLayout({ role }: { role?: string }) {
         }
       }
       if (!prompt) prompt = "Hi";
+      const history = messages.slice(-8).map((m) => ({ role: m.role, content: (m.content as unknown as { text?: string }[] | string) }));
+      // Normalize history to {role, content: string}
+      const convHistory = messages.slice(-6).map((m) => {
+        const c = m.content as unknown;
+        let text = "";
+        if (Array.isArray(c)) text = (c as { text?: string }[]).map((p) => p.text ?? "").join("\n");
+        else if (typeof c === "string") text = c;
+        return { role: m.role as string, content: text };
+      }).filter((x) => x.content);
       const res = await fetch("/api/ai/eve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: prompt, clinicName: "Meenu Care", role }),
+        body: JSON.stringify({ message: prompt, clinicName: clinicName ?? "Meenu Care", role, clinicId, conversationHistory: convHistory }),
         signal: abortSignal,
       });
       if (!res.ok) {
@@ -143,7 +152,7 @@ export default function ClinicAiAssistantPage() {
         </div>
 
         <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-          <ClinicAssistantLayout role={session.role} />
+          <ClinicAssistantLayout role={session.role} clinicId={session.clinicId ?? undefined} clinicName="Meenu Care" />
         </div>
 
         <div className="shrink-0 border-t bg-muted/20 px-4 py-2 text-center">

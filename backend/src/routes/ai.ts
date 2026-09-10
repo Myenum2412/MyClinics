@@ -249,6 +249,30 @@ export function registerAiRoutes(app: FastifyInstance): void {
     }
   });
 
+  // Ai Root chat history (MongoDB) — auto title + clinic-scoped
+  app.post("/api/ai/chats", async (request, reply) => {
+    const body = request.body as { clinicId?: string; userId?: string; threadId?: string; message?: string; reply?: string; title?: string };
+    if (!body?.clinicId || !body?.message) return reply.code(400).send({ error: "clinicId and message required" });
+    const db = await getDb();
+    const title = body.title || body.message.slice(0, 40) + (body.message.length > 40 ? "..." : "");
+    let threadId = body.threadId;
+    if (!threadId) {
+      threadId = `thr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      await db.collection(DB_COLLECTIONS.aiChats).insertOne({ threadId, clinicId: body.clinicId, userId: body.userId ?? null, title, messages: [{ role: "user", content: body.message, at: new Date().toISOString() }, ...(body.reply ? [{ role: "assistant", content: body.reply, at: new Date().toISOString() }] : [])], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    } else {
+      await db.collection(DB_COLLECTIONS.aiChats).updateOne({ threadId, clinicId: body.clinicId }, { $push: { messages: { $each: [{ role: "user", content: body.message, at: new Date().toISOString() }, ...(body.reply ? [{ role: "assistant", content: body.reply, at: new Date().toISOString() }] : [])] } as unknown as Record<string, unknown>, $set: { updatedAt: new Date().toISOString() } }, { upsert: true });
+      if (title) await db.collection(DB_COLLECTIONS.aiChats).updateOne({ threadId, clinicId: body.clinicId, title: { $exists: true } }, { $setOnInsert: { title } } as unknown as Record<string, unknown>);
+    }
+    return reply.send({ threadId, title });
+  });
+  app.get("/api/ai/chats", async (request, reply) => {
+    const q = request.query as { clinicId?: string; userId?: string };
+    if (!q?.clinicId) return reply.code(400).send({ error: "clinicId required" });
+    const db = await getDb();
+    const items = await db.collection(DB_COLLECTIONS.aiChats).find({ clinicId: q.clinicId, ...(q.userId ? { userId: q.userId } : {}) }).sort({ updatedAt: -1 }).limit(50).toArray();
+    return reply.send({ items: items.map((d) => ({ threadId: d.threadId, title: d.title, updatedAt: d.updatedAt, messages: d.messages })) });
+  });
+
   // Generic chat proxy for Eve frontend — OpenRouter Thinking Machines: Inkling
   app.post("/api/ai/chat", async (request, reply) => {
     const body = request.body as { message?: string; projectContext?: string; conversationHistory?: { role: string; content: string }[] };

@@ -85,6 +85,20 @@ export async function POST(req: NextRequest) {
   // OpenRouter — Thinking Machines: Inkling — no system prompt, nurse persona via user context + project data
   const openrouterKey = process.env.OPENROUTER_API_KEY || "";
   const openrouterModel = process.env.OPENROUTER_MODEL || "thinkingmachines/inkling";
+  // Store chat history helper (MongoDB via backend)
+  async function storeChat(replyText: string) {
+    if (!clinicId || !message) return;
+    try {
+      const title = message.slice(0, 40) + (message.length > 40 ? "..." : "");
+      await fetch(`${BACKEND_URL}/api/ai/chats`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clinicId, message, reply: replyText, title }),
+        cache: "no-store",
+      }).catch(() => {});
+    } catch {}
+  }
+
   const nurseContext = `
 You are Ai Root, an intelligent, friendly, professional clinic nurse assistant for ${
   clinicName ?? "this clinic"
@@ -685,7 +699,7 @@ Always behave as Ai Root, the intelligent nurse assistant for THIS clinic only.
     if (r.ok) {
       const j = await r.json();
       const reply = j.choices?.[0]?.message?.content?.trim();
-      if (reply) return NextResponse.json({ reply });
+      if (reply) { await storeChat(reply); return NextResponse.json({ reply }); }
     } else {
       const errText = await r.text().catch(() => "");
       console.error("OpenRouter error", r.status, errText.slice(0, 500));

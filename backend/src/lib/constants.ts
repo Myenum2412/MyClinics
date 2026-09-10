@@ -25,4 +25,5 @@ export const DB_COLLECTIONS = {
   bills: "bills",
   medicines: "medicines",
   services: "services",
+  aiChats: "ai_chats",
 } as const;
