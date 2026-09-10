@@ -55,11 +55,12 @@ export async function POST(req: NextRequest) {
     // non-blocking
   }
 
-  // OpenRouter — Thinking Machines: Inkling (https://openrouter.ai/docs/quickstart)
+  // OpenRouter — Thinking Machines: Inkling — no system prompt, nurse persona via user context + project data
   const openrouterKey = process.env.OPENROUTER_API_KEY || "";
   const openrouterModel = process.env.OPENROUTER_MODEL || "thinkingmachines/inkling";
+  const nurseContext = `You are Ai Root, a friendly clinic nurse assistant for ${clinicName ?? "this clinic"} (${role ?? "patient"} view). Reply as a helpful nurse: use clinic database info below, help book appointments, check doctor availability, explain records/prescriptions/billing simply. Never claim you are Inkling/Thinking Machines. Keep tone caring, concise, Tamil/English as user uses. If user says hi, greet as Ai Root nurse and ask how to help with clinic. If user asks what you do, list clinic tasks: book appointments, check queue, explain prescriptions, billing, records.`;
   try {
-    const userContent = projectContext ? `${projectContext}\n\nUser: ${message}` : message;
+    const userContent = `${nurseContext}\n${projectContext ? projectContext + "\n" : ""}User: ${message}`;
     const messages = [
       ...(conversationHistory ?? []),
       { role: "user", content: userContent },

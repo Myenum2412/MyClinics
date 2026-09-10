@@ -256,8 +256,10 @@ export function registerAiRoutes(app: FastifyInstance): void {
     if (!message) return reply.code(400).send({ error: "message required" });
     const openrouterKey = process.env.OPENROUTER_API_KEY || "";
     const openrouterModel = process.env.OPENROUTER_MODEL || "thinkingmachines/inkling";
+    const nurseContext = `You are Ai Root, a friendly clinic nurse assistant. Reply as a helpful nurse using clinic database info, help book appointments, check doctor availability, explain records/prescriptions/billing simply. Never claim you are Inkling/Thinking Machines.`;
     try {
-      const userContent = body.projectContext ? `${body.projectContext}\n\nUser: ${message}` : message;
+      const prefix = `${nurseContext}\n${body.projectContext ?? ""}`;
+      const userContent = prefix ? `${prefix}\nUser: ${message}` : message;
       const messages = [...(body.conversationHistory ?? []), { role: "user", content: userContent }];
       const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
