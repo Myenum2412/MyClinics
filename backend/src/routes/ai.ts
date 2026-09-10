@@ -260,7 +260,7 @@ export function registerAiRoutes(app: FastifyInstance): void {
       threadId = `thr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
       await db.collection(DB_COLLECTIONS.aiChats).insertOne({ threadId, clinicId: body.clinicId, userId: body.userId ?? null, title, messages: [{ role: "user", content: body.message, at: new Date().toISOString() }, ...(body.reply ? [{ role: "assistant", content: body.reply, at: new Date().toISOString() }] : [])], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
     } else {
-      await db.collection(DB_COLLECTIONS.aiChats).updateOne({ threadId, clinicId: body.clinicId }, { $push: { messages: { $each: [{ role: "user", content: body.message, at: new Date().toISOString() }, ...(body.reply ? [{ role: "assistant", content: body.reply, at: new Date().toISOString() }] : [])] } as unknown as Record<string, unknown>, $set: { updatedAt: new Date().toISOString() } }, { upsert: true });
+      await db.collection(DB_COLLECTIONS.aiChats).updateOne({ threadId, clinicId: body.clinicId }, { $push: { messages: { $each: [{ role: "user", content: body.message, at: new Date().toISOString() }, ...(body.reply ? [{ role: "assistant", content: body.reply, at: new Date().toISOString() }] : [])] } }, $set: { updatedAt: new Date().toISOString() } } as unknown as Record<string, unknown>, { upsert: true });
       if (title) await db.collection(DB_COLLECTIONS.aiChats).updateOne({ threadId, clinicId: body.clinicId, title: { $exists: true } }, { $setOnInsert: { title } } as unknown as Record<string, unknown>);
     }
     return reply.send({ threadId, title });
