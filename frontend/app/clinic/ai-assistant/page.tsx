@@ -27,7 +27,6 @@ function ClinicAssistantLayout({ role, clinicId, clinicName }: { role?: string; 
         }
       }
       if (!prompt) prompt = "Hi";
-      const history = messages.slice(-8).map((m) => ({ role: m.role, content: (m.content as unknown as { text?: string }[] | string) }));
       // Normalize history to {role, content: string}
       const convHistory = messages.slice(-6).map((m) => {
         const c = m.content as unknown;

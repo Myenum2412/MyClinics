@@ -24,62 +24,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ reply: "I'm designed to assist with this clinic and its services — appointments, doctors, treatments, billing, records, and patient support. How can I help you with the clinic today?" });
   }
 
-  // Clinic-scoped data fetch: ONLY current clinicId, never other clinics. Modules: Appointment, Patients, Medical Records, Treatment, Prescriptions, Medicine
+  // Clinic-scoped data fetch: ONLY current clinicId (full page access on-demand, never other clinics)
   let projectContext = "";
-  const headers: Record<string, string> = {};
-  const cookie = (() => { try { return (typeof req !== "undefined" && (req as unknown as { headers: { get(n: string): string | null } }).headers.get("cookie")) ?? ""; } catch { return ""; } })();
-  if (cookie) headers.cookie = cookie;
-  // Helper to fetch clinic-scoped JSON with auth cookie
-  async function fetchClinic(path: string): Promise<unknown | null> {
-    if (!clinicId) return null;
-    try {
-      const r = await fetch(`${BACKEND_URL}/api/clinics/${clinicId}${path}`, { headers, cache: "no-store" });
-      if (!r.ok) return null;
-      return await r.json();
-    } catch { return null; }
-  }
   try {
-    const wantsPatients = /patient|people|person|name|mobile|phone/i.test(message);
-    const wantsAppt = /appointment|book|slot|token|queue|schedule|visit/i.test(message);
-    const wantsRecords = /record|medical|report|lab|file|document/i.test(message);
-    const wantsTreatment = /treatment|diagnosis|complaint|symptom/i.test(message);
-    const wantsPresc = /prescription|medicine|drug|tablet|dose|dosage/i.test(message);
-    const wantsMedicine = wantsPresc || /pharmacy|stock|inventory/i.test(message);
-    const fetchAll = !wantsPatients && !wantsAppt && !wantsRecords && !wantsTreatment && !wantsPresc;
-
-    const tasks: Promise<void>[] = [];
-    let ctxParts: string[] = [];
-
-    // Always fetch clinic header (name/settings) scoped to clinicId
-    tasks.push((async () => {
-      if (process.env.AI_INTERNAL_TOKEN && clinicId) {
+    const cookie = req.headers.get("cookie") ?? "";
+    if (clinicId) {
+      // Lightweight: only clinic header, not 6 parallel queries (avoid Vercel timeout/white page)
+      if (process.env.AI_INTERNAL_TOKEN) {
         const aiRes = await fetch(`${BACKEND_URL}/api/ai/context?organizationId=${encodeURIComponent(clinicId)}`, {
-          headers: { "X-Internal-Token": process.env.AI_INTERNAL_TOKEN, cookie: headers.cookie ?? "" },
+          headers: { "X-Internal-Token": process.env.AI_INTERNAL_TOKEN, cookie },
           cache: "no-store",
         }).catch(() => null);
         if (aiRes?.ok) {
           const ctx = await aiRes.json().catch(() => null);
-          if (ctx) ctxParts.push(`Clinic header: ${JSON.stringify(ctx).slice(0, 800)}`);
-          return;
+          if (ctx) projectContext = `CLINIC_ID=${clinicId} — use ONLY this clinic. Clinic header: ${JSON.stringify(ctx).slice(0, 1000)}\nModules available: Appointment, Patients, Medical Records, Treatment, Prescriptions, Medicine (fetch on demand)`;
         }
       }
-      const clinic = (await fetchClinic("")) as { name?: string; settings?: unknown } | null;
-      if (clinic) ctxParts.push(`Clinic: ${clinic.name ?? clinicName ?? clinicId} | ${JSON.stringify((clinic as unknown as { settings?: unknown }).settings ?? {}).slice(0, 600)}`);
-    })());
-
-    if (wantsPatients || fetchAll) tasks.push(fetchClinic("/patients?limit=5").then(d => { if (d) ctxParts.push(`Patients (this clinic only, sample 5): ${JSON.stringify(d).slice(0, 1500)}`); }));
-    if (wantsAppt || fetchAll) tasks.push(fetchClinic("/appointments?limit=5").then(d => { if (d) ctxParts.push(`Appointments (this clinic only): ${JSON.stringify(d).slice(0, 1500)}`); }));
-    if (wantsRecords || fetchAll) tasks.push(fetchClinic("/medical-record?limit=5").then(d => { if (d) ctxParts.push(`Medical Records (this clinic): ${JSON.stringify(d).slice(0, 1500)}`); }));
-    if (wantsTreatment || fetchAll) tasks.push(fetchClinic("/medicine?limit=5").then(d => { if (d) ctxParts.push(`Treatment/Medicine Records (this clinic): ${JSON.stringify(d).slice(0, 1500)}`); }));
-    if (wantsPresc) tasks.push(fetchClinic("/prescriptions?limit=5").then(d => { if (d) ctxParts.push(`Prescriptions (this clinic): ${JSON.stringify(d).slice(0, 1500)}`); }));
-    if (wantsMedicine) tasks.push(fetchClinic("/pharmacy/medicines?limit=5").then(d => { if (d) ctxParts.push(`Pharmacy Medicines (this clinic): ${JSON.stringify(d).slice(0, 1500)}`); }));
-
-    await Promise.all(tasks);
-    // Enforce clinic isolation in prompt
-    projectContext = `CLINIC_ID=${clinicId ?? "unknown"} — use ONLY this clinic's data. Never use other clinics.\n` + ctxParts.join("\n");
-    if (!clinicId) projectContext = "No clinicId provided — cannot access clinic data. Ask user to open a clinic first.";
+      if (!projectContext) {
+        // fallback: at least pass clinicId isolation without fetching
+        projectContext = `CLINIC_ID=${clinicId} — use ONLY this clinic (${clinicName ?? clinicId}). Modules: Appointment, Patients, Medical Records, Treatment, Prescriptions, Medicine. Ask for patient name/date to fetch specific records.`;
+      }
+    } else {
+      projectContext = "No clinicId — ask user to open clinic, cannot access data.";
+    }
   } catch {
-    // non-blocking
+    if (clinicId) projectContext = `CLINIC_ID=${clinicId} — use ONLY this clinic.`;
   }
 
   // OpenRouter — Thinking Machines: Inkling — no system prompt, nurse persona via user context + project data
