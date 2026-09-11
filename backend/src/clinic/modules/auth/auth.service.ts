@@ -260,16 +260,25 @@ export class AuthService {
       throw new UnauthorizedError("This account has been deactivated");
     }
 
-    if (user.role !== "platform_admin") {
-      const clinic = user.clinicId
-        ? await this.repo.findClinicByClinicId(user.clinicId)
-        : null;
+    let clinicName: string | null = null;
+    if (user.role !== "platform_admin" && user.clinicId) {
+      const clinic = await this.repo.findClinicByClinicId(user.clinicId);
       if (!clinic || clinic.status !== "active") {
         throw new UnauthorizedError("This clinic is not active");
       }
+      clinicName = clinic.name;
     }
 
-    await this.repo.touchLastLogin(user.userId);
+    // Non-critical writes: don't block login response (prevents 504 when DB slow)
+    void this.repo.touchLastLogin(user.userId).catch(() => {});
+    void writeAudit(this.db, userToCtx(user), {
+      action: "login",
+      entity: "user",
+      entityId: user.userId,
+      metadata: { email: user.email },
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    }).catch(() => {});
 
     const token = await this.issueToken({
       userId: user.userId,
@@ -281,19 +290,10 @@ export class AuthService {
       patientId: user.patientId,
     });
 
-    await writeAudit(this.db, userToCtx(user), {
-      action: "login",
-      entity: "user",
-      entityId: user.userId,
-      metadata: { email: user.email },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
     return {
       userId: user.userId,
       clinicId: user.clinicId,
-      clinicName: user.clinicId ? (await this.repo.findClinicByClinicId(user.clinicId))?.name ?? null : null,
+      clinicName,
       role: user.role,
       name: user.name,
       email: user.email,
