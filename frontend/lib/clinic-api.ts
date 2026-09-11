@@ -515,7 +515,17 @@ export const API_BASE_URL = API_BASE;
 
 /** Short-lived in-memory cache for GET requests (avoids refetch on nav). */
 const getCache = new Map<string, { data: unknown; expires: number }>();
+const pendingGets = new Map<string, Promise<unknown>>();
 const GET_CACHE_TTL_MS = 30_000;
+const GET_SWR_MS = 60_000;
+
+function invalidateCacheForPath(path: string) {
+  // Mutations only invalidate GETs for same clinic prefix, not entire cache
+  const m = path.match(/^\/api\/clinics\/([^/]+)/);
+  const prefix = m ? `/api/clinics/${m[1]}` : null;
+  if (!prefix) { getCache.clear(); return; }
+  for (const k of getCache.keys()) if (k.includes(prefix)) getCache.delete(k);
+}
 
 async function request<T>(
   path: string,
@@ -526,16 +536,11 @@ async function request<T>(
   };
   const token = typeof window !== "undefined" ? getStoredToken() : null;
   if (token) headers.Authorization = `Bearer ${token}`;
-  // CSRF double-submit for cookie-auth mutating requests
   const csrf = getCsrfToken();
   const method = (init.method ?? "GET").toUpperCase();
   if (csrf && method !== "GET" && method !== "HEAD" && method !== "OPTIONS") {
     headers["X-CSRF-Token"] = csrf;
   }
-
-  // Only set Content-Type for an actual JSON payload. Sending
-  // "application/json" on a bodyless request (e.g. DELETE) makes the server
-  // try to parse an empty body and fail with 400 "Invalid JSON body".
   const hasBody = init.body != null;
   if (hasBody && typeof init.body === "string" && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
@@ -548,55 +553,61 @@ async function request<T>(
   if (method === "GET" && !skipCache) {
     const hit = getCache.get(cacheKey);
     if (hit && hit.expires > nowMs()) return hit.data as T;
-  } else {
-    getCache.clear();
+    // SWR: serve stale while revalidating in background
+    if (hit && hit.expires + GET_SWR_MS > nowMs()) {
+      // trigger background revalidation without blocking
+      setTimeout(() => { void doFetch<T>(url, path, init, headers, cacheKey, true); }, 0);
+      return hit.data as T;
+    }
+    const pending = pendingGets.get(cacheKey);
+    if (pending) return pending as Promise<T>;
+  } else if (method !== "GET") {
+    // don't clear aggressively here; clear after success
   }
 
-  let res: Response;
-  try {
-    res = await fetch(url, { ...init, headers, cache: "no-store", credentials: "include" });
-  } catch (e) {
-    // Fallback: if direct API_BASE fetch failed, retry via same-origin proxy (avoids CORS/network issues on Vercel)
-    if (API_BASE && url.startsWith(API_BASE)) {
-      try {
-        const proxyUrl = url.slice(API_BASE.length);
-        res = await fetch(proxyUrl, { ...init, headers, cache: "no-store", credentials: "include" });
-      } catch (e2) {
-        const msg = e instanceof TypeError ? `Network error — cannot reach API at ${API_BASE || "proxy"} (${e instanceof Error ? e.message : ""}). Retried via proxy also failed. Check backend at https://api.myclinic.myenum.in is up and CORS allows ${typeof window !== "undefined" ? window.location.origin : ""}.` : e instanceof Error ? e.message : "Network error";
+  return doFetch<T>(url, path, init, headers, cacheKey, skipCache) as Promise<T>;
+}
+
+async function doFetch<T>(url: string, path: string, init: RequestInit, headers: Record<string,string>, cacheKey: string, skipCache: boolean): Promise<T> {
+  const method = (init.method ?? "GET").toUpperCase();
+  const isGet = method === "GET" && !skipCache;
+  const task = (async (): Promise<T> => {
+    let res: Response;
+    try {
+      res = await fetch(url, { ...init, headers, credentials: "include" });
+    } catch (e) {
+      if (API_BASE && url.startsWith(API_BASE)) {
+        try {
+          const proxyUrl = url.slice(API_BASE.length);
+          res = await fetch(proxyUrl, { ...init, headers, credentials: "include" });
+        } catch {
+          const msg = e instanceof TypeError ? `Network error — cannot reach API at ${API_BASE || "proxy"} (${e instanceof Error ? e.message : ""}).` : e instanceof Error ? e.message : "Network error";
+          throw new ClinicApiError(msg, 0, "NETWORK_ERROR");
+        }
+      } else {
+        const msg = e instanceof TypeError ? `Network error — cannot reach API at ${API_BASE || "proxy"} (${e.message}).` : e instanceof Error ? e.message : "Network error";
         throw new ClinicApiError(msg, 0, "NETWORK_ERROR");
       }
-    } else {
-      const msg = e instanceof TypeError ? `Network error — cannot reach API at ${API_BASE || "proxy"} (${e.message}). Check backend at https://api.myclinic.myenum.in is up and CORS allows ${typeof window !== "undefined" ? window.location.origin : ""}.` : e instanceof Error ? e.message : "Network error";
-      throw new ClinicApiError(msg, 0, "NETWORK_ERROR");
     }
-  }
-
-  let data: unknown;
-  try {
-    data = await res.json();
-  } catch {
-    data = {};
-  }
-
-  if (!res.ok) {
-    const err = data as { error?: string; code?: string };
-    throw new ClinicApiError(
-      err.error ?? `Request failed (${res.status})`,
-      res.status,
-      err.code
-    );
-  }
-
-  if (method === "GET" && !skipCache) {
-    getCache.set(cacheKey, { data, expires: nowMs() + GET_CACHE_TTL_MS });
-    if (getCache.size > 200) {
-      const now = nowMs();
-      for (const [key, entry] of getCache) {
-        if (entry.expires <= now) getCache.delete(key);
-      }
+    let data: unknown;
+    try { data = await res.json(); } catch { data = {}; }
+    if (!res.ok) {
+      const err = data as { error?: string; code?: string };
+      throw new ClinicApiError(err.error ?? `Request failed (${res.status})`, res.status, err.code);
     }
+    if (isGet) {
+      getCache.set(cacheKey, { data, expires: nowMs() + GET_CACHE_TTL_MS });
+      if (getCache.size > 200) for (const [k, v] of getCache) if (v.expires + GET_SWR_MS <= nowMs()) getCache.delete(k);
+    } else if (method !== "GET" && method !== "HEAD") {
+      invalidateCacheForPath(path);
+    }
+    return data as T;
+  })();
+  if (isGet) {
+    pendingGets.set(cacheKey, task);
+    task.finally(() => pendingGets.delete(cacheKey));
   }
-  return data as T;
+  return task;
 }
 
 async function slideSession(): Promise<boolean> {
