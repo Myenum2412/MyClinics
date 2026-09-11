@@ -12,6 +12,11 @@ import {
   type Doctor,
   type Prescription,
   getDashboard,
+  listAppointments,
+  listBills,
+  listDoctors,
+  listPatients,
+  listPrescriptions,
 } from "@/lib/clinic-api";
 import { Card, CardContent } from "@/components/ui/card";
 import { KOLKATA_TZ, now, toLocalDateISO, parseLocalDate, addDays, formatDate, weekdayIndex } from "@/lib/datetime";
@@ -330,80 +335,105 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
+  const [counts, setCounts] = useState<{ appointments: number; patients: number; doctors: number; prescriptions: number; revenue: number } | null>(null);
 
   useEffect(() => {
     if (!clinicId) return;
     let active = true;
     setLoading(true);
-    getDashboard(clinicId)
-      .then((data) => {
+    async function load() {
+      try {
+        const data = await getDashboard(clinicId);
         if (!active) return;
         setAppointments((data.appointments as Appointment[]) ?? []);
         setPatients((data.patients as Patient[]) ?? []);
         setDoctors((data.doctors as unknown as Doctor[]) ?? []);
-        // prescriptions count used via stats, no full list needed for dashboard
-        setPrescriptions([]);
+        // backend returns limited patients (5) but counts has true totals - keep both
+        setCounts(data.counts);
+        // derive prescriptions length from counts (no list needed)
+        setPrescriptions(Array(data.counts.prescriptions).fill(null as any));
         setBills((data.bills as Bill[]) ?? []);
-        // store counts via refs if needed - we derive from lengths but use dashboard counts if larger
-        (window as any).__dashboardCounts = data.counts;
-      })
-      .catch(() => toast.error("Failed to load dashboard"))
-      .finally(() => {
+      } catch (e: any) {
+        // fallback if backend not deployed yet (404) - use old 4-5 parallel calls
+        const is404 = e?.status === 404;
+        if (!is404) { toast.error("Failed to load dashboard"); }
+        try {
+          const promises: Promise<any>[] = [
+            listAppointments(clinicId, { limit: 50 }),
+            listPatients(clinicId, { limit: 50 }),
+            listDoctors(clinicId, { limit: 50 }),
+            listPrescriptions(clinicId, { limit: 50 }),
+          ];
+          if (!isDoctorRole) promises.push(listBills(clinicId, { limit: 50 }));
+          const [apptRes, patientRes, doctorRes, rxRes, billRes] = await Promise.allSettled(promises);
+          if (!active) return;
+          if (apptRes.status === "fulfilled") setAppointments((apptRes.value as any)?.items ?? []);
+          if (patientRes.status === "fulfilled") setPatients((patientRes.value as any)?.items ?? []);
+          if (doctorRes.status === "fulfilled") setDoctors((doctorRes.value as any)?.items ?? []);
+          if (rxRes && rxRes.status === "fulfilled") setPrescriptions((rxRes.value as any)?.items ?? []);
+          if (billRes && (billRes as any).status === "fulfilled") setBills(((billRes as any).value as any)?.items ?? []);
+          setCounts(null);
+        } catch {}
+      } finally {
         if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [clinicId]);
+      }
+    }
+    load();
+    return () => { active = false; };
+  }, [clinicId, isDoctorRole]);
 
   // Stats section cards
   const chartConfig = { capacity: { label: "Capacity", color: "hsl(var(--primary))" } } satisfies ChartConfig;
-  const totalRevenue = (bills ?? []).reduce((s, b) => (b.status !== "void" ? s + (b.total ?? 0) : s), 0);
+  const totalRevenue = counts ? counts.revenue : (bills ?? []).reduce((s, b) => (b.status !== "void" ? s + (b.total ?? 0) : s), 0);
+  const apptCount = counts ? counts.appointments : appointments.length;
+  const patientCount = counts ? counts.patients : patients.length;
+  const doctorCount = counts ? counts.doctors : doctors.length;
+  const rxCount = counts ? counts.prescriptions : prescriptions.length;
 
   const statsData = isDoctorRole
     ? [
         {
           name: "My Patients",
-          current: patients.length,
+          current: patientCount,
           allowed: 100,
-          capacity: Math.min(100, Math.round((patients.length / 100) * 100)),
+          capacity: Math.min(100, Math.round((patientCount / 100) * 100)),
           fill: "var(--chart-1)",
         },
         {
           name: "Appointments",
-          current: appointments.length,
+          current: apptCount,
           allowed: 50,
-          capacity: Math.min(100, Math.round((appointments.length / 50) * 100)),
+          capacity: Math.min(100, Math.round((apptCount / 50) * 100)),
           fill: "var(--chart-2)",
         },
         {
           name: "Prescriptions",
-          current: prescriptions.length,
+          current: rxCount,
           allowed: 100,
-          capacity: Math.min(100, Math.round((prescriptions.length / 100) * 100)),
+          capacity: Math.min(100, Math.round((rxCount / 100) * 100)),
           fill: "var(--chart-3)",
         },
         {
           name: "Doctors Roster",
-          current: doctors.length,
+          current: doctorCount,
           allowed: 10,
-          capacity: Math.min(100, Math.round((doctors.length / 10) * 100)),
+          capacity: Math.min(100, Math.round((doctorCount / 10) * 100)),
           fill: "var(--chart-4)",
         },
       ]
     : [
         {
           name: "Patients",
-          current: patients.length,
+          current: patientCount,
           allowed: 100,
-          capacity: Math.min(100, Math.round((patients.length / 100) * 100)),
+          capacity: Math.min(100, Math.round((patientCount / 100) * 100)),
           fill: "var(--chart-1)",
         },
         {
           name: "Appointments",
-          current: appointments.length,
+          current: apptCount,
           allowed: 50,
-          capacity: Math.min(100, Math.round((appointments.length / 50) * 100)),
+          capacity: Math.min(100, Math.round((apptCount / 50) * 100)),
           fill: "var(--chart-2)",
         },
         {
@@ -415,9 +445,9 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
         },
         {
           name: "Doctors",
-          current: doctors.length,
+          current: doctorCount,
           allowed: 10,
-          capacity: Math.min(100, Math.round((doctors.length / 10) * 100)),
+          capacity: Math.min(100, Math.round((doctorCount / 10) * 100)),
           fill: "var(--chart-4)",
         },
       ];
