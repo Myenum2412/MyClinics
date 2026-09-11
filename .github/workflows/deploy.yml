@@ -51,7 +51,7 @@ jobs:
           CMD_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=[\"cd /home/ubuntu/myclinics-backend 2>/dev/null || cd ~/MyClinics\",\"git pull origin main\",\"npm ci --prefix backend || npm install --prefix backend\",\"pm2 restart myclinic-api myclinic-whatsapp --update-env || pm2 restart all\",\"pm2 save\",\"pm2 status\"]" \
+            --parameters "commands=[\"cd /home/ubuntu/myclinics-backend 2>/dev/null || cd ~/MyClinics/backend\",\"git pull origin main\",\"npm ci 2>/dev/null || npm install\",\"pm2 reload ecosystem.config.cjs --env production --update-env || pm2 start ecosystem.config.cjs --env production\",\"pm2 save\",\"pm2 status\"]" \
             --query "Command.CommandId" --output text)
           echo "SSM CommandId: $CMD_ID"
           aws ssm wait command-executed --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" || true
@@ -71,5 +71,5 @@ jobs:
             cd /home/ubuntu/myclinics-backend 2>/dev/null || cd ~/MyClinics
             git pull origin main
             npm ci --prefix backend || npm install --prefix backend
-            pm2 restart myclinic-api myclinic-whatsapp --update-env || pm2 restart all
+            pm2 reload ecosystem.config.cjs --env production --update-env || pm2 start ecosystem.config.cjs --env production
             pm2 save
