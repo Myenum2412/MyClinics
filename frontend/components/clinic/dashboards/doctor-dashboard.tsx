@@ -11,11 +11,7 @@ import {
   type Patient,
   type Doctor,
   type Prescription,
-  listAppointments,
-  listBills,
-  listDoctors,
-  listPatients,
-  listPrescriptions,
+  getDashboard,
 } from "@/lib/clinic-api";
 import { Card, CardContent } from "@/components/ui/card";
 import { KOLKATA_TZ, now, toLocalDateISO, parseLocalDate, addDays, formatDate, weekdayIndex } from "@/lib/datetime";
@@ -339,44 +335,26 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     if (!clinicId) return;
     let active = true;
     setLoading(true);
-
-    const promises: Promise<any>[] = [
-      listAppointments(clinicId, { limit: 50 }),
-      listPatients(clinicId, { limit: 50 }),
-      listDoctors(clinicId, { limit: 50 }),
-      listPrescriptions(clinicId, { limit: 50 }),
-    ];
-
-    if (!isDoctorRole) {
-      promises.push(listBills(clinicId, { limit: 50 }));
-    }
-
-     Promise.allSettled(promises)
-      .then(([apptRes, patientRes, doctorRes, rxRes, billRes]) => {
+    getDashboard(clinicId)
+      .then((data) => {
         if (!active) return;
-        if (apptRes.status === "fulfilled") {
-          setAppointments((apptRes.value as any)?.items ?? []);
-        }
-        if (patientRes.status === "fulfilled") {
-          setPatients((patientRes.value as any)?.items ?? []);
-        }
-        if (doctorRes.status === "fulfilled") {
-          setDoctors((doctorRes.value as any)?.items ?? []);
-        }
-        if (rxRes && rxRes.status === "fulfilled") {
-          setPrescriptions((rxRes.value as any)?.items ?? []);
-        }
-        if (billRes && billRes.status === "fulfilled") {
-          setBills((billRes.value as any)?.items ?? []);
-        }
+        setAppointments((data.appointments as Appointment[]) ?? []);
+        setPatients((data.patients as Patient[]) ?? []);
+        setDoctors((data.doctors as unknown as Doctor[]) ?? []);
+        // prescriptions count used via stats, no full list needed for dashboard
+        setPrescriptions([]);
+        setBills((data.bills as Bill[]) ?? []);
+        // store counts via refs if needed - we derive from lengths but use dashboard counts if larger
+        (window as any).__dashboardCounts = data.counts;
       })
+      .catch(() => toast.error("Failed to load dashboard"))
       .finally(() => {
         if (active) setLoading(false);
       });
     return () => {
       active = false;
     };
-  }, [clinicId, isDoctorRole]);
+  }, [clinicId]);
 
   // Stats section cards
   const chartConfig = { capacity: { label: "Capacity", color: "hsl(var(--primary))" } } satisfies ChartConfig;

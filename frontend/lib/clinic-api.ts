@@ -2181,6 +2181,18 @@ export function myBills(clinicId: string, query: { limit?: number } = {}): Promi
   return request(tenantPath(clinicId, `/me/bills?${params}`));
 }
 
+// ── Dashboard aggregated ───────────────────────────────────────────────────
+export interface DashboardSummary {
+  counts: { appointments: number; patients: number; doctors: number; prescriptions: number; revenue: number };
+  bills: Bill[];
+  appointments: Appointment[];
+  patients: Patient[];
+  doctors: Pick<Doctor, "doctorId" | "name">[];
+}
+export function getDashboard(clinicId: string): Promise<DashboardSummary> {
+  return request(tenantPath(clinicId, "/dashboard"));
+}
+
 // ── Platform admin ─────────────────────────────────────────────────────────
 
 export function listAllClinics(
