@@ -219,25 +219,25 @@ export class AuthService {
     const email = normalizeEmail(input.email);
     const user = await this.repo.findUserByEmail(email);
     if (!user) {
-      await writeAudit(this.db, null, {
+      void writeAudit(this.db, null, {
         action: "login_failed",
         entity: "user",
         entityId: null,
         metadata: { email, reason: "no_account" },
         ip: meta.ip,
         userAgent: meta.userAgent,
-      });
+      }).catch(()=>{});
       throw new UnauthorizedError("Invalid email or password");
     }
     if (user.authProvider === "google" || typeof user.passwordHash !== "string") {
-      await writeAudit(this.db, userToCtx(user), {
+      void writeAudit(this.db, userToCtx(user), {
         action: "login_failed",
         entity: "user",
         entityId: user.userId,
         metadata: { email: user.email, reason: "google_only_account" },
         ip: meta.ip,
         userAgent: meta.userAgent,
-      });
+      }).catch(()=>{});
       throw new UnauthorizedError(
         "This account uses Google sign-in — click Continue with Google"
       );
@@ -245,14 +245,14 @@ export class AuthService {
 
     const valid = await bcrypt.compare(input.password, user.passwordHash);
     if (!valid) {
-      await writeAudit(this.db, userToCtx(user), {
+      void writeAudit(this.db, userToCtx(user), {
         action: "login_failed",
         entity: "user",
         entityId: user.userId,
         metadata: { email: user.email, reason: "bad_password" },
         ip: meta.ip,
         userAgent: meta.userAgent,
-      });
+      }).catch(()=>{});
       throw new UnauthorizedError("Invalid email or password");
     }
 
@@ -327,16 +327,24 @@ export class AuthService {
       throw new UnauthorizedError("This account has been deactivated");
     }
 
-    if (user.role !== "platform_admin") {
-      const clinic = user.clinicId
-        ? await this.repo.findClinicByClinicId(user.clinicId)
-        : null;
+    let clinicName2: string | null = null;
+    if (user.role !== "platform_admin" && user.clinicId) {
+      const clinic = await this.repo.findClinicByClinicId(user.clinicId);
       if (!clinic || clinic.status !== "active") {
         throw new UnauthorizedError("This clinic is not active");
       }
+      clinicName2 = clinic.name;
     }
 
-    await this.repo.touchLastLogin(user.userId);
+    void this.repo.touchLastLogin(user.userId).catch(()=>{});
+    void writeAudit(this.db, userToCtx(user), {
+      action: "login",
+      entity: "user",
+      entityId: user.userId,
+      metadata: { email: user.email, provider: "google" },
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    }).catch(()=>{});
 
     const token = await this.issueToken({
       userId: user.userId,
@@ -348,19 +356,10 @@ export class AuthService {
       patientId: user.patientId,
     });
 
-    await writeAudit(this.db, userToCtx(user), {
-      action: "login",
-      entity: "user",
-      entityId: user.userId,
-      metadata: { email: user.email, provider: "google" },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
     return {
       userId: user.userId,
       clinicId: user.clinicId,
-      clinicName: user.clinicId ? (await this.repo.findClinicByClinicId(user.clinicId))?.name ?? null : null,
+      clinicName: clinicName2,
       role: user.role,
       name: user.name,
       email: user.email,

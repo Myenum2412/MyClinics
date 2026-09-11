@@ -76,8 +76,7 @@ export function LoginForm({
         result.role === "platform_admin" ? "/orgmenu" : result.role === "patient" ? "/clinic/patient" : "/clinic";
       const safeCallback =
         callbackUrl && /^\/(?!\/)/.test(callbackUrl) ? callbackUrl : null;
-      router.push(safeCallback ?? destination);
-      router.refresh();
+      router.replace(safeCallback ?? destination);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invalid email or password.");
     } finally {
