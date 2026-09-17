@@ -66,30 +66,20 @@ export function DoctorSelect({
       onValueChange={(v) => onChange(v === "" ? null : v)}
       required={required}
     >
-      <SelectTrigger>
-        <SelectValue placeholder="Select doctor">
-          {selectedDoctor ? (
-            <div className="flex items-center gap-2">
-              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={selectedDoctor.doctorId} name={selectedDoctor.name} size="xs" />
-              <span className="truncate">{selectedDoctor.name}</span>
-            </div>
-          ) : value ? (
-            "Loading..."
-          ) : (
-            ""
-          )}
-        </SelectValue>
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Select doctor" />
       </SelectTrigger>
       <SelectContent>
         {allowEmpty && <SelectItem value="">None</SelectItem>}
-        {doctors.map((d) => (
-          <SelectItem key={d.doctorId} value={d.doctorId}>
-            <div className="flex items-center gap-2">
-              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={d.doctorId} name={d.name} size="xs" />
-              <span>{d.name}</span>
-            </div>
-          </SelectItem>
-        ))}
+        {doctors.length === 0 ? (
+          <div className="px-3 py-6 text-center text-sm text-muted-foreground">No doctors found</div>
+        ) : (
+          doctors.map((d) => (
+            <SelectItem key={d.doctorId} value={d.doctorId}>
+              {d.name}
+            </SelectItem>
+          ))
+        )}
       </SelectContent>
     </Select>
   );
@@ -227,33 +217,22 @@ export function PatientSelect({
   required?: boolean;
 }) {
   const patients = usePatientOptions(clinicId);
-  const selectedPatient = useMemo(() => patients.find((p) => p.patientId === value), [patients, value]);
 
   return (
     <Select value={value ?? ""} onValueChange={onChange} required={required}>
-      <SelectTrigger>
-        <SelectValue placeholder="Select patient">
-          {selectedPatient ? (
-            <div className="flex items-center gap-2">
-              <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={selectedPatient.patientId} name={selectedPatient.fullName} size="xs" />
-              <span className="truncate">{selectedPatient.fullName}</span>
-            </div>
-          ) : value ? (
-            "Loading..."
-          ) : (
-            ""
-          )}
-        </SelectValue>
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="Select patient" />
       </SelectTrigger>
       <SelectContent>
-        {patients.map((p) => (
-          <SelectItem key={p.patientId} value={p.patientId}>
-            <div className="flex items-center gap-2">
-              <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} size="xs" />
-              <span>{p.fullName}</span>
-            </div>
-          </SelectItem>
-        ))}
+        {patients.length === 0 ? (
+          <div className="px-3 py-6 text-center text-sm text-muted-foreground">No patients found</div>
+        ) : (
+          patients.map((p) => (
+            <SelectItem key={p.patientId} value={p.patientId}>
+              {p.fullName}
+            </SelectItem>
+          ))
+        )}
       </SelectContent>
     </Select>
   );
