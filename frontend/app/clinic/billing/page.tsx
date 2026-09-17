@@ -26,12 +26,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -498,24 +498,16 @@ export default function BillingPage() {
             searchPlaceholder="Search bills, patient, status..."
             action={
               <div className="flex items-center gap-2">
-                <Select
-                  value={statusFilter}
-                  onValueChange={(v) => {
-                    setStatusFilter(v ?? "all");
-                    setPageIndex(0);
-                  }}
-                >
-                  <SelectTrigger className="h-9 w-36">
-                    <SelectValue placeholder="All Statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="issued">Issued</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="void">Void</SelectItem>
-                  </SelectContent>
-                </Select>
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="flex h-9 w-36 items-center justify-between rounded-lg border border-input bg-transparent px-3 text-sm">
+                    {statusFilter === "all" ? "All Statuses" : statusFilter} <ChevronDown className="size-4 opacity-50" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-36">
+                    {["all","draft","issued","paid","void"].map((s) => (
+                      <DropdownMenuItem key={s} onClick={() => { setStatusFilter(s); setPageIndex(0); }}>{s === "all" ? "All Statuses" : s}</DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
                 <Button className="flex items-center gap-1.5 shadow-sm h-9" onClick={() => setCreating(true)}>
                   <Plus className="size-4" />
@@ -665,16 +657,16 @@ export default function BillingPage() {
                         {b.status === "void" ? (
                           <Badge variant="outline" className={STATUS_CLASS.void}>void</Badge>
                         ) : (
-                          <Select value={b.status} onValueChange={(v) => handleStatus(b, v)}>
-                            <SelectTrigger className="h-7 w-28 text-xs font-semibold">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="draft">draft</SelectItem>
-                              <SelectItem value="issued">issued</SelectItem>
-                              <SelectItem value="paid">paid</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="flex h-7 w-28 items-center justify-between rounded-lg border border-input px-2 text-xs font-semibold">
+                              {b.status} <ChevronDown className="size-3 opacity-50" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-28">
+                              {(["draft","issued","paid"] as const).map((s) => (
+                                <DropdownMenuItem key={s} onClick={() => handleStatus(b, s)}>{s}</DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                       </TableCell>
                     )}
@@ -982,35 +974,30 @@ function BillForm({
 
             <div>
               <Label className={fieldLabel}>Payment Type *</Label>
-              <Select value={paymentType} onValueChange={(v) => setPaymentType((v ?? "cash") as PaymentType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex h-9 w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 text-sm">
+                  {PAYMENT_TYPE_OPTIONS.find(o=>o.value===paymentType)?.label ?? paymentType} <ChevronDown className="size-4 opacity-50" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48">
                   {PAYMENT_TYPE_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
+                    <DropdownMenuItem key={opt.value} onClick={() => setPaymentType(opt.value)}>{opt.label}</DropdownMenuItem>
                   ))}
-                </SelectContent>
-              </Select>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             <div>
               <Label className={fieldLabel}>Payment Status</Label>
-              <Select
-                value={readOnly ? initial?.paymentStatus ?? "unpaid" : derivedStatus}
-                onValueChange={(v) => selectPaymentStatus((v ?? "unpaid") as PaymentStatus)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="unpaid">Unpaid</SelectItem>
-                  <SelectItem value="partial">Partial</SelectItem>
-                  <SelectItem value="paid">Paid</SelectItem>
-                </SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex h-9 w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 text-sm">
+                  {(readOnly ? initial?.paymentStatus ?? "unpaid" : derivedStatus)} <ChevronDown className="size-4 opacity-50" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48">
+                  {(["unpaid","partial","paid"] as const).map((s) => (
+                    <DropdownMenuItem key={s} onClick={() => selectPaymentStatus(s)}>{s}</DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </section>
@@ -1257,16 +1244,16 @@ function BillForm({
             </div>
             <div>
               <Label className={fieldLabel}>Send Bill to Patient</Label>
-              <Select value={sendMethod} onValueChange={(v) => setSendMethod((v ?? "none") as "whatsapp" | "email" | "none")}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="none">Don&apos;t Send</SelectItem>
-                </SelectContent>
-              </Select>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex h-9 w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 text-sm">
+                  {sendMethod === "whatsapp" ? "WhatsApp" : sendMethod === "email" ? "Email" : "Don't Send"} <ChevronDown className="size-4 opacity-50" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-48">
+                  <DropdownMenuItem onClick={() => setSendMethod("whatsapp")}>WhatsApp</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSendMethod("email")}>Email</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSendMethod("none")}>Don&apos;t Send</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </section>
