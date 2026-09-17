@@ -1009,11 +1009,7 @@ function BillForm({
             <h2 className={sectionTitle}>Items</h2>
           </header>
 
-          <datalist id="bill-item-suggestions">
-            {COMMON_ITEMS.map((name) => (
-              <option key={name} value={name} />
-            ))}
-          </datalist>
+
 
           <div className="overflow-x-auto rounded-lg border border-border">
             <Table>
@@ -1032,13 +1028,24 @@ function BillForm({
                 {items.map((it, i) => (
                   <TableRow key={i} className="border-b border-border last:border-0 hover:bg-muted/30">
                     <TableCell className="p-1.5 align-middle">
-                      <Input
-                        className="h-9"
-                        placeholder="e.g. Consultation"
-                        list="bill-item-suggestions"
-                        value={it.description}
-                        onChange={(e) => setItem(i, { description: e.target.value })}
-                      />
+                      <div className="flex items-center gap-1">
+                        <Input
+                          className="h-9 flex-1"
+                          placeholder="e.g. Consultation"
+                          value={it.description}
+                          onChange={(e) => setItem(i, { description: e.target.value })}
+                        />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-input bg-transparent">
+                            <ChevronDown className="size-4 opacity-50" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start" className="w-48">
+                            {COMMON_ITEMS.map((name) => (
+                              <DropdownMenuItem key={name} onClick={() => setItem(i, { description: name })}>{name}</DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                       {errors.items?.[i] && (
                         <p className="mt-0.5 text-[11px] text-destructive">{errors.items[i]}</p>
                       )}
@@ -1115,23 +1122,21 @@ function BillForm({
             </Table>
           </div>
 
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-3 flex items-center gap-2">
             <Button type="button" variant="outline" size="sm" className="h-9 gap-1.5" onClick={() => addItem()}>
               <Plus className="size-4" />
               Add Another Item
             </Button>
-            <div className="flex flex-wrap gap-1.5">
-              {COMMON_ITEMS.map((name) => (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() => addItem(name)}
-                  className="rounded-full border border-border bg-muted/30 px-2.5 py-1 text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex h-9 items-center gap-1.5 rounded-lg border border-input bg-transparent px-3 text-sm">
+                Quick Add <ChevronDown className="size-4 opacity-50" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {COMMON_ITEMS.map((name) => (
+                  <DropdownMenuItem key={name} onClick={() => addItem(name)}>{name}</DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </section>
 
