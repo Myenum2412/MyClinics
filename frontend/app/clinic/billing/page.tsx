@@ -808,7 +808,6 @@ function BillForm({
   const [amountPaid, setAmountPaid] = useState(initial ? String(initial.amountPaid ?? 0) : "0");
   const [attachName, setAttachName] = useState("");
   const [errors, setErrors] = useState<{ patient?: string; items?: Record<number, string> }>({});
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   function setItem(i: number, patch: Partial<BillFormItem>) {
     setItems((list) => list.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
@@ -1029,26 +1028,24 @@ function BillForm({
                 {items.map((it, i) => (
                   <TableRow key={i} className="border-b border-border last:border-0 hover:bg-muted/30">
                     <TableCell className="p-1.5 align-middle">
-                      <DropdownMenu open={openIndex===i} onOpenChange={(o)=> setOpenIndex(o?i:null)}>
                       <div className="flex items-center gap-1">
                         <Input
                           className="h-9 flex-1"
                           placeholder="e.g. Consultation"
                           value={it.description}
                           onChange={(e) => setItem(i, { description: e.target.value })}
-                          onFocus={() => setOpenIndex(i)}
-                          onClick={() => setOpenIndex(i)}
                         />
+                        <DropdownMenu>
                           <DropdownMenuTrigger className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-input bg-transparent">
                             <ChevronDown className="size-4 opacity-50" />
                           </DropdownMenuTrigger>
-                      </div>
                           <DropdownMenuContent align="start" className="w-48">
                             {COMMON_ITEMS.map((name) => (
-                              <DropdownMenuItem key={name} onClick={() => { setItem(i, { description: name }); setOpenIndex(null); }}>{name}</DropdownMenuItem>
+                              <DropdownMenuItem key={name} onClick={() => setItem(i, { description: name })}>{name}</DropdownMenuItem>
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
+                      </div>
                       {errors.items?.[i] && (
                         <p className="mt-0.5 text-[11px] text-destructive">{errors.items[i]}</p>
                       )}
