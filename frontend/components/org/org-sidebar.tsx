@@ -3,19 +3,15 @@
 import * as React from "react"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-
+import { NavMain } from "@/components/nav-main"
+import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
+import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
 import {
@@ -23,7 +19,6 @@ import {
   BuildingLibraryIcon as BuildingLibrary,
   ChatBubbleLeftRightIcon as ChatBubbleIcon,
 } from "@heroicons/react/24/outline";
-
 import {
   RadioIcon,
   ListTodoIcon,
@@ -35,130 +30,81 @@ import {
   ShieldAlertIcon,
   NetworkIcon,
   FileText,
+  GalleryVerticalEndIcon,
 } from "lucide-react";
-
-const NAV_ITEMS = [
-  {
-    title: "All Clinics",
-    url: "/orgmenu",
-    icon: <BuildingOfficeIcon />,
-    match: "exact" as const,
-  },
-  {
-    title: "Organization",
-    url: "/orgmenu/organization",
-    icon: <BuildingLibrary />,
-    match: "prefix" as const,
-  },
-  {
-    title: "WhatsApp Messages",
-    url: "/orgmenu/whatsapp",
-    icon: <ChatBubbleIcon />,
-    match: "prefix" as const,
-  },
-  {
-    title: "Assistant Soul",
-    url: "/orgmenu/soul",
-    icon: <FileText className="size-4" />,
-    match: "prefix" as const,
-  },
-];
-
-const NEO_SUBITEMS = [
-  { title: "Traceway Dashboard", url: "/orgmenu/traceway", icon: <RadioIcon className="size-4" /> },
-  { title: "Traces", url: "/orgmenu/traceway/traces", icon: <Activity className="size-4" /> },
-  { title: "Logs", url: "/orgmenu/traceway/logs", icon: <ClipboardList className="size-4" /> },
-  { title: "Metrics", url: "/orgmenu/traceway/metrics", icon: <HeartPulseIcon className="size-4" /> },
-  { title: "Exceptions", url: "/orgmenu/traceway/exceptions", icon: <ShieldAlertIcon className="size-4" /> },
-  { title: "Session Replay", url: "/orgmenu/traceway/replay", icon: <ListTodoIcon className="size-4" /> },
-  { title: "AI Tracing", url: "/orgmenu/traceway/ai", icon: <SparklesIcon className="size-4" /> },
-  { title: "Endpoints", url: "/orgmenu/traceway/endpoints", icon: <NetworkIcon className="size-4" /> },
-  { title: "Alerts", url: "/orgmenu/traceway/alerts", icon: <TrendingUpIcon className="size-4" /> },
-];
 
 export function OrgSidebar({
   user,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
-  user: {
-    name: string
-    email: string
-  }
+  user: { name: string; email: string }
 }) {
   const pathname = usePathname()
+
+  const teams = [
+    {
+      name: "My Clinics",
+      logo: (
+        <Image src="/logo.png" alt="My Clinics" width={32} height={32} className="size-full object-contain" />
+      ),
+      plan: "Organization",
+    },
+  ]
+
+  const navMain = [
+    {
+      title: "Clinics",
+      url: "#",
+      icon: <BuildingOfficeIcon className="size-4" />,
+      isActive: pathname.startsWith("/orgmenu") && !pathname.startsWith("/orgmenu/traceway") && !pathname.startsWith("/orgmenu/whatsapp") && !pathname.startsWith("/orgmenu/soul"),
+      items: [
+        { title: "All Clinics", url: "/orgmenu" },
+        { title: "Organization", url: "/orgmenu/organization" },
+      ],
+    },
+    {
+      title: "Communication",
+      url: "#",
+      icon: <ChatBubbleIcon className="size-4" />,
+      isActive: pathname.startsWith("/orgmenu/whatsapp") || pathname.startsWith("/orgmenu/soul"),
+      items: [
+        { title: "WhatsApp Messages", url: "/orgmenu/whatsapp" },
+        { title: "Assistant Soul", url: "/orgmenu/soul" },
+      ],
+    },
+    {
+      title: "Traceway",
+      url: "#",
+      icon: <RadioIcon className="size-4" />,
+      isActive: pathname.startsWith("/orgmenu/traceway"),
+      items: [
+        { title: "Dashboard", url: "/orgmenu/traceway" },
+        { title: "Traces", url: "/orgmenu/traceway/traces" },
+        { title: "Logs", url: "/orgmenu/traceway/logs" },
+        { title: "Metrics", url: "/orgmenu/traceway/metrics" },
+        { title: "Exceptions", url: "/orgmenu/traceway/exceptions" },
+        { title: "Session Replay", url: "/orgmenu/traceway/replay" },
+        { title: "AI Tracing", url: "/orgmenu/traceway/ai" },
+        { title: "Endpoints", url: "/orgmenu/traceway/endpoints" },
+        { title: "Alerts", url: "/orgmenu/traceway/alerts" },
+      ],
+    },
+  ]
+
+  const projects = [
+    { name: "WhatsApp", url: "/orgmenu/whatsapp", icon: <ChatBubbleIcon className="size-4" /> },
+    { name: "Soul", url: "/orgmenu/soul", icon: <FileText className="size-4" /> },
+    { name: "Traceway", url: "/orgmenu/traceway", icon: <RadioIcon className="size-4" /> },
+  ]
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              render={<a href="/orgmenu" />}
-              className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
-            >
-              <div className="flex aspect-square size-8 items-center justify-center overflow-hidden rounded-lg">
-                <Image
-                  src="/logo.png"
-                  alt="My Clinics"
-                  width={32}
-                  height={32}
-                  className="size-full object-contain"
-                />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">My Clinics</span>
-                <span className="truncate text-xs">Organization Menu</span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <TeamSwitcher teams={teams} />
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {NAV_ITEMS.map((item) => {
-                const active =
-                  item.match === "exact" ? pathname === item.url : pathname.startsWith(`${item.url}`)
-                return (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton render={<a href={item.url} />} isActive={active}>
-                      {item.icon}
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>
-            <span className="flex items-center gap-2">
-              <RadioIcon className="size-4 text-primary" />
-              Traceway
-            </span>
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {NEO_SUBITEMS.map((item) => {
-                const active =
-                  item.url === "/orgmenu/traceway"
-                    ? pathname === item.url
-                    : pathname.startsWith(item.url)
-                return (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton render={<a href={item.url} />} isActive={active} tooltip={item.title}>
-                      {item.icon}
-                      <span>{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        <NavMain items={navMain} />
+        <NavProjects projects={projects} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
