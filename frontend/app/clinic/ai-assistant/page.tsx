@@ -9,6 +9,7 @@ import { ThreadList } from "@/components/thread-list.aui";
 import Image from "next/image";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Command, History } from "lucide-react";
+import { useEffect, useState } from "react";
 
 function ClinicAssistantLayout({ role, clinicId, clinicName }: { role?: string; clinicId?: string; clinicName?: string }) {
   const adapter: ChatModelAdapter = {
@@ -89,6 +90,27 @@ function ClinicAssistantLayout({ role, clinicId, clinicName }: { role?: string; 
     },
   });
 
+function BackendHistory({ clinicId }: { clinicId?: string }) {
+  const [items, setItems] = useState<{ threadId: string; title: string; updatedAt: string }[]>([]);
+  useEffect(() => {
+    if (!clinicId) return;
+    fetch(`/api/ai/chats?clinicId=${encodeURIComponent(clinicId)}`, { cache: "no-store" })
+      .then((r) => r.json()).then((d) => setItems(d.items ?? [])).catch(() => {});
+  }, [clinicId]);
+  if (!items.length) return <p className="px-2 text-xs text-muted-foreground">No saved history yet — chats are saved after your first message.</p>;
+  return (
+    <div className="space-y-1">
+      <p className="px-2 text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Saved chats (backend memory)</p>
+      {items.slice(0, 20).map((it) => (
+        <div key={it.threadId} className="px-2 py-1.5 rounded-lg border bg-muted/20 text-xs">
+          <p className="font-medium truncate">{it.title}</p>
+          <p className="text-[11px] text-muted-foreground">{new Date(it.updatedAt).toLocaleString()}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
   const ClinicWelcome = () => (
     <div className="aui-thread-welcome-root mb-6 flex flex-col items-center px-4 text-center">
       <div className="size-14 rounded-2xl overflow-hidden shadow-sm mb-4 border bg-muted">
@@ -106,7 +128,7 @@ function ClinicAssistantLayout({ role, clinicId, clinicName }: { role?: string; 
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       <div className="flex flex-1 min-h-0 overflow-hidden flex-col lg:flex-row">
-        {/* Left history — assistant-ui ThreadList */}
+        {/* Left history — assistant-ui ThreadList + backend persisted history */}
         <aside className="w-full lg:w-[300px] xl:w-[340px] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r bg-card overflow-hidden max-h-[45vh] lg:max-h-none lg:h-full">
           <div className="px-3 py-3 border-b shrink-0 bg-card">
             <div className="flex items-center gap-2 text-sm font-semibold">
@@ -114,13 +136,14 @@ function ClinicAssistantLayout({ role, clinicId, clinicName }: { role?: string; 
               History
               <span className="ml-auto text-xs font-normal text-muted-foreground hidden lg:inline">assistant-ui threads</span>
             </div>
-            <p className="text-xs text-muted-foreground mt-1 hidden lg:block">Search, rename, archive or delete conversations</p>
+            <p className="text-xs text-muted-foreground mt-1 hidden lg:block">Search, rename, archive — persisted to backend memory</p>
           </div>
-          <div className="flex-1 overflow-auto p-2">
+          <div className="flex-1 overflow-auto p-2 space-y-3">
             <ThreadList />
+            <BackendHistory clinicId={clinicId} />
           </div>
           <div className="p-3 border-t bg-muted/30 text-[11px] text-muted-foreground flex items-center gap-1.5 shrink-0">
-            <span className="size-1.5 rounded-full bg-emerald-500" /> Threads stored in-memory • rename & archive supported
+            <span className="size-1.5 rounded-full bg-emerald-500" /> Persisted to backend • memory storage enabled
           </div>
         </aside>
 
