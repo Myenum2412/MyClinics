@@ -46,7 +46,11 @@ export default function OrgMenuDashboardPage() {
       q: q || undefined,
       limit: 100,
     })
-      .then((res) => setItems((res as any)?.items ?? []))
+      .then((res) => {
+        const raw: Clinic[] = (res as any)?.items ?? [];
+        // Only show clinics that have both email and phone — drop incomplete/test rows
+        setItems(raw.filter((c) => !!c.email?.trim() && !!c.phone?.trim()));
+      })
       .catch(() => toast.error("Failed to load clinics"))
       .finally(() => setLoading(false));
   }, [statusFilter, q]);
