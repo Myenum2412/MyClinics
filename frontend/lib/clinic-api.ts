@@ -1697,6 +1697,7 @@ export async function getAvatarUrl(
       method: "GET",
       cache: "no-store",
       headers,
+      credentials: "include",
     });
     const type = res.headers.get("content-type") ?? "";
     if (res.ok && type.startsWith("image/")) {
@@ -1730,6 +1731,7 @@ export async function uploadAvatar(
     headers,
     body: form,
     cache: "no-store",
+    credentials: "include",
   });
 
   let data: unknown;
