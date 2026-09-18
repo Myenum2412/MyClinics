@@ -3,10 +3,10 @@ import { Input } from "@/components/ui/input"
 import { Search, ArrowRight } from "lucide-react"
 
 const popularPages = [
-  "Getting started",
-  "Installation guide",
-  "Components reference",
-  "Theming and tokens",
+  { label: "Clinic Dashboard", href: "/clinic" },
+  { label: "Appointments", href: "/clinic/appointments" },
+  { label: "Patients", href: "/clinic/patients" },
+  { label: "AI Assistant", href: "/clinic/ai-assistant" },
 ]
 
 export default function ErrorBlock() {
@@ -20,8 +20,7 @@ export default function ErrorBlock() {
           Page not found
         </h1>
         <p className="max-w-md text-sm text-muted-foreground">
-          We could not find the page you were looking for. Try searching, or
-          pick one of the popular pages below.
+          We could not find this clinic page. Go back to your dashboard or pick a popular page below.
         </p>
       </div>
 
@@ -31,8 +30,8 @@ export default function ErrorBlock() {
       >
         <Input
           type="search"
-          placeholder="Search the docs..."
-          aria-label="Search the docs"
+          placeholder="Search patients, appointments..."
+          aria-label="Search clinic"
           className="h-9 flex-1 text-sm"
         />
         <Button type="submit" size="lg" className="w-full sm:w-auto">
@@ -47,12 +46,12 @@ export default function ErrorBlock() {
         </p>
         <ul className="flex flex-col border-t border-border">
           {popularPages.map((page) => (
-            <li key={page} className="border-b border-border">
+            <li key={page.href} className="border-b border-border">
               <a
-                href="#"
+                href={page.href}
                 className="group flex items-center justify-between gap-4 py-2.5 text-sm text-foreground"
               >
-                <span>{page}</span>
+                <span>{page.label}</span>
                 <ArrowRight className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" aria-hidden="true" />
               </a>
             </li>
