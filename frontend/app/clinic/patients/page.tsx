@@ -211,6 +211,21 @@ export default function PatientsPage() {
     load();
   }, [load]);
 
+  // AI → patient form fill
+  const [aiPatientPrefill, setAiPatientPrefill] = useState<Partial<PatientFormState> | null>(null);
+  useEffect(() => {
+    const onFill = (e: Event) => {
+      const d = (e as CustomEvent).detail ?? (() => { try { return JSON.parse(localStorage.getItem("ai:fill-patient") ?? "null"); } catch { return null; } })();
+      if (!d) return;
+      setAiPatientPrefill(d);
+      setCreating(true);
+      toast.success("AI filled patient form — review and save");
+    };
+    window.addEventListener("ai:fill-patient" as any, onFill);
+    try { const s = localStorage.getItem("ai:fill-patient"); if (s) { const d = JSON.parse(s); if (d) setAiPatientPrefill(d); } } catch {}
+    return () => window.removeEventListener("ai:fill-patient" as any, onFill);
+  }, []);
+
   async function handleSave(form: PatientFormState) {
     setSaving(true);
     try {
@@ -464,11 +479,13 @@ export default function PatientsPage() {
           <CardContent className="p-6">
             <PatientForm
               clinicId={clinicId}
-              initial={EMPTY_FORM}
+              initial={aiPatientPrefill ? { ...EMPTY_FORM, ...aiPatientPrefill } as PatientFormState : EMPTY_FORM}
               saving={saving}
               onSave={async (form) => {
                 await handleSave(form);
                 setCreating(false);
+                setAiPatientPrefill(null);
+                try { localStorage.removeItem("ai:fill-patient"); } catch {}
               }}
             />
           </CardContent>

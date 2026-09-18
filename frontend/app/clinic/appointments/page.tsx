@@ -265,6 +265,27 @@ export default function AppointmentsPage() {
     loadData();
   }, [loadData]);
 
+  // AI → form fill: listen for ai:fill-appointment / ai:appointment-created
+  const [aiPrefill, setAiPrefill] = useState<Partial<AppointmentFormState> | null>(null);
+  useEffect(() => {
+    const onFill = (e: Event) => {
+      const detail = (e as CustomEvent).detail ?? (() => { try { return JSON.parse(localStorage.getItem("ai:fill-appointment") ?? "null"); } catch { return null; } })();
+      if (!detail) return;
+      setAiPrefill(detail);
+      setCreating(true);
+      toast.success("AI filled appointment form — review and save");
+    };
+    const onCreated = () => { loadData(); toast.success("AI created appointment — table updated"); };
+    window.addEventListener("ai:fill-appointment" as any, onFill);
+    window.addEventListener("ai:appointment-created" as any, onCreated);
+    // hydrate if AI filled before navigation
+    try { const s = localStorage.getItem("ai:fill-appointment"); if (s) { const d = JSON.parse(s); if (d) { setAiPrefill(d); } } } catch {}
+    return () => {
+      window.removeEventListener("ai:fill-appointment" as any, onFill);
+      window.removeEventListener("ai:appointment-created" as any, onCreated);
+    };
+  }, [loadData]);
+
   // Load patient's appointment history when opening the View modal
   useEffect(() => {
     if (!viewing || !selectedAppt || !clinicId) {
@@ -597,10 +618,12 @@ export default function AppointmentsPage() {
               appointments={appointments}
               patients={patients}
               doctors={doctors}
-              initial={emptyAppointmentForm()}
+              initial={aiPrefill ? { ...emptyAppointmentForm(), ...aiPrefill } as AppointmentFormState : emptyAppointmentForm()}
               onSave={async (form) => {
                 await handleCreate(form);
                 setCreating(false);
+                setAiPrefill(null);
+                try { localStorage.removeItem("ai:fill-appointment"); } catch {}
               }}
               saving={saving}
             />
