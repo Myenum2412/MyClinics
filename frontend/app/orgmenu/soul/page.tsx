@@ -71,7 +71,7 @@ export default function OrgSoulPage() {
         </p>
       </div>
 
-      <Card>
+      <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
         <CardHeader>
           <CardTitle>soul.md</CardTitle>
           <p className="text-sm text-muted-foreground">

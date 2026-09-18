@@ -107,7 +107,7 @@ export default function OrgClinicDetailPage() {
     : [];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {statCards.map((s) => (
           <Card key={s.label}>
@@ -119,7 +119,7 @@ export default function OrgClinicDetailPage() {
         ))}
       </div>
 
-      <Card>
+      <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
@@ -208,7 +208,7 @@ export default function OrgClinicDetailPage() {
       </Card>
 
       {clinic && (
-        <Card>
+        <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>Integrations</CardTitle>
@@ -222,24 +222,24 @@ export default function OrgClinicDetailPage() {
         </Card>
       )}
 
-      <Card>
+      <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
         <CardHeader>
           <CardTitle>Patients</CardTitle>
         </CardHeader>
         <CardContent>
           {loadingPatients ? (
             <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
             </div>
           ) : patients.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No patients in this clinic.
+              — No patients in this clinic yet.
             </p>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                <TableRow className="border-b bg-muted/30 hover:bg-muted/30">
                   <TableHead>Name</TableHead>
                   <TableHead>Mobile</TableHead>
                   <TableHead>Email</TableHead>
@@ -249,7 +249,7 @@ export default function OrgClinicDetailPage() {
               </TableHeader>
               <TableBody>
                 {patients.map((p) => (
-                  <TableRow key={p.patientId}>
+                  <TableRow className="transition-colors duration-150 hover:bg-muted/40" key={p.patientId}>
                     <TableCell className="font-medium">{p.fullName}</TableCell>
                     <TableCell>{p.mobile}</TableCell>
                     <TableCell>{p.email ?? "—"}</TableCell>

@@ -148,25 +148,25 @@ export default function OrgMenuDashboardPage() {
         </div>
       )}
 
-      <Card>
+      <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
         <CardHeader>
           <CardTitle>All clinics</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
             </div>
           ) : items.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No clinics found.
+              — No clinics found — adjust filters or check again later.
             </p>
           ) : (
             <div className="overflow-x-auto">
             <Table className="min-w-[700px]">
               <TableHeader>
-                <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                <TableRow className="border-b bg-muted/30 hover:bg-muted/30">
                   <TableHead>Clinic</TableHead>
                   <TableHead>Clinic ID</TableHead>
                   <TableHead>Email</TableHead>
@@ -178,7 +178,7 @@ export default function OrgMenuDashboardPage() {
               </TableHeader>
               <TableBody>
                 {items.map((c) => (
-                  <TableRow key={c.clinicId}>
+                  <TableRow className="transition-colors duration-150 hover:bg-muted/40" key={c.clinicId}>
                     <TableCell>
                       <Link
                         href={`/orgmenu/clinics/${c.clinicId}`}

@@ -30,7 +30,7 @@ export default function OrgMenuLayout({
   if (loading || !session || session.role !== "platform_admin") {
     return (
       <div className="flex min-h-svh items-center justify-center">
-        <Skeleton className="h-10 w-64" />
+        <div className="flex flex-col items-center gap-3"><Skeleton className="h-10 w-64 rounded-xl" /><Skeleton className="h-4 w-40" /></div>
       </div>
     );
   }
@@ -42,7 +42,7 @@ export default function OrgMenuLayout({
       />
       <SidebarInset>
         <WorkspaceHeader />
-        <div className="flex flex-1 flex-col gap-4 px-4 py-6 md:px-6 lg:px-8">
+        <div className="flex flex-1 flex-col gap-6 bg-gradient-to-b from-background to-muted/20 px-4 py-6 md:px-6 lg:px-8">
           {children}
         </div>
       </SidebarInset>

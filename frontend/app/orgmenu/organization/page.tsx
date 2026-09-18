@@ -26,8 +26,8 @@ export default function OrgInfoPage() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card>
+    <div className="flex flex-col gap-6">
+      <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
         <CardHeader>
           <CardTitle>Organization</CardTitle>
         </CardHeader>

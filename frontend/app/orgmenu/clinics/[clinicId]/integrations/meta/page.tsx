@@ -206,9 +206,9 @@ export default function MetaIntegrationPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col gap-4">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="flex flex-col gap-6">
+        <Skeleton className="h-32 w-full rounded-2xl" />
+        <Skeleton className="h-64 w-full rounded-2xl" />
       </div>
     );
   }
@@ -216,8 +216,8 @@ export default function MetaIntegrationPage() {
   const connected = integration?.status === "connected";
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card>
+    <div className="flex flex-col gap-6">
+      <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
@@ -277,7 +277,7 @@ export default function MetaIntegrationPage() {
       </Card>
 
       {!connected && (
-        <Card>
+        <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
           <CardHeader>
             <CardTitle className="text-base">Connect your own Meta Business app</CardTitle>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -346,7 +346,7 @@ export default function MetaIntegrationPage() {
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <Card>
+          <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
             <CardHeader>
               <CardTitle>Campaign → Clinic Routing</CardTitle>
             </CardHeader>
@@ -367,7 +367,7 @@ export default function MetaIntegrationPage() {
                   </TableHeader>
                   <TableBody>
                     {mappings.map((m) => (
-                      <TableRow key={m.mappingId}>
+                      <TableRow className="transition-colors duration-150 hover:bg-muted/40" key={m.mappingId}>
                         <TableCell>{m.metaCampaignName ?? m.metaCampaignId}</TableCell>
                         <TableCell>{m.department ?? "—"}</TableCell>
                         <TableCell>{m.service ?? "—"}</TableCell>
@@ -399,7 +399,7 @@ export default function MetaIntegrationPage() {
         </TabsContent>
 
         <TabsContent value="sync">
-          <Card>
+          <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Synchronization</CardTitle>
@@ -431,7 +431,7 @@ export default function MetaIntegrationPage() {
                 </TableHeader>
                 <TableBody>
                   {jobs.map((j) => (
-                    <TableRow key={j.syncJobId}>
+                    <TableRow className="transition-colors duration-150 hover:bg-muted/40" key={j.syncJobId}>
                       <TableCell>{j.mode}</TableCell>
                       <TableCell><StatusBadge status={j.status} /></TableCell>
                       <TableCell>{j.found}</TableCell>
@@ -448,7 +448,7 @@ export default function MetaIntegrationPage() {
         </TabsContent>
 
         <TabsContent value="webhooks">
-          <Card>
+          <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Webhook Events</CardTitle>
@@ -468,7 +468,7 @@ export default function MetaIntegrationPage() {
                 </TableHeader>
                 <TableBody>
                   {events.map((e) => (
-                    <TableRow key={e.eventId}>
+                    <TableRow className="transition-colors duration-150 hover:bg-muted/40" key={e.eventId}>
                       <TableCell className="font-mono text-xs">{e.eventId}</TableCell>
                       <TableCell>{e.eventType}</TableCell>
                       <TableCell><StatusBadge status={e.status} /></TableCell>
@@ -483,7 +483,7 @@ export default function MetaIntegrationPage() {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <Card>
+          <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
             <CardHeader><CardTitle>Meta Performance Analytics</CardTitle></CardHeader>
             <CardContent>
               {analytics ? (
@@ -509,7 +509,7 @@ export default function MetaIntegrationPage() {
                     </TableHeader>
                     <TableBody>
                       {analytics.byCampaign.map((c) => (
-                        <TableRow key={c.campaignId ?? "unknown"}>
+                        <TableRow className="transition-colors duration-150 hover:bg-muted/40" key={c.campaignId ?? "unknown"}>
                           <TableCell>{c.campaignName ?? c.campaignId ?? "Unknown"}</TableCell>
                           <TableCell>{c.leads}</TableCell>
                           <TableCell>{c.appointments}</TableCell>
@@ -554,7 +554,7 @@ function Stat({ label, value }: { label: string; value: number | string }) {
 
 function AssetTable({ title, rows, columns }: { title: string; rows: Array<Record<string, unknown>>; columns: Array<[string, string]> }) {
   return (
-    <Card className="mt-3">
+    <Card className="mt-3 rounded-2xl border shadow-sm">
       <CardHeader><CardTitle className="text-base">{title}</CardTitle></CardHeader>
       <CardContent>
         {rows.length === 0 ? (
@@ -568,7 +568,7 @@ function AssetTable({ title, rows, columns }: { title: string; rows: Array<Recor
             </TableHeader>
             <TableBody>
               {rows.map((r, i) => (
-                <TableRow key={i}>
+                <TableRow className="transition-colors duration-150 hover:bg-muted/40" key={i}>
                   {columns.map(([, key]) => (
                     <TableCell key={key}>{String(r[key] ?? "—")}</TableCell>
                   ))}
