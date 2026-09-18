@@ -45,8 +45,29 @@ function ClinicAssistantLayout({ role, clinicId, clinicName }: { role?: string; 
         const txt = await res.text().catch(() => res.statusText);
         throw new Error(txt || "Assistant request failed");
       }
-      const data = (await res.json()) as { reply?: string };
-      const reply = (data.reply as string) ?? "No reply";
+      const data = (await res.json()) as { reply?: string; toolCalls?: { function: { name: string; arguments: string } }[] };
+      // Execute AI-requested form fills / creates
+      if (data.toolCalls?.length) {
+        for (const tc of data.toolCalls) {
+          try {
+            const args = JSON.parse(tc.function.arguments || "{}");
+            if (tc.function.name === "fill_appointment_form" || tc.function.name === "create_appointment") {
+              if (tc.function.name === "create_appointment" && clinicId && args.patientId) {
+                await fetch(`/api/clinics/${clinicId}/appointments`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(args), credentials: "include" }).catch(()=>{});
+                window.dispatchEvent(new CustomEvent("ai:appointment-created"));
+              } else {
+                localStorage.setItem("ai:fill-appointment", JSON.stringify(args));
+                window.dispatchEvent(new CustomEvent("ai:fill-appointment", { detail: args }));
+              }
+            }
+            if (tc.function.name === "fill_patient_form") {
+              localStorage.setItem("ai:fill-patient", JSON.stringify(args));
+              window.dispatchEvent(new CustomEvent("ai:fill-patient", { detail: args }));
+            }
+          } catch {}
+        }
+      }
+      const reply = (data.reply as string) ?? (data.toolCalls?.length ? "Done — I've filled the form for you. Check the appointments/patients page; the new entry will appear in the table." : "No reply");
       return {
         content: [{ type: "text", text: reply }],
       };

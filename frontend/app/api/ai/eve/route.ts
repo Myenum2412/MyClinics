@@ -649,8 +649,14 @@ Your highest priorities are:
 
 Always behave as Ai Root, the intelligent nurse assistant for THIS clinic only.
 `;
+  // Clinic-aware tool definitions — AI can request frontend to fill forms / show tables
+  const tools = [
+    { type: "function", function: { name: "fill_appointment_form", description: "Prefill appointment booking form and navigate to appointments page", parameters: { type: "object", properties: { patientId: { type: "string" }, patientName: { type: "string" }, doctorId: { type: "string" }, date: { type: "string", description: "YYYY-MM-DD" }, time: { type: "string", description: "HH:mm" }, reason: { type: "string" } }, required: [] } } },
+    { type: "function", function: { name: "create_appointment", description: "Create appointment directly", parameters: { type: "object", properties: { patientId: { type: "string" }, doctorId: { type: "string" }, date: { type: "string" }, time: { type: "string" }, reason: { type: "string" } }, required: ["patientId","doctorId","date","time"] } } },
+    { type: "function", function: { name: "fill_patient_form", description: "Prefill patient registration form", parameters: { type: "object", properties: { fullName: { type: "string" }, mobile: { type: "string" }, gender: { type: "string" } }, required: ["fullName"] } } },
+  ];
   try {
-    const userContent = `${nurseContext}\n${projectContext ? projectContext + "\n" : ""}User: ${message}`;
+    const userContent = `${nurseContext}\n${projectContext ? projectContext + "\n" : ""}User: ${message}\n\nWhen user wants to book/create appointment or add patient, USE the appropriate tool instead of just describing. After booking, mention it will appear in the appointments table.`;
     const messages = [
       ...(conversationHistory ?? []),
       { role: "user", content: userContent },
@@ -663,11 +669,17 @@ Always behave as Ai Root, the intelligent nurse assistant for THIS clinic only.
         "HTTP-Referer": "https://myclinic.myenum.in",
         "X-Title": "MyClinics Ai Root",
       },
-      body: JSON.stringify({ model: openrouterModel, messages, max_tokens: 1024, temperature: 0.4 }),
+      body: JSON.stringify({ model: openrouterModel, messages, max_tokens: 1024, temperature: 0.4, tools, tool_choice: "auto" }),
     });
     if (r.ok) {
       const j = await r.json();
-      const reply = j.choices?.[0]?.message?.content?.trim();
+      const choice = j.choices?.[0]?.message;
+      const toolCalls = choice?.tool_calls;
+      if (toolCalls?.length) {
+        await storeChat(choice.content ?? "");
+        return NextResponse.json({ reply: choice.content ?? "", toolCalls });
+      }
+      const reply = choice?.content?.trim();
       if (reply) { await storeChat(reply); return NextResponse.json({ reply }); }
     } else {
       const errText = await r.text().catch(() => "");
