@@ -9,7 +9,7 @@ import type { OrgIncidentItem } from "@/lib/neo-api";
 export function NeoIncidentCard({ incident }: { incident: OrgIncidentItem }) {
   return (
     <Link
-      href={`/orgmenu/rgb-neo/incidents/${incident.incidentId}?clinicId=${incident.clinicId}`}
+      href={`/orgmenu/traceway/exceptions?incidentId=${incident.incidentId}&clinicId=${incident.clinicId}`}
       className="block rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/50 hover:bg-accent/40"
     >
       <div className="flex items-center justify-between gap-2">

@@ -65,17 +65,15 @@ const NAV_ITEMS = [
 ];
 
 const NEO_SUBITEMS = [
-  { title: "Command Center", url: "/orgmenu/rgb-neo", icon: <RadioIcon className="size-4" /> },
-  { title: "Live Monitoring", url: "/orgmenu/rgb-neo/live", icon: <Activity className="size-4" /> },
-  { title: "Clinics", url: "/orgmenu/rgb-neo/clinics", icon: <BuildingOfficeIcon className="size-4" /> },
-  { title: "Incidents", url: "/orgmenu/rgb-neo/incidents", icon: <ListTodoIcon className="size-4" /> },
-  { title: "Events", url: "/orgmenu/rgb-neo/events", icon: <ClipboardList className="size-4" /> },
-  { title: "Performance", url: "/orgmenu/rgb-neo/performance", icon: <HeartPulseIcon className="size-4" /> },
-  { title: "Security", url: "/orgmenu/rgb-neo/security", icon: <ShieldAlertIcon className="size-4" /> },
-  { title: "Integrations", url: "/orgmenu/rgb-neo/integrations", icon: <NetworkIcon className="size-4" /> },
-  { title: "AI Insights", url: "/orgmenu/rgb-neo/ai", icon: <SparklesIcon className="size-4" /> },
-  { title: "Predictions", url: "/orgmenu/rgb-neo/predictions", icon: <TrendingUpIcon className="size-4" /> },
-  { title: "Business Impact", url: "/orgmenu/rgb-neo/business-impact", icon: <BuildingLibrary className="size-4" /> },
+  { title: "Traceway Dashboard", url: "/orgmenu/traceway", icon: <RadioIcon className="size-4" /> },
+  { title: "Traces", url: "/orgmenu/traceway/traces", icon: <Activity className="size-4" /> },
+  { title: "Logs", url: "/orgmenu/traceway/logs", icon: <ClipboardList className="size-4" /> },
+  { title: "Metrics", url: "/orgmenu/traceway/metrics", icon: <HeartPulseIcon className="size-4" /> },
+  { title: "Exceptions", url: "/orgmenu/traceway/exceptions", icon: <ShieldAlertIcon className="size-4" /> },
+  { title: "Session Replay", url: "/orgmenu/traceway/replay", icon: <ListTodoIcon className="size-4" /> },
+  { title: "AI Tracing", url: "/orgmenu/traceway/ai", icon: <SparklesIcon className="size-4" /> },
+  { title: "Endpoints", url: "/orgmenu/traceway/endpoints", icon: <NetworkIcon className="size-4" /> },
+  { title: "Alerts", url: "/orgmenu/traceway/alerts", icon: <TrendingUpIcon className="size-4" /> },
 ];
 
 export function OrgSidebar({
@@ -139,14 +137,14 @@ export function OrgSidebar({
           <SidebarGroupLabel>
             <span className="flex items-center gap-2">
               <RadioIcon className="size-4 text-primary" />
-              RGB Neo
+              Traceway
             </span>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {NEO_SUBITEMS.map((item) => {
                 const active =
-                  item.url === "/orgmenu/rgb-neo"
+                  item.url === "/orgmenu/traceway"
                     ? pathname === item.url
                     : pathname.startsWith(item.url)
                 return (
