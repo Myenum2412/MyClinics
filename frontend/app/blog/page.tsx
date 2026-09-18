@@ -146,16 +146,6 @@ export default function BlogPage() {
           ))}
         </ul>
 
-        {/* Newsletter CTA */}
-        <div className="rounded-2xl bg-violet-600 px-8 py-12 text-center md:py-16">
-          <h2 className="text-2xl font-semibold text-white md:text-3xl">Get clinic growth tips in your inbox</h2>
-          <p className="mx-auto mt-3 max-w-xl text-white/80">Join 2,000+ clinic owners receiving weekly insights on operations, patient care, and healthcare technology.</p>
-          <div className="mx-auto mt-6 flex max-w-md gap-2">
-            <input type="email" placeholder="Enter your email" className="flex-1 rounded-lg bg-white px-4 py-2.5 text-sm outline-none" />
-            <button type="button" className="rounded-lg bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white hover:bg-zinc-800">Subscribe</button>
-          </div>
-        </div>
-
         {/* Simple pagination */}
         <div className="flex items-center justify-center gap-2 border-t pt-8">
           <span className="text-sm text-muted-foreground">Page 1 of 1</span>
