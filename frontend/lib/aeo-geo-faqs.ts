@@ -6,116 +6,156 @@ export interface FaqItem {
 export interface FaqCategoryData {
   id: string;
   label: string;
-  iconName: "Sparkles" | "Cpu" | "MapPin" | "MessageSquare" | "ShieldCheck";
+  iconName:
+    | "Sparkles"
+    | "MessageSquare"
+    | "Calendar"
+    | "FileText"
+    | "CreditCard"
+    | "ShieldCheck";
   items: FaqItem[];
 }
 
-export const AEO_GEO_FAQ_CATEGORIES: FaqCategoryData[] = [
+export const SOFTWARE_FAQ_CATEGORIES: FaqCategoryData[] = [
   {
-    id: "aeo",
-    label: "AEO & Answer Engines",
+    id: "getting-started",
+    label: "Getting Started",
     iconName: "Sparkles",
     items: [
       {
-        q: "What is Answer Engine Optimization (AEO) for clinics and doctors?",
-        a: "Answer Engine Optimization (AEO) is the process of structuring clinic content, medical services, and doctor profiles so conversational AI platforms (such as Perplexity, ChatGPT Search, Bing Copilot, and Google AI Overviews) select and cite your clinic as the primary direct answer to patient questions.",
+        q: "What is MyClinics and how does it help doctors and clinics?",
+        a: "MyClinics is an all-in-one clinic management platform designed to automate front-desk operations. It provides 24/7 WhatsApp appointment booking, live OPD queue counters, electronic medical records (EMR), digital prescriptions, GST billing, and pharmacy inventory in a secure multi-tenant system.",
       },
       {
-        q: "How is AEO different from traditional healthcare SEO?",
-        a: "Traditional SEO focuses on earning clicks from ten blue links based on keywords and backlinks. AEO optimizes for zero-click and synthetic AI answers by providing high-density factual answers (40–60 words) immediately under headings, accompanied by structured Schema.org markup that AI engines can extract instantly.",
+        q: "How long does it take to set up my clinic on MyClinics?",
+        a: "You can sign up and start managing your clinic in under 5 minutes. Adding doctors, configuring consultation hours, and connecting your WhatsApp assistant requires no technical setup or hardware installation.",
       },
       {
-        q: "Why is Schema.org markup essential for clinic AEO?",
-        a: "Structured data (like FAQPage, MedicalClinic, Physician, and SoftwareApplication schemas) allows answer engine crawlers to parse doctor specialties, consulting hours, clinic locations, and WhatsApp booking links without ambiguity or AI hallucination.",
+        q: "Do I or my front-desk staff need technical training to use the software?",
+        a: "No. The software is built with an intuitive, clean interface that feels as familiar as everyday messaging apps. Receptionists and staff can schedule visits, register walk-ins, and print bills immediately without formal training.",
       },
       {
-        q: "How do voice search and natural language queries impact clinic appointments?",
-        a: "Over 60% of mobile and voice searches now use conversational questions such as 'Which clinic near me has WhatsApp booking?' or 'How do I book an appointment with Dr. Sharma?'. AEO formats your clinic pages to directly match and resolve these intent-driven queries.",
+        q: "Does MyClinics work on mobile phones, tablets, and computers?",
+        a: "Yes. MyClinics is fully cloud-based and responsive. Doctors and staff can securely access the dashboard from smartphones, iPads, tablets, laptops, and desktop computers anywhere, with progressive web app (PWA) support.",
+      },
+      {
+        q: "Can I manage multiple doctors and clinic branches from a single account?",
+        a: "Yes. MyClinics supports solo practitioner clinics as well as multi-doctor polyclinics and multi-location practices, with role-based access control for clinic admins, doctors, receptionists, and pharmacy staff.",
       },
     ],
   },
   {
-    id: "geo",
-    label: "GEO (Generative AI)",
-    iconName: "Cpu",
-    items: [
-      {
-        q: "What is Generative Engine Optimization (GEO)?",
-        a: "Generative Engine Optimization (GEO) is the strategy of establishing brand authority, verifiable statistics, and machine-readable data across the web so large language models (LLMs like ChatGPT, Claude, Gemini, and DeepSeek) recommend your clinic or healthcare software in conversational recommendations.",
-      },
-      {
-        q: "How does MyClinics optimize for LLMs like ChatGPT and Claude?",
-        a: "MyClinics implements standardized machine-readable files such as llms.txt, verifiable clinic and doctor entities, open AI crawler permissions (GPTBot, ClaudeBot, PerplexityBot), and citation-ready metrics that LLMs easily digest during both real-time retrieval and model synthesis.",
-      },
-      {
-        q: "What is llms.txt and why does MyClinics use it?",
-        a: "llms.txt is an emerging web standard that provides AI crawlers with a curated, markdown-formatted summary of services, features, doctor workflows, and pricing. It ensures AI search models understand your capabilities accurately without scraping noisy scripts or markup.",
-      },
-      {
-        q: "Why are concrete statistics vital for Generative Engine Optimization?",
-        a: "Generative AI models prefer citing authoritative, data-backed claims. Documenting specific outcomes—such as 'cutting patient no-shows by 42%' or 'saving front-desk staff 15+ hours weekly'—makes MyClinics significantly more likely to be cited by AI models over generic software platforms.",
-      },
-    ],
-  },
-  {
-    id: "local-geo",
-    label: "Local Geo-Targeting",
-    iconName: "MapPin",
-    items: [
-      {
-        q: "How does programmatic geo-targeting work for clinics?",
-        a: "Geo-targeting connects local patient demand with nearby clinics through dedicated pincode directories, municipal radius indexing, and localized Google Maps schema, ensuring your clinic appears when patients search for doctors in their specific pincode or neighborhood.",
-      },
-      {
-        q: "Can multi-location practices manage their local presence in MyClinics?",
-        a: "Yes. MyClinics is built as a multi-tenant platform where clinics and branch locations each maintain distinct geographical metadata (latitude, longitude, city, and pincode) while clinic admins retain unified dashboard management.",
-      },
-      {
-        q: "How do AI engines resolve 'clinics near me' queries?",
-        a: "AI search engines cross-reference the user's geolocation with localized schema entities and real-time operational details—such as whether the clinic offers live WhatsApp queue updates and instant digital token appointments.",
-      },
-    ],
-  },
-  {
-    id: "automation",
-    label: "WhatsApp & Operations",
+    id: "whatsapp-ai",
+    label: "WhatsApp AI Assistant",
     iconName: "MessageSquare",
     items: [
       {
-        q: "How does WhatsApp AI booking connect to AEO and GEO marketing?",
-        a: "WhatsApp AI acts as the ultimate conversion engine. When an AI search engine recommends your clinic, patients are directed to a zero-friction WhatsApp link where an AI assistant books, reschedules, and answers questions 24/7 without human delay.",
+        q: "How does the WhatsApp AI assistant book appointments for patients?",
+        a: "Patients message your clinic's WhatsApp number naturally (e.g., 'I want to book an appointment with Dr. Sharma tomorrow morning'). The AI assistant checks live doctor availability, collects necessary details, reserves the slot, and sends an instant WhatsApp confirmation.",
       },
       {
-        q: "How do 30-minute turn alerts reduce waiting room overcrowding?",
-        a: "MyClinics automatically notifies patients ~30 minutes prior to their consultation and sends a real-time turn alert when the previous patient is finished. This eliminates waiting room chaos and minimizes clinic no-shows.",
+        q: "Does the WhatsApp assistant work 24/7 when the clinic is closed?",
+        a: "Yes. The AI assistant responds instantly 24 hours a day, 7 days a week—including nights, weekends, and holidays—so patients can book upcoming appointments and receive clinic info even when your front desk is closed.",
       },
       {
-        q: "Can the WhatsApp assistant answer clinic-specific medical queries?",
-        a: "The WhatsApp bot is strictly grounded in each clinic's custom knowledge base (soul.md and uploaded documents). It accurately answers timings, doctor schedules, consultation fees, and clinic policies while never fabricating medical advice.",
+        q: "How do automated WhatsApp reminders reduce patient no-shows?",
+        a: "MyClinics automatically sends WhatsApp reminder alerts ~30 minutes prior to the scheduled consultation with token details and clinic directions. Clinics using MyClinics report an average 42% reduction in missed appointments.",
+      },
+      {
+        q: "Can patients reschedule or cancel their appointments over WhatsApp?",
+        a: "Yes. Patients can request to reschedule or cancel directly through the WhatsApp chat. The system instantly updates the doctor's calendar and opens up the time slot for other patients waiting in line.",
+      },
+      {
+        q: "Will the WhatsApp AI hallucinate or give wrong medical advice?",
+        a: "No. The AI assistant is strictly grounded in your clinic's verified knowledge base (soul.md and uploaded clinic documents). It answers questions about timings, doctors, fees, and location, and strictly refers medical inquiries to a doctor consultation.",
       },
     ],
   },
   {
-    id: "security",
-    label: "Security & Compliance",
+    id: "appointments-queue",
+    label: "Appointments & Queue",
+    iconName: "Calendar",
+    items: [
+      {
+        q: "How does the live OPD queue counter and token system work?",
+        a: "Every booked patient receives a daily token number. As the doctor marks consultations complete, the live counter updates in real time and automatically alerts the next patient on WhatsApp that it is their turn to enter.",
+      },
+      {
+        q: "Can receptionists easily manage walk-in patients alongside online bookings?",
+        a: "Yes. Receptionists can use the Quick-Add feature to register walk-in patients in seconds, assigning them immediate tokens without interrupting pre-booked WhatsApp or online appointments.",
+      },
+      {
+        q: "Can doctors view and manage their daily appointment schedule?",
+        a: "Doctors have a dedicated dashboard displaying their day's schedule, live token progression, completed consultations, and patient history, enabling seamless transition between patients.",
+      },
+    ],
+  },
+  {
+    id: "prescriptions-emr",
+    label: "Prescriptions & EMR",
+    iconName: "FileText",
+    items: [
+      {
+        q: "Can doctors issue digital prescriptions in MyClinics?",
+        a: "Yes. Doctors can generate clean digital prescriptions with medicine search, auto-completed dosages, frequency instructions, and clinical advice. Prescriptions can be printed or delivered directly to the patient's WhatsApp.",
+      },
+      {
+        q: "How are patient medical records and lab reports stored?",
+        a: "All patient vitals, diagnosis history, allergies, visit notes, and uploaded diagnostic reports (securely stored in Cloudflare R2) are organized into a unified, searchable patient medical timeline.",
+      },
+      {
+        q: "Does MyClinics include pharmacy inventory and stock tracking?",
+        a: "Yes. The integrated pharmacy module lets clinics track medicine batches, purchase invoices, retail sales, expiry dates, stock adjustments, and supplier history with low-stock alerts.",
+      },
+    ],
+  },
+  {
+    id: "billing-pricing",
+    label: "Billing & Plans",
+    iconName: "CreditCard",
+    items: [
+      {
+        q: "Can I generate GST-compliant bills and track payments?",
+        a: "Yes. Invoices can be generated automatically from visits and pharmacy items with GST calculation, discount handling, payment mode tracking (Cash, UPI, Card), and pending balance alerts.",
+      },
+      {
+        q: "What pricing plans does MyClinics offer?",
+        a: "MyClinics offers transparent monthly and annual tiers: Starter (₹7,000/mo), Growth (₹12,000/mo), and Scale (₹20,000/mo). Annual subscriptions include ~17% savings (2 months free). All plans include WhatsApp booking and strict data isolation.",
+      },
+      {
+        q: "Can patients view past bills and records online?",
+        a: "Yes. Patients can access a self-service Patient Portal to review their past appointments, payment receipts, active prescriptions, and lab reports anytime from their phone.",
+      },
+    ],
+  },
+  {
+    id: "security-privacy",
+    label: "Security & Privacy",
     iconName: "ShieldCheck",
     items: [
       {
-        q: "How is patient data isolated and secured in MyClinics?",
-        a: "MyClinics enforces strict tenant isolation at the database level. Every clinic has an independent namespace, role-based access control (Admin, Doctor, Staff, Patient), encrypted document storage in Cloudflare R2, and TLS 1.3 encryption in transit.",
+        q: "Is my clinic's patient data isolated and private?",
+        a: "Yes. MyClinics uses a multi-tenant architecture with strict database-level isolation. Every clinic has its own dedicated namespace and Clinic ID, ensuring no clinic or outside party can ever view your records.",
       },
       {
-        q: "Does MyClinics support digital prescriptions and GST-compliant billing?",
-        a: "Yes. Doctors can issue digital prescriptions linked directly to patient timelines, and clinics can generate GST-ready invoices with pending-payment tracking and real-time revenue analytics.",
+        q: "Who owns our clinic's medical and financial data?",
+        a: "You own 100% of your data. You can export patient records, appointment registries, and revenue reports at any time with no lock-in.",
+      },
+      {
+        q: "How is patient data protected against unauthorized access?",
+        a: "All network traffic is encrypted using TLS 1.3, and medical files are stored with AES-256 encryption. Granular role-based permissions ensure staff members only see the modules authorized by the clinic administrator.",
       },
     ],
   },
 ];
 
+// Re-export as AEO_GEO_FAQ_CATEGORIES for backwards-compatibility
+export const AEO_GEO_FAQ_CATEGORIES = SOFTWARE_FAQ_CATEGORIES;
+
 /**
  * Builds standard Schema.org FAQPage JSON-LD object for Answer Engine Optimization.
  */
-export function buildFaqPageSchema(categories = AEO_GEO_FAQ_CATEGORIES) {
+export function buildFaqPageSchema(categories = SOFTWARE_FAQ_CATEGORIES) {
   const mainEntity = categories.flatMap((category) =>
     category.items.map((item) => ({
       "@type": "Question",

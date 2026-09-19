@@ -5,37 +5,35 @@ import { SiteFooter } from "@/components/site-footer";
 import { FaqsBlock } from "@/components/blocks/faqs-5";
 import { buttonVariants } from "@/components/ui/button";
 import { buildFaqPageSchema } from "@/lib/aeo-geo-faqs";
-import { ArrowRight, Bot, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, MessageSquare, Clock, ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AEO & GEO Marketing FAQs — AI Search & Clinic Optimization | My Clinics",
+  title: "My Clinics Software FAQs — Everything You Need to Know | My Clinics",
   description:
-    "Everything you need to know about Answer Engine Optimization (AEO), Generative Engine Optimization (GEO), and AI-driven clinic marketing. Learn how My Clinics puts doctors at the top of ChatGPT, Perplexity, and Google AI search.",
+    "Find answers to the most common questions doctors, clinic managers, and patients ask about My Clinics: WhatsApp booking, live OPD queues, digital prescriptions, EMR, billing, and data privacy.",
   keywords: [
-    "AEO marketing for clinics",
-    "GEO marketing healthcare",
-    "Answer Engine Optimization clinics",
-    "Generative Engine Optimization doctor",
-    "ChatGPT clinic marketing",
-    "Perplexity doctor search",
-    "Google AI Overviews clinic SEO",
-    "WhatsApp clinic booking automation",
-    "clinic management software FAQ",
     "My Clinics FAQs",
+    "clinic management software FAQ",
+    "WhatsApp doctor appointment booking",
+    "clinic queue token system",
+    "EMR software questions India",
+    "clinic billing software",
+    "digital prescriptions for doctors",
+    "doctor patient management software",
   ],
   alternates: { canonical: "/faq" },
   openGraph: {
-    title: "AEO & GEO FAQs — Answer Engine & Generative Optimization for Clinics",
+    title: "My Clinics Software FAQs — Everything You Need to Know",
     description:
-      "Discover how clinics use AEO & GEO to dominate AI search results on ChatGPT, Perplexity, Gemini, and Google AI Overviews with My Clinics.",
+      "Frequently asked questions about My Clinics software: WhatsApp AI booking, live OPD queue management, digital prescriptions, billing, and security.",
     type: "website",
     url: "/faq",
   },
   twitter: {
     card: "summary_large_image",
-    title: "AEO & GEO FAQs | My Clinics",
+    title: "My Clinics Software FAQs",
     description:
-      "Learn how Answer Engine Optimization (AEO) and Generative Engine Optimization (GEO) power patient acquisition and clinic discovery.",
+      "Answers to the most common questions doctors and clinics ask about front-desk automation, WhatsApp booking, and clinic operations.",
   },
 };
 
@@ -54,7 +52,7 @@ export default function FaqPage() {
       {
         "@type": "ListItem",
         position: 2,
-        name: "FAQs (AEO & GEO)",
+        name: "FAQs",
         item: "https://myclinic.myenum.in/faq",
       },
     ],
@@ -77,41 +75,41 @@ export default function FaqPage() {
       <main className="flex-1">
         {/* Interactive FAQ Block */}
         <FaqsBlock
-          title="AEO & GEO Healthcare FAQs"
-          subtitle="Answer Engine Optimization (AEO) and Generative Engine Optimization (GEO) demystified for modern doctors, clinics, and healthcare practices."
-          badge="AEO & GEO Knowledge Engine"
+          title="Frequently Asked Questions"
+          subtitle="Everything doctors, clinic managers, and patients need to know about My Clinics software, setup, and features."
+          badge="Product & Software Help Center"
         />
 
-        {/* Informational Callout & AI Readiness Grid */}
+        {/* Informational Callout Grid */}
         <section className="w-full border-t bg-muted/40 px-4 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-5xl">
             <div className="text-center mb-10">
               <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                Why AEO & GEO Matter for Modern Clinics
+                Built for Fast, Flawless Clinic Operations
               </h2>
               <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                Patients no longer just browse links — they ask AI agents for direct doctor recommendations.
+                Everything you need to automate your front desk, eliminate no-shows, and provide modern patient care.
               </p>
             </div>
 
             <div className="grid gap-6 sm:grid-cols-3">
               <div className="rounded-2xl border bg-card p-6 shadow-xs">
                 <div className="mb-4 inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Bot className="size-5" />
+                  <MessageSquare className="size-5" />
                 </div>
-                <h3 className="font-semibold text-foreground">Zero-Click AI Answers</h3>
+                <h3 className="font-semibold text-foreground">24/7 WhatsApp AI Assistant</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Perplexity, ChatGPT Search, and Google AI Overviews deliver synthetic direct answers. AEO ensures your clinic is the cited source.
+                  Patients book, reschedule, or check doctor timings directly over WhatsApp at any hour, reducing front-desk calls by up to 65%.
                 </p>
               </div>
 
               <div className="rounded-2xl border bg-card p-6 shadow-xs">
                 <div className="mb-4 inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Zap className="size-5" />
+                  <Clock className="size-5" />
                 </div>
-                <h3 className="font-semibold text-foreground">Instant WhatsApp Conversion</h3>
+                <h3 className="font-semibold text-foreground">Live Queue & Turn Alerts</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  When patients find your clinic through AI search, our 24/7 WhatsApp assistant immediately books appointments and answers clinic questions.
+                  Real-time token counters and automated 30-minute turn alerts notify patients when it is their turn, eliminating waiting-room chaos.
                 </p>
               </div>
 
@@ -119,9 +117,9 @@ export default function FaqPage() {
                 <div className="mb-4 inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <ShieldCheck className="size-5" />
                 </div>
-                <h3 className="font-semibold text-foreground">Verified Entity Authority</h3>
+                <h3 className="font-semibold text-foreground">Strict Data Isolation</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Structured schemas and standard machine-readable files ensure LLMs present accurate clinic hours, fees, and specialties without hallucination.
+                  Every clinic has an isolated tenant database. Your patient records, prescriptions, and financial data are private and 100% owned by you.
                 </p>
               </div>
             </div>
@@ -129,10 +127,10 @@ export default function FaqPage() {
             {/* Bottom CTA */}
             <div className="mt-12 rounded-3xl border bg-gradient-to-r from-primary/10 via-background to-primary/5 p-8 text-center sm:p-12">
               <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                Ready to optimize your clinic for AI search?
+                Ready to run your clinic on autopilot?
               </h3>
               <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-                Join 500+ clinics automating their front desk with WhatsApp AI and dominating local & generative search.
+                Join 500+ clinics modernizing patient care, WhatsApp booking, and OPD operations with My Clinics.
               </p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
                 <Link

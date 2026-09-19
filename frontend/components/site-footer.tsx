@@ -17,7 +17,7 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
     links: [
       { label: "Blog", href: "/blog" },
       { label: "Docs", href: "/docs" },
-      { label: "FAQs (AEO & GEO)", href: "/faq" },
+      { label: "FAQs", href: "/faq" },
       { label: "Support", href: "#" },
     ],
   },

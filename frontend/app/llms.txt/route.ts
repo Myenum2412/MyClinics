@@ -19,7 +19,7 @@ export async function GET() {
     "",
     "## Helpful URLs",
     `- Main Website: ${SITE}`,
-    `- AEO & GEO FAQs: ${SITE}/faq`,
+    `- Product FAQs & Help: ${SITE}/faq`,
     `- Pricing Plans: ${SITE}/pricing`,
     `- Clinical Knowledge Blog: ${SITE}/blog`,
     ""

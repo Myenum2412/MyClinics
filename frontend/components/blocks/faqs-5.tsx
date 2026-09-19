@@ -23,22 +23,29 @@ import {
   MapPin,
   MessageSquare,
   ShieldCheck,
+  Calendar,
+  FileText,
+  CreditCard,
   Search,
   X,
   HelpCircle,
 } from "lucide-react";
 import {
-  AEO_GEO_FAQ_CATEGORIES,
+  SOFTWARE_FAQ_CATEGORIES,
   FaqCategoryData,
   FaqItem,
 } from "@/lib/aeo-geo-faqs";
 
-const ICON_MAP = {
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Sparkles,
   Cpu,
   MapPin,
   MessageSquare,
   ShieldCheck,
+  Calendar,
+  FileText,
+  CreditCard,
+  HelpCircle,
 };
 
 interface FaqsBlockProps {
@@ -50,10 +57,10 @@ interface FaqsBlockProps {
 }
 
 export default function FaqsBlock({
-  categories = AEO_GEO_FAQ_CATEGORIES,
+  categories = SOFTWARE_FAQ_CATEGORIES,
   title = "Frequently Asked Questions",
-  subtitle = "Learn how AEO (Answer Engine Optimization) & GEO (Generative Engine Optimization) power modern clinic discovery and patient acquisition.",
-  badge = "AEO & GEO Knowledge Base",
+  subtitle = "Find clear answers to common questions about using MyClinics — WhatsApp booking, live OPD queues, digital prescriptions, billing, and security.",
+  badge = "Help Center & FAQs",
   className,
 }: FaqsBlockProps) {
   const [query, setQuery] = useState("");
