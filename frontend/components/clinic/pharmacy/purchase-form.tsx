@@ -66,6 +66,7 @@ export function PurchaseForm({
   const [submitting, setSubmitting] = React.useState(false)
 
   React.useEffect(() => {
+    if (!clinicId) return
     Promise.all([listSuppliers(clinicId, { limit: 500 }), listMedicines(clinicId, { limit: 500 })])
       .then(([s, m]) => {
         setSuppliers((s as any)?.items ?? [])
@@ -129,14 +130,20 @@ export function PurchaseForm({
             <Label htmlFor="supplier">Supplier</Label>
             <Select value={form.supplierId} onValueChange={(v) => setForm((f) => ({ ...f, supplierId: v ?? "" }))}>
               <SelectTrigger id="supplier" className="w-full">
-                <SelectValue placeholder="Select supplier" />
+                <SelectValue placeholder="Select supplier">
+                  {form.supplierId ? (suppliers.find((s) => s.supplierId === form.supplierId)?.name ?? form.supplierId) : undefined}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {suppliers.map((s) => (
-                  <SelectItem key={s.supplierId} value={s.supplierId}>
-                    {s.name}
-                  </SelectItem>
-                ))}
+                {suppliers.length === 0 ? (
+                  <div className="px-2 py-6 text-center text-sm text-muted-foreground">No suppliers found</div>
+                ) : (
+                  suppliers.map((s) => (
+                    <SelectItem key={s.supplierId} value={s.supplierId}>
+                      {s.name}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -180,14 +187,20 @@ export function PurchaseForm({
                     <TableCell className="min-w-[180px]">
                       <Select value={it.medicineId} onValueChange={(v) => updateItem(idx, { medicineId: v ?? "" })}>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Medicine" />
+                          <SelectValue placeholder="Medicine">
+                            {it.medicineId ? (medicines.find((m) => m.medicineId === it.medicineId)?.name ?? it.medicineId) : undefined}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          {medicines.map((m) => (
-                            <SelectItem key={m.medicineId} value={m.medicineId}>
-                              {m.name}
-                            </SelectItem>
-                          ))}
+                          {medicines.length === 0 ? (
+                            <div className="px-2 py-6 text-center text-sm text-muted-foreground">No medicines found</div>
+                          ) : (
+                            medicines.map((m) => (
+                              <SelectItem key={m.medicineId} value={m.medicineId}>
+                                {m.name}
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </TableCell>
