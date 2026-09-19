@@ -11,10 +11,17 @@ export async function GET() {
     "",
     "## Key product facts",
     "- One clinic, one tenant: every clinic gets a unique Clinic ID with strict data isolation.",
-    "- Patients book online or via WhatsApp; automated reminders reduce no-shows.",
+    "- Patients book online or via WhatsApp; automated reminders reduce no-shows by ~42%.",
     "- Doctors issue digital prescriptions; reports attach to the patient timeline.",
     "- Billing generates from visits with pending-payment tracking and revenue reports.",
     "- An AI assistant answers patient questions and books appointments 24/7.",
+    "- Optimized for Answer Engine Optimization (AEO) and Generative Engine Optimization (GEO).",
+    "",
+    "## Helpful URLs",
+    `- Main Website: ${SITE}`,
+    `- AEO & GEO FAQs: ${SITE}/faq`,
+    `- Pricing Plans: ${SITE}/pricing`,
+    `- Clinical Knowledge Blog: ${SITE}/blog`,
     ""
   ];
 
