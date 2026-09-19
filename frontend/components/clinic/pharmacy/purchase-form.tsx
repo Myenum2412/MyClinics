@@ -222,7 +222,9 @@ export function PurchaseForm({
                     <TableCell className="min-w-[150px]">
                       <Select value={it.supplierId ?? ""} onValueChange={(v) => updateItem(idx, { supplierId: v || null })}>
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Optional" />
+                          <SelectValue placeholder="Optional">
+                            {it.supplierId ? (suppliers.find((s) => s.supplierId === it.supplierId)?.name ?? it.supplierId) : undefined}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {suppliers.map((s) => (

@@ -55,6 +55,7 @@ export function SaleForm({
   const [submitting, setSubmitting] = React.useState(false)
 
   React.useEffect(() => {
+    if (!clinicId) return
     listMedicines(clinicId, { limit: 2000 })
       .then((m) => setMedicines((m as any)?.items ?? []))
       .catch((e: unknown) => {
@@ -190,10 +191,12 @@ export function SaleForm({
                     const line = med ? med.sellingPrice * (it.quantity || 0) - (it.discount || 0) : 0
                     return (
                       <TableRow key={idx}>
-                        <TableCell>
+                        <TableCell className="min-w-[220px]">
                           <Select value={it.medicineId} onValueChange={(v) => updateItem(idx, { medicineId: v ?? "" })}>
-                            <SelectTrigger className="h-8 w-56">
-                              <SelectValue placeholder="Select medicine" />
+                            <SelectTrigger className="h-8 w-full">
+                              <SelectValue placeholder="Select medicine">
+                                {it.medicineId ? (medicineById.get(it.medicineId)?.name ?? it.medicineId) : undefined}
+                              </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                               {medicines.map((m) => (

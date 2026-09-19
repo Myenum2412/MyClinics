@@ -62,6 +62,7 @@ export function OpeningStockForm({
   const [saving, setSaving] = React.useState(false)
 
   React.useEffect(() => {
+    if (!clinicId) return
     Promise.all([listMedicines(clinicId, { limit: 500 }), listSuppliers(clinicId, { limit: 500 })])
       .then(([m, s]) => {
         setMedicines((m as any)?.items ?? [])
@@ -131,7 +132,9 @@ export function OpeningStockForm({
                   <Label>Medicine</Label>
                   <Select value={it.medicineId} onValueChange={(v) => updateItem(idx, { medicineId: v ?? "" })}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select medicine" />
+                      <SelectValue placeholder="Select medicine">
+                        {it.medicineId ? (medicines.find((m) => m.medicineId === it.medicineId)?.name ?? it.medicineId) : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {medicines.map((m) => (
@@ -167,7 +170,9 @@ export function OpeningStockForm({
                   <Label>Supplier</Label>
                   <Select value={it.supplierId} onValueChange={(v) => updateItem(idx, { supplierId: v ?? "" })}>
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select supplier" />
+                      <SelectValue placeholder="Select supplier">
+                        {it.supplierId ? (suppliers.find((s) => s.supplierId === it.supplierId)?.name ?? it.supplierId) : undefined}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {suppliers.map((s) => (

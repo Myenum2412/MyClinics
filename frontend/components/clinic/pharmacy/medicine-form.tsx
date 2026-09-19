@@ -96,6 +96,7 @@ export function MedicineForm({
   const [loading, setLoading] = React.useState(Boolean(id))
 
   React.useEffect(() => {
+    if (!clinicId) return
     listSuppliers(clinicId, { limit: 500 })
       .then((s) => setSuppliers((s as any)?.items ?? []))
       .catch(() => {})
@@ -167,7 +168,7 @@ export function MedicineForm({
       sellingPrice: num(form.sellingPrice),
       taxPercent: num(form.taxPercent),
       discount: num(form.discount),
-      supplierId: form.supplierId.trim() === "" ? null : form.supplierId,
+      supplierId: form.supplierId.trim() === "" || form.supplierId === "__none__" ? null : form.supplierId,
       manufacturingDate: form.manufacturingDate.trim() === "" ? null : form.manufacturingDate,
       expiryDate: form.expiryDate.trim() === "" ? null : form.expiryDate,
       storageConditions: str(form.storageConditions),
@@ -259,16 +260,24 @@ export function MedicineForm({
           <div className="md:col-span-2">
             <Label htmlFor="supplierId">Supplier</Label>
             <Select value={form.supplierId} onValueChange={(v) => set("supplierId", v ?? "")}>
-              <SelectTrigger id="supplierId">
-                <SelectValue placeholder="Select supplier" />
+              <SelectTrigger id="supplierId" className="w-full">
+                <SelectValue placeholder="Select supplier">
+                  {form.supplierId ? (suppliers.find((s) => s.supplierId === form.supplierId)?.name ?? form.supplierId) : undefined}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
-                {suppliers.map((s) => (
-                  <SelectItem key={s.supplierId} value={s.supplierId}>
-                    {s.name}
-                  </SelectItem>
-                ))}
+                {suppliers.length === 0 ? (
+                  <div className="px-3 py-6 text-center text-sm text-muted-foreground">No suppliers found</div>
+                ) : (
+                  <>
+                    <SelectItem value="__none__">None</SelectItem>
+                    {suppliers.map((s) => (
+                      <SelectItem key={s.supplierId} value={s.supplierId}>
+                        {s.name}
+                      </SelectItem>
+                    ))}
+                  </>
+                )}
               </SelectContent>
             </Select>
           </div>

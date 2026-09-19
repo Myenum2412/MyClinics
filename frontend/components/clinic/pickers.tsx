@@ -62,15 +62,17 @@ export function DoctorSelect({
 
   return (
     <Select
-      value={value ?? ""}
-      onValueChange={(v) => onChange(v === "" ? null : v)}
+      value={value === null ? "__none__" : value ?? ""}
+      onValueChange={(v) => onChange(v === "__none__" || v === "" ? null : v)}
       required={required}
     >
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select doctor" />
+        <SelectValue placeholder="Select doctor">
+          {value ? (selectedDoctor?.name ?? value) : undefined}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
-        {allowEmpty && <SelectItem value="">None</SelectItem>}
+        {allowEmpty && <SelectItem value="__none__">None</SelectItem>}
         {doctors.length === 0 ? (
           <div className="px-3 py-6 text-center text-sm text-muted-foreground">No doctors found</div>
         ) : (
@@ -221,7 +223,9 @@ export function PatientSelect({
   return (
     <Select value={value ?? ""} onValueChange={onChange} required={required}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select patient" />
+        <SelectValue placeholder="Select patient">
+          {value ? (patients.find((p) => p.patientId === value)?.fullName ?? value) : undefined}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {patients.length === 0 ? (
