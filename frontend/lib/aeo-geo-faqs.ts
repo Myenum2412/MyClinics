@@ -42,6 +42,18 @@ export const SOFTWARE_FAQ_CATEGORIES: FaqCategoryData[] = [
         q: "Can I manage multiple doctors and clinic branches from a single account?",
         a: "Yes. MyClinics supports solo practitioner clinics as well as multi-doctor polyclinics and multi-location practices, with role-based access control for clinic admins, doctors, receptionists, and pharmacy staff.",
       },
+      {
+        q: "Can I import my existing patient records and medicine inventory?",
+        a: "Yes. MyClinics provides quick-import and bulk upload tools for patient directories and pharmacy medicine catalogs, making data migration from spreadsheets or legacy software fast and error-free.",
+      },
+      {
+        q: "Is there a free trial or live product demo available?",
+        a: "Yes. You can test the platform with a live demo walk-through or sign up for a trial account to test the dashboard, WhatsApp booking flow, and queue management before committing to a paid plan.",
+      },
+      {
+        q: "What happens if my clinic experiences slow internet or a temporary outage?",
+        a: "MyClinics includes Progressive Web App (PWA) offline support. Your reception team can still view queued patient tokens and consult schedules cached locally on their device until internet connectivity resumes.",
+      },
     ],
   },
   {
@@ -69,6 +81,18 @@ export const SOFTWARE_FAQ_CATEGORIES: FaqCategoryData[] = [
         q: "Will the WhatsApp AI hallucinate or give wrong medical advice?",
         a: "No. The AI assistant is strictly grounded in your clinic's verified knowledge base (soul.md and uploaded clinic documents). It answers questions about timings, doctors, fees, and location, and strictly refers medical inquiries to a doctor consultation.",
       },
+      {
+        q: "Can we customize the WhatsApp assistant's personality, greeting, and clinic FAQs?",
+        a: "Absolutely. You can customize your clinic's assistant persona via the soul.md configuration and knowledge documents. You define custom clinic rules, consulting hours, doctor bios, consultation fees, and clinic policies.",
+      },
+      {
+        q: "What happens if a patient asks a complex query the AI cannot handle?",
+        a: "If a patient query requires human intervention, the assistant flags the conversation in your clinic dashboard's AI Assistant and Leads inbox so your front-desk staff can step in and reply directly.",
+      },
+      {
+        q: "Can the WhatsApp bot send post-consultation instructions and follow-up reminders?",
+        a: "Yes. Automated follow-ups can be sent to patients post-visit, reminding them about their medication schedule, follow-up dates, or inviting them to leave a review for the clinic.",
+      },
     ],
   },
   {
@@ -87,6 +111,22 @@ export const SOFTWARE_FAQ_CATEGORIES: FaqCategoryData[] = [
       {
         q: "Can doctors view and manage their daily appointment schedule?",
         a: "Doctors have a dedicated dashboard displaying their day's schedule, live token progression, completed consultations, and patient history, enabling seamless transition between patients.",
+      },
+      {
+        q: "Can patients check their live token number from home before coming to the clinic?",
+        a: "Yes. Patients receive a unique WhatsApp tracking link showing the current token being served and their estimated consultation time, allowing them to time their arrival and avoid crowded waiting rooms.",
+      },
+      {
+        q: "Can multiple doctors have independent live queue counters in the same clinic?",
+        a: "Yes. Each doctor in your clinic has their own independent queue counter, token sequence, and schedule. The receptionist can manage all active doctor counters simultaneously from the queue dashboard.",
+      },
+      {
+        q: "How does the system prevent double-booking or scheduling conflicts?",
+        a: "The scheduling engine synchronizes time slots in real time across online bookings, WhatsApp reservations, and receptionist walk-ins, guaranteeing that no time slot or token is allocated twice.",
+      },
+      {
+        q: "Can emergency or priority patients be moved up in the queue?",
+        a: "Yes. Clinic staff have full control to reorder tokens or insert priority patients directly into the queue when immediate medical attention is required.",
       },
     ],
   },
@@ -107,6 +147,22 @@ export const SOFTWARE_FAQ_CATEGORIES: FaqCategoryData[] = [
         q: "Does MyClinics include pharmacy inventory and stock tracking?",
         a: "Yes. The integrated pharmacy module lets clinics track medicine batches, purchase invoices, retail sales, expiry dates, stock adjustments, and supplier history with low-stock alerts.",
       },
+      {
+        q: "Can doctors create customized prescription templates for common diagnoses?",
+        a: "Yes. Doctors can save standardized prescription templates (e.g., Seasonal Flu, Hypertension, Dental Cleaning) with pre-filled medications and instructions to create complete prescriptions in under 15 seconds.",
+      },
+      {
+        q: "Can prescription printouts include our clinic's logo and custom letterhead?",
+        a: "Yes. You can configure custom clinic letterhead layouts, logos, doctor registration numbers, and clinic addresses to print professional, compliant physical prescriptions or export signed PDFs.",
+      },
+      {
+        q: "Does the prescription system include medicine brand names and generic salts?",
+        a: "Yes. The medicine database supports brand names, generic formulations, strengths, dosage formats (tablets, syrups, injections), and customizable intake timings (before food, after food, bedtime).",
+      },
+      {
+        q: "Can patients upload past test reports and records to their profile?",
+        a: "Yes. Patients and staff can upload lab PDFs, scan images, and test reports directly to the patient's record, where they are indexed and easily accessible to doctors during consultations.",
+      },
     ],
   },
   {
@@ -126,6 +182,22 @@ export const SOFTWARE_FAQ_CATEGORIES: FaqCategoryData[] = [
         q: "Can patients view past bills and records online?",
         a: "Yes. Patients can access a self-service Patient Portal to review their past appointments, payment receipts, active prescriptions, and lab reports anytime from their phone.",
       },
+      {
+        q: "Which payment methods can be tracked in the clinic billing system?",
+        a: "The system supports Cash, UPI, Card, Net Banking, and custom split-payment options. You can record payments, track partial dues, and generate payment receipts instantly.",
+      },
+      {
+        q: "Does MyClinics generate daily revenue and collection reports?",
+        a: "Yes. The dashboard provides real-time financial reporting including daily OPD collections, pharmacy turnover, outstanding patient balances, doctor-wise revenue splits, and monthly GST breakdowns.",
+      },
+      {
+        q: "Are there any hidden setup fees or charges per WhatsApp message?",
+        a: "No hidden fees. Our pricing plans include all core features, multi-tenant hosting, and WhatsApp booking capabilities with clear upfront monthly or annual billing.",
+      },
+      {
+        q: "Can I change or cancel my clinic subscription plan at any time?",
+        a: "Yes. You can upgrade, downgrade, or cancel your subscription at any time directly from your clinic billing settings without penalty.",
+      },
     ],
   },
   {
@@ -144,6 +216,18 @@ export const SOFTWARE_FAQ_CATEGORIES: FaqCategoryData[] = [
       {
         q: "How is patient data protected against unauthorized access?",
         a: "All network traffic is encrypted using TLS 1.3, and medical files are stored with AES-256 encryption. Granular role-based permissions ensure staff members only see the modules authorized by the clinic administrator.",
+      },
+      {
+        q: "Can I control what each staff member can view and edit?",
+        a: "Yes. MyClinics provides granular role-based permissions (Admin, Doctor, Nurse, Receptionist, Pharmacist). Receptionists cannot view clinical diagnoses unless authorized, and staff cannot alter billing audits.",
+      },
+      {
+        q: "Are database backups automated, and where is the data hosted?",
+        a: "Database backups are automated daily with redundant geographic snapshots. Files and medical documents are stored in Cloudflare R2 object storage with multi-layer encryption.",
+      },
+      {
+        q: "Is MyClinics compliant with telemedicine and digital health guidelines?",
+        a: "Yes. MyClinics adheres to the Telemedicine Practice Guidelines and digital healthcare security standards, ensuring doctor consent, digital prescription validity, and strict patient confidentiality.",
       },
     ],
   },
