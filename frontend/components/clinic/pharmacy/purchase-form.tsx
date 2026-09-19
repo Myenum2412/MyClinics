@@ -128,7 +128,7 @@ export function PurchaseForm({
           <div className="space-y-2">
             <Label htmlFor="supplier">Supplier</Label>
             <Select value={form.supplierId} onValueChange={(v) => setForm((f) => ({ ...f, supplierId: v ?? "" }))}>
-              <SelectTrigger id="supplier">
+              <SelectTrigger id="supplier" className="w-full">
                 <SelectValue placeholder="Select supplier" />
               </SelectTrigger>
               <SelectContent>
@@ -179,7 +179,7 @@ export function PurchaseForm({
                   <TableRow key={idx}>
                     <TableCell className="min-w-[180px]">
                       <Select value={it.medicineId} onValueChange={(v) => updateItem(idx, { medicineId: v ?? "" })}>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Medicine" />
                         </SelectTrigger>
                         <SelectContent>
@@ -208,7 +208,7 @@ export function PurchaseForm({
                     </TableCell>
                     <TableCell className="min-w-[150px]">
                       <Select value={it.supplierId ?? ""} onValueChange={(v) => updateItem(idx, { supplierId: v || null })}>
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Optional" />
                         </SelectTrigger>
                         <SelectContent>
