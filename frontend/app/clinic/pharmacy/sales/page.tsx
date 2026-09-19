@@ -134,9 +134,9 @@ export default function PharmacySalesPage() {
         <CardContent className="p-0">
           <div className="flex flex-wrap items-center gap-2 p-4 border-b border-border">
             <span className="text-sm font-medium">Sales <span className="text-muted-foreground">({filtered.length})</span></span>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter((v as "" | SaleStatus) ?? "")}>
+            <Select value={statusFilter || "__all__"} onValueChange={(v) => setStatusFilter((v === "__all__" ? "" : v) as "" | SaleStatus)}>
               <SelectTrigger className="h-9 w-40 ml-auto"><SelectValue placeholder="All statuses" /></SelectTrigger>
-              <SelectContent><SelectItem value="">All statuses</SelectItem><SelectItem value="completed">Completed</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem><SelectItem value="refunded">Refunded</SelectItem></SelectContent>
+              <SelectContent><SelectItem value="__all__">All statuses</SelectItem><SelectItem value="completed">Completed</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem><SelectItem value="refunded">Refunded</SelectItem></SelectContent>
             </Select>
           </div>
           <div className="overflow-x-auto">

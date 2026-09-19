@@ -93,7 +93,7 @@ export function WriteOffForm({
             <Label>Reason</Label>
             <Select value={reason} onValueChange={(v) => setReason((v as typeof reason) ?? "damaged")}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>{WRITE_OFF_REASONS.find((r) => r.value === reason)?.label ?? reason}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {WRITE_OFF_REASONS.map((r) => (

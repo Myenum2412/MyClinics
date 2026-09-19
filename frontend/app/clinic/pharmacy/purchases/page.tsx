@@ -148,9 +148,9 @@ export default function PharmacyPurchasesPage() {
           <div className="flex flex-wrap items-center gap-2 p-4 border-b border-border">
             <span className="text-sm font-medium">Purchase Orders <span className="text-muted-foreground">({filtered.length})</span></span>
             <div className="ml-auto flex items-center gap-2">
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter((v as StatusFilter) ?? "")}>
+            <Select value={statusFilter || "__all__"} onValueChange={(v) => setStatusFilter((v === "__all__" ? "" : v) as StatusFilter)}>
               <SelectTrigger className="h-9 w-32"><SelectValue placeholder="All statuses" /></SelectTrigger>
-              <SelectContent><SelectItem value="">All</SelectItem><SelectItem value="draft">Draft</SelectItem><SelectItem value="received">Received</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent>
+              <SelectContent><SelectItem value="__all__">All</SelectItem><SelectItem value="draft">Draft</SelectItem><SelectItem value="received">Received</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent>
             </Select>
             </div>
           </div>
