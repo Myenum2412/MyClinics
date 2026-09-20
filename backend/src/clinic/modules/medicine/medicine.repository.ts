@@ -25,7 +25,7 @@ export class MedicineRepository {
   private scoped(base: Record<string, unknown> = {}): Record<string, unknown> {
     const filter: Record<string, unknown> = { ...base };
     if (this.scope.role === "doctor") {
-      filter.doctorId = this.scope.doctorId ?? null;
+      if (this.scope.doctorId) filter.doctorId = this.scope.doctorId;
     }
     if (this.scope.role === "patient") {
       filter.patientId = this.scope.patientId ?? null;

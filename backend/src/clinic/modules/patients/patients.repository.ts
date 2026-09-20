@@ -30,8 +30,8 @@ export class PatientRepository {
       status: { $ne: "deleted" },
       ...base,
     };
-    if (this.scope.role === "doctor") {
-      filter.doctorId = this.scope.doctorId ?? null;
+    if (this.scope.role === "doctor" && this.scope.doctorId) {
+      filter.doctorId = this.scope.doctorId;
     }
     if (this.scope.role === "patient") {
       // A patient may only ever target their OWN record. If the caller tried
