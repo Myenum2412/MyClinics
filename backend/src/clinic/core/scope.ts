@@ -64,26 +64,13 @@ async function loadActiveClinicUser(token: VerifiedClinicToken): Promise<ActiveU
       clinicActive = clinic?.status === "active";
     }
 
-    let doctorId = typeof user.doctorId === "string" ? user.doctorId : null;
-    // Fallback for legacy orphan doctor users (ajaysingh099 case): resolve via doctors collection
-    if ((user.role === "doctor" || token.role === "doctor") && !doctorId && user.clinicId) {
-      const doc = await db.collection(CLINIC_COLLECTIONS.doctors).findOne(
-        { clinicId: user.clinicId as string, $or: [{ userId: token.userId }, ...(user.email ? [{ email: user.email }] : []), ...(token.email ? [{ email: token.email }] : [])] } as any,
-        { projection: { doctorId: 1 } }
-      );
-      if (doc?.doctorId) {
-        doctorId = doc.doctorId as string;
-        // self-heal: backfill user record
-        await db.collection(CLINIC_COLLECTIONS.users).updateOne({ userId: token.userId }, { $set: { doctorId } });
-      }
-    }
     return {
       userId: token.userId,
       clinicId: (user.clinicId as string | null) ?? null,
       role: isClinicRole(user.role) ? user.role : token.role,
       name: typeof user.name === "string" ? user.name : token.name,
       email: typeof user.email === "string" ? user.email : token.email,
-      doctorId,
+      doctorId: typeof user.doctorId === "string" ? user.doctorId : null,
       patientId: typeof user.patientId === "string" ? user.patientId : null,
       clinicActive,
       userActive: user.status !== "inactive" && user.status !== "deleted",
@@ -167,13 +154,27 @@ export function applyClinicScope(app: FastifyInstance): void {
       }
     }
 
+    let resolvedDoctorId = active.doctorId;
+    if (active.role === "doctor" && !resolvedDoctorId && active.clinicId) {
+      try {
+        const db = await getDb();
+        const doc = await db.collection(CLINIC_COLLECTIONS.doctors).findOne(
+          { clinicId: active.clinicId, $or: [{ userId: active.userId }, ...(active.email ? [{ email: active.email }] : [])] } as any,
+          { projection: { doctorId: 1 } }
+        );
+        if (doc?.doctorId) {
+          resolvedDoctorId = doc.doctorId as string;
+          invalidateCache(`clc:user:${active.userId}`);
+        }
+      } catch {}
+    }
     const clinic: ClinicContext = {
       userId: active.userId,
       clinicId: active.clinicId,
       role: active.role,
       name: active.name,
       email: active.email,
-      doctorId: active.doctorId,
+      doctorId: resolvedDoctorId,
       patientId: active.patientId,
       tokenId: verified.jti,
       ip,
