@@ -24,6 +24,11 @@ export function createWhatsAppClient(options: WhatsAppClientOptions): Client {
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
       "--disable-gpu",
+      "--disable-accelerated-2d-canvas",
+      "--no-first-run",
+      "--no-zygote",
+      "--single-process",
+      "--disable-extensions",
     ],
   };
   if (process.env.WHATSAPP_CHROME_PATH) {

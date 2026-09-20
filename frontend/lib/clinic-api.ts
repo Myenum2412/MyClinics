@@ -1612,11 +1612,14 @@ export function uploadMedicalRecordFile(
     };
 
     xhr.open("POST", `${API_BASE}${tenantPath(clinicId, "/medical-record/upload")}`);
+    xhr.withCredentials = true;
 
     const token = typeof window !== "undefined" ? getStoredToken() : null;
     if (token) {
       xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     }
+    const csrf = getCsrfToken();
+    if (csrf) xhr.setRequestHeader("X-CSRF-Token", csrf);
 
     xhr.send(form);
   });
@@ -1634,10 +1637,12 @@ export async function uploadMedicalRecordFileVersion(
   const headers: Record<string, string> = {};
   const token = typeof window !== "undefined" ? getStoredToken() : null;
   if (token) headers.Authorization = `Bearer ${token}`;
+  const csrf2 = getCsrfToken();
+  if (csrf2) headers["X-CSRF-Token"] = csrf2;
 
   const res = await fetch(
     `${API_BASE}${tenantPath(clinicId, `/medical-record/files/${fileId}/version`)}`,
-    { method: "POST", headers, body: form, cache: "no-store" }
+    { method: "POST", headers, body: form, cache: "no-store", credentials: "include" }
   );
 
   let data: unknown;
@@ -1725,6 +1730,8 @@ export async function uploadAvatar(
   const headers: Record<string, string> = {};
   const token = typeof window !== "undefined" ? getStoredToken() : null;
   if (token) headers.Authorization = `Bearer ${token}`;
+  const csrf3 = getCsrfToken();
+  if (csrf3) headers["X-CSRF-Token"] = csrf3;
 
   const res = await fetch(`${API_BASE}${avatarPath(clinicId, ownerType, ownerId)}`, {
     method: "POST",
