@@ -9,8 +9,15 @@ export class DashboardService {
   async getSummary(ctx: ClinicContext) {
     const clinicId = requireClinicOf(ctx);
     const isDoctor = ctx.role === "doctor";
-    // 30s cache per clinic+role+doctorId
-    const cacheKey = `dashboard:${clinicId}:${isDoctor ? ctx.doctorId : "staff"}`;
+    let doctorId = ctx.doctorId;
+    if (isDoctor && !doctorId) {
+      const doc = await this.db.collection(CLINIC_COLLECTIONS.doctors).findOne(
+        { clinicId, $or: [{ userId: ctx.userId }, ...(ctx.email ? [{ email: ctx.email }] : [])] } as any,
+        { projection: { doctorId: 1 } }
+      );
+      if (doc?.doctorId) doctorId = doc.doctorId as string;
+    }
+    const cacheKey = `dashboard:${clinicId}:${isDoctor ? doctorId ?? "unknown" : "staff"}`;
     return cached(cacheKey, 30_000, async () => {
       const appointmentsCol = this.db.collection(CLINIC_COLLECTIONS.appointments);
       const patientsCol = this.db.collection(CLINIC_COLLECTIONS.patients);
@@ -18,7 +25,7 @@ export class DashboardService {
       const prescriptionsCol = this.db.collection(CLINIC_COLLECTIONS.prescriptions);
       const billsCol = this.db.collection(CLINIC_COLLECTIONS.bills);
 
-      const doctorFilter = isDoctor ? { doctorId: ctx.doctorId } : {};
+      const doctorFilter = isDoctor && doctorId ? { doctorId } : {};
 
       const [apptCount, patientCount, doctorCount, rxCount, billDocs, recentAppointments, recentPatients] =
         await Promise.all([
