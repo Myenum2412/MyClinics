@@ -106,7 +106,6 @@ const NAV_GROUPS: NavGroup[] = [
       { title: "Labs", url: "/clinic/labs", icon: <FlaskConical className="size-5" />, roles: ["clinic_admin", "lab_technician"] },
       { title: "Leads", url: "/clinic/leads", icon: <InboxIcon className="size-5" />, roles: ["staff", "clinic_admin"] },
       { title: "Audit Logs", url: "/clinic/audit-logs", icon: <ClipboardListIcon className="size-5" />, roles: ["clinic_admin"] },
-      { title: "Clinic Profile", url: "/clinic/profile", icon: <Settings2Icon className="size-5" />, roles: ["staff", "clinic_admin"] },
       { title: "Settings", url: "/clinic/settings", icon: <Settings2Icon className="size-5" />, roles: ["staff", "clinic_admin"] },
     ],
   },
