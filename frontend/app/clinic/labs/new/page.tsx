@@ -33,7 +33,7 @@ export default function NewLabPage(){
     if(f.password!==f.confirmPassword) return toast.error("Passwords do not match");
     setSaving(true);setSaveError(null);
     try{
-      await createLab(clinicId,{name:f.name.trim(),contactPerson:f.contactPerson.trim()||null,phone:f.phone.trim()||null,email:f.email.trim(),password:f.password,address:f.address.trim()||null,city:f.city.trim()||null,state:f.state.trim()||null,pincode:f.pincode.trim()||null,licenseNo:f.licenseNo.trim()||null,labType:f.labType||null});
+      await createLab(clinicId,{labName:f.name.trim(),contactPerson:f.contactPerson.trim()||null,phone:f.phone.trim()||null,email:f.email.trim(),password:f.password,address:f.address.trim()||null,city:f.city.trim()||null,state:f.state.trim()||null,pincode:f.pincode.trim()||null,licenseNo:f.licenseNo.trim()||null,labType:f.labType||null});
       setCreated({email:f.email.trim(),password:f.password,labName:f.name.trim()});
     }catch(err){const msg=err instanceof Error?err.message:"Failed to create lab";setSaveError(msg);toast.error(msg);} finally{setSaving(false);}
   };

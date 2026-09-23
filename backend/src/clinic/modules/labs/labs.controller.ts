@@ -13,7 +13,7 @@ export class LabController {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
     const parsed = createLabSchema.safeParse(request.body);
-    if (!parsed.success) throw new BadRequestError(parsed.error.issues[0]?.message ?? "Invalid lab data");
+    if (!parsed.success) { const d = parsed.error.issues.map(i => `${i.path.join(".")}: ${i.message}`).join("; "); throw new BadRequestError(d || "Invalid lab data"); }
     const db = await getDb();
     const lab = await this.service(db).createLab(ctx, parsed.data);
     return reply.code(201).send(labToPublic(lab));
@@ -40,7 +40,7 @@ export class LabController {
     if (!ctx) throw new UnauthorizedError();
     const { labId } = request.params as { labId: string };
     const parsed = updateLabSchema.safeParse(request.body);
-    if (!parsed.success) throw new BadRequestError(parsed.error.issues[0]?.message ?? "Invalid lab data");
+    if (!parsed.success) { const d = parsed.error.issues.map(i => `${i.path.join(".")}: ${i.message}`).join("; "); throw new BadRequestError(d || "Invalid lab data"); }
     const db = await getDb();
     const lab = await this.service(db).updateLab(ctx, labId, parsed.data);
     return reply.send(labToPublic(lab));
