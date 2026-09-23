@@ -47,6 +47,8 @@ import {
   ChevronRight,
   ChevronDown,
   Trash2,
+  Eye,
+  Pencil,
 } from "lucide-react";
 import {
   Select,
@@ -886,20 +888,17 @@ export default function RecordsPage() {
                       )}
                       <TableCell className="text-right pr-6">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => setViewing(r)}>
-                            View
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => setEditing(r)}>
-                            Edit
-                          </Button>
+                          <Button variant="ghost" size="icon-sm" onClick={() => setViewing(r)} aria-label="View" title="View"><Eye className="size-4" /></Button>
+                          <Button variant="ghost" size="icon-sm" onClick={() => setEditing(r)} aria-label="Edit" title="Edit"><Pencil className="size-4" /></Button>
                           {canManage && (
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon-sm"
                               className="text-destructive hover:bg-destructive/10"
                               onClick={() => setDeleteTarget(r)}
+                              aria-label="Delete" title="Delete"
                             >
-                              Delete
+                              <Trash2 className="size-4" />
                             </Button>
                           )}
                         </div>

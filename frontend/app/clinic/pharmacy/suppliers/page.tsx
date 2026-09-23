@@ -33,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Pencil, Trash2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 
 type SupplierStatus = "active" | "inactive"
@@ -153,13 +154,14 @@ export default function PharmacySuppliersPage() {
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon-sm"
+                          aria-label="Edit" title="Edit"
                           render={<Link href={`/clinic/pharmacy/suppliers/${s.supplierId}/edit`} />}
                         >
-                          Edit
+                          <Pencil className="size-4" />
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => setDeleteTarget(s)}>
-                          Delete
+                        <Button variant="ghost" size="icon-sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" aria-label="Delete" title="Delete" onClick={() => setDeleteTarget(s)}>
+                          <Trash2 className="size-4" />
                         </Button>
                       </div>
                     </TableCell>

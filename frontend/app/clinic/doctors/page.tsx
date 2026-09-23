@@ -40,6 +40,8 @@ import {
   Camera,
   AlertCircle,
   Activity,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { DoctorOverviewAnalytics } from "@/src/components/clinic/doctor-overview-analytics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -784,15 +786,16 @@ export default function DoctorsPage() {
                       {canManage && (
                         <TableCell className="text-right pr-6">
                           <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => setViewing(d)}>View</Button>
-                            <Button variant="ghost" size="sm" onClick={() => setEditing(d)}>Edit</Button>
+                            <Button variant="ghost" size="icon-sm" onClick={() => setViewing(d)} aria-label="View" title="View"><Eye className="size-4" /></Button>
+                            <Button variant="ghost" size="icon-sm" onClick={() => setEditing(d)} aria-label="Edit" title="Edit"><Pencil className="size-4" /></Button>
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon-sm"
                               className="text-destructive hover:bg-destructive/10"
                               onClick={() => setDeleteTarget(d)}
+                              aria-label="Delete" title="Delete"
                             >
-                              Delete
+                              <Trash2 className="size-4" />
                             </Button>
                           </div>
                         </TableCell>

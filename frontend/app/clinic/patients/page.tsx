@@ -16,6 +16,7 @@ import {
   updatePatient,
   uploadAvatar,
 } from "@/lib/clinic-api";
+import { Eye, Pencil, Send, Trash2 } from "lucide-react";
 import { bustAvatarCache, PersonAvatar } from "@/components/clinic/person-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -834,26 +835,28 @@ export default function PatientsPage() {
                       )}
                       <TableCell className="text-right pr-6">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => setViewing(p)}>View</Button>
-                          <Button variant="ghost" size="sm" onClick={() => setEditing(p)}>Edit</Button>
+                          <Button variant="ghost" size="icon-sm" onClick={() => setViewing(p)} aria-label="View" title="View"><Eye className="size-4" /></Button>
+                          <Button variant="ghost" size="icon-sm" onClick={() => setEditing(p)} aria-label="Edit" title="Edit"><Pencil className="size-4" /></Button>
                           {canManage && p.userId && (
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon-sm"
                               disabled={resending}
                               onClick={() => handleResendCredentials(p)}
+                              aria-label="Resend" title="Resend"
                             >
-                              Resend
+                              <Send className="size-4" />
                             </Button>
                           )}
                           {canManage && (
                             <Button
                               variant="ghost"
-                              size="sm"
+                              size="icon-sm"
                               className="text-destructive hover:bg-destructive/10"
                               onClick={() => setDeleteTarget(p)}
+                              aria-label="Delete" title="Delete"
                             >
-                              Delete
+                              <Trash2 className="size-4" />
                             </Button>
                           )}
                         </div>

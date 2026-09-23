@@ -187,14 +187,12 @@ export default function PharmacyPurchasesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1.5">
-                          <Button variant="ghost" size="sm" onClick={() => openDetail(p)}>
-                            <EyeIcon />
-                            View
+                          <Button variant="ghost" size="icon-sm" aria-label="View" title="View" onClick={() => openDetail(p)}>
+                            <EyeIcon className="size-4" />
                           </Button>
                           {p.status === "draft" && (
-                            <Button variant="outline" size="sm" onClick={() => handleReceive(p)}>
-                              <CheckIcon />
-                              Receive
+                            <Button variant="outline" size="icon-sm" aria-label="Receive" title="Receive" onClick={() => handleReceive(p)}>
+                              <CheckIcon className="size-4" />
                             </Button>
                           )}
                         </div>

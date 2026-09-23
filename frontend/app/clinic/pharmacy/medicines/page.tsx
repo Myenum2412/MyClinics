@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Pencil, Trash2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
 import { ChartContainer } from "@/components/ui/chart"
@@ -305,13 +306,14 @@ export default function PharmacyMedicinesPage() {
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"
-                          size="sm"
+                          size="icon-sm"
+                          aria-label="Edit" title="Edit"
                           render={<Link href={`/clinic/pharmacy/medicines/${m.medicineId}/edit`} />}
                         >
-                          Edit
+                          <Pencil className="size-4" />
                         </Button>
-                        <Button variant="destructive" size="sm" onClick={() => setDeleteTarget(m)}>
-                          Delete
+                        <Button variant="ghost" size="icon-sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" aria-label="Delete" title="Delete" onClick={() => setDeleteTarget(m)}>
+                          <Trash2 className="size-4" />
                         </Button>
                       </div>
                     </TableCell>

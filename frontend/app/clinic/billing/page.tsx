@@ -70,6 +70,8 @@ import {
   RotateCcw,
   FileText,
   Info,
+  Eye,
+  Pencil,
 } from "lucide-react";
 
 const STATUS_CLASS: Record<string, string> = {
@@ -679,30 +681,17 @@ export default function BillingPage() {
                       >
                         <Download className="size-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8"
-                        onClick={() => setViewing(b)}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8"
-                        onClick={() => setEditing(b)}
-                      >
-                        Edit
-                      </Button>
+                      <Button variant="ghost" size="icon-sm" className="h-8 w-8" onClick={() => setViewing(b)} aria-label="View" title="View"><Eye className="size-4" /></Button>
+                      <Button variant="ghost" size="icon-sm" className="h-8 w-8" onClick={() => setEditing(b)} aria-label="Edit" title="Edit"><Pencil className="size-4" /></Button>
                       {b.status !== "void" && (
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="h-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          size="icon-sm"
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
                           onClick={() => setVoidTarget(b)}
+                          aria-label="Void" title="Void"
                         >
-                          Void
+                          <Trash className="size-4" />
                         </Button>
                       )}
                     </TableCell>
