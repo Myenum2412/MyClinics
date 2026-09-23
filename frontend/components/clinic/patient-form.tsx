@@ -505,17 +505,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="2. Vital Signs">
-          <div className="grid gap-4 md:grid-cols-2">
-            {renderViewField("Blood Pressure", form.bloodPressure ? `${form.bloodPressure} mmHg` : "—")}
-            {renderViewField("Temperature", form.temperature ? `${form.temperature} °C` : "—")}
-            {renderViewField("Pulse / Heart Rate", form.pulse ? `${form.pulse} bpm` : "—")}
-            {renderViewField("Respiratory Rate", form.respiratoryRate ? `${form.respiratoryRate} /min` : "—")}
-            {renderViewField("SpO₂ (Oxygen Saturation)", form.spo2 ? `${form.spo2} %` : "—")}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="3. Address">
+        <SectionCard title="2. Address">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("Full Address", form.address)}
             {renderViewField("City", form.city)}
@@ -524,7 +514,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="4. Emergency Contact">
+        <SectionCard title="3. Emergency Contact">
           <div className="space-y-4">
             {(form.emergencyContacts.length ? form.emergencyContacts : [{ name: form.emergencyContactName, relationship: form.emergencyContactRelationship, mobile: form.emergencyContactMobile }]).map((c, idx) => (
               <div key={idx} className="grid gap-4 md:grid-cols-3 rounded-lg border border-border/60 p-3 bg-muted/20">
@@ -536,7 +526,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="5. Medical Information">
+        <SectionCard title="4. Medical Information">
           <div className="space-y-4">
             {renderViewField("Known Allergies", form.allergies)}
             {renderViewField("Medical Conditions", form.medicalConditions)}
@@ -546,7 +536,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="6. Chief Complaint">
+        <SectionCard title="5. Chief Complaint">
           <div className="space-y-4">
             {form.chiefComplaints.map((c, idx) => (
               <div key={idx} className="rounded-lg border border-border/60 p-3 bg-muted/20 space-y-3">
@@ -561,7 +551,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="7. History of Presenting Illness">
+        <SectionCard title="6. History of Presenting Illness">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("Presenting Complaint", form.hpi.presentingComplaint)}
             {renderViewField("Onset", form.hpi.onset)}
@@ -578,10 +568,20 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="8. Identification">
+        <SectionCard title="7. Identification">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("ID Proof Type", form.idType)}
             {renderViewField("ID Number", form.idNumber)}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="8. Vital Signs">
+          <div className="grid gap-4 md:grid-cols-2">
+            {renderViewField("Blood Pressure", form.bloodPressure ? `${form.bloodPressure} mmHg` : "—")}
+            {renderViewField("Temperature", form.temperature ? `${form.temperature} °C` : "—")}
+            {renderViewField("Pulse / Heart Rate", form.pulse ? `${form.pulse} bpm` : "—")}
+            {renderViewField("Respiratory Rate", form.respiratoryRate ? `${form.respiratoryRate} /min` : "—")}
+            {renderViewField("SpO₂ (Oxygen Saturation)", form.spo2 ? `${form.spo2} %` : "—")}
           </div>
         </SectionCard>
 
@@ -855,57 +855,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="2. Vital Signs" description="Optional — captured at registration, editable anytime">
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            label="Blood Pressure"
-            name="bloodPressure"
-            value={form.bloodPressure}
-            onChange={(v) => handleChange("bloodPressure", v)}
-            placeholder="120/80"
-            helperText="mmHg, e.g. 120/80"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Temperature"
-            name="temperature"
-            value={form.temperature}
-            onChange={(v) => handleChange("temperature", v)}
-            placeholder="98.6"
-            helperText="°F or °C"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Pulse / Heart Rate"
-            name="pulse"
-            value={form.pulse}
-            onChange={(v) => handleChange("pulse", v)}
-            placeholder="72"
-            helperText="beats per minute (bpm)"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Respiratory Rate"
-            name="respiratoryRate"
-            value={form.respiratoryRate}
-            onChange={(v) => handleChange("respiratoryRate", v)}
-            placeholder="16"
-            helperText="breaths per minute"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="SpO₂ (Oxygen Saturation)"
-            name="spo2"
-            value={form.spo2}
-            onChange={(v) => handleChange("spo2", v)}
-            placeholder="98"
-            helperText="%, e.g. 98"
-            disabled={isViewMode}
-          />
-        </div>
-      </SectionCard>
-
-      <SectionCard title="3. Address">
+      <SectionCard title="2. Address">
         <PincodeLookup
           pincode={form.pincode}
           city={form.city}
@@ -942,7 +892,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="4. Emergency Contact"
+        title="3. Emergency Contact"
         description="Optional but recommended — add multiple contacts"
         action={
           <Button type="button" variant="outline" size="icon" className="shrink-0 rounded-full" onClick={() => setForm((prev) => {
@@ -1004,7 +954,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="5. Medical Information"
+        title="4. Medical Information"
         description="Shared with the assigned doctor for prescriptions and consultations"
       >
         <FormField
@@ -1080,7 +1030,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="6. Chief Complaint"
+        title="5. Chief Complaint"
         description="Primary reason for visit"
         action={
           <Button type="button" variant="outline" size="icon" className="shrink-0 rounded-full" onClick={() => setForm((prev) => ({ ...prev, chiefComplaints: [...prev.chiefComplaints, { complaint: "", duration: "", severity: "", notes: "" }] }))} title="Add another chief complaint">
@@ -1116,7 +1066,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="7. History of Presenting Illness">
+      <SectionCard title="6. History of Presenting Illness">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Presenting Complaint" name="hpi.presentingComplaint" value={form.hpi.presentingComplaint} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, presentingComplaint: v } }))} placeholder="Main complaint" />
           <FormField label="Onset" name="hpi.onset" value={form.hpi.onset} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, onset: v } }))} placeholder="Sudden / Gradual">
@@ -1141,7 +1091,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="8. Identification"
+        title="7. Identification"
         description="Optional — only fill if required by your clinic"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1302,7 +1252,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="8. Additional Information">
+      <SectionCard title="10. Additional Information">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             label="Referred By"
@@ -1361,7 +1311,7 @@ export function PatientForm({
 
       {!isCreateMode && (
         <SectionCard
-          title="9. Attachments"
+          title="11. Attachments"
           description="Optional - upload patient documents"
         >
         {isViewMode ? (
@@ -1421,4 +1371,54 @@ export function PatientForm({
       </div>
     </form>
   );
+      <SectionCard title="8. Vital Signs" description="Optional — captured at registration, editable anytime">
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            label="Blood Pressure"
+            name="bloodPressure"
+            value={form.bloodPressure}
+            onChange={(v) => handleChange("bloodPressure", v)}
+            placeholder="120/80"
+            helperText="mmHg, e.g. 120/80"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="Temperature"
+            name="temperature"
+            value={form.temperature}
+            onChange={(v) => handleChange("temperature", v)}
+            placeholder="98.6"
+            helperText="°F or °C"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="Pulse / Heart Rate"
+            name="pulse"
+            value={form.pulse}
+            onChange={(v) => handleChange("pulse", v)}
+            placeholder="72"
+            helperText="beats per minute (bpm)"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="Respiratory Rate"
+            name="respiratoryRate"
+            value={form.respiratoryRate}
+            onChange={(v) => handleChange("respiratoryRate", v)}
+            placeholder="16"
+            helperText="breaths per minute"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="SpO₂ (Oxygen Saturation)"
+            name="spo2"
+            value={form.spo2}
+            onChange={(v) => handleChange("spo2", v)}
+            placeholder="98"
+            helperText="%, e.g. 98"
+            disabled={isViewMode}
+          />
+        </div>
+      </SectionCard>
+
 }
