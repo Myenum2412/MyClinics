@@ -546,10 +546,12 @@ export function PatientForm({
         <SectionCard title="6. Chief Complaint">
           <div className="space-y-4">
             {form.chiefComplaints.map((c, idx) => (
-              <div key={idx} className="grid gap-4 md:grid-cols-2 rounded-lg border border-border/60 p-3 bg-muted/20">
-                {renderViewField(`Complaint${form.chiefComplaints.length > 1 ? ` #${idx + 1}` : ""}`, c.complaint)}
-                {renderViewField("Duration", c.duration)}
-                {renderViewField("Severity", c.severity)}
+              <div key={idx} className="rounded-lg border border-border/60 p-3 bg-muted/20 space-y-3">
+                <div className="grid gap-4 md:grid-cols-3">
+                  {renderViewField(`Complaint${form.chiefComplaints.length > 1 ? ` #${idx + 1}` : ""}`, c.complaint)}
+                  {renderViewField("Duration", c.duration)}
+                  {renderViewField("Severity", c.severity)}
+                </div>
                 {renderViewField("Notes", c.notes)}
               </div>
             ))}
@@ -1073,7 +1075,7 @@ export function PatientForm({
                   <Trash2 className="size-4" />
                 </Button>
               )}
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <FormField label={`Complaint${form.chiefComplaints.length > 1 ? ` #${idx + 1}` : ""}`} name={`chiefComplaints.${idx}.complaint`} value={item.complaint} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, complaint: v } : c) }))} placeholder="e.g. Fever, Headache" />
                 <FormField label="Duration" name={`chiefComplaints.${idx}.duration`} value={item.duration} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, duration: v } : c) }))} placeholder="e.g. 3 days, 2 weeks" />
                 <FormField label="Severity" name={`chiefComplaints.${idx}.severity`} value={item.severity} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, severity: v } : c) }))} placeholder="Mild / Moderate / Severe">
@@ -1084,8 +1086,10 @@ export function PatientForm({
                     </SelectContent>
                   </Select>
                 </FormField>
-                <FormField label="Notes" name={`chiefComplaints.${idx}.notes`} value={item.notes} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, notes: v } : c) }))} placeholder="Additional notes" />
               </div>
+              <FormField label="Notes" name={`chiefComplaints.${idx}.notes`} value={item.notes} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, notes: v } : c) }))} placeholder="Additional notes">
+                <Textarea value={item.notes} onChange={(e) => { e.target.style.height = "auto"; e.target.style.height = `${e.target.scrollHeight}px`; setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, notes: e.target.value } : c) })); }} onInput={(e) => { const t = e.target as HTMLTextAreaElement; t.style.height = "auto"; t.style.height = `${t.scrollHeight}px`; }} rows={2} className="border-border min-h-[56px] resize-none overflow-hidden" />
+              </FormField>
             </div>
           ))}
         </div>
