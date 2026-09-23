@@ -23,7 +23,7 @@ export type ClinicRole =
   | "inventory_staff"
   | "billing_staff"
   | "staff"
-  | "patient";
+  | "patient" | "lab_technician";
 
 /** Role hierarchy — higher roles pass `requireRoles(min)` gates. */
 export const ROLE_PRIORITY: Record<ClinicRole, number> = {
@@ -36,6 +36,7 @@ export const ROLE_PRIORITY: Record<ClinicRole, number> = {
   billing_staff: 3,
   staff: 2,
   patient: 1,
+  lab_technician: 2,
 };
 
 export function can(role: ClinicRole, min: ClinicRole): boolean {
@@ -138,7 +139,7 @@ export interface ClinicUser {
   userId: string;
   name: string;
   email: string;
-  role: "clinic_admin" | "doctor" | "staff" | "patient";
+  role: "clinic_admin" | "doctor" | "staff" | "patient" | "lab_technician";
   doctorId: string | null;
   staffId: string | null;
   patientId: string | null;
@@ -1037,7 +1038,7 @@ export interface AppointmentNotification {
   _id?: string;
   appointmentId: string;
   clinicId: string;
-  recipientRole: "patient" | "doctor";
+  recipientRole: "patient" | "lab_technician" | "doctor";
   recipientId: string;
   type: "event" | "reminder" | "queue";
   action: "created" | "updated" | "cancelled" | "reminder" | "queue";
@@ -1183,7 +1184,7 @@ export interface ClinicUser {
   userId: string;
   name: string;
   email: string;
-  role: "clinic_admin" | "doctor" | "staff" | "patient";
+  role: "clinic_admin" | "doctor" | "staff" | "patient" | "lab_technician";
   doctorId: string | null;
   staffId: string | null;
   patientId: string | null;
@@ -1197,7 +1198,7 @@ export function createClinicUser(
     name: string;
     email: string;
     password: string;
-    role: "doctor" | "staff" | "patient";
+    role: "doctor" | "staff" | "patient" | "lab_technician";
     phone?: string | null;
     whatsapp?: string | null;
     doctorId?: string;
@@ -1674,7 +1675,7 @@ export function deleteMedicalRecordFile(
   return request(tenantPath(clinicId, `/medical-record/${fileId}`), { method: "DELETE" });
 }
 
-export type AvatarOwnerType = "patient" | "doctor" | "clinic";
+export type AvatarOwnerType = "patient" | "lab_technician" | "doctor" | "clinic";
 
 export function avatarPath(
   clinicId: string,
@@ -3038,3 +3039,9 @@ export async function downloadPharmacyReport(
   a.remove();
   URL.revokeObjectURL(objectUrl);
 }
+
+// ── Labs ─────────────────────────────────────────────────────────────────
+export interface Lab { labId:string; name:string; contactPerson:string|null; phone:string|null; email:string|null; address:string|null; city:string|null; state:string|null; pincode:string|null; licenseNo:string|null; labType:string|null; status:string; createdAt:string; }
+export function listLabs(clinicId:string):Promise<PageResult<Lab>>{ return request(tenantPath(clinicId,"/labs?limit=100")); }
+export function createLab(clinicId:string,input:Record<string,unknown>):Promise<Lab>{ return request(tenantPath(clinicId,"/labs"),{method:"POST",body:JSON.stringify(input)}); }
+export function getLab(clinicId:string,labId:string):Promise<Lab>{ return request(tenantPath(clinicId,`/labs/${labId}`)); }

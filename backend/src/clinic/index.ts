@@ -28,6 +28,7 @@ import {
   registerPublicMetaRoutes,
 } from "@/clinic/modules/meta/meta.routes";
 import { registerNeoRoutes } from "@/neo";
+import { registerLabRoutes } from "@/clinic/modules/labs/labs.routes";
 import { registerDashboardRoutes } from "@/clinic/modules/dashboard/dashboard.routes";
 import { registerEventStreamRoutes } from "@/clinic/modules/events/events.routes";
 
@@ -83,6 +84,7 @@ export function registerClinicApi(app: FastifyInstance): void {
     registerPharmacyRoutes(tenantApi);
     registerPlatformMetaRoutes(tenantApi);
     registerNeoRoutes(tenantApi);
+    registerLabRoutes(tenantApi);
     registerDashboardRoutes(tenantApi);
     registerEventStreamRoutes(tenantApi);
   });

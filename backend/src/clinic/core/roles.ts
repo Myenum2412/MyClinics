@@ -20,6 +20,7 @@ export const CLINIC_ROLES = [
   "inventory_staff",
   "billing_staff",
   "staff",
+  "lab_technician",
   "patient",
 ] as const;
 export type ClinicRole = (typeof CLINIC_ROLES)[number];
@@ -51,6 +52,7 @@ export const ROLE_PRIORITY: Record<ClinicRole, number> = {
   inventory_staff: 3,
   billing_staff: 3,
   staff: 2,
+  lab_technician: 2,
   patient: 1,
 };
 
@@ -88,5 +90,6 @@ export const ROLE_LABELS: Record<ClinicRole, string> = {
   inventory_staff: "Inventory Staff",
   billing_staff: "Billing Staff",
   staff: "Staff",
+  lab_technician: "Lab Technician",
   patient: "Patient",
 };
