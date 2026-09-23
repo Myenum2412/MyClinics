@@ -35,10 +35,25 @@ import {
   Mail,
   CheckCircle,
   ExternalLink,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { now, toLocalDateISO } from "@/lib/datetime";
 
 const GENDERS = ["Male", "Female", "Other"];
+
+export interface EmergencyContact {
+  name: string;
+  relationship: string;
+  mobile: string;
+}
+
+export interface ChiefComplaint {
+  complaint: string;
+  duration: string;
+  severity: string;
+  notes: string;
+}
 
 export interface PatientFormState {
   fullName: string;
@@ -64,6 +79,8 @@ export interface PatientFormState {
   emergencyContactName: string;
   emergencyContactRelationship: string;
   emergencyContactMobile: string;
+  emergencyContacts: EmergencyContact[];
+  chiefComplaints: ChiefComplaint[];
   allergies: string;
   medicalConditions: string;
   previousSurgeries: string;
@@ -111,6 +128,8 @@ export const EMPTY_FORM: PatientFormState = {
   emergencyContactName: "",
   emergencyContactRelationship: "",
   emergencyContactMobile: "",
+  emergencyContacts: [{ name: "", relationship: "", mobile: "" }],
+  chiefComplaints: [{ complaint: "", duration: "", severity: "", notes: "" }],
   allergies: "",
   medicalConditions: "",
   previousSurgeries: "",
@@ -228,21 +247,28 @@ function FormField({
 function SectionCard({
   title,
   description,
+  action,
   children,
 }: {
   title: string;
   description?: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
       <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold text-foreground">
-          {title}
-        </CardTitle>
-        {description && (
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        )}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle className="text-base font-semibold text-foreground">
+              {title}
+            </CardTitle>
+            {description && (
+              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            )}
+          </div>
+          {action}
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">{children}</CardContent>
     </Card>
@@ -276,7 +302,21 @@ export function PatientForm({
   const howDidYouHear = getOptions("how_did_you_hear");
   const idProofTypes = getOptions("id_proof_types");
 
-  const [form, setForm] = useState<PatientFormState>({ ...EMPTY_FORM, ...initialData } as PatientFormState);
+  const [form, setForm] = useState<PatientFormState>(() => {
+    const merged = { ...EMPTY_FORM, ...initialData } as PatientFormState;
+    // migrate legacy single contact -> array if array empty/missing
+    if (!merged.emergencyContacts || merged.emergencyContacts.length === 0) {
+      if (merged.emergencyContactName || merged.emergencyContactRelationship || merged.emergencyContactMobile) {
+        merged.emergencyContacts = [{ name: merged.emergencyContactName, relationship: merged.emergencyContactRelationship, mobile: merged.emergencyContactMobile }];
+      } else {
+        merged.emergencyContacts = [{ name: "", relationship: "", mobile: "" }];
+      }
+    }
+    if (!merged.chiefComplaints || merged.chiefComplaints.length === 0) {
+      merged.chiefComplaints = [{ complaint: "", duration: "", severity: "", notes: "" }];
+    }
+    return merged;
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -353,6 +393,11 @@ export function PatientForm({
     if (form.pincode && !validateIndianPincode(form.pincode)) {
       newErrors.pincode = "Enter a valid Indian pincode";
     }
+    form.emergencyContacts.forEach((c, idx) => {
+      if (c.mobile && !validateIndianMobile(c.mobile)) {
+        newErrors[`emergencyContacts.${idx}.mobile`] = "Enter a valid Indian mobile number";
+      }
+    });
     if (
       form.emergencyContactMobile &&
       !validateIndianMobile(form.emergencyContactMobile)
@@ -459,10 +504,14 @@ export function PatientForm({
         </SectionCard>
 
         <SectionCard title="4. Emergency Contact">
-          <div className="grid gap-4 md:grid-cols-3">
-            {renderViewField("Contact Name", form.emergencyContactName)}
-            {renderViewField("Relationship", form.emergencyContactRelationship)}
-            {renderViewField("Mobile Number", form.emergencyContactMobile)}
+          <div className="space-y-4">
+            {(form.emergencyContacts.length ? form.emergencyContacts : [{ name: form.emergencyContactName, relationship: form.emergencyContactRelationship, mobile: form.emergencyContactMobile }]).map((c, idx) => (
+              <div key={idx} className="grid gap-4 md:grid-cols-3 rounded-lg border border-border/60 p-3 bg-muted/20">
+                {renderViewField(`Contact Name ${form.emergencyContacts.length > 1 ? `#${idx + 1}` : ""}`, c.name)}
+                {renderViewField("Relationship", c.relationship)}
+                {renderViewField("Mobile Number", c.mobile)}
+              </div>
+            ))}
           </div>
         </SectionCard>
 
@@ -475,14 +524,27 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="6. Identification">
+        <SectionCard title="6. Chief Complaint">
+          <div className="space-y-4">
+            {form.chiefComplaints.map((c, idx) => (
+              <div key={idx} className="grid gap-4 md:grid-cols-2 rounded-lg border border-border/60 p-3 bg-muted/20">
+                {renderViewField(`Complaint${form.chiefComplaints.length > 1 ? ` #${idx + 1}` : ""}`, c.complaint)}
+                {renderViewField("Duration", c.duration)}
+                {renderViewField("Severity", c.severity)}
+                {renderViewField("Notes", c.notes)}
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="7. Identification">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("ID Proof Type", form.idType)}
             {renderViewField("ID Number", form.idNumber)}
           </div>
         </SectionCard>
 
-        <SectionCard title="7. Account & Portal Access">
+        <SectionCard title="8. Account & Portal Access">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField(
               "Assigned Doctor",
@@ -490,15 +552,6 @@ export function PatientForm({
             )}
             {renderViewField("Portal Access", form.portalAccess)}
             {renderViewField("Login Notification", form.loginNotification)}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="8. Insurance">
-          <div className="grid gap-4 md:grid-cols-2">
-            {renderViewField("Insurance Provider", form.insuranceProvider)}
-            {renderViewField("Policy Number", form.insurancePolicyNumber)}
-            {renderViewField("Policy Holder Name", form.insurancePolicyHolderName)}
-            {renderViewField("Valid Till", form.insuranceValidTill)}
           </div>
         </SectionCard>
 
@@ -849,35 +902,63 @@ export function PatientForm({
 
       <SectionCard
         title="4. Emergency Contact"
-        description="Optional but recommended"
+        description="Optional but recommended — add multiple contacts"
+        action={
+          <Button type="button" variant="outline" size="icon" className="shrink-0 rounded-full" onClick={() => setForm((prev) => {
+            const next = [...prev.emergencyContacts, { name: "", relationship: "", mobile: "" }];
+            // keep legacy fields in sync with first contact
+            return { ...prev, emergencyContacts: next };
+          })} title="Add another emergency contact">
+            <Plus className="size-4" />
+          </Button>
+        }
       >
-        <div className="grid gap-4 md:grid-cols-3">
-          <FormField
-            label="Contact Name"
-            name="emergencyContactName"
-            value={form.emergencyContactName}
-            onChange={(v) => handleChange("emergencyContactName", v)}
-            placeholder="Jane Doe"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Relationship"
-            name="emergencyContactRelationship"
-            value={form.emergencyContactRelationship}
-            onChange={(v) => handleChange("emergencyContactRelationship", v)}
-            placeholder="Spouse"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Mobile Number"
-            name="emergencyContactMobile"
-            type="tel"
-            value={form.emergencyContactMobile}
-            onChange={(v) => handleChange("emergencyContactMobile", v)}
-            error={errors.emergencyContactMobile}
-            placeholder="9876543210"
-            disabled={isViewMode}
-          />
+        <div className="space-y-4">
+          {form.emergencyContacts.map((contact, idx) => (
+            <div key={idx} className="grid gap-4 md:grid-cols-3 relative rounded-lg border border-border/60 p-4 pt-6 bg-muted/10">
+              {form.emergencyContacts.length > 1 && (
+                <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-2 size-7 text-muted-foreground hover:text-destructive" onClick={() => setForm((prev) => {
+                  const next = prev.emergencyContacts.filter((_, i) => i !== idx);
+                  const synced = next.length ? next : [{ name: "", relationship: "", mobile: "" }];
+                  return { ...prev, emergencyContacts: synced, emergencyContactName: synced[0]?.name ?? "", emergencyContactRelationship: synced[0]?.relationship ?? "", emergencyContactMobile: synced[0]?.mobile ?? "" };
+                })} title="Remove">
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
+              <FormField
+                label={`Contact Name${form.emergencyContacts.length > 1 ? ` #${idx + 1}` : ""}`}
+                name={`emergencyContacts.${idx}.name`}
+                value={contact.name}
+                onChange={(v) => setForm((prev) => {
+                  const next = prev.emergencyContacts.map((c, i) => i === idx ? { ...c, name: v } : c);
+                  return { ...prev, emergencyContacts: next, ...(idx === 0 ? { emergencyContactName: v } : {}) };
+                })}
+                placeholder="Jane Doe"
+              />
+              <FormField
+                label="Relationship"
+                name={`emergencyContacts.${idx}.relationship`}
+                value={contact.relationship}
+                onChange={(v) => setForm((prev) => {
+                  const next = prev.emergencyContacts.map((c, i) => i === idx ? { ...c, relationship: v } : c);
+                  return { ...prev, emergencyContacts: next, ...(idx === 0 ? { emergencyContactRelationship: v } : {}) };
+                })}
+                placeholder="Spouse"
+              />
+              <FormField
+                label="Mobile Number"
+                name={`emergencyContacts.${idx}.mobile`}
+                type="tel"
+                value={contact.mobile}
+                onChange={(v) => setForm((prev) => {
+                  const next = prev.emergencyContacts.map((c, i) => i === idx ? { ...c, mobile: v } : c);
+                  return { ...prev, emergencyContacts: next, ...(idx === 0 ? { emergencyContactMobile: v } : {}) };
+                })}
+                error={errors[`emergencyContacts.${idx}.mobile`]}
+                placeholder="9876543210"
+              />
+            </div>
+          ))}
         </div>
       </SectionCard>
 
@@ -940,7 +1021,42 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="6. Identification"
+        title="6. Chief Complaint"
+        description="Primary reason for visit"
+        action={
+          <Button type="button" variant="outline" size="icon" className="shrink-0 rounded-full" onClick={() => setForm((prev) => ({ ...prev, chiefComplaints: [...prev.chiefComplaints, { complaint: "", duration: "", severity: "", notes: "" }] }))} title="Add another chief complaint">
+            <Plus className="size-4" />
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          {form.chiefComplaints.map((item, idx) => (
+            <div key={idx} className="relative rounded-lg border border-border/60 p-4 pt-6 bg-muted/10 space-y-4">
+              {form.chiefComplaints.length > 1 && (
+                <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-2 size-7 text-muted-foreground hover:text-destructive" onClick={() => setForm((prev) => ({ ...prev, chiefComplaints: prev.chiefComplaints.filter((_, i) => i !== idx) }))} title="Remove">
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
+              <div className="grid gap-4 md:grid-cols-2">
+                <FormField label={`Complaint${form.chiefComplaints.length > 1 ? ` #${idx + 1}` : ""}`} name={`chiefComplaints.${idx}.complaint`} value={item.complaint} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, complaint: v } : c) }))} placeholder="e.g. Fever, Headache" />
+                <FormField label="Duration" name={`chiefComplaints.${idx}.duration`} value={item.duration} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, duration: v } : c) }))} placeholder="e.g. 3 days, 2 weeks" />
+                <FormField label="Severity" name={`chiefComplaints.${idx}.severity`} value={item.severity} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, severity: v } : c) }))} placeholder="Mild / Moderate / Severe">
+                  <Select value={item.severity} onValueChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, severity: v } : c) }))}>
+                    <SelectTrigger className="border-border"><SelectValue placeholder="Select severity" /></SelectTrigger>
+                    <SelectContent>
+                      {["Mild", "Moderate", "Severe"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </FormField>
+                <FormField label="Notes" name={`chiefComplaints.${idx}.notes`} value={item.notes} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, notes: v } : c) }))} placeholder="Additional notes" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="7. Identification"
         description="Optional — only fill if required by your clinic"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -970,7 +1086,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="7. Account & Portal Access"
+        title="8. Account & Portal Access"
         description="Assign the patient to a doctor and optionally create patient portal credentials"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1101,47 +1217,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard
-        title="8. Insurance"
-        description="Optional — add if the patient has health insurance"
-      >
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            label="Insurance Provider"
-            name="insuranceProvider"
-            value={form.insuranceProvider}
-            onChange={(v) => handleChange("insuranceProvider", v)}
-            placeholder="e.g. Star Health, ICICI Lombard"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Policy Number"
-            name="insurancePolicyNumber"
-            value={form.insurancePolicyNumber}
-            onChange={(v) => handleChange("insurancePolicyNumber", v)}
-            placeholder="Policy number"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Policy Holder Name"
-            name="insurancePolicyHolderName"
-            value={form.insurancePolicyHolderName}
-            onChange={(v) => handleChange("insurancePolicyHolderName", v)}
-            placeholder="Name on the policy"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Valid Till"
-            name="insuranceValidTill"
-            type="date"
-            value={form.insuranceValidTill}
-            onChange={(v) => handleChange("insuranceValidTill", v)}
-            disabled={isViewMode}
-          />
-        </div>
-      </SectionCard>
-
-      <SectionCard title="9. Additional Information">
+      <SectionCard title="8. Additional Information">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             label="Referred By"
@@ -1199,7 +1275,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="10. Attachments"
+        title="9. Attachments"
         description="Optional - upload patient documents"
       >
         {isViewMode ? (
