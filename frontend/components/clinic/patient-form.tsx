@@ -1338,10 +1338,11 @@ export function PatientForm({
         </FormField>
       </SectionCard>
 
-      <SectionCard
-        title="9. Attachments"
-        description="Optional - upload patient documents"
-      >
+      {!isCreateMode && (
+        <SectionCard
+          title="9. Attachments"
+          description="Optional - upload patient documents"
+        >
         {isViewMode ? (
           <div className="space-y-2">
             <Label className="text-sm font-medium text-foreground">Uploaded Documents</Label>
@@ -1375,6 +1376,7 @@ export function PatientForm({
           />
         )}
       </SectionCard>
+      )}
 
       <div className="flex gap-3 border-t border-border pt-8">
         <Button
