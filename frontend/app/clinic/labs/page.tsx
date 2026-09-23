@@ -25,8 +25,8 @@ export default function LabsPage(){
     <Card className="border-border shadow-sm"><CardContent className="p-0">
       {loading ? <div className="p-6 space-y-3"><Skeleton className="h-10 w-full"/><Skeleton className="h-10 w-full"/></div>
       : items.length===0 ? <div className="py-12 text-center text-sm text-muted-foreground">No labs found.</div>
-      : <Table><TableHeader><TableRow><TableHead>Lab Name</TableHead><TableHead>Contact</TableHead><TableHead>Phone</TableHead><TableHead>Email</TableHead><TableHead>Lab Type</TableHead><TableHead>License</TableHead></TableRow></TableHeader>
-        <TableBody>{items.map(l=><TableRow key={l.labId}><TableCell className="font-medium">{(l as any).labName ?? (l as any).name ?? "—"}</TableCell><TableCell>{l.contactPerson??"—"}</TableCell><TableCell>{l.phone??"—"}</TableCell><TableCell>{l.email??"—"}</TableCell><TableCell>{l.labType??"—"}</TableCell><TableCell>{l.licenseNo??"—"}</TableCell></TableRow>)}</TableBody></Table>}
+      : <div className="overflow-x-auto -mx-6 px-6"><Table className="min-w-[640px]"><TableHeader><TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40"><TableHead>Lab Name</TableHead><TableHead>Contact</TableHead><TableHead>Phone</TableHead><TableHead>Email</TableHead><TableHead>Lab Type</TableHead><TableHead>License</TableHead></TableRow></TableHeader>
+        <TableBody>{items.map(l=><TableRow key={l.labId} className="hover:bg-muted/30 border-b border-border last:border-0"><TableCell className="font-medium">{(l as any).labName ?? (l as any).name ?? "—"}</TableCell><TableCell className="text-muted-foreground">{l.contactPerson??"—"}</TableCell><TableCell className="text-muted-foreground">{l.phone??"—"}</TableCell><TableCell className="text-muted-foreground">{l.email??"—"}</TableCell><TableCell className="text-muted-foreground">{l.labType??"—"}</TableCell><TableCell className="text-muted-foreground">{l.licenseNo??"—"}</TableCell></TableRow>)}</TableBody></Table></div>}
     </CardContent></Card>
   </div>;
 }
