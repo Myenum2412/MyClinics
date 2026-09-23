@@ -267,28 +267,41 @@ function SectionCard({
   description,
   action,
   children,
+  defaultOpen = true,
 }: {
   title: string;
   description?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
+  defaultOpen?: boolean;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
-    <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
+    <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent overflow-hidden">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <CardTitle className="text-base font-semibold text-foreground">
-              {title}
-            </CardTitle>
-            {description && (
-              <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-            )}
-          </div>
-          {action}
+        <div className="flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="flex flex-1 items-center justify-between gap-4 text-left"
+            aria-expanded={open}
+          >
+            <div>
+              <CardTitle className="text-base font-semibold text-foreground">
+                {title}
+              </CardTitle>
+              {description && (
+                <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+              )}
+            </div>
+            <span className={`flex size-8 shrink-0 items-center justify-center rounded-md border border-border bg-background transition-transform ${open ? "rotate-180" : ""}`}>
+              <ChevronLeft className="-rotate-90 size-4 text-muted-foreground" />
+            </span>
+          </button>
+          {action && <div onClick={(e) => e.stopPropagation()}>{action}</div>}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">{children}</CardContent>
+      {open && <CardContent className="space-y-4">{children}</CardContent>}
     </Card>
   );
 }
