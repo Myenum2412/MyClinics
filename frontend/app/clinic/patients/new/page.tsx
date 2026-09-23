@@ -88,6 +88,7 @@ export default function NewPatientPage() {
         medicalConditions: form.medicalConditions.trim() || null,
         previousSurgeries: form.previousSurgeries.trim() || null,
         currentMedications: form.currentMedications.trim() || null,
+        habits: form.habits.trim() || null,
         idType: form.idType || null,
         idNumber: form.idNumber.trim() || null,
         insuranceProvider: form.insuranceProvider.trim() || null,

@@ -108,6 +108,7 @@ export interface PatientFormState {
   insuranceValidTill: string;
   referredBy: string;
   howDidYouHear: string;
+  habits: string;
   notes: string;
   doctorId: string | null;
   password: string;
@@ -158,6 +159,7 @@ export const EMPTY_FORM: PatientFormState = {
   insuranceValidTill: "",
   referredBy: "",
   howDidYouHear: "",
+  habits: "",
   notes: "",
   doctorId: null,
   password: "",
@@ -540,6 +542,7 @@ export function PatientForm({
             {renderViewField("Medical Conditions", form.medicalConditions)}
             {renderViewField("Previous Surgeries / Hospitalizations", form.previousSurgeries)}
             {renderViewField("Current Medications", form.currentMedications)}
+            {renderViewField("Habits", form.habits)}
           </div>
         </SectionCard>
 
@@ -1051,6 +1054,24 @@ export function PatientForm({
             value={form.currentMedications}
             onChange={(e) => handleChange("currentMedications", e.target.value)}
             placeholder="List current medications with dosages"
+            rows={2}
+            className="h-10 w-full border-border font-normal"
+            disabled={isViewMode}
+          />
+        </FormField>
+        <FormField
+          label="Habits"
+          name="habits"
+          value={form.habits}
+          onChange={(v) => handleChange("habits", v)}
+          placeholder="Smoking, Alcohol, Tobacco, Diet, Exercise (comma-separated)"
+          helperText="e.g. Smoking - occasional, Alcohol - none, Vegetarian"
+          disabled={isViewMode}
+        >
+          <Textarea
+            value={form.habits}
+            onChange={(e) => handleChange("habits", e.target.value)}
+            placeholder="Smoking, Alcohol, Tobacco, Diet, Exercise, Sleep pattern"
             rows={2}
             className="h-10 w-full border-border font-normal"
             disabled={isViewMode}
