@@ -792,7 +792,7 @@ export function PatientForm({
             disabled={isViewMode}
           >
             <Select value={form.bloodGroup} onValueChange={(v) => handleChange("bloodGroup", v)} disabled={isViewMode}>
-              <SelectTrigger className="border-border">
+              <SelectTrigger className="h-10 w-full border-border font-normal">
                 <SelectValue placeholder="Select blood group" />
               </SelectTrigger>
               <SelectContent>
@@ -829,7 +829,7 @@ export function PatientForm({
             disabled={isViewMode}
           >
             <Select value={form.maritalStatus} onValueChange={(v) => handleChange("maritalStatus", v)} disabled={isViewMode}>
-              <SelectTrigger className="border-border">
+              <SelectTrigger className="h-10 w-full border-border font-normal">
                 <SelectValue placeholder="Select marital status" />
               </SelectTrigger>
               <SelectContent>
@@ -1035,7 +1035,7 @@ export function PatientForm({
             onChange={(e) => handleChange("previousSurgeries", e.target.value)}
             placeholder="Describe any previous surgeries or hospitalizations"
             rows={2}
-            className="border-border"
+            className="h-10 w-full border-border font-normal"
             disabled={isViewMode}
           />
         </FormField>
@@ -1052,7 +1052,7 @@ export function PatientForm({
             onChange={(e) => handleChange("currentMedications", e.target.value)}
             placeholder="List current medications with dosages"
             rows={2}
-            className="border-border"
+            className="h-10 w-full border-border font-normal"
             disabled={isViewMode}
           />
         </FormField>
@@ -1080,7 +1080,7 @@ export function PatientForm({
                 <FormField label="Duration" name={`chiefComplaints.${idx}.duration`} value={item.duration} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, duration: v } : c) }))} placeholder="e.g. 3 days, 2 weeks" />
                 <FormField label="Severity" name={`chiefComplaints.${idx}.severity`} value={item.severity} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, severity: v } : c) }))} placeholder="Mild / Moderate / Severe">
                   <Select value={item.severity} onValueChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, severity: v ?? "" } : c) }))}>
-                    <SelectTrigger className="border-border"><SelectValue placeholder="Select severity" /></SelectTrigger>
+                    <SelectTrigger className="h-10 w-full border-border font-normal"><SelectValue placeholder="Select severity" /></SelectTrigger>
                     <SelectContent>
                       {["Mild", "Moderate", "Severe"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                     </SelectContent>
@@ -1099,24 +1099,24 @@ export function PatientForm({
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Presenting Complaint" name="hpi.presentingComplaint" value={form.hpi.presentingComplaint} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, presentingComplaint: v } }))} placeholder="Main complaint" />
           <FormField label="Onset" name="hpi.onset" value={form.hpi.onset} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, onset: v } }))} placeholder="Sudden / Gradual">
-            <Select value={form.hpi.onset} onValueChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, onset: v ?? "" } }))}><SelectTrigger className="border-border"><SelectValue placeholder="Select onset" /></SelectTrigger><SelectContent><SelectItem value="Sudden">Sudden</SelectItem><SelectItem value="Gradual">Gradual</SelectItem></SelectContent></Select>
+            <Select value={form.hpi.onset} onValueChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, onset: v ?? "" } }))}><SelectTrigger className="h-10 w-full border-border font-normal"><SelectValue placeholder="Select onset" /></SelectTrigger><SelectContent><SelectItem value="Sudden">Sudden</SelectItem><SelectItem value="Gradual">Gradual</SelectItem></SelectContent></Select>
           </FormField>
           <div className="grid grid-cols-2 gap-2">
             <FormField label="Duration" name="hpi.durationValue" type="number" value={form.hpi.durationValue} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, durationValue: v } }))} placeholder="Number" />
             <FormField label="Unit" name="hpi.durationUnit" value={form.hpi.durationUnit} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, durationUnit: v } }))} placeholder="Days/Weeks/Months">
-              <Select value={form.hpi.durationUnit} onValueChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, durationUnit: v ?? "" } }))}><SelectTrigger className="border-border"><SelectValue placeholder="Unit" /></SelectTrigger><SelectContent><SelectItem value="Days">Days</SelectItem><SelectItem value="Weeks">Weeks</SelectItem><SelectItem value="Months">Months</SelectItem></SelectContent></Select>
+              <Select value={form.hpi.durationUnit} onValueChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, durationUnit: v ?? "" } }))}><SelectTrigger className="h-10 w-full border-border font-normal"><SelectValue placeholder="Unit" /></SelectTrigger><SelectContent><SelectItem value="Days">Days</SelectItem><SelectItem value="Weeks">Weeks</SelectItem><SelectItem value="Months">Months</SelectItem></SelectContent></Select>
             </FormField>
           </div>
           <FormField label="Progression" name="hpi.progression" value={form.hpi.progression} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, progression: v } }))} placeholder="Improving / Worsening / Stable">
-            <Select value={form.hpi.progression} onValueChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, progression: v ?? "" } }))}><SelectTrigger className="border-border"><SelectValue placeholder="Select progression" /></SelectTrigger><SelectContent><SelectItem value="Improving">Improving</SelectItem><SelectItem value="Worsening">Worsening</SelectItem><SelectItem value="Stable">Stable</SelectItem></SelectContent></Select>
+            <Select value={form.hpi.progression} onValueChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, progression: v ?? "" } }))}><SelectTrigger className="h-10 w-full border-border font-normal"><SelectValue placeholder="Select progression" /></SelectTrigger><SelectContent><SelectItem value="Improving">Improving</SelectItem><SelectItem value="Worsening">Worsening</SelectItem><SelectItem value="Stable">Stable</SelectItem></SelectContent></Select>
           </FormField>
           <FormField label="Aggravating Factors" name="hpi.aggravatingFactors" value={form.hpi.aggravatingFactors} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, aggravatingFactors: v } }))} placeholder="Factors that worsen" />
           <FormField label="Relieving Factors" name="hpi.relievingFactors" value={form.hpi.relievingFactors} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, relievingFactors: v } }))} placeholder="Factors that relieve" />
         </div>
-        <FormField label="Symptoms" name="hpi.symptoms" value={form.hpi.symptoms} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, symptoms: v } }))} placeholder="Describe symptoms"><Textarea value={form.hpi.symptoms} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, symptoms: e.target.value } }))} rows={2} className="border-border" /></FormField>
-        <FormField label="Associated Symptoms" name="hpi.associatedSymptoms" value={form.hpi.associatedSymptoms} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, associatedSymptoms: v } }))} placeholder="Associated symptoms"><Textarea value={form.hpi.associatedSymptoms} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, associatedSymptoms: e.target.value } }))} rows={2} className="border-border" /></FormField>
-        <FormField label="Previous Treatment" name="hpi.previousTreatment" value={form.hpi.previousTreatment} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, previousTreatment: v } }))} placeholder="Previous treatment details"><Textarea value={form.hpi.previousTreatment} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, previousTreatment: e.target.value } }))} rows={2} className="border-border" /></FormField>
-        <FormField label="Additional Notes" name="hpi.additionalNotes" value={form.hpi.additionalNotes} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, additionalNotes: v } }))} placeholder="Any additional notes"><Textarea value={form.hpi.additionalNotes} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, additionalNotes: e.target.value } }))} rows={2} className="border-border" /></FormField>
+        <FormField label="Symptoms" name="hpi.symptoms" value={form.hpi.symptoms} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, symptoms: v } }))} placeholder="Describe symptoms"><Textarea value={form.hpi.symptoms} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, symptoms: e.target.value } }))} rows={2} className="h-10 w-full border-border font-normal" /></FormField>
+        <FormField label="Associated Symptoms" name="hpi.associatedSymptoms" value={form.hpi.associatedSymptoms} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, associatedSymptoms: v } }))} placeholder="Associated symptoms"><Textarea value={form.hpi.associatedSymptoms} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, associatedSymptoms: e.target.value } }))} rows={2} className="h-10 w-full border-border font-normal" /></FormField>
+        <FormField label="Previous Treatment" name="hpi.previousTreatment" value={form.hpi.previousTreatment} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, previousTreatment: v } }))} placeholder="Previous treatment details"><Textarea value={form.hpi.previousTreatment} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, previousTreatment: e.target.value } }))} rows={2} className="h-10 w-full border-border font-normal" /></FormField>
+        <FormField label="Additional Notes" name="hpi.additionalNotes" value={form.hpi.additionalNotes} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, additionalNotes: v } }))} placeholder="Any additional notes"><Textarea value={form.hpi.additionalNotes} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, additionalNotes: e.target.value } }))} rows={2} className="h-10 w-full border-border font-normal" /></FormField>
       </SectionCard>
 
       <SectionCard
@@ -1126,7 +1126,7 @@ export function PatientForm({
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="ID Proof Type" name="idType" error={errors.idType} disabled={isViewMode}>
             <Select value={form.idType} onValueChange={(v) => handleChange("idType", v)} disabled={isViewMode}>
-              <SelectTrigger className="border-border">
+              <SelectTrigger className="h-10 w-full border-border font-normal">
                 <SelectValue placeholder="Select ID proof type" />
               </SelectTrigger>
               <SelectContent>
@@ -1302,7 +1302,7 @@ export function PatientForm({
               onValueChange={(v) => handleChange("howDidYouHear", v)}
               disabled={isViewMode}
             >
-              <SelectTrigger className="border-border">
+              <SelectTrigger className="h-10 w-full border-border font-normal">
                 <SelectValue placeholder="Select option" />
               </SelectTrigger>
               <SelectContent>
@@ -1328,7 +1328,7 @@ export function PatientForm({
             onChange={(e) => handleChange("notes", e.target.value)}
             placeholder="Internal notes — visible only to authorized clinic staff"
             rows={3}
-            className="border-border"
+            className="h-10 w-full border-border font-normal"
             disabled={isViewMode}
           />
           <p className="text-xs text-warning flex items-center gap-1">
