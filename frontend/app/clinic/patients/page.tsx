@@ -16,7 +16,6 @@ import {
   updatePatient,
   uploadAvatar,
 } from "@/lib/clinic-api";
-import { Eye, Pencil, Send, Trash2 } from "lucide-react";
 import { bustAvatarCache, PersonAvatar } from "@/components/clinic/person-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,7 +55,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye } from "lucide-react";
+import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye, Send, Trash2 } from "lucide-react";
 import { TableFilters } from "@/components/clinic/table-filters";
 import dynamic from "next/dynamic";
 import { sessionCan } from "@/hooks/use-clinic-session";
