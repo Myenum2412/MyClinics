@@ -28,7 +28,7 @@ import {
   ClipboardDocumentCheckIcon as RecordsIcon,
   FolderOpenIcon,
 } from "@heroicons/react/24/outline";
-import { HeartPulse } from "lucide-react";
+import { HeartPulse, FlaskConical } from "lucide-react";
 
 interface NavItem {
   title: string
@@ -84,6 +84,11 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     title: "Treatment",
     url: "/clinic/complaints",
     icon: <HeartPulse className="size-6" />,
+  },
+  {
+    title: "Labs",
+    url: "/clinic/labs",
+    icon: <FlaskConical className="size-6" />,
   },
   {
     title: "Notifications",
