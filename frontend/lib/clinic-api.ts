@@ -3045,3 +3045,5 @@ export interface Lab { labId:string; labName:string; name?:string; contactPerson
 export function listLabs(clinicId:string):Promise<PageResult<Lab>>{ return request(tenantPath(clinicId,"/labs?limit=100")); }
 export function createLab(clinicId:string,input:Record<string,unknown>):Promise<Lab>{ return request(tenantPath(clinicId,"/labs"),{method:"POST",body:JSON.stringify(input)}); }
 export function getLab(clinicId:string,labId:string):Promise<Lab>{ return request(tenantPath(clinicId,`/labs/${labId}`)); }
+export function updateLab(clinicId:string,labId:string,input:Record<string,unknown>):Promise<Lab>{ return request(tenantPath(clinicId,`/labs/${labId}`),{method:"PATCH",body:JSON.stringify(input)}); }
+export function deleteLab(clinicId:string,labId:string):Promise<{ok:true}>{ return request(tenantPath(clinicId,`/labs/${labId}`),{method:"DELETE"}); }
