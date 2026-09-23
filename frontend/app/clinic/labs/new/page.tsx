@@ -1,10 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
-import { createLab } from "@/lib/clinic-api";
+import { createLab, listDoctors } from "@/lib/clinic-api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +23,8 @@ export default function NewLabPage(){
   const [created,setCreated]=useState<{email:string,password:string,labName:string}|null>(null);
   const [copied,setCopied]=useState(false);
   const [f,setF]=useState({name:"",contactPerson:"",phone:"",email:"",password:"",confirmPassword:"",address:"",city:"",state:"",pincode:"",licenseNo:"",labType:""});
+  const [doctors,setDoctors]=useState<{doctorId:string;name:string;phone?:string|null;email?:string|null}[]>([]);
+  useEffect(()=>{ if(!clinicId) return; listDoctors(clinicId,{limit:100}).then((r:any)=>setDoctors(r.items??r??[])).catch(()=>{});},[clinicId]);
   const upd=(k:string,v:string)=>setF(s=>({...s,[k]:v}));
   const copyPw=(pw:string)=>{navigator.clipboard.writeText(pw).then(()=>{setCopied(true);setTimeout(()=>setCopied(false),2000);});};
   const submit=async(e:React.FormEvent)=>{
@@ -54,7 +56,7 @@ export default function NewLabPage(){
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2"><Label className="text-sm font-medium">Lab Name <span className="text-destructive">*</span></Label><Input value={f.name} onChange={e=>upd("name",e.target.value)} placeholder="City Lab Diagnostics" className="border-border"/></div>
           <div className="space-y-2"><Label className="text-sm font-medium">Lab Type</Label><Select value={f.labType} onValueChange={v=>upd("labType",v ?? "")}><SelectTrigger className="border-border"><SelectValue placeholder="Select type"/></SelectTrigger><SelectContent><SelectItem value="pathology">Pathology</SelectItem><SelectItem value="radiology">Radiology</SelectItem><SelectItem value="microbiology">Microbiology</SelectItem><SelectItem value="general">General</SelectItem></SelectContent></Select></div>
-          <div className="space-y-2"><Label className="text-sm font-medium">Contact Person</Label><Input value={f.contactPerson} onChange={e=>upd("contactPerson",e.target.value)} placeholder="Dr. John Doe" className="border-border"/></div>
+          <div className="space-y-2"><Label className="text-sm font-medium">Contact Person (Doctor)</Label><Select value={f.contactPerson} onValueChange={v=>{const d=doctors.find(x=>x.name===v); upd("contactPerson",v ?? ""); if(d?.phone) upd("phone",d.phone??""); if(d?.email) upd("email",d.email??"");}}><SelectTrigger className="border-border"><SelectValue placeholder="Select doctor"/></SelectTrigger><SelectContent>{doctors.length?doctors.map(d=><SelectItem key={d.doctorId} value={d.name}>{d.name} {d.phone?`— ${d.phone}`:""}</SelectItem>):<SelectItem value="__none" disabled>No doctors found</SelectItem>}</SelectContent></Select></div>
           <div className="space-y-2"><Label className="text-sm font-medium">Phone</Label><Input value={f.phone} onChange={e=>upd("phone",e.target.value)} placeholder="9876543210" className="border-border"/></div>
           <div className="space-y-2"><Label className="text-sm font-medium">License No</Label><Input value={f.licenseNo} onChange={e=>upd("licenseNo",e.target.value)} placeholder="License number" className="border-border"/></div>
         </div>
