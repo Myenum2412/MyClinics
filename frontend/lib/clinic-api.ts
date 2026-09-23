@@ -3041,7 +3041,7 @@ export async function downloadPharmacyReport(
 }
 
 // ── Labs ─────────────────────────────────────────────────────────────────
-export interface Lab { labId:string; name:string; contactPerson:string|null; phone:string|null; email:string|null; address:string|null; city:string|null; state:string|null; pincode:string|null; licenseNo:string|null; labType:string|null; status:string; createdAt:string; }
+export interface Lab { labId:string; labName:string; name?:string; contactPerson:string|null; phone:string|null; email:string|null; address:string|null; city:string|null; state:string|null; pincode:string|null; licenseNo:string|null; labType:string|null; status:string; createdAt:string; }
 export function listLabs(clinicId:string):Promise<PageResult<Lab>>{ return request(tenantPath(clinicId,"/labs?limit=100")); }
 export function createLab(clinicId:string,input:Record<string,unknown>):Promise<Lab>{ return request(tenantPath(clinicId,"/labs"),{method:"POST",body:JSON.stringify(input)}); }
 export function getLab(clinicId:string,labId:string):Promise<Lab>{ return request(tenantPath(clinicId,`/labs/${labId}`)); }
