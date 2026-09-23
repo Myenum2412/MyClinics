@@ -1,5 +1,6 @@
 "use client";
 
+import { OdontogramDialog } from "@/components/clinic/odontogram-dialog";
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -776,6 +777,7 @@ export default function MedicalRecordPage() {
   const [moveValue, setMoveValue] = useState<string>("");
   const [moving, setMoving] = useState(false);
   const [versionsFile, setVersionsFile] = useState<MedicalRecordFile | null>(null);
+  const [odontoOpen, setOdontoOpen] = useState(false);
   const [versionInput, setVersionInput] = useState<MedicalRecordFile | null>(null);
   const [clipboard, setClipboard] = useState<ClipboardItem | null>(null);
   const uploadSystemRef = useRef<FileUploadSystemHandle>(null);
@@ -1396,6 +1398,9 @@ export default function MedicalRecordPage() {
                 <FolderPlus className="size-4" /> New Folder
               </Button>
             )}
+            <Button variant="default" size="sm" onClick={() => setOdontoOpen(true)} title="Open odontogram">
+              🦷 Teeth Chart
+            </Button>
           </div>
         </div>
 
@@ -2151,6 +2156,7 @@ export default function MedicalRecordPage() {
             );
           })()}
         </div>
+        <OdontogramDialog open={odontoOpen} onOpenChange={setOdontoOpen} />
       </div>
     );
   }
