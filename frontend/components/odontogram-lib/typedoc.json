@@ -1,0 +1,34 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/App.tsx",
+    "src/odontogram.ts",
+    "src/i18n/translations.ts",
+    "src/i18n/useI18n.ts",
+    "src/utils/numbering.ts",
+    "src/status_extras.ts",
+    "src/theme.ts",
+    "src/plugin.ts",
+    "src/SettingsModal.tsx",
+    "src/OdontogramContext.tsx",
+    "src/perioClassification.ts",
+    "src/perioPdf.ts",
+    "src/dx/packs.ts",
+    "src/dx/codes.ts",
+    "src/dx/caseCodes.ts",
+    "src/dx/refine.ts",
+    "src/fhir/types.ts",
+    "src/anatomy/profiles.ts"
+  ],
+  "out": "docs",
+  "name": "React Advanced Odontogram",
+  "readme": "README.md",
+  "tsconfig": "tsconfig.json",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "includeVersion": true,
+  "githubPages": true,
+  "navigationLinks": {
+    "GitHub": "https://github.com/ZoliQua/React-Advanced-Odontogram"
+  }
+}
