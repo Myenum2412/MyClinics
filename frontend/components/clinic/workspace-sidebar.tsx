@@ -37,6 +37,7 @@ import {
   FolderOpenIcon,
   ChartBarIcon,
   ChevronRightIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { Pill, HeartPulse } from "lucide-react";
 import { FlaskConical } from "lucide-react";
@@ -66,6 +67,7 @@ const NAV_GROUPS: NavGroup[] = [
       { title: "Patients", url: "/clinic/patients", icon: <UsersIcon className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
       { title: "Medical Records", url: "/clinic/medical-record", icon: <FolderOpenIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
       { title: "Treatment", url: "/clinic/complaints", icon: <HeartPulse className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
+      { title: "Investigation", url: "/clinic/investigation", icon: <MagnifyingGlassIcon className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
       { title: "Prescriptions", url: "/clinic/prescriptions", icon: <PillIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
       { title: "Medicine", url: "/clinic/records", icon: <RecordsIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
       {

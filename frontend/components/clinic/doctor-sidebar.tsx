@@ -27,6 +27,7 @@ import {
   BellIcon,
   ClipboardDocumentCheckIcon as RecordsIcon,
   FolderOpenIcon,
+  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { HeartPulse } from "lucide-react";
 
@@ -84,6 +85,11 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     title: "Treatment",
     url: "/clinic/complaints",
     icon: <HeartPulse className="size-6" />,
+  },
+  {
+    title: "Investigation",
+    url: "/clinic/investigation",
+    icon: <MagnifyingGlassIcon className="size-6" />,
   },
   {
     title: "Notifications",
