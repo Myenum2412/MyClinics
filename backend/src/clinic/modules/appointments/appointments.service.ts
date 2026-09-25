@@ -29,7 +29,10 @@ import {
   skip as skipToken,
   startConsultation as startConsultationToken,
 } from "@/clinic/modules/appointments/token.service";
-import { queueAppointmentNotifications } from "@/services/whatsapp/appointment-notification.service";
+import {
+  queueAppointmentNotifications,
+  type QueueNotificationOptions,
+} from "@/services/whatsapp/appointment-notification.service";
 import { logger } from "@/lib/logger";
 import { indexEntity, removeEntity } from "@/services/search/indexer";
 import { emitClinicEvent } from "@/lib/rx/event-bus";
@@ -100,7 +103,8 @@ export class AppointmentService {
 
   async createAppointment(
     ctx: ClinicContext,
-    input: CreateAppointmentInput
+    input: CreateAppointmentInput,
+    notify: QueueNotificationOptions = {}
   ): Promise<WithId<AppointmentDoc>> {
     const clinicId = requireClinicOf(ctx);
 
@@ -164,7 +168,7 @@ export class AppointmentService {
       },
     });
 
-    await queueAppointmentNotifications(this.db, clinicId, appointment.appointmentId, "created");
+    await queueAppointmentNotifications(this.db, clinicId, appointment.appointmentId, "created", notify);
 
     // Reminders are sent by the every-minute /api/cron/reminders poll once the
     // 1-hour-ahead scheduled time is reached (queued above), so no per-appointment
@@ -203,7 +207,8 @@ export class AppointmentService {
   async updateAppointment(
     ctx: ClinicContext,
     appointmentId: string,
-    input: UpdateAppointmentInput
+    input: UpdateAppointmentInput,
+    notify: QueueNotificationOptions = {}
   ): Promise<WithId<AppointmentDoc>> {
     const repo = this.repo(ctx);
     const existing = await repo.findByAppointmentId(appointmentId);
@@ -269,7 +274,7 @@ export class AppointmentService {
 
     if (patch.status || patch.date || patch.time) {
       const action = patch.status === "cancelled" ? "cancelled" : "updated";
-      await queueAppointmentNotifications(this.db, requireClinicOf(ctx), appointmentId, action);
+      await queueAppointmentNotifications(this.db, requireClinicOf(ctx), appointmentId, action, notify);
       // Reminder delivery is handled by the every-minute /api/cron/reminders poll.
     }
 

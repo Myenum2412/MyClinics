@@ -12,6 +12,7 @@ import { registerAuth } from "@/plugins/auth";
 import { registerKnowledgeRoutes } from "@/routes/knowledge";
 import { registerSoulRoutes } from "@/routes/soul";
 import { registerWhatsappSessionRoutes } from "@/routes/whatsapp-session";
+import { registerWhatsappGatewayRoutes } from "@/routes/whatsapp-gateway";
 import { registerCronRoutes } from "@/routes/cron-reminders";
 import { registerPincodeRoutes } from "@/routes/pincode";
 import { registerPublicAppointmentRoutes } from "@/routes/public-appointments";
@@ -106,6 +107,7 @@ export function buildServer() {
   void app.register(registerKnowledgeRoutes);
   void app.register(registerSoulRoutes);
   void app.register(registerWhatsappSessionRoutes);
+  void app.register(registerWhatsappGatewayRoutes);
   void app.register(registerCronRoutes);
   void app.register(registerPincodeRoutes);
   void app.register(registerPublicAppointmentRoutes);
