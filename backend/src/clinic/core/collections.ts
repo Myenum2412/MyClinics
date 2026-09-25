@@ -52,6 +52,7 @@ export const CLINIC_COLLECTIONS = {
   metaOauthStates: "clc_meta_oauth_states",
   avatars: "clc_avatars",
   labs: "clc_labs",
+  investigations: "clc_investigations",
 } as const;
 
 export type ClinicCollectionName =

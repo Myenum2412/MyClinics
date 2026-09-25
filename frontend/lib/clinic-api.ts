@@ -338,6 +338,30 @@ export interface Prescription {
   updatedAt: string;
 }
 
+export type InvestigationStatus =
+  | "pending"
+  | "in-progress"
+  | "completed"
+  | "cancelled";
+
+export interface Investigation {
+  investigationId: string;
+  patientId: string;
+  patientName: string;
+  doctorId: string | null;
+  title: string;
+  notes: string | null;
+  visitDate: string;
+  status: InvestigationStatus;
+  chartData: Record<string, unknown> | null;
+  medicalRecordId: string | null;
+  createdBy: string;
+  createdByName: string | null;
+  clinicId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type BillStatus = "draft" | "issued" | "paid" | "void";
 
 export type PaymentType = "cash" | "upi" | "card" | "other";
@@ -1354,6 +1378,66 @@ export function deletePrescription(
   prescriptionId: string
 ): Promise<{ ok: true }> {
   return request(tenantPath(clinicId, `/prescriptions/${prescriptionId}`), {
+    method: "DELETE",
+  });
+}
+
+// ── Investigations ─────────────────────────────────────────────────────────
+
+export function listInvestigations(
+  clinicId: string,
+  query: {
+    q?: string;
+    patientId?: string;
+    status?: string;
+    from?: string;
+    to?: string;
+    limit?: number;
+  } = {}
+): Promise<PageResult<Investigation>> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.patientId) params.set("patientId", query.patientId);
+  if (query.status) params.set("status", query.status);
+  if (query.from) params.set("from", query.from);
+  if (query.to) params.set("to", query.to);
+  params.set("limit", String(query.limit ?? 50));
+  return request(tenantPath(clinicId, `/investigations?${params}`));
+}
+
+export function getInvestigation(
+  clinicId: string,
+  investigationId: string
+): Promise<Investigation> {
+  return request(tenantPath(clinicId, `/investigations/${investigationId}`));
+}
+
+export function createInvestigation(
+  clinicId: string,
+  input: Record<string, unknown>
+): Promise<Investigation> {
+  return request(tenantPath(clinicId, "/investigations"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateInvestigation(
+  clinicId: string,
+  investigationId: string,
+  input: Record<string, unknown>
+): Promise<Investigation> {
+  return request(tenantPath(clinicId, `/investigations/${investigationId}`), {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteInvestigation(
+  clinicId: string,
+  investigationId: string
+): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/investigations/${investigationId}`), {
     method: "DELETE",
   });
 }

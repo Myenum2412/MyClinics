@@ -53,6 +53,10 @@ export function generateReportId(): string {
   return `rpt_${randomToken(12)}`;
 }
 
+export function generateInvestigationId(): string {
+  return `inv_${randomToken(12)}`;
+}
+
 // ── Pharmacy Management ─────────────────────────────────────────────────────
 export function generatePharmacySettingsId(): string {
   return `phs_${randomToken(12)}`;
