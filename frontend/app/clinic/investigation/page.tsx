@@ -10,7 +10,9 @@ export default function InvestigationPage() {
         <h1 className="text-2xl font-bold tracking-tight">Investigation</h1>
         <p className="text-sm text-muted-foreground">Dental odontogram — chart conditions, findings and treatments.</p>
       </div>
-      <OdontogramShell />
+      <div className="isolate overflow-auto rounded-xl border bg-white">
+        <OdontogramShell />
+      </div>
     </div>
   );
 }
