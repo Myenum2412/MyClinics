@@ -1,6 +1,7 @@
 "use client";
 
 import { OdontogramShell } from "react-advanced-odontogram";
+import "./odontogram.css";
 
 export default function InvestigationPage() {
   return (

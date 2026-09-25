@@ -13,6 +13,7 @@ const BACKEND_URL =
 
 const nextConfig: NextConfig = {
   typescript: { ignoreBuildErrors: true },
+  transpilePackages: ["react-advanced-odontogram"],
   poweredByHeader: false,
   // Never ship browser source maps — they leak original file paths and
   // source code to anyone who runs the bookmarklet / DevTools. The build
