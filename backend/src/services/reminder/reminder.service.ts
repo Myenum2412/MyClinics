@@ -1,11 +1,12 @@
-import type { Client } from "whatsapp-web.js";
 import type { Db, ObjectId } from "mongodb";
 import { KOLKATA_OFFSET, now as nowFn } from "@/clinic/core/datetime";
 import { logger } from "@/lib/logger";
 import { todayDateString } from "@/lib/stats";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { toWhatsAppRemoteId } from "@/lib/phone";
-import { sendWithTimeout } from "@/services/whatsapp/send.utils";
+import { getGatewayConfig, legacySessionId } from "@/services/whatsapp/gateway/config";
+import { gateway } from "@/services/whatsapp/gateway/client";
+import { isRouteReady, phoneFromRemoteId, type GatewayApi } from "@/services/whatsapp/gateway/drain";
 export { toWhatsAppRemoteId } from "@/lib/phone";
 
 export const REMINDERS_COLLECTION = "reminders";
@@ -211,13 +212,15 @@ export async function scanAndQueueReminders(
   return { checked: due.length, ...result };
 }
 
-/** Sends queued reminders through the connected WhatsApp client. */
+/** Sends queued reminders through the platform's WhatsApp session (via the gateway). */
 export async function processDueReminders(
-  client: Client,
   db: Db,
-  organizationId: string
+  organizationId: string,
+  api: GatewayApi = gateway
 ): Promise<{ sent: number; failed: number; pending: number }> {
-  if (!client.info) return { sent: 0, failed: 0, pending: 0 };
+  if (!getGatewayConfig()) return { sent: 0, failed: 0, pending: 0 };
+  const route = legacySessionId();
+  if (!(await isRouteReady(api, route))) return { sent: 0, failed: 0, pending: 0 };
 
   const queued = await db
     .collection<ReminderDoc>(REMINDERS_COLLECTION)
@@ -233,7 +236,8 @@ export async function processDueReminders(
   }[] = [];
 
   for (const reminder of queued) {
-    if (!reminder.remoteId) {
+    const to = phoneFromRemoteId(reminder.remoteId);
+    if (!to) {
       updates.push({
         filter: { _id: reminder._id },
         update: { $set: { status: "failed", attempts: reminder.attempts + 1 } },
@@ -242,7 +246,7 @@ export async function processDueReminders(
       continue;
     }
     try {
-      await sendWithTimeout(client, reminder.remoteId, reminder.message);
+      await api.sendText(route, to, reminder.message, { dedupeKey: `reminder:${String(reminder._id)}` });
       updates.push({
         filter: { _id: reminder._id },
         update: { $set: { status: "sent", sentAt: nowFn(), lastError: null } },

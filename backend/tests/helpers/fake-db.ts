@@ -119,6 +119,14 @@ class FakeCursor {
   async toArray(): Promise<Doc[]> {
     if (!this.projection) return this.items;
     const fields = Object.entries(this.projection);
+    // Exclusion projection ({ mediaData: 0 }): return everything except those fields.
+    if (fields.length > 0 && fields.every(([, include]) => include === 0)) {
+      return this.items.map((doc) => {
+        const out: Doc = { ...doc };
+        for (const [key] of fields) delete out[key];
+        return out;
+      });
+    }
     return this.items.map((doc) => {
       const out: Doc = {};
       for (const [key, include] of fields) {

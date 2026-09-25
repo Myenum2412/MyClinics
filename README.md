@@ -56,7 +56,7 @@ itself.
 - [next-auth](https://next-auth.js.org) v5 (beta) with MongoDB adapter
 - [MongoDB](https://www.mongodb.com/) (Atlas) via the native driver
 - [Tailwind CSS](https://tailwindcss.com) v4 + shadcn-style UI components
-- [whatsapp-web.js](https://wwebjs.dev) for the WhatsApp client
+- A standalone **whatsapp-gateway** service (Baileys, no browser) for WhatsApp — see [docs/whatsapp-gateway.md](docs/whatsapp-gateway.md)
 - [NVIDIA NIM](https://integrate.api.nvidia.com) for LLM chat + embeddings
 - [Cloudflare R2](https://developers.cloudflare.com/r2/) for report file storage
 - [vitest](https://vitest.dev) for testing
@@ -108,10 +108,13 @@ myclinics/
    `/api/*` requests (except `/api/auth`) are proxied to the API server via Next.js
    rewrites. next-auth runs in-process; server components may read MongoDB directly
    for page data.
-3. **WhatsApp worker** (`backend/`) — connects WhatsApp as a linked device and
-   processes incoming messages. It calls the AI only through the internal `/api/ai/*`
-   endpoints (authenticated with `AI_INTERNAL_TOKEN`), so the bot can never touch
-   dashboard modules directly.
+3. **WhatsApp gateway** (separate repo/service, `whatsapp-gateway`) — owns the WhatsApp
+   connections (one linked number per clinic, no browser) and talks to the API over
+   HMAC-signed HTTP: incoming patient messages arrive at `POST /api/whatsapp/inbound`
+   (answered by the menu chatbot) and the API sends through the gateway's REST API.
+4. **WhatsApp worker** (`backend/`, `npm run whatsapp`) — holds no WhatsApp connection;
+   it hands queued notifications (appointment events, reports, prescriptions,
+   reminders) to the gateway.
 
 ### Performance & data handling
 
@@ -177,10 +180,12 @@ NVIDIA_TIMEOUT_MS=60000
 # NVIDIA_EMBED_URL=https://integrate.api.nvidia.com/v1/embeddings
 # NVIDIA_EMBED_MODEL=snowflake/arctic-embed-l
 
-# --- WhatsApp worker ---
-WHATSAPP_SESSION_PATH=C:\path\to\whatsapp-session
-# Optional: pin the Chrome binary used by the headless browser
-# WHATSAPP_CHROME_PATH=C:\Program Files\Google\Chrome\Application\chrome.exe
+# --- WhatsApp gateway (standalone service) ---
+GATEWAY_URL=http://localhost:4100
+# Shared HMAC secret, min 16 chars. Must equal GATEWAY_SECRET in the gateway's .env.
+GATEWAY_SECRET=<long random string>
+# Optional: gateway session used for notifications that belong to no clinic
+# GATEWAY_LEGACY_SESSION_ID=platform
 
 # --- Reminder scheduler (CronLite — self-hosted cron-as-a-service) ---
 # CRON_SECRET is the shared HMAC secret (also the legacy x-cron-secret header).
@@ -204,17 +209,19 @@ R2_BUCKET_NAME=<bucket name>
 
 ```bash
 npm run dev        # API server (3100) + web server (3000) together
-npm run whatsapp   # WhatsApp worker (separate terminal)
+npm run whatsapp   # WhatsApp delivery worker (separate terminal)
+# and, from the whatsapp-gateway repo:  npm start
 ```
 
 Open http://localhost:3000, sign up, and create a doctor account. Then link the
-WhatsApp bot:
+clinic's WhatsApp number:
 
-1. Start the worker — it prints a QR code.
-2. On your phone: WhatsApp → Linked devices → Link a device → scan the QR image saved
-   to `WHATSAPP_SESSION_PATH\qr.png` (the worker refreshes it until scanned).
-3. The worker log should show `whatsapp connected` / `ready`, and status is written to
-   `status.json` in the session folder.
+1. Start the gateway (`whatsapp-gateway`, `npm start`) with the same `GATEWAY_SECRET`
+   and `BACKEND_URL=http://localhost:3100`.
+2. In the dashboard open the clinic's WhatsApp settings and click **Connect** — a QR
+   code appears.
+3. On the clinic phone: WhatsApp → Linked devices → Link a device → scan it. The status
+   changes to *ready* and the number is shown. Pairing survives restarts.
 
 ## Multi-tenant Clinic API (`/api/mt/*`)
 
@@ -292,18 +299,37 @@ mt/
 Auth via `Authorization: Bearer <token>` (or `mt_token` cookie). Token lifetime:
 `MT_JWT_TTL_HOURS` (default 24h). Tests live in `backend/tests/mt/`.
 
-## WhatsApp AI assistant
+## WhatsApp chatbot (menu)
 
-- The bot's personality and knowledge boundary live in `backend/src/souls/default.md`
-  (editable in the dashboard under **Settings**).
-- Additional facts (location, fees, policies, hours) live in the **knowledge base**,
-  also editable from Settings. Only these documents plus the soul are allowed into the
-  prompt.
-- Booking flow: the bot collects doctor → date → time, asks one question at a time,
-  confirms once, then creates the appointment through the backend. Customers are
-  identified by their WhatsApp profile name, so it never asks for a name.
-- Conversation memory: facts are extracted and stored per customer, and long
-  conversations are summarized automatically.
+Patients chat with the clinic's own WhatsApp number. The bot is a **deterministic menu
+— no LLM** — so replies are instant, predictable and free of hallucinated facts.
+
+```
+Hi  →  Hello Asha! 👋 Welcome to <clinic>. Reply with a number:
+       1 Book an appointment      4 Clinic timings & location
+       2 Reschedule / cancel      5 My reports & prescriptions
+       3 My upcoming appointments 6 Talk to our staff
+```
+
+- **Book**: doctor → day (next 7 days, honouring clinic/doctor working days) → time
+  (free slots only) → confirm. Uses the tenant `AppointmentService`, so the booking gets
+  a token number, an audit entry and shows up in the dashboard immediately. A number
+  that isn't a patient yet is registered (WhatsApp profile name) only when the booking
+  is confirmed. Several profiles on one number (family) → the bot asks who it is for.
+- **Reschedule / cancel / my appointments**: only the patient's own upcoming appointments.
+- **Reports & prescriptions**: sends stored files as WhatsApp documents (≤ 15 MB) and
+  prescriptions as text — only to the number that owns the record.
+- **Talk to staff**: notifies clinic admins/staff in the dashboard and pauses the bot
+  for that chat for 2 hours (`0` resumes) so a person can reply.
+- Free text such as "cancel my appointment" jumps to the right option; anything else
+  shows the menu. Send `0` (or "hi") anywhere to return to the main menu.
+- Conversation state is stored per clinic + phone in `wa_menu_state` and expires after
+  30 minutes of silence. The Settings → *AI agent* switch turns the bot off per clinic.
+
+Code: `backend/src/services/whatsapp/menu/` (engine, texts, slots, tenant data access) and
+`backend/src/routes/whatsapp-gateway.ts` (webhooks). Wording lives in `menu/texts.ts`.
+The earlier LLM assistant services (`services/ai/*`, soul/knowledge editing) are still in
+the codebase but are no longer used by WhatsApp.
 
 ## Appointment reminders
 

@@ -1,5 +1,5 @@
 import type { ClinicSessionConfigDoc } from "@/services/whatsapp/whatsapp-session.store";
-import type { SessionState } from "@/services/whatsapp/whatsapp.session";
+import type { SessionState } from "@/services/whatsapp/session.types";
 
 /** Public shape of a clinic's WhatsApp Web connection for API responses. */
 export interface ClinicWhatsappSessionPublic {

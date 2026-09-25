@@ -1,17 +1,13 @@
-﻿import type { FastifyInstance } from "fastify";
-import QRCode from "qrcode";
+import type { FastifyInstance } from "fastify";
 import { requireAuth } from "@/plugins/auth";
-import {
-  LEGACY_SESSION_KEY,
-  readQrTextFromDisk,
-  readSessionStateFromDisk,
-} from "@/services/whatsapp/whatsapp.session";
-
-const QR_IMAGE_WIDTH = 360;
+import { logger } from "@/lib/logger";
+import { legacySessionId } from "@/services/whatsapp/gateway/config";
+import { gateway } from "@/services/whatsapp/gateway/client";
+import { toQr, toSessionState } from "@/services/whatsapp/gateway/session";
 
 /**
- * Legacy platform-wide WhatsApp connection status (the central AI bot number).
- * Per-clinic connections are served by
+ * Platform-wide ("central number") WhatsApp connection status, read from the
+ * whatsapp-gateway. Per-clinic connections are served by
  * GET /api/clinics/:clinicId/whatsapp/session instead.
  */
 export function registerWhatsappSessionRoutes(app: FastifyInstance): void {
@@ -19,26 +15,11 @@ export function registerWhatsappSessionRoutes(app: FastifyInstance): void {
     if (!(await requireAuth(request, reply))) return;
 
     try {
-      const state = readSessionStateFromDisk(LEGACY_SESSION_KEY);
-      const qrText = readQrTextFromDisk(LEGACY_SESSION_KEY);
-
-      let qr: { dataUrl: string; generatedAt: string } | null = null;
-      if (qrText && (state === null || state.stage !== "ready")) {
-        qr = {
-          dataUrl: await QRCode.toDataURL(qrText.content, {
-            width: QR_IMAGE_WIDTH,
-            margin: 2,
-            errorCorrectionLevel: "M",
-          }),
-          generatedAt: qrText.generatedAt,
-        };
-      }
-
-      return reply.send({ state, qr });
+      const gw = await gateway.getSession(legacySessionId());
+      return reply.send({ state: gw ? toSessionState(gw) : null, qr: toQr(gw) });
     } catch (err) {
-      return reply.code(500).send({
-        error: `Something went wrong. Please try again. (${err instanceof Error ? err.message : String(err)})`,
-      });
+      logger.warn("whatsapp gateway status failed (platform session)", { error: err instanceof Error ? err.message : String(err) });
+      return reply.send({ state: null, qr: null });
     }
   });
 }
