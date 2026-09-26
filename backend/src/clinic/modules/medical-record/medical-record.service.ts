@@ -253,8 +253,9 @@ export class MedicalRecordService {
 
   /**
    * Sends a copy of an uploaded medical document to the patient's WhatsApp
-   * number (through the clinic's own connection). Large files (>1.5MB) are
-   * shared as a portal link in text rather than inline media. Returns an honest
+   * number (through the clinic's own gateway session). Large files (>8MB, which
+   * is the most a queued MongoDB document can carry as base64) are shared as a
+   * portal link in text rather than inline media. Returns an honest
    * status so the caller can surface delivery state to the UI.
    */
   private async enqueuePatientCopy(
@@ -265,7 +266,7 @@ export class MedicalRecordService {
     data: Buffer,
     mimeType: string | null
   ): Promise<WhatsAppCopyResult> {
-    const MAX_WHATSAPP_MEDIA_SIZE = 1.5 * 1024 * 1024; // 1.5 MB limit for base64 WhatsApp Web sending
+    const MAX_WHATSAPP_MEDIA_SIZE = 8 * 1024 * 1024; // queued as base64 in one MongoDB document (16MB BSON limit)
     const largeFile = data.length > MAX_WHATSAPP_MEDIA_SIZE;
 
     if (!doc.patientPhone) {

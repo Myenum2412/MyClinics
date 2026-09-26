@@ -36,11 +36,21 @@ function getScheduledReminderTime(dateStr: string, timeStr: string): Date {
   return new Date(appointmentTime.getTime() - 60 * 60 * 1000);
 }
 
+export interface QueueNotificationOptions {
+  /**
+   * Skip the immediate patient message (the patient was already told in the
+   * WhatsApp chat that just made the change). The doctor notification and the
+   * 1-hour reminder are unaffected.
+   */
+  skipPatientEvent?: boolean;
+}
+
 export async function queueAppointmentNotifications(
   db: Db,
   clinicId: string,
   appointmentId: string,
-  action: "created" | "updated" | "cancelled"
+  action: "created" | "updated" | "cancelled",
+  options: QueueNotificationOptions = {}
 ): Promise<void> {
   try {
     // 1. Fetch appointment details
@@ -111,7 +121,9 @@ export async function queueAppointmentNotifications(
 
     // Queue Event for Patient (skip when unreachable — a queued row with no
     // phone can only ever fail its retry budget, so log once instead).
-    if (patientPhone) {
+    if (options.skipPatientEvent) {
+      // Already confirmed to the patient in chat — do not send a duplicate.
+    } else if (patientPhone) {
       notificationsToInsert.push({
         appointmentId,
         clinicId,

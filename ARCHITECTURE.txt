@@ -5,6 +5,13 @@ A clinic management platform with a WhatsApp AI assistant that books,
 reschedules and cancels appointments, answers clinic questions, sends reminders
 and turn alerts. This document explains the full architecture in plain text.
 
+NOTE (WhatsApp architecture update): WhatsApp is no longer driven by a headless
+browser inside this repo. Sections 3.3, 7 and 8 below describe the previous
+whatsapp-web.js worker and LLM assistant. The current design is a standalone
+"whatsapp-gateway" service (Baileys, no browser, one linked number per clinic) that
+calls this API over HMAC-signed HTTP, answered by a deterministic menu chatbot
+(no LLM). See docs/whatsapp-gateway.md and README "WhatsApp chatbot (menu)".
+
 --------------------------------------------------------------------------------
 1. HIGH-LEVEL OVERVIEW
 --------------------------------------------------------------------------------

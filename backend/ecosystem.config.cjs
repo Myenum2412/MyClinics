@@ -19,17 +19,17 @@ module.exports = {
 			name: "myclinic-whatsapp",
 			script: "src/services/whatsapp/whatsapp.worker.ts",
 			interpreter: "node",
-			node_args: "--import tsx --max-old-space-size=512",
+			node_args: "--import tsx --max-old-space-size=256",
 			instances: 1,
 			exec_mode: "fork",
-			max_memory_restart: "900M",
+			// No browser any more: this worker only hands queued messages to the whatsapp-gateway.
+			max_memory_restart: "300M",
 			restart_delay: 5000,
 			max_restarts: 20,
 			min_uptime: "30s",
+			// GATEWAY_URL / GATEWAY_SECRET come from the shared .env.local (see README).
 			env: {
 				NODE_ENV: "production",
-				WHATSAPP_SESSION_PATH: "/var/www/myclinic/shared/whatsapp-session",
-				WHATSAPP_MAX_CLINIC_SESSIONS: "5",
 			},
 		},
 	],
