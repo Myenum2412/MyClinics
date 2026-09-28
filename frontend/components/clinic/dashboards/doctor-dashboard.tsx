@@ -198,7 +198,7 @@ function GreetingBanner({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br ${greeting.gradientFrom} ${greeting.gradientTo} px-6 py-7 shadow-sm`}
+      className={`relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br ${greeting.gradientFrom} ${greeting.gradientTo} px-4 py-5 shadow-sm sm:px-6 sm:py-7`}
     >
       {/* Time-of-day Background Image - Fixed to card with increased brightness */}
       <div className="pointer-events-none absolute inset-0 select-none overflow-hidden rounded-2xl">
@@ -218,16 +218,16 @@ function GreetingBanner({
       <div className="pointer-events-none absolute -right-10 -top-10 size-48 rounded-full bg-white/5 blur-2xl" />
       <div className="pointer-events-none absolute -bottom-8 -left-8 size-32 rounded-full bg-white/5 blur-2xl" />
 
-      <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative z-10 flex flex-col gap-4 sm:gap-5 lg:flex-row lg:items-center lg:justify-between">
         {/* Left: greeting text */}
         <div className="rounded-xl bg-background/30 p-2.5 backdrop-blur-[2px] sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
-          <p className={`text-sm font-bold uppercase tracking-widest ${greeting.accentColor}`}>
+          <p className={`text-xs font-bold uppercase tracking-widest sm:text-sm ${greeting.accentColor}`}>
             {greeting.emoji}&nbsp;&nbsp;{greeting.text}
           </p>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="mt-1 text-xl font-extrabold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
             Dr. {firstName}
           </h1>
-          <p className="mt-1 text-sm font-medium text-foreground/80">
+          <p className="mt-1 text-xs font-medium text-foreground/80 sm:text-sm">
             {new Intl.DateTimeFormat("en-IN", {
               weekday: "long",
               day: "numeric",
@@ -239,13 +239,13 @@ function GreetingBanner({
         </div>
 
         {/* Right: Quick Fill + Medical Record */}
-        <div className="flex items-center gap-3">
-          <Link href="/clinic/quick-add" className="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3">
+          <Link href="/clinic/quick-add" className="flex items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-md hover:bg-primary/90 sm:w-auto">
             <Plus className="size-4" /> Quick Fill
           </Link>
           <Link
             href="/clinic/medical-record"
-            className="group flex w-fit items-center gap-3 rounded-xl border border-border/80 bg-background/80 px-5 py-4 shadow-md backdrop-blur-md transition-all duration-200 hover:border-primary/40 hover:bg-background hover:shadow-lg active:scale-[0.97]"
+            className="group flex w-full items-center justify-center gap-3 rounded-xl border border-border/80 bg-background/80 px-4 py-3 shadow-md backdrop-blur-md transition-all duration-200 hover:border-primary/40 hover:bg-background hover:shadow-lg active:scale-[0.97] sm:w-fit sm:justify-start sm:px-5 sm:py-4"
             title="Open medical records"
           >
             <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 border border-indigo-100">
@@ -483,14 +483,14 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   }, [appointments, patients, doctors, isDoctorRole]);
 
   return (
-    <div className="w-full flex flex-col gap-6">
+    <div className="w-full flex flex-col gap-4 sm:gap-6">
       {/* Greeting banner */}
       <GreetingBanner doctorName={session.name ?? "Doctor"} />
 
       <MetricStatGrid items={statsItems} />
 
       {/* Recent Appointments + Doctor Patients / Billing row */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
         <RecentAppointmentsCard
           loading={loading}
           weekCalendar={appointmentWeek}

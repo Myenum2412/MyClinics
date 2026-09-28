@@ -37,16 +37,16 @@ function MetricStatCard({ item }: { item: MetricStatItem }) {
   const accent = item.accent ?? "var(--chart-1)";
 
   return (
-    <Card className="p-4 shadow-2xs" key={item.name}>
-      <CardContent className="flex items-center space-x-4 p-0">
+    <Card className="p-3 shadow-2xs sm:p-4" key={item.name}>
+      <CardContent className="flex flex-col items-center gap-1.5 p-0 text-center sm:flex-row sm:items-center sm:gap-0 sm:space-x-4 sm:text-left">
         <div className="relative flex shrink-0 items-center justify-center">
-          <ChartContainer className="h-[80px] w-[80px]" config={chartConfig}>
+          <ChartContainer className="h-[68px] w-[68px] sm:h-[80px] sm:w-[80px]" config={chartConfig}>
             <RadialBarChart
               barSize={6}
               data={[{ capacity: pct }]}
               endAngle={-270}
-              innerRadius={30}
-              outerRadius={40}
+              innerRadius={26}
+              outerRadius={33}
               startAngle={90}
             >
               <PolarAngleAxis
@@ -66,13 +66,13 @@ function MetricStatCard({ item }: { item: MetricStatItem }) {
             </RadialBarChart>
           </ChartContainer>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="font-medium text-base text-foreground tabular-nums">
+            <span className="font-medium text-sm text-foreground tabular-nums sm:text-base">
               {pct}%
             </span>
           </div>
         </div>
-        <div className="min-w-0">
-          <dt className="flex items-center gap-1.5 font-medium text-foreground text-sm">
+        <div className="min-w-0 w-full">
+          <dt className="flex items-center justify-center gap-1.5 font-medium text-foreground text-xs sm:justify-start sm:text-sm">
             {item.icon ? (
               <span className="inline-flex shrink-0 items-center" style={{ color: accent }}>
                 {item.icon}
@@ -80,10 +80,10 @@ function MetricStatCard({ item }: { item: MetricStatItem }) {
             ) : null}
             <span className="truncate">{item.name}</span>
           </dt>
-          <dd className="mt-0.5 text-muted-foreground text-sm tabular-nums">
+          <dd className="mt-0.5 text-muted-foreground text-xs tabular-nums sm:text-sm">
             {item.value}
           </dd>
-          <dd className="text-muted-foreground text-xs">{item.detail}</dd>
+          <dd className="truncate text-muted-foreground text-[11px] sm:text-xs">{item.detail}</dd>
         </div>
       </CardContent>
     </Card>
@@ -98,7 +98,7 @@ export function MetricStatGrid({
   className?: string;
 }) {
   return (
-    <dl className={cn("grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4", className)}>
+    <dl className={cn("grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4", className)}>
       {items.map((item) => (
         <MetricStatCard key={item.name} item={item} />
       ))}
