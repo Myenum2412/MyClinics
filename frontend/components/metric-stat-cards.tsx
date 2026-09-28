@@ -1,8 +1,17 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
 import { Card, CardContent } from "@/components/ui/card";
+import { type ChartConfig, ChartContainer } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
+
+const chartConfig = {
+  capacity: {
+    label: "Capacity",
+    color: "hsl(var(--primary))",
+  },
+} satisfies ChartConfig;
 
 export interface MetricStatItem {
   name: string;
@@ -28,45 +37,53 @@ function MetricStatCard({ item }: { item: MetricStatItem }) {
   const accent = item.accent ?? "var(--chart-1)";
 
   return (
-    <Card className="overflow-hidden border-border/70 bg-card shadow-none">
-      <CardContent className="flex flex-col gap-3 p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-2.5">
+    <Card className="p-4 shadow-2xs" key={item.name}>
+      <CardContent className="flex items-center space-x-4 p-0">
+        <div className="relative flex shrink-0 items-center justify-center">
+          <ChartContainer className="h-[80px] w-[80px]" config={chartConfig}>
+            <RadialBarChart
+              barSize={6}
+              data={[{ capacity: pct }]}
+              endAngle={-270}
+              innerRadius={30}
+              outerRadius={40}
+              startAngle={90}
+            >
+              <PolarAngleAxis
+                angleAxisId={0}
+                axisLine={false}
+                domain={[0, 100]}
+                tick={false}
+                type="number"
+              />
+              <RadialBar
+                angleAxisId={0}
+                background
+                cornerRadius={10}
+                dataKey="capacity"
+                fill={accent}
+              />
+            </RadialBarChart>
+          </ChartContainer>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="font-medium text-base text-foreground tabular-nums">
+              {pct}%
+            </span>
+          </div>
+        </div>
+        <div className="min-w-0">
+          <dt className="flex items-center gap-1.5 font-medium text-foreground text-sm">
             {item.icon ? (
-              <span
-                className="flex size-9 shrink-0 items-center justify-center rounded-lg"
-                style={{ backgroundColor: `color-mix(in oklab, ${accent} 14%, transparent)`, color: accent }}
-              >
+              <span className="inline-flex shrink-0 items-center" style={{ color: accent }}>
                 {item.icon}
               </span>
             ) : null}
-            <dt className="truncate text-sm font-medium text-muted-foreground">
-              {item.name}
-            </dt>
-          </div>
-          <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-muted-foreground">
-            {pct}%
-          </span>
-        </div>
-
-        <dd className="text-2xl font-semibold tracking-tight text-foreground tabular-nums sm:text-[1.65rem]">
-          {item.value}
-        </dd>
-
-        <p className="text-xs text-muted-foreground">{item.detail}</p>
-
-        <div
-          className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
-          role="progressbar"
-          aria-valuenow={pct}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={`${item.name} ${pct}%`}
-        >
-          <div
-            className={cn("h-full rounded-full transition-[width] duration-500 ease-out")}
-            style={{ width: `${pct}%`, backgroundColor: accent }}
-          />
+            <span className="truncate">{item.name}</span>
+          </dt>
+          <dd className="mt-0.5 text-muted-foreground text-sm tabular-nums">
+            {item.value}
+          </dd>
+          <dd className="text-muted-foreground text-xs">{item.detail}</dd>
         </div>
       </CardContent>
     </Card>
@@ -81,7 +98,7 @@ export function MetricStatGrid({
   className?: string;
 }) {
   return (
-    <dl className={cn("grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4", className)}>
+    <dl className={cn("grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4", className)}>
       {items.map((item) => (
         <MetricStatCard key={item.name} item={item} />
       ))}

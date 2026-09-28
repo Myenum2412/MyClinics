@@ -277,8 +277,8 @@ function SectionCard({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent overflow-hidden">
-      <CardHeader className="pb-3">
+    <Card className="p-4 shadow-2xs overflow-hidden">
+      <CardHeader className="p-0 pb-3">
         <div className="flex items-center justify-between gap-4">
           <button
             type="button"
@@ -287,7 +287,7 @@ function SectionCard({
             aria-expanded={open}
           >
             <div>
-              <CardTitle className="text-base font-semibold text-foreground">
+              <CardTitle className="font-medium text-foreground text-sm">
                 {title}
               </CardTitle>
               {description && (
@@ -301,7 +301,7 @@ function SectionCard({
           {action && <div onClick={(e) => e.stopPropagation()}>{action}</div>}
         </div>
       </CardHeader>
-      {open && <CardContent className="space-y-4">{children}</CardContent>}
+      {open && <CardContent className="space-y-4 p-0">{children}</CardContent>}
     </Card>
   );
 }

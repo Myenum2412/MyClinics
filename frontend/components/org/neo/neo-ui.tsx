@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export function SeverityBadge({ severity }: { severity: string }) {
@@ -47,16 +48,18 @@ export function SectionCard({
   className?: string;
 }) {
   return (
-    <div className={cn("rounded-none border border-border bg-card p-5 shadow-sm", className)}>
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
+    <Card className={cn("p-4 shadow-2xs", className)}>
+      <CardHeader className="p-0 pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="font-medium text-foreground text-sm">{title}</CardTitle>
+            {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+          </div>
+          {action}
         </div>
-        {action}
-      </div>
-      {children}
-    </div>
+      </CardHeader>
+      <CardContent className="p-0">{children}</CardContent>
+    </Card>
   );
 }
 

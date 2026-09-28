@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft, AlertCircle, X } from "lucide-react";
 
-/** Sectioned card matching the PatientForm design. */
+/** Sectioned card matching the @blocks-so/stats-07 block design. */
 export function SectionCard({
   title,
   description,
@@ -16,12 +16,12 @@ export function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold text-foreground">{title}</CardTitle>
+    <Card className="p-4 shadow-2xs">
+      <CardHeader className="p-0 pb-3">
+        <CardTitle className="font-medium text-foreground text-sm">{title}</CardTitle>
         {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </CardHeader>
-      <CardContent className="space-y-4">{children}</CardContent>
+      <CardContent className="space-y-4 p-0">{children}</CardContent>
     </Card>
   );
 }
