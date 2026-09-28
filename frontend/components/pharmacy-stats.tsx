@@ -41,15 +41,15 @@ export function PharmacyStats({
 
   return (
     <div className="w-full">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="shrink-0">
-          <h2 className="text-balance font-medium text-foreground text-xl">{title}</h2>
+          <h2 className="text-balance font-medium text-foreground text-lg sm:text-xl">{title}</h2>
           {subtitle && (
-            <p className="mt-1 text-pretty text-muted-foreground text-sm leading-6">{subtitle}</p>
+            <p className="mt-0.5 text-pretty text-muted-foreground text-xs leading-5 sm:mt-1 sm:text-sm sm:leading-6">{subtitle}</p>
           )}
         </div>
         {onSearchChange !== undefined && (
-          <div className="flex-1 flex justify-center px-4">
+          <div className="flex-1 flex justify-center px-0 sm:px-4">
             <div className="relative w-full max-w-md">
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -62,9 +62,9 @@ export function PharmacyStats({
             </div>
           </div>
         )}
-        {action && <div className="shrink-0 flex gap-2">{action}</div>}
+        {action && <div className="shrink-0 flex flex-col gap-2 sm:flex-row">{action}</div>}
       </div>
-      <div className="mt-6">
+      <div className="mt-4 sm:mt-6">
         <MetricStatGrid items={metrics} />
       </div>
     </div>
