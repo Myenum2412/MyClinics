@@ -2144,22 +2144,32 @@ export default function MedicalRecordPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
+                    <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                      <TableHead>Visit date</TableHead>
                       <TableHead>Doctor</TableHead>
                       <TableHead>Diagnosis</TableHead>
+                      <TableHead>Symptoms</TableHead>
                       <TableHead>Treatment</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {[...overview.patientRecords].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((r) => (
-                      <TableRow key={r.recordId}>
-                        <TableCell className="whitespace-nowrap text-sm">{formatDate(r.visitDate)}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{doctorName(r.doctorId)}</TableCell>
-                        <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{r.diagnosis || "—"}</TableCell>
-                        <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{r.treatment || "—"}</TableCell>
-                      </TableRow>
-                    ))}
+                    {[...overview.patientRecords].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((r) => {
+                      const doctorLabel = doctorName(r.doctorId);
+                      return (
+                        <TableRow key={r.recordId} className="hover:bg-muted/30 border-b border-border last:border-0">
+                          <TableCell className="text-muted-foreground whitespace-nowrap">{formatDate(r.visitDate)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2.5">
+                              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={r.doctorId} name={doctorLabel} />
+                              <span className="text-xs text-foreground font-medium">{doctorLabel}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-48 truncate font-medium text-foreground">{r.diagnosis || "—"}</TableCell>
+                          <TableCell className="max-w-40 truncate text-muted-foreground">{r.symptoms || "—"}</TableCell>
+                          <TableCell className="max-w-40 truncate text-muted-foreground">{r.treatment || "—"}</TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -2185,22 +2195,44 @@ export default function MedicalRecordPage() {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                       <TableHead>Date</TableHead>
                       <TableHead>Doctor</TableHead>
+                      <TableHead>Diagnosis</TableHead>
                       <TableHead>Medicines</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {[...overview.patientPrescriptions].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((pr) => (
-                      <TableRow key={pr.prescriptionId}>
-                        <TableCell className="whitespace-nowrap text-sm">{formatDate(pr.visitDate)}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{doctorName(pr.doctorId)}</TableCell>
-                        <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
-                          {pr.medicines.map((m) => m.name).filter(Boolean).join(", ") || "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {[...overview.patientPrescriptions].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((pr) => {
+                      const doctorLabel = doctorName(pr.doctorId);
+                      return (
+                        <TableRow key={pr.prescriptionId} className="border-b border-border transition-colors hover:bg-muted/30">
+                          <TableCell className="font-medium text-xs tabular-nums text-foreground whitespace-nowrap">{formatDate(pr.visitDate)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2.5">
+                              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={pr.doctorId} name={doctorLabel} />
+                              <span className="text-xs text-foreground font-medium">{doctorLabel}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-44 truncate text-xs text-muted-foreground">{pr.diagnosis ?? "—"}</TableCell>
+                          <TableCell className="max-w-52">
+                            <ul className="list-disc pl-4 text-[11px] text-muted-foreground leading-tight space-y-0.5">
+                              {(pr.medicines ?? []).slice(0, 2).map((m, i) => (
+                                <li key={i} className="truncate">
+                                  <span className="font-semibold text-foreground/80">{m.name}</span>{" "}
+                                  {m.dosage && `(${m.dosage})`}
+                                </li>
+                              ))}
+                              {(pr.medicines ?? []).length > 2 && (
+                                <li className="list-none text-[10px] text-primary/80 font-medium pl-0">
+                                  +{(pr.medicines ?? []).length - 2} more items
+                                </li>
+                              )}
+                            </ul>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
