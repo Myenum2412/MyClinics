@@ -26,6 +26,7 @@ import {
   UsersIcon,
   BellIcon,
   ClipboardDocumentCheckIcon as RecordsIcon,
+  ClipboardDocumentListIcon as ExaminationIcon,
   FolderOpenIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
@@ -90,6 +91,11 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     title: "Investigation",
     url: "/clinic/investigation",
     icon: <MagnifyingGlassIcon className="size-6" />,
+  },
+  {
+    title: "Examination",
+    url: "/clinic/examination",
+    icon: <ExaminationIcon className="size-6" />,
   },
   {
     title: "Notifications",

@@ -53,6 +53,7 @@ export const CLINIC_COLLECTIONS = {
   avatars: "clc_avatars",
   labs: "clc_labs",
   investigations: "clc_investigations",
+  examinations: "clc_examinations",
 } as const;
 
 export type ClinicCollectionName =

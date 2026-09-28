@@ -49,6 +49,7 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
   const pharmacyReturns = db.collection(CLINIC_COLLECTIONS.pharmacyReturns);
   const avatars = db.collection(CLINIC_COLLECTIONS.avatars);
   const investigations = db.collection(CLINIC_COLLECTIONS.investigations);
+  const examinations = db.collection(CLINIC_COLLECTIONS.examinations);
 
   const indexSpecs = [
     // ── Clinics ──────────────────────────────────────────────────────────
@@ -285,6 +286,12 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     investigations.createIndex({ clinicId: 1, doctorId: 1, visitDate: -1 }),
     investigations.createIndex({ clinicId: 1, medicalRecordId: 1 }),
     investigations.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
+
+    // ── Examinations ─────────────────────────────────────────────────────
+    examinations.createIndex({ clinicId: 1, examinationId: 1 }, { unique: true }),
+    examinations.createIndex({ clinicId: 1, patientId: 1, visitDate: -1 }),
+    examinations.createIndex({ clinicId: 1, doctorId: 1, visitDate: -1 }),
+    examinations.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
   ];
 
   // A single failing index (e.g. a unique index hitting pre-existing

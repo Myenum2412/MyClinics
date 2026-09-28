@@ -30,6 +30,7 @@ import {
 import { registerNeoRoutes } from "@/neo";
 import { registerLabRoutes } from "@/clinic/modules/labs/labs.routes";
 import { registerInvestigationRoutes } from "@/clinic/modules/investigations/investigations.routes";
+import { registerExaminationRoutes } from "@/clinic/modules/examinations/examinations.routes";
 import { registerDashboardRoutes } from "@/clinic/modules/dashboard/dashboard.routes";
 import { registerEventStreamRoutes } from "@/clinic/modules/events/events.routes";
 
@@ -87,6 +88,7 @@ export function registerClinicApi(app: FastifyInstance): void {
     registerNeoRoutes(tenantApi);
     registerLabRoutes(tenantApi);
     registerInvestigationRoutes(tenantApi);
+    registerExaminationRoutes(tenantApi);
     registerDashboardRoutes(tenantApi);
     registerEventStreamRoutes(tenantApi);
   });

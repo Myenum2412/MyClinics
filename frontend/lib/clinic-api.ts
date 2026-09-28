@@ -1444,6 +1444,88 @@ export function deleteInvestigation(
   });
 }
 
+// ── Examinations ───────────────────────────────────────────────────────────
+
+export type ExaminationStatus =
+  | "pending"
+  | "in-progress"
+  | "completed"
+  | "cancelled";
+
+export interface Examination {
+  examinationId: string;
+  patientId: string;
+  patientName: string;
+  doctorId: string | null;
+  visitDate: string;
+  status: ExaminationStatus;
+  oralFindings: string;
+  notes: string | null;
+  createdBy: string;
+  createdByName: string | null;
+  clinicId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export function listExaminations(
+  clinicId: string,
+  query: {
+    q?: string;
+    patientId?: string;
+    status?: string;
+    from?: string;
+    to?: string;
+    limit?: number;
+  } = {}
+): Promise<PageResult<Examination>> {
+  const params = new URLSearchParams();
+  if (query.q) params.set("q", query.q);
+  if (query.patientId) params.set("patientId", query.patientId);
+  if (query.status) params.set("status", query.status);
+  if (query.from) params.set("from", query.from);
+  if (query.to) params.set("to", query.to);
+  params.set("limit", String(query.limit ?? 50));
+  return request(tenantPath(clinicId, `/examinations?${params}`));
+}
+
+export function getExamination(
+  clinicId: string,
+  examinationId: string
+): Promise<Examination> {
+  return request(tenantPath(clinicId, `/examinations/${examinationId}`));
+}
+
+export function createExamination(
+  clinicId: string,
+  input: Record<string, unknown>
+): Promise<Examination> {
+  return request(tenantPath(clinicId, "/examinations"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateExamination(
+  clinicId: string,
+  examinationId: string,
+  input: Record<string, unknown>
+): Promise<Examination> {
+  return request(tenantPath(clinicId, `/examinations/${examinationId}`), {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export function deleteExamination(
+  clinicId: string,
+  examinationId: string
+): Promise<{ ok: true }> {
+  return request(tenantPath(clinicId, `/examinations/${examinationId}`), {
+    method: "DELETE",
+  });
+}
+
 export function createQuickAdd(
   clinicId: string,
   input: {

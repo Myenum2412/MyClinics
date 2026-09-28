@@ -1,0 +1,55 @@
+import { z } from "zod";
+
+const optionalString = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .transform((v) => (v === "" ? null : v))
+    .nullable()
+    .optional();
+
+const dateString = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD");
+
+export const examinationStatusEnum = z.enum([
+  "pending",
+  "in-progress",
+  "completed",
+  "cancelled",
+]);
+
+export const createExaminationSchema = z.object({
+  patientId: z.string().trim().min(1, "Patient is required").max(120),
+  doctorId: z.string().trim().min(1).max(120).optional().nullable(),
+  visitDate: dateString,
+  status: examinationStatusEnum.optional(),
+  oralFindings: z
+    .string()
+    .trim()
+    .min(2, "Oral findings are required")
+    .max(5000),
+  notes: optionalString(5000),
+});
+
+export type CreateExaminationInput = z.infer<
+  typeof createExaminationSchema
+>;
+
+export const updateExaminationSchema = createExaminationSchema
+  .partial()
+  .omit({ patientId: true });
+
+export type UpdateExaminationInput = z.infer<
+  typeof updateExaminationSchema
+>;
+
+export const listExaminationsSchema = z.object({
+  q: z.string().trim().max(200).optional(),
+  patientId: z.string().trim().max(120).optional(),
+  status: examinationStatusEnum.optional(),
+  from: dateString.optional(),
+  to: dateString.optional(),
+});
