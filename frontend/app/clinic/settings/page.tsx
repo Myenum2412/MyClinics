@@ -299,47 +299,47 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-foreground font-sans">Settings</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h2 className="text-xl font-bold text-foreground font-sans sm:text-2xl">Settings</h2>
+        <p className="text-xs text-muted-foreground mt-1 sm:text-sm">
           Manage your clinic's WhatsApp connection, billing variables, and dropdown lists.
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-border gap-2">
+      <div className="flex border-b border-border gap-1 overflow-x-auto sm:gap-2">
         <button
           onClick={() => setActiveTab("whatsapp")}
-          className={`flex items-center gap-2 px-4 py-2.5 font-semibold text-sm transition-all border-b-2 -mb-[2px] ${
+          className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2.5 font-semibold text-xs transition-all border-b-2 -mb-[2px] sm:gap-2 sm:px-4 sm:text-sm ${
             activeTab === "whatsapp"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          <MessageSquare className="size-4" />
+          <MessageSquare className="size-4 shrink-0" />
           WhatsApp
         </button>
         <button
           onClick={() => setActiveTab("billing")}
-          className={`flex items-center gap-2 px-4 py-2.5 font-semibold text-sm transition-all border-b-2 -mb-[2px] ${
+          className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2.5 font-semibold text-xs transition-all border-b-2 -mb-[2px] sm:gap-2 sm:px-4 sm:text-sm ${
             activeTab === "billing"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Receipt className="size-4" />
+          <Receipt className="size-4 shrink-0" />
           Billing Settings
         </button>
         <button
           onClick={() => setActiveTab("dropdowns")}
-          className={`flex items-center gap-2 px-4 py-2.5 font-semibold text-sm transition-all border-b-2 -mb-[2px] ${
+          className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-2.5 font-semibold text-xs transition-all border-b-2 -mb-[2px] sm:gap-2 sm:px-4 sm:text-sm ${
             activeTab === "dropdowns"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          <Sliders className="size-4" />
+          <Sliders className="size-4 shrink-0" />
           Dropdown Options
         </button>
       </div>
@@ -359,7 +359,7 @@ export default function SettingsPage() {
                   </span>
                 )}
               </CardHeader>
-              <CardContent className="flex flex-col items-center gap-4 text-center">
+              <CardContent className="flex flex-col items-center gap-4 p-4 text-center sm:p-6">
                 {waLoading ? (
                   <Skeleton className="h-64 w-64" />
                 ) : connected ? (
@@ -380,10 +380,11 @@ export default function SettingsPage() {
                       </p>
                     </div>
                     {canEdit && (
-                      <div className="flex flex-wrap justify-center gap-2">
+                      <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-center">
                         <Button
                           type="button"
                           variant="outline"
+                          className="w-full justify-center sm:w-auto"
                           disabled={waAction !== null}
                           onClick={() => void handleDisconnect(false)}
                         >
@@ -392,6 +393,7 @@ export default function SettingsPage() {
                         <Button
                           type="button"
                           variant="destructive"
+                          className="w-full justify-center sm:w-auto"
                           disabled={waAction !== null}
                           onClick={() => void handleDisconnect(true)}
                         >
@@ -410,7 +412,7 @@ export default function SettingsPage() {
                       alt="WhatsApp Web QR code"
                       width={264}
                       height={264}
-                      className="rounded-lg border border-border bg-background p-2"
+                      className="h-auto w-full max-w-[264px] rounded-lg border border-border bg-background p-2"
                     />
                     <p className="max-w-sm text-sm font-medium text-primary">
                       Open WhatsApp on your phone → Settings → Linked devices → Link a device,
@@ -430,7 +432,7 @@ export default function SettingsPage() {
                   </>
                 ) : (
                   <div className="flex flex-col items-center gap-4 py-4">
-                    <div className="flex size-[264px] items-center justify-center rounded-lg border border-dashed border-border bg-muted/20">
+                    <div className="flex aspect-square w-full max-w-[264px] items-center justify-center rounded-lg border border-dashed border-border bg-muted/20">
                       {stage === "error" ? (
                         <QrCode className="size-10 text-muted-foreground/50" />
                       ) : (
@@ -580,7 +582,7 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 /* ── EDIT MODE ── */
-                <form onSubmit={handleSaveBilling} className="space-y-6">
+                <form onSubmit={handleSaveBilling} className="space-y-4 sm:space-y-6">
                 <p className="text-sm text-muted-foreground">
                   Configure the billing and payment details for this clinic. These values are printed on the generated invoice PDFs.
                 </p>
@@ -690,18 +692,19 @@ export default function SettingsPage() {
                 </div>
 
                 {canEdit && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
                     {settings && (
                       <Button
                         type="button"
                         variant="outline"
+                        className="w-full justify-center sm:w-auto"
                         disabled={savingBilling}
                         onClick={() => setBillingEditing(false)}
                       >
                         Cancel
                       </Button>
                     )}
-                    <Button type="submit" disabled={savingBilling}>
+                    <Button type="submit" className="w-full justify-center sm:w-auto" disabled={savingBilling}>
                       {savingBilling ? "Saving..." : "Save Billing Settings"}
                     </Button>
                   </div>
@@ -772,7 +775,7 @@ export default function SettingsPage() {
                           <Input
                             value={dropdownDrafts[def.key] ?? ""}
                             placeholder={`Add a new option...`}
-                            className="h-8 max-w-xs text-xs"
+                            className="h-8 min-w-0 flex-1 text-xs sm:max-w-xs sm:flex-none"
                             disabled={saving}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
@@ -786,7 +789,7 @@ export default function SettingsPage() {
                           />
                           <Button
                             size="sm"
-                            className="h-8 gap-1 text-xs"
+                            className="h-8 shrink-0 gap-1 text-xs"
                             disabled={saving || !(dropdownDrafts[def.key] ?? "").trim()}
                             onClick={() => handleAddOption(def.key)}
                           >
