@@ -12,6 +12,8 @@ import { Command, History } from "lucide-react";
 import { useEffect, useState } from "react";
 
 function ClinicAssistantLayout({ role, clinicId, clinicName }: { role?: string; clinicId?: string; clinicName?: string }) {
+  // History panel is collapsible on mobile (room for the chat), always visible on lg+.
+  const [showHistory, setShowHistory] = useState(false);
   const adapter: ChatModelAdapter = {
     async run({ messages, abortSignal }) {
       const lastUser = [...messages].reverse().find((m) => m.role === "user");
@@ -128,8 +130,9 @@ function BackendHistory({ clinicId }: { clinicId?: string }) {
   return (
     <AssistantRuntimeProvider runtime={runtime}>
       <div className="flex flex-1 min-h-0 overflow-hidden flex-col lg:flex-row">
-        {/* Left history — assistant-ui ThreadList + backend persisted history */}
-        <aside className="w-full lg:w-[300px] xl:w-[340px] shrink-0 flex flex-col border-b lg:border-b-0 lg:border-r bg-card overflow-hidden max-h-[45vh] lg:max-h-none lg:h-full">
+        {/* Left history — assistant-ui ThreadList + backend persisted history.
+            Hidden behind a toggle on mobile, always visible on lg+. */}
+        <aside className={`${showHistory ? "flex" : "hidden"} w-full shrink-0 flex-col border-b bg-card overflow-hidden max-h-[38vh] lg:flex lg:w-[300px] lg:border-b-0 lg:border-r lg:max-h-none lg:h-full xl:w-[340px]`}>
           <div className="px-3 py-3 border-b shrink-0 bg-card">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <History className="size-4 text-muted-foreground" />
@@ -149,6 +152,19 @@ function BackendHistory({ clinicId }: { clinicId?: string }) {
 
         {/* Right chat — assistant-ui Thread */}
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden bg-background">
+          {/* Mobile history toggle */}
+          <div className="flex shrink-0 items-center gap-2 border-b border-border/60 bg-card px-3 py-2 lg:hidden">
+            <button
+              type="button"
+              onClick={() => setShowHistory((v) => !v)}
+              aria-expanded={showHistory}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-background px-3 text-xs font-medium text-foreground"
+            >
+              <History className="size-3.5 text-muted-foreground" />
+              {showHistory ? "Hide history" : "Show history"}
+            </button>
+            <span className="truncate text-[11px] text-muted-foreground">Chats are saved automatically</span>
+          </div>
           <Thread components={{ Welcome: ClinicWelcome }} />
         </div>
       </div>
@@ -163,9 +179,7 @@ export default function ClinicAiAssistantPage() {
     return (
       <div className="space-y-4">
         <Skeleton className="h-[64px] w-full rounded-2xl" />
-        <div className="grid grid-cols-12 gap-4 h-[560px]">
-          <Skeleton className="col-span-12 rounded-2xl" />
-        </div>
+        <Skeleton className="h-[420px] w-full rounded-2xl sm:h-[560px]" />
       </div>
     );
 
