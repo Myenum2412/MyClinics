@@ -181,31 +181,55 @@ export default function InvestigationPage() {
   // the moment the grid appears (with a 5s safety timeout).
   useEffect(() => {
     if (screen.name !== "form" || !chartData) return;
+    let cancelled = false;
     let done = false;
     const finish = () => {
       if (done) return;
       done = true;
-      setChartLoading(false);
+      if (!cancelled) setChartLoading(false);
     };
+    const observer = new MutationObserver(() => {
+      if (tryImport()) observer.disconnect();
+    });
     const tryImport = () => {
       const grid = document.getElementById("toothGrid");
       if (grid && grid.childElementCount > 0) {
-        clearInterval(timer);
+        observer.disconnect();
         void odontogramApi()
           .then(({ importStatus }) => {
             if (cancelled) return;
-            importStatus(chartData as Record<string, unknown>);
+            try {
+              importStatus(chartData as Record<string, unknown>);
+            } catch (e) {
+              toast.error(
+                e instanceof Error ? e.message : "Failed to load saved chart"
+              );
+            } finally {
+              finish();
+            }
           })
           .catch((e) => {
-            toast.error(
-              e instanceof Error ? e.message : "Failed to load saved chart"
-            );
+            if (!cancelled) {
+              toast.error(
+                e instanceof Error ? e.message : "Failed to load saved chart"
+              );
+            }
+            finish();
           });
-      } else if (tries >= 40) {
-        clearInterval(timer);
+        return true;
       }
-    }, 100);
+      return false;
+    };
+    setChartLoading(true);
+    if (!tryImport()) {
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
+    const timer = setTimeout(() => {
+      observer.disconnect();
+      finish();
+    }, 5000);
     return () => {
+      cancelled = true;
       observer.disconnect();
       clearTimeout(timer);
     };
