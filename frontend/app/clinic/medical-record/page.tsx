@@ -358,15 +358,15 @@ function FolderCard({
           onDropUpload(folder, e.dataTransfer.files);
         }
       }}
-      className={`group relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border p-5 text-center transition hover:border-primary/40 hover:shadow-sm ${over ? "border-primary/50 bg-accent" : "border-border bg-background"}`}
+      className={`group relative flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition hover:border-primary/40 hover:shadow-sm sm:gap-2 sm:p-5 ${over ? "border-primary/50 bg-accent" : "border-border bg-background"}`}
       onClick={onOpen}
     >
-      <span className={`flex size-12 items-center justify-center rounded-xl ${meta.bg} ${meta.tint}`}>
-        <Icon className="size-6" />
+      <span className={`flex size-10 items-center justify-center rounded-xl sm:size-12 ${meta.bg} ${meta.tint}`}>
+        <Icon className="size-5 sm:size-6" />
       </span>
-      <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-foreground">{meta.title}</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+      <div className="min-w-0 w-full">
+        <p className="truncate text-xs font-semibold text-foreground sm:text-sm">{meta.title}</p>
+        <p className="mt-0.5 text-[11px] text-muted-foreground sm:text-xs">
           {count} file{count === 1 ? "" : "s"}
         </p>
       </div>
@@ -379,7 +379,7 @@ function FolderCard({
             <Button
               variant="ghost"
               size="icon"
-              className="size-7 opacity-0 transition group-hover:opacity-100"
+              className="size-8 opacity-100 transition sm:size-7 sm:opacity-0 sm:group-hover:opacity-100"
               aria-label="Folder actions"
             >
               <MoreHorizontal className="size-4" />
@@ -691,7 +691,7 @@ function PrescriptionCard({
             <p className="text-sm font-medium text-foreground">{prescription.diagnosis}</p>
           </div>
         )}
-        <div className="mt-3 overflow-hidden rounded-lg ring-1 ring-border">
+        <div className="mt-3 hidden overflow-hidden rounded-lg ring-1 ring-border sm:block">
           <table className="w-full text-left text-sm">
             <thead className="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
@@ -714,6 +714,20 @@ function PrescriptionCard({
               ))}
             </tbody>
           </table>
+        </div>
+        {/* Mobile medicine list */}
+        <div className="mt-3 space-y-2 sm:hidden">
+          {prescription.medicines.map((m, i) => (
+            <div key={i} className="rounded-lg bg-muted/50 px-3 py-2 ring-1 ring-border">
+              <p className="text-sm font-semibold text-foreground">{m.name}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                {[m.dosage, m.frequency, m.duration].filter(Boolean).join(" · ") || "—"}
+              </p>
+              {m.instructions ? (
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">{m.instructions}</p>
+              ) : null}
+            </div>
+          ))}
         </div>
         {prescription.notes && (
           <p className="mt-3 text-sm text-foreground">
@@ -1333,9 +1347,9 @@ export default function MedicalRecordPage() {
 
   if (!session || loading) {
     return (
-      <div className="space-y-4 p-6">
+      <div className="space-y-4 p-4 sm:p-6">
         <Skeleton className="h-10 w-64" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <Skeleton key={i} className="h-40" />
           ))}
@@ -1387,14 +1401,14 @@ export default function MedicalRecordPage() {
             </>
           ) : (
             <>
-              <Users className="size-5 text-primary" />
-              <h1 className="text-xl font-bold text-foreground">Medical Records</h1>
+              <Users className="size-5 shrink-0 text-primary" />
+              <h1 className="text-lg font-bold text-foreground sm:text-xl">Medical Records</h1>
             </>
           )}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex w-full flex-wrap items-center gap-2 sm:w-auto">
             {!canManage && <Badge variant="secondary">Upload-only access</Badge>}
             {clipboard && canManage && (
-              <Button variant="outline" size="sm" onClick={() => handlePaste()}>
+              <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => handlePaste()}>
                 <ClipboardCopy className="size-4" /> Paste
               </Button>
             )}
@@ -1403,11 +1417,12 @@ export default function MedicalRecordPage() {
               size="sm"
               onClick={() => uploadSystemRef.current?.openFilePicker()}
               disabled={!selectedPatient}
+              className="h-9 flex-1 justify-center sm:flex-none"
             >
               <UploadCloud className="size-4" /> Upload
             </Button>
             {canManage && selectedPatient && (
-              <Button variant="outline" size="sm" onClick={() => setNewFolderOpen(true)}>
+              <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => setNewFolderOpen(true)}>
                 <FolderPlus className="size-4" /> New Folder
               </Button>
             )}
@@ -1421,7 +1436,7 @@ export default function MedicalRecordPage() {
               <Stethoscope className="size-3" /> {doctorName(selectedPatient.doctorId)}
             </Badge>
             {view === "drive" && (
-              <div className="relative ml-auto w-full max-w-xs">
+              <div className="relative w-full sm:ml-auto sm:max-w-xs">
                 <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={search}
@@ -1454,7 +1469,7 @@ export default function MedicalRecordPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
                 {filteredPatients.map((p) => {
                   const stats = patientStats.get(p.patientId) ?? { files: 0, fileSize: 0, records: 0, prescriptions: 0, examinations: 0, last: null };
                   return (
@@ -1466,21 +1481,27 @@ export default function MedicalRecordPage() {
                         setActiveFolderId(null);
                         setSearch("");
                       }}
-                      className="group flex items-center gap-3 rounded-xl border border-border bg-background p-4 text-left transition hover:border-primary/40 hover:shadow-sm"
+                      className="group flex items-center gap-2 rounded-xl border border-border bg-background p-3 text-left transition hover:border-primary/40 hover:shadow-sm sm:gap-3 sm:p-4"
                     >
-                      <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-11 text-sm" />
+                      <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-9 shrink-0 text-xs sm:size-11 sm:text-sm" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold text-foreground group-hover:text-primary">
+                        <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
                           {p.fullName}
                         </p>
-                        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-                          <span>{calculateAge(p.dateOfBirth) ?? "—"} yrs</span>
+                        <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground sm:text-xs">
+                          <span className="tabular-nums">{calculateAge(p.dateOfBirth) ?? "—"} yrs</span>
                           <span>·</span>
-                          <span>{p.gender ?? "—"}</span>
-                          <span>·</span>
-                          <span className="inline-flex items-center gap-1"><Phone className="size-3" />{p.mobile}</span>
+                          <span className="capitalize">{p.gender ?? "—"}</span>
+                          <span className="hidden sm:inline">·</span>
+                          <span className="hidden items-center gap-1 sm:inline-flex"><Phone className="size-3" />{p.mobile}</span>
                         </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
+                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground sm:hidden">
+                          <Phone className="size-3 shrink-0" /><span className="truncate font-mono">{p.mobile}</span>
+                        </p>
+                        <p className="mt-1 truncate text-[11px] text-muted-foreground sm:hidden">
+                          {stats.files} files · {stats.records} records
+                        </p>
+                        <p className="mt-1 hidden text-xs text-muted-foreground sm:block">
                           {stats.files} files · {stats.records} records · {stats.prescriptions} prescriptions · {stats.examinations} examinations
                         </p>
                       </div>
@@ -1900,7 +1921,7 @@ export default function MedicalRecordPage() {
     return (
       <div className="mt-4 space-y-4">
         <Card>
-          <CardContent className="p-5">
+          <CardContent className="p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <SectionHeading
                 Icon={CalendarDays}
@@ -1911,7 +1932,7 @@ export default function MedicalRecordPage() {
               />
               <Link
                 href="/clinic/appointments"
-                className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+                className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground sm:w-auto"
               >
                 Book Appointment
               </Link>
@@ -1919,7 +1940,9 @@ export default function MedicalRecordPage() {
             {patientAppointments.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">No appointments for this patient yet.</p>
             ) : (
-              <div className="mt-3 overflow-x-auto">
+              <>
+              {/* Desktop table */}
+              <div className="mt-3 hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -1971,6 +1994,49 @@ export default function MedicalRecordPage() {
                   </TableBody>
                 </Table>
               </div>
+              {/* Mobile cards */}
+              <div className="mt-3 space-y-2.5 md:hidden">
+                {patientAppointments.map((a) => (
+                  <div key={a.appointmentId} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-bold text-foreground tabular-nums">
+                        {formatDate(a.date)} <span className="font-medium text-muted-foreground">· {formatTime(a.time)}</span>
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="size-9 shrink-0 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
+                        onClick={() => handleDelete(a)}
+                        aria-label="Delete appointment"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">Dr. {doctorName(a.doctorId)}</p>
+                    {a.reason ? (
+                      <p className="mt-1 truncate text-xs text-muted-foreground">{a.reason}</p>
+                    ) : null}
+                    <div className="mt-2">
+                      <Select
+                        value={a.status}
+                        onValueChange={(v) => handleStatusChange(a, v as AppointmentStatus)}
+                      >
+                        <SelectTrigger className={`h-8 min-w-28 rounded-full text-[11px] font-semibold ${APPT_STATUS_CLASS[a.status]}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {APPT_STATUSES.map((s) => (
+                            <SelectItem key={s} value={s} className="text-xs">
+                              {APPT_STATUS_LABELS[s]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </CardContent>
         </Card>
@@ -1982,13 +2048,13 @@ export default function MedicalRecordPage() {
     if (!selectedPatient || !overview) return null;
     const p = selectedPatient;
     return (
-      <div className="mt-6 space-y-6">
+      <div className="mt-4 space-y-4 sm:mt-6 sm:space-y-6">
         {/* ── Hero patient card — Linear / Stripe premium ── */}
         <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-violet-500/[0.04] pointer-events-none" />
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
-          <div className="relative p-6 sm:p-7">
-            <div className="flex flex-wrap items-start gap-5">
+          <div className="relative p-4 sm:p-7">
+            <div className="flex flex-wrap items-start gap-4 sm:gap-5">
               <div className="relative">
                 <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-16 text-base ring-4 ring-background" />
                 <span className="absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-card">
@@ -2010,7 +2076,7 @@ export default function MedicalRecordPage() {
                 </div>
                 {(p.address || p.city) && <p className="mt-3 max-w-xl text-[13px] leading-relaxed text-muted-foreground">{[p.address, p.city, p.state, p.pincode].filter(Boolean).join(", ")}</p>}
               </div>
-              <div className="flex flex-col gap-2 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 backdrop-blur-sm">
+              <div className="flex w-full flex-col gap-2 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 backdrop-blur-sm sm:w-auto">
                 <span className="inline-flex items-center gap-2 text-[13px] font-medium text-foreground"><span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><Stethoscope className="size-3.5" /></span>{doctorName(p.doctorId)}</span>
                 {p.mobile && <span className="inline-flex items-center gap-2 text-[13px] text-muted-foreground"><span className="flex size-7 items-center justify-center rounded-lg bg-muted text-muted-foreground"><Phone className="size-3.5" /></span>{p.mobile}</span>}
               </div>
@@ -2019,8 +2085,8 @@ export default function MedicalRecordPage() {
         </div>
 
         {/* ── Clinical overview — 3-up bento ── */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-border">
+        <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
+          <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-4 transition-all duration-200 hover:border-border sm:p-5">
             <div className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/10 transition" />
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Care timeline</p>
             <div className="mt-4 space-y-4">
@@ -2041,7 +2107,7 @@ export default function MedicalRecordPage() {
               </div>
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5">
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-4 sm:p-5">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Medical history</p>
             <div className="mt-4 space-y-3">
               <div className="rounded-xl bg-muted/40 p-3">
@@ -2054,7 +2120,7 @@ export default function MedicalRecordPage() {
               </div>
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5">
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-4 sm:p-5">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Current medications</p>
             <p className="mt-4 text-sm leading-relaxed text-foreground">{p.currentMedications || <span className="text-muted-foreground">No active medications</span>}</p>
             {p.currentMedications && <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground"><span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active regimen</div>}
@@ -2068,7 +2134,7 @@ export default function MedicalRecordPage() {
             <h3 className="text-sm font-semibold tracking-tight">Patient Details</h3>
             <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-medium ${p.status==="active" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-muted text-muted-foreground"}`}>{p.status}</span>
           </div>
-          <div className="grid gap-6 p-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 p-4 sm:gap-6 sm:p-5 lg:grid-cols-3 sm:grid-cols-2">
             {[
               { label: "Contact", items: [
                 ["Mobile", p.mobile || "—"],
@@ -2124,16 +2190,16 @@ export default function MedicalRecordPage() {
         </div>
 
         {/* ── This patient's records (shown only on profile) ── */}
-        <div className="grid gap-4">
+        <div className="grid gap-3 sm:gap-4">
           {/* Visit records */}
           <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-4">
+            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
               <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Stethoscope className="size-4" /></span>
               <h3 className="text-sm font-semibold tracking-tight">Visit Records</h3>
               <Badge variant="outline" className="text-xs">{overview.patientRecords.length}</Badge>
               <Link
                 href="/clinic/records"
-                className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+                className="ml-auto inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground sm:w-auto"
               >
                 Open Records
               </Link>
@@ -2141,7 +2207,8 @@ export default function MedicalRecordPage() {
             {overview.patientRecords.length === 0 ? (
               <p className="px-5 py-8 text-center text-sm text-muted-foreground">No visit records for this patient yet.</p>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -2173,18 +2240,42 @@ export default function MedicalRecordPage() {
                   </TableBody>
                 </Table>
               </div>
+              {/* Mobile cards */}
+              <div className="space-y-2.5 px-4 py-4 md:hidden">
+                {[...overview.patientRecords].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((r) => {
+                  const doctorLabel = doctorName(r.doctorId);
+                  return (
+                    <div key={r.recordId} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+                      <div className="flex items-center justify-between gap-2">
+                        <Badge className="bg-primary/10 text-primary hover:bg-primary/10 tabular-nums">
+                          {formatDate(r.visitDate)}
+                        </Badge>
+                        <span className="truncate text-[11px] text-muted-foreground">Dr. {doctorLabel}</span>
+                      </div>
+                      <p className="mt-1.5 truncate text-sm font-semibold text-foreground">{r.diagnosis || "—"}</p>
+                      {r.symptoms ? (
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.symptoms}</p>
+                      ) : null}
+                      {r.treatment ? (
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.treatment}</p>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+              </>
             )}
           </div>
 
           {/* Prescriptions */}
           <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-4">
+            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
               <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600"><Pill className="size-4" /></span>
               <h3 className="text-sm font-semibold tracking-tight">Prescriptions</h3>
               <Badge variant="outline" className="text-xs">{overview.patientPrescriptions.length}</Badge>
               <Link
                 href="/clinic/prescriptions"
-                className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+                className="ml-auto inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground sm:w-auto"
               >
                 Open Prescriptions
               </Link>
@@ -2192,7 +2283,8 @@ export default function MedicalRecordPage() {
             {overview.patientPrescriptions.length === 0 ? (
               <p className="px-5 py-8 text-center text-sm text-muted-foreground">No prescriptions for this patient yet.</p>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -2236,18 +2328,44 @@ export default function MedicalRecordPage() {
                   </TableBody>
                 </Table>
               </div>
+              {/* Mobile cards */}
+              <div className="space-y-2.5 px-4 py-4 md:hidden">
+                {[...overview.patientPrescriptions].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((pr) => (
+                  <div key={pr.prescriptionId} className="rounded-xl border border-success/20 bg-card p-3 shadow-2xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <Badge className="bg-success/10 text-success hover:bg-success/10 tabular-nums">
+                        {formatDate(pr.visitDate)}
+                      </Badge>
+                      <span className="truncate text-[11px] text-muted-foreground">Dr. {doctorName(pr.doctorId)}</span>
+                    </div>
+                    {pr.diagnosis ? (
+                      <p className="mt-1.5 truncate text-sm font-semibold text-foreground">{pr.diagnosis}</p>
+                    ) : null}
+                    <ul className="mt-1 space-y-0.5">
+                      {(pr.medicines ?? []).map((m, i) => (
+                        <li key={i} className="truncate text-xs text-muted-foreground">
+                          <span className="font-semibold text-foreground/80">{m.name}</span>
+                          {m.dosage ? <span> · {m.dosage}</span> : null}
+                          {m.frequency ? <span> · {m.frequency}</span> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </div>
 
           {/* Examinations */}
           <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-4">
+            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
               <span className="flex size-8 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600"><ClipboardList className="size-4" /></span>
               <h3 className="text-sm font-semibold tracking-tight">Examinations</h3>
               <Badge variant="outline" className="text-xs">{overview.patientExaminations.length}</Badge>
               <Link
                 href="/clinic/examination"
-                className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+                className="ml-auto inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground sm:w-auto"
               >
                 Open Examinations
               </Link>
@@ -2255,7 +2373,8 @@ export default function MedicalRecordPage() {
             {overview.patientExaminations.length === 0 ? (
               <p className="px-5 py-8 text-center text-sm text-muted-foreground">No examinations for this patient yet.</p>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              <div className="hidden overflow-x-auto md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -2277,12 +2396,30 @@ export default function MedicalRecordPage() {
                   </TableBody>
                 </Table>
               </div>
+              {/* Mobile cards */}
+              <div className="space-y-2.5 px-4 py-4 md:hidden">
+                {[...overview.patientExaminations].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((e) => (
+                  <div key={e.examinationId} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-bold text-foreground tabular-nums">{formatDate(e.visitDate)}</p>
+                      <span className="shrink-0 rounded-full bg-teal-500/10 px-2 py-0.5 text-[11px] font-semibold capitalize text-teal-700 dark:text-teal-300">
+                        {e.status.replace("-", " ")}
+                      </span>
+                    </div>
+                    <p className="mt-1 truncate text-xs font-medium capitalize text-foreground">{e.issueType || "—"}</p>
+                    {e.oralFindings ? (
+                      <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{e.oralFindings}</p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+              </>
             )}
           </div>
 
           {/* Files & documents */}
           <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-4">
+            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
               <span className="flex size-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600"><FileText className="size-4" /></span>
               <h3 className="text-sm font-semibold tracking-tight">Files & Documents</h3>
               <Badge variant="outline" className="text-xs">{patientFiles.length}</Badge>
@@ -2290,7 +2427,7 @@ export default function MedicalRecordPage() {
             {patientFiles.length === 0 ? (
               <p className="px-5 py-8 text-center text-sm text-muted-foreground">No files for this patient yet.</p>
             ) : (
-              <div className="space-y-1.5 px-5 py-4">
+              <div className="space-y-1.5 px-4 py-4 sm:px-5">
                 {[...patientFiles].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((f) => (
                   <div key={f.fileId} className="flex items-center gap-3 rounded-lg bg-background px-3 py-2.5 ring-1 ring-border">
                     {fileIcon(f.mimeType, f.fileName)}
@@ -2314,10 +2451,10 @@ export default function MedicalRecordPage() {
 
         {/* Unified timeline — single card */}
         <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-          <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-4">
+          <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
             <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600"><History className="size-4" /></span>
             <h3 className="text-sm font-semibold tracking-tight">Clinical Timeline</h3>
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-700 dark:text-violet-300">{overview.patientRecords.length} visits</span>
               <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">{overview.patientPrescriptions.length} prescriptions</span>
               <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">{overview.patientPrescriptions.flatMap(pr=>pr.medicines).length} medicines</span>
@@ -2343,7 +2480,7 @@ export default function MedicalRecordPage() {
             const dot = { visit: "bg-violet-500", prescription: "bg-emerald-500", medicine: "bg-sky-500", treatment: "bg-amber-500", examination: "bg-teal-500" } as const;
             if(items.length===0) return <p className="px-5 py-10 text-center text-sm text-muted-foreground">No clinical history yet.</p>;
             return (
-              <div className="px-5 py-6">
+              <div className="px-4 py-6 sm:px-5">
                 <Timeline defaultValue={items.length} className="w-full">
                   {items.slice(0,20).map((it, idx)=> (
                     <TimelineItem key={idx} step={idx+1} className="sm:group-data-[orientation=vertical]/timeline:ms-32">
