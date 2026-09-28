@@ -96,36 +96,38 @@ export default function TreatmentPage(){
   const allChecked = filtered.length>0 && filtered.every(i=> selected.has(i.id));
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-        <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} searchTerm={q} onSearchChange={(v)=>{setQ(v); setPage(0);}} action={<Button onClick={()=>startAdd("record")} className="h-9 gap-1.5 shadow-sm"><Plus className="size-4"/>Add Record</Button>} />
-        {open && <div className="mt-6 rounded-xl border bg-card p-5 space-y-4">
+    <div className="flex flex-col gap-4 sm:gap-6">
+      <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
+        <StatsTreatment records={records} plans={plans} discharges={0} patients={patients.length} searchTerm={q} onSearchChange={(v)=>{setQ(v); setPage(0);}} action={<Button onClick={()=>startAdd("record")} className="h-9 w-full justify-center gap-1.5 shadow-sm sm:w-auto"><Plus className="size-4"/>Add Record</Button>} />
+        {open && <div className="mt-4 rounded-xl border bg-card p-4 space-y-4 sm:mt-6 sm:p-5">
           <h3 className="font-semibold text-sm">{editing?"Edit":"New"} Treatment — Record & Plan</h3>
           <div className="space-y-4">
-            <div className="grid sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
               <div><Label className="text-xs">Patient *</Label><select value={v["Patient"]||""} onChange={e=> onPatientSelect(e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select patient</option>{patients.map(p=> <option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
               <div><Label className="text-xs">Appointment</Label><select value={v["Appointment"]||v["Visit Date & Time"]||""} onChange={e=>{SV("Appointment", e.target.value); SV("Visit Date & Time", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">{!v["Patient"] ? "Select patient first" : filteredAppointments.length===0 ? "No appointments for this patient" : "Select appointment"}</option>{filteredAppointments.map(a=> <option key={a.appointmentId} value={a.date+" "+a.time}>{a.date} {a.time} — {a.reason || a.appointmentId.slice(0,6)}</option>)}</select></div>
               <div><Label className="text-xs">Doctor</Label><select value={v["Doctor"]||""} onChange={e=>SV("Doctor", e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select doctor</option>{doctors.map(d=> <option key={d.doctorId} value={d.name}>{d.name}</option>)}</select></div>
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               <div><Label className="text-xs">Diagnosis *</Label><select value={v["Diagnosis"]||v["Diagnosis / Clinical Impression"]||""} onChange={e=>{SV("Diagnosis", e.target.value); SV("Diagnosis / Clinical Impression", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select diagnosis</option><option value="Fever">Fever</option><option value="Infection">Infection</option><option value="Diabetes">Diabetes</option><option value="Hypertension">Hypertension</option><option value="Other">Other</option></select></div>
               <div><Label className="text-xs">Treatment Given / Objective</Label><select value={v["Treatment Given"]||v["Treatment Objective"]||""} onChange={e=>{SV("Treatment Given", e.target.value); SV("Treatment Objective", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select treatment</option><option value="Medication">Medication</option><option value="Therapy">Therapy</option><option value="Surgery">Surgery</option><option value="Observation">Observation</option></select></div>
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               <div><Label className="text-xs">Prescriptions</Label><select value={v["Medicines Prescribed"]||v["Medicines"]||""} onChange={e=>{SV("Medicines Prescribed", e.target.value); SV("Medicines", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select prescription</option>{prescriptions.map((pr:any)=> <option key={pr.prescriptionId} value={pr.medicines?.map((m:any)=>m.name).join(", ")}>{pr.medicines?.map((m:any)=>m.name).join(", ").slice(0,40) || pr.diagnosis || pr.prescriptionId.slice(0,6)}</option>)}<option value="Paracetamol">Paracetamol</option><option value="Antibiotic">Antibiotic</option><option value="Other">Other</option></select></div>
               <div><Label className="text-xs">Dosage & Duration</Label><select value={v["Dosage & Duration"]||""} onChange={e=>SV("Dosage & Duration", e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select dosage</option><option value="1x daily - 3 days">1x daily - 3 days</option><option value="2x daily - 5 days">2x daily - 5 days</option><option value="3x daily - 7 days">3x daily - 7 days</option></select></div>
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               <div><Label className="text-xs">Follow-up</Label><select value={v["Follow-up Date"]||v["Follow-up Schedule"]||"Follow-up in 7 days"} onChange={e=>{SV("Follow-up Date", e.target.value); SV("Follow-up Schedule", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select follow-up</option><option value="Follow-up in 3 days">Follow-up in 3 days</option><option value="Follow-up in 7 days">Follow-up in 7 days</option><option value="Follow-up in 14 days">Follow-up in 14 days</option></select></div>
               <div><Label className="text-xs">Patient Consent</Label><select value={v["Patient Consent"]||""} onChange={e=>SV("Patient Consent", e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option><option value="Pending">Pending</option></select></div>
             </div>
             <div><Label className="text-xs">Doctor Notes</Label><Textarea value={v["Doctor Notes"]||v["Doctor's Remarks"]||""} onChange={e=>{SV("Doctor Notes", e.target.value); SV("Doctor's Remarks", e.target.value); e.target.style.height="auto"; e.target.style.height=e.target.scrollHeight+"px"}} rows={2} placeholder="Type notes..." className="mt-1 min-h-[72px] resize-none overflow-hidden" onInput={e=>{ const t=e.target as HTMLTextAreaElement; t.style.height="auto"; t.style.height=t.scrollHeight+"px"}}/></div>
           </div>
-          <div className="flex gap-2"><Button variant="outline" onClick={()=>setOpen(false)}>Cancel</Button><Button onClick={submit}>{editing?"Update":"Save"}</Button></div>
+          <div className="flex flex-col gap-2 sm:flex-row"><Button variant="outline" className="w-full justify-center sm:w-auto" onClick={()=>setOpen(false)}>Cancel</Button><Button className="w-full justify-center sm:w-auto" onClick={submit}>{editing?"Update":"Save"}</Button></div>
         </div>}
       </div>
 
-      <Card className="shadow-sm"><CardContent className="p-0"><div className="overflow-x-auto"><Table>
+      <Card className="shadow-sm"><CardContent className="p-0">
+        {/* Desktop table — hidden on mobile */}
+        <div className="hidden overflow-x-auto md:block"><Table>
             <TableHeader><TableRow className="bg-muted/40"><TableHead className="w-10"><Checkbox checked={allChecked} onCheckedChange={v=> setSelected(v ? new Set(filtered.map(i=>i.id)) : new Set())} /></TableHead>{COLS.map(c=><TableHead key={c} className="text-xs whitespace-nowrap">{c}</TableHead>)}<TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
             <TableBody>{paged.length===0 ? <TableRow><TableCell colSpan={COLS.length+2} className="py-16 text-center text-sm text-muted-foreground">{items.length===0 ? "No entries yet — click Add Record/Plan." : "No match."}</TableCell></TableRow> : paged.map(it=><TableRow key={it.id} className="hover:bg-muted/30">
               <TableCell><Checkbox checked={selected.has(it.id)} onCheckedChange={v=> setSelected(s=>{ const n=new Set(s); if(v) n.add(it.id); else n.delete(it.id); return n; })} /></TableCell>
@@ -143,7 +145,45 @@ export default function TreatmentPage(){
                 <Button variant="ghost" size="icon" className="size-7 text-destructive" onClick={()=>save(items.filter(x=>x.id!==it.id))}><Trash2 className="size-3.5"/></Button>
               </div></TableCell>
             </TableRow>)}</TableBody>
-          </Table></div></CardContent>{filtered.length>0 && <Pagination page={page+1} pageSize={pageSize} totalItems={filtered.length} onPageChange={p=> setPage(Math.max(0,Math.min(p-1,pageCount-1)))} itemLabel="records" />}</Card>
+          </Table></div>
+          {/* Mobile card list — visible only on small screens */}
+          <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+            {paged.length===0 ? (
+              <p className="rounded-xl border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">
+                {items.length===0 ? "No entries yet — click Add Record/Plan." : "No match."}
+              </p>
+            ) : paged.map(it=>(
+              <div key={it.id} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+                <div className="flex items-center gap-2.5">
+                  <Checkbox checked={selected.has(it.id)} onCheckedChange={v=> setSelected(s=>{ const n=new Set(s); if(v) n.add(it.id); else n.delete(it.id); return n; })} aria-label={`Select ${it.patient}`} />
+                  <p className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">{it.patient}</p>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${it.type==="record"?"bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400":"bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"}`}>{it.type}</span>
+                </div>
+                <p className="mt-1.5 truncate text-[11px] text-muted-foreground tabular-nums">
+                  {it.data["Visit Date & Time"] || it.data["Visit Date"] || "—"}
+                  {it.data["Doctor"] ? ` · Dr. ${it.data["Doctor"]}` : ""}
+                </p>
+                <p className="mt-1 truncate text-xs text-foreground">
+                  <span className="font-semibold">Dx: </span>{it.data["Diagnosis"] || it.data["Diagnosis / Clinical Impression"] || "—"}
+                </p>
+                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                  {it.data["Treatment Given"] || it.data["Treatment Objective"] || "—"}
+                </p>
+                {(it.data["Medicines Prescribed"] || it.data["Medicines"]) ? (
+                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{it.data["Medicines Prescribed"] || it.data["Medicines"]}</p>
+                ) : null}
+                {(it.data["Follow-up Date"] || it.data["Follow-up Schedule"]) ? (
+                  <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{it.data["Follow-up Date"] || it.data["Follow-up Schedule"]}</p>
+                ) : null}
+                <div className="mt-2 flex items-center justify-end gap-1.5 border-t border-border/60 pt-2">
+                  <Button variant="outline" size="icon" className="size-9 rounded-xl text-muted-foreground" aria-label="View" onClick={()=>setViewing(it)}><Eye className="size-4"/></Button>
+                  <Button variant="outline" size="icon" className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary" aria-label="Edit" onClick={()=>startEdit(it)}><Pencil className="size-4"/></Button>
+                  <Button variant="outline" size="icon" className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive" aria-label="Delete" onClick={()=>save(items.filter(x=>x.id!==it.id))}><Trash2 className="size-4"/></Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>{filtered.length>0 && <Pagination page={page+1} pageSize={pageSize} totalItems={filtered.length} onPageChange={p=> setPage(Math.max(0,Math.min(p-1,pageCount-1)))} itemLabel="records" />}</Card>
 
 
 
