@@ -115,6 +115,11 @@ export default function InvestigationPage() {
   const [recordsLoading, setRecordsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Investigation | null>(null);
+  // Row-level pending id for view/edit opens (list rows carry no chartData —
+  // the full record is fetched on demand).
+  const [pendingRowId, setPendingRowId] = useState<string | null>(null);
+  // True while a charted record's chart is being fetched/hydrated.
+  const [chartLoading, setChartLoading] = useState(false);
 
   // Remount the odontogram shell per opened record so every form starts from
   // a clean chart (the provider inits on mount / destroys on unmount).
@@ -166,17 +171,19 @@ export default function InvestigationPage() {
   }, [screen, form.patientId, clinicId]);
 
   // Hydrate a saved chart into the freshly mounted shell. The grid builds
-  // asynchronously, so poll briefly for it before importing.
+  // asynchronously, so observe for it instead of polling — the chart imports
+  // the moment the grid appears (with a 5s safety timeout).
   useEffect(() => {
     if (screen.name !== "form" || !chartData) return;
-    let cancelled = false;
-    let tries = 0;
-    const timer = setInterval(() => {
-      if (cancelled) return;
-      tries += 1;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      setChartLoading(false);
+    };
+    const tryImport = () => {
       const grid = document.getElementById("toothGrid");
       if (grid && grid.childElementCount > 0) {
-        clearInterval(timer);
         try {
           importStatus(chartData as Record<string, unknown>);
         } catch (e) {
@@ -184,13 +191,24 @@ export default function InvestigationPage() {
             e instanceof Error ? e.message : "Failed to load saved chart"
           );
         }
-      } else if (tries >= 40) {
-        clearInterval(timer);
+        finish();
+        return true;
       }
-    }, 100);
+      return false;
+    };
+    setChartLoading(true);
+    if (tryImport()) return;
+    const observer = new MutationObserver(() => {
+      if (tryImport()) observer.disconnect();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    const timer = setTimeout(() => {
+      observer.disconnect();
+      finish();
+    }, 5000);
     return () => {
-      cancelled = true;
-      clearInterval(timer);
+      observer.disconnect();
+      clearTimeout(timer);
     };
   }, [screen, shellKey, chartData]);
 
@@ -209,29 +227,55 @@ export default function InvestigationPage() {
 
   function openCreate() {
     setForm(emptyForm());
+    setPendingRowId(null);
+    setChartLoading(false);
     setScreen({ name: "form", mode: "create" });
   }
 
   function openEdit(record: Investigation) {
-    setForm({
-      patientId: record.patientId,
-      title: record.title,
-      visitDate: record.visitDate,
-      status: record.status,
-      notes: record.notes ?? "",
-      medicalRecordId: record.medicalRecordId ?? "",
-    });
-    setScreen({ name: "form", mode: "edit", record });
+    // List rows omit chartData for speed — fetch the full record first so the
+    // chart is intact when the editor opens.
+    setPendingRowId(record.investigationId);
+    getInvestigation(clinicId, record.investigationId)
+      .then((full) => {
+        setForm({
+          patientId: full.patientId,
+          title: full.title,
+          visitDate: full.visitDate,
+          status: full.status,
+          notes: full.notes ?? "",
+          medicalRecordId: full.medicalRecordId ?? "",
+        });
+        setScreen({ name: "form", mode: "edit", record: full });
+      })
+      .catch((e) =>
+        toast.error(e instanceof Error ? e.message : "Failed to open investigation")
+      )
+      .finally(() => setPendingRowId(null));
   }
 
-  async function openView(record: Investigation) {
-    // Fetch the full record (with chartData) before opening the viewer.
-    try {
-      const full = await getInvestigation(clinicId, record.investigationId);
-      setScreen({ name: "form", mode: "view", record: full });
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to open investigation");
+  function openView(record: Investigation) {
+    // Open instantly with the row data, then fetch the full record (with
+    // chartData) in the background — the chart hydrates when it arrives.
+    const hasChart = record.hasChart ?? record.chartData != null;
+    setChartLoading(hasChart && record.chartData == null);
+    setScreen({ name: "form", mode: "view", record });
+    if (record.chartData != null) return;
+    if (!hasChart) {
+      setChartLoading(false);
+      return;
     }
+    getInvestigation(clinicId, record.investigationId)
+      .then((full) => {
+        setScreen((prev) =>
+          prev.name === "form" &&
+          prev.mode === "view" &&
+          prev.record.investigationId === record.investigationId
+            ? { name: "form", mode: "view", record: full }
+            : prev
+        );
+      })
+      .catch(() => setChartLoading(false));
   }
 
   async function handleSave() {
@@ -463,7 +507,10 @@ export default function InvestigationPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Dental odontogram</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Dental odontogram
+              {chartLoading && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="isolate overflow-auto rounded-xl border bg-white">
@@ -473,6 +520,11 @@ export default function InvestigationPage() {
                 readOnly={readOnly}
               />
             </div>
+            {!chartData && !chartLoading && mode === "view" && (
+              <p className="pt-2 text-sm text-muted-foreground">
+                No chart was recorded for this investigation.
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -589,7 +641,7 @@ export default function InvestigationPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {item.chartData ? (
+                        {(item.hasChart ?? item.chartData != null) ? (
                           <Badge variant="outline">Charted</Badge>
                         ) : (
                           <span className="text-sm text-muted-foreground">—</span>
@@ -609,8 +661,13 @@ export default function InvestigationPage() {
                             size="icon-sm"
                             title="View"
                             onClick={() => openView(item)}
+                            disabled={pendingRowId === item.investigationId}
                           >
-                            <Eye className="size-4" />
+                            {pendingRowId === item.investigationId ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <Eye className="size-4" />
+                            )}
                           </Button>
                           {canManage && (
                             <Button
@@ -618,8 +675,13 @@ export default function InvestigationPage() {
                               size="icon-sm"
                               title="Edit"
                               onClick={() => openEdit(item)}
+                              disabled={pendingRowId === item.investigationId}
                             >
-                              <Pencil className="size-4" />
+                              {pendingRowId === item.investigationId ? (
+                                <Loader2 className="size-4 animate-spin" />
+                              ) : (
+                                <Pencil className="size-4" />
+                              )}
                             </Button>
                           )}
                           {canDelete && (

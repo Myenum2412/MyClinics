@@ -8,7 +8,7 @@ import {
   listInvestigationsSchema,
   updateInvestigationSchema,
 } from "@/clinic/modules/investigations/investigations.dto";
-import { investigationToPublic } from "@/clinic/modules/investigations/investigations.schema";
+import { investigationToListItem, investigationToPublic } from "@/clinic/modules/investigations/investigations.schema";
 import { InvestigationService } from "@/clinic/modules/investigations/investigations.service";
 
 export class InvestigationController {
@@ -54,7 +54,7 @@ export class InvestigationController {
       limit,
     });
     return reply.send({
-      items: result.items.map(investigationToPublic),
+      items: result.items.map(investigationToListItem),
       total: result.total,
     });
   }

@@ -354,6 +354,8 @@ export interface Investigation {
   visitDate: string;
   status: InvestigationStatus;
   chartData: Record<string, unknown> | null;
+  /** Present on list responses (which omit chartData for speed). */
+  hasChart?: boolean;
   medicalRecordId: string | null;
   createdBy: string;
   createdByName: string | null;

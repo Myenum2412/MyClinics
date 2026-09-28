@@ -61,3 +61,18 @@ export function investigationToPublic(doc: InvestigationDoc) {
     updatedAt: doc.updatedAt,
   };
 }
+
+/**
+ * Lightweight list item — omits the (potentially ~1MB) `chartData` payload
+ * so tables stay fast. Single-record reads still use `investigationToPublic`.
+ * `hasChart` drives the "Charted" badge; fetch one record to get the chart.
+ */
+export function investigationToListItem(doc: InvestigationDoc) {
+  const { chartData: _chart, ...rest } = investigationToPublic(doc);
+  void _chart;
+  return {
+    ...rest,
+    chartData: null,
+    hasChart: doc.chartData != null,
+  };
+}
