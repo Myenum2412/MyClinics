@@ -62,7 +62,7 @@ export function TableFilters({
 
         {filters?.map((f) => (
           <Select key={f.key} value={filterValues?.[f.key] ?? "all"} onValueChange={(v) => onFilterChange?.(f.key, v ?? "all")}>
-            <SelectTrigger className="w-[160px] h-9">
+            <SelectTrigger className="h-9 min-w-[140px] flex-1 sm:flex-none sm:w-[160px]">
               <SelectValue placeholder={f.placeholder ?? f.label} />
             </SelectTrigger>
             <SelectContent>

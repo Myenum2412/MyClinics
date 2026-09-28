@@ -55,7 +55,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye, Send, Trash2, UsersRound } from "lucide-react";
+import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye, Send, Trash2, UsersRound, Phone } from "lucide-react";
 import { TableFilters } from "@/components/clinic/table-filters";
 import dynamic from "next/dynamic";
 import { sessionCan } from "@/hooks/use-clinic-session";
@@ -699,10 +699,10 @@ export default function PatientsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* Stats Section with action slot */}
       {!initialLoading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <StatsGeneric
             title="Patient Analytics"
             description="Demographics and assigned patient insights."
@@ -715,8 +715,8 @@ export default function PatientsPage() {
             searchPlaceholder="Search name, mobile, email, condition..."
             action={
               !isDoctor && (
-                <Link href="/clinic/patients/new">
-                  <Button className="flex items-center gap-1.5 shadow-sm">
+                <Link href="/clinic/patients/new" className="block w-full sm:w-auto">
+                  <Button className="flex w-full items-center justify-center gap-1.5 shadow-sm sm:w-auto">
                     <Plus className="size-4" />
                     New Patient
                   </Button>
@@ -788,7 +788,7 @@ export default function PatientsPage() {
       <Card className="border-border shadow-sm">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-6 space-y-3">
+            <div className="p-4 sm:p-6 space-y-3">
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
@@ -807,7 +807,8 @@ export default function PatientsPage() {
             </Empty>
           ) : (
             <>
-              <div className="overflow-x-auto -mx-6 px-6">
+              {/* Desktop table — hidden on mobile */}
+              <div className="hidden overflow-x-auto -mx-6 px-6 md:block">
               <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -905,6 +906,120 @@ export default function PatientsPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
+
+              {/* Mobile card list — visible only on small screens */}
+              <div className="space-y-3 bg-muted/40 p-3 md:hidden">
+                {items.map((p) => {
+                  const isSelected = selectedIds.has(p.patientId);
+                  return (
+                    <article
+                      key={p.patientId}
+                      className={`overflow-hidden rounded-2xl border bg-card shadow-sm transition-colors ${
+                        isSelected ? "border-primary/50 ring-1 ring-primary/30" : "border-border"
+                      }`}
+                    >
+                      {/* Header: select + avatar + identity + status */}
+                      <div className="flex items-center gap-2.5 p-3.5 pb-3">
+                        {visibleColumns.select && (
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelectRow(p.patientId)}
+                            aria-label={`Select ${p.fullName}`}
+                          />
+                        )}
+                        <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} size="md" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-foreground">{p.fullName}</p>
+                          <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <Phone className="size-3 shrink-0" />
+                            <span className="truncate font-mono">{p.mobile}</span>
+                          </p>
+                        </div>
+                        {visibleColumns.status && (
+                          <Badge className={`${patientStatusTone(p.status)} shrink-0 capitalize`} variant="outline">
+                            {p.status}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Info tiles: email / gender */}
+                      <div className="mx-3.5 grid grid-cols-2 gap-2 rounded-xl bg-muted/60 p-2">
+                        {visibleColumns.email && (
+                          <div className="flex min-w-0 flex-col items-center gap-0.5 rounded-lg bg-background px-1 py-2 text-center shadow-2xs">
+                            <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                              <Mail className="size-3" /> Email
+                            </span>
+                            <span className="w-full truncate text-[11px] font-bold text-foreground">{p.email ?? "—"}</span>
+                          </div>
+                        )}
+                        <div className="flex min-w-0 flex-col items-center gap-0.5 rounded-lg bg-background px-1 py-2 text-center shadow-2xs">
+                          <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                            <UsersRound className="size-3" /> Gender
+                          </span>
+                          <span className="w-full truncate text-[11px] font-bold capitalize text-foreground">{p.gender ?? "—"}</span>
+                        </div>
+                      </div>
+
+                      {/* Doctor assignment */}
+                      {visibleColumns.doctor && !isDoctor && (
+                        <div className="mx-3.5 mt-2">
+                          <DoctorSelect
+                            clinicId={clinicId}
+                            value={p.doctorId}
+                            onChange={(v) => handleAssign(p, v)}
+                            allowEmpty
+                          />
+                        </div>
+                      )}
+
+                      {/* Footer actions */}
+                      <div className="mt-2.5 flex items-center justify-end gap-1.5 border-t border-border/60 px-3.5 py-2.5">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl text-muted-foreground"
+                          onClick={() => setViewing(p)}
+                          aria-label="View" title="View"
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
+                          onClick={() => setEditing(p)}
+                          aria-label="Edit" title="Edit"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        {canManage && p.userId && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-9 rounded-xl text-muted-foreground"
+                            disabled={resending}
+                            onClick={() => handleResendCredentials(p)}
+                            aria-label="Resend" title="Resend"
+                          >
+                            <Send className="size-4" />
+                          </Button>
+                        )}
+                        {canManage && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
+                            onClick={() => setDeleteTarget(p)}
+                            aria-label="Delete" title="Delete"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
 
               {/* Pagination Controls */}
