@@ -17,6 +17,7 @@ async function odontogramApi() {
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import {
   type Investigation,
+  type InvestigationCategory,
   type InvestigationStatus,
   type MedicineRecord,
   createInvestigation,
@@ -77,6 +78,103 @@ const STATUS_BADGE: Record<InvestigationStatus, string> = {
   cancelled: "bg-slate-100 text-slate-600",
 };
 
+const CATEGORY_OPTIONS: { value: InvestigationCategory; label: string }[] = [
+  { value: "vital-test", label: "Vital Test" },
+  { value: "x-ray", label: "X-Ray" },
+  { value: "blood-report", label: "Blood Report" },
+  { value: "biopsy", label: "Biopsy" },
+  { value: "other", label: "Other" },
+];
+
+const CATEGORY_BADGE: Record<InvestigationCategory, string> = {
+  "vital-test": "bg-rose-100 text-rose-800",
+  "x-ray": "bg-indigo-100 text-indigo-800",
+  "blood-report": "bg-red-100 text-red-800",
+  biopsy: "bg-purple-100 text-purple-800",
+  other: "bg-slate-100 text-slate-600",
+};
+
+function normalizeCategory(value: unknown): InvestigationCategory {
+  return CATEGORY_OPTIONS.some((o) => o.value === value)
+    ? (value as InvestigationCategory)
+    : "other";
+}
+
+function categoryLabel(value: unknown): string {
+  return CATEGORY_OPTIONS.find((o) => o.value === value)?.label ?? "Other";
+}
+
+const TITLE_PLACEHOLDERS: Record<InvestigationCategory, string> = {
+  "vital-test": "e.g. Vitals — routine check",
+  "x-ray": "e.g. IOPA — 46",
+  "blood-report": "e.g. CBC + fasting sugar",
+  biopsy: "e.g. Biopsy — left buccal mucosa",
+  other: "e.g. Root canal assessment — 46",
+};
+
+interface CategoryField {
+  key: string;
+  label: string;
+  placeholder: string;
+}
+
+/** Related form fields per report type (the odontogram stays for "Other"). */
+const CATEGORY_FIELDS: Record<
+  Exclude<InvestigationCategory, "other">,
+  CategoryField[]
+> = {
+  "vital-test": [
+    { key: "bloodPressure", label: "Blood pressure", placeholder: "e.g. 120/80 mmHg" },
+    { key: "temperature", label: "Temperature", placeholder: "e.g. 98.6 °F" },
+    { key: "pulse", label: "Pulse", placeholder: "e.g. 72 bpm" },
+    { key: "respiratoryRate", label: "Respiratory rate", placeholder: "e.g. 16 /min" },
+    { key: "spo2", label: "SpO₂", placeholder: "e.g. 98 %" },
+    { key: "height", label: "Height", placeholder: "e.g. 170 cm" },
+    { key: "weight", label: "Weight", placeholder: "e.g. 68 kg" },
+    { key: "bloodSugar", label: "Blood sugar", placeholder: "e.g. 110 mg/dL (fasting)" },
+  ],
+  "x-ray": [
+    { key: "xrayType", label: "X-ray type", placeholder: "e.g. IOPA, OPG, CBCT, Chest" },
+    { key: "region", label: "Region / tooth", placeholder: "e.g. 46, upper arch" },
+    { key: "findings", label: "Findings", placeholder: "Radiographic findings…" },
+    { key: "impression", label: "Impression", placeholder: "Radiologist impression…" },
+  ],
+  "blood-report": [
+    { key: "testPanel", label: "Test / panel", placeholder: "e.g. CBC, FBS, Lipid profile, HbA1c" },
+    { key: "hemoglobin", label: "Hemoglobin", placeholder: "e.g. 13.5 g/dL" },
+    { key: "wbc", label: "WBC count", placeholder: "e.g. 7,200 /µL" },
+    { key: "platelets", label: "Platelet count", placeholder: "e.g. 2.4 L/µL" },
+    { key: "esr", label: "ESR", placeholder: "e.g. 12 mm/hr" },
+    { key: "fastingSugar", label: "Fasting sugar", placeholder: "e.g. 95 mg/dL" },
+    { key: "ppSugar", label: "PP sugar", placeholder: "e.g. 130 mg/dL" },
+    { key: "remarks", label: "Remarks", placeholder: "Pathologist remarks…" },
+  ],
+  biopsy: [
+    { key: "biopsySite", label: "Biopsy site", placeholder: "e.g. left buccal mucosa" },
+    { key: "specimenType", label: "Specimen type", placeholder: "e.g. Incisional, Excisional, Punch, FNAC" },
+    { key: "clinicalDiagnosis", label: "Clinical diagnosis", placeholder: "Provisional clinical diagnosis…" },
+    { key: "grossFindings", label: "Gross findings", placeholder: "Specimen description…" },
+    { key: "labName", label: "Referred lab", placeholder: "Lab name…" },
+  ],
+};
+
+/** Display label for a stored details key. */
+function fieldLabel(cat: InvestigationCategory, key: string): string {
+  if (cat === "other") return key;
+  return CATEGORY_FIELDS[cat].find((f) => f.key === key)?.label ?? key;
+}
+
+/** Flatten stored details (unknown values) to editable strings. */
+function detailsToStrings(details: Record<string, unknown> | null | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!details || typeof details !== "object") return out;
+  for (const [k, v] of Object.entries(details)) {
+    if (typeof v === "string") out[k] = v;
+    else if (typeof v === "number" || typeof v === "boolean") out[k] = String(v);
+  }
+  return out;
+}
+
 type Screen =
   | { name: "table" }
   | { name: "form"; mode: "create" }
@@ -86,20 +184,24 @@ type Screen =
 interface FormState {
   patientId: string;
   title: string;
+  category: InvestigationCategory;
   visitDate: string;
   status: InvestigationStatus;
   notes: string;
   medicalRecordId: string;
+  details: Record<string, string>;
 }
 
 function emptyForm(): FormState {
   return {
     patientId: "",
     title: "",
+    category: "vital-test",
     visitDate: todayISO(),
     status: "pending",
     notes: "",
     medicalRecordId: "",
+    details: {},
   };
 }
 
@@ -115,6 +217,7 @@ export default function InvestigationPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   const [form, setForm] = useState<FormState>(emptyForm());
   const [records, setRecords] = useState<MedicineRecord[]>([]);
@@ -239,14 +342,16 @@ export default function InvestigationPage() {
     const term = searchTerm.trim().toLowerCase();
     return items.filter((item) => {
       if (statusFilter !== "all" && item.status !== statusFilter) return false;
+      if (categoryFilter !== "all" && normalizeCategory(item.category) !== categoryFilter) return false;
       if (!term) return true;
       return (
         item.title.toLowerCase().includes(term) ||
         item.patientName.toLowerCase().includes(term) ||
+        categoryLabel(item.category).toLowerCase().includes(term) ||
         (item.notes ?? "").toLowerCase().includes(term)
       );
     });
-  }, [items, searchTerm, statusFilter]);
+  }, [items, searchTerm, statusFilter, categoryFilter]);
 
   function openCreate() {
     setForm(emptyForm());
@@ -264,10 +369,12 @@ export default function InvestigationPage() {
         setForm({
           patientId: full.patientId,
           title: full.title,
+          category: normalizeCategory(full.category),
           visitDate: full.visitDate,
           status: full.status,
           notes: full.notes ?? "",
           medicalRecordId: full.medicalRecordId ?? "",
+          details: detailsToStrings(full.details),
         });
         setScreen({ name: "form", mode: "edit", record: full });
       })
@@ -313,18 +420,30 @@ export default function InvestigationPage() {
     }
     setSaving(true);
     try {
+      // The odontogram chart only applies to "Other" — clinical report types
+      // use their related form (details) instead. On edit, an existing chart
+      // is preserved untouched.
       let chartData: Record<string, unknown> | null = null;
-      try {
-        const { getStatusChart } = await odontogramApi();
-        const chart = getStatusChart() as unknown;
-        if (chart && typeof chart === "object") {
-          chartData = chart as Record<string, unknown>;
+      if (form.category === "other") {
+        try {
+          const { getStatusChart } = await odontogramApi();
+          const chart = getStatusChart() as unknown;
+          if (chart && typeof chart === "object") {
+            chartData = chart as Record<string, unknown>;
+          }
+        } catch {
+          chartData = null;
         }
-      } catch {
-        chartData = null;
+      } else if (screen.mode === "edit") {
+        chartData = screen.record.chartData ?? null;
       }
+      const detailEntries = Object.entries(form.details).filter(
+        ([, v]) => v.trim().length > 0
+      );
       const payload: Record<string, unknown> = {
         title: form.title.trim(),
+        category: form.category,
+        details: detailEntries.length > 0 ? Object.fromEntries(detailEntries) : null,
         visitDate: form.visitDate,
         status: form.status,
         notes: form.notes.trim() || null,
@@ -362,6 +481,14 @@ export default function InvestigationPage() {
 
   if (screen.name === "form") {
     const mode = screen.mode;
+    const formCategory =
+      mode === "view" ? normalizeCategory(screen.record.category) : form.category;
+    const detailEntries =
+      mode === "view"
+        ? Object.entries(detailsToStrings(screen.record.details)).filter(
+            ([, v]) => v.trim().length > 0
+          )
+        : [];
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
@@ -384,8 +511,8 @@ export default function InvestigationPage() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {mode === "view"
-              ? "Read-only investigation record with the charted odontogram."
-              : "Select the patient, fill in the details and chart the odontogram."}
+              ? "Read-only investigation record."
+              : "Select the patient, pick the report type and fill in the related form."}
           </p>
         </div>
 
@@ -424,9 +551,48 @@ export default function InvestigationPage() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, title: e.target.value }))
                 }
-                placeholder="e.g. Root canal assessment — 46"
+                placeholder={
+                  TITLE_PLACEHOLDERS[
+                    mode === "view"
+                      ? normalizeCategory(screen.record.category)
+                      : form.category
+                  ]
+                }
                 disabled={mode === "view"}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Report type</Label>
+              {mode === "view" ? (
+                <div>
+                  <Badge className={CATEGORY_BADGE[normalizeCategory(screen.record.category)]}>
+                    {categoryLabel(screen.record.category)}
+                  </Badge>
+                </div>
+              ) : (
+                <Select
+                  value={form.category}
+                  onValueChange={(v) =>
+                    setForm((f) => ({
+                      ...f,
+                      category: v as InvestigationCategory,
+                      // Clear type-specific fields when switching report types.
+                      details: {},
+                    }))
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select report type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORY_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="inv-date">Visit date</Label>
@@ -529,6 +695,40 @@ export default function InvestigationPage() {
           </CardContent>
         </Card>
 
+        {formCategory !== "other" && (mode !== "view" || detailEntries.length > 0) && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{categoryLabel(formCategory)} details</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              {mode === "view"
+                ? detailEntries.map(([key, value]) => (
+                    <div key={key} className="space-y-2">
+                      <Label>{fieldLabel(formCategory, key)}</Label>
+                      <Input value={value} disabled />
+                    </div>
+                  ))
+                : CATEGORY_FIELDS[formCategory].map((field) => (
+                    <div key={field.key} className="space-y-2">
+                      <Label htmlFor={`inv-${field.key}`}>{field.label}</Label>
+                      <Input
+                        id={`inv-${field.key}`}
+                        value={form.details[field.key] ?? ""}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            details: { ...f.details, [field.key]: e.target.value },
+                          }))
+                        }
+                        placeholder={field.placeholder}
+                      />
+                    </div>
+                  ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {formCategory === "other" && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -551,6 +751,7 @@ export default function InvestigationPage() {
             )}
           </CardContent>
         </Card>
+        )}
 
         {mode !== "view" && (
           <div className="flex justify-end gap-2">
@@ -573,7 +774,7 @@ export default function InvestigationPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Investigations</h1>
           <p className="text-sm text-muted-foreground">
-            Dental investigations with odontogram charting
+            Vital tests, X-rays, blood reports and biopsies
             {total > 0 ? ` — ${total} total` : ""}.
           </p>
         </div>
@@ -591,11 +792,27 @@ export default function InvestigationPage() {
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               className="pl-9"
-              placeholder="Search by title, patient or notes…"
+              placeholder="Search by type, title, patient or notes…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <Select
+            value={categoryFilter}
+            onValueChange={(v) => setCategoryFilter(v ?? "all")}
+          >
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="All types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All types</SelectItem>
+              {CATEGORY_OPTIONS.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select
             value={statusFilter}
             onValueChange={(v) => setStatusFilter(v ?? "all")}
@@ -640,6 +857,7 @@ export default function InvestigationPage() {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Patient</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Chart</TableHead>
@@ -655,6 +873,11 @@ export default function InvestigationPage() {
                       </TableCell>
                       <TableCell className="font-medium">
                         {item.patientName}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={CATEGORY_BADGE[normalizeCategory(item.category)]}>
+                          {categoryLabel(item.category)}
+                        </Badge>
                       </TableCell>
                       <TableCell className="max-w-56 truncate">
                         {item.title}

@@ -18,12 +18,19 @@ import type { InvestigationDoc } from "@/clinic/modules/investigations/investiga
 /** Upper bound for the serialised odontogram chart payload (~1MB JSON). */
 const MAX_CHART_BYTES = 1024 * 1024;
 
-function chartByteSize(chart: unknown): number {
+/** Upper bound for the category-specific form payload (small key-values). */
+const MAX_DETAILS_BYTES = 32 * 1024;
+
+function jsonByteSize(value: unknown): number {
   try {
-    return Buffer.byteLength(JSON.stringify(chart) ?? "", "utf8");
+    return Buffer.byteLength(JSON.stringify(value) ?? "", "utf8");
   } catch {
     return Number.POSITIVE_INFINITY;
   }
+}
+
+function chartByteSize(chart: unknown): number {
+  return jsonByteSize(chart);
 }
 
 export class InvestigationService {
@@ -108,6 +115,9 @@ export class InvestigationService {
     if (input.chartData && chartByteSize(input.chartData) > MAX_CHART_BYTES) {
       throw new BadRequestError("Chart data is too large");
     }
+    if (input.details && jsonByteSize(input.details) > MAX_DETAILS_BYTES) {
+      throw new BadRequestError("Report details are too large");
+    }
 
     const doctorId = await this.resolveDoctor(clinicId, input.doctorId, ctx);
     const medicalRecordId = await this.resolveMedicalRecord(
@@ -123,6 +133,8 @@ export class InvestigationService {
       doctorId,
       title: input.title,
       notes: input.notes ?? null,
+      category: input.category ?? "other",
+      details: (input.details as Record<string, unknown> | undefined) ?? null,
       visitDate: input.visitDate,
       status: input.status ?? "pending",
       chartData: (input.chartData as Record<string, unknown> | undefined) ?? null,
@@ -139,6 +151,7 @@ export class InvestigationService {
         patientId: input.patientId,
         doctorId,
         title: input.title,
+        category: input.category ?? "other",
         medicalRecordId,
       },
     });
@@ -165,6 +178,7 @@ export class InvestigationService {
       q?: string;
       patientId?: string;
       status?: string;
+      category?: string;
       from?: string;
       to?: string;
       skip: number;
@@ -192,6 +206,13 @@ export class InvestigationService {
     const patch: Record<string, unknown> = {};
     if (input.title !== undefined) patch.title = input.title;
     if (input.notes !== undefined) patch.notes = input.notes;
+    if (input.category !== undefined) patch.category = input.category;
+    if (input.details !== undefined) {
+      if (input.details && jsonByteSize(input.details) > MAX_DETAILS_BYTES) {
+        throw new BadRequestError("Report details are too large");
+      }
+      patch.details = input.details;
+    }
     if (input.visitDate !== undefined) patch.visitDate = input.visitDate;
     if (input.status !== undefined) patch.status = input.status;
     if (input.chartData !== undefined) {

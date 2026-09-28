@@ -13,7 +13,18 @@ export type InvestigationStatus =
  * opaque JSON payload (`chartData`) produced by the client's
  * `getStatusChart()` and restored via `importStatus()` — the server never
  * interprets it, it only validates size + JSON-ness.
+ *
+ * `category` scopes the record to a report type (vital test, x-ray, blood
+ * report, biopsy, other) and `details` carries the category-specific form
+ * fields — both are opaque to the server.
  */
+export type InvestigationCategory =
+  | "vital-test"
+  | "x-ray"
+  | "blood-report"
+  | "biopsy"
+  | "other";
+
 export interface InvestigationDoc extends ClinicDocument {
   clinicId: string;
   investigationId: string;
@@ -24,6 +35,10 @@ export interface InvestigationDoc extends ClinicDocument {
   doctorId: string | null;
   title: string;
   notes: string | null;
+  /** Report type: vital-test | x-ray | blood-report | biopsy | other. */
+  category: InvestigationCategory;
+  /** Category-specific form fields (opaque to the server). */
+  details: Record<string, unknown> | null;
   /** YYYY-MM-DD investigation date. */
   visitDate: string;
   status: InvestigationStatus;
@@ -50,6 +65,8 @@ export function investigationToPublic(doc: InvestigationDoc) {
     doctorId: doc.doctorId,
     title: doc.title,
     notes: doc.notes,
+    category: doc.category ?? "other",
+    details: doc.details ?? null,
     visitDate: doc.visitDate,
     status: doc.status,
     chartData: doc.chartData,

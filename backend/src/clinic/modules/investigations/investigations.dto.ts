@@ -21,11 +21,21 @@ export const investigationStatusEnum = z.enum([
   "cancelled",
 ]);
 
+export const investigationCategoryEnum = z.enum([
+  "vital-test",
+  "x-ray",
+  "blood-report",
+  "biopsy",
+  "other",
+]);
+
 export const createInvestigationSchema = z.object({
   patientId: z.string().trim().min(1, "Patient is required").max(120),
   doctorId: z.string().trim().min(1).max(120).optional().nullable(),
   title: z.string().trim().min(2, "Title is required").max(200),
   notes: optionalString(5000),
+  category: investigationCategoryEnum.optional(),
+  details: z.record(z.string(), z.unknown()).nullable().optional(),
   visitDate: dateString,
   status: investigationStatusEnum.optional(),
   chartData: z.record(z.string(), z.unknown()).nullable().optional(),
@@ -48,6 +58,7 @@ export const listInvestigationsSchema = z.object({
   q: z.string().trim().max(200).optional(),
   patientId: z.string().trim().max(120).optional(),
   status: investigationStatusEnum.optional(),
+  category: investigationCategoryEnum.optional(),
   from: dateString.optional(),
   to: dateString.optional(),
 });

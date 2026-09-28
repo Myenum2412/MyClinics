@@ -47,6 +47,7 @@ export class InvestigationRepository {
     q?: string;
     patientId?: string;
     status?: string;
+    category?: string;
     from?: string;
     to?: string;
     skip: number;
@@ -57,6 +58,7 @@ export class InvestigationRepository {
     };
     if (query.patientId) filter.patientId = query.patientId;
     if (query.status) filter.status = query.status;
+    if (query.category) filter.category = query.category;
     if (query.from || query.to) {
       filter.visitDate = {
         ...(query.from ? { $gte: query.from } : {}),

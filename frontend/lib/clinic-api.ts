@@ -358,6 +358,13 @@ export type InvestigationStatus =
   | "completed"
   | "cancelled";
 
+export type InvestigationCategory =
+  | "vital-test"
+  | "x-ray"
+  | "blood-report"
+  | "biopsy"
+  | "other";
+
 export interface Investigation {
   investigationId: string;
   patientId: string;
@@ -365,6 +372,10 @@ export interface Investigation {
   doctorId: string | null;
   title: string;
   notes: string | null;
+  /** Report type: vital-test | x-ray | blood-report | biopsy | other (null on legacy records). */
+  category: InvestigationCategory | null;
+  /** Category-specific form fields (null when none recorded). */
+  details: Record<string, unknown> | null;
   visitDate: string;
   status: InvestigationStatus;
   chartData: Record<string, unknown> | null;
@@ -1434,6 +1445,7 @@ export function listInvestigations(
     q?: string;
     patientId?: string;
     status?: string;
+    category?: string;
     from?: string;
     to?: string;
     limit?: number;
@@ -1443,6 +1455,7 @@ export function listInvestigations(
   if (query.q) params.set("q", query.q);
   if (query.patientId) params.set("patientId", query.patientId);
   if (query.status) params.set("status", query.status);
+  if (query.category) params.set("category", query.category);
   if (query.from) params.set("from", query.from);
   if (query.to) params.set("to", query.to);
   params.set("limit", String(query.limit ?? 50));
