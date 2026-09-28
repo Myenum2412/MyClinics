@@ -154,9 +154,9 @@ export default function AuditLogsPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* Top Header Section with StatsGeneric */}
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
         <StatsGeneric
           title="Audit Log Analytics"
           description="Security audit trail, administrative actions, and data mutation logs."
@@ -176,7 +176,7 @@ export default function AuditLogsPage() {
                   setAction(e.target.value);
                   setPageIndex(0);
                 }}
-                className="h-9 w-32"
+                className="h-9 w-full sm:w-32"
               />
             </div>
           }
@@ -217,7 +217,7 @@ export default function AuditLogsPage() {
       <Card className="border-border shadow-sm">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-6 space-y-3">
+            <div className="p-4 sm:p-6 space-y-3">
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
@@ -227,6 +227,9 @@ export default function AuditLogsPage() {
               No audit entries found.
             </div>
           ) : (
+            <>
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -302,6 +305,61 @@ export default function AuditLogsPage() {
                 ))}
               </TableBody>
             </Table>
+            </div>
+
+            {/* Mobile card list — visible only on small screens */}
+            <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+              {paginatedItems.map((a) => {
+                const isSelected = selectedIds.has(a.auditId);
+                return (
+                  <div
+                    key={a.auditId}
+                    className={`rounded-xl border bg-card p-3 shadow-2xs transition-colors ${
+                      isSelected ? "border-primary/50 ring-1 ring-primary/30" : "border-border"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      {visibleColumns.select && (
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => handleToggleSelectRow(a.auditId, !!checked)}
+                          aria-label={`Select ${a.auditId}`}
+                        />
+                      )}
+                      {visibleColumns.action && (
+                        <Badge variant="outline" className="shrink-0 bg-muted text-foreground border-border text-[11px]">
+                          {a.action}
+                        </Badge>
+                      )}
+                      {visibleColumns.entity && (
+                        <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{a.entity}</span>
+                      )}
+                    </div>
+                    {visibleColumns.createdAt && (
+                      <p className="mt-1.5 text-[11px] text-muted-foreground tabular-nums">
+                        {formatDateTime(a.createdAt)}
+                      </p>
+                    )}
+                    {visibleColumns.actorUserId && (
+                      <p className="mt-0.5 truncate text-xs font-semibold text-foreground">
+                        {a.actorUserId ?? "—"}
+                      </p>
+                    )}
+                    {visibleColumns.entityId && a.entityId ? (
+                      <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">
+                        ID: {a.entityId}
+                      </p>
+                    ) : null}
+                    {visibleColumns.metadata && a.metadata ? (
+                      <p className="mt-1 line-clamp-2 break-all font-mono text-[11px] leading-relaxed text-muted-foreground">
+                        {JSON.stringify(a.metadata)}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+            </>
           )}
 
           {/* Pagination Footer */}
