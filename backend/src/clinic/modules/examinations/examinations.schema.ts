@@ -23,6 +23,14 @@ export interface ExaminationDoc extends ClinicDocument {
   /** YYYY-MM-DD examination date. */
   visitDate: string;
   status: ExaminationStatus;
+  /** Hard/soft issue classification. */
+  issueType: "hard" | "soft";
+  /**
+   * Link to the dental investigation (`clc_investigations.investigationId`)
+   * created alongside this examination. Optional; must belong to the same
+   * patient in the same clinic.
+   */
+  investigationId: string | null;
   /** Oral examination findings (required). */
   oralFindings: string;
   notes: string | null;
@@ -41,6 +49,8 @@ export function examinationToPublic(doc: ExaminationDoc) {
     doctorId: doc.doctorId,
     visitDate: doc.visitDate,
     status: doc.status,
+    issueType: doc.issueType,
+    investigationId: doc.investigationId,
     oralFindings: doc.oralFindings,
     notes: doc.notes,
     createdBy: doc.createdBy,

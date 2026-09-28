@@ -291,6 +291,7 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     examinations.createIndex({ clinicId: 1, examinationId: 1 }, { unique: true }),
     examinations.createIndex({ clinicId: 1, patientId: 1, visitDate: -1 }),
     examinations.createIndex({ clinicId: 1, doctorId: 1, visitDate: -1 }),
+    examinations.createIndex({ clinicId: 1, investigationId: 1 }),
     examinations.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
   ];
 

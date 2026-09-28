@@ -54,6 +54,32 @@ export class ExaminationService {
     return resolved;
   }
 
+  /**
+   * Validate the optional linked investigation: it must exist in this
+   * clinic and belong to the same patient.
+   */
+  private async resolveInvestigation(
+    clinicId: string,
+    investigationId: string | null | undefined,
+    patientId: string
+  ): Promise<string | null> {
+    if (!investigationId) return null;
+    const inv = await this.db
+      .collection<{ investigationId: string; patientId: string }>(
+        CLINIC_COLLECTIONS.investigations
+      )
+      .findOne({ clinicId, investigationId, status: { $ne: "deleted" } });
+    if (!inv) {
+      throw new BadRequestError("The linked investigation does not exist");
+    }
+    if (inv.patientId !== patientId) {
+      throw new BadRequestError(
+        "The linked investigation belongs to a different patient"
+      );
+    }
+    return investigationId;
+  }
+
   async createExamination(
     ctx: ClinicContext,
     input: CreateExaminationInput
@@ -69,6 +95,11 @@ export class ExaminationService {
     }
 
     const doctorId = await this.resolveDoctor(clinicId, input.doctorId, ctx);
+    const investigationId = await this.resolveInvestigation(
+      clinicId,
+      input.investigationId,
+      input.patientId
+    );
 
     const examination = await this.repo(ctx).insert({
       examinationId: generateExaminationId(),
@@ -77,6 +108,8 @@ export class ExaminationService {
       doctorId,
       visitDate: input.visitDate,
       status: input.status ?? "pending",
+      issueType: input.issueType,
+      investigationId,
       oralFindings: input.oralFindings,
       notes: input.notes ?? null,
       createdBy: ctx.userId,
@@ -90,6 +123,8 @@ export class ExaminationService {
       metadata: {
         patientId: input.patientId,
         doctorId,
+        issueType: input.issueType,
+        investigationId,
       },
     });
 
@@ -142,10 +177,18 @@ export class ExaminationService {
     const patch: Record<string, unknown> = {};
     if (input.visitDate !== undefined) patch.visitDate = input.visitDate;
     if (input.status !== undefined) patch.status = input.status;
+    if (input.issueType !== undefined) patch.issueType = input.issueType;
     if (input.oralFindings !== undefined) patch.oralFindings = input.oralFindings;
     if (input.notes !== undefined) patch.notes = input.notes;
     if (input.doctorId !== undefined) {
       patch.doctorId = await this.resolveDoctor(clinicId, input.doctorId, ctx);
+    }
+    if (input.investigationId !== undefined) {
+      patch.investigationId = await this.resolveInvestigation(
+        clinicId,
+        input.investigationId,
+        existing.patientId
+      );
     }
 
     if (Object.keys(patch).length === 0) return existing;

@@ -2,18 +2,28 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import {
+  OdontogramShell,
+  getStatusChart,
+} from "react-advanced-odontogram";
+import "../investigation/odontogram.css";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import {
   type Examination,
   type ExaminationStatus,
+  type MedicineRecord,
   createExamination,
+  createInvestigation,
   deleteExamination,
+  getInvestigation,
   listExaminations,
+  listRecords,
   updateExamination,
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -62,6 +72,18 @@ const STATUS_BADGE: Record<ExaminationStatus, string> = {
   cancelled: "bg-slate-100 text-slate-600",
 };
 
+type IssueType = "hard" | "soft";
+
+const ISSUE_OPTIONS: { value: IssueType; label: string }[] = [
+  { value: "hard", label: "Hard" },
+  { value: "soft", label: "Soft" },
+];
+
+const ISSUE_BADGE: Record<IssueType, string> = {
+  hard: "bg-red-100 text-red-800",
+  soft: "bg-sky-100 text-sky-800",
+};
+
 type Screen =
   | { name: "table" }
   | { name: "form"; mode: "create" }
@@ -72,8 +94,17 @@ interface FormState {
   patientId: string;
   visitDate: string;
   status: ExaminationStatus;
+  issueType: IssueType | "";
   oralFindings: string;
   notes: string;
+  // Embedded investigation form (create mode only).
+  includeInvestigation: boolean;
+  showInvestigation: boolean;
+  invTitle: string;
+  invVisitDate: string;
+  invStatus: ExaminationStatus;
+  invNotes: string;
+  invMedicalRecordId: string;
 }
 
 function emptyForm(): FormState {
@@ -81,8 +112,16 @@ function emptyForm(): FormState {
     patientId: "",
     visitDate: todayISO(),
     status: "pending",
+    issueType: "",
     oralFindings: "",
     notes: "",
+    includeInvestigation: true,
+    showInvestigation: true,
+    invTitle: "",
+    invVisitDate: todayISO(),
+    invStatus: "pending",
+    invNotes: "",
+    invMedicalRecordId: "",
   };
 }
 
@@ -100,8 +139,11 @@ export default function ExaminationPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const [form, setForm] = useState<FormState>(emptyForm());
+  const [records, setRecords] = useState<MedicineRecord[]>([]);
+  const [recordsLoading, setRecordsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Examination | null>(null);
+  const [linkedInvTitle, setLinkedInvTitle] = useState<string | null>(null);
 
   const load = useCallback(() => {
     if (!clinicId) return;
@@ -120,6 +162,21 @@ export default function ExaminationPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Medical records of the selected patient for the embedded
+  // investigation's link picker (create mode only).
+  useEffect(() => {
+    if (screen.name !== "form" || screen.mode !== "create" || !clinicId) return;
+    if (!form.patientId) {
+      setRecords([]);
+      return;
+    }
+    setRecordsLoading(true);
+    listRecords(clinicId, { patientId: form.patientId, limit: 50 })
+      .then((res) => setRecords(res.items ?? []))
+      .catch(() => setRecords([]))
+      .finally(() => setRecordsLoading(false));
+  }, [screen, form.patientId, clinicId]);
 
   const filteredItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -141,23 +198,42 @@ export default function ExaminationPage() {
 
   function openEdit(record: Examination) {
     setForm({
+      ...emptyForm(),
       patientId: record.patientId,
       visitDate: record.visitDate,
       status: record.status,
+      issueType: record.issueType,
       oralFindings: record.oralFindings,
       notes: record.notes ?? "",
+      includeInvestigation: false,
     });
+    setLinkedInvTitle(null);
     setScreen({ name: "form", mode: "edit", record });
+    if (record.investigationId) {
+      getInvestigation(clinicId, record.investigationId)
+        .then((inv) => setLinkedInvTitle(inv.title))
+        .catch(() => setLinkedInvTitle(null));
+    }
   }
 
   function openView(record: Examination) {
+    setLinkedInvTitle(null);
     setScreen({ name: "form", mode: "view", record });
+    if (record.investigationId) {
+      getInvestigation(clinicId, record.investigationId)
+        .then((inv) => setLinkedInvTitle(inv.title))
+        .catch(() => setLinkedInvTitle(null));
+    }
   }
 
   async function handleSave() {
     if (screen.name !== "form" || screen.mode === "view") return;
     if (!form.patientId) {
       toast.error("Please select a patient");
+      return;
+    }
+    if (!form.issueType) {
+      toast.error("Please select the issue type (Hard / Soft)");
       return;
     }
     if (form.oralFindings.trim().length < 2) {
@@ -169,11 +245,39 @@ export default function ExaminationPage() {
       const payload: Record<string, unknown> = {
         visitDate: form.visitDate,
         status: form.status,
+        issueType: form.issueType,
         oralFindings: form.oralFindings.trim(),
         notes: form.notes.trim() || null,
       };
       if (screen.mode === "create") {
         payload.patientId = form.patientId;
+        // Create the embedded investigation first so its id can be linked.
+        if (form.includeInvestigation) {
+          if (form.invTitle.trim().length < 2) {
+            toast.error("Please enter the investigation title");
+            setSaving(false);
+            return;
+          }
+          let chartData: Record<string, unknown> | null = null;
+          try {
+            const chart = getStatusChart() as unknown;
+            if (chart && typeof chart === "object") {
+              chartData = chart as Record<string, unknown>;
+            }
+          } catch {
+            chartData = null;
+          }
+          const inv = await createInvestigation(clinicId, {
+            patientId: form.patientId,
+            title: form.invTitle.trim(),
+            visitDate: form.invVisitDate,
+            status: form.invStatus,
+            notes: form.invNotes.trim() || null,
+            medicalRecordId: form.invMedicalRecordId || null,
+            chartData,
+          });
+          payload.investigationId = inv.investigationId;
+        }
         await createExamination(clinicId, payload);
         toast.success("Examination created successfully");
       } else {
@@ -296,6 +400,37 @@ export default function ExaminationPage() {
                 </Select>
               )}
             </div>
+            <div className="space-y-2">
+              <Label>Issues</Label>
+              {readOnly ? (
+                <div>
+                  <Badge className={ISSUE_BADGE[screen.record.issueType]}>
+                    {screen.record.issueType}
+                  </Badge>
+                </div>
+              ) : (
+                <Select
+                  value={form.issueType || "__none"}
+                  onValueChange={(v) =>
+                    setForm((f) => ({
+                      ...f,
+                      issueType: (v === "__none" ? "" : v) as IssueType | "",
+                    }))
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select issue type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ISSUE_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>
+                        {o.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="exam-oral">Oral findings</Label>
               <Textarea
@@ -322,6 +457,171 @@ export default function ExaminationPage() {
             </div>
           </CardContent>
         </Card>
+
+        {mode === "create" && (
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <CardTitle>Investigation</CardTitle>
+                <div className="flex items-center gap-4">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                    <Checkbox
+                      checked={form.includeInvestigation}
+                      onCheckedChange={(v) =>
+                        setForm((f) => ({
+                          ...f,
+                          includeInvestigation: v === true,
+                        }))
+                      }
+                    />
+                    Include investigation
+                  </label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      setForm((f) => ({
+                        ...f,
+                        showInvestigation: !f.showInvestigation,
+                      }))
+                    }
+                  >
+                    {form.showInvestigation ? "Hide" : "Show"}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            {form.showInvestigation && (
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="exam-inv-title">Title</Label>
+                  <Input
+                    id="exam-inv-title"
+                    value={form.invTitle}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, invTitle: e.target.value }))
+                    }
+                    placeholder="e.g. Root canal assessment — 46"
+                    disabled={!form.includeInvestigation}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="exam-inv-date">Visit date</Label>
+                  <Input
+                    id="exam-inv-date"
+                    type="date"
+                    value={form.invVisitDate}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, invVisitDate: e.target.value }))
+                    }
+                    disabled={!form.includeInvestigation}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select
+                    value={form.invStatus}
+                    onValueChange={(v) =>
+                      setForm((f) => ({
+                        ...f,
+                        invStatus: v as ExaminationStatus,
+                      }))
+                    }
+                    disabled={!form.includeInvestigation}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUS_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>
+                          {o.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Linked medical record (optional)</Label>
+                  <Select
+                    value={form.invMedicalRecordId || "__none"}
+                    onValueChange={(v) =>
+                      setForm((f) => ({
+                        ...f,
+                        invMedicalRecordId: !v || v === "__none" ? "" : v,
+                      }))
+                    }
+                    disabled={
+                      !form.includeInvestigation ||
+                      recordsLoading ||
+                      !form.patientId
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue
+                        placeholder={
+                          !form.patientId
+                            ? "Select a patient first"
+                            : recordsLoading
+                              ? "Loading records…"
+                              : "No linked record"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none">No linked record</SelectItem>
+                      {records.map((r) => (
+                        <SelectItem key={r.recordId} value={r.recordId}>
+                          {r.visitDate} — {r.diagnosis}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="exam-inv-notes">Notes</Label>
+                  <Textarea
+                    id="exam-inv-notes"
+                    value={form.invNotes}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, invNotes: e.target.value }))
+                    }
+                    placeholder="Clinical notes for this investigation…"
+                    disabled={!form.includeInvestigation}
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Dental odontogram</Label>
+                  <div className="isolate overflow-auto rounded-xl border bg-white">
+                    <OdontogramShell
+                      key="exam-new-investigation"
+                      language="en"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )}
+
+        {mode !== "create" && screen.record.investigationId && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Linked investigation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm font-medium">
+                  {linkedInvTitle ?? screen.record.investigationId}
+                </p>
+                <Button variant="outline" size="sm" render={<a href="/clinic/investigation" />}>
+                  <Eye className="size-4" />
+                  Open investigations
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {mode !== "view" && (
           <div className="flex justify-end gap-2">
@@ -411,8 +711,10 @@ export default function ExaminationPage() {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Patient</TableHead>
+                    <TableHead>Issues</TableHead>
                     <TableHead>Oral findings</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Investigation</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -425,6 +727,11 @@ export default function ExaminationPage() {
                       <TableCell className="font-medium">
                         {item.patientName}
                       </TableCell>
+                      <TableCell>
+                        <Badge className={ISSUE_BADGE[item.issueType]}>
+                          {item.issueType}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="max-w-56 truncate">
                         {item.oralFindings}
                       </TableCell>
@@ -432,6 +739,13 @@ export default function ExaminationPage() {
                         <Badge className={STATUS_BADGE[item.status]}>
                           {item.status}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {item.investigationId ? (
+                          <Badge variant="outline">Linked</Badge>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-1">

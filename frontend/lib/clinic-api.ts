@@ -1459,6 +1459,8 @@ export interface Examination {
   doctorId: string | null;
   visitDate: string;
   status: ExaminationStatus;
+  issueType: "hard" | "soft";
+  investigationId: string | null;
   oralFindings: string;
   notes: string | null;
   createdBy: string;

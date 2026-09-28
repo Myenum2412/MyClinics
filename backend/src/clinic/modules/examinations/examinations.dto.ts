@@ -21,11 +21,15 @@ export const examinationStatusEnum = z.enum([
   "cancelled",
 ]);
 
+export const examinationIssueEnum = z.enum(["hard", "soft"]);
+
 export const createExaminationSchema = z.object({
   patientId: z.string().trim().min(1, "Patient is required").max(120),
   doctorId: z.string().trim().min(1).max(120).optional().nullable(),
   visitDate: dateString,
   status: examinationStatusEnum.optional(),
+  issueType: examinationIssueEnum,
+  investigationId: z.string().trim().min(1).max(120).optional().nullable(),
   oralFindings: z
     .string()
     .trim()
