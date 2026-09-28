@@ -34,6 +34,9 @@ export interface PatientDoc extends ClinicDocument {
   medicalConditions: string | null;
   previousSurgeries: string | null;
   currentMedications: string | null;
+  familyHistory: string | null;
+  patientHistory: string | null;
+  habits: string | null;
   idType: string | null;
   idNumber: string | null;
   insuranceProvider: string | null;
@@ -82,6 +85,9 @@ export function patientToPublic(doc: PatientDoc) {
     medicalConditions: doc.medicalConditions,
     previousSurgeries: doc.previousSurgeries,
     currentMedications: doc.currentMedications,
+    familyHistory: doc.familyHistory ?? null,
+    patientHistory: doc.patientHistory ?? null,
+    habits: doc.habits ?? null,
     idType: doc.idType,
     idNumber: doc.idNumber,
     insuranceProvider: doc.insuranceProvider,

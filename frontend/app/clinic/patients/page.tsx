@@ -97,6 +97,9 @@ interface PatientFormState {
   medicalConditions: string;
   previousSurgeries: string;
   currentMedications: string;
+  familyHistory: string;
+  patientHistory: string;
+  habits: string;
   idType: string;
   idNumber: string;
   insuranceProvider: string;
@@ -141,6 +144,9 @@ const EMPTY_FORM: PatientFormState = {
   medicalConditions: "",
   previousSurgeries: "",
   currentMedications: "",
+  familyHistory: "",
+  patientHistory: "",
+  habits: "",
   idType: "",
   idNumber: "",
   insuranceProvider: "",
@@ -296,6 +302,9 @@ export default function PatientsPage() {
         medicalConditions: form.medicalConditions || null,
         previousSurgeries: form.previousSurgeries || null,
         currentMedications: form.currentMedications || null,
+        familyHistory: form.familyHistory || null,
+        patientHistory: form.patientHistory || null,
+        habits: form.habits || null,
         idType: form.idType || null,
         idNumber: form.idNumber || null,
         insuranceProvider: form.insuranceProvider || null,
@@ -572,6 +581,9 @@ export default function PatientsPage() {
                 medicalConditions: editing.medicalConditions ?? "",
                 previousSurgeries: editing.previousSurgeries ?? "",
                 currentMedications: editing.currentMedications ?? "",
+                familyHistory: editing.familyHistory ?? "",
+                patientHistory: editing.patientHistory ?? "",
+                habits: editing.habits ?? "",
                 idType: editing.idType ?? "",
                 idNumber: editing.idNumber ?? "",
                 insuranceProvider: editing.insuranceProvider ?? "",
@@ -659,6 +671,9 @@ export default function PatientsPage() {
                 medicalConditions: viewing.medicalConditions ?? "",
                 previousSurgeries: viewing.previousSurgeries ?? "",
                 currentMedications: viewing.currentMedications ?? "",
+                familyHistory: viewing.familyHistory ?? "",
+                patientHistory: viewing.patientHistory ?? "",
+                habits: viewing.habits ?? "",
                 idType: viewing.idType ?? "",
                 idNumber: viewing.idNumber ?? "",
                 insuranceProvider: viewing.insuranceProvider ?? "",
@@ -1235,6 +1250,18 @@ function PatientForm({
             <Label>Current medications</Label>
             <Input value={form.currentMedications} onChange={(e) => set("currentMedications", e.target.value)} placeholder="Metformin 500mg" />
           </div>
+        </div>
+        <div className="grid gap-2">
+          <Label>Patient history (Notes)</Label>
+          <Textarea value={form.patientHistory} onChange={(e) => set("patientHistory", e.target.value)} rows={2} placeholder="Past illnesses, treatments, hospitalizations" />
+        </div>
+        <div className="grid gap-2">
+          <Label>Family history (Notes)</Label>
+          <Textarea value={form.familyHistory} onChange={(e) => set("familyHistory", e.target.value)} rows={2} placeholder="Hereditary / family conditions" />
+        </div>
+        <div className="grid gap-2">
+          <Label>Habits</Label>
+          <Textarea value={form.habits} onChange={(e) => set("habits", e.target.value)} rows={2} placeholder="Smoking, Alcohol, Tobacco, Diet, Exercise, Sleep" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="grid gap-2">

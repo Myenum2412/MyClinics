@@ -228,6 +228,9 @@ export interface Patient {
   medicalConditions: string | null;
   previousSurgeries: string | null;
   currentMedications: string | null;
+  familyHistory: string | null;
+  patientHistory: string | null;
+  habits: string | null;
   idType: string | null;
   idNumber: string | null;
   insuranceProvider: string | null;

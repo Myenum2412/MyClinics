@@ -100,6 +100,8 @@ export interface PatientFormState {
   medicalConditions: string;
   previousSurgeries: string;
   currentMedications: string;
+  familyHistory: string;
+  patientHistory: string;
   idType: string;
   idNumber: string;
   insuranceProvider: string;
@@ -151,6 +153,8 @@ export const EMPTY_FORM: PatientFormState = {
   medicalConditions: "",
   previousSurgeries: "",
   currentMedications: "",
+  familyHistory: "",
+  patientHistory: "",
   idType: "",
   idNumber: "",
   insuranceProvider: "",
@@ -545,6 +549,8 @@ export function PatientForm({
             {renderViewField("Medical Conditions", form.medicalConditions)}
             {renderViewField("Previous Surgeries / Hospitalizations", form.previousSurgeries)}
             {renderViewField("Current Medications", form.currentMedications)}
+            {renderViewField("Patient History", form.patientHistory)}
+            {renderViewField("Family History", form.familyHistory)}
             {renderViewField("Habits", form.habits)}
           </div>
         </SectionCard>
@@ -1025,6 +1031,42 @@ export function PatientForm({
           />
         </FormField>
         <FormField
+          label="Patient History"
+          name="patientHistory"
+          value={form.patientHistory}
+          onChange={(v) => handleChange("patientHistory", v)}
+          placeholder="Past illnesses, hospitalizations, chronic conditions"
+          helperText="Notes — previous episodes relevant to this patient"
+          disabled={isViewMode}
+        >
+          <Textarea
+            value={form.patientHistory}
+            onChange={(e) => handleChange("patientHistory", e.target.value)}
+            placeholder="Patient history notes — past illnesses, treatments, hospitalizations"
+            rows={2}
+            className="h-10 w-full border-border font-normal"
+            disabled={isViewMode}
+          />
+        </FormField>
+        <FormField
+          label="Family History"
+          name="familyHistory"
+          value={form.familyHistory}
+          onChange={(v) => handleChange("familyHistory", v)}
+          placeholder="Diabetes, Hypertension, Heart disease in family"
+          helperText="Notes — hereditary / family conditions"
+          disabled={isViewMode}
+        >
+          <Textarea
+            value={form.familyHistory}
+            onChange={(e) => handleChange("familyHistory", e.target.value)}
+            placeholder="Family history notes — parents, siblings, hereditary conditions"
+            rows={2}
+            className="h-10 w-full border-border font-normal"
+            disabled={isViewMode}
+          />
+        </FormField>
+        <FormField
           label="Habits"
           name="habits"
           value={form.habits}
@@ -1130,6 +1172,56 @@ export function PatientForm({
             value={form.idNumber}
             onChange={(v) => handleChange("idNumber", v)}
             placeholder="Enter the ID number"
+            disabled={isViewMode}
+          />
+        </div>
+      </SectionCard>
+
+      <SectionCard title="8. Vital Signs" description="Optional — captured at registration, editable anytime">
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            label="Blood Pressure"
+            name="bloodPressure"
+            value={form.bloodPressure}
+            onChange={(v) => handleChange("bloodPressure", v)}
+            placeholder="120/80"
+            helperText="mmHg, e.g. 120/80"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="Temperature"
+            name="temperature"
+            value={form.temperature}
+            onChange={(v) => handleChange("temperature", v)}
+            placeholder="98.6"
+            helperText="°F or °C"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="Pulse / Heart Rate"
+            name="pulse"
+            value={form.pulse}
+            onChange={(v) => handleChange("pulse", v)}
+            placeholder="72"
+            helperText="beats per minute (bpm)"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="Respiratory Rate"
+            name="respiratoryRate"
+            value={form.respiratoryRate}
+            onChange={(v) => handleChange("respiratoryRate", v)}
+            placeholder="16"
+            helperText="breaths per minute"
+            disabled={isViewMode}
+          />
+          <FormField
+            label="SpO₂ (Oxygen Saturation)"
+            name="spo2"
+            value={form.spo2}
+            onChange={(v) => handleChange("spo2", v)}
+            placeholder="98"
+            helperText="%, e.g. 98"
             disabled={isViewMode}
           />
         </div>
@@ -1388,54 +1480,4 @@ export function PatientForm({
       </div>
     </form>
   );
-      <SectionCard title="8. Vital Signs" description="Optional — captured at registration, editable anytime">
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            label="Blood Pressure"
-            name="bloodPressure"
-            value={form.bloodPressure}
-            onChange={(v) => handleChange("bloodPressure", v)}
-            placeholder="120/80"
-            helperText="mmHg, e.g. 120/80"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Temperature"
-            name="temperature"
-            value={form.temperature}
-            onChange={(v) => handleChange("temperature", v)}
-            placeholder="98.6"
-            helperText="°F or °C"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Pulse / Heart Rate"
-            name="pulse"
-            value={form.pulse}
-            onChange={(v) => handleChange("pulse", v)}
-            placeholder="72"
-            helperText="beats per minute (bpm)"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Respiratory Rate"
-            name="respiratoryRate"
-            value={form.respiratoryRate}
-            onChange={(v) => handleChange("respiratoryRate", v)}
-            placeholder="16"
-            helperText="breaths per minute"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="SpO₂ (Oxygen Saturation)"
-            name="spo2"
-            value={form.spo2}
-            onChange={(v) => handleChange("spo2", v)}
-            placeholder="98"
-            helperText="%, e.g. 98"
-            disabled={isViewMode}
-          />
-        </div>
-      </SectionCard>
-
 }
