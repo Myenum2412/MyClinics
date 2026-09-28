@@ -116,19 +116,19 @@ export default function PharmacySuppliersPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {!initialLoading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-      {(() => {const sampleTotal=statsSuppliers.length;const active=statsSuppliers.filter(s=>s.status==="active").length;const s=[{name:"Total Suppliers",percentage:Math.min(100,total*10),current:total,allowed:10,allowedLabel:"suppliers",fill:"var(--chart-1)"},{name:"Active",percentage:sampleTotal?Math.round(active/sampleTotal*100):0,current:active,allowed:sampleTotal,allowedLabel:"recent",fill:"var(--chart-2)"},{name:"Inactive",percentage:sampleTotal?Math.round((sampleTotal-active)/sampleTotal*100):0,current:sampleTotal-active,allowed:sampleTotal,allowedLabel:"recent",fill:"var(--chart-3)"},{name:"With GST",percentage:sampleTotal?Math.round(statsSuppliers.filter(s=>s.gstNumber).length/sampleTotal*100):0,current:statsSuppliers.filter(s=>s.gstNumber).length,allowed:sampleTotal,allowedLabel:"recent",fill:"var(--chart-4)"}];return (<PharmacyStats title="Suppliers Analytics" subtitle="Manage medicine and drug suppliers." searchTerm={search} onSearchChange={(v)=>{setSearch(v);setPage(1)}} searchPlaceholder="Search suppliers..." action={<Button size="sm" className="h-9 shadow-sm" render={<Link href="/clinic/pharmacy/suppliers/new" />}>Add Supplier</Button>} items={s} />)})()}
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
+      {(() => {const sampleTotal=statsSuppliers.length;const active=statsSuppliers.filter(s=>s.status==="active").length;const s=[{name:"Total Suppliers",percentage:Math.min(100,total*10),current:total,allowed:10,allowedLabel:"suppliers",fill:"var(--chart-1)"},{name:"Active",percentage:sampleTotal?Math.round(active/sampleTotal*100):0,current:active,allowed:sampleTotal,allowedLabel:"recent",fill:"var(--chart-2)"},{name:"Inactive",percentage:sampleTotal?Math.round((sampleTotal-active)/sampleTotal*100):0,current:sampleTotal-active,allowed:sampleTotal,allowedLabel:"recent",fill:"var(--chart-3)"},{name:"With GST",percentage:sampleTotal?Math.round(statsSuppliers.filter(s=>s.gstNumber).length/sampleTotal*100):0,current:statsSuppliers.filter(s=>s.gstNumber).length,allowed:sampleTotal,allowedLabel:"recent",fill:"var(--chart-4)"}];return (<PharmacyStats title="Suppliers Analytics" subtitle="Manage medicine and drug suppliers." searchTerm={search} onSearchChange={(v)=>{setSearch(v);setPage(1)}} searchPlaceholder="Search suppliers..." action={<Button size="sm" className="h-9 w-full justify-center shadow-sm sm:w-auto" render={<Link href="/clinic/pharmacy/suppliers/new" />}>Add Supplier</Button>} items={s} />)})()}
         </div>
       )}
 
       <Card className="shadow-sm">
         <CardContent className="p-0">
-          <div className="flex flex-wrap items-center gap-2 p-4 border-b border-border">
+          <div className="flex flex-wrap items-center gap-2 border-b border-border p-3 sm:p-4">
             <span className="text-sm font-medium">Suppliers <span className="text-muted-foreground">({total})</span></span>
             <Select value={statusFilter} onValueChange={(v) => { setStatusFilter((v as "all" | SupplierStatus) ?? "all"); setPage(1) }}>
-              <SelectTrigger className="h-9 w-40 ml-auto"><SelectValue placeholder="All statuses" /></SelectTrigger>
+              <SelectTrigger className="h-9 min-w-[140px] flex-1 sm:ml-auto sm:flex-none sm:w-40"><SelectValue placeholder="All statuses" /></SelectTrigger>
               <SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent>
             </Select>
           </div>
@@ -141,7 +141,9 @@ export default function PharmacySuppliersPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto"><Table>
+            <>
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden overflow-x-auto md:block"><Table>
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                   <TableHead>Name</TableHead>
@@ -188,6 +190,53 @@ export default function PharmacySuppliersPage() {
               </TableBody>
             </Table>
             </div>
+            {/* Mobile card list — visible only on small screens */}
+            <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+              {filtered.map((s) => (
+                <div key={s.supplierId} className="rounded-2xl border border-border bg-card p-3 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <p className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">{s.name}</p>
+                    <Badge variant={s.status === "active" ? "secondary" : "outline"} className="shrink-0 text-[11px] capitalize">
+                      {s.status}
+                    </Badge>
+                  </div>
+                  {s.contactPerson ? (
+                    <p className="mt-1 truncate text-xs text-foreground">{s.contactPerson}</p>
+                  ) : null}
+                  {(s.phone || s.email) ? (
+                    <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">
+                      {[s.phone, s.email].filter(Boolean).join(" · ")}
+                    </p>
+                  ) : null}
+                  {(s.gstNumber || s.drugLicenseNumber) ? (
+                    <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">
+                      {[s.gstNumber && `GST: ${s.gstNumber}`, s.drugLicenseNumber && `DL: ${s.drugLicenseNumber}`].filter(Boolean).join(" · ")}
+                    </p>
+                  ) : null}
+                  <div className="mt-2 flex items-center justify-end gap-1.5 border-t border-border/60 pt-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
+                      aria-label="Edit" title="Edit"
+                      render={<Link href={`/clinic/pharmacy/suppliers/${s.supplierId}/edit`} />}
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
+                      aria-label="Delete" title="Delete"
+                      onClick={() => setDeleteTarget(s)}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
           )}
           {!loading && total > 0 && (
             <Pagination page={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} itemLabel="suppliers" />
