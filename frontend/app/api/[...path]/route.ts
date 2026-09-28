@@ -40,10 +40,20 @@ async function proxy(req: Request, params: { path?: string[] }) {
 
     const resHeaders = new Headers();
     res.headers.forEach((v, k) => {
-      if (!HOP_BY_HOP.has(k.toLowerCase())) resHeaders.set(k, v);
+      // undici transparently decodes the upstream body, so a forwarded
+      // content-encoding would make browsers gunzip plain JSON and abort.
+      // (The auth proxy route already strips it for the same reason.)
+      if (!HOP_BY_HOP.has(k.toLowerCase()) && k.toLowerCase() !== "content-encoding") {
+        resHeaders.set(k, v);
+      }
     });
 
     const buf = await res.arrayBuffer();
+    // 204/304 are null-body statuses: constructing a Response with a body
+    // throws ("Invalid response status code") and would surface as a 503.
+    if (res.status === 204 || res.status === 304) {
+      return new Response(null, { status: res.status, headers: resHeaders });
+    }
     return new Response(buf, { status: res.status, headers: resHeaders });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);

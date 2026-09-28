@@ -32,6 +32,9 @@ async function proxy(req: NextRequest, path: string[]) {
     outHeaders.set(k, v);
   });
   const body = await res.arrayBuffer();
+  if (res.status === 204 || res.status === 304) {
+    return new NextResponse(null, { status: res.status, headers: outHeaders });
+  }
   return new NextResponse(body, { status: res.status, headers: outHeaders });
 }
 
