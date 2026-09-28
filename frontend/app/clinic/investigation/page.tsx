@@ -502,14 +502,14 @@ export default function InvestigationPage() {
           </Button>
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
             {mode === "create"
               ? "New Investigation"
               : mode === "edit"
                 ? "Edit Investigation"
                 : "View Investigation"}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
             {mode === "view"
               ? "Read-only investigation record."
               : "Select the patient, pick the report type and fill in the related form."}
@@ -520,7 +520,7 @@ export default function InvestigationPage() {
           <CardHeader>
             <CardTitle>Details</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
+          <CardContent className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             <div className="space-y-2">
               <Label>Patient</Label>
               {mode === "create" ? (
@@ -700,7 +700,7 @@ export default function InvestigationPage() {
             <CardHeader>
               <CardTitle>{categoryLabel(formCategory)} details</CardTitle>
             </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
+            <CardContent className="grid gap-3 sm:grid-cols-2 sm:gap-4">
               {mode === "view"
                 ? detailEntries.map(([key, value]) => (
                     <div key={key} className="space-y-2">
@@ -754,11 +754,11 @@ export default function InvestigationPage() {
         )}
 
         {mode !== "view" && (
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setScreen({ name: "table" })}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" className="w-full justify-center sm:w-auto" onClick={() => setScreen({ name: "table" })}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button className="w-full justify-center sm:w-auto" onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="size-4 animate-spin" />}
               {mode === "create" ? "Save investigation" : "Save changes"}
             </Button>
@@ -771,15 +771,15 @@ export default function InvestigationPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Investigations</h1>
-          <p className="text-sm text-muted-foreground">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Investigations</h1>
+          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
             Vital tests, X-rays, blood reports and biopsies
             {total > 0 ? ` — ${total} total` : ""}.
           </p>
         </div>
         {canManage && (
-          <Button onClick={openCreate}>
+          <Button onClick={openCreate} className="w-full justify-center sm:w-auto">
             <Plus className="size-4" />
             New Investigation
           </Button>
@@ -787,7 +787,7 @@ export default function InvestigationPage() {
       </div>
 
       <Card>
-        <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row">
+        <CardContent className="flex flex-col gap-2.5 p-4 sm:flex-row sm:gap-3 sm:p-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -851,7 +851,9 @@ export default function InvestigationPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -948,6 +950,76 @@ export default function InvestigationPage() {
                 </TableBody>
               </Table>
             </div>
+            {/* Mobile card list — visible only on small screens */}
+            <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+              {filteredItems.map((item) => (
+                <div key={item.investigationId} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <p className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">
+                      {item.patientName}
+                    </p>
+                    <Badge className={`${CATEGORY_BADGE[normalizeCategory(item.category)]} shrink-0 text-[10px]`}>
+                      {categoryLabel(item.category)}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 truncate text-xs font-medium text-foreground">{item.title}</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+                    {formatDate(item.visitDate)}
+                    {(item.hasChart ?? item.chartData != null) ? " · Charted" : ""}
+                    {item.medicalRecordId ? " · Linked" : ""}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/60 pt-2">
+                    <Badge className={`${STATUS_BADGE[item.status]} text-[11px]`}>
+                      {item.status}
+                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="size-9 rounded-xl text-muted-foreground"
+                        aria-label="View"
+                        onClick={() => openView(item)}
+                        disabled={pendingRowId === item.investigationId}
+                      >
+                        {pendingRowId === item.investigationId ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Eye className="size-4" />
+                        )}
+                      </Button>
+                      {canManage && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
+                          aria-label="Edit"
+                          onClick={() => openEdit(item)}
+                          disabled={pendingRowId === item.investigationId}
+                        >
+                          {pendingRowId === item.investigationId ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Pencil className="size-4" />
+                          )}
+                        </Button>
+                      )}
+                      {canDelete && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
+                          aria-label="Delete"
+                          onClick={() => setDeleteTarget(item)}
+                        >
+                          <Trash className="size-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
