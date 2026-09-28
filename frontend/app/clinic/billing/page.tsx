@@ -7,13 +7,11 @@ import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
   type Bill,
   type BillItem,
-  type Patient,
   type PaymentStatus,
   type PaymentType,
   createBill,
   downloadBillPdf,
   listBills,
-  listPatients,
   updateBill,
   voidBill,
 } from "@/lib/clinic-api";
@@ -43,6 +41,7 @@ import {
 import { PatientSelect } from "@/components/clinic/pickers";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import dynamic from "next/dynamic";
@@ -121,9 +120,12 @@ export default function BillingPage() {
 
   // Core States
   const [items, setItems] = useState<Bill[]>([]);
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [patientLookup, setPatientLookup] = useState<Record<string, string>>({});
+  const [total, setTotal] = useState(0);
+  // Separate, unfiltered snapshot (most recent 100) purely for the revenue stat cards + chart —
+  // those need real records to sum, not just a count, so they can't reuse the table's own page.
+  const [statsBills, setStatsBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Bill | null>(null);
@@ -149,29 +151,41 @@ export default function BillingPage() {
   const [pageIndex, setPageIndex] = useState(0);
   const pageSize = 10;
 
+  // Debounced so every keystroke doesn't fire a request.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 350);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
+  const loadStatsBills = useCallback(() => {
+    if (!clinicId) return;
+    listBills(clinicId, { limit: 100 })
+      .then((res) => setStatsBills(res.items ?? []))
+      .catch(() => {});
+  }, [clinicId]);
+
   const load = useCallback(() => {
     if (!clinicId) return;
-    Promise.all([
-      listBills(clinicId, { limit: 50 }),
-      listPatients(clinicId, { limit: 50 }),
-    ])
-      .then(([billsRes, patientsRes]) => {
-        const map: Record<string, string> = {};
-        patientsRes.items.forEach((p) => {
-          map[p.patientId] = p.fullName;
-        });
-
-        setPatientLookup(map);
-        setPatients((patientsRes as any)?.items ?? []);
-        setItems((billsRes as any)?.items ?? []);
+    setLoading(true);
+    listBills(clinicId, {
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      q: debouncedSearch || undefined,
+      page: pageIndex + 1,
+      limit: pageSize,
+    })
+      .then((res) => {
+        setItems(res.items ?? []);
+        setTotal(res.total ?? 0);
         setSelectedIds(new Set());
-        setPageIndex(0);
       })
-      .catch(() => {
-        toast.error("Failed to load bills");
-      })
-      .finally(() => setLoading(false));
-  }, [clinicId]);
+      .catch(() => toast.error("Failed to load bills"))
+      .finally(() => {
+        setLoading(false);
+        setInitialLoading(false);
+      });
+    loadStatsBills();
+  }, [clinicId, statusFilter, debouncedSearch, pageIndex, loadStatsBills]);
 
   useEffect(() => {
     load();
@@ -272,7 +286,7 @@ export default function BillingPage() {
   // Row Selection logic
   const handleToggleSelectAll = (checked: boolean) => {
     if (checked) {
-      const allIds = new Set(paginatedItems.map((b) => b.billId));
+      const allIds = new Set(sortedItems.map((b) => b.billId));
       setSelectedIds(allIds);
     } else {
       setSelectedIds(new Set());
@@ -315,51 +329,14 @@ export default function BillingPage() {
     }
   };
 
-  // Filtering & Search
-  const filteredItems = useMemo(() => {
-    return items.filter((b) => {
-      const patientName = patientLookup[b.patientId]?.toLowerCase() ?? "";
-      const billNumber = b.billNumber.toLowerCase();
-      const term = searchTerm.toLowerCase();
-
-      // Apply statusFilter if not 'all'
-      if (statusFilter !== "all" && b.status !== statusFilter) return false;
-
-      return (
-        patientName.includes(term) ||
-        billNumber.includes(term) ||
-        b.total.toString().includes(term)
-      );
-    });
-  }, [items, searchTerm, statusFilter, patientLookup]);
-
-  // Sorting
+  // Search/status are applied server-side (see `load`); `items` is already exactly one page.
+  // Only the sort-toggle re-orders that page client-side (cheap for ~10 rows, no round trip needed).
   const sortedItems = useMemo(() => {
-    if (!sortField) return filteredItems;
+    if (!sortField) return items;
+    return [...items].sort((a, b) => (sortDesc ? b.createdAt.localeCompare(a.createdAt) : a.createdAt.localeCompare(b.createdAt)));
+  }, [items, sortField, sortDesc]);
 
-    return [...filteredItems].sort((a, b) => {
-      let valA: string = a[sortField] || "";
-      let valB: string = b[sortField] || "";
-
-      if (sortField === "createdAt") {
-        valA = a.createdAt;
-        valB = b.createdAt;
-      }
-
-      if (sortDesc) {
-        return valB.localeCompare(valA);
-      }
-      return valA.localeCompare(valB);
-    });
-  }, [filteredItems, sortField, sortDesc]);
-
-  // Pagination
-  const paginatedItems = useMemo(() => {
-    const start = pageIndex * pageSize;
-    return sortedItems.slice(start, start + pageSize);
-  }, [sortedItems, pageIndex]);
-
-  const pageCount = Math.ceil(sortedItems.length / pageSize);
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
 
   const toggleSort = (field: "createdAt") => {
     if (sortField === field) {
@@ -431,7 +408,7 @@ export default function BillingPage() {
   }
 
   if (viewing) {
-    const patientName = patientLookup[viewing.patientId] || viewing.patientId;
+    const patientName = viewing.patientName || "Unknown Patient";
     return (
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -488,10 +465,10 @@ export default function BillingPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Metrics Section */}
-      {!loading && (
+      {!initialLoading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsBilling
-            bills={items}
+            bills={statsBills}
             searchTerm={searchTerm}
             onSearchChange={(v) => {
               setSearchTerm(v);
@@ -522,10 +499,10 @@ export default function BillingPage() {
       )}
 
       {/* Chart below section card — real data only */}
-      {!loading && (
+      {!initialLoading && (
         <Card className="border-border shadow-sm overflow-hidden">
           <CardContent className="p-0">
-            <BillingPayoutsChart bills={items} />
+            <BillingPayoutsChart bills={statsBills} />
           </CardContent>
         </Card>
       )}
@@ -569,10 +546,18 @@ export default function BillingPage() {
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
             </div>
-          ) : filteredItems.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-              No bills found.
-            </div>
+          ) : sortedItems.length === 0 ? (
+            <Empty className="border-none py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon"><ReceiptText /></EmptyMedia>
+                <EmptyTitle>{debouncedSearch || statusFilter !== "all" ? "No matching bills" : "No bills yet"}</EmptyTitle>
+                <EmptyDescription>
+                  {debouncedSearch || statusFilter !== "all"
+                    ? "Try a different search term or clear the filters above."
+                    : "Bills you create will show up here."}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <div className="overflow-x-auto -mx-6 px-6">
             <Table className="min-w-[720px]">
@@ -582,8 +567,8 @@ export default function BillingPage() {
                     <TableHead className="w-12">
                       <Checkbox
                         checked={
-                          paginatedItems.length > 0 &&
-                          paginatedItems.every((b) => selectedIds.has(b.billId))
+                          sortedItems.length > 0 &&
+                          sortedItems.every((b) => selectedIds.has(b.billId))
                         }
                         onCheckedChange={(checked) => handleToggleSelectAll(!!checked)}
                       />
@@ -620,7 +605,7 @@ export default function BillingPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedItems.map((b) => (
+                {sortedItems.map((b) => (
                   <TableRow key={b.billId} className={selectedIds.has(b.billId) ? "bg-muted/30" : ""}>
                     {visibleColumns.select && (
                       <TableCell>
@@ -636,9 +621,9 @@ export default function BillingPage() {
                     {visibleColumns.patient && (
                       <TableCell>
                         <div className="flex items-center gap-2.5">
-                          <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={b.patientId} name={patientLookup[b.patientId] || b.patientId} />
+                          <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={b.patientId} name={b.patientName || "Unknown Patient"} />
                           <span className="text-muted-foreground font-medium">
-                            {patientLookup[b.patientId] || b.patientId}
+                            {b.patientName || "Unknown Patient"}
                           </span>
                         </div>
                       </TableCell>
@@ -703,11 +688,11 @@ export default function BillingPage() {
           )}
 
           {/* Pagination Footer */}
-          {!loading && sortedItems.length > 0 && (
+          {!loading && total > 0 && (
             <Pagination
               page={pageIndex + 1}
               pageSize={pageSize}
-              totalItems={sortedItems.length}
+              totalItems={total}
               onPageChange={(p) => setPageIndex(Math.max(0, Math.min(p - 1, pageCount - 1)))}
               itemLabel="results"
             />

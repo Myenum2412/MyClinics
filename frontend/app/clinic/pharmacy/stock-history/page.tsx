@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
-import { listMovements, listMedicines, type PharmacyMovement, type PharmacyMedicine } from "@/lib/clinic-api"
+import { listMovements, type PharmacyMovement } from "@/lib/clinic-api"
 import { toast } from "sonner"
 import { Card, CardContent } from "@/components/ui/card"
 import { PharmacyStats } from "@/components/pharmacy-stats"
@@ -45,77 +45,83 @@ export default function PharmacyStockHistoryPage() {
   const session = useRequireRole("billing_staff")
   const clinicId = session?.clinicId ?? ""
   const [movements, setMovements] = React.useState<PharmacyMovement[]>([])
-  const [medicines, setMedicines] = React.useState<PharmacyMedicine[]>([])
+  const [total, setTotal] = React.useState(0)
   const [loading, setLoading] = React.useState(true)
+  const [initialLoading, setInitialLoading] = React.useState(true)
   const [search, setSearch] = React.useState("")
+  const [debouncedSearch, setDebouncedSearch] = React.useState("")
   const [type, setType] = React.useState<MovementType>("")
   const [from, setFrom] = React.useState("")
   const [to, setTo] = React.useState("")
   const [page, setPage] = React.useState(0)
 
   React.useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 250)
+    return () => clearTimeout(t)
+  }, [search])
+
+  React.useEffect(() => {
     if (!clinicId) return
     let active = true
     setLoading(true)
-    Promise.all([listMovements(clinicId, { limit: 500 }), listMedicines(clinicId, { limit: 500 })])
-      .then(([m, meds]) => {
+    listMovements(clinicId, {
+      search: debouncedSearch || undefined,
+      movementType: type || undefined,
+      from: from || undefined,
+      to: to || undefined,
+      page: page + 1,
+      limit: PAGE_SIZE,
+    })
+      .then((m: any) => {
         if (!active) return
-        setMovements((m as any)?.items ?? [])
-        setMedicines((meds as any)?.items ?? [])
+        setMovements(m?.items ?? [])
+        setTotal(m?.total ?? 0)
       })
       .catch((err: unknown) => { toast.error(err instanceof Error ? err.message : "Failed to load stock history") })
-      .finally(() => active && setLoading(false))
+      .finally(() => {
+        if (!active) return
+        setLoading(false)
+        setInitialLoading(false)
+      })
     return () => { active = false }
-  }, [clinicId])
+  }, [clinicId, debouncedSearch, type, from, to, page])
 
-  const medName = React.useMemo(() => {
-    const map = new Map<string, string>()
-    for (const med of medicines) map.set(med.medicineId, med.name)
-    return map
-  }, [medicines])
-
-  const fromTs = from ? new Date(from).setHours(0, 0, 0, 0) : null
-  const toTs = to ? new Date(to).setHours(23, 59, 59, 999) : null
-  const filtered = React.useMemo(() => {
-    const q = search.trim().toLowerCase()
-    return movements.filter((mv) => {
-      if (type && mv.movementType !== type) return false
-      const name = mv.medicineName ?? medName.get(mv.medicineId) ?? ""
-      if (q && !name.toLowerCase().includes(q)) return false
-      const ts = new Date(mv.createdAt).getTime()
-      if (fromTs != null && ts < fromTs) return false
-      if (toTs != null && ts > toTs) return false
-      return true
-    })
-  }, [movements, medName, type, search, fromTs, toTs])
-
-  const capped = filtered.length > 500
-  const view = capped ? filtered.slice(0, 500) : filtered
-  const pageCount = Math.max(1, Math.ceil(view.length / PAGE_SIZE))
-  const safePage = Math.min(page, pageCount - 1)
-  const pageRows = view.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE)
+  const pageRows = movements
+  const safePage = page
 
   const resetFilters = () => { setSearch(""); setType(""); setFrom(""); setTo(""); setPage(0) }
 
+  // Clinic-wide counts for the stat cards — independent of the table's current page/filters.
+  const [statusCounts, setStatusCounts] = React.useState<{ today: number; purchases: number; sales: number } | null>(null)
+  React.useEffect(() => {
+    if (!clinicId) return
+    const todayStr = new Date().toISOString().slice(0, 10)
+    Promise.allSettled([
+      listMovements(clinicId, { from: todayStr, to: todayStr, limit: 1 }),
+      listMovements(clinicId, { movementType: "purchase", limit: 1 }),
+      listMovements(clinicId, { movementType: "sale", limit: 1 }),
+    ]).then(([t, p, s]) => {
+      const count = (x: PromiseSettledResult<any>) => (x.status === "fulfilled" ? x.value?.total ?? 0 : 0)
+      setStatusCounts({ today: count(t), purchases: count(p), sales: count(s) })
+    })
+  }, [clinicId])
+
   const statsItems = React.useMemo(() => {
-    const total = movements.length
-    const today = new Date().toDateString()
-    const todayCount = movements.filter(m => new Date(m.createdAt).toDateString() === today).length
-    const purchases = movements.filter(m => m.movementType === "purchase").length
-    const sales = movements.filter(m => m.movementType === "sale").length
+    const purchases = statusCounts?.purchases ?? 0
+    const sales = statusCounts?.sales ?? 0
     return [
-      { name: "Total Movements", percentage: Math.min(100, total), current: total, allowed: 500, allowedLabel: "records", fill: "var(--chart-1)" },
-      { name: "Today", percentage: Math.min(100, todayCount), current: todayCount, allowed: 20, allowedLabel: "today", fill: "var(--chart-2)" },
+      { name: "Total Movements", percentage: Math.min(100, total), current: total, allowed: Math.max(total, 1), allowedLabel: "records", fill: "var(--chart-1)" },
+      { name: "Today", percentage: Math.min(100, (statusCounts?.today ?? 0)), current: statusCounts?.today ?? 0, allowed: 20, allowedLabel: "today", fill: "var(--chart-2)" },
       { name: "Purchases", percentage: total ? Math.round(purchases / total * 100) : 0, current: purchases, allowed: total, allowedLabel: "total", fill: "var(--chart-3)" },
       { name: "Sales", percentage: total ? Math.round(sales / total * 100) : 0, current: sales, allowed: total, allowedLabel: "total", fill: "var(--chart-4)" },
     ]
-  }, [movements])
+  }, [total, statusCounts])
 
   if (!session) return null
 
   return (
     <div className="flex flex-col gap-6">
-      {!loading && (
+      {!initialLoading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <PharmacyStats
             title="Stock History Analytics"
@@ -164,11 +170,14 @@ export default function PharmacyStockHistoryPage() {
             <div className="space-y-4 p-4">
               {Array.from({ length: 8 }).map((_, i) => (<Skeleton key={i} className="h-10 w-full" />))}
             </div>
-          ) : view.length === 0 ? (
-            <div className="py-16 text-center"><p className="text-sm text-muted-foreground">No movements match the filters.</p></div>
+          ) : pageRows.length === 0 ? (
+            <div className="py-16 text-center">
+              <p className="text-sm text-muted-foreground">
+                {search || type || from || to ? "No movements match the filters." : "No stock movements yet."}
+              </p>
+            </div>
           ) : (
             <>
-              {capped && (<p className="mx-4 mt-4 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-700">Showing first 500 of {filtered.length} results. Refine filters to narrow down.</p>)}
               <div className="overflow-x-auto">
                 <Table className="min-w-[900px]">
                   <TableHeader>
@@ -188,7 +197,7 @@ export default function PharmacyStockHistoryPage() {
                   </TableHeader>
                   <TableBody>
                     {pageRows.map((mv) => {
-                      const name = mv.medicineName ?? medName.get(mv.medicineId) ?? mv.medicineId
+                      const name = mv.medicineName ?? mv.medicineId
                       const changed = mv.quantityChanged
                       const changedColor = changed > 0 ? "text-emerald-600" : changed < 0 ? "text-red-600" : "text-muted-foreground"
                       return (
@@ -213,8 +222,8 @@ export default function PharmacyStockHistoryPage() {
             </>
           )}
         </CardContent>
-        {!loading && view.length > 0 && (
-          <Pagination page={safePage + 1} pageSize={PAGE_SIZE} totalItems={view.length} onPageChange={(p) => setPage(p - 1)} itemLabel="movements" />
+        {!loading && total > 0 && (
+          <Pagination page={safePage + 1} pageSize={PAGE_SIZE} totalItems={total} onPageChange={(p) => setPage(p - 1)} itemLabel="movements" />
         )}
       </Card>
     </div>

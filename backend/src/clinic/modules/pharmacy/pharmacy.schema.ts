@@ -396,12 +396,13 @@ export function supplierToPublic(doc: PharmacySupplierDoc) {
   };
 }
 
-export function purchaseToPublic(doc: PharmacyPurchaseDoc) {
+export function purchaseToPublic(doc: PharmacyPurchaseDoc & { supplierName?: string | null }) {
   return {
     clinicId: doc.clinicId,
     purchaseId: doc.purchaseId,
     invoiceNumber: doc.invoiceNumber,
     supplierId: doc.supplierId,
+    supplierName: doc.supplierName ?? null,
     purchaseDate: doc.purchaseDate,
     items: doc.items,
     subtotal: doc.subtotal,
@@ -415,13 +416,14 @@ export function purchaseToPublic(doc: PharmacyPurchaseDoc) {
   };
 }
 
-export function saleToPublic(doc: PharmacySaleDoc) {
+export function saleToPublic(doc: PharmacySaleDoc & { patientName?: string | null }) {
   return {
     clinicId: doc.clinicId,
     saleId: doc.saleId,
     invoiceNumber: doc.invoiceNumber,
     saleDate: doc.saleDate,
     patientId: doc.patientId,
+    patientName: doc.patientName ?? null,
     items: doc.items,
     subtotal: doc.subtotal,
     discount: doc.discount,

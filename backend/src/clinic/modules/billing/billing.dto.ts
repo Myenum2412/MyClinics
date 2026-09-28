@@ -58,4 +58,6 @@ export const listBillsSchema = z.object({
   status: z.enum(BILL_STATUSES).optional(),
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  /** Matches patient name, doctor name, or bill number. */
+  q: z.string().trim().max(200).optional(),
 });

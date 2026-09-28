@@ -24,11 +24,16 @@ export interface PrescriptionDoc extends ClinicDocument {
   deletedAt?: Date;
 }
 
-export function prescriptionToPublic(doc: PrescriptionDoc) {
+export function prescriptionToPublic(
+  doc: PrescriptionDoc & { patientName?: string | null; patientPhone?: string | null; doctorName?: string | null }
+) {
   return {
     prescriptionId: doc.prescriptionId,
     patientId: doc.patientId,
     doctorId: doc.doctorId,
+    patientName: doc.patientName ?? null,
+    patientPhone: doc.patientPhone ?? null,
+    doctorName: doc.doctorName ?? null,
     visitDate: doc.visitDate,
     diagnosis: doc.diagnosis,
     medicines: doc.medicines,

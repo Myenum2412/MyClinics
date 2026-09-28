@@ -1,76 +1,60 @@
 'use client';
 
-import { PolarAngleAxis, RadialBar, RadialBarChart } from 'recharts';
-import { Card, CardContent } from '@/components/ui/card';
-import { type ChartConfig, ChartContainer } from '@/components/ui/chart';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import type { Appointment } from '@/lib/clinic-api';
 import { todayISO } from '@/lib/datetime';
-
-const chartConfig = {
-  capacity: {
-    label: 'Capacity',
-    color: 'hsl(var(--primary))',
-  },
-} satisfies ChartConfig;
+import { MetricStatGrid } from '@/components/metric-stat-cards';
 
 export default function StatsAppointments({
   appointments,
   action,
   searchTerm,
   onSearchChange,
+  stats,
 }: {
   appointments: Appointment[];
   action?: React.ReactNode;
   searchTerm?: string;
   onSearchChange?: (v: string) => void;
+  stats?: { total: number; today: number; completed: number; scheduled: number };
 }) {
-  const totalCount = appointments.length;
-
-  // Calculate today's appointments
   const todayStr = todayISO();
-  const todayCount = appointments.filter((a) => a.date === todayStr).length;
+  const totalCount = stats?.total ?? appointments.length;
+  const todayCount = stats?.today ?? appointments.filter((a) => a.date === todayStr).length;
+  const completedCount =
+    stats?.completed ?? appointments.filter((a) => a.status === 'completed').length;
+  const scheduledCount =
+    stats?.scheduled ?? appointments.filter((a) => a.status === 'scheduled').length;
 
-  // Calculate completed appointments
-  const completedCount = appointments.filter((a) => a.status === 'completed').length;
-
-  // Calculate active scheduled appointments
-  const scheduledCount = appointments.filter((a) => a.status === 'scheduled').length;
-
-  // Prepare data for the cards
-  const data = [
+  const items = [
     {
       name: 'Total Appointments',
-      percentage: Math.min(100, Math.round((totalCount / 100) * 100)), // Monthly target 100
-      current: totalCount,
-      allowed: 100,
-      allowedLabel: 'target',
-      fill: 'var(--chart-1)',
+      value: totalCount,
+      detail: `${totalCount} of 100 target`,
+      percentage: Math.min(100, Math.round((totalCount / 100) * 100)),
+      accent: 'var(--chart-1)',
     },
     {
       name: 'Appointments Today',
-      percentage: Math.min(100, Math.round((todayCount / 10) * 100)), // Daily target 10
-      current: todayCount,
-      allowed: 10,
-      allowedLabel: 'target',
-      fill: 'var(--chart-2)',
+      value: todayCount,
+      detail: `${todayCount} of 10 target`,
+      percentage: Math.min(100, Math.round((todayCount / 10) * 100)),
+      accent: 'var(--chart-2)',
     },
     {
       name: 'Active Scheduled',
-      percentage: Math.min(100, Math.round((scheduledCount / 50) * 100)), // Target 50 active
-      current: scheduledCount,
-      allowed: 50,
-      allowedLabel: 'target',
-      fill: 'var(--chart-3)',
+      value: scheduledCount,
+      detail: `${scheduledCount} of 50 target`,
+      percentage: Math.min(100, Math.round((scheduledCount / 50) * 100)),
+      accent: 'var(--chart-3)',
     },
     {
       name: 'Completed Visited',
+      value: completedCount,
+      detail: `${completedCount} of ${totalCount} total booked`,
       percentage: totalCount ? Math.round((completedCount / totalCount) * 100) : 0,
-      current: completedCount,
-      allowed: totalCount,
-      allowedLabel: 'total booked',
-      fill: 'var(--chart-4)',
+      accent: 'var(--chart-4)',
     },
   ];
 
@@ -91,9 +75,9 @@ export default function StatsAppointments({
               <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 type="search"
-                value={searchTerm ?? ""}
+                value={searchTerm ?? ''}
                 onChange={(e) => onSearchChange(e.target.value)}
-                placeholder="Search name, doctor, reason..."
+                placeholder="Search appointments..."
                 className="h-9 w-full pl-9"
               />
             </div>
@@ -101,57 +85,9 @@ export default function StatsAppointments({
         )}
         {action && <div className="shrink-0">{action}</div>}
       </div>
-      <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {data.map((item) => (
-          <Card className="p-4 shadow-sm bg-card" key={item.name}>
-            <CardContent className="flex items-center space-x-4 p-0">
-              <div className="relative flex items-center justify-center">
-                <ChartContainer
-                  className="h-[80px] w-[80px]"
-                  config={chartConfig}
-                >
-                  <RadialBarChart
-                    barSize={6}
-                    data={[{ name: item.name, capacity: item.percentage }]}
-                    endAngle={-270}
-                    innerRadius={30}
-                    outerRadius={60}
-                    startAngle={90}
-                  >
-                    <PolarAngleAxis
-                      angleAxisId={0}
-                      axisLine={false}
-                      domain={[0, 100]}
-                      tick={false}
-                      type="number"
-                    />
-                    <RadialBar
-                      angleAxisId={0}
-                      background
-                      cornerRadius={10}
-                      dataKey="capacity"
-                      fill={item.fill}
-                    />
-                  </RadialBarChart>
-                </ChartContainer>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="font-medium text-xs text-foreground font-semibold">
-                    {item.percentage}%
-                  </span>
-                </div>
-              </div>
-              <div>
-                <dt className="font-semibold text-foreground text-sm tracking-tight leading-none mb-1">
-                  {item.name}
-                </dt>
-                <dd className="text-muted-foreground text-xs">
-                  {item.current} of {item.allowed} {item.allowedLabel}
-                </dd>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </dl>
+      <div className="mt-6">
+        <MetricStatGrid items={items} />
+      </div>
     </div>
   );
 }

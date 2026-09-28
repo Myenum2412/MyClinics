@@ -23,6 +23,22 @@ export class BillingController {
     return new BillingService(db);
   }
 
+  /** Single-record reads/writes skip the list endpoint's join, so resolve the same names here. */
+  private async withNames(db: Db, clinicId: string, bill: Parameters<typeof billToPublic>[0]) {
+    const [patient, doctor] = await Promise.all([
+      db.collection(CLINIC_COLLECTIONS.patients).findOne({ clinicId, patientId: bill.patientId }),
+      bill.doctorId
+        ? db.collection(CLINIC_COLLECTIONS.doctors).findOne({ clinicId, doctorId: bill.doctorId })
+        : Promise.resolve(null),
+    ]);
+    return {
+      ...billToPublic(bill),
+      patientName: (patient as { fullName?: string } | null)?.fullName ?? null,
+      patientPhone: (patient as { mobile?: string } | null)?.mobile ?? null,
+      doctorName: (doctor as { name?: string } | null)?.name ?? null,
+    };
+  }
+
   async create(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
@@ -32,7 +48,7 @@ export class BillingController {
     }
     const db = await getDb();
     const bill = await this.service(db).createBill(ctx, parsed.data);
-    return reply.code(201).send(billToPublic(bill));
+    return reply.code(201).send(await this.withNames(db, requireClinicOf(ctx), bill));
   }
 
   async list(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
@@ -54,7 +70,7 @@ export class BillingController {
     const { billId } = request.params as { billId: string };
     const db = await getDb();
     const bill = await this.service(db).getBill(ctx, billId);
-    return reply.send(billToPublic(bill));
+    return reply.send(await this.withNames(db, requireClinicOf(ctx), bill));
   }
 
   async updateById(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
@@ -67,7 +83,7 @@ export class BillingController {
     }
     const db = await getDb();
     const bill = await this.service(db).updateBill(ctx, billId, parsed.data);
-    return reply.send(billToPublic(bill));
+    return reply.send(await this.withNames(db, requireClinicOf(ctx), bill));
   }
 
   async void(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {

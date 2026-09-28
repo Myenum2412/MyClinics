@@ -74,6 +74,7 @@ export async function handleInboundMessage(
       phone: msg.from,
       pushName: msg.pushName ?? null,
       messageId: msg.messageId,
+      initialSettings: settings,
       io,
     });
     const outcome = await handleMenuMessage({ text: msg.text, type: msg.type, pushName: msg.pushName ?? null }, previous, deps);

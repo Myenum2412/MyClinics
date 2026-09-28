@@ -37,6 +37,8 @@ export const listAppointmentsSchema = z.object({
   status: z.enum(APPOINTMENT_STATUSES).optional(),
   doctorId: z.string().startsWith("doc_").optional(),
   patientId: z.string().startsWith("pat_").optional(),
+  /** Matches patient name, doctor name, or reason. */
+  q: z.string().trim().max(200).optional(),
 });
 
 export const rescheduleQueueSchema = z.object({

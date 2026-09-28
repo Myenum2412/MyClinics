@@ -7,9 +7,7 @@ import {
   listMedicines,
   deleteMedicine,
   bulkMedicines,
-  listSuppliers,
   type PharmacyMedicine,
-  type PharmacySupplier,
 } from "@/lib/clinic-api"
 import { toast } from "sonner"
 import { Card, CardContent } from "@/components/ui/card"
@@ -27,6 +25,7 @@ import {
 } from "@/components/ui/table"
 import { Pencil, Trash2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Pagination } from "@/components/ui/pagination"
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
 import { ChartContainer } from "@/components/ui/chart"
 import {
@@ -53,7 +52,9 @@ export default function PharmacyMedicinesPage() {
   const clinicId = session?.clinicId ?? ""
 
   const [medicines, setMedicines] = React.useState<PharmacyMedicine[]>([])
-  const [suppliers, setSuppliers] = React.useState<PharmacySupplier[]>([])
+  const [total, setTotal] = React.useState(0)
+  const [page, setPage] = React.useState(1)
+  const pageSize = 20
   const [loading, setLoading] = React.useState(true)
   const [search, setSearch] = React.useState("")
   const [category, setCategory] = React.useState("")
@@ -65,29 +66,27 @@ export default function PharmacyMedicinesPage() {
   const [bulkOpen, setBulkOpen] = React.useState(false)
 
   const load = React.useCallback(
-    (q?: { search?: string; category?: string; status?: string }) => {
+    (q?: { search?: string; category?: string; status?: string; page?: number }) => {
       if (!clinicId) return
       setLoading(true)
       const effStatus = q?.status ?? status
-      Promise.all([
-        listMedicines(clinicId, {
-          search: q?.search ?? search,
-          category: q?.category ?? category,
-          status: effStatus && effStatus !== "all" ? effStatus : undefined,
-          limit: 200,
-        }),
-        listSuppliers(clinicId, { limit: 500 }),
-      ])
-        .then(([m, s]) => {
-          setMedicines((m as any)?.items ?? [])
-          setSuppliers((s as any)?.items ?? [])
+      listMedicines(clinicId, {
+        search: q?.search ?? search,
+        category: q?.category ?? category,
+        status: effStatus && effStatus !== "all" ? effStatus : undefined,
+        page: q?.page ?? page,
+        limit: pageSize,
+      })
+        .then((m) => {
+          setMedicines(m.items ?? [])
+          setTotal(m.total ?? 0)
         })
         .catch((e: unknown) => {
           toast.error(e instanceof Error ? e.message : "Failed to load medicines")
         })
         .finally(() => setLoading(false))
     },
-    [clinicId, search, category, status]
+    [clinicId, search, category, status, page]
   )
 
   React.useEffect(() => {
@@ -95,7 +94,7 @@ export default function PharmacyMedicinesPage() {
     const t = setTimeout(() => load(), 250)
     return () => clearTimeout(t)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clinicId, search, category, status])
+  }, [clinicId, search, category, status, page])
 
   if (!session) return null
 
@@ -198,16 +197,16 @@ export default function PharmacyMedicinesPage() {
           <Input
             placeholder="Search medicines…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             className="h-9 min-w-48 flex-1"
           />
           <Input
             placeholder="Category"
             value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            onChange={(e) => { setCategory(e.target.value); setPage(1) }}
             className="h-9 w-44"
           />
-          <Select value={status} onValueChange={(v) => setStatus(v ?? "all")}>
+          <Select value={status} onValueChange={(v) => { setStatus(v ?? "all"); setPage(1) }}>
             <SelectTrigger className="h-9 w-36">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -276,7 +275,7 @@ export default function PharmacyMedicinesPage() {
               ) : medicines.length === 0 ? (
                 <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                   <TableCell colSpan={11} className="py-10 text-center text-muted-foreground">
-                    No medicines found.
+                    {search || category || status !== "all" ? "No medicines match your search or filters." : "No medicines yet — add your first one to get started."}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -322,6 +321,9 @@ export default function PharmacyMedicinesPage() {
               )}
             </TableBody>
           </Table>
+          {!loading && total > 0 && (
+            <Pagination page={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} itemLabel="medicines" />
+          )}
         </CardContent>
       </Card>
 

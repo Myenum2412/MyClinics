@@ -90,12 +90,15 @@ export function derivePaymentStatus(total: number, amountPaid: number): (typeof 
   return "partial";
 }
 
-export function billToPublic(doc: BillDoc) {
+export function billToPublic(doc: BillDoc & { patientName?: string | null; patientPhone?: string | null; doctorName?: string | null }) {
   return {
     billId: doc.billId,
     billNumber: doc.billNumber,
     patientId: doc.patientId,
     doctorId: doc.doctorId,
+    patientName: doc.patientName ?? null,
+    patientPhone: doc.patientPhone ?? null,
+    doctorName: doc.doctorName ?? null,
     items: doc.items,
     subtotal: doc.subtotal,
     discount: doc.discount,

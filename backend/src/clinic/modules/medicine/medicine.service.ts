@@ -104,7 +104,7 @@ export class MedicineService {
 
   async listRecords(
     ctx: ClinicContext,
-    query: { patientId?: string; doctorId?: string; from?: string; to?: string; skip: number; limit: number }
+    query: { patientId?: string; doctorId?: string; from?: string; to?: string; q?: string; skip: number; limit: number }
   ) {
     const [items, total] = await this.repo(ctx).list(query);
     return { items, total };

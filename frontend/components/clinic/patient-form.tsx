@@ -602,7 +602,9 @@ export function PatientForm({
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField(
               "Assigned Doctor",
-              doctors.find((d) => d.doctorId === form.doctorId)?.name ?? form.doctorId
+              form.doctorId
+                ? doctors.find((d) => d.doctorId === form.doctorId)?.name ?? "Unknown doctor"
+                : "Not assigned"
             )}
             {renderViewField("Portal Access", form.portalAccess)}
             {renderViewField("Login Notification", form.loginNotification)}
@@ -1146,7 +1148,9 @@ export function PatientForm({
           >
             {isViewMode ? (
               <div className="border border-border rounded-md px-3 py-2 text-foreground bg-muted">
-                {form.doctorId || "—"}
+                {form.doctorId
+                  ? doctors.find((d) => d.doctorId === form.doctorId)?.name ?? "Unknown doctor"
+                  : "Not assigned"}
               </div>
             ) : (
               <DoctorComboBox

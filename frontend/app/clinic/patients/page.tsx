@@ -5,7 +5,6 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
-  type Appointment,
   type Patient,
   assignPatient,
   createPatient,
@@ -51,11 +50,12 @@ import {
 } from "@/components/ui/table";
 import { DoctorSelect } from "@/components/clinic/pickers";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { Pagination } from "@/components/ui/pagination";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye, Send, Trash2 } from "lucide-react";
+import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye, Send, Trash2, UsersRound } from "lucide-react";
 import { TableFilters } from "@/components/clinic/table-filters";
 import dynamic from "next/dynamic";
 import { sessionCan } from "@/hooks/use-clinic-session";
@@ -163,9 +163,17 @@ export default function PatientsPage() {
   const { getOptions } = useDropdownOptions(clinicId);
   const bloodGroups = getOptions("blood_groups");
   const [items, setItems] = useState<Patient[]>([]);
-  const [apptItems, setApptItems] = useState<Appointment[]>([]);
+  const [total, setTotal] = useState(0);
+  const [globalStats, setGlobalStats] = useState<{ total: number; active: number; female: number; upcoming: number } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [q, setQ] = useState("");
+  // Debounced so every keystroke doesn't fire a request.
+  const [debouncedQ, setDebouncedQ] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 350);
+    return () => clearTimeout(t);
+  }, [q]);
   const [editing, setEditing] = useState<Patient | null>(null);
   const [viewing, setViewing] = useState<Patient | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Patient | null>(null);
@@ -191,21 +199,49 @@ export default function PatientsPage() {
     status: true,
   });
 
+  // Clinic-wide counts for the stat cards — independent of the table's current page/filters.
+  const loadStats = useCallback(() => {
+    if (!clinicId) return;
+    const today = todayISO();
+    Promise.allSettled([
+      listPatients(clinicId, { limit: 1 }),
+      listPatients(clinicId, { limit: 1, status: "active" }),
+      listPatients(clinicId, { limit: 1, gender: "female" }),
+      listAppointments(clinicId, { limit: 1, status: "scheduled", from: today }),
+    ]).then(([totalRes, activeRes, femaleRes, upcomingRes]) => {
+      const count = (r: PromiseSettledResult<any>) => (r.status === "fulfilled" ? r.value?.total ?? 0 : 0);
+      setGlobalStats({
+        total: count(totalRes),
+        active: count(activeRes),
+        female: count(femaleRes),
+        upcoming: count(upcomingRes),
+      });
+    });
+  }, [clinicId]);
+
+  // The actual table data: real server-side pagination + filtering + search.
   const load = useCallback(() => {
     if (!clinicId) return;
-    Promise.allSettled([
-      listPatients(clinicId, { limit: 50 }),
-      listAppointments(clinicId, { limit: 50 }),
-    ])
-      .then(([patientRes, apptRes]) => {
-        if (patientRes.status === "fulfilled") setItems((patientRes.value as any)?.items ?? []);
-        else toast.error("Failed to load patients");
-        if (apptRes.status === "fulfilled") setApptItems((apptRes.value as any)?.items ?? []);
-        setCurrentPage(1);
+    setLoading(true);
+    listPatients(clinicId, {
+      q: debouncedQ || undefined,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      gender: genderFilter !== "all" ? genderFilter : undefined,
+      page: currentPage,
+      limit: pageSize,
+    })
+      .then((res) => {
+        setItems(res.items ?? []);
+        setTotal(res.total ?? 0);
         setSelectedIds(new Set());
       })
-      .finally(() => setLoading(false));
-  }, [clinicId]);
+      .catch(() => toast.error("Failed to load patients"))
+      .finally(() => {
+        setLoading(false);
+        setInitialLoading(false);
+      });
+    loadStats();
+  }, [clinicId, debouncedQ, statusFilter, genderFilter, currentPage, pageSize, loadStats]);
 
   useEffect(() => {
     load();
@@ -335,14 +371,11 @@ export default function PatientsPage() {
   const canManage = sessionCan(session, "clinic_admin");
   const isDoctor = session?.role === "doctor";
 
-  // Stats calculations
-  const totalPatients = items.length;
-  const activePatients = items.filter((p) => p.status === "active").length;
-  const femalePatients = items.filter((p) => p.gender === "female").length;
-  const today = todayISO();
-  const upcomingAppointments = apptItems.filter(
-    (a) => a.status === "scheduled" && a.date >= today
-  ).length;
+  // Stats calculations — clinic-wide (from the server), not just the current page.
+  const totalPatients = globalStats?.total ?? items.length;
+  const activePatients = globalStats?.active ?? items.filter((p) => p.status === "active").length;
+  const femalePatients = globalStats?.female ?? items.filter((p) => p.gender === "female").length;
+  const upcomingAppointments = globalStats?.upcoming ?? 0;
 
   const patientStats = useMemo(() => [
     {
@@ -419,29 +452,14 @@ export default function PatientsPage() {
     }
   };
 
-  // Client-side search + filter
-  const filteredItems = useMemo(() => {
-    const lower = q.toLowerCase();
-    return items.filter((p) => {
-      const matchesSearch = !q || p.fullName.toLowerCase().includes(lower) || (p.email && p.email.toLowerCase().includes(lower)) || p.mobile.includes(lower) || (p.city && p.city.toLowerCase().includes(lower));
-      const matchesStatus = statusFilter === "all" || p.status === statusFilter;
-      const matchesGender = genderFilter === "all" || p.gender === genderFilter;
-      return matchesSearch && matchesStatus && matchesGender;
-    });
-  }, [items, q, statusFilter, genderFilter]);
-
-  // Pagination calculation
-  const totalPages = Math.ceil(filteredItems.length / pageSize);
-  const paginatedItems = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredItems.slice(startIndex, startIndex + pageSize);
-  }, [filteredItems, currentPage, pageSize]);
+  // Search/status/gender are applied server-side (see `load`); `items` is already exactly one page.
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === paginatedItems.length) {
+    if (selectedIds.size === items.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(paginatedItems.map((p) => p.patientId)));
+      setSelectedIds(new Set(items.map((p) => p.patientId)));
     }
   };
 
@@ -668,7 +686,7 @@ export default function PatientsPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Stats Section with action slot */}
-      {!loading && (
+      {!initialLoading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
             title="Patient Analytics"
@@ -761,9 +779,17 @@ export default function PatientsPage() {
               <Skeleton className="h-10 w-full" />
             </div>
           ) : items.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-              No patients found.
-            </div>
+            <Empty className="border-none py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon"><UsersRound /></EmptyMedia>
+                <EmptyTitle>{debouncedQ || statusFilter !== "all" || genderFilter !== "all" ? "No matching patients" : "No patients yet"}</EmptyTitle>
+                <EmptyDescription>
+                  {debouncedQ || statusFilter !== "all" || genderFilter !== "all"
+                    ? "Try a different search term or clear the filters above."
+                    : "Patients you add will show up here."}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <>
               <div className="overflow-x-auto -mx-6 px-6">
@@ -773,7 +799,7 @@ export default function PatientsPage() {
                     {visibleColumns.select && (
                       <TableHead className="w-12 pl-6">
                         <Checkbox
-                          checked={selectedIds.size === paginatedItems.length && paginatedItems.length > 0}
+                          checked={selectedIds.size === items.length && items.length > 0}
                           onCheckedChange={toggleSelectAll}
                           aria-label="Select all"
                         />
@@ -788,7 +814,7 @@ export default function PatientsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedItems.map((p) => (
+                  {items.map((p) => (
                     <TableRow
                       key={p.patientId}
                       className={`hover:bg-muted/30 border-b border-border last:border-0 ${selectedIds.has(p.patientId) ? "bg-muted/30" : ""}`}
@@ -867,11 +893,11 @@ export default function PatientsPage() {
               </div>
 
               {/* Pagination Controls */}
-              {filteredItems.length > 0 && (
+              {total > 0 && (
                 <Pagination
                   page={currentPage}
                   pageSize={pageSize}
-                  totalItems={filteredItems.length}
+                  totalItems={total}
                   onPageChange={(p) => setCurrentPage(Math.max(1, Math.min(p, totalPages || 1)))}
                   itemLabel="results"
                 />

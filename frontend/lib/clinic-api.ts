@@ -297,12 +297,19 @@ export interface Appointment {
   completedAt: string | null;
   notifiedStages: string[];
   queueHistory: { status: AppointmentQueueStatus; at: string; by?: string | null }[];
+  /** Denormalized at read time by the server (joined from patients/doctors) — always present, never a raw id. */
+  patientName?: string | null;
+  patientPhone?: string | null;
+  doctorName?: string | null;
 }
 
 export interface MedicineRecord {
   recordId: string;
   patientId: string;
   doctorId: string;
+  /** Denormalized at read time by the server (joined from patients/doctors) — always present, never a raw id. */
+  patientName?: string | null;
+  doctorName?: string | null;
   diagnosis: string;
   symptoms: string | null;
   treatment: string | null;
@@ -336,6 +343,10 @@ export interface Prescription {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Denormalized at read time by the server (joined from patients/doctors) — always present, never a raw id. */
+  patientName?: string | null;
+  patientPhone?: string | null;
+  doctorName?: string | null;
 }
 
 export type InvestigationStatus =
@@ -404,6 +415,10 @@ export interface Bill {
   sendMethod: "whatsapp" | "email" | "none";
   createdAt: string;
   updatedAt: string;
+  /** Denormalized at read time by the server (joined from patients/doctors) — always present, never a raw id. */
+  patientName?: string | null;
+  patientPhone?: string | null;
+  doctorName?: string | null;
 }
 
 export interface Notification {
@@ -577,19 +592,22 @@ async function request<T>(
   const cacheKey = `${method} ${url}`;
   const skipCache = init.cache === "no-store";
 
-  if (method === "GET" && !skipCache) {
-    const hit = getCache.get(cacheKey);
-    if (hit && hit.expires > nowMs()) return hit.data as T;
-    // SWR: serve stale while revalidating in background
-    if (hit && hit.expires + GET_SWR_MS > nowMs()) {
-      // trigger background revalidation without blocking
-      setTimeout(() => { void doFetch<T>(url, path, init, headers, cacheKey, true); }, 0);
-      return hit.data as T;
+  if (method === "GET") {
+    if (!skipCache) {
+      const hit = getCache.get(cacheKey);
+      if (hit && hit.expires > nowMs()) return hit.data as T;
+      // SWR: serve stale while revalidating in background
+      if (hit && hit.expires + GET_SWR_MS > nowMs()) {
+        // trigger background revalidation without blocking
+        setTimeout(() => { void doFetch<T>(url, path, init, headers, cacheKey, true); }, 0);
+        return hit.data as T;
+      }
     }
+    // Coalesce truly-concurrent duplicate requests (e.g. a layout and a page both calling
+    // ensureSession() on the same navigation) even for no-store calls — this only merges
+    // requests that overlap in flight, it never serves data from a previous tick.
     const pending = pendingGets.get(cacheKey);
     if (pending) return pending as Promise<T>;
-  } else if (method !== "GET") {
-    // don't clear aggressively here; clear after success
   }
 
   return doFetch<T>(url, path, init, headers, cacheKey, skipCache) as Promise<T>;
@@ -597,7 +615,8 @@ async function request<T>(
 
 async function doFetch<T>(url: string, path: string, init: RequestInit, headers: Record<string,string>, cacheKey: string, skipCache: boolean): Promise<T> {
   const method = (init.method ?? "GET").toUpperCase();
-  const isGet = method === "GET" && !skipCache;
+  const isGet = method === "GET";
+  const cacheable = isGet && !skipCache;
   const task = (async (): Promise<T> => {
     let res: Response;
     try {
@@ -622,7 +641,7 @@ async function doFetch<T>(url: string, path: string, init: RequestInit, headers:
       const err = data as { error?: string; code?: string };
       throw new ClinicApiError(err.error ?? `Request failed (${res.status})`, res.status, err.code);
     }
-    if (isGet) {
+    if (cacheable) {
       getCache.set(cacheKey, { data, expires: nowMs() + GET_CACHE_TTL_MS });
       if (getCache.size > 200) for (const [k, v] of getCache) if (v.expires + GET_SWR_MS <= nowMs()) getCache.delete(k);
     } else if (method !== "GET" && method !== "HEAD") {
@@ -789,14 +808,25 @@ export function updateOwnClinic(
 
 export function listPatients(
   clinicId: string,
-  query: { q?: string; doctorId?: string; status?: string; limit?: number } = {}
+  query: { q?: string; doctorId?: string; status?: string; gender?: string; page?: number; limit?: number; ids?: string[] } = {}
 ): Promise<PageResult<Patient>> {
   const params = new URLSearchParams();
   if (query.q) params.set("q", query.q);
   if (query.doctorId) params.set("doctorId", query.doctorId);
   if (query.status) params.set("status", query.status);
-  params.set("limit", String(query.limit ?? 50));
+  if (query.gender) params.set("gender", query.gender);
+  if (query.ids?.length) params.set("ids", query.ids.join(","));
+  if (query.page) params.set("page", String(query.page));
+  params.set("limit", String(query.limit ?? 20));
   return request(tenantPath(clinicId, `/patients?${params}`));
+}
+
+/** Resolves patient names for a batch of ids in one round trip (e.g. for a page of appointments/bills). Empty when `ids` is empty. */
+export async function getPatientsByIds(clinicId: string, ids: string[]): Promise<Patient[]> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  if (unique.length === 0) return [];
+  const { items } = await listPatients(clinicId, { ids: unique });
+  return items;
 }
 
 export function createPatient(
@@ -872,6 +902,9 @@ export function listAppointments(
     status?: string;
     doctorId?: string;
     patientId?: string;
+    /** Matches patient name, doctor name, or reason (server-side, joined). */
+    q?: string;
+    page?: number;
     limit?: number;
   } = {}
 ): Promise<PageResult<Appointment>> {
@@ -882,7 +915,9 @@ export function listAppointments(
   if (query.status) params.set("status", query.status);
   if (query.doctorId) params.set("doctorId", query.doctorId);
   if (query.patientId) params.set("patientId", query.patientId);
-  params.set("limit", String(query.limit ?? 50));
+  if (query.q) params.set("q", query.q);
+  if (query.page) params.set("page", String(query.page));
+  params.set("limit", String(query.limit ?? 20));
   return request(tenantPath(clinicId, `/appointments?${params}`));
 }
 
@@ -1302,13 +1337,15 @@ export function deleteStaff(clinicId: string, staffId: string): Promise<{ ok: tr
 
 export function listRecords(
   clinicId: string,
-  query: { patientId?: string; from?: string; to?: string; limit?: number } = {}
+  query: { patientId?: string; from?: string; to?: string; q?: string; page?: number; limit?: number } = {}
 ): Promise<PageResult<MedicineRecord>> {
   const params = new URLSearchParams();
   if (query.patientId) params.set("patientId", query.patientId);
   if (query.from) params.set("from", query.from);
   if (query.to) params.set("to", query.to);
-  params.set("limit", String(query.limit ?? 50));
+  if (query.q) params.set("q", query.q);
+  if (query.page) params.set("page", String(query.page));
+  params.set("limit", String(query.limit ?? 20));
   return request(tenantPath(clinicId, `/medicine?${params}`));
 }
 
@@ -1343,14 +1380,16 @@ export function deleteRecord(clinicId: string, recordId: string): Promise<{ ok: 
 
 export function listPrescriptions(
   clinicId: string,
-  query: { patientId?: string; doctorId?: string; from?: string; to?: string; limit?: number } = {}
+  query: { patientId?: string; doctorId?: string; from?: string; to?: string; q?: string; page?: number; limit?: number } = {}
 ): Promise<PageResult<Prescription>> {
   const params = new URLSearchParams();
   if (query.patientId) params.set("patientId", query.patientId);
   if (query.doctorId) params.set("doctorId", query.doctorId);
   if (query.from) params.set("from", query.from);
   if (query.to) params.set("to", query.to);
-  params.set("limit", String(query.limit ?? 50));
+  if (query.q) params.set("q", query.q);
+  if (query.page) params.set("page", String(query.page));
+  params.set("limit", String(query.limit ?? 20));
   return request(tenantPath(clinicId, `/prescriptions?${params}`));
 }
 
@@ -1565,14 +1604,16 @@ export function createQuickAdd(
 
 export function listBills(
   clinicId: string,
-  query: { patientId?: string; status?: string; from?: string; to?: string; limit?: number } = {}
+  query: { patientId?: string; status?: string; from?: string; to?: string; q?: string; page?: number; limit?: number } = {}
 ): Promise<PageResult<Bill>> {
   const params = new URLSearchParams();
   if (query.patientId) params.set("patientId", query.patientId);
   if (query.status) params.set("status", query.status);
   if (query.from) params.set("from", query.from);
   if (query.to) params.set("to", query.to);
-  params.set("limit", String(query.limit ?? 50));
+  if (query.q) params.set("q", query.q);
+  if (query.page) params.set("page", String(query.page));
+  params.set("limit", String(query.limit ?? 20));
   return request(tenantPath(clinicId, `/billing?${params}`));
 }
 
@@ -1705,15 +1746,17 @@ export interface MedicalRecordListFilter {
   type?: string;
   from?: string;
   to?: string;
+  page?: number;
+  limit?: number;
 }
 
 export function listMedicalRecordFiles(
   clinicId: string,
   filter: MedicalRecordListFilter = {}
-): Promise<{ files: MedicalRecordFile[] }> {
+): Promise<{ files: MedicalRecordFile[]; total: number }> {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(filter)) {
-    if (value) params.set(key, value);
+    if (value) params.set(key, String(value));
   }
   const qs = params.toString();
   return request(tenantPath(clinicId, `/medical-record${qs ? `?${qs}` : ""}`), {
@@ -2363,7 +2406,7 @@ export function myBills(clinicId: string, query: { limit?: number } = {}): Promi
 
 // ── Dashboard aggregated ───────────────────────────────────────────────────
 export interface DashboardSummary {
-  counts: { appointments: number; patients: number; doctors: number; prescriptions: number; revenue: number };
+  counts: { appointments: number; patients: number; doctors: number; prescriptions: number; revenue: number; paidRevenue: number };
   bills: Bill[];
   appointments: Appointment[];
   patients: Patient[];
@@ -2841,6 +2884,8 @@ export interface PharmacyPurchase {
   purchaseId: string;
   invoiceNumber: string;
   supplierId: string | null;
+  /** Only populated when the list was fetched with a search `q` (joined server-side then). */
+  supplierName?: string | null;
   purchaseDate: string;
   items: PharmacyPurchaseItem[];
   subtotal: number;
@@ -2865,6 +2910,8 @@ export interface PharmacySale {
   invoiceNumber: string;
   saleDate: string;
   patientId: string | null;
+  /** Only populated when the list was fetched with a search `q` (joined server-side then). */
+  patientName?: string | null;
   items: PharmacySaleItem[];
   subtotal: number;
   discount: number;
@@ -2976,7 +3023,7 @@ export function updatePharmacySettings(
 }
 export function listMedicines(
   clinicId: string,
-  query: { search?: string; category?: string; status?: string; supplierId?: string; limit?: number } = {}
+  query: { search?: string; category?: string; status?: string; supplierId?: string; page?: number; limit?: number } = {}
 ): Promise<{ items: PharmacyMedicine[]; total: number }> {
   return request(tenantPath(clinicId, `/pharmacy/medicines${pharmacyQuery(query)}`));
 }
@@ -3047,7 +3094,7 @@ export function listMovements(
 }
 export function listSuppliers(
   clinicId: string,
-  query: { search?: string; status?: string; limit?: number } = {}
+  query: { search?: string; status?: string; page?: number; limit?: number } = {}
 ): Promise<{ items: PharmacySupplier[]; total: number }> {
   return request(tenantPath(clinicId, `/pharmacy/suppliers${pharmacyQuery(query)}`));
 }

@@ -354,7 +354,7 @@ const orphanFiles = files.filter(
                     <TableRow key={record.recordId}>
                       <TableCell className="text-sm whitespace-nowrap">{formatDate(record.visitDate)}</TableCell>
                       <TableCell className="text-sm">
-                        <p className="font-medium text-foreground">Dr. {record.doctorId?.slice(0, 8) || "Unknown"}</p>
+                        <p className="font-medium text-foreground">Dr. {doctorName(doctors, record.doctorId)}</p>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{record.diagnosis || "—"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{record.symptoms || "—"}</TableCell>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRequireRole } from "@/hooks/use-clinic-session";
-import { myRecords, type MedicineRecord } from "@/lib/clinic-api";
+import { myRecords, listDoctors, type MedicineRecord, type Doctor } from "@/lib/clinic-api";
 import { formatDate } from "@/lib/format-time";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,17 +18,22 @@ import { ChevronRight, Pill } from "lucide-react";
 export default function PatientMedicineRecordsPage() {
   const session = useRequireRole("patient");
   const [records, setRecords] = useState<MedicineRecord[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!session?.clinicId) return;
-    myRecords(session.clinicId)
-      .then((res) => {
-        setRecords((res as any)?.items ?? []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    Promise.allSettled([
+      myRecords(session.clinicId),
+      listDoctors(session.clinicId, { limit: 50 }),
+    ]).then(([recordsRes, doctorsRes]) => {
+      if (recordsRes.status === "fulfilled") setRecords((recordsRes.value as any)?.items ?? []);
+      if (doctorsRes.status === "fulfilled") setDoctors((doctorsRes.value as any)?.items ?? []);
+      setLoading(false);
+    });
   }, [session?.clinicId]);
+
+  const doctorName = (id: string) => doctors.find((d) => d.doctorId === id)?.name ?? "Unknown doctor";
 
   if (loading) {
     return (
@@ -73,7 +78,7 @@ export default function PatientMedicineRecordsPage() {
                 <TableRow key={record.recordId} className="border-b border-border hover:bg-muted/50">
                   <TableCell className="font-medium text-foreground whitespace-nowrap">{formatDate(record.visitDate)}</TableCell>
                   <TableCell>
-                    <p className="font-medium text-foreground">Dr. {record.doctorId?.slice(0, 8) || "Unknown"}</p>
+                    <p className="font-medium text-foreground">Dr. {doctorName(record.doctorId)}</p>
                   </TableCell>
                   <TableCell>
                     <p className="text-muted-foreground max-w-xs truncate">{record.diagnosis || "—"}</p>

@@ -49,6 +49,7 @@ import {
   Trash2,
   Eye,
   Pencil,
+  Pill,
 } from "lucide-react";
 import {
   Select,
@@ -66,6 +67,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import dynamic from "next/dynamic";
@@ -313,6 +315,11 @@ export default function RecordsPage() {
   const appointmentParam = searchParams.get("appointmentId");
 
   const [items, setItems] = useState<MedicineRecord[]>([]);
+  const [total, setTotal] = useState(0);
+  const [initialLoading, setInitialLoading] = useState(true);
+  // Bounded, unfiltered sample purely for the stat cards below — those need real records to
+  // compute unique-patient/treatment-coverage percentages from, not just a count.
+  const [statsRecords, setStatsRecords] = useState<MedicineRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<MedicineRecord | null>(null);
   const [viewing, setViewing] = useState<MedicineRecord | null>(null);
@@ -320,34 +327,46 @@ export default function RecordsPage() {
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [patientLookup, setPatientLookup] = useState<Record<string, string>>({});
   const [q, setQ] = useState("");
+  // Debounced so every keystroke doesn't fire a request.
+  const [debouncedQ, setDebouncedQ] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQ(q.trim()), 350);
+    return () => clearTimeout(t);
+  }, [q]);
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  const loadStatsRecords = useCallback(() => {
+    if (!clinicId) return;
+    listRecords(clinicId, { limit: 100 })
+      .then((res) => setStatsRecords(res.items ?? []))
+      .catch(() => {});
+  }, [clinicId]);
+
+  useEffect(() => {
+    loadStatsRecords();
+  }, [loadStatsRecords]);
+
   const load = useCallback(() => {
     if (!clinicId) return;
-    Promise.all([
-      listPatients(clinicId, { limit: 50 }),
-      listRecords(clinicId, { limit: 50 }),
-    ])
-      .then(([patientRes, recordRes]) => {
-        const map: Record<string, string> = {};
-        patientRes.items.forEach((p) => {
-          map[p.patientId] = p.fullName;
-        });
-
-        setPatientLookup(map);
-        setItems((recordRes as any)?.items ?? []);
-        setCurrentPage(1);
+    setLoading(true);
+    listRecords(clinicId, { q: debouncedQ || undefined, page: currentPage, limit: pageSize })
+      .then((res) => {
+        setItems(res.items ?? []);
+        setTotal(res.total ?? 0);
         setSelectedIds(new Set());
       })
       .catch(() => {
         toast.error("Failed to load medicine records");
       })
-      .finally(() => setLoading(false));
-  }, [clinicId]);
+      .finally(() => {
+        setLoading(false);
+        setInitialLoading(false);
+      });
+    loadStatsRecords();
+  }, [clinicId, debouncedQ, currentPage, loadStatsRecords]);
 
   useEffect(() => {
     load();
@@ -526,29 +545,15 @@ export default function RecordsPage() {
 
   const canManage = sessionCan(session, "clinic_admin");
 
-  const filteredItems = useMemo(() => {
-    if (!q) return items;
-    const lower = q.toLowerCase();
-    return items.filter((r) => {
-      const pName = (patientLookup[r.patientId] || "").toLowerCase();
-      return (
-        pName.includes(lower) ||
-        r.patientId.toLowerCase().includes(lower) ||
-        r.diagnosis.toLowerCase().includes(lower) ||
-        (r.symptoms && r.symptoms.toLowerCase().includes(lower)) ||
-        (r.treatment && r.treatment.toLowerCase().includes(lower))
-      );
-    });
-  }, [items, q, patientLookup]);
-
-  const totalCount = items.length;
-  const uniquePatients = new Set(items.map((i) => i.patientId)).size;
-  const thisMonthRecords = items.filter((i) => {
+  // Search is applied server-side (see `load`); `items` is already exactly one page.
+  const totalCount = total;
+  const uniquePatients = new Set(statsRecords.map((i) => i.patientId)).size;
+  const thisMonthRecords = statsRecords.filter((i) => {
     const recordDate = parseLocalDate(i.visitDate);
     const thirtyDaysAgo = daysAgo(30);
     return recordDate >= thirtyDaysAgo;
   }).length;
-  const withTreatmentCount = items.filter((i) => i.treatment).length;
+  const withTreatmentCount = statsRecords.filter((i) => i.treatment).length;
 
   const recordsStats = useMemo(
     () => [
@@ -561,38 +566,40 @@ export default function RecordsPage() {
         fill: "var(--chart-1)",
       },
       {
+        // These three are computed from `statsRecords` (a bounded, unfiltered sample), so their
+        // percentage is relative to that sample size, not the clinic-wide `totalCount`.
         name: "Unique Patients Visited",
-        percentage: totalCount ? Math.round((uniquePatients / totalCount) * 100) : 0,
+        percentage: statsRecords.length ? Math.round((uniquePatients / statsRecords.length) * 100) : 0,
         current: uniquePatients,
-        allowed: totalCount,
-        allowedLabel: "total patients",
+        allowed: statsRecords.length,
+        allowedLabel: "recent patients",
         fill: "var(--chart-2)",
       },
       {
         name: "Recent Visits (30d)",
-        percentage: totalCount ? Math.round((thisMonthRecords / totalCount) * 100) : 0,
+        percentage: statsRecords.length ? Math.round((thisMonthRecords / statsRecords.length) * 100) : 0,
         current: thisMonthRecords,
-        allowed: totalCount,
-        allowedLabel: "total records",
+        allowed: statsRecords.length,
+        allowedLabel: "recent records",
         fill: "var(--chart-3)",
       },
       {
         name: "Treatment Coverage",
-        percentage: totalCount ? Math.round((withTreatmentCount / totalCount) * 100) : 0,
+        percentage: statsRecords.length ? Math.round((withTreatmentCount / statsRecords.length) * 100) : 0,
         current: withTreatmentCount,
-        allowed: totalCount,
+        allowed: statsRecords.length,
         allowedLabel: "documented",
         fill: "var(--chart-4)",
       },
     ],
-    [totalCount, uniquePatients, thisMonthRecords, withTreatmentCount]
+    [totalCount, uniquePatients, thisMonthRecords, withTreatmentCount, statsRecords.length]
   );
 
   const handleBulkExport = () => {
     const selected = items.filter((r) => selectedIds.has(r.recordId));
     const mappedSelected = selected.map((r) => ({
       ...r,
-      patientName: patientLookup[r.patientId] || "Unknown",
+      patientName: r.patientName || "Unknown",
     }));
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(mappedSelected, null, 2));
     const downloadAnchor = document.createElement("a");
@@ -604,11 +611,9 @@ export default function RecordsPage() {
     toast.success(`Exported ${selected.length} medicine records to JSON.`);
   };
 
-  const totalPages = Math.ceil(filteredItems.length / pageSize);
-  const paginatedItems = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredItems.slice(startIndex, startIndex + pageSize);
-  }, [filteredItems, currentPage, pageSize]);
+  // Search is applied server-side (see `load`); `items` is already exactly one page.
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const paginatedItems = items;
 
   const toggleSelectAll = () => {
     if (selectedIds.size === paginatedItems.length) {
@@ -749,7 +754,7 @@ export default function RecordsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {!loading && (
+      {!initialLoading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsGeneric
             title="Medical Record Analytics"
@@ -805,10 +810,16 @@ export default function RecordsPage() {
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
             </div>
-          ) : filteredItems.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-              No medicine records found.
-            </div>
+          ) : total === 0 ? (
+            <Empty className="border-none py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon"><Pill /></EmptyMedia>
+                <EmptyTitle>{debouncedQ ? "No matching records" : "No medicine records yet"}</EmptyTitle>
+                <EmptyDescription>
+                  {debouncedQ ? "Try a different search term." : "Medicine records you add will show up here."}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <>
               <Table>
@@ -854,7 +865,7 @@ export default function RecordsPage() {
                           <Checkbox
                             checked={selectedIds.has(r.recordId)}
                             onCheckedChange={() => toggleSelectRow(r.recordId)}
-                            aria-label={`Select record for ${patientLookup[r.patientId] || r.patientId}`}
+                            aria-label={`Select record for ${r.patientName || "Unknown Patient"}`}
                           />
                         </TableCell>
                       )}
@@ -864,9 +875,9 @@ export default function RecordsPage() {
                       {visibleColumns.patient && (
                         <TableCell>
                           <div className="flex items-center gap-2.5">
-                            <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={r.patientId} name={patientLookup[r.patientId] || r.patientId} />
+                            <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={r.patientId} name={r.patientName || "Unknown Patient"} />
                             <span className="font-medium text-foreground">
-                              {patientLookup[r.patientId] || r.patientId}
+                              {r.patientName || "Unknown Patient"}
                             </span>
                           </div>
                         </TableCell>
@@ -908,11 +919,11 @@ export default function RecordsPage() {
                 </TableBody>
               </Table>
 
-              {filteredItems.length > 0 && (
+              {total > 0 && (
                 <Pagination
                   page={currentPage}
                   pageSize={pageSize}
-                  totalItems={filteredItems.length}
+                  totalItems={total}
                   onPageChange={(p) => setCurrentPage(Math.max(1, Math.min(p, totalPages || 1)))}
                   itemLabel="results"
                 />
@@ -931,7 +942,7 @@ export default function RecordsPage() {
         description={
           deleteTarget
             ? `Delete the medicine record for patient ${
-                patientLookup[deleteTarget.patientId] ?? deleteTarget.patientId
+                deleteTarget.patientName || "this patient"
               }?`
             : undefined
         }

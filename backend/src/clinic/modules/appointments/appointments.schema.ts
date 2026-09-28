@@ -65,11 +65,16 @@ export interface AppointmentQueueEvent {
   by?: string | null;
 }
 
-export function appointmentToPublic(doc: AppointmentDoc) {
+export function appointmentToPublic(
+  doc: AppointmentDoc & { patientName?: string | null; patientPhone?: string | null; doctorName?: string | null }
+) {
   return {
     appointmentId: doc.appointmentId,
     patientId: doc.patientId,
     doctorId: doc.doctorId,
+    patientName: doc.patientName ?? null,
+    patientPhone: doc.patientPhone ?? null,
+    doctorName: doc.doctorName ?? null,
     date: doc.date,
     time: doc.time,
     status: doc.status,

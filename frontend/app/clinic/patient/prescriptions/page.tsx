@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRequireRole } from "@/hooks/use-clinic-session";
-import { myPrescriptions, type Prescription, type MedicineEntry } from "@/lib/clinic-api";
+import { myPrescriptions, listDoctors, type Prescription, type MedicineEntry, type Doctor } from "@/lib/clinic-api";
 import { formatDate } from "@/lib/format-time";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,17 +19,22 @@ import { Pill, ChevronRight } from "lucide-react";
 export default function PatientPrescriptionsPage() {
   const session = useRequireRole("patient");
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!session?.clinicId) return;
-    myPrescriptions(session.clinicId)
-      .then((res) => {
-        setPrescriptions((res as any)?.items ?? []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    Promise.allSettled([
+      myPrescriptions(session.clinicId),
+      listDoctors(session.clinicId, { limit: 50 }),
+    ]).then(([prescRes, doctorsRes]) => {
+      if (prescRes.status === "fulfilled") setPrescriptions((prescRes.value as any)?.items ?? []);
+      if (doctorsRes.status === "fulfilled") setDoctors((doctorsRes.value as any)?.items ?? []);
+      setLoading(false);
+    });
   }, [session?.clinicId]);
+
+  const doctorName = (id: string) => doctors.find((d) => d.doctorId === id)?.name ?? "Unknown doctor";
 
   if (loading) {
     return (
@@ -74,7 +79,7 @@ export default function PatientPrescriptionsPage() {
                 <TableRow key={presc.prescriptionId} className="border-b border-border hover:bg-muted/50">
                   <TableCell className="font-medium text-foreground whitespace-nowrap">{formatDate(presc.visitDate)}</TableCell>
                   <TableCell>
-                    <p className="font-medium text-foreground">Dr. {presc.doctorId?.slice(0, 8) || "Unknown"}</p>
+                    <p className="font-medium text-foreground">Dr. {doctorName(presc.doctorId)}</p>
                   </TableCell>
                   <TableCell>
                     <p className="text-muted-foreground max-w-xs truncate">{presc.diagnosis || "—"}</p>

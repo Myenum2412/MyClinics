@@ -502,11 +502,13 @@ export class MedicalRecordService {
       type?: string;
       from?: string;
       to?: string;
+      skip?: number;
       limit?: number;
     } = {}
-  ): Promise<MedicalRecordFileDoc[]> {
+  ): Promise<[MedicalRecordFileDoc[], number]> {
     const clinicId = requireClinicOf(ctx);
     const limit = Math.min(filter.limit ?? 50, 100);
+    const skip = filter.skip ?? 0;
 
     // Build the base match query
     const matchQuery: Record<string, unknown> = { clinicId };
@@ -559,30 +561,37 @@ export class MedicalRecordService {
         : ctx.role === "patient"
         ? [{ $match: { "patient.patientId": ctx.patientId, "patient.status": { $ne: "deleted" } } }]
         : []),
-      { $sort: { createdAt: -1 } },
-      { $limit: limit },
     ];
+    pipeline.push({
+      $facet: {
+        items: [{ $sort: { createdAt: -1 } }, { $skip: skip }, { $limit: limit }],
+        total: [{ $count: "count" }],
+      },
+    });
 
-    const docs = await this.collection().aggregate(pipeline).toArray();
+    const [result] = await this.collection().aggregate(pipeline).toArray();
 
     // Transform aggregated results back to expected format
-    const transformed = docs.map((doc) => ({
+    const transformed = ((result?.items ?? []) as any[]).map((doc) => ({
       ...doc,
       patientName: doc.patient?.fullName,
       // Remove the patient object from the result
       patient: undefined,
     })) as unknown as MedicalRecordFileDoc[];
+    const total = (result?.total?.[0]?.count as number | undefined) ?? 0;
 
-    // Merge legacy R2 files when listing a patient (or a specific virtual folder).
+    // Merge legacy R2 files when listing a patient (or a specific virtual folder) — this is
+    // always a single patient's own bounded folder view, so it's returned unpaginated as before.
     if (filter.patientId && (!filter.folder || isVirtualFolderKey(filter.folder))) {
       const legacy = await this.listLegacyFiles(ctx, filter.patientId);
       const filteredLegacy = filter.folder
         ? legacy.filter((f) => f.folder === filter.folder)
         : legacy;
-      return [...transformed, ...filteredLegacy];
+      const combined = [...transformed, ...filteredLegacy];
+      return [combined, total + filteredLegacy.length];
     }
 
-    return transformed;
+    return [transformed, total];
   }
 
   async createFolder(

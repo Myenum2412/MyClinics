@@ -521,13 +521,13 @@ export class PharmacyService {
     ctx: ClinicContext,
     query: Parameters<PharmacyStockMovementRepository["list"]>[0]
   ) {
-    const [items, total] = await this.movementRepo(ctx).list(query);
+    // A text search should also match by medicine name, not just the raw stored fields (medicineId,
+    // batchNumber, …) — resolve matching medicine ids up front and OR them into the movement filter.
+    const searchMedicineIds = query.search ? await this.medicineRepo(ctx).findIdsByName(query.search) : undefined;
+    const [items, total] = await this.movementRepo(ctx).list({ ...query, searchMedicineIds });
+    // Only look up the names actually referenced on this page — not the whole catalog.
     const medicineIds = Array.from(new Set(items.map((m) => m.medicineId)));
-    const medMap = new Map<string, string>();
-    if (medicineIds.length) {
-      const [meds] = await this.medicineRepo(ctx).list({ skip: 0, limit: 10_000 });
-      for (const m of meds) medMap.set(m.medicineId, m.name);
-    }
+    const medMap = await this.medicineRepo(ctx).namesByIds(medicineIds);
     const rows = items.map((m) => ({ ...m, medicineName: medMap.get(m.medicineId) ?? m.medicineId }));
     return { items: rows, total };
   }
@@ -669,7 +669,7 @@ export class PharmacyService {
 
   async listPurchases(
     ctx: ClinicContext,
-    query: { supplierId?: string; status?: string; from?: string; to?: string; skip: number; limit: number }
+    query: { supplierId?: string; status?: string; from?: string; to?: string; q?: string; skip: number; limit: number }
   ) {
     const [items, total] = await this.purchaseRepo(ctx).list(query);
     return { items, total };
@@ -930,7 +930,7 @@ export class PharmacyService {
 
   async listSales(
     ctx: ClinicContext,
-    query: { patientId?: string; paymentMethod?: string; status?: string; from?: string; to?: string; skip: number; limit: number }
+    query: { patientId?: string; paymentMethod?: string; status?: string; from?: string; to?: string; q?: string; skip: number; limit: number }
   ) {
     const [items, total] = await this.saleRepo(ctx).list(query);
     return { items, total };

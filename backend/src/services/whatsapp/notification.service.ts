@@ -141,3 +141,94 @@ export async function enqueueClinicNotification(
   const org = await ensureDefaultOrganization(db);
   return enqueueNotification(db, org.id, phone, message, type, media);
 }
+
+export interface BatchNotificationItem {
+  phone: string;
+  message: string;
+  media?: NotificationMedia;
+}
+
+/**
+ * Same dedupe+enqueue semantics as `enqueueNotification`, but for many recipients at once: one
+ * query covers dedupe-checking the whole batch (instead of a `findOne` per recipient), and inserts
+ * are batched — used by clinic-wide broadcasts, which can target thousands of patients.
+ */
+export async function enqueueNotificationsBatch(
+  db: Db,
+  organizationId: string,
+  type: string,
+  items: BatchNotificationItem[],
+  clinicId?: string | null
+): Promise<{ queued: number; deduped: number; skippedNoPhone: number }> {
+  if (items.length === 0) return { queued: 0, deduped: 0, skippedNoPhone: 0 };
+
+  const withRemoteId: (BatchNotificationItem & { remoteId: string })[] = [];
+  let skippedNoPhone = 0;
+  for (const item of items) {
+    const remoteId = toWhatsAppRemoteId(item.phone);
+    if (!remoteId) {
+      skippedNoPhone += 1;
+      continue;
+    }
+    withRemoteId.push({ ...item, remoteId });
+  }
+  if (withRemoteId.length === 0) return { queued: 0, deduped: 0, skippedNoPhone };
+
+  const dedupeWindowMs = 60_000;
+  const since = new Date(Date.now() - dedupeWindowMs);
+  const remoteIds = [...new Set(withRemoteId.map((i) => i.remoteId))];
+
+  const existing = await db
+    .collection(NOTIFICATIONS_COLLECTION)
+    .find({
+      organizationId,
+      clinicId: clinicId ?? null,
+      type,
+      status: { $in: ["queued", "processing"] },
+      createdAt: { $gte: since },
+      remoteId: { $in: remoteIds },
+    } as any)
+    .project({ remoteId: 1, message: 1, mediaFilename: 1 })
+    .toArray();
+
+  const seenKeys = new Set(
+    existing.map((e: any) => `${e.remoteId}\u0000${e.message}\u0000${e.mediaFilename ?? ""}`)
+  );
+
+  const now = nowFn();
+  const docs: NotificationDoc[] = [];
+  let deduped = 0;
+  for (const item of withRemoteId) {
+    const key = `${item.remoteId}\u0000${item.message}\u0000${item.media?.filename ?? ""}`;
+    if (seenKeys.has(key)) {
+      deduped += 1;
+      continue;
+    }
+    // Guards against the same recipient+message appearing twice within this one batch too.
+    seenKeys.add(key);
+    docs.push({
+      type,
+      organizationId,
+      clinicId: clinicId ?? null,
+      remoteId: item.remoteId,
+      message: item.message,
+      status: "queued",
+      attempts: 0,
+      lastError: null,
+      createdAt: now,
+      sentAt: null,
+      mediaFilename: item.media?.filename,
+      mediaMimetype: item.media?.mimetype,
+      mediaData: item.media?.data,
+    });
+  }
+
+  // Chunked, not one giant insertMany — attachments carry base64 media, so an unbounded broadcast
+  // could otherwise hold gigabytes of doc data in memory at once.
+  const CHUNK_SIZE = 200;
+  for (let i = 0; i < docs.length; i += CHUNK_SIZE) {
+    await db.collection(NOTIFICATIONS_COLLECTION).insertMany(docs.slice(i, i + CHUNK_SIZE) as any);
+  }
+
+  return { queued: docs.length, deduped, skippedNoPhone };
+}

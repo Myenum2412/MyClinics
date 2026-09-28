@@ -448,6 +448,8 @@ export const listPurchasesSchema = z.object({
   status: z.enum(PURCHASE_STATUSES).optional(),
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  /** Matches invoice number or supplier name. */
+  q: z.string().trim().max(200).optional(),
 });
 
 export const listSalesSchema = z.object({
@@ -456,6 +458,8 @@ export const listSalesSchema = z.object({
   status: z.enum(SALE_STATUSES).optional(),
   from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  /** Matches invoice number or patient name. */
+  q: z.string().trim().max(200).optional(),
 });
 
 export const reportTypes = [

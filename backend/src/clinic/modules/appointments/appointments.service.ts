@@ -196,6 +196,7 @@ export class AppointmentService {
       status?: string;
       doctorId?: string;
       patientId?: string;
+      q?: string;
       skip: number;
       limit: number;
     }

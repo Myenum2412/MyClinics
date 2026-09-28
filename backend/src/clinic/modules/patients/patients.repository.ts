@@ -58,12 +58,16 @@ export class PatientRepository {
     q?: string;
     doctorId?: string;
     status?: string;
+    gender?: string;
+    ids?: string[];
     skip: number;
     limit: number;
   }): Promise<[WithId<PatientDoc>[], number]> {
     const filter: Record<string, unknown> = { status: { $ne: "deleted" } };
     if (query.doctorId) filter.doctorId = query.doctorId;
     if (query.status) filter.status = query.status;
+    if (query.gender) filter.gender = query.gender;
+    if (query.ids?.length) filter.patientId = { $in: query.ids };
     if (query.q) {
       const safeQ = escapeRegex(query.q);
       filter.$or = [

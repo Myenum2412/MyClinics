@@ -142,7 +142,7 @@ export class BillingService {
 
   async listBills(
     ctx: ClinicContext,
-    query: { patientId?: string; status?: string; from?: string; to?: string; skip: number; limit: number }
+    query: { patientId?: string; status?: string; from?: string; to?: string; q?: string; skip: number; limit: number }
   ) {
     const [items, total] = await this.repo(ctx).list(query);
     return { items, total };

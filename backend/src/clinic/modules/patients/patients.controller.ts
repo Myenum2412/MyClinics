@@ -34,13 +34,21 @@ export class PatientController {
   async list(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
-    const query = request.query as { q?: string; doctorId?: string; status?: string };
-    const { skip, limit } = parsePagination(query as Record<string, unknown>);
+    const query = request.query as { q?: string; doctorId?: string; status?: string; gender?: string; ids?: string };
+    // Batch lookup by id (e.g. resolving patient names for a page of appointments/bills):
+    // bypasses normal paging so every requested id can come back in one call.
+    const parsedIds = query.ids
+      ? [...new Set(query.ids.split(",").map((s) => s.trim()).filter(Boolean))].slice(0, 200)
+      : [];
+    const ids = parsedIds.length > 0 ? parsedIds : undefined;
+    const { skip, limit } = ids ? { skip: 0, limit: ids.length } : parsePagination(query as Record<string, unknown>);
     const db = await getDb();
     const result = await this.service(db).listPatients(ctx, {
       q: query.q,
       doctorId: query.doctorId,
       status: query.status,
+      gender: query.gender,
+      ids,
       skip,
       limit,
     });

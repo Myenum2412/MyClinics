@@ -6,7 +6,8 @@ import { generateNotificationId } from "@/clinic/core/ids";
 import { NotificationRepository } from "@/clinic/modules/notifications/notifications.repository";
 import type { NotificationDoc } from "@/clinic/modules/notifications/notifications.schema";
 import {
-  enqueueClinicNotification,
+  enqueueNotificationsBatch,
+  type BatchNotificationItem,
   type NotificationMedia,
 } from "@/services/whatsapp/notification.service";
 
@@ -126,7 +127,9 @@ export class NotificationService {
 
     const text = [input.title, input.message].filter(Boolean).join("\n\n");
 
-    let messagesQueued = 0;
+    // Build every message up front, then enqueue in one batched call instead of one DB
+    // round-trip (dedupe check + insert) per patient — a broadcast can target thousands.
+    const items: BatchNotificationItem[] = [];
     let queuedPatients = 0;
     let skippedNoPhone = 0;
 
@@ -138,8 +141,7 @@ export class NotificationService {
       }
 
       if (attachments.length === 0) {
-        await enqueueClinicNotification(this.db, phone, text, input.type, undefined, clinicId);
-        messagesQueued += 1;
+        items.push({ phone, message: text });
       } else {
         for (const [index, attachment] of attachments.entries()) {
           const media: NotificationMedia = {
@@ -148,24 +150,18 @@ export class NotificationService {
             data: attachment.data.toString("base64"),
           };
           // Caption goes on the first attachment; the rest are plain files.
-          await enqueueClinicNotification(
-            this.db,
-            phone,
-            index === 0 ? text : "",
-            input.type,
-            media,
-            clinicId
-          );
-          messagesQueued += 1;
+          items.push({ phone, message: index === 0 ? text : "", media });
         }
       }
       queuedPatients += 1;
     }
 
+    const result = await enqueueNotificationsBatch(this.db, clinicId, input.type, items, clinicId);
+
     return {
       targeted: patients.length,
       queued: queuedPatients,
-      messagesQueued,
+      messagesQueued: result.queued,
       skippedNoPhone,
     };
   }

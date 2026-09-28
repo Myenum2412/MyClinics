@@ -27,15 +27,30 @@ export class DashboardService {
 
       const doctorFilter = isDoctor && doctorId ? { doctorId } : {};
 
-      const [apptCount, patientCount, doctorCount, rxCount, billDocs, recentAppointments, recentPatients] =
+      // Revenue is a sum over every non-void bill — computed server-side via $group/$sum instead
+      // of pulling every bill document over the wire and reducing in JS.
+      const revenueAgg = !isDoctor
+        ? billsCol
+            .aggregate([
+              { $match: { clinicId, status: { $ne: "void" } } },
+              { $group: { _id: null, totalRevenue: { $sum: "$total" }, paidRevenue: { $sum: { $cond: [{ $eq: ["$status", "paid"] }, "$total", 0] } } } },
+            ])
+            .toArray()
+        : Promise.resolve([] as any[]);
+
+      const [apptCount, patientCount, doctorCount, rxCount, revenueRows, recentBills, recentAppointments, recentPatients] =
         await Promise.all([
           appointmentsCol.countDocuments({ clinicId, ...doctorFilter } as any),
           patientsCol.countDocuments({ clinicId, status: { $ne: "deleted" }, ...doctorFilter } as any),
           doctorsCol.countDocuments({ clinicId, status: { $ne: "deleted" } }),
           prescriptionsCol.countDocuments({ clinicId, ...doctorFilter } as any),
+          revenueAgg,
+          // Bounded "recent" window for the billing trend card — not every bill ever raised.
           !isDoctor
             ? billsCol
-                .find({ clinicId }, { projection: { total: 1, status: 1 } })
+                .find({ clinicId }, { projection: { total: 1, status: 1, invoiceDate: 1, createdAt: 1 } })
+                .sort({ createdAt: -1 })
+                .limit(400)
                 .toArray()
             : Promise.resolve([] as any[]),
           appointmentsCol
@@ -58,12 +73,12 @@ export class DashboardService {
         .limit(50)
         .toArray();
 
-      const bills = billDocs as any[];
-      const totalRevenue = bills.reduce((s: number, b: any) => (b.status !== "void" ? s + (b.total ?? 0) : s), 0);
+      const totalRevenue = (revenueRows[0]?.totalRevenue as number | undefined) ?? 0;
+      const paidRevenue = (revenueRows[0]?.paidRevenue as number | undefined) ?? 0;
 
       return {
-        counts: { appointments: apptCount, patients: patientCount, doctors: doctorCount, prescriptions: rxCount, revenue: totalRevenue },
-        bills: !isDoctor ? bills : [],
+        counts: { appointments: apptCount, patients: patientCount, doctors: doctorCount, prescriptions: rxCount, revenue: totalRevenue, paidRevenue },
+        bills: recentBills,
         appointments: recentAppointments,
         patients: recentPatients,
         doctors,

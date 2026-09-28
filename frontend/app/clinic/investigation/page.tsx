@@ -1,13 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { toast } from "sonner";
-import {
-  OdontogramShell,
-  getStatusChart,
-  importStatus,
-} from "react-advanced-odontogram";
-import "./odontogram.css";
+
+// Load odontogram + its CSS only when a chart screen opens — keeps the list
+// view light and avoids CSS leaking into the clinic sidebar.
+const OdontogramShell = dynamic(
+  () => import("./odontogram-lazy").then((m) => m.OdontogramShell),
+  { ssr: false, loading: () => <div className="h-[420px] animate-pulse rounded-xl bg-muted/40" /> }
+);
+
+async function odontogramApi() {
+  return import("./odontogram-lazy");
+}
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import {
   type Investigation,
@@ -184,28 +190,21 @@ export default function InvestigationPage() {
     const tryImport = () => {
       const grid = document.getElementById("toothGrid");
       if (grid && grid.childElementCount > 0) {
-        try {
-          importStatus(chartData as Record<string, unknown>);
-        } catch (e) {
-          toast.error(
-            e instanceof Error ? e.message : "Failed to load saved chart"
-          );
-        }
-        finish();
-        return true;
+        clearInterval(timer);
+        void odontogramApi()
+          .then(({ importStatus }) => {
+            if (cancelled) return;
+            importStatus(chartData as Record<string, unknown>);
+          })
+          .catch((e) => {
+            toast.error(
+              e instanceof Error ? e.message : "Failed to load saved chart"
+            );
+          });
+      } else if (tries >= 40) {
+        clearInterval(timer);
       }
-      return false;
-    };
-    setChartLoading(true);
-    if (tryImport()) return;
-    const observer = new MutationObserver(() => {
-      if (tryImport()) observer.disconnect();
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    const timer = setTimeout(() => {
-      observer.disconnect();
-      finish();
-    }, 5000);
+    }, 100);
     return () => {
       observer.disconnect();
       clearTimeout(timer);
@@ -292,6 +291,7 @@ export default function InvestigationPage() {
     try {
       let chartData: Record<string, unknown> | null = null;
       try {
+        const { getStatusChart } = await odontogramApi();
         const chart = getStatusChart() as unknown;
         if (chart && typeof chart === "object") {
           chartData = chart as Record<string, unknown>;

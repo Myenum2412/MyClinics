@@ -2,6 +2,7 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Db } from "mongodb";
 import { getMedicalRecordsDb } from "@/lib/db-pools";
 import { BadRequestError, UnauthorizedError } from "@/clinic/core/errors";
+import { parsePagination } from "@/clinic/core/pagination";
 import { isAllowedUploadWithMagic } from "@/clinic/core/upload-guard";
 import {
   MedicalRecordService,
@@ -82,16 +83,19 @@ export class MedicalRecordController {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();
     const params = request.query as Record<string, string | undefined>;
+    const { skip, limit } = parsePagination(request.query as Record<string, unknown>);
     const db = await getMedicalRecordsDb();
-    const files = await this.service(db).listFiles(ctx, {
+    const [files, total] = await this.service(db).listFiles(ctx, {
       q: params.q,
       patientId: params.patientId,
       folder: params.folder,
       type: params.type,
       from: params.from,
       to: params.to,
+      skip,
+      limit,
     });
-    return reply.send({ files: files.map((f) => medicalRecordFileToPublic(f)) });
+    return reply.send({ files: files.map((f) => medicalRecordFileToPublic(f)), total });
   }
 
   async createFolder(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {

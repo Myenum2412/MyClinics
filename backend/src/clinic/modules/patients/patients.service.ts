@@ -227,7 +227,7 @@ export class PatientService {
 
   async listPatients(
     ctx: ClinicContext,
-    query: { q?: string; doctorId?: string; status?: string; skip: number; limit: number }
+    query: { q?: string; doctorId?: string; status?: string; gender?: string; ids?: string[]; skip: number; limit: number }
   ) {
     const [items, total] = await this.repo(ctx).list(query);
     return { items, total };

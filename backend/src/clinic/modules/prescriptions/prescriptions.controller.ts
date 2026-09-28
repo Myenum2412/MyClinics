@@ -14,10 +14,28 @@ import {
 } from "@/clinic/modules/prescriptions/prescriptions.dto";
 import { prescriptionToPublic } from "@/clinic/modules/prescriptions/prescriptions.schema";
 import { PrescriptionService } from "@/clinic/modules/prescriptions/prescriptions.service";
+import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
+import { requireClinicOf } from "@/clinic/core/context";
 
 export class PrescriptionController {
   private service(db: Db): PrescriptionService {
     return new PrescriptionService(db);
+  }
+
+  /** Single-record reads/writes skip the list endpoint's join, so resolve the same names here. */
+  private async withNames(db: Db, clinicId: string, prescription: Parameters<typeof prescriptionToPublic>[0]) {
+    const [patient, doctor] = await Promise.all([
+      db.collection(CLINIC_COLLECTIONS.patients).findOne({ clinicId, patientId: prescription.patientId }),
+      prescription.doctorId
+        ? db.collection(CLINIC_COLLECTIONS.doctors).findOne({ clinicId, doctorId: prescription.doctorId })
+        : Promise.resolve(null),
+    ]);
+    return {
+      ...prescriptionToPublic(prescription),
+      patientName: (patient as { fullName?: string } | null)?.fullName ?? null,
+      patientPhone: (patient as { mobile?: string } | null)?.mobile ?? null,
+      doctorName: (doctor as { name?: string } | null)?.name ?? null,
+    };
   }
 
   async create(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
@@ -29,7 +47,7 @@ export class PrescriptionController {
     }
     const db = await getDb();
     const prescription = await this.service(db).createPrescription(ctx, parsed.data);
-    return reply.code(201).send(prescriptionToPublic(prescription));
+    return reply.code(201).send(await this.withNames(db, requireClinicOf(ctx), prescription));
   }
 
   async list(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
@@ -51,7 +69,7 @@ export class PrescriptionController {
     const { prescriptionId } = request.params as { prescriptionId: string };
     const db = await getDb();
     const prescription = await this.service(db).getPrescription(ctx, prescriptionId);
-    return reply.send(prescriptionToPublic(prescription));
+    return reply.send(await this.withNames(db, requireClinicOf(ctx), prescription));
   }
 
   async updateById(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
@@ -64,7 +82,7 @@ export class PrescriptionController {
     }
     const db = await getDb();
     const prescription = await this.service(db).updatePrescription(ctx, prescriptionId, parsed.data);
-    return reply.send(prescriptionToPublic(prescription));
+    return reply.send(await this.withNames(db, requireClinicOf(ctx), prescription));
   }
 
   async delete(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {

@@ -55,6 +55,7 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { Pagination } from "@/components/ui/pagination";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 import dynamic from "next/dynamic";
@@ -146,14 +147,25 @@ export default function AppointmentsPage() {
 
   // Main Data States
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [total, setTotal] = useState(0);
+  const [globalStats, setGlobalStats] = useState<{ total: number; today: number; completed: number; scheduled: number } | null>(null);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
+  // True only until the first fetch ever completes — gates the stats/search bar so it doesn't
+  // unmount (and drop search-box focus) on every subsequent page/filter/search refetch.
+  const [initialLoading, setInitialLoading] = useState(true);
 
-  // Filters & Search
+  // Filters & Search — these now drive server queries, not client-side filtering.
   const [dateFilter, setDateFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  // Debounced so every keystroke doesn't fire a request.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 350);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   // Table Configuration (Sorting & Columns)
   const [sortField, setSortField] = useState<"date" | "time" | null>("date");
@@ -236,18 +248,14 @@ export default function AppointmentsPage() {
     return map;
   }, [appointments]);
 
-  const loadData = useCallback(() => {
+  // Patients/doctors here back the "New Appointment" picker forms and legacy name lookups —
+  // not the table, so a 50-row cap is acceptable and unrelated to the table's own pagination.
+  const loadSupportingData = useCallback(() => {
     if (!clinicId) return;
     Promise.allSettled([
-      listAppointments(clinicId, { limit: 50 }),
       listPatients(clinicId, { limit: 50 }),
       listDoctors(clinicId, { limit: 50 }),
-    ]).then(([apptsRes, patientsRes, doctorsRes]) => {
-      if (apptsRes.status === "fulfilled") {
-        setAppointments((apptsRes.value as any)?.items ?? []);
-      } else {
-        toast.error("Failed to load appointments");
-      }
+    ]).then(([patientsRes, doctorsRes]) => {
       if (patientsRes.status === "fulfilled") {
         setPatients((patientsRes.value as any)?.items ?? []);
       } else {
@@ -258,8 +266,54 @@ export default function AppointmentsPage() {
       } else {
         toast.error("Failed to load doctors");
       }
-    }).finally(() => setLoading(false));
+    });
   }, [clinicId]);
+
+  useEffect(() => {
+    loadSupportingData();
+  }, [loadSupportingData]);
+
+  // Clinic-wide counts for the stat cards — independent of the table's current page/filters.
+  const loadStats = useCallback(() => {
+    if (!clinicId) return;
+    Promise.allSettled([
+      listAppointments(clinicId, { limit: 1 }),
+      listAppointments(clinicId, { limit: 1, date: todayISO() }),
+      listAppointments(clinicId, { limit: 1, status: "completed" }),
+      listAppointments(clinicId, { limit: 1, status: "scheduled" }),
+    ]).then(([totalRes, todayRes, completedRes, scheduledRes]) => {
+      const count = (r: PromiseSettledResult<any>) => (r.status === "fulfilled" ? r.value?.total ?? 0 : 0);
+      setGlobalStats({
+        total: count(totalRes),
+        today: count(todayRes),
+        completed: count(completedRes),
+        scheduled: count(scheduledRes),
+      });
+    });
+  }, [clinicId]);
+
+  // The actual table data: real server-side pagination + filtering + search.
+  const loadData = useCallback(() => {
+    if (!clinicId) return;
+    setLoading(true);
+    listAppointments(clinicId, {
+      date: dateFilter || undefined,
+      status: statusFilter !== "all" ? (statusFilter as AppointmentStatus) : undefined,
+      q: debouncedSearch || undefined,
+      page: currentPage,
+      limit: pageSize,
+    })
+      .then((res) => {
+        setAppointments(res.items ?? []);
+        setTotal(res.total ?? 0);
+      })
+      .catch(() => toast.error("Failed to load appointments"))
+      .finally(() => {
+        setLoading(false);
+        setInitialLoading(false);
+      });
+    loadStats();
+  }, [clinicId, dateFilter, statusFilter, debouncedSearch, currentPage, pageSize, loadStats]);
 
   useEffect(() => {
     loadData();
@@ -473,10 +527,10 @@ export default function AppointmentsPage() {
 
   // Row Selection Helpers
   const toggleSelectAll = () => {
-    if (selectedIds.size === filteredAndSortedAppointments.length) {
+    if (selectedIds.size === paginatedAppointments.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredAndSortedAppointments.map((a) => a.appointmentId)));
+      setSelectedIds(new Set(paginatedAppointments.map((a) => a.appointmentId)));
     }
   };
 
@@ -519,55 +573,21 @@ export default function AppointmentsPage() {
   };
 
   // Filter & Search Logic
-  const filteredAndSortedAppointments = useMemo(() => {
-    let list = [...appointments];
-
-    // Filter by Date
-    if (dateFilter) {
-      list = list.filter((a) => a.date === dateFilter);
-    }
-
-    // Filter by Status
-    if (statusFilter !== "all") {
-      list = list.filter((a) => a.status === statusFilter);
-    }
-
-    // Filter by Search Term
-    if (searchTerm.trim() !== "") {
-      const query = searchTerm.toLowerCase();
-      list = list.filter((a) => {
-        const patient = patientMap.get(a.patientId);
-        const doctor = doctorMap.get(a.doctorId);
-        const patientName = patient?.fullName.toLowerCase() || "";
-        const doctorName = doctor?.name.toLowerCase() || "";
-        const reason = a.reason?.toLowerCase() || "";
-        return patientName.includes(query) || doctorName.includes(query) || reason.includes(query);
-      });
-    }
-
-    // Sort List
-    if (sortField) {
-      list.sort((a, b) => {
-        let valA = a[sortField] || "";
-        let valB = b[sortField] || "";
-        if (sortOrder === "asc") {
-          return valA.localeCompare(valB);
-        } else {
-          return valB.localeCompare(valA);
-        }
-      });
-    }
-
-    return list;
-  }, [appointments, dateFilter, statusFilter, searchTerm, sortField, sortOrder, patientMap, doctorMap]);
-
-  // Paginated List
+  // Date/status/search are now applied server-side (see loadData); `appointments` is already
+  // exactly one page of results. Only the sort-toggle re-orders that page client-side, since
+  // re-sorting ~20 already-fetched rows locally is cheap and doesn't need another round trip.
   const paginatedAppointments = useMemo(() => {
-    const startIndex = (currentPage - 1) * pageSize;
-    return filteredAndSortedAppointments.slice(startIndex, startIndex + pageSize);
-  }, [filteredAndSortedAppointments, currentPage, pageSize]);
+    if (!sortField) return appointments;
+    const list = [...appointments];
+    list.sort((a, b) => {
+      const valA = a[sortField] || "";
+      const valB = b[sortField] || "";
+      return sortOrder === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    });
+    return list;
+  }, [appointments, sortField, sortOrder]);
 
-  const totalPages = Math.ceil(filteredAndSortedAppointments.length / pageSize);
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   // Status visual badge inside the table rows
   function renderWhatsAppBadgeStatus(apptId: string) {
@@ -751,6 +771,7 @@ export default function AppointmentsPage() {
                       <TableBody>
                         {history.map((h) => {
                           const hDoctor = doctorMap.get(h.doctorId);
+                          const hDoctorLabel = h.doctorName || hDoctor?.name || "Unknown Doctor";
                           return (
                             <TableRow
                               key={h.appointmentId}
@@ -766,7 +787,7 @@ export default function AppointmentsPage() {
                                 {formatTime(h.time)}
                               </TableCell>
                               <TableCell className="text-xs">
-                                {hDoctor?.name || h.doctorId}
+                                {hDoctorLabel}
                               </TableCell>
                               <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
                                 {h.reason || "—"}
@@ -796,12 +817,16 @@ export default function AppointmentsPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Stats Section with action slot - Appointment Analytics with centered search */}
-      {!loading && (
+      {!initialLoading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <StatsAppointments
             appointments={appointments}
+            stats={globalStats ?? undefined}
             searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
+            onSearchChange={(v) => {
+              setSearchTerm(v);
+              setCurrentPage(1);
+            }}
             action={
               <div className="flex items-center gap-2">
                 <Button
@@ -887,11 +912,18 @@ export default function AppointmentsPage() {
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
             </div>
-          ) : filteredAndSortedAppointments.length === 0 ? (
-            <div className="py-16 text-center">
-              <Calendar className="size-10 mx-auto text-muted-foreground/45" />
-              <p className="mt-3 text-sm font-medium text-muted-foreground">No appointments found.</p>
-            </div>
+          ) : paginatedAppointments.length === 0 ? (
+            <Empty className="border-none py-16">
+              <EmptyHeader>
+                <EmptyMedia variant="icon"><Calendar /></EmptyMedia>
+                <EmptyTitle>{debouncedSearch || dateFilter || statusFilter !== "all" ? "No matching appointments" : "No appointments yet"}</EmptyTitle>
+                <EmptyDescription>
+                  {debouncedSearch || dateFilter || statusFilter !== "all"
+                    ? "Try a different search term or clear the filters above."
+                    : "Appointments you book will show up here."}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -899,7 +931,7 @@ export default function AppointmentsPage() {
                   <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                     <TableHead className="w-12 pl-4">
                       <Checkbox
-                        checked={selectedIds.size === filteredAndSortedAppointments.length && filteredAndSortedAppointments.length > 0}
+                        checked={selectedIds.size === paginatedAppointments.length && paginatedAppointments.length > 0}
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
@@ -933,9 +965,11 @@ export default function AppointmentsPage() {
                 
                 <TableBody>
                   {paginatedAppointments.map((a) => {
-                    const patient = patientMap.get(a.patientId);
-                    const doctor = doctorMap.get(a.doctorId);
-                    const dLabel = doctor ? doctor.name : a.doctorId;
+                    // Server-joined name/phone (see appointments.repository.ts) — never a raw id,
+                    // even for a doctor/patient outside the locally-loaded 50-row picker lists.
+                    const patientLabel = a.patientName || patientMap.get(a.patientId)?.fullName || "Unknown Patient";
+                    const patientPhone = a.patientPhone || patientMap.get(a.patientId)?.mobile || "No Contact";
+                    const dLabel = a.doctorName || doctorMap.get(a.doctorId)?.name || "Unknown Doctor";
 
                     return (
                       <TableRow key={a.appointmentId} className="hover:bg-muted/30 transition-colors">
@@ -978,14 +1012,14 @@ export default function AppointmentsPage() {
                         {visibleColumns.patient && (
                           <TableCell>
                             <div className="flex items-center gap-2.5">
-                              <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={a.patientId} name={patient?.fullName || "Unknown Patient"} />
+                              <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={a.patientId} name={patientLabel} />
                               <div className="flex flex-col">
                                 <span className="text-xs font-semibold text-foreground leading-tight">
-                                  {patient?.fullName || "Unknown Patient"}
+                                  {patientLabel}
                                 </span>
                                 <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground font-mono mt-0.5">
                                   <Phone className="size-2.5" />
-                                  {patient?.mobile || "No Contact"}
+                                  {patientPhone}
                                 </span>
                               </div>
                             </div>
@@ -995,7 +1029,7 @@ export default function AppointmentsPage() {
                         {visibleColumns.doctor && (
                           <TableCell>
                             <div className="flex items-center gap-2.5">
-                              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={a.doctorId} name={doctor?.name || a.doctorId} />
+                              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={a.doctorId} name={dLabel} />
                               <span className="text-xs font-medium text-foreground">
                                 {dLabel}
                               </span>
@@ -1091,11 +1125,11 @@ export default function AppointmentsPage() {
         </CardContent>
 
         {/* Pagination Footer */}
-        {!loading && filteredAndSortedAppointments.length > 0 && (
+        {!loading && total > 0 && (
           <Pagination
             page={currentPage}
             pageSize={pageSize}
-            totalItems={filteredAndSortedAppointments.length}
+            totalItems={total}
             onPageChange={(p) => setCurrentPage(Math.max(1, Math.min(p, totalPages || 1)))}
             pageSizeOptions={[5, 10, 25, 50]}
             onPageSizeChange={(size) => {
@@ -1231,8 +1265,9 @@ export default function AppointmentsPage() {
         description={
           deleteTarget
             ? `Are you sure you want to delete the appointment for ${
-                patientMap.get(deleteTarget.patientId)?.fullName ??
-                deleteTarget.patientId
+                deleteTarget.patientName ||
+                patientMap.get(deleteTarget.patientId)?.fullName ||
+                "this patient"
               }?`
             : undefined
         }

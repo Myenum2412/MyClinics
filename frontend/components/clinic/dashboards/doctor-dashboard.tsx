@@ -22,12 +22,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { KOLKATA_TZ, now, toLocalDateISO, parseLocalDate, addDays, formatDate, weekdayIndex } from "@/lib/datetime";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
-import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts";
+import { MetricStatGrid } from "@/components/metric-stat-cards";
 import { BillingOverviewCard } from "@/components/clinic/billing-overview-card";
 import { RecentAppointmentsCard } from "@/components/clinic/recent-appointments-card";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
-import { Folder, ArrowRight, Users, Phone, Eye, FileText, Plus } from "lucide-react";
+import {
+  Folder,
+  ArrowRight,
+  Users,
+  Phone,
+  Eye,
+  FileText,
+  Plus,
+  CalendarDays,
+  IndianRupee,
+  Stethoscope,
+} from "lucide-react";
 import {
   type Week,
   type AgendaDay,
@@ -335,7 +345,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
-  const [counts, setCounts] = useState<{ appointments: number; patients: number; doctors: number; prescriptions: number; revenue: number } | null>(null);
+  const [counts, setCounts] = useState<{ appointments: number; patients: number; doctors: number; prescriptions: number; revenue: number; paidRevenue: number } | null>(null);
 
   useEffect(() => {
     if (!clinicId) return;
@@ -383,72 +393,86 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   }, [clinicId, isDoctorRole]);
 
   // Stats section cards
-  const chartConfig = { capacity: { label: "Capacity", color: "hsl(var(--primary))" } } satisfies ChartConfig;
   const totalRevenue = counts ? counts.revenue : (bills ?? []).reduce((s, b) => (b.status !== "void" ? s + (b.total ?? 0) : s), 0);
   const apptCount = counts ? counts.appointments : appointments.length;
   const patientCount = counts ? counts.patients : patients.length;
   const doctorCount = counts ? counts.doctors : doctors.length;
   const rxCount = counts ? counts.prescriptions : prescriptions.length;
+  const paidRevenue =
+    counts?.paidRevenue ??
+    (bills ?? []).filter((b) => b.status === "paid").reduce((s, b) => s + (b.total ?? 0), 0);
+  const revenuePct = totalRevenue
+    ? Math.min(100, Math.round((paidRevenue / Math.max(1, totalRevenue)) * 100))
+    : 0;
 
-  const statsData = isDoctorRole
+  const iconCls = "size-4";
+  const statsItems = isDoctorRole
     ? [
         {
           name: "My Patients",
-          current: patientCount,
-          allowed: 100,
-          capacity: Math.min(100, Math.round((patientCount / 100) * 100)),
-          fill: "var(--chart-1)",
+          value: patientCount,
+          detail: `${patientCount} of 100 assigned`,
+          percentage: Math.min(100, Math.round((patientCount / 100) * 100)),
+          accent: "var(--chart-1)",
+          icon: <Users className={iconCls} />,
         },
         {
           name: "Appointments",
-          current: apptCount,
-          allowed: 50,
-          capacity: Math.min(100, Math.round((apptCount / 50) * 100)),
-          fill: "var(--chart-2)",
+          value: apptCount,
+          detail: `${apptCount} of 50 assigned`,
+          percentage: Math.min(100, Math.round((apptCount / 50) * 100)),
+          accent: "var(--chart-2)",
+          icon: <CalendarDays className={iconCls} />,
         },
         {
           name: "Prescriptions",
-          current: rxCount,
-          allowed: 100,
-          capacity: Math.min(100, Math.round((rxCount / 100) * 100)),
-          fill: "var(--chart-3)",
+          value: rxCount,
+          detail: `${rxCount} of 100 assigned`,
+          percentage: Math.min(100, Math.round((rxCount / 100) * 100)),
+          accent: "var(--chart-3)",
+          icon: <FileText className={iconCls} />,
         },
         {
           name: "Doctors Roster",
-          current: doctorCount,
-          allowed: 10,
-          capacity: Math.min(100, Math.round((doctorCount / 10) * 100)),
-          fill: "var(--chart-4)",
+          value: doctorCount,
+          detail: `${doctorCount} of 10 assigned`,
+          percentage: Math.min(100, Math.round((doctorCount / 10) * 100)),
+          accent: "var(--chart-4)",
+          icon: <Stethoscope className={iconCls} />,
         },
       ]
     : [
         {
           name: "Patients",
-          current: patientCount,
-          allowed: 100,
-          capacity: Math.min(100, Math.round((patientCount / 100) * 100)),
-          fill: "var(--chart-1)",
+          value: patientCount,
+          detail: `${patientCount} of 100 used`,
+          percentage: Math.min(100, Math.round((patientCount / 100) * 100)),
+          accent: "var(--chart-1)",
+          icon: <Users className={iconCls} />,
         },
         {
           name: "Appointments",
-          current: apptCount,
-          allowed: 50,
-          capacity: Math.min(100, Math.round((apptCount / 50) * 100)),
-          fill: "var(--chart-2)",
+          value: apptCount,
+          detail: `${apptCount} of 50 used`,
+          percentage: Math.min(100, Math.round((apptCount / 50) * 100)),
+          accent: "var(--chart-2)",
+          icon: <CalendarDays className={iconCls} />,
         },
         {
           name: "Revenue",
-          current: totalRevenue,
-          allowed: Math.max(totalRevenue, 1),
-          capacity: totalRevenue ? Math.min(100, Math.round(((bills ?? []).filter(b => b.status === "paid").reduce((s, b) => s + (b.total ?? 0), 0) / Math.max(1, totalRevenue)) * 100)) : 0,
-          fill: "var(--chart-3)",
+          value: `₹${totalRevenue.toLocaleString("en-IN")}`,
+          detail: `₹${paidRevenue.toLocaleString("en-IN")} collected`,
+          percentage: revenuePct,
+          accent: "var(--chart-3)",
+          icon: <IndianRupee className={iconCls} />,
         },
         {
           name: "Doctors",
-          current: doctorCount,
-          allowed: 10,
-          capacity: Math.min(100, Math.round((doctorCount / 10) * 100)),
-          fill: "var(--chart-4)",
+          value: doctorCount,
+          detail: `${doctorCount} of 10 used`,
+          percentage: Math.min(100, Math.round((doctorCount / 10) * 100)),
+          accent: "var(--chart-4)",
+          icon: <Stethoscope className={iconCls} />,
         },
       ];
 
@@ -463,34 +487,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
       {/* Greeting banner */}
       <GreetingBanner doctorName={session.name ?? "Doctor"} />
 
-      {/* Section cards — stats-07 design */}
-      <div>
-        <dl className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {statsData.map((item) => (
-            <Card className="p-4 shadow-2xs" key={item.name}>
-              <CardContent className="flex items-center space-x-4 p-0">
-                <div className="relative flex items-center justify-center">
-                  <ChartContainer className="h-[80px] w-[80px]" config={chartConfig}>
-                    <RadialBarChart barSize={6} data={[item]} endAngle={-270} innerRadius={30} outerRadius={60} startAngle={90}>
-                      <PolarAngleAxis angleAxisId={0} axisLine={false} domain={[0, 100]} tick={false} type="number" />
-                      <RadialBar angleAxisId={0} background cornerRadius={10} dataKey="capacity" fill={item.fill} />
-                    </RadialBarChart>
-                  </ChartContainer>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="font-semibold text-xs text-foreground">{item.capacity}%</span>
-                  </div>
-                </div>
-                <div>
-                  <dt className="font-semibold text-foreground text-sm tracking-tight leading-none mb-1">{item.name}</dt>
-                  <dd className="text-muted-foreground text-xs">
-                    {item.name === "Revenue" ? `₹${item.current.toLocaleString("en-IN")}` : `${item.current} of ${item.allowed} ${isDoctorRole ? 'assigned' : 'used'}`}
-                  </dd>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </dl>
-      </div>
+      <MetricStatGrid items={statsItems} />
 
       {/* Recent Appointments + Doctor Patients / Billing row */}
       <div className="grid gap-6 lg:grid-cols-2">

@@ -18,11 +18,13 @@ export interface MedicineRecordDoc extends ClinicDocument {
   deletedAt?: Date;
 }
 
-export function recordToPublic(doc: MedicineRecordDoc) {
+export function recordToPublic(doc: MedicineRecordDoc & { patientName?: string | null; doctorName?: string | null }) {
   return {
     recordId: doc.recordId,
     patientId: doc.patientId,
     doctorId: doc.doctorId,
+    patientName: doc.patientName ?? null,
+    doctorName: doc.doctorName ?? null,
     diagnosis: doc.diagnosis,
     symptoms: doc.symptoms,
     treatment: doc.treatment,

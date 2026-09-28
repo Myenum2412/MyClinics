@@ -7,12 +7,10 @@ import {
   type MedicineEntry,
   type Prescription,
   type Patient,
-  type Doctor,
   createPrescription,
   deletePrescription,
   listPrescriptions,
   listPatients,
-  listDoctors,
   API_BASE_URL,
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
@@ -60,6 +58,7 @@ import {
 } from "@/components/clinic/medicine-input";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { Pagination } from "@/components/ui/pagination";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import dynamic from "next/dynamic";
@@ -115,8 +114,11 @@ export default function PrescriptionsPage() {
 
   // Core data states
   const [items, setItems] = useState<Prescription[]>([]);
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [total, setTotal] = useState(0);
+  const [initialLoading, setInitialLoading] = useState(true);
+  // A bounded, unfiltered patient sample purely for the "mobile coverage" stat card — that needs
+  // real records to compute a percentage from, not just a count.
+  const [statsPatients, setStatsPatients] = useState<Patient[]>([]);
   const [notificationsMap, setNotificationsMap] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
 
@@ -149,53 +151,86 @@ export default function PrescriptionsPage() {
   const [pageIndex, setPageIndex] = useState(0);
   const pageSize = 8;
 
-  // Patient and Doctor lookup maps
-  const patientMap = useMemo(() => {
-    const map = new Map<string, Patient>();
-    patients.forEach((p) => map.set(p.patientId, p));
-    return map;
-  }, [patients]);
+  // Debounced so every keystroke doesn't fire a request.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 350);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
-  const doctorMap = useMemo(() => {
-    const map = new Map<string, Doctor>();
-    doctors.forEach((d) => map.set(d.doctorId, d));
-    return map;
-  }, [doctors]);
+  // WhatsApp delivery-log badges — independent of table pagination/search, so it's loaded once
+  // rather than being refetched on every keystroke/page change.
+  const loadNotifications = useCallback(() => {
+    if (!clinicId) return;
+    fetch(`${API_BASE_URL}/api/clinics/${clinicId}/prescriptions/notifications`)
+      .then((notifRes) => (notifRes.ok ? notifRes.json() : { notifications: [] }))
+      .then((notifData) => {
+        const map: Record<string, any> = {};
+        (notifData.notifications || []).forEach((n: any) => {
+          const existing = map[n.prescriptionId];
+          const nUpdated = parseDate(n.updatedAt);
+          const existingUpdated = existing ? parseDate(existing.updatedAt) : null;
+          if (!existing || (nUpdated && existingUpdated && nUpdated > existingUpdated)) {
+            map[n.prescriptionId] = n;
+          }
+        });
+        setNotificationsMap(map);
+      })
+      .catch(() => {});
+  }, [clinicId]);
 
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  // Bounded, unfiltered sample for the "mobile coverage" stat card.
+  const loadStatsPatients = useCallback(() => {
+    if (!clinicId) return;
+    listPatients(clinicId, { limit: 100 })
+      .then((res) => setStatsPatients(res.items ?? []))
+      .catch(() => {});
+  }, [clinicId]);
+
+  useEffect(() => {
+    loadStatsPatients();
+  }, [loadStatsPatients]);
+
+  // Clinic-wide counts for the "Total"/"Today" stat cards — independent of the table's page/search.
+  const [globalStats, setGlobalStats] = useState<{ total: number; today: number } | null>(null);
+  const loadStats = useCallback(() => {
+    if (!clinicId) return;
+    Promise.allSettled([
+      listPrescriptions(clinicId, { limit: 1 }),
+      listPrescriptions(clinicId, { limit: 1, from: todayISO(), to: todayISO() }),
+    ]).then(([totalRes, todayRes]) => {
+      const count = (r: PromiseSettledResult<any>) => (r.status === "fulfilled" ? r.value?.total ?? 0 : 0);
+      setGlobalStats({ total: count(totalRes), today: count(todayRes) });
+    });
+  }, [clinicId]);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
+
+  // The actual table data: real server-side pagination + search.
   const load = useCallback(() => {
     if (!clinicId) return;
     setLoading(true);
-    Promise.allSettled([
-      listPrescriptions(clinicId, { limit: 50 }),
-      listPatients(clinicId, { limit: 50 }),
-      listDoctors(clinicId, { limit: 50 }),
-    ])
-      .then((results) => {
-        const [prescRes, patientRes, docRes] = results;
-        if (prescRes.status === "fulfilled") setItems((prescRes.value as any)?.items ?? []);
-        else toast.error(prescRes.reason?.message || "Failed to load prescriptions");
-        if (patientRes.status === "fulfilled") setPatients((patientRes.value as any)?.items ?? []);
-        if (docRes.status === "fulfilled") setDoctors((docRes.value as any)?.items ?? []);
+    listPrescriptions(clinicId, {
+      q: debouncedSearch || undefined,
+      page: pageIndex + 1,
+      limit: pageSize,
+    })
+      .then((res) => {
+        setItems(res.items ?? []);
+        setTotal(res.total ?? 0);
       })
-      .then(() =>
-        fetch(`${API_BASE_URL}/api/clinics/${clinicId}/prescriptions/notifications`)
-          .then((notifRes) => (notifRes.ok ? notifRes.json() : { notifications: [] }))
-          .then((notifData) => {
-            const map: Record<string, any> = {};
-            (notifData.notifications || []).forEach((n: any) => {
-              const existing = map[n.prescriptionId];
-              const nUpdated = parseDate(n.updatedAt);
-              const existingUpdated = existing ? parseDate(existing.updatedAt) : null;
-              if (!existing || (nUpdated && existingUpdated && nUpdated > existingUpdated)) {
-                map[n.prescriptionId] = n;
-              }
-            });
-            setNotificationsMap(map);
-          })
-          .catch(() => {})
-      )
-      .finally(() => setLoading(false));
-  }, [clinicId]);
+      .catch((e) => toast.error(e?.message || "Failed to load prescriptions"))
+      .finally(() => {
+        setLoading(false);
+        setInitialLoading(false);
+      });
+  }, [clinicId, debouncedSearch, pageIndex]);
 
   useEffect(() => {
     load();
@@ -237,7 +272,7 @@ export default function PrescriptionsPage() {
   // Row Selection logic
   const handleToggleSelectAll = (checked: boolean) => {
     if (checked) {
-      const allIds = new Set(filteredItems.map((p) => p.prescriptionId));
+      const allIds = new Set(sortedItems.map((p) => p.prescriptionId));
       setSelectedIds(allIds);
     } else {
       setSelectedIds(new Set());
@@ -316,55 +351,14 @@ export default function PrescriptionsPage() {
     }
   };
 
-  // Filtering & Search
-  const filteredItems = useMemo(() => {
-    return items.filter((p) => {
-      const patient = patientMap.get(p.patientId);
-      const patientName = patient?.fullName.toLowerCase() ?? "";
-      const patientEmail = patient?.email?.toLowerCase() ?? "";
-      const patientMobile = patient?.mobile ?? "";
-      const diagnosis = p.diagnosis?.toLowerCase() ?? "";
-      const doctor = doctorMap.get(p.doctorId)?.name.toLowerCase() ?? "";
-      const term = searchTerm.toLowerCase();
-
-      return (
-        patientName.includes(term) ||
-        patientEmail.includes(term) ||
-        patientMobile.includes(term) ||
-        diagnosis.includes(term) ||
-        doctor.includes(term) ||
-        p.visitDate.includes(term)
-      );
-    });
-  }, [items, searchTerm, patientMap, doctorMap]);
-
-  // Sorting
+  // Search is applied server-side (see `load`); `items` is already exactly one page.
+  // Only the sort-toggle re-orders that page client-side (cheap for ~8 rows, no round trip needed).
   const sortedItems = useMemo(() => {
-    if (!sortField) return filteredItems;
+    if (!sortField) return items;
+    return [...items].sort((a, b) => (sortDesc ? b.visitDate.localeCompare(a.visitDate) : a.visitDate.localeCompare(b.visitDate)));
+  }, [items, sortField, sortDesc]);
 
-    return [...filteredItems].sort((a, b) => {
-      let valA: string = a[sortField] || "";
-      let valB: string = b[sortField] || "";
-
-      if (sortField === "visitDate") {
-        valA = a.visitDate;
-        valB = b.visitDate;
-      }
-
-      if (sortDesc) {
-        return valB.localeCompare(valA);
-      }
-      return valA.localeCompare(valB);
-    });
-  }, [filteredItems, sortField, sortDesc]);
-
-  // Pagination
-  const paginatedItems = useMemo(() => {
-    const start = pageIndex * pageSize;
-    return sortedItems.slice(start, start + pageSize);
-  }, [sortedItems, pageIndex]);
-
-  const pageCount = Math.ceil(sortedItems.length / pageSize);
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
 
   const canManage = sessionCan(session, "clinic_admin");
 
@@ -538,11 +532,12 @@ export default function PrescriptionsPage() {
   return (
     <div className="flex flex-col gap-6">
       {/* Metrics Section */}
-      {!loading && (
+      {!initialLoading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <Stats07
             prescriptions={items}
-            patients={patients}
+            patients={statsPatients}
+            stats={globalStats ?? undefined}
             searchTerm={searchTerm}
             onSearchChange={(v) => {
               setSearchTerm(v);
@@ -610,10 +605,15 @@ export default function PrescriptionsPage() {
               <Skeleton className="h-10 w-full" />
             </div>
           ) : sortedItems.length === 0 ? (
-            <div className="py-16 text-center">
-              <FileText className="size-10 mx-auto text-muted-foreground/45" />
-              <p className="mt-3 text-sm font-medium text-muted-foreground">No prescriptions found.</p>
-            </div>
+            <Empty className="border-none py-16">
+              <EmptyHeader>
+                <EmptyMedia variant="icon"><FileText /></EmptyMedia>
+                <EmptyTitle>{debouncedSearch ? "No matching prescriptions" : "No prescriptions yet"}</EmptyTitle>
+                <EmptyDescription>
+                  {debouncedSearch ? "Try a different search term." : "Prescriptions you write will show up here."}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -622,8 +622,8 @@ export default function PrescriptionsPage() {
                     {visibleColumns.select && (
                       <TableHead className="w-10 pl-4">
                         <Checkbox
-                          checked={selectedIds.size === filteredItems.length && filteredItems.length > 0}
-                          indeterminate={selectedIds.size > 0 && selectedIds.size < filteredItems.length}
+                          checked={selectedIds.size === sortedItems.length && sortedItems.length > 0}
+                          indeterminate={selectedIds.size > 0 && selectedIds.size < sortedItems.length}
                           onCheckedChange={(c) => handleToggleSelectAll(c === true)}
                           aria-label="Select all rows"
                         />
@@ -687,9 +687,10 @@ export default function PrescriptionsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedItems.map((p) => {
-                    const patient = patientMap.get(p.patientId);
-                    const doctor = doctorMap.get(p.doctorId);
+                  {sortedItems.map((p) => {
+                    const patientLabel = p.patientName || "Unknown Patient";
+                    const patientPhone = p.patientPhone || "No phone";
+                    const doctorLabel = p.doctorName || "Unknown Doctor";
                     const notif = notificationsMap[p.prescriptionId];
 
                     return (
@@ -721,15 +722,15 @@ export default function PrescriptionsPage() {
                                 clinicId={clinicId}
                                 ownerType="patient"
                                 ownerId={p.patientId}
-                                name={patient?.fullName ?? p.patientId}
+                                name={patientLabel}
                                 className="size-8"
                               />
                               <div className="min-w-0">
                                 <p className="truncate text-xs font-semibold leading-tight text-foreground">
-                                  {patient?.fullName ?? p.patientId}
+                                  {patientLabel}
                                 </p>
                                 <p className="truncate text-[10px] text-muted-foreground">
-                                  {patient?.mobile ?? "No phone"}
+                                  {patientPhone}
                                 </p>
                               </div>
                             </div>
@@ -739,9 +740,9 @@ export default function PrescriptionsPage() {
                         {visibleColumns.doctor && (
                           <TableCell>
                             <div className="flex items-center gap-2.5">
-                              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={p.doctorId} name={doctor?.name || "Unknown Doctor"} />
+                              <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={p.doctorId} name={doctorLabel} />
                               <span className="text-xs text-foreground font-medium">
-                                {doctor?.name ?? "—"}
+                                {doctorLabel}
                               </span>
                             </div>
                           </TableCell>
@@ -870,11 +871,11 @@ export default function PrescriptionsPage() {
           )}
 
           {/* Table Footer / Pagination */}
-          {!loading && sortedItems.length > 0 && (
+          {!loading && total > 0 && (
             <Pagination
               page={pageIndex + 1}
               pageSize={pageSize}
-              totalItems={sortedItems.length}
+              totalItems={total}
               onPageChange={(p) => setPageIndex(Math.max(0, Math.min(p - 1, pageCount - 1)))}
               itemLabel="prescriptions"
             />
@@ -891,7 +892,7 @@ export default function PrescriptionsPage() {
               <DialogHeader>
                 <DialogTitle>Notification History</DialogTitle>
                 <DialogDescription>
-                  WhatsApp delivery tracking logs for patient: {patientMap.get(selectedPrescription.patientId)?.fullName ?? selectedPrescription.patientId}
+                  WhatsApp delivery tracking logs for patient: {selectedPrescription.patientName || "Unknown Patient"}
                 </DialogDescription>
               </DialogHeader>
               <div className="py-3">

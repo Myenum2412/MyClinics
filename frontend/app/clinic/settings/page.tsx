@@ -36,7 +36,9 @@ import {
   QrCode,
 } from "lucide-react";
 
-const WHATSAPP_POLL_MS = 1_000;
+// The QR itself only rotates every ~20-60s (WhatsApp's own protocol); polling every second just
+// adds request churn and increases the odds of catching a transient gap between rotations.
+const WHATSAPP_POLL_MS = 4_000;
 
 /** Deep links that open the saved UPI ID in the user's payment app. */
 function upiAppLinks(upiId: string): { label: string; href: string }[] {
@@ -70,6 +72,11 @@ export default function SettingsPage() {
   const [waSession, setWaSession] = useState<ClinicWhatsappSession | null>(null);
   const [waLoading, setWaLoading] = useState(true);
   const [waAction, setWaAction] = useState<"connect" | "disconnect" | "logout" | null>(null);
+  // Keeps the last QR on screen across polls instead of flashing to a "Generating…" placeholder
+  // whenever a poll lands in the brief gap between one QR expiring and the next being issued.
+  const lastQrRef = useRef<ClinicWhatsappSession["qr"] | null>(null);
+  if (waSession?.qr) lastQrRef.current = waSession.qr;
+  const displayQr = waSession?.qr ?? lastQrRef.current;
   const [aiAgentEnabled, setAiAgentEnabled] = useState(true);
   const [aiAgentSaving, setAiAgentSaving] = useState(false);
 
@@ -149,10 +156,11 @@ export default function SettingsPage() {
       void handleConnect();
       return;
     }
-    // Auto-retry if stuck on idle/qr-less for >12s (worker may have not emitted qr yet)
+    // Auto-retry if stuck on idle/qr-less for >15s (worker may have not emitted qr yet) — the
+    // worker itself can take 10-15s to start, so retrying sooner just fights its own startup.
     if (hasQr || waSession?.connected) return;
     if (s === "idle" || s === "unconfigured" || s === "disconnected" || s === "error") {
-      if (Date.now() - lastConnectAt.current > 6_000 && waAction === null) {
+      if (Date.now() - lastConnectAt.current > 15_000 && waAction === null) {
         lastConnectAt.current = Date.now();
         void handleConnect();
       }
@@ -178,6 +186,7 @@ export default function SettingsPage() {
     setWaAction(logout ? "logout" : "disconnect");
     try {
       await disconnectClinicWhatsapp(session.clinicId, logout);
+      lastQrRef.current = null;
       toast.success(
         logout
           ? "WhatsApp disconnected and unlinked. Connect again to re-pair."
@@ -340,8 +349,15 @@ export default function SettingsPage() {
         {activeTab === "whatsapp" && (
           <>
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>WhatsApp connection</CardTitle>
+                {!waLoading && (
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${connected ? "bg-[#25D366]/10 text-[#25D366] ring-[#25D366]/20" : "bg-red-50 text-red-600 ring-red-200"}`}
+                  >
+                    {connected ? "Connected" : "Not connected"}
+                  </span>
+                )}
               </CardHeader>
               <CardContent className="flex flex-col items-center gap-4 text-center">
                 {waLoading ? (
@@ -386,11 +402,11 @@ export default function SettingsPage() {
                       </div>
                     )}
                   </>
-                ) : waSession?.qr ? (
+                ) : displayQr ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={waSession.qr.dataUrl}
+                      src={displayQr.dataUrl}
                       alt="WhatsApp Web QR code"
                       width={264}
                       height={264}
@@ -415,15 +431,22 @@ export default function SettingsPage() {
                 ) : (
                   <div className="flex flex-col items-center gap-4 py-4">
                     <div className="flex size-[264px] items-center justify-center rounded-lg border border-dashed border-border bg-muted/20">
-                      <span className="size-6 animate-spin rounded-full border-2 border-primary/30 border-t-primary inline-block" />
+                      {stage === "error" ? (
+                        <QrCode className="size-10 text-muted-foreground/50" />
+                      ) : (
+                        <span className="size-6 animate-spin rounded-full border-2 border-primary/30 border-t-primary inline-block" />
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {stage === "idle" ? "Starting browser… (10-15s)" : stage === "error" ? "Retrying…" : "Generating QR…"}
+                    <p className="max-w-sm text-center text-sm text-muted-foreground">
+                      {stage === "error"
+                        ? "WhatsApp is temporarily unavailable. Please try again in a moment."
+                        : stage === "idle"
+                          ? "Starting connection…"
+                          : "Generating QR code…"}
                     </p>
-                    <p className="text-xs text-muted-foreground">If QR never appears, worker is down — SSH EC2: `pm2 status` then `pm2 logs myclinic-whatsapp --lines 80`</p>
                     {canEdit && (
                       <Button type="button" disabled={waAction !== null} onClick={() => void handleConnect()}>
-                        {waAction === "connect" ? "Starting…" : "Generate QR"}
+                        {waAction === "connect" ? "Starting…" : stage === "error" ? "Try again" : "Generate QR"}
                       </Button>
                     )}
                   </div>

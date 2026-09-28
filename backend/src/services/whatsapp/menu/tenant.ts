@@ -34,6 +34,8 @@ export interface TenantDepsParams {
   pushName: string | null;
   /** WhatsApp message id: makes document sends idempotent across webhook retries. */
   messageId: string;
+  /** Already fetched by the caller (to check the AI-agent toggle) — reused instead of a second query. */
+  initialSettings?: Record<string, unknown> | null;
   /** Overridable for tests. */
   io?: {
     download: (key: string) => Promise<Buffer>;
@@ -89,7 +91,9 @@ export function createTenantMenuDeps(p: TenantDepsParams): MenuDeps {
     workingHours?: { open: string; close: string };
     slotMinutes?: number;
   }
-  let settingsCache: SettingsLite | null = null;
+  // Reuse the settings doc the caller already fetched (to check the AI-agent toggle) instead of
+  // querying it again on the first call that needs working hours/slot config.
+  let settingsCache: SettingsLite | null = p.initialSettings !== undefined ? ((p.initialSettings as SettingsLite | null) ?? {}) : null;
   let patientsCache: PatientRef[] | null = null;
   const doctorsById = new Map<string, DoctorDoc>();
 

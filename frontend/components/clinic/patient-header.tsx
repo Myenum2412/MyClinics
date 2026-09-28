@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Bell } from "lucide-react";
 
 interface PatientHeaderProps {
@@ -41,7 +40,6 @@ export function PatientHeader({
 
       {/* Right: Notifications bell icon with small notification indicator badge */}
       <div className="flex items-center gap-2">
-        <ThemeToggle />
         <Link
           href="/clinic/notifications"
           aria-label="View notifications"

@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/table"
 import { Pencil, Trash2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Pagination } from "@/components/ui/pagination"
 
 type SupplierStatus = "active" | "inactive"
 
@@ -42,10 +43,14 @@ export default function PharmacySuppliersPage() {
   const session = useRequireRole("billing_staff")
   const clinicId = session?.clinicId ?? ""
   const [suppliers, setSuppliers] = React.useState<PharmacySupplier[]>([])
+  const [total, setTotal] = React.useState(0)
+  const [page, setPage] = React.useState(1)
+  const pageSize = 20
   const [loading, setLoading] = React.useState(true)
   const [search, setSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<"all" | SupplierStatus>("all")
 
+  const [initialLoading, setInitialLoading] = React.useState(true)
   const [deleteTarget, setDeleteTarget] = React.useState<PharmacySupplier | null>(null)
   const [deleting, setDeleting] = React.useState(false)
 
@@ -53,38 +58,47 @@ export default function PharmacySuppliersPage() {
     if (!clinicId) return
     let active = true
     setLoading(true)
-    listSuppliers(clinicId, { limit: 1000 })
+    listSuppliers(clinicId, {
+      search: search.trim() || undefined,
+      status: statusFilter !== "all" ? statusFilter : undefined,
+      page,
+      limit: pageSize,
+    })
       .then((res) => {
         if (!active) return
-        setSuppliers((res as any)?.items ?? [])
+        setSuppliers(res.items ?? [])
+        setTotal(res.total ?? 0)
       })
       .catch((err: unknown) => {
         toast.error(err instanceof Error ? err.message : "Failed to load suppliers")
       })
-      .finally(() => active && setLoading(false))
+      .finally(() => {
+        if (!active) return
+        setLoading(false)
+        setInitialLoading(false)
+      })
     return () => {
       active = false
     }
-  }, [clinicId])
+  }, [clinicId, search, statusFilter, page])
 
+  // Debounced so every keystroke doesn't fire a request.
   React.useEffect(() => {
-    return load()
-  }, [load])
+    const t = setTimeout(() => load(), 250)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clinicId, search, statusFilter, page])
+
+  // Bounded, unfiltered sample purely for the stat cards (active/inactive/with-GST ratios).
+  const [statsSuppliers, setStatsSuppliers] = React.useState<PharmacySupplier[]>([])
+  React.useEffect(() => {
+    if (!clinicId) return
+    listSuppliers(clinicId, { limit: 200 }).then((res) => setStatsSuppliers(res.items ?? [])).catch(() => {})
+  }, [clinicId])
 
   if (!session) return null
 
-  const filtered = suppliers.filter((s) => {
-    if (statusFilter !== "all" && s.status !== statusFilter) return false
-    if (search.trim()) {
-      const q = search.trim().toLowerCase()
-      const hay = [s.name, s.contactPerson, s.phone, s.email, s.gstNumber, s.drugLicenseNumber]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-      if (!hay.includes(q)) return false
-    }
-    return true
-  })
+  const filtered = suppliers
 
   async function confirmDelete() {
     if (!clinicId || !deleteTarget) return
@@ -103,25 +117,29 @@ export default function PharmacySuppliersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {!loading && (
+      {!initialLoading && (
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-      {(() => {const total=suppliers.length;const active=suppliers.filter(s=>s.status==="active").length;const s=[{name:"Total Suppliers",percentage:Math.min(100,total*10),current:total,allowed:10,allowedLabel:"suppliers",fill:"var(--chart-1)"},{name:"Active",percentage:total?Math.round(active/total*100):0,current:active,allowed:total,allowedLabel:"total",fill:"var(--chart-2)"},{name:"Inactive",percentage:total?Math.round((total-active)/total*100):0,current:total-active,allowed:total,allowedLabel:"total",fill:"var(--chart-3)"},{name:"With GST",percentage:total?Math.round(suppliers.filter(s=>s.gstNumber).length/total*100):0,current:suppliers.filter(s=>s.gstNumber).length,allowed:total,allowedLabel:"total",fill:"var(--chart-4)"}];return (<PharmacyStats title="Suppliers Analytics" subtitle="Manage medicine and drug suppliers." searchTerm={search} onSearchChange={setSearch} searchPlaceholder="Search suppliers..." action={<Button size="sm" className="h-9 shadow-sm" render={<Link href="/clinic/pharmacy/suppliers/new" />}>Add Supplier</Button>} items={s} />)})()}
+      {(() => {const sampleTotal=statsSuppliers.length;const active=statsSuppliers.filter(s=>s.status==="active").length;const s=[{name:"Total Suppliers",percentage:Math.min(100,total*10),current:total,allowed:10,allowedLabel:"suppliers",fill:"var(--chart-1)"},{name:"Active",percentage:sampleTotal?Math.round(active/sampleTotal*100):0,current:active,allowed:sampleTotal,allowedLabel:"recent",fill:"var(--chart-2)"},{name:"Inactive",percentage:sampleTotal?Math.round((sampleTotal-active)/sampleTotal*100):0,current:sampleTotal-active,allowed:sampleTotal,allowedLabel:"recent",fill:"var(--chart-3)"},{name:"With GST",percentage:sampleTotal?Math.round(statsSuppliers.filter(s=>s.gstNumber).length/sampleTotal*100):0,current:statsSuppliers.filter(s=>s.gstNumber).length,allowed:sampleTotal,allowedLabel:"recent",fill:"var(--chart-4)"}];return (<PharmacyStats title="Suppliers Analytics" subtitle="Manage medicine and drug suppliers." searchTerm={search} onSearchChange={(v)=>{setSearch(v);setPage(1)}} searchPlaceholder="Search suppliers..." action={<Button size="sm" className="h-9 shadow-sm" render={<Link href="/clinic/pharmacy/suppliers/new" />}>Add Supplier</Button>} items={s} />)})()}
         </div>
       )}
 
       <Card className="shadow-sm">
         <CardContent className="p-0">
           <div className="flex flex-wrap items-center gap-2 p-4 border-b border-border">
-            <span className="text-sm font-medium">Suppliers <span className="text-muted-foreground">({filtered.length})</span></span>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter((v as "all" | SupplierStatus) ?? "all")}>
+            <span className="text-sm font-medium">Suppliers <span className="text-muted-foreground">({total})</span></span>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter((v as "all" | SupplierStatus) ?? "all"); setPage(1) }}>
               <SelectTrigger className="h-9 w-40 ml-auto"><SelectValue placeholder="All statuses" /></SelectTrigger>
               <SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent>
             </Select>
           </div>
           {loading ? (
-            <div className="space-y-2 p-4"><div className="h-10 w-full animate-pulse rounded bg-muted" /><div className="h-10 w-full animate-pulse rounded bg-muted" /></div>
+            <div className="space-y-2 p-4"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
           ) : filtered.length === 0 ? (
-            <div className="py-16 text-center"><p className="text-sm text-muted-foreground">No suppliers found.</p></div>
+            <div className="py-16 text-center">
+              <p className="text-sm text-muted-foreground">
+                {search || statusFilter !== "all" ? "No suppliers match your search or filters." : "No suppliers yet — add your first one to get started."}
+              </p>
+            </div>
           ) : (
             <div className="overflow-x-auto"><Table>
               <TableHeader>
@@ -170,6 +188,9 @@ export default function PharmacySuppliersPage() {
               </TableBody>
             </Table>
             </div>
+          )}
+          {!loading && total > 0 && (
+            <Pagination page={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} itemLabel="suppliers" />
           )}
         </CardContent>
       </Card>

@@ -1,5 +1,7 @@
 import { now as nowFn } from "@/clinic/core/datetime";
+import { escapeRegex } from "@/clinic/core/pagination";
 import type { Db, WithId } from "mongodb";
+import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import type {
   PharmacySettingsDoc,
   PharmacyMedicineDoc,
@@ -135,6 +137,26 @@ export class PharmacyMedicineRepository {
       this.collection().countDocuments(scoped),
     ]);
     return [items, total];
+  }
+
+  /** Medicine ids whose name matches (used to let a movement/history search match by medicine name). */
+  async findIdsByName(nameQuery: string): Promise<string[]> {
+    const rows = await this.collection()
+      .find(this.scoped({ name: { $regex: nameQuery, $options: "i" } }), { projection: { medicineId: 1 } })
+      .limit(500)
+      .toArray();
+    return rows.map((r) => r.medicineId);
+  }
+
+  /** Just the id→name pairs actually referenced — avoids pulling the whole catalog to label a page of rows. */
+  async namesByIds(medicineIds: string[]): Promise<Map<string, string>> {
+    const map = new Map<string, string>();
+    if (medicineIds.length === 0) return map;
+    const rows = await this.collection()
+      .find(this.scoped({ medicineId: { $in: medicineIds } }), { projection: { medicineId: 1, name: 1 } })
+      .toArray();
+    for (const r of rows) map.set(r.medicineId, r.name);
+    return map;
   }
 
   async insert(
@@ -377,6 +399,8 @@ export class PharmacyStockMovementRepository {
 
   async list(query: {
     search?: string;
+    /** Extra medicine ids to match on `search` (resolved from a medicine-name lookup by the caller). */
+    searchMedicineIds?: string[];
     medicineId?: string;
     batchNumber?: string;
     movementType?: string;
@@ -403,7 +427,9 @@ export class PharmacyStockMovementRepository {
     }
     if (query.search) {
       const re = { $regex: query.search, $options: "i" };
-      filter.$or = [{ medicineId: re }, { batchNumber: re }, { transactionId: re }, { reason: re }, { notes: re }, { party: re }];
+      const or: Record<string, unknown>[] = [{ medicineId: re }, { batchNumber: re }, { transactionId: re }, { reason: re }, { notes: re }, { party: re }];
+      if (query.searchMedicineIds?.length) or.push({ medicineId: { $in: query.searchMedicineIds } });
+      filter.$or = or;
     }
     const scoped = this.scoped(filter);
     const [items, total] = await Promise.all([
@@ -544,9 +570,11 @@ export class PharmacyPurchaseRepository {
     status?: string;
     from?: string;
     to?: string;
+    /** Matches invoice number or supplier name. */
+    q?: string;
     skip: number;
     limit: number;
-  }): Promise<[WithId<PharmacyPurchaseDoc>[], number]> {
+  }): Promise<[(WithId<PharmacyPurchaseDoc> & { supplierName: string | null })[], number]> {
     const filter: Record<string, unknown> = {};
     if (query.supplierId) filter.supplierId = query.supplierId;
     if (query.status) filter.status = query.status;
@@ -557,10 +585,44 @@ export class PharmacyPurchaseRepository {
       };
     }
     const scoped = this.scoped(filter);
-    const [items, total] = await Promise.all([
-      this.collection().find(scoped).sort({ purchaseDate: -1, createdAt: -1 }).skip(query.skip).limit(query.limit).toArray(),
-      this.collection().countDocuments(scoped),
-    ]);
+
+    if (!query.q) {
+      const [items, total] = await Promise.all([
+        this.collection().find(scoped).sort({ purchaseDate: -1, createdAt: -1 }).skip(query.skip).limit(query.limit).toArray(),
+        this.collection().countDocuments(scoped),
+      ]);
+      return [items.map((d) => ({ ...d, supplierName: null })), total];
+    }
+
+    const safeQ = escapeRegex(query.q);
+    const pipeline: Record<string, unknown>[] = [
+      { $match: scoped },
+      { $lookup: { from: CLINIC_COLLECTIONS.pharmacySuppliers, localField: "supplierId", foreignField: "supplierId", as: "supplier" } },
+      { $unwind: { path: "$supplier", preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          $or: [
+            { invoiceNumber: { $regex: safeQ, $options: "i" } },
+            { "supplier.name": { $regex: safeQ, $options: "i" } },
+          ],
+        },
+      },
+      {
+        $facet: {
+          items: [
+            { $sort: { purchaseDate: -1, createdAt: -1 } },
+            { $skip: query.skip },
+            { $limit: query.limit },
+            { $set: { supplierName: "$supplier.name" } },
+            { $unset: "supplier" },
+          ],
+          total: [{ $count: "count" }],
+        },
+      },
+    ];
+    const [result] = await this.collection().aggregate(pipeline).toArray();
+    const items = (result?.items ?? []) as (WithId<PharmacyPurchaseDoc> & { supplierName: string | null })[];
+    const total = (result?.total?.[0]?.count as number | undefined) ?? 0;
     return [items, total];
   }
 
@@ -616,9 +678,11 @@ export class PharmacySaleRepository {
     status?: string;
     from?: string;
     to?: string;
+    /** Matches invoice number or patient name. */
+    q?: string;
     skip: number;
     limit: number;
-  }): Promise<[WithId<PharmacySaleDoc>[], number]> {
+  }): Promise<[(WithId<PharmacySaleDoc> & { patientName: string | null })[], number]> {
     const filter: Record<string, unknown> = {};
     if (query.patientId) filter.patientId = query.patientId;
     if (query.paymentMethod) filter.paymentMethod = query.paymentMethod;
@@ -630,10 +694,44 @@ export class PharmacySaleRepository {
       };
     }
     const scoped = this.scoped(filter);
-    const [items, total] = await Promise.all([
-      this.collection().find(scoped).sort({ saleDate: -1, createdAt: -1 }).skip(query.skip).limit(query.limit).toArray(),
-      this.collection().countDocuments(scoped),
-    ]);
+
+    if (!query.q) {
+      const [items, total] = await Promise.all([
+        this.collection().find(scoped).sort({ saleDate: -1, createdAt: -1 }).skip(query.skip).limit(query.limit).toArray(),
+        this.collection().countDocuments(scoped),
+      ]);
+      return [items.map((d) => ({ ...d, patientName: null })), total];
+    }
+
+    const safeQ = escapeRegex(query.q);
+    const pipeline: Record<string, unknown>[] = [
+      { $match: scoped },
+      { $lookup: { from: CLINIC_COLLECTIONS.patients, localField: "patientId", foreignField: "patientId", as: "patient" } },
+      { $unwind: { path: "$patient", preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          $or: [
+            { invoiceNumber: { $regex: safeQ, $options: "i" } },
+            { "patient.fullName": { $regex: safeQ, $options: "i" } },
+          ],
+        },
+      },
+      {
+        $facet: {
+          items: [
+            { $sort: { saleDate: -1, createdAt: -1 } },
+            { $skip: query.skip },
+            { $limit: query.limit },
+            { $set: { patientName: "$patient.fullName" } },
+            { $unset: "patient" },
+          ],
+          total: [{ $count: "count" }],
+        },
+      },
+    ];
+    const [result] = await this.collection().aggregate(pipeline).toArray();
+    const items = (result?.items ?? []) as (WithId<PharmacySaleDoc> & { patientName: string | null })[];
+    const total = (result?.total?.[0]?.count as number | undefined) ?? 0;
     return [items, total];
   }
 

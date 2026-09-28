@@ -1,18 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import { PolarAngleAxis, RadialBar, RadialBarChart } from 'recharts';
-import { Card, CardContent } from '@/components/ui/card';
-import { type ChartConfig, ChartContainer } from '@/components/ui/chart';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-
-const chartConfig = {
-  capacity: {
-    label: 'Capacity',
-    color: 'hsl(var(--primary))',
-  },
-} satisfies ChartConfig;
+import { MetricStatGrid, type MetricStatItem } from '@/components/metric-stat-cards';
 
 export interface StatItem {
   name: string;
@@ -21,6 +12,16 @@ export interface StatItem {
   allowed: string | number;
   allowedLabel: string;
   fill: string;
+}
+
+function toMetricItems(items: StatItem[]): MetricStatItem[] {
+  return items.map((item) => ({
+    name: item.name,
+    value: item.current,
+    detail: `${item.current} of ${item.allowed} ${item.allowedLabel}`,
+    percentage: item.percentage,
+    accent: item.fill,
+  }));
 }
 
 export default function StatsGeneric({
@@ -67,58 +68,9 @@ export default function StatsGeneric({
         )}
         {action && <div className="shrink-0">{action}</div>}
       </div>
-      <dl className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {items.map((item) => (
-          <Card className="p-4 shadow-sm bg-card" key={item.name}>
-            <CardContent className="flex items-center space-x-4 p-0">
-              <div className="relative flex items-center justify-center">
-                <ChartContainer
-                  className="h-[80px] w-[80px]"
-                  config={chartConfig}
-                >
-                  <RadialBarChart
-                    barSize={6}
-                    data={[{ name: item.name, capacity: item.percentage }]}
-                    endAngle={-270}
-                    innerRadius={30}
-                    outerRadius={60}
-                    startAngle={90}
-                  >
-                    <PolarAngleAxis
-                      angleAxisId={0}
-                      axisLine={false}
-                      domain={[0, 100]}
-                      tick={false}
-                      type="number"
-                    />
-                    <RadialBar
-                      angleAxisId={0}
-                      background
-                      cornerRadius={10}
-                      dataKey="capacity"
-                      fill={item.fill}
-                    />
-                  </RadialBarChart>
-                </ChartContainer>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="font-semibold text-xs text-foreground">
-                    {item.percentage}%
-                  </span>
-                </div>
-              </div>
-              <div>
-                <dt className="font-semibold text-foreground text-sm tracking-tight leading-none mb-1">
-                  {item.name}
-                </dt>
-                <dd className="text-muted-foreground text-xs">
-                  {item.current} of {item.allowed} {item.allowedLabel}
-                </dd>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </dl>
+      <div className="mt-6">
+        <MetricStatGrid items={toMetricItems(items)} />
+      </div>
     </div>
   );
 }
-
