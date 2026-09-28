@@ -9,6 +9,7 @@ import {
   type Appointment,
   type AppointmentStatus,
   type Doctor,
+  type Examination,
   type MedicalRecordFile,
   type MedicalRecordFolder,
   type MedicineRecord,
@@ -24,6 +25,7 @@ import {
   getMedicalRecordDownloadUrl,
   listAppointments,
   listDoctors,
+  listExaminations,
   listMedicalRecordFiles,
   listMedicalRecordFolders,
   listPatients,
@@ -750,6 +752,7 @@ export default function MedicalRecordPage() {
   const [folders, setFolders] = useState<MedicalRecordFolder[]>([]);
   const [records, setRecords] = useState<MedicineRecord[]>([]);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [examinations, setExaminations] = useState<Examination[]>([]);
   const [appointments, setAppointments] = useState<PageResult<Appointment>>({ items: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -784,23 +787,25 @@ export default function MedicalRecordPage() {
     if (!clinicId) return;
     setLoading(true);
     const calls: Array<[string, Promise<unknown>]> = [
-      ["patients", listPatients(clinicId, { limit: 50 })],
-      ["doctors", listDoctors(clinicId, { limit: 50 })],
-      ["files", listMedicalRecordFiles(clinicId)],
+      ["patients", listPatients(clinicId, { limit: 100 })],
+      ["doctors", listDoctors(clinicId, { limit: 100 })],
+      ["files", listMedicalRecordFiles(clinicId, { limit: 100 })],
       ["folders", listMedicalRecordFolders(clinicId)],
-      ["records", listRecords(clinicId, { limit: 50 })],
-      ["prescriptions", listPrescriptions(clinicId, { limit: 50 })],
-      ["appointments", listAppointments(clinicId, { limit: 50 })],
+      ["records", listRecords(clinicId, { limit: 100 })],
+      ["prescriptions", listPrescriptions(clinicId, { limit: 100 })],
+      ["examinations", listExaminations(clinicId, { limit: 100 })],
+      ["appointments", listAppointments(clinicId, { limit: 100 })],
     ];
     Promise.allSettled(calls.map(([, p]) => p))
       .then((results) => {
-        const [p, d, f, fo, r, pr, ap] = results;
+        const [p, d, f, fo, r, pr, ex, ap] = results;
         if (p.status === "fulfilled") setPatients(((p.value as any)?.items ?? []));
         if (d.status === "fulfilled") setDoctors(((d.value as any)?.items ?? []));
         if (f.status === "fulfilled") setFiles(((f.value as any)?.files ?? []));
         if (fo.status === "fulfilled") setFolders(((fo.value as any)?.folders ?? []));
         if (r.status === "fulfilled") setRecords(((r.value as any)?.items ?? []));
         if (pr.status === "fulfilled") setPrescriptions(((pr.value as any)?.items ?? []));
+        if (ex.status === "fulfilled") setExaminations(((ex.value as any)?.items ?? []));
         if (ap.status === "fulfilled") {
           const a = ap.value as PageResult<Appointment>;
           setAppointments({ items: a.items, total: a.total });
@@ -936,13 +941,14 @@ export default function MedicalRecordPage() {
     (key: string): string => {
       const k = displayFolderKey(key);
       if (isDefaultFolderKey(k)) return FOLDER_META[k]?.title ?? "Folder";
-      const folder = patientFolders.find((f) => f.folderId === k);
+      const folder = folders.find((f) => f.folderId === k)
+        ?? patientFolders.find((f) => f.folderId === k);
       if (folder?.isDefault && folder.defaultKey) {
         return FOLDER_META[displayFolderKey(folder.defaultKey)]?.title ?? folder.name;
       }
       return folder?.name ?? "Folder";
     },
-    [patientFolders]
+    [folders, patientFolders]
   );
 
   /** FolderId of the default folder matching currentFolderKey (for Move dialog preselection). */
@@ -953,29 +959,90 @@ export default function MedicalRecordPage() {
     const patientStats = useMemo(() => {
     const stats = new Map<
       string,
-      { files: number; fileSize: number; records: number; prescriptions: number; last: string | null }
+      { files: number; fileSize: number; records: number; prescriptions: number; examinations: number; last: string | null }
     >();
+    const empty = () => ({ files: 0, fileSize: 0, records: 0, prescriptions: 0, examinations: 0, last: null as string | null });
     for (const f of files) {
-      const cur = stats.get(f.patientId) ?? { files: 0, fileSize: 0, records: 0, prescriptions: 0, last: null };
+      const cur = stats.get(f.patientId) ?? empty();
       cur.files += 1;
       cur.fileSize += f.size;
       if (!cur.last || f.createdAt > cur.last) cur.last = f.createdAt;
       stats.set(f.patientId, cur);
     }
     for (const r of records) {
-      const cur = stats.get(r.patientId) ?? { files: 0, fileSize: 0, records: 0, prescriptions: 0, last: null };
+      const cur = stats.get(r.patientId) ?? empty();
       cur.records += 1;
       if (!cur.last || r.createdAt > cur.last) cur.last = r.createdAt;
       stats.set(r.patientId, cur);
     }
     for (const p of prescriptions) {
-      const cur = stats.get(p.patientId) ?? { files: 0, fileSize: 0, records: 0, prescriptions: 0, last: null };
+      const cur = stats.get(p.patientId) ?? empty();
       cur.prescriptions += 1;
       if (!cur.last || p.createdAt > cur.last) cur.last = p.createdAt;
       stats.set(p.patientId, cur);
     }
+    for (const e of examinations) {
+      const cur = stats.get(e.patientId) ?? empty();
+      cur.examinations += 1;
+      if (!cur.last || e.createdAt > cur.last) cur.last = e.createdAt;
+      stats.set(e.patientId, cur);
+    }
     return stats;
-  }, [files, records, prescriptions]);
+  }, [files, records, prescriptions, examinations]);
+
+  const patientNameFor = useCallback(
+    (patientId: string, fallback?: string | null): string =>
+      fallback || patients.find((p) => p.patientId === patientId)?.fullName || "Unknown",
+    [patients]
+  );
+
+  /** All clinic records (unfiltered by patient) for the root "All Records" view. */
+  const allRecordsFiltered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const sorted = [...records].sort((a, b) => b.visitDate.localeCompare(a.visitDate));
+    if (!q) return sorted;
+    return sorted.filter((r) =>
+      (r.patientName || patientNameFor(r.patientId)).toLowerCase().includes(q) ||
+      r.diagnosis.toLowerCase().includes(q) ||
+      (r.symptoms ?? "").toLowerCase().includes(q) ||
+      (r.treatment ?? "").toLowerCase().includes(q)
+    );
+  }, [records, search, patientNameFor]);
+
+  const allPrescriptionsFiltered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const sorted = [...prescriptions].sort((a, b) => b.visitDate.localeCompare(a.visitDate));
+    if (!q) return sorted;
+    return sorted.filter((p) =>
+      (p.patientName || patientNameFor(p.patientId)).toLowerCase().includes(q) ||
+      (p.diagnosis ?? "").toLowerCase().includes(q) ||
+      p.medicines.some((m) => m.name.toLowerCase().includes(q))
+    );
+  }, [prescriptions, search, patientNameFor]);
+
+  const allExaminationsFiltered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const sorted = [...examinations].sort((a, b) => b.visitDate.localeCompare(a.visitDate));
+    if (!q) return sorted;
+    return sorted.filter((e) =>
+      (e.patientName || patientNameFor(e.patientId)).toLowerCase().includes(q) ||
+      e.oralFindings.toLowerCase().includes(q) ||
+      (e.notes ?? "").toLowerCase().includes(q) ||
+      e.issueType.toLowerCase().includes(q) ||
+      e.status.toLowerCase().includes(q)
+    );
+  }, [examinations, search, patientNameFor]);
+
+  const allFilesFiltered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const sorted = [...files].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    if (!q) return sorted;
+    return sorted.filter(
+      (f) =>
+        f.fileName.toLowerCase().includes(q) ||
+        (f.patientName || patientNameFor(f.patientId)).toLowerCase().includes(q)
+    );
+  }, [files, search, patientNameFor]);
 
   // ── Upload ───────────────────────────────────────────────────────────────
 
@@ -1290,11 +1357,12 @@ export default function MedicalRecordPage() {
     if (!selectedPatient) return null;
     const patientRecords = records.filter((r) => r.patientId === selectedPatient.patientId);
     const patientPrescriptions = prescriptions.filter((p) => p.patientId === selectedPatient.patientId);
+    const patientExaminations = examinations.filter((e) => e.patientId === selectedPatient.patientId);
     const patientAppointments = appointments.items.filter(
       (a) => a.patientId === selectedPatient.patientId
     );
     const lastVisit =
-      [...patientRecords, ...patientPrescriptions]
+      [...patientRecords, ...patientPrescriptions, ...patientExaminations]
         .map((x) => x.visitDate)
         .sort()
         .pop() ?? null;
@@ -1308,11 +1376,12 @@ export default function MedicalRecordPage() {
     return {
       patientRecords,
       patientPrescriptions,
+      patientExaminations,
       nextAppointment,
       lastVisit,
       timeline,
     };
-  }, [selectedPatient, records, prescriptions, appointments, patientFiles]);
+  }, [selectedPatient, records, prescriptions, examinations, appointments, patientFiles]);
 
   // ── Render ───────────────────────────────────────────────────────────────
 
@@ -1427,7 +1496,7 @@ export default function MedicalRecordPage() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search patients…"
+                placeholder="Search patients, diagnoses, medicines, examinations, files…"
                 className="pl-9"
               />
             </div>
@@ -1441,7 +1510,7 @@ export default function MedicalRecordPage() {
             ) : (
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredPatients.map((p) => {
-                  const stats = patientStats.get(p.patientId) ?? { files: 0, fileSize: 0, records: 0, prescriptions: 0, last: null };
+                  const stats = patientStats.get(p.patientId) ?? { files: 0, fileSize: 0, records: 0, prescriptions: 0, examinations: 0, last: null };
                   return (
                     <button
                       key={p.patientId}
@@ -1466,7 +1535,7 @@ export default function MedicalRecordPage() {
                           <span className="inline-flex items-center gap-1"><Phone className="size-3" />{p.mobile}</span>
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {stats.files} files · {stats.records} records · {stats.prescriptions} prescriptions
+                          {stats.files} files · {stats.records} records · {stats.prescriptions} prescriptions · {stats.examinations} examinations
                         </p>
                       </div>
                     </button>
@@ -1474,6 +1543,298 @@ export default function MedicalRecordPage() {
                 })}
               </div>
             )}
+
+            {/* ── All records (clinic-wide) ── */}
+            <div className="mt-8 space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
+                  <ClipboardList className="size-4" />
+                </span>
+                <h2 className="text-sm font-semibold text-foreground">All Records</h2>
+                <Badge variant="secondary">
+                  {allRecordsFiltered.length + allPrescriptionsFiltered.length + allExaminationsFiltered.length + allFilesFiltered.length} total
+                </Badge>
+                {search.trim() && (
+                  <span className="text-xs text-muted-foreground">
+                    matching &ldquo;{search.trim()}&rdquo;
+                  </span>
+                )}
+              </div>
+
+              {/* Visit records */}
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
+                      <Stethoscope className="size-4" />
+                    </span>
+                    <h3 className="text-sm font-semibold text-foreground">Visit Records</h3>
+                    <Badge variant="outline" className="text-xs">{allRecordsFiltered.length}</Badge>
+                    <Link
+                      href="/clinic/records"
+                      className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+                    >
+                      Open Records
+                    </Link>
+                  </div>
+                  {allRecordsFiltered.length === 0 ? (
+                    <p className="mt-3 text-sm text-muted-foreground">No visit records yet.</p>
+                  ) : (
+                    <div className="mt-3 overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Patient</TableHead>
+                            <TableHead>Doctor</TableHead>
+                            <TableHead>Diagnosis</TableHead>
+                            <TableHead>Treatment</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {allRecordsFiltered.slice(0, 20).map((r) => {
+                            const patient = patients.find((p) => p.patientId === r.patientId);
+                            return (
+                              <TableRow key={r.recordId}>
+                                <TableCell className="whitespace-nowrap text-sm">{formatDate(r.visitDate)}</TableCell>
+                                <TableCell className="text-sm">
+                                  {patient ? (
+                                    <button
+                                      type="button"
+                                      className="font-medium text-foreground hover:text-primary hover:underline"
+                                      onClick={() => {
+                                        setSelectedPatient(patient);
+                                        setActiveFolderId(null);
+                                        setSearch("");
+                                      }}
+                                    >
+                                      {r.patientName || patient.fullName}
+                                    </button>
+                                  ) : (
+                                    <span className="font-medium text-foreground">{r.patientName || "Unknown"}</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">{doctorName(r.doctorId)}</TableCell>
+                                <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{r.diagnosis || "—"}</TableCell>
+                                <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{r.treatment || "—"}</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                      {allRecordsFiltered.length > 20 && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Showing 20 of {allRecordsFiltered.length} — refine search or open Records for the full list.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Prescriptions */}
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
+                      <Pill className="size-4" />
+                    </span>
+                    <h3 className="text-sm font-semibold text-foreground">Prescriptions</h3>
+                    <Badge variant="outline" className="text-xs">{allPrescriptionsFiltered.length}</Badge>
+                    <Link
+                      href="/clinic/prescriptions"
+                      className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+                    >
+                      Open Prescriptions
+                    </Link>
+                  </div>
+                  {allPrescriptionsFiltered.length === 0 ? (
+                    <p className="mt-3 text-sm text-muted-foreground">No prescriptions yet.</p>
+                  ) : (
+                    <div className="mt-3 overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Patient</TableHead>
+                            <TableHead>Doctor</TableHead>
+                            <TableHead>Medicines</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {allPrescriptionsFiltered.slice(0, 20).map((p) => {
+                            const patient = patients.find((x) => x.patientId === p.patientId);
+                            return (
+                              <TableRow key={p.prescriptionId}>
+                                <TableCell className="whitespace-nowrap text-sm">{formatDate(p.visitDate)}</TableCell>
+                                <TableCell className="text-sm">
+                                  {patient ? (
+                                    <button
+                                      type="button"
+                                      className="font-medium text-foreground hover:text-primary hover:underline"
+                                      onClick={() => {
+                                        setSelectedPatient(patient);
+                                        setActiveFolderId(null);
+                                        setSearch("");
+                                        setView("overview");
+                                      }}
+                                    >
+                                      {p.patientName || patient.fullName}
+                                    </button>
+                                  ) : (
+                                    <span className="font-medium text-foreground">{p.patientName || "Unknown"}</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">{doctorName(p.doctorId)}</TableCell>
+                                <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
+                                  {p.medicines.map((m) => m.name).filter(Boolean).join(", ") || "—"}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                      {allPrescriptionsFiltered.length > 20 && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Showing 20 of {allPrescriptionsFiltered.length} — refine search or open Prescriptions for the full list.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Examinations */}
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
+                      <Stethoscope className="size-4" />
+                    </span>
+                    <h3 className="text-sm font-semibold text-foreground">Examinations</h3>
+                    <Badge variant="outline" className="text-xs">{allExaminationsFiltered.length}</Badge>
+                    <Link
+                      href="/clinic/examination"
+                      className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+                    >
+                      Open Examinations
+                    </Link>
+                  </div>
+                  {allExaminationsFiltered.length === 0 ? (
+                    <p className="mt-3 text-sm text-muted-foreground">No examinations yet.</p>
+                  ) : (
+                    <div className="mt-3 overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Patient</TableHead>
+                            <TableHead>Issue</TableHead>
+                            <TableHead>Oral findings</TableHead>
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {allExaminationsFiltered.slice(0, 20).map((e) => {
+                            const patient = patients.find((x) => x.patientId === e.patientId);
+                            return (
+                              <TableRow key={e.examinationId}>
+                                <TableCell className="whitespace-nowrap text-sm">{formatDate(e.visitDate)}</TableCell>
+                                <TableCell className="text-sm">
+                                  {patient ? (
+                                    <button
+                                      type="button"
+                                      className="font-medium text-foreground hover:text-primary hover:underline"
+                                      onClick={() => {
+                                        setSelectedPatient(patient);
+                                        setActiveFolderId(null);
+                                        setSearch("");
+                                        setView("overview");
+                                      }}
+                                    >
+                                      {e.patientName || patient.fullName}
+                                    </button>
+                                  ) : (
+                                    <span className="font-medium text-foreground">{e.patientName || "Unknown"}</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground capitalize">{e.issueType || "—"}</TableCell>
+                                <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{e.oralFindings || "—"}</TableCell>
+                                <TableCell className="text-sm text-muted-foreground capitalize">{e.status.replace("-", " ")}</TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                      {allExaminationsFiltered.length > 20 && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Showing 20 of {allExaminationsFiltered.length} — refine search or open Examinations for the full list.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Files */}
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
+                      <FileText className="size-4" />
+                    </span>
+                    <h3 className="text-sm font-semibold text-foreground">Files & Documents</h3>
+                    <Badge variant="outline" className="text-xs">{allFilesFiltered.length}</Badge>
+                  </div>
+                  {allFilesFiltered.length === 0 ? (
+                    <p className="mt-3 text-sm text-muted-foreground">No files uploaded yet.</p>
+                  ) : (
+                    <div className="mt-3 space-y-1.5">
+                      {allFilesFiltered.slice(0, 20).map((f) => {
+                        const patient = patients.find((x) => x.patientId === f.patientId);
+                        return (
+                          <div key={f.fileId} className="flex items-center gap-3 rounded-lg bg-background px-3 py-2.5 ring-1 ring-border">
+                            {fileIcon(f.mimeType, f.fileName)}
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-medium text-foreground">{f.fileName}</p>
+                              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                                <span>{formatDate(f.createdAt)}</span>
+                                <span>·</span>
+                                {patient ? (
+                                  <button
+                                    type="button"
+                                    className="hover:text-primary hover:underline"
+                                    onClick={() => {
+                                      setSelectedPatient(patient);
+                                      setActiveFolderId(null);
+                                      setSearch("");
+                                    }}
+                                  >
+                                    {f.patientName || patient.fullName}
+                                  </button>
+                                ) : (
+                                  <span>{f.patientName || "Unknown"}</span>
+                                )}
+                                <span>·</span>
+                                <span>{folderName(f.folder)}</span>
+                              </p>
+                            </div>
+                            <Button variant="ghost" size="icon" aria-label="View file" className="size-8" onClick={() => handleDownload(f)}>
+                              <Download className="size-4" />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                      {allFilesFiltered.length > 20 && (
+                        <p className="text-xs text-muted-foreground">
+                          Showing 20 of {allFilesFiltered.length} — select a patient or refine search to see more.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </>
         )}
 
@@ -2117,10 +2478,11 @@ export default function MedicalRecordPage() {
               <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">{overview.patientPrescriptions.length} prescriptions</span>
               <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">{overview.patientPrescriptions.flatMap(pr=>pr.medicines).length} medicines</span>
               <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">{overview.patientRecords.filter(r=>r.treatment).length} treatments</span>
+              <span className="rounded-full bg-teal-500/10 px-2 py-0.5 text-xs font-medium text-teal-700 dark:text-teal-300">{overview.patientExaminations.length} examinations</span>
             </div>
           </div>
           {(() => {
-            type TL = { date: string; kind: "visit"|"prescription"|"medicine"|"treatment"; title: string; el: ReactNode };
+            type TL = { date: string; kind: "visit"|"prescription"|"medicine"|"treatment"|"examination"; title: string; el: ReactNode };
             const items: TL[] = [];
             overview.patientRecords.forEach(r=>{
               items.push({ date: r.visitDate, kind: "visit", title: r.diagnosis || "Visit", el: <MedicineRecordCard key={`v-${r.recordId}`} record={r} doctorName={doctorName} onDownload={handleRecordAttachmentDownload} /> });
@@ -2130,8 +2492,11 @@ export default function MedicalRecordPage() {
               items.push({ date: pr.visitDate, kind: "prescription", title: pr.diagnosis || "Prescription", el: <PrescriptionCard key={`p-${pr.prescriptionId}`} prescription={pr} doctorName={doctorName} /> });
               pr.medicines.forEach((m,i)=> items.push({ date: pr.visitDate, kind: "medicine", title: m.name, el: <div key={`m-${pr.prescriptionId}-${i}`} className="rounded-xl border border-sky-200/60 bg-sky-50/50 p-3 dark:border-sky-900/30 dark:bg-sky-500/5"><p className="text-xs text-muted-foreground">{[m.dosage && `Dosage ${m.dosage}`, m.frequency, m.duration, m.instructions].filter(Boolean).join(" · ") || "—"} · {doctorName(pr.doctorId)}</p></div> }));
             });
+            overview.patientExaminations.forEach(ex=>{
+              items.push({ date: ex.visitDate, kind: "examination", title: ex.oralFindings?.slice(0, 60) || "Examination", el: <div key={`e-${ex.examinationId}`} className="rounded-xl border border-teal-200/60 bg-teal-50/50 p-4 dark:border-teal-900/30 dark:bg-teal-500/5"><p className="text-sm font-medium text-foreground capitalize">{ex.issueType} · {ex.status.replace("-", " ")}</p><p className="mt-1 text-sm text-foreground">{ex.oralFindings}</p>{ex.notes && <p className="mt-1 text-xs text-muted-foreground">{ex.notes}</p>}</div> });
+            });
             items.sort((a,b)=> b.date.localeCompare(a.date));
-            const dot = { visit: "bg-violet-500", prescription: "bg-emerald-500", medicine: "bg-sky-500", treatment: "bg-amber-500" } as const;
+            const dot = { visit: "bg-violet-500", prescription: "bg-emerald-500", medicine: "bg-sky-500", treatment: "bg-amber-500", examination: "bg-teal-500" } as const;
             if(items.length===0) return <p className="px-5 py-10 text-center text-sm text-muted-foreground">No clinical history yet.</p>;
             return (
               <div className="px-5 py-6">
