@@ -134,9 +134,9 @@ export default function PharmacySalesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {!initialLoading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
       {(() => {
         // "Completed" and "Revenue" are computed from this page's own rows (a sample), so their
         // percentage is relative to that sample size, not the clinic-wide `total`.
@@ -150,21 +150,22 @@ export default function PharmacySalesPage() {
           { name: "Today", percentage: Math.min(100, todayCount * 10), current: todayCount, allowed: 10, allowedLabel: "target", fill: "var(--chart-3)" },
           { name: "Revenue (this page)", percentage: Math.min(100, Math.round((totalVal / 50000) * 100)), current: `₹${totalVal.toLocaleString("en-IN")}`, allowed: "₹50K", allowedLabel: "target", fill: "var(--chart-4)" },
         ];
-        return (<PharmacyStats title="Sales Analytics" subtitle="Dispensing records and new sales." searchTerm={search} onSearchChange={(v)=>{setSearch(v);setPage(1)}} searchPlaceholder="Search invoice # or patient..." action={<Button size="sm" className="h-9 shadow-sm" render={<Link href="/clinic/pharmacy/sales/new" />}>New Sale</Button>} items={stats} />);
+        return (<PharmacyStats title="Sales Analytics" subtitle="Dispensing records and new sales." searchTerm={search} onSearchChange={(v)=>{setSearch(v);setPage(1)}} searchPlaceholder="Search invoice # or patient..." action={<Button size="sm" className="h-9 w-full justify-center shadow-sm sm:w-auto" render={<Link href="/clinic/pharmacy/sales/new" />}>New Sale</Button>} items={stats} />);
       })()}
         </div>
       )}
 
       <Card className="shadow-sm">
         <CardContent className="p-0">
-          <div className="flex flex-wrap items-center gap-2 p-4 border-b border-border">
+          <div className="flex flex-wrap items-center gap-2 border-b border-border p-3 sm:p-4">
             <span className="text-sm font-medium">Sales <span className="text-muted-foreground">({total})</span></span>
             <Select value={statusFilter || "__all__"} onValueChange={(v) => { setStatusFilter((v === "__all__" ? "" : v) as "" | SaleStatus); setPage(1) }}>
-              <SelectTrigger className="h-9 w-40 ml-auto"><SelectValue placeholder="All statuses" /></SelectTrigger>
+              <SelectTrigger className="h-9 min-w-[140px] flex-1 sm:ml-auto sm:flex-none sm:w-40"><SelectValue placeholder="All statuses" /></SelectTrigger>
               <SelectContent><SelectItem value="__all__">All statuses</SelectItem><SelectItem value="completed">Completed</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem><SelectItem value="refunded">Refunded</SelectItem></SelectContent>
             </Select>
           </div>
-          <div className="overflow-x-auto">
+          {/* Desktop table — hidden on mobile */}
+          <div className="hidden overflow-x-auto md:block">
           <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -204,6 +205,37 @@ export default function PharmacySalesPage() {
             </TableBody>
           </Table>
           </div>
+          {/* Mobile card list — visible only on small screens */}
+          <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+            {loading ? (
+              <div className="space-y-2 p-1"><Skeleton className="h-20 w-full rounded-xl" /><Skeleton className="h-20 w-full rounded-xl" /><Skeleton className="h-20 w-full rounded-xl" /></div>
+            ) : filtered.length === 0 ? (
+              <p className="rounded-xl border border-border bg-card px-4 py-10 text-center text-sm text-muted-foreground">{search || statusFilter ? "No sales match your search or filters." : "No sales yet — record your first one to get started."}</p>
+            ) : (
+              filtered.map((s) => (
+                <button
+                  key={s.saleId}
+                  type="button"
+                  onClick={() => openDetail(s)}
+                  className="w-full rounded-2xl border border-border bg-card p-3 text-left shadow-2xs transition active:scale-[0.99]"
+                >
+                  <div className="flex items-center gap-2">
+                    <p className="min-w-0 flex-1 truncate font-mono text-xs font-bold text-foreground">{s.invoiceNumber}</p>
+                    {statusBadge(s.status)}
+                  </div>
+                  <p className="mt-1 truncate text-xs text-muted-foreground">
+                    {s.patientId ? (s.patientName ?? s.patientId) : "Walk-in"}
+                    {` · ${(s.items ?? []).length} item${(s.items ?? []).length === 1 ? "" : "s"}`}
+                    {` · ${new Date(s.saleDate).toLocaleDateString()}`}
+                  </p>
+                  <div className="mt-1.5 flex items-center justify-between gap-2 border-t border-border/60 pt-1.5">
+                    <span className="truncate text-[11px] capitalize text-muted-foreground">{s.paymentMethod}</span>
+                    <span className="shrink-0 text-sm font-extrabold tabular-nums text-foreground">{fmtMoney(s.total)}</span>
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
           {!loading && total > 0 && (
             <Pagination page={page} pageSize={pageSize} totalItems={total} onPageChange={setPage} itemLabel="sales" />
           )}
@@ -226,7 +258,8 @@ export default function PharmacySalesPage() {
               {detail.notes && (
                 <div><span className="text-muted-foreground">Notes:</span> {detail.notes}</div>
               )}
-              <div className="overflow-x-auto rounded-lg border">
+              {/* Desktop items table */}
+              <div className="hidden overflow-x-auto rounded-lg border md:block">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -251,6 +284,20 @@ export default function PharmacySalesPage() {
                     ))}
                   </TableBody>
                 </Table>
+              </div>
+              {/* Mobile item list */}
+              <div className="space-y-2 md:hidden">
+                {detail.items.map((it: PharmacySaleItem, i) => (
+                  <div key={i} className="rounded-xl bg-muted/50 px-3 py-2 ring-1 ring-border">
+                    <p className="truncate text-sm font-semibold text-foreground">
+                      {medicineById.get(it.medicineId)?.name ?? it.medicineId}
+                      <span className="ml-1.5 font-normal text-muted-foreground tabular-nums">× {it.quantity}</span>
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground tabular-nums">
+                      {[it.batchNumber, fmtMoney(it.unitPrice), it.discount ? `−${fmtMoney(it.discount)}` : null, `${it.taxPercent}% tax`].filter(Boolean).join(" · ")}
+                    </p>
+                  </div>
+                ))}
               </div>
               <div className="rounded-lg bg-muted/50 p-3 text-sm">
                 <div className="flex justify-between"><span>Subtotal</span><span className="tabular-nums">{fmtMoney(detail.subtotal)}</span></div>
