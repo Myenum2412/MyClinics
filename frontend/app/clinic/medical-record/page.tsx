@@ -990,60 +990,6 @@ export default function MedicalRecordPage() {
     return stats;
   }, [files, records, prescriptions, examinations]);
 
-  const patientNameFor = useCallback(
-    (patientId: string, fallback?: string | null): string =>
-      fallback || patients.find((p) => p.patientId === patientId)?.fullName || "Unknown",
-    [patients]
-  );
-
-  /** All clinic records (unfiltered by patient) for the root "All Records" view. */
-  const allRecordsFiltered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const sorted = [...records].sort((a, b) => b.visitDate.localeCompare(a.visitDate));
-    if (!q) return sorted;
-    return sorted.filter((r) =>
-      (r.patientName || patientNameFor(r.patientId)).toLowerCase().includes(q) ||
-      r.diagnosis.toLowerCase().includes(q) ||
-      (r.symptoms ?? "").toLowerCase().includes(q) ||
-      (r.treatment ?? "").toLowerCase().includes(q)
-    );
-  }, [records, search, patientNameFor]);
-
-  const allPrescriptionsFiltered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const sorted = [...prescriptions].sort((a, b) => b.visitDate.localeCompare(a.visitDate));
-    if (!q) return sorted;
-    return sorted.filter((p) =>
-      (p.patientName || patientNameFor(p.patientId)).toLowerCase().includes(q) ||
-      (p.diagnosis ?? "").toLowerCase().includes(q) ||
-      p.medicines.some((m) => m.name.toLowerCase().includes(q))
-    );
-  }, [prescriptions, search, patientNameFor]);
-
-  const allExaminationsFiltered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const sorted = [...examinations].sort((a, b) => b.visitDate.localeCompare(a.visitDate));
-    if (!q) return sorted;
-    return sorted.filter((e) =>
-      (e.patientName || patientNameFor(e.patientId)).toLowerCase().includes(q) ||
-      e.oralFindings.toLowerCase().includes(q) ||
-      (e.notes ?? "").toLowerCase().includes(q) ||
-      e.issueType.toLowerCase().includes(q) ||
-      e.status.toLowerCase().includes(q)
-    );
-  }, [examinations, search, patientNameFor]);
-
-  const allFilesFiltered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const sorted = [...files].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    if (!q) return sorted;
-    return sorted.filter(
-      (f) =>
-        f.fileName.toLowerCase().includes(q) ||
-        (f.patientName || patientNameFor(f.patientId)).toLowerCase().includes(q)
-    );
-  }, [files, search, patientNameFor]);
-
   // ── Upload ───────────────────────────────────────────────────────────────
 
   const handleUpload = useCallback(
@@ -1496,7 +1442,7 @@ export default function MedicalRecordPage() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search patients, diagnoses, medicines, examinations, files…"
+                placeholder="Search patients…"
                 className="pl-9"
               />
             </div>
@@ -1544,297 +1490,6 @@ export default function MedicalRecordPage() {
               </div>
             )}
 
-            {/* ── All records (clinic-wide) ── */}
-            <div className="mt-8 space-y-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
-                  <ClipboardList className="size-4" />
-                </span>
-                <h2 className="text-sm font-semibold text-foreground">All Records</h2>
-                <Badge variant="secondary">
-                  {allRecordsFiltered.length + allPrescriptionsFiltered.length + allExaminationsFiltered.length + allFilesFiltered.length} total
-                </Badge>
-                {search.trim() && (
-                  <span className="text-xs text-muted-foreground">
-                    matching &ldquo;{search.trim()}&rdquo;
-                  </span>
-                )}
-              </div>
-
-              {/* Visit records */}
-              <Card>
-                <CardContent className="p-5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
-                      <Stethoscope className="size-4" />
-                    </span>
-                    <h3 className="text-sm font-semibold text-foreground">Visit Records</h3>
-                    <Badge variant="outline" className="text-xs">{allRecordsFiltered.length}</Badge>
-                    <Link
-                      href="/clinic/records"
-                      className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
-                    >
-                      Open Records
-                    </Link>
-                  </div>
-                  {allRecordsFiltered.length === 0 ? (
-                    <p className="mt-3 text-sm text-muted-foreground">No visit records yet.</p>
-                  ) : (
-                    <div className="mt-3 overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Patient</TableHead>
-                            <TableHead>Doctor</TableHead>
-                            <TableHead>Diagnosis</TableHead>
-                            <TableHead>Treatment</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {allRecordsFiltered.slice(0, 20).map((r) => {
-                            const patient = patients.find((p) => p.patientId === r.patientId);
-                            return (
-                              <TableRow key={r.recordId}>
-                                <TableCell className="whitespace-nowrap text-sm">{formatDate(r.visitDate)}</TableCell>
-                                <TableCell className="text-sm">
-                                  {patient ? (
-                                    <button
-                                      type="button"
-                                      className="font-medium text-foreground hover:text-primary hover:underline"
-                                      onClick={() => {
-                                        setSelectedPatient(patient);
-                                        setActiveFolderId(null);
-                                        setSearch("");
-                                      }}
-                                    >
-                                      {r.patientName || patient.fullName}
-                                    </button>
-                                  ) : (
-                                    <span className="font-medium text-foreground">{r.patientName || "Unknown"}</span>
-                                  )}
-                                </TableCell>
-                                <TableCell className="text-sm text-muted-foreground">{doctorName(r.doctorId)}</TableCell>
-                                <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{r.diagnosis || "—"}</TableCell>
-                                <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{r.treatment || "—"}</TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                      {allRecordsFiltered.length > 20 && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Showing 20 of {allRecordsFiltered.length} — refine search or open Records for the full list.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Prescriptions */}
-              <Card>
-                <CardContent className="p-5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
-                      <Pill className="size-4" />
-                    </span>
-                    <h3 className="text-sm font-semibold text-foreground">Prescriptions</h3>
-                    <Badge variant="outline" className="text-xs">{allPrescriptionsFiltered.length}</Badge>
-                    <Link
-                      href="/clinic/prescriptions"
-                      className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
-                    >
-                      Open Prescriptions
-                    </Link>
-                  </div>
-                  {allPrescriptionsFiltered.length === 0 ? (
-                    <p className="mt-3 text-sm text-muted-foreground">No prescriptions yet.</p>
-                  ) : (
-                    <div className="mt-3 overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Patient</TableHead>
-                            <TableHead>Doctor</TableHead>
-                            <TableHead>Medicines</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {allPrescriptionsFiltered.slice(0, 20).map((p) => {
-                            const patient = patients.find((x) => x.patientId === p.patientId);
-                            return (
-                              <TableRow key={p.prescriptionId}>
-                                <TableCell className="whitespace-nowrap text-sm">{formatDate(p.visitDate)}</TableCell>
-                                <TableCell className="text-sm">
-                                  {patient ? (
-                                    <button
-                                      type="button"
-                                      className="font-medium text-foreground hover:text-primary hover:underline"
-                                      onClick={() => {
-                                        setSelectedPatient(patient);
-                                        setActiveFolderId(null);
-                                        setSearch("");
-                                        setView("overview");
-                                      }}
-                                    >
-                                      {p.patientName || patient.fullName}
-                                    </button>
-                                  ) : (
-                                    <span className="font-medium text-foreground">{p.patientName || "Unknown"}</span>
-                                  )}
-                                </TableCell>
-                                <TableCell className="text-sm text-muted-foreground">{doctorName(p.doctorId)}</TableCell>
-                                <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
-                                  {p.medicines.map((m) => m.name).filter(Boolean).join(", ") || "—"}
-                                </TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                      {allPrescriptionsFiltered.length > 20 && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Showing 20 of {allPrescriptionsFiltered.length} — refine search or open Prescriptions for the full list.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Examinations */}
-              <Card>
-                <CardContent className="p-5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
-                      <Stethoscope className="size-4" />
-                    </span>
-                    <h3 className="text-sm font-semibold text-foreground">Examinations</h3>
-                    <Badge variant="outline" className="text-xs">{allExaminationsFiltered.length}</Badge>
-                    <Link
-                      href="/clinic/examination"
-                      className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
-                    >
-                      Open Examinations
-                    </Link>
-                  </div>
-                  {allExaminationsFiltered.length === 0 ? (
-                    <p className="mt-3 text-sm text-muted-foreground">No examinations yet.</p>
-                  ) : (
-                    <div className="mt-3 overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Patient</TableHead>
-                            <TableHead>Issue</TableHead>
-                            <TableHead>Oral findings</TableHead>
-                            <TableHead>Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {allExaminationsFiltered.slice(0, 20).map((e) => {
-                            const patient = patients.find((x) => x.patientId === e.patientId);
-                            return (
-                              <TableRow key={e.examinationId}>
-                                <TableCell className="whitespace-nowrap text-sm">{formatDate(e.visitDate)}</TableCell>
-                                <TableCell className="text-sm">
-                                  {patient ? (
-                                    <button
-                                      type="button"
-                                      className="font-medium text-foreground hover:text-primary hover:underline"
-                                      onClick={() => {
-                                        setSelectedPatient(patient);
-                                        setActiveFolderId(null);
-                                        setSearch("");
-                                        setView("overview");
-                                      }}
-                                    >
-                                      {e.patientName || patient.fullName}
-                                    </button>
-                                  ) : (
-                                    <span className="font-medium text-foreground">{e.patientName || "Unknown"}</span>
-                                  )}
-                                </TableCell>
-                                <TableCell className="text-sm text-muted-foreground capitalize">{e.issueType || "—"}</TableCell>
-                                <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{e.oralFindings || "—"}</TableCell>
-                                <TableCell className="text-sm text-muted-foreground capitalize">{e.status.replace("-", " ")}</TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
-                      {allExaminationsFiltered.length > 20 && (
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Showing 20 of {allExaminationsFiltered.length} — refine search or open Examinations for the full list.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Files */}
-              <Card>
-                <CardContent className="p-5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
-                      <FileText className="size-4" />
-                    </span>
-                    <h3 className="text-sm font-semibold text-foreground">Files & Documents</h3>
-                    <Badge variant="outline" className="text-xs">{allFilesFiltered.length}</Badge>
-                  </div>
-                  {allFilesFiltered.length === 0 ? (
-                    <p className="mt-3 text-sm text-muted-foreground">No files uploaded yet.</p>
-                  ) : (
-                    <div className="mt-3 space-y-1.5">
-                      {allFilesFiltered.slice(0, 20).map((f) => {
-                        const patient = patients.find((x) => x.patientId === f.patientId);
-                        return (
-                          <div key={f.fileId} className="flex items-center gap-3 rounded-lg bg-background px-3 py-2.5 ring-1 ring-border">
-                            {fileIcon(f.mimeType, f.fileName)}
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium text-foreground">{f.fileName}</p>
-                              <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-                                <span>{formatDate(f.createdAt)}</span>
-                                <span>·</span>
-                                {patient ? (
-                                  <button
-                                    type="button"
-                                    className="hover:text-primary hover:underline"
-                                    onClick={() => {
-                                      setSelectedPatient(patient);
-                                      setActiveFolderId(null);
-                                      setSearch("");
-                                    }}
-                                  >
-                                    {f.patientName || patient.fullName}
-                                  </button>
-                                ) : (
-                                  <span>{f.patientName || "Unknown"}</span>
-                                )}
-                                <span>·</span>
-                                <span>{folderName(f.folder)}</span>
-                              </p>
-                            </div>
-                            <Button variant="ghost" size="icon" aria-label="View file" className="size-8" onClick={() => handleDownload(f)}>
-                              <Download className="size-4" />
-                            </Button>
-                          </div>
-                        );
-                      })}
-                      {allFilesFiltered.length > 20 && (
-                        <p className="text-xs text-muted-foreground">
-                          Showing 20 of {allFilesFiltered.length} — select a patient or refine search to see more.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
           </>
         )}
 
@@ -2465,6 +2120,163 @@ export default function MedicalRecordPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* ── This patient's records (shown only on profile) ── */}
+        <div className="grid gap-4">
+          {/* Visit records */}
+          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-4">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Stethoscope className="size-4" /></span>
+              <h3 className="text-sm font-semibold tracking-tight">Visit Records</h3>
+              <Badge variant="outline" className="text-xs">{overview.patientRecords.length}</Badge>
+              <Link
+                href="/clinic/records"
+                className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+              >
+                Open Records
+              </Link>
+            </div>
+            {overview.patientRecords.length === 0 ? (
+              <p className="px-5 py-8 text-center text-sm text-muted-foreground">No visit records for this patient yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Doctor</TableHead>
+                      <TableHead>Diagnosis</TableHead>
+                      <TableHead>Treatment</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[...overview.patientRecords].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((r) => (
+                      <TableRow key={r.recordId}>
+                        <TableCell className="whitespace-nowrap text-sm">{formatDate(r.visitDate)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{doctorName(r.doctorId)}</TableCell>
+                        <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{r.diagnosis || "—"}</TableCell>
+                        <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{r.treatment || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+
+          {/* Prescriptions */}
+          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-4">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600"><Pill className="size-4" /></span>
+              <h3 className="text-sm font-semibold tracking-tight">Prescriptions</h3>
+              <Badge variant="outline" className="text-xs">{overview.patientPrescriptions.length}</Badge>
+              <Link
+                href="/clinic/prescriptions"
+                className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+              >
+                Open Prescriptions
+              </Link>
+            </div>
+            {overview.patientPrescriptions.length === 0 ? (
+              <p className="px-5 py-8 text-center text-sm text-muted-foreground">No prescriptions for this patient yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Doctor</TableHead>
+                      <TableHead>Medicines</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[...overview.patientPrescriptions].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((pr) => (
+                      <TableRow key={pr.prescriptionId}>
+                        <TableCell className="whitespace-nowrap text-sm">{formatDate(pr.visitDate)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{doctorName(pr.doctorId)}</TableCell>
+                        <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
+                          {pr.medicines.map((m) => m.name).filter(Boolean).join(", ") || "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+
+          {/* Examinations */}
+          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-4">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600"><ClipboardList className="size-4" /></span>
+              <h3 className="text-sm font-semibold tracking-tight">Examinations</h3>
+              <Badge variant="outline" className="text-xs">{overview.patientExaminations.length}</Badge>
+              <Link
+                href="/clinic/examination"
+                className="ml-auto inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground"
+              >
+                Open Examinations
+              </Link>
+            </div>
+            {overview.patientExaminations.length === 0 ? (
+              <p className="px-5 py-8 text-center text-sm text-muted-foreground">No examinations for this patient yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Issue</TableHead>
+                      <TableHead>Oral findings</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[...overview.patientExaminations].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((e) => (
+                      <TableRow key={e.examinationId}>
+                        <TableCell className="whitespace-nowrap text-sm">{formatDate(e.visitDate)}</TableCell>
+                        <TableCell className="text-sm capitalize text-muted-foreground">{e.issueType || "—"}</TableCell>
+                        <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{e.oralFindings || "—"}</TableCell>
+                        <TableCell className="text-sm capitalize text-muted-foreground">{e.status.replace("-", " ")}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+
+          {/* Files & documents */}
+          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+            <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-5 py-4">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600"><FileText className="size-4" /></span>
+              <h3 className="text-sm font-semibold tracking-tight">Files & Documents</h3>
+              <Badge variant="outline" className="text-xs">{patientFiles.length}</Badge>
+            </div>
+            {patientFiles.length === 0 ? (
+              <p className="px-5 py-8 text-center text-sm text-muted-foreground">No files for this patient yet.</p>
+            ) : (
+              <div className="space-y-1.5 px-5 py-4">
+                {[...patientFiles].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((f) => (
+                  <div key={f.fileId} className="flex items-center gap-3 rounded-lg bg-background px-3 py-2.5 ring-1 ring-border">
+                    {fileIcon(f.mimeType, f.fileName)}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">{f.fileName}</p>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                        <span>{formatDate(f.createdAt)}</span>
+                        <span>·</span>
+                        <span>{folderName(f.folder)}</span>
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="icon" aria-label="View file" className="size-8" onClick={() => handleDownload(f)}>
+                      <Download className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
