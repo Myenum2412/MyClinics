@@ -645,7 +645,7 @@ export default function RecordsPage() {
                 <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">New Medicine Record</h1>
+                <h1 className="text-xl font-bold text-foreground sm:text-2xl">New Medicine Record</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Record a patient visit with diagnosis and medicines in one place
                 </p>
@@ -654,7 +654,7 @@ export default function RecordsPage() {
           </div>
         </div>
 
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           <div className="space-y-6">
             <RecordForm
               clinicId={clinicId}
@@ -685,7 +685,7 @@ export default function RecordsPage() {
                 <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Medicine Record</h1>
+                <h1 className="text-xl font-bold text-foreground sm:text-2xl">Medicine Record</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Saved record details — review or update the visit information
                 </p>
@@ -694,7 +694,7 @@ export default function RecordsPage() {
           </div>
         </div>
 
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           <div className="space-y-6">
             <RecordForm
               clinicId={clinicId}
@@ -726,7 +726,7 @@ export default function RecordsPage() {
                 <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">View Medicine Record</h1>
+                <h1 className="text-xl font-bold text-foreground sm:text-2xl">View Medicine Record</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Read-only view of the visit information
                 </p>
@@ -735,7 +735,7 @@ export default function RecordsPage() {
           </div>
         </div>
 
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           <div className="space-y-6">
             <RecordForm
               clinicId={clinicId}
@@ -753,9 +753,9 @@ export default function RecordsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {!initialLoading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <StatsGeneric
             title="Medical Record Analytics"
             description="Clinical visits, patient diagnoses, and treatment documentation insights."
@@ -764,7 +764,7 @@ export default function RecordsPage() {
             onSearchChange={handleSearchChange}
             searchPlaceholder="Search patient, diagnosis, treatment..."
             action={
-              <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
+              <Button className="flex h-9 w-full items-center justify-center gap-1.5 shadow-sm sm:w-auto" onClick={() => setCreating(true)}>
                 <Plus className="size-4" />
                 New Medicine
               </Button>
@@ -805,7 +805,7 @@ export default function RecordsPage() {
       <Card className="border-border shadow-sm">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-6 space-y-3">
+            <div className="p-4 sm:p-6 space-y-3">
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
@@ -822,6 +822,8 @@ export default function RecordsPage() {
             </Empty>
           ) : (
             <>
+              {/* Desktop table — hidden on mobile */}
+              <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -918,6 +920,91 @@ export default function RecordsPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
+
+              {/* Mobile card list — visible only on small screens */}
+              <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+                {paginatedItems.map((r) => {
+                  const isSelected = selectedIds.has(r.recordId);
+                  const patientLabel = r.patientName || "Unknown Patient";
+                  return (
+                    <article
+                      key={r.recordId}
+                      className={`overflow-hidden rounded-2xl border bg-card shadow-2xs transition-colors ${
+                        isSelected ? "border-primary/50 ring-1 ring-primary/30" : "border-border"
+                      }`}
+                    >
+                      {/* Header: select + avatar + identity + date */}
+                      <div className="flex items-center gap-2.5 p-3.5 pb-2.5">
+                        {visibleColumns.select && (
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelectRow(r.recordId)}
+                            aria-label={`Select record for ${patientLabel}`}
+                          />
+                        )}
+                        <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={r.patientId} name={patientLabel} size="md" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-foreground">{patientLabel}</p>
+                          {visibleColumns.visitDate && (
+                            <p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+                              {formatDate(r.visitDate)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Clinical summary */}
+                      <div className="px-3.5">
+                        {visibleColumns.diagnosis && (
+                          <p className="truncate text-xs font-semibold text-foreground">
+                            Dx: {r.diagnosis || "—"}
+                          </p>
+                        )}
+                        {visibleColumns.symptoms && r.symptoms ? (
+                          <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.symptoms}</p>
+                        ) : null}
+                        {visibleColumns.treatment && r.treatment ? (
+                          <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.treatment}</p>
+                        ) : null}
+                      </div>
+
+                      {/* Footer actions */}
+                      <div className="mt-2.5 flex items-center justify-end gap-1.5 border-t border-border/60 px-3.5 py-2.5">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl text-muted-foreground"
+                          onClick={() => setViewing(r)}
+                          aria-label="View" title="View"
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
+                          onClick={() => setEditing(r)}
+                          aria-label="Edit" title="Edit"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        {canManage && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
+                            onClick={() => setDeleteTarget(r)}
+                            aria-label="Delete" title="Delete"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
 
               {total > 0 && (
                 <Pagination
