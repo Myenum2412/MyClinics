@@ -42,6 +42,7 @@ import {
   Activity,
   Pencil,
   Trash2,
+  Phone,
 } from "lucide-react";
 import { DoctorOverviewAnalytics } from "@/src/components/clinic/doctor-overview-analytics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -517,7 +518,7 @@ export default function DoctorsPage() {
                 <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">Add Doctor</h1>
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Add Doctor</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Register a new doctor at this clinic
                 </p>
@@ -526,7 +527,7 @@ export default function DoctorsPage() {
           </div>
         </div>
 
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           <div className="space-y-6">
             <DoctorForm
               initial={EMPTY_FORM}
@@ -556,7 +557,7 @@ export default function DoctorsPage() {
                 <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">Edit Doctor</h1>
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">Edit Doctor</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Modify doctor details, fee, and schedule
                 </p>
@@ -565,7 +566,7 @@ export default function DoctorsPage() {
           </div>
         </div>
 
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           <div className="space-y-6">
             <DoctorForm
               initial={doctorToForm(editing)}
@@ -595,7 +596,7 @@ export default function DoctorsPage() {
                 <ChevronLeft size={20} className="text-primary" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">View Doctor</h1>
+                <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl">View Doctor</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Doctor details, fee, and schedule
                 </p>
@@ -607,13 +608,13 @@ export default function DoctorsPage() {
         <div className="px-4 py-6 sm:px-6 lg:px-8">
           <Tabs defaultValue="performance" className="gap-4">
             <TabsList className="w-full bg-[#E3F2FD]">
-              <TabsTrigger value="performance" className="flex-1 flex items-center gap-1.5">
-                <Activity className="size-4" />
-                Performance Overview
+              <TabsTrigger value="performance" className="flex-1 flex items-center justify-center gap-1.5 px-2 text-xs sm:text-sm">
+                <Activity className="size-4 shrink-0 max-[400px]:hidden" />
+                <span className="truncate">Performance Overview</span>
               </TabsTrigger>
-              <TabsTrigger value="details" className="flex-1 flex items-center gap-1.5">
-                <User className="size-4" />
-                View Doctor
+              <TabsTrigger value="details" className="flex-1 flex items-center justify-center gap-1.5 px-2 text-xs sm:text-sm">
+                <User className="size-4 shrink-0 max-[400px]:hidden" />
+                <span className="truncate">View Doctor</span>
               </TabsTrigger>
             </TabsList>
 
@@ -653,10 +654,10 @@ export default function DoctorsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* Stats Section with action slot */}
       {!loading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <StatsGeneric
             title="Doctor Analytics"
             description="Doctor specializations, roster availability, and shift insights."
@@ -666,7 +667,7 @@ export default function DoctorsPage() {
             searchPlaceholder="Search doctor, specialization, city..."
             action={
               canManage && (
-                <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
+                <Button className="flex h-9 w-full items-center justify-center gap-1.5 shadow-sm sm:w-auto" onClick={() => setCreating(true)}>
                   <Plus className="size-4" />
                   Add Doctor
                 </Button>
@@ -710,7 +711,7 @@ export default function DoctorsPage() {
       <Card className="border-border shadow-sm">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-6 space-y-3">
+            <div className="p-4 sm:p-6 space-y-3">
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
@@ -721,6 +722,8 @@ export default function DoctorsPage() {
             </div>
           ) : (
             <>
+              {/* Desktop table — hidden on mobile */}
+              <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -804,6 +807,103 @@ export default function DoctorsPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
+
+              {/* Mobile card list — visible only on small screens */}
+              <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+                {paginatedItems.map((d) => {
+                  const isSelected = selectedIds.has(d.doctorId);
+                  return (
+                    <article
+                      key={d.doctorId}
+                      className={`overflow-hidden rounded-2xl border bg-card shadow-2xs transition-colors ${
+                        isSelected ? "border-primary/50 ring-1 ring-primary/30" : "border-border"
+                      }`}
+                    >
+                      {/* Header: select + avatar + identity + fee */}
+                      <div className="flex items-center gap-2.5 p-3.5 pb-2.5">
+                        {visibleColumns.select && (
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleSelectRow(d.doctorId)}
+                            aria-label={`Select ${d.name}`}
+                          />
+                        )}
+                        <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={d.doctorId} name={d.name} size="md" />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-foreground">{d.name}</p>
+                          {visibleColumns.specialization && (
+                            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{d.specialization}</p>
+                          )}
+                        </div>
+                        {visibleColumns.fee && (
+                          <span className="shrink-0 text-sm font-extrabold text-foreground tabular-nums">
+                            {d.fee != null ? `₹${d.fee}` : "—"}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Contact + status */}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3.5">
+                        {visibleColumns.phone && d.phone ? (
+                          <span className="inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
+                            <Phone className="size-3 shrink-0" />
+                            <span className="truncate">{d.phone}</span>
+                          </span>
+                        ) : null}
+                        {visibleColumns.email && d.email ? (
+                          <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">{d.email}</span>
+                        ) : null}
+                        {visibleColumns.status && (
+                          <Badge
+                            className={`shrink-0 capitalize ${
+                              d.status === "active"
+                                ? "bg-success/10 text-success border-success/25 hover:bg-success/10"
+                                : "bg-muted text-muted-foreground border-border hover:bg-muted"
+                            }`}
+                            variant="outline"
+                          >
+                            {d.status}
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Footer actions */}
+                      {canManage && (
+                        <div className="mt-2.5 flex items-center justify-end gap-1.5 border-t border-border/60 px-3.5 py-2.5">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-9 rounded-xl text-muted-foreground"
+                            onClick={() => setViewing(d)}
+                            aria-label="View" title="View"
+                          >
+                            <Eye className="size-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
+                            onClick={() => setEditing(d)}
+                            aria-label="Edit" title="Edit"
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
+                            onClick={() => setDeleteTarget(d)}
+                            aria-label="Delete" title="Delete"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
 
               {/* Pagination Controls */}
               {filteredItems.length > 0 && (
