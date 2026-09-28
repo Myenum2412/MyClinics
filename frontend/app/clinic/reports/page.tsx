@@ -327,7 +327,7 @@ export default function BusinessReportsPage() {
     const a = document.createElement("a"); a.href = url; a.download = `clinic-report-${label.replace(/\s+/g, "-")}.csv`; a.click(); URL.revokeObjectURL(url);
   };
 
-  if (loading) return <div className="p-6 space-y-4"><Skeleton className="h-24 w-full" /><Skeleton className="h-64 w-full" /><Skeleton className="h-64 w-full" /></div>;
+  if (loading) return <div className="p-4 sm:p-6 space-y-4"><Skeleton className="h-24 w-full" /><Skeleton className="h-64 w-full" /><Skeleton className="h-64 w-full" /></div>;
 
   const reportStatsItems = [
     {
@@ -365,9 +365,9 @@ export default function BusinessReportsPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6 p-1">
+    <div className="flex flex-col gap-4 p-1 sm:gap-6">
       {/* Header with StatsGeneric matching exact design */}
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+      <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
         <StatsGeneric
           title="Report Analytics"
           description="Clinic growth, revenue metrics, and performance analytics."
@@ -375,9 +375,9 @@ export default function BusinessReportsPage() {
           searchPlaceholder="Search report metric..."
           onSearchChange={() => {}}
           action={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Select value={range} onValueChange={(v) => setRange(v as Range)}>
-                <SelectTrigger className="h-9 w-36">
+                <SelectTrigger className="h-9 w-full sm:w-36">
                   <SelectValue placeholder="Period" />
                 </SelectTrigger>
                 <SelectContent>
@@ -389,7 +389,7 @@ export default function BusinessReportsPage() {
                   <SelectItem value="year">This Year</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" onClick={handleExportCSV} className="h-9 gap-1.5">
+              <Button variant="outline" size="sm" onClick={handleExportCSV} className="h-9 w-full justify-center gap-1.5 sm:w-auto">
                 <Download className="size-4" /> CSV
               </Button>
             </div>
@@ -402,8 +402,8 @@ export default function BusinessReportsPage() {
       {/* Revenue Intelligence */}
       <Card className="border-border bg-card">
         <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Receipt className="size-4 text-primary" /> Revenue & Financial Intelligence</CardTitle></CardHeader>
-        <CardContent className="space-y-6">
-          <div className="h-[220px]">
+        <CardContent className="space-y-4 sm:space-y-6">
+          <div className="h-[180px] sm:h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dailyRevenue} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid vertical={false} stroke="#e2e8f0" strokeOpacity={0.6} />
@@ -414,7 +414,7 @@ export default function BusinessReportsPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="grid gap-6 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-3 sm:gap-6">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">By Doctor</p>
               {revenueByDoctor.length ? revenueByDoctor.map(r => <div key={r.name} className="mt-2 flex justify-between text-sm"><span className="text-muted-foreground truncate">{r.name}</span><span className="font-medium">{formatINR(r.value)}</span></div>) : <p className="text-xs text-muted-foreground mt-2">Not enough data</p>}
@@ -432,14 +432,14 @@ export default function BusinessReportsPage() {
       </Card>
 
       {/* Patient Growth + Appointment */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <Card className="border-border bg-card">
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Users className="size-4 text-primary" /> Patient Growth</CardTitle></CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">New</p><p className="text-xl font-bold">{newPatients}</p></div>
-              <div className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Returning</p><p className="text-xl font-bold">{returningPatients}</p></div>
-              <div className="rounded-lg border border-border p-3"><p className="text-xs text-muted-foreground">Retention</p><p className="text-xl font-bold">{retentionRate}%</p></div>
+            <div className="grid grid-cols-3 gap-2 text-center sm:gap-3">
+              <div className="rounded-lg border border-border p-2.5 sm:p-3"><p className="text-[11px] text-muted-foreground sm:text-xs">New</p><p className="text-lg font-bold sm:text-xl">{newPatients}</p></div>
+              <div className="rounded-lg border border-border p-2.5 sm:p-3"><p className="text-[11px] text-muted-foreground sm:text-xs">Returning</p><p className="text-lg font-bold sm:text-xl">{returningPatients}</p></div>
+              <div className="rounded-lg border border-border p-2.5 sm:p-3"><p className="text-[11px] text-muted-foreground sm:text-xs">Retention</p><p className="text-lg font-bold sm:text-xl">{retentionRate}%</p></div>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">Clinic is <span className="font-semibold text-foreground">{newPatients > returningPatients ? "growing" : newPatients === returningPatients ? "stable" : "stable/retention-focused"}</span> in this period.</p>
           </CardContent>
@@ -465,7 +465,9 @@ export default function BusinessReportsPage() {
         <CardHeader><CardTitle className="text-base">Doctor Performance</CardTitle></CardHeader>
         <CardContent>
           {doctorPerf.length ? (
-            <div className="overflow-x-auto">
+            <>
+            {/* Desktop table */}
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead className="text-xs text-muted-foreground border-b"><tr><th className="py-2 text-left">Doctor</th><th className="text-center">Appts</th><th className="text-center">Completed</th><th className="text-right">Revenue</th><th className="text-center">Avg</th><th className="text-center">Cancel%</th></tr></thead>
                 <tbody>
@@ -475,6 +477,24 @@ export default function BusinessReportsPage() {
                 </tbody>
               </table>
             </div>
+            {/* Mobile cards */}
+            <div className="space-y-2.5 md:hidden">
+              {doctorPerf.map(d => (
+                <div key={d.name} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">{d.name}</p>
+                    <p className="shrink-0 text-sm font-extrabold tabular-nums text-foreground">{formatINR(d.revenue)}</p>
+                  </div>
+                  <div className="mt-2 grid grid-cols-4 gap-1.5 text-center">
+                    <div className="rounded-lg bg-muted/50 px-1 py-1.5"><p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Appts</p><p className="text-xs font-bold tabular-nums">{d.appointments}</p></div>
+                    <div className="rounded-lg bg-muted/50 px-1 py-1.5"><p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Done</p><p className="text-xs font-bold tabular-nums">{d.completed}</p></div>
+                    <div className="rounded-lg bg-muted/50 px-1 py-1.5"><p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Avg</p><p className="truncate text-xs font-bold tabular-nums">{formatINR(d.avg)}</p></div>
+                    <div className="rounded-lg bg-muted/50 px-1 py-1.5"><p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Cancel</p><p className="text-xs font-bold tabular-nums">{d.cancelRate}%</p></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
           ) : <p className="text-xs text-muted-foreground">Not enough data — add doctors and appointments.</p>}
         </CardContent>
       </Card>
@@ -484,14 +504,14 @@ export default function BusinessReportsPage() {
         <CardHeader><CardTitle className="flex items-center gap-2 text-base"><FileText className="size-4 text-primary" /> Service Performance</CardTitle></CardHeader>
         <CardContent>
           {revenueByService.length ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
               {revenueByService.map((s, i) => {
                 const cat = s.value > totalRevenue * 0.25 ? "High Performing" : s.value > totalRevenue * 0.1 ? "Growth Opportunity" : "Underperforming";
                 return (
                   <div key={s.name} className="rounded-lg border border-border p-3">
                     <p className="text-xs font-medium text-muted-foreground truncate">{s.name}</p>
-                    <p className="mt-1 text-lg font-bold">{formatINR(s.value)}</p>
-                    <Badge variant="outline" className={`mt-2 text-xs ${cat === "High Performing" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : cat === "Growth Opportunity" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-50 text-slate-600 border-slate-200"}`}>{cat}</Badge>
+                    <p className="mt-1 text-base font-bold tabular-nums sm:text-lg">{formatINR(s.value)}</p>
+                    <Badge variant="outline" className={`mt-2 text-[11px] sm:text-xs ${cat === "High Performing" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : cat === "Growth Opportunity" ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-slate-50 text-slate-600 border-slate-200"}`}>{cat}</Badge>
                   </div>
                 );
               })}
@@ -501,7 +521,7 @@ export default function BusinessReportsPage() {
       </Card>
 
       {/* Retention, Drop-off, Capacity, Billing, Forecasting */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <Card className="border-border bg-card">
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><UserCheck className="size-4 text-primary" /> Patient Retention & Loyalty</CardTitle></CardHeader>
           <CardContent className="space-y-3 text-sm">
@@ -537,7 +557,7 @@ export default function BusinessReportsPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <Card className="border-border bg-card">
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Clock className="size-4 text-primary" /> Capacity & Operational Efficiency</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
@@ -562,7 +582,7 @@ export default function BusinessReportsPage() {
         <CardHeader><CardTitle className="flex items-center gap-2 text-base"><TrendingUp className="size-4 text-primary" /> Forecasting (Estimates)</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm">
           <p className="text-xs text-muted-foreground">Based on last 3 periods moving average — labeled as estimates, not guaranteed.</p>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-2.5 sm:gap-3 min-[480px]:grid-cols-3">
             <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Next month revenue</p><p className="text-lg font-bold">{formatINR(Math.round((totalRevenue + prevRevenue) / 2))} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
             <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Next month appts</p><p className="text-lg font-bold">{Math.round((totalAppts + apptsPrev.length) / 2)} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
             <div className="rounded-lg border border-border p-3 text-center"><p className="text-xs text-muted-foreground">Patient growth</p><p className="text-lg font-bold">{newPatients ? `${Math.round(((newPatients - patients.filter(p => { const d = parseDate(p.createdAt); return !!d && d >= prevStart && d <= prevEnd; }).length) / Math.max(1, newPatients)) * 100)}%` : "—"} <span className="text-xs font-normal text-muted-foreground">est.</span></p></div>
@@ -571,7 +591,7 @@ export default function BusinessReportsPage() {
       </Card>
 
       {/* Health + Recommendations */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
         <Card className="border-border bg-card lg:col-span-1">
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Activity className="size-4 text-primary" /> Business Health Score</CardTitle></CardHeader>
           <CardContent className="text-center">
@@ -586,11 +606,11 @@ export default function BusinessReportsPage() {
         </Card>
         <Card className="border-border bg-card lg:col-span-2">
           <CardHeader>
-            <div className="flex items-center justify-between gap-2">
-              <CardTitle className="flex items-center gap-2 text-base"><Lightbulb className="size-4 text-primary" /> What Should You Improve? (AI Recommendations)</CardTitle>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="bg-violet-50 text-violet-700 border-violet-200 text-xs">NVIDIA: minimax-m3</Badge>
-                <Button size="sm" variant="outline" onClick={fetchAiInsights} disabled={aiLoading} className="h-7 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="flex min-w-0 items-center gap-2 text-sm sm:text-base"><Lightbulb className="size-4 shrink-0 text-primary" /> <span className="truncate">What Should You Improve? (AI Recommendations)</span></CardTitle>
+              <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                <Badge variant="outline" className="bg-violet-50 text-violet-700 border-violet-200 text-[11px] sm:text-xs">NVIDIA: minimax-m3</Badge>
+                <Button size="sm" variant="outline" onClick={fetchAiInsights} disabled={aiLoading} className="h-7 flex-1 justify-center text-xs sm:flex-none">
                   {aiLoading ? "Generating..." : aiInsights ? "Regenerate" : "Generate AI Insights"}
                 </Button>
               </div>
@@ -614,7 +634,7 @@ export default function BusinessReportsPage() {
       </div>
 
       {/* Problems & Opportunities */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         <Card className="border-border bg-card">
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><AlertTriangle className="size-4 text-amber-600" /> Problems Detected</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
