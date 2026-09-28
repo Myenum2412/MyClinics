@@ -120,9 +120,9 @@ export default function PharmacyStockHistoryPage() {
   if (!session) return null
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {!initialLoading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <PharmacyStats
             title="Stock History Analytics"
             subtitle="Audit trail of every pharmacy stock movement."
@@ -130,17 +130,17 @@ export default function PharmacyStockHistoryPage() {
             searchTerm={search}
             onSearchChange={(v) => { setSearch(v); setPage(0) }}
             searchPlaceholder="Search medicine..."
-            action={<Button variant="outline" size="sm" className="h-9" onClick={resetFilters}>Reset Filters</Button>}
+            action={<Button variant="outline" size="sm" className="h-9 w-full justify-center sm:w-auto" onClick={resetFilters}>Reset Filters</Button>}
           />
         </div>
       )}
 
       <Card className="shadow-sm">
         <CardContent className="p-0">
-          <div className="flex items-center justify-between px-6 py-4">
-            <h2 className="text-base font-semibold">Filters</h2>
+          <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4">
+            <h2 className="text-sm font-semibold sm:text-base">Filters</h2>
           </div>
-          <div className="px-6 pb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="px-4 pb-4 grid gap-3 sm:px-6 sm:pb-6 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="space-y-1.5">
               <Label htmlFor="search">Medicine</Label>
               <Input id="search" placeholder="Search medicine name" value={search} onChange={(e) => { setSearch(e.target.value); setPage(0) }} />
@@ -178,7 +178,8 @@ export default function PharmacyStockHistoryPage() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Desktop table — hidden on mobile */}
+              <div className="hidden overflow-x-auto md:block">
                 <Table className="min-w-[900px]">
                   <TableHeader>
                     <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -218,6 +219,38 @@ export default function PharmacyStockHistoryPage() {
                     })}
                   </TableBody>
                 </Table>
+              </div>
+              {/* Mobile card list — visible only on small screens */}
+              <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+                {pageRows.map((mv) => {
+                  const name = mv.medicineName ?? mv.medicineId
+                  const changed = mv.quantityChanged
+                  const changedColor = changed > 0 ? "text-emerald-600" : changed < 0 ? "text-red-600" : "text-muted-foreground"
+                  return (
+                    <div key={mv.movementId} className="rounded-2xl border border-border bg-card p-3 shadow-2xs">
+                      <div className="flex items-center gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-foreground">{name}</p>
+                          <p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">{fmtDate(mv.createdAt)}</p>
+                        </div>
+                        <Badge variant={TYPE_BADGE[mv.movementType] ?? "secondary"} className="shrink-0 text-[10px] capitalize">{mv.movementType.replace(/_/g, " ")}</Badge>
+                      </div>
+                      <div className="mt-2 grid grid-cols-3 gap-1.5 text-center">
+                        <div className="rounded-lg bg-muted/50 px-1 py-1.5"><p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Before</p><p className="text-xs font-bold tabular-nums">{mv.quantityBefore}</p></div>
+                        <div className="rounded-lg bg-muted/50 px-1 py-1.5"><p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">Changed</p><p className={`text-xs font-bold tabular-nums ${changedColor}`}>{changed >= 0 ? "+" : ""}{changed}</p></div>
+                        <div className="rounded-lg bg-muted/50 px-1 py-1.5"><p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">After</p><p className="text-xs font-bold tabular-nums">{mv.quantityAfter}</p></div>
+                      </div>
+                      {(mv.batchNumber || mv.referenceInvoice || mv.party || mv.performedBy) ? (
+                        <p className="mt-1.5 truncate text-[11px] text-muted-foreground">
+                          {[mv.batchNumber, mv.referenceInvoice, mv.party, mv.performedBy].filter(Boolean).join(" · ")}
+                        </p>
+                      ) : null}
+                      {(mv.reason || mv.notes) ? (
+                        <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">{mv.reason || mv.notes}</p>
+                      ) : null}
+                    </div>
+                  )
+                })}
               </div>
             </>
           )}
