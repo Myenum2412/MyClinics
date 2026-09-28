@@ -88,6 +88,8 @@ import {
   Loader2,
   FileText,
   MessageSquare,
+  Eye,
+  Phone,
 } from "lucide-react";
 
 interface PrescriptionFormState {
@@ -384,7 +386,7 @@ export default function PrescriptionsPage() {
                 <ChevronLeft size={20} className="text-muted-foreground" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Create Prescription</h1>
+                <h1 className="text-xl font-bold text-foreground sm:text-2xl">Create Prescription</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Write diagnosis and prescribe medication. Respective patients will receive secure automated WhatsApp alerts.
                 </p>
@@ -393,7 +395,7 @@ export default function PrescriptionsPage() {
           </div>
         </div>
 
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           <div className="space-y-6">
             <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
               <CardHeader className="pb-3">
@@ -432,7 +434,7 @@ export default function PrescriptionsPage() {
                 <ChevronLeft size={20} className="text-muted-foreground" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Edit Prescription</h1>
+                <h1 className="text-xl font-bold text-foreground sm:text-2xl">Edit Prescription</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Modify the prescription details. Respective patients will receive secure automated WhatsApp alerts on update.
                 </p>
@@ -441,7 +443,7 @@ export default function PrescriptionsPage() {
           </div>
         </div>
 
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           <div className="space-y-6">
             <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
               <CardHeader className="pb-3">
@@ -489,7 +491,7 @@ export default function PrescriptionsPage() {
                 <ChevronLeft size={20} className="text-muted-foreground" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">View Prescription</h1>
+                <h1 className="text-xl font-bold text-foreground sm:text-2xl">View Prescription</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Read-only view of the prescription details.
                 </p>
@@ -498,7 +500,7 @@ export default function PrescriptionsPage() {
           </div>
         </div>
 
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
           <div className="space-y-6">
             <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
               <CardHeader className="pb-3">
@@ -530,10 +532,10 @@ export default function PrescriptionsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* Metrics Section */}
       {!initialLoading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <Stats07
             prescriptions={items}
             patients={statsPatients}
@@ -545,7 +547,7 @@ export default function PrescriptionsPage() {
             }}
             searchPlaceholder="Search patient, medicine, doctor..."
             action={
-              <Button className="flex items-center gap-1.5 shadow-sm" onClick={() => setCreating(true)}>
+              <Button className="flex h-9 w-full items-center justify-center gap-1.5 shadow-sm sm:w-auto" onClick={() => setCreating(true)}>
                 <Plus className="size-4" />
                 New Prescription
               </Button>
@@ -599,7 +601,7 @@ export default function PrescriptionsPage() {
       <Card className="shadow-sm">
         <CardContent className="p-0">
           {loading ? (
-            <div className="space-y-4 p-6">
+            <div className="space-y-4 p-4 sm:p-6">
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
@@ -615,7 +617,9 @@ export default function PrescriptionsPage() {
               </EmptyHeader>
             </Empty>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -868,6 +872,143 @@ export default function PrescriptionsPage() {
                 </TableBody>
               </Table>
             </div>
+
+            {/* Mobile card list — visible only on small screens */}
+            <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+              {sortedItems.map((p) => {
+                const patientLabel = p.patientName || "Unknown Patient";
+                const patientPhone = p.patientPhone || "No phone";
+                const doctorLabel = p.doctorName || "Unknown Doctor";
+                const notif = notificationsMap[p.prescriptionId];
+                const isSelected = selectedIds.has(p.prescriptionId);
+                return (
+                  <article
+                    key={p.prescriptionId}
+                    className={`overflow-hidden rounded-2xl border bg-card shadow-2xs transition-colors ${
+                      isSelected ? "border-primary/50 ring-1 ring-primary/30" : "border-border"
+                    }`}
+                  >
+                    {/* Header: select + patient + date */}
+                    <div className="flex items-center gap-2.5 p-3.5 pb-2.5">
+                      {visibleColumns.select && (
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(c) => handleToggleSelectRow(p.prescriptionId, c === true)}
+                          aria-label="Select row"
+                        />
+                      )}
+                      <PersonAvatar
+                        clinicId={clinicId}
+                        ownerType="patient"
+                        ownerId={p.patientId}
+                        name={patientLabel}
+                        size="md"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-foreground">{patientLabel}</p>
+                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Phone className="size-3 shrink-0" />
+                          <span className="truncate font-mono">{patientPhone}</span>
+                        </p>
+                      </div>
+                      {visibleColumns.visitDate && (
+                        <span className="shrink-0 text-xs font-bold text-foreground tabular-nums">
+                          {formatDate(p.visitDate)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Doctor + diagnosis */}
+                    <div className="px-3.5">
+                      {visibleColumns.doctor && (
+                        <p className="truncate text-[11px] text-muted-foreground">Dr. {doctorLabel}</p>
+                      )}
+                      {visibleColumns.diagnosis && p.diagnosis ? (
+                        <p className="mt-0.5 truncate text-xs font-medium text-foreground">{p.diagnosis}</p>
+                      ) : null}
+                    </div>
+
+                    {/* Medicines */}
+                    {visibleColumns.medicines && (
+                      <ul className="mx-3.5 mt-2 space-y-0.5 rounded-xl bg-muted/60 p-2">
+                        {(p.medicines ?? []).map((m, i) => (
+                          <li key={i} className="truncate text-xs text-muted-foreground">
+                            <span className="font-semibold text-foreground/80">{m.name}</span>
+                            {m.dosage ? <span> · {m.dosage}</span> : null}
+                            {m.frequency ? <span> · {m.frequency}</span> : null}
+                          </li>
+                        ))}
+                        {(p.medicines ?? []).length === 0 && (
+                          <li className="text-xs text-muted-foreground">—</li>
+                        )}
+                      </ul>
+                    )}
+
+                    {/* Footer: notification status + actions */}
+                    <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 px-3.5 py-2.5">
+                      {visibleColumns.status && (
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-medium">
+                          {notif?.status === "sent" && (
+                            <><CheckCircle className="size-3.5 text-success" /><span className="text-success">Sent</span></>
+                          )}
+                          {notif?.status === "failed" && (
+                            <><XCircle className="size-3.5 text-destructive" /><span className="text-destructive">Failed</span></>
+                          )}
+                          {notif?.status === "enqueued" && (
+                            <><Loader2 className="size-3.5 animate-spin text-yellow-500" /><span className="text-yellow-700">Enqueued</span></>
+                          )}
+                          {notif?.status === "pending" && (
+                            <><AlertCircle className="size-3.5 text-warning" /><span className="text-warning">Pending</span></>
+                          )}
+                          {!notif && <span className="text-muted-foreground">Not triggered</span>}
+                        </span>
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl text-muted-foreground"
+                          aria-label="View details"
+                          onClick={() => setViewing(p)}
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
+                          aria-label="Edit"
+                          onClick={() => setEditing(p)}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl text-muted-foreground"
+                          aria-label="Notification logs"
+                          onClick={() => viewLogs(p)}
+                        >
+                          <MessageSquare className="size-4" />
+                        </Button>
+                        {canManage && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
+                            aria-label="Delete"
+                            onClick={() => setDeleteTarget(p)}
+                          >
+                            <Trash className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            </>
           )}
 
           {/* Table Footer / Pagination */}
@@ -1102,7 +1243,7 @@ function PrescriptionForm({
                     </Button>
                   )}
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 gap-2 min-[480px]:grid-cols-3">
                   <SuggestionInput
                     value={m.dosage ?? ""}
                     onChange={(v) => setMedicine(i, { dosage: v })}
@@ -1152,12 +1293,12 @@ function PrescriptionForm({
       </fieldset>
 
       {!readOnly && (
-        <div className="flex gap-3 border-t border-border pt-8">
-          <Button type="button" variant="outline" onClick={() => setForm(initial || { patientId: "", doctorId, visitDate: todayISO(), diagnosis: "", medicines: [{ ...EMPTY_MEDICINE }], notes: "" })} className="border-primary/30 text-primary hover:bg-accent">
+        <div className="flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:gap-3 sm:pt-8">
+          <Button type="button" variant="outline" onClick={() => setForm(initial || { patientId: "", doctorId, visitDate: todayISO(), diagnosis: "", medicines: [{ ...EMPTY_MEDICINE }], notes: "" })} className="w-full justify-center border-primary/30 text-primary hover:bg-accent sm:w-auto">
             Reset
           </Button>
-          <div className="flex-1" />
-          <Button type="submit" disabled={saving} size="lg">
+          <div className="hidden flex-1 sm:block" />
+          <Button type="submit" disabled={saving} size="lg" className="w-full justify-center sm:w-auto">
             {saving ? "Saving Prescription..." : isEdit ? "Save Changes" : "Save & Queue WhatsApp Alert"}
           </Button>
         </div>
