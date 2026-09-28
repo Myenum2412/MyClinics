@@ -188,9 +188,9 @@ export default function NotificationsPage() {
   const canCreate = sessionCan(session, "staff");
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {!loading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <StatsGeneric
             title="Notification Analytics"
             description="WhatsApp alerts, automated reminders, and delivery log insights."
@@ -202,13 +202,13 @@ export default function NotificationsPage() {
             }}
             searchPlaceholder="Search notifications..."
             action={
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={handleReadAll} className="h-9">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Button variant="outline" size="sm" onClick={handleReadAll} className="h-9 w-full justify-center sm:w-auto">
                   Mark all as read
                 </Button>
                 {canCreate && (
                   <Dialog open={creating} onOpenChange={setCreating}>
-                    <DialogTrigger render={<Button size="sm" className="h-9">Send notification</Button>} />
+                    <DialogTrigger render={<Button size="sm" className="h-9 w-full justify-center sm:w-auto">Send notification</Button>} />
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Send notification</DialogTitle>
@@ -227,10 +227,10 @@ export default function NotificationsPage() {
       )}
 
       <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
+        <CardHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
+          <CardTitle className="text-base sm:text-lg">Notifications</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
           {loading ? (
             <div className="space-y-2">
               <Skeleton className="h-10 w-full" />
@@ -251,13 +251,13 @@ export default function NotificationsPage() {
                     n.readAt ? "opacity-60" : ""
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium">{n.title}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
+                  <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+                    <span className="text-sm font-medium break-words">{n.title}</span>
+                    <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground sm:text-xs">
                       {formatDateTime(n.createdAt)}
                     </span>
                   </div>
-                  {n.body && <p className="mt-1 text-sm text-muted-foreground">{n.body}</p>}
+                  {n.body && <p className="mt-1 text-xs break-words text-muted-foreground sm:text-sm">{n.body}</p>}
                   <div className="mt-1 flex items-center gap-2">
                     <Badge className="bg-muted text-muted-foreground">{n.type}</Badge>
                     {!n.readAt && (
@@ -464,7 +464,7 @@ function NotificationForm({
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
           <div className="grid gap-2">
             <Label>Type</Label>
             <Select value={type} onValueChange={(v) => setType(v ?? "general")}>
