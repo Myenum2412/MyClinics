@@ -95,6 +95,7 @@ import {
   Pencil,
   ArrowRightCircle,
   Star,
+  Stethoscope,
 } from "lucide-react";
 
 const STATUSES: AppointmentStatus[] = ["rescheduled", "completed", "cancelled", "no_show"];
@@ -1125,121 +1126,137 @@ export default function AppointmentsPage() {
             </div>
 
             {/* Mobile card list — visible only on small screens */}
-            <div className="divide-y divide-border md:hidden">
+            <div className="space-y-3 bg-muted/40 p-3 md:hidden">
               {paginatedAppointments.map((a) => {
                 const patientLabel = a.patientName || patientMap.get(a.patientId)?.fullName || "Unknown Patient";
                 const patientPhone = a.patientPhone || patientMap.get(a.patientId)?.mobile || "No Contact";
                 const dLabel = a.doctorName || doctorMap.get(a.doctorId)?.name || "Unknown Doctor";
                 const displayToken = a.tokenNumber ?? tokenFallbackMap.get(a.appointmentId) ?? null;
+                const isSelected = selectedIds.has(a.appointmentId);
                 return (
-                  <div key={a.appointmentId} className="flex flex-col gap-2.5 p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-2.5">
-                        <Checkbox
-                          checked={selectedIds.has(a.appointmentId)}
-                          onCheckedChange={() => toggleSelectRow(a.appointmentId)}
-                        />
-                        <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={a.patientId} name={patientLabel} />
-                        <div className="flex min-w-0 flex-col">
-                          <span className="truncate text-xs font-semibold text-foreground leading-tight">
-                            {patientLabel}
-                          </span>
-                          <span className="mt-0.5 flex items-center gap-0.5 font-mono text-[10px] text-muted-foreground">
-                            <Phone className="size-2.5" />
-                            <span className="truncate">{patientPhone}</span>
-                          </span>
-                        </div>
+                  <article
+                    key={a.appointmentId}
+                    className={`overflow-hidden rounded-2xl border bg-card shadow-sm transition-colors ${
+                      isSelected ? "border-primary/50 ring-1 ring-primary/30" : "border-border"
+                    }`}
+                  >
+                    {/* Header: select + avatar + identity + token */}
+                    <div className="flex items-center gap-2.5 p-3.5 pb-3">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleSelectRow(a.appointmentId)}
+                        aria-label={`Select appointment for ${patientLabel}`}
+                      />
+                      <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={a.patientId} name={patientLabel} size="md" />
+                      <div className="min-w-0 flex-1">
+                        <p className="flex items-center gap-1 truncate text-sm font-bold text-foreground">
+                          <span className="truncate">{patientLabel}</span>
+                          {a.priority ? <Star className="size-3.5 shrink-0 fill-amber-400 text-amber-400" /> : null}
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Phone className="size-3 shrink-0" />
+                          <span className="truncate font-mono">{patientPhone}</span>
+                        </p>
                       </div>
                       {displayToken != null ? (
-                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                          #{displayToken}
-                          {a.priority && <Star className="size-3 fill-primary" />}
-                        </span>
+                        <div className="flex shrink-0 flex-col items-center rounded-xl bg-primary px-2.5 py-1.5 text-primary-foreground shadow-sm">
+                          <span className="text-[9px] font-bold uppercase tracking-widest opacity-80">Token</span>
+                          <span className="text-base font-extrabold leading-none tabular-nums">#{displayToken}</span>
+                        </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="shrink-0 rounded-xl bg-muted px-2.5 py-1.5 text-xs font-semibold text-muted-foreground">—</span>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1 font-medium text-foreground">
-                        <Calendar className="size-3 text-muted-foreground" />
-                        {a.date}
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="size-3 text-muted-foreground" />
-                        {formatTime(a.time)}
-                      </span>
-                      <span className="inline-flex min-w-0 items-center gap-1">
-                        <span className="truncate font-medium text-foreground">Dr. {dLabel}</span>
-                      </span>
+                    {/* Info tiles: date / time / doctor */}
+                    <div className="mx-3.5 grid grid-cols-3 gap-2 rounded-xl bg-muted/60 p-2">
+                      <div className="flex min-w-0 flex-col items-center gap-0.5 rounded-lg bg-background px-1 py-2 text-center shadow-2xs">
+                        <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                          <Calendar className="size-3" /> Date
+                        </span>
+                        <span className="truncate text-[11px] font-bold text-foreground tabular-nums">{a.date}</span>
+                      </div>
+                      <div className="flex min-w-0 flex-col items-center gap-0.5 rounded-lg bg-background px-1 py-2 text-center shadow-2xs">
+                        <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                          <Clock className="size-3" /> Time
+                        </span>
+                        <span className="truncate text-[11px] font-bold text-foreground tabular-nums">{formatTime(a.time)}</span>
+                      </div>
+                      <div className="flex min-w-0 flex-col items-center gap-0.5 rounded-lg bg-background px-1 py-2 text-center shadow-2xs">
+                        <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+                          <Stethoscope className="size-3" /> Doctor
+                        </span>
+                        <span className="w-full truncate text-[11px] font-bold text-foreground">{dLabel}</span>
+                      </div>
                     </div>
 
+                    {/* Reason */}
                     {a.reason ? (
-                      <p className="truncate text-xs text-muted-foreground">{a.reason}</p>
+                      <p className="mx-3.5 mt-2 truncate rounded-lg border border-dashed border-border bg-background px-2.5 py-1.5 text-xs text-muted-foreground">
+                        {a.reason}
+                      </p>
                     ) : null}
 
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Select
-                          value={a.status}
-                          onValueChange={(v) => handleStatus(a, v as AppointmentStatus)}
-                        >
-                          <SelectTrigger className={`h-7 w-28 rounded-full text-[11px] font-semibold ${STATUS_CLASS[a.status]}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {STATUSES.map((s) => (
-                              <SelectItem key={s} value={s} className="text-xs">
-                                {STATUS_LABELS[s]}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {renderWhatsAppBadgeStatus(a.appointmentId)}
-                      </div>
-                      <div className="flex items-center gap-0.5">
+                    {/* Footer: status + actions */}
+                    <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border/60 px-3.5 py-2.5">
+                      <Select
+                        value={a.status}
+                        onValueChange={(v) => handleStatus(a, v as AppointmentStatus)}
+                      >
+                        <SelectTrigger className={`h-8 min-w-28 rounded-full text-[11px] font-semibold ${STATUS_CLASS[a.status]}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STATUSES.map((s) => (
+                            <SelectItem key={s} value={s} className="text-xs">
+                              {STATUS_LABELS[s]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="flex items-center gap-1.5">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
-                          className="size-8 text-muted-foreground hover:text-foreground"
+                          className="size-9 rounded-xl text-muted-foreground"
                           aria-label="View details"
                           onClick={() => {
                             setSelectedAppt(a);
                             setViewing(true);
                           }}
                         >
-                          <Eye className="size-3.5" />
+                          <Eye className="size-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
-                          className="size-8 text-primary hover:text-primary"
+                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
                           aria-label="Edit appointment"
                           onClick={() => setEditingAppt(a)}
                         >
-                          <Pencil className="size-3.5" />
+                          <Pencil className="size-4" />
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
-                          className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          aria-label="Delete appointment"
-                          onClick={() => setDeleteTarget(a)}
-                        >
-                          <Trash2 className="size-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-8 text-muted-foreground hover:text-primary"
+                          className="size-9 rounded-xl text-muted-foreground"
                           aria-label="WhatsApp logs"
                           onClick={() => fetchNotificationLogs(a)}
                         >
-                          <Bell className="size-3.5" />
+                          <Bell className="size-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
+                          aria-label="Delete appointment"
+                          onClick={() => setDeleteTarget(a)}
+                        >
+                          <Trash2 className="size-4" />
                         </Button>
                       </div>
                     </div>
-                  </div>
+                  </article>
                 );
               })}
             </div>
