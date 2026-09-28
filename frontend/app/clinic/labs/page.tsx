@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/ui/pagination";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { FlaskConical, Plus, Eye, Pencil, Trash2, Search } from "lucide-react";
+import { FlaskConical, Plus, Eye, Pencil, Trash2, Search, Phone } from "lucide-react";
 
 export default function LabsPage() {
   const session = useRequireRole("patient");
@@ -79,23 +79,23 @@ export default function LabsPage() {
 
   if (editing) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6">
         <Card className="border-border shadow-sm max-w-xl">
-          <CardHeader className="border-b bg-muted/20"><CardTitle>Edit Lab</CardTitle></CardHeader>
-          <CardContent className="p-6"><LabForm initial={editing} saving={saving} onSave={handleEditSave} onCancel={() => setEditing(null)} /></CardContent>
+          <CardHeader className="border-b bg-muted/20"><CardTitle className="text-base sm:text-lg">Edit Lab</CardTitle></CardHeader>
+          <CardContent className="p-4 sm:p-6"><LabForm initial={editing} saving={saving} onSave={handleEditSave} onCancel={() => setEditing(null)} /></CardContent>
         </Card>
       </div>
     );
   }
   if (viewing) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6">
         <Card className="border-border shadow-sm max-w-xl">
-          <CardHeader className="border-b bg-muted/20 flex flex-row items-center justify-between"><CardTitle>View Lab</CardTitle>
+          <CardHeader className="border-b bg-muted/20 flex flex-row items-center justify-between gap-2"><CardTitle className="text-base sm:text-lg">View Lab</CardTitle>
             <Button variant="outline" size="sm" onClick={() => { setEditing(viewing); setViewing(null); }}><Pencil className="size-4" />Edit</Button>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid sm:grid-cols-2 gap-4 text-sm">
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-4 text-sm">
               <div><span className="text-xs text-muted-foreground">Lab Name</span><div className="font-medium">{viewing.labName ?? (viewing as any).name ?? "—"}</div></div>
               <div><span className="text-xs text-muted-foreground">Contact</span><div className="font-medium">{viewing.contactPerson ?? "—"}</div></div>
               <div><span className="text-xs text-muted-foreground">Phone</span><div className="font-medium">{viewing.phone ?? "—"}</div></div>
@@ -104,7 +104,7 @@ export default function LabsPage() {
               <div><span className="text-xs text-muted-foreground">License</span><div className="font-medium">{viewing.licenseNo ?? "—"}</div></div>
               <div><span className="text-xs text-muted-foreground">Status</span><div><Badge variant="outline">{viewing.status}</Badge></div></div>
             </div>
-            <div className="mt-6"><Button variant="outline" onClick={() => setViewing(null)}>Back to Labs</Button></div>
+            <div className="mt-4 sm:mt-6"><Button variant="outline" className="w-full justify-center sm:w-auto" onClick={() => setViewing(null)}>Back to Labs</Button></div>
           </CardContent>
         </Card>
       </div>
@@ -112,14 +112,14 @@ export default function LabsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2"><FlaskConical className="size-5 text-primary" /><h1 className="text-xl font-bold">Labs</h1><Badge variant="secondary">{filtered.length}</Badge></div>
-        {canManage && <Button render={<Link href="/clinic/labs/new" />}><Plus className="size-4" />Create Lab</Button>}
+    <div className="flex flex-col gap-4 sm:gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2"><FlaskConical className="size-5 shrink-0 text-primary" /><h1 className="text-lg font-bold sm:text-xl">Labs</h1><Badge variant="secondary">{filtered.length}</Badge></div>
+        {canManage && <Button className="w-full justify-center sm:w-auto" render={<Link href="/clinic/labs/new" />}><Plus className="size-4" />Create Lab</Button>}
       </div>
 
       {selectedIds.size > 0 && canManage && (
-        <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5">
           <span className="text-sm font-semibold text-primary">{selectedIds.size} selected</span>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>Clear</Button>
@@ -133,10 +133,11 @@ export default function LabsPage() {
       </div>
 
       <Card className="border-border shadow-sm"><CardContent className="p-0">
-        {loading ? <div className="p-6 space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
+        {loading ? <div className="p-4 sm:p-6 space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
           : filtered.length === 0 ? <div className="py-12 text-center text-sm text-muted-foreground">No labs found.</div>
             : <>
-              <div className="overflow-x-auto -mx-6 px-6"><Table className="min-w-[720px]">
+              {/* Desktop table — hidden on mobile */}
+              <div className="hidden overflow-x-auto -mx-6 px-6 md:block"><Table className="min-w-[720px]">
                 <TableHeader><TableRow className="border-b bg-muted/40 hover:bg-muted/40">
                   <TableHead className="w-12"><Checkbox checked={paginated.length > 0 && selectedIds.size === paginated.length} onCheckedChange={toggleAll} aria-label="Select all" /></TableHead>
                   <TableHead>Lab Name</TableHead><TableHead>Contact</TableHead><TableHead>Phone</TableHead><TableHead>Email</TableHead><TableHead>Lab Type</TableHead><TableHead>License</TableHead><TableHead>Status</TableHead>
@@ -162,6 +163,90 @@ export default function LabsPage() {
                   </TableRow>
                 ))}</TableBody>
               </Table></div>
+              {/* Mobile card list — visible only on small screens */}
+              <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+                {paginated.map((l) => {
+                  const labName = (l as any).labName ?? (l as any).name ?? "—";
+                  const isSelected = selectedIds.has(l.labId);
+                  return (
+                    <article
+                      key={l.labId}
+                      className={`overflow-hidden rounded-2xl border bg-card shadow-2xs transition-colors ${
+                        isSelected ? "border-primary/50 ring-1 ring-primary/30" : "border-border"
+                      }`}
+                    >
+                      {/* Header: select + icon + identity + status */}
+                      <div className="flex items-center gap-2.5 p-3.5 pb-2.5">
+                        <Checkbox checked={isSelected} onCheckedChange={() => toggleOne(l.labId)} aria-label={`Select ${labName}`} />
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                          <FlaskConical className="size-4" />
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-foreground">{labName}</p>
+                          {l.labType ? (
+                            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{l.labType}</p>
+                          ) : null}
+                        </div>
+                        <Badge variant="outline" className="shrink-0 text-[11px] capitalize">{l.status}</Badge>
+                      </div>
+
+                      {/* Contact details */}
+                      <div className="space-y-1 px-3.5">
+                        {l.contactPerson ? (
+                          <p className="truncate text-xs text-foreground">{l.contactPerson}</p>
+                        ) : null}
+                        {l.phone ? (
+                          <p className="flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
+                            <Phone className="size-3 shrink-0" />
+                            <span className="truncate">{l.phone}</span>
+                          </p>
+                        ) : null}
+                        {l.email ? (
+                          <p className="truncate text-[11px] text-muted-foreground">{l.email}</p>
+                        ) : null}
+                        {l.licenseNo ? (
+                          <p className="truncate font-mono text-[11px] text-muted-foreground">Lic: {l.licenseNo}</p>
+                        ) : null}
+                      </div>
+
+                      {/* Footer actions */}
+                      <div className="mt-2.5 flex items-center justify-end gap-1.5 border-t border-border/60 px-3.5 py-2.5">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl text-muted-foreground"
+                          onClick={() => setViewing(l)}
+                          aria-label="View" title="View"
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                        {canManage && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
+                            onClick={() => setEditing(l)}
+                            aria-label="Edit" title="Edit"
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                        )}
+                        {canManage && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
+                            onClick={() => setDeleteTarget(l)}
+                            aria-label="Delete" title="Delete"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
               {filtered.length > 0 && <Pagination page={currentPage} pageSize={pageSize} totalItems={filtered.length} onPageChange={(p) => setCurrentPage(Math.max(1, Math.min(p, totalPages || 1)))} itemLabel="results" />}
             </>}
       </CardContent></Card>
@@ -178,18 +263,18 @@ function LabForm({ initial, saving, onSave, onCancel }: { initial: Lab; saving: 
   return (
     <form onSubmit={async (e) => { e.preventDefault(); await onSave(form); }} className="space-y-4">
       <div className="grid gap-2"><Label>Lab Name *</Label><Input value={form.labName} onChange={(e) => set("labName", e.target.value)} required /></div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
         <div className="grid gap-2"><Label>Contact Person</Label><Input value={form.contactPerson} onChange={(e) => set("contactPerson", e.target.value)} /></div>
         <div className="grid gap-2"><Label>Phone</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></div>
       </div>
       <div className="grid gap-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} /></div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
         <div className="grid gap-2"><Label>Lab Type</Label><Input value={form.labType} onChange={(e) => set("labType", e.target.value)} placeholder="Pathology / Radiology" /></div>
         <div className="grid gap-2"><Label>License No</Label><Input value={form.licenseNo} onChange={(e) => set("licenseNo", e.target.value)} /></div>
       </div>
-      <div className="flex gap-2 justify-end pt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit" disabled={saving}>{saving ? "Saving..." : "Save Changes"}</Button>
+      <div className="flex flex-col gap-2 justify-end pt-2 sm:flex-row">
+        <Button type="button" variant="outline" className="w-full justify-center sm:w-auto" onClick={onCancel}>Cancel</Button>
+        <Button type="submit" className="w-full justify-center sm:w-auto" disabled={saving}>{saving ? "Saving..." : "Save Changes"}</Button>
       </div>
     </form>
   );
