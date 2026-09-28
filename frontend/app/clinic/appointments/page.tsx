@@ -815,10 +815,10 @@ export default function AppointmentsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* Stats Section with action slot - Appointment Analytics with centered search */}
       {!initialLoading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <StatsAppointments
             appointments={appointments}
             stats={globalStats ?? undefined}
@@ -828,13 +828,13 @@ export default function AppointmentsPage() {
               setCurrentPage(1);
             }}
             action={
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={loadData}
                   disabled={loading}
-                  className="h-9 gap-1.5"
+                  className="h-9 w-full justify-center gap-1.5 sm:w-auto"
                 >
                   <RefreshCw className={`size-3.5 ${loading ? "animate-spin" : ""}`} />
                   Sync
@@ -843,7 +843,7 @@ export default function AppointmentsPage() {
                 {canManage && (
                   <Button
                     variant="outline"
-                    className="flex items-center gap-1.5 h-9"
+                    className="flex h-9 w-full items-center justify-center gap-1.5 sm:w-auto"
                     onClick={handleCallNext}
                     disabled={callingNext}
                   >
@@ -852,7 +852,7 @@ export default function AppointmentsPage() {
                   </Button>
                 )}
 
-                <Button className="flex items-center gap-1.5 shadow-sm h-9" onClick={() => setCreating(true)}>
+                <Button className="flex h-9 w-full items-center justify-center gap-1.5 shadow-sm sm:w-auto" onClick={() => setCreating(true)}>
                   <Plus className="size-4" />
                   New Appointment
                 </Button>
@@ -907,7 +907,7 @@ export default function AppointmentsPage() {
       <Card className="shadow-sm">
         <CardContent className="p-0">
           {loading ? (
-            <div className="space-y-4 p-6">
+            <div className="space-y-4 p-4 sm:p-6">
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
@@ -925,7 +925,9 @@ export default function AppointmentsPage() {
               </EmptyHeader>
             </Empty>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -1121,6 +1123,127 @@ export default function AppointmentsPage() {
                 </TableBody>
               </Table>
             </div>
+
+            {/* Mobile card list — visible only on small screens */}
+            <div className="divide-y divide-border md:hidden">
+              {paginatedAppointments.map((a) => {
+                const patientLabel = a.patientName || patientMap.get(a.patientId)?.fullName || "Unknown Patient";
+                const patientPhone = a.patientPhone || patientMap.get(a.patientId)?.mobile || "No Contact";
+                const dLabel = a.doctorName || doctorMap.get(a.doctorId)?.name || "Unknown Doctor";
+                const displayToken = a.tokenNumber ?? tokenFallbackMap.get(a.appointmentId) ?? null;
+                return (
+                  <div key={a.appointmentId} className="flex flex-col gap-2.5 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <Checkbox
+                          checked={selectedIds.has(a.appointmentId)}
+                          onCheckedChange={() => toggleSelectRow(a.appointmentId)}
+                        />
+                        <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={a.patientId} name={patientLabel} />
+                        <div className="flex min-w-0 flex-col">
+                          <span className="truncate text-xs font-semibold text-foreground leading-tight">
+                            {patientLabel}
+                          </span>
+                          <span className="mt-0.5 flex items-center gap-0.5 font-mono text-[10px] text-muted-foreground">
+                            <Phone className="size-2.5" />
+                            <span className="truncate">{patientPhone}</span>
+                          </span>
+                        </div>
+                      </div>
+                      {displayToken != null ? (
+                        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                          #{displayToken}
+                          {a.priority && <Star className="size-3 fill-primary" />}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                        <Calendar className="size-3 text-muted-foreground" />
+                        {a.date}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="size-3 text-muted-foreground" />
+                        {formatTime(a.time)}
+                      </span>
+                      <span className="inline-flex min-w-0 items-center gap-1">
+                        <span className="truncate font-medium text-foreground">Dr. {dLabel}</span>
+                      </span>
+                    </div>
+
+                    {a.reason ? (
+                      <p className="truncate text-xs text-muted-foreground">{a.reason}</p>
+                    ) : null}
+
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Select
+                          value={a.status}
+                          onValueChange={(v) => handleStatus(a, v as AppointmentStatus)}
+                        >
+                          <SelectTrigger className={`h-7 w-28 rounded-full text-[11px] font-semibold ${STATUS_CLASS[a.status]}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUSES.map((s) => (
+                              <SelectItem key={s} value={s} className="text-xs">
+                                {STATUS_LABELS[s]}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {renderWhatsAppBadgeStatus(a.appointmentId)}
+                      </div>
+                      <div className="flex items-center gap-0.5">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:text-foreground"
+                          aria-label="View details"
+                          onClick={() => {
+                            setSelectedAppt(a);
+                            setViewing(true);
+                          }}
+                        >
+                          <Eye className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-primary hover:text-primary"
+                          aria-label="Edit appointment"
+                          onClick={() => setEditingAppt(a)}
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          aria-label="Delete appointment"
+                          onClick={() => setDeleteTarget(a)}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:text-primary"
+                          aria-label="WhatsApp logs"
+                          onClick={() => fetchNotificationLogs(a)}
+                        >
+                          <Bell className="size-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            </>
           )}
         </CardContent>
 
