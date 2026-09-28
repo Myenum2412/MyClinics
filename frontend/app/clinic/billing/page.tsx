@@ -349,7 +349,7 @@ export default function BillingPage() {
 
   if (creating) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6">
         <div className="flex items-center gap-4">
           <Button
             variant="outline"
@@ -361,7 +361,7 @@ export default function BillingPage() {
             Back to Bills
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">New Bill</h1>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">New Bill</h1>
             <p className="text-sm text-muted-foreground">Create a bill quickly; final totals are computed by the server.</p>
           </div>
         </div>
@@ -378,7 +378,7 @@ export default function BillingPage() {
 
   if (editing) {
     return (
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6">
         <div className="flex items-center gap-4">
           <Button
             variant="outline"
@@ -390,7 +390,7 @@ export default function BillingPage() {
             Back to Bills
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Edit Bill</h1>
+            <h1 className="text-xl font-bold text-foreground sm:text-2xl">Edit Bill</h1>
             <p className="text-sm text-muted-foreground">Update bill details.</p>
           </div>
         </div>
@@ -410,8 +410,8 @@ export default function BillingPage() {
   if (viewing) {
     const patientName = viewing.patientName || "Unknown Patient";
     return (
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
@@ -423,17 +423,17 @@ export default function BillingPage() {
               Back to Bills
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Bill Details</h1>
+              <h1 className="text-xl font-bold text-foreground sm:text-2xl">Bill Details</h1>
               <p className="text-sm text-muted-foreground">
                 {viewing.billNumber} · {patientName}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
             <Button
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5"
+              className="h-9 w-full justify-center gap-1.5 sm:w-auto"
               onClick={() => handleDownloadPdf(viewing)}
             >
               <Download className="size-4" />
@@ -442,7 +442,7 @@ export default function BillingPage() {
             <Button
               variant="outline"
               size="sm"
-              className="h-9 gap-1.5"
+              className="h-9 w-full justify-center gap-1.5 sm:w-auto"
               onClick={() => {
                 setEditing(viewing);
                 setViewing(null);
@@ -463,10 +463,10 @@ export default function BillingPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 sm:gap-6">
       {/* Metrics Section */}
       {!initialLoading && (
-        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <StatsBilling
             bills={statsBills}
             searchTerm={searchTerm}
@@ -476,9 +476,9 @@ export default function BillingPage() {
             }}
             searchPlaceholder="Search bills, patient, status..."
             action={
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <DropdownMenu>
-                  <DropdownMenuTrigger className="flex h-9 w-36 items-center justify-between rounded-lg border border-input bg-transparent px-3 text-sm">
+                  <DropdownMenuTrigger className="flex h-9 w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 text-sm sm:w-36">
                     {statusFilter === "all" ? "All Statuses" : statusFilter} <ChevronDown className="size-4 opacity-50" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-36">
@@ -488,7 +488,7 @@ export default function BillingPage() {
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <Button className="flex items-center gap-1.5 shadow-sm h-9" onClick={() => setCreating(true)}>
+                <Button className="flex h-9 w-full items-center justify-center gap-1.5 shadow-sm sm:w-auto" onClick={() => setCreating(true)}>
                   <Plus className="size-4" />
                   New Bill
                 </Button>
@@ -541,7 +541,7 @@ export default function BillingPage() {
       <Card className="border-border shadow-sm">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-6 space-y-3">
+            <div className="p-4 sm:p-6 space-y-3">
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
@@ -559,7 +559,9 @@ export default function BillingPage() {
               </EmptyHeader>
             </Empty>
           ) : (
-            <div className="overflow-x-auto -mx-6 px-6">
+            <>
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden overflow-x-auto -mx-6 px-6 md:block">
             <Table className="min-w-[720px]">
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -685,6 +687,118 @@ export default function BillingPage() {
               </TableBody>
             </Table>
             </div>
+
+            {/* Mobile card list — visible only on small screens */}
+            <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+              {sortedItems.map((b) => {
+                const isSelected = selectedIds.has(b.billId);
+                return (
+                  <article
+                    key={b.billId}
+                    className={`overflow-hidden rounded-2xl border bg-card shadow-2xs transition-colors ${
+                      isSelected ? "border-primary/50 ring-1 ring-primary/30" : "border-border"
+                    }`}
+                  >
+                    {/* Header: select + patient + total */}
+                    <div className="flex items-center gap-2.5 p-3.5 pb-2.5">
+                      {visibleColumns.select && (
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) => handleToggleSelectRow(b.billId, !!checked)}
+                          aria-label={`Select ${b.billNumber}`}
+                        />
+                      )}
+                      <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={b.patientId} name={b.patientName || "Unknown Patient"} size="md" />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-foreground">
+                          {b.patientName || "Unknown Patient"}
+                        </p>
+                        {visibleColumns.billNumber && (
+                          <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">
+                            {b.billNumber}
+                          </p>
+                        )}
+                      </div>
+                      {visibleColumns.total && (
+                        <span className="shrink-0 text-sm font-extrabold text-foreground tabular-nums">
+                          {formatINR(b.total)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Meta: date · items */}
+                    <div className="px-3.5">
+                      <p className="truncate text-[11px] text-muted-foreground tabular-nums">
+                        {visibleColumns.createdAt ? formatDate(b.createdAt) : ""}
+                        {visibleColumns.createdAt && visibleColumns.itemsCount ? " · " : ""}
+                        {visibleColumns.itemsCount ? `${(b.items ?? []).length} item${(b.items ?? []).length === 1 ? "" : "s"}` : ""}
+                      </p>
+                    </div>
+
+                    {/* Footer: status + actions */}
+                    <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 border-t border-border/60 px-3.5 py-2.5">
+                      {visibleColumns.status && (
+                        b.status === "void" ? (
+                          <Badge variant="outline" className={STATUS_CLASS.void}>void</Badge>
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="flex h-8 min-w-28 items-center justify-between rounded-lg border border-input px-2 text-xs font-semibold">
+                              {b.status} <ChevronDown className="size-3 opacity-50" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-28">
+                              {(["draft","issued","paid"] as const).map((s) => (
+                                <DropdownMenuItem key={s} onClick={() => handleStatus(b, s)}>{s}</DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl text-muted-foreground"
+                          aria-label="Download PDF"
+                          onClick={() => handleDownloadPdf(b)}
+                        >
+                          <Download className="size-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl text-muted-foreground"
+                          aria-label="View" title="View"
+                          onClick={() => setViewing(b)}
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
+                          aria-label="Edit" title="Edit"
+                          onClick={() => setEditing(b)}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        {b.status !== "void" && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
+                            aria-label="Void" title="Void"
+                            onClick={() => setVoidTarget(b)}
+                          >
+                            <Trash className="size-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+            </>
           )}
 
           {/* Pagination Footer */}
@@ -887,12 +1001,12 @@ function BillForm({
   }
 
   const sectionTitle = "text-sm font-semibold text-foreground flex items-center gap-2";
-  const sectionCard = "rounded-xl border border-border bg-card p-5 shadow-sm";
+  const sectionCard = "rounded-xl border border-border bg-card p-4 shadow-sm sm:p-5";
   const fieldLabel = "text-xs font-medium text-muted-foreground mb-1";
 
   return (
-    <form onSubmit={submit} className="space-y-6">
-      <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
+    <form onSubmit={submit} className="space-y-4 sm:space-y-6">
+      <fieldset disabled={readOnly} className="space-y-4 border-0 p-0 m-0 sm:space-y-6">
         {/* ── 1. Bill Information ── */}
         <section className={sectionCard}>
           <header className="mb-4 flex items-center gap-2 border-b border-border pb-3">
@@ -985,7 +1099,8 @@ function BillForm({
 
 
 
-          <div className="overflow-x-auto rounded-lg border border-border">
+          {/* Desktop items table */}
+          <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
@@ -1094,6 +1209,104 @@ function BillForm({
                 ))}
               </TableBody>
             </Table>
+          </div>
+
+          {/* Mobile item cards */}
+          <div className="space-y-2.5 md:hidden">
+            {items.map((it, i) => (
+              <div key={i} className="space-y-2 rounded-xl border border-border bg-background p-3">
+                <div className="flex items-center gap-1.5">
+                  <Input
+                    className="h-10 flex-1"
+                    placeholder="e.g. Consultation"
+                    value={it.description}
+                    onChange={(e) => setItem(i, { description: e.target.value })}
+                  />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-input bg-transparent">
+                      <ChevronDown className="size-4 opacity-50" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      {COMMON_ITEMS.map((name) => (
+                        <DropdownMenuItem key={name} onClick={() => setItem(i, { description: name })}>{name}</DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                {errors.items?.[i] && (
+                  <p className="text-[11px] text-destructive">{errors.items[i]}</p>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label className="mb-1 text-[11px] font-medium text-muted-foreground">Qty</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      className="h-10"
+                      value={it.quantity}
+                      onChange={(e) => setItem(i, { quantity: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="mb-1 text-[11px] font-medium text-muted-foreground">Unit Price</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="h-10"
+                      placeholder="0.00"
+                      value={it.unitPrice}
+                      onChange={(e) => setItem(i, { unitPrice: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="mb-1 text-[11px] font-medium text-muted-foreground">Discount</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="h-10"
+                      placeholder="0"
+                      value={it.discount}
+                      onChange={(e) => setItem(i, { discount: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label className="mb-1 text-[11px] font-medium text-muted-foreground">Tax %</Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        className="h-10 pr-7"
+                        placeholder="0"
+                        value={it.taxPercent}
+                        onChange={(e) => setItem(i, { taxPercent: e.target.value })}
+                      />
+                      <span className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-xs text-muted-foreground">
+                        %
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between border-t border-border/60 pt-2">
+                  <span className="text-sm font-bold tabular-nums text-foreground">
+                    {formatINR(computed[i].lineTotal)}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => removeItem(i)}
+                  >
+                    <Trash className="size-3.5" /> Remove
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
 
           <div className="mt-3 flex items-center gap-2">
@@ -1240,18 +1453,18 @@ function BillForm({
 
       {/* Actions */}
       {!readOnly && (
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
-            className="h-10 gap-1.5"
+            className="h-10 w-full justify-center gap-1.5 sm:w-auto"
             onClick={resetForm}
             disabled={saving}
           >
             <RotateCcw className="size-4" />
             Reset
           </Button>
-          <Button type="submit" className="h-10 gap-1.5" disabled={saving}>
+          <Button type="submit" className="h-10 w-full justify-center gap-1.5 sm:w-auto" disabled={saving}>
             {saving ? (
               <>
                 <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
