@@ -323,14 +323,14 @@ export default function ExaminationPage() {
           </Button>
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
             {mode === "create"
               ? "New Examination"
               : mode === "edit"
                 ? "Edit Examination"
                 : "View Examination"}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
             {mode === "view"
               ? "Read-only examination record."
               : "Select the patient and record the oral findings."}
@@ -341,7 +341,7 @@ export default function ExaminationPage() {
           <CardHeader>
             <CardTitle>Details</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
+          <CardContent className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             <div className="space-y-2">
               <Label>Patient</Label>
               {mode === "create" ? (
@@ -461,10 +461,10 @@ export default function ExaminationPage() {
         {mode === "create" && (
           <Card>
             <CardHeader>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <CardTitle>Investigation</CardTitle>
-                <div className="flex items-center gap-4">
-                  <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+              <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+                <CardTitle className="text-base sm:text-lg">Investigation</CardTitle>
+                <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-4">
+                  <label className="flex cursor-pointer items-center gap-2 text-xs font-medium sm:text-sm">
                     <Checkbox
                       checked={form.includeInvestigation}
                       onCheckedChange={(v) =>
@@ -492,7 +492,7 @@ export default function ExaminationPage() {
               </div>
             </CardHeader>
             {form.showInvestigation && (
-              <CardContent className="grid gap-4 sm:grid-cols-2">
+              <CardContent className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="exam-inv-title">Title</Label>
                   <Input
@@ -610,11 +610,11 @@ export default function ExaminationPage() {
               <CardTitle>Linked investigation</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm font-medium">
+              <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+                <p className="min-w-0 flex-1 truncate text-sm font-medium">
                   {linkedInvTitle ?? screen.record.investigationId}
                 </p>
-                <Button variant="outline" size="sm" render={<a href="/clinic/investigation" />}>
+                <Button variant="outline" size="sm" className="w-full justify-center sm:w-auto" render={<a href="/clinic/investigation" />}>
                   <Eye className="size-4" />
                   Open investigations
                 </Button>
@@ -624,11 +624,11 @@ export default function ExaminationPage() {
         )}
 
         {mode !== "view" && (
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setScreen({ name: "table" })}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button variant="outline" className="w-full justify-center sm:w-auto" onClick={() => setScreen({ name: "table" })}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button className="w-full justify-center sm:w-auto" onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="size-4 animate-spin" />}
               {mode === "create" ? "Save examination" : "Save changes"}
             </Button>
@@ -641,15 +641,15 @@ export default function ExaminationPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Examinations</h1>
-          <p className="text-sm text-muted-foreground">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Examinations</h1>
+          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
             Clinical examinations with oral findings
             {total > 0 ? ` — ${total} total` : ""}.
           </p>
         </div>
         {canManage && (
-          <Button onClick={openCreate}>
+          <Button onClick={openCreate} className="w-full justify-center sm:w-auto">
             <Plus className="size-4" />
             New Examination
           </Button>
@@ -657,7 +657,7 @@ export default function ExaminationPage() {
       </div>
 
       <Card>
-        <CardContent className="flex flex-col gap-3 pt-6 sm:flex-row">
+        <CardContent className="flex flex-col gap-2.5 p-4 sm:flex-row sm:gap-3 sm:p-6">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -705,7 +705,9 @@ export default function ExaminationPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Desktop table — hidden on mobile */}
+            <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -784,6 +786,65 @@ export default function ExaminationPage() {
                 </TableBody>
               </Table>
             </div>
+            {/* Mobile card list — visible only on small screens */}
+            <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
+              {filteredItems.map((item) => (
+                <div key={item.examinationId} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <p className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">
+                      {item.patientName}
+                    </p>
+                    <Badge className={`${ISSUE_BADGE[item.issueType]} shrink-0 text-[10px]`}>
+                      {item.issueType}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{item.oralFindings}</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
+                    {formatDate(item.visitDate)}
+                    {item.investigationId ? " · Linked investigation" : ""}
+                  </p>
+                  <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/60 pt-2">
+                    <Badge className={`${STATUS_BADGE[item.status]} text-[11px]`}>
+                      {item.status}
+                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="size-9 rounded-xl text-muted-foreground"
+                        aria-label="View"
+                        onClick={() => openView(item)}
+                      >
+                        <Eye className="size-4" />
+                      </Button>
+                      {canManage && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
+                          aria-label="Edit"
+                          onClick={() => openEdit(item)}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                      )}
+                      {canDelete && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
+                          aria-label="Delete"
+                          onClick={() => setDeleteTarget(item)}
+                        >
+                          <Trash className="size-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
