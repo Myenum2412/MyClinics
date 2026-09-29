@@ -12,6 +12,7 @@
 .odontogram-root .chart-actions { display: none !important; }
 .odontogram-root .topbar { display: none !important; }
 .odontogram-root #diagnosesSection { display: none !important; }
+.odontogram-root #openCaseDiagnosesBtn { display: none !important; }
 
 /* MyClinic: mobile fit (phones ≤640px) — shrink the 16-tooth grid to screen width. */
 @media (max-width: 640px) {
