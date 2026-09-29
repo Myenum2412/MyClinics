@@ -5,3 +5,21 @@
 /* MyClinic: portal nodes (appended to document.body, outside .odontogram-root)
    need the theme vars in dark mode; light mode is covered by var() fallbacks. */
 .dark .odon-depth-popup,.dark .odon-ctx-menu,.dark .odon-note-backdrop,.dark .odon-zoom-overlay,.dark .odon-export-overlay,.dark .odon-tour-backdrop,.dark .odon-tour-card,.dark .odon-tour-highlight,.dark .odon-settings-backdrop,.dark .odon-confirm-backdrop,.dark .perio-overlay,.dark .perio-info-popover{--bg:var(--odon-bg,#0f172a);--panel:var(--odon-panel,#1e293b);--card:var(--odon-card,#1e293b);--muted:var(--odon-muted,#94a3b8);--text:var(--odon-text,#f1f5f9);--line:var(--odon-line,#334155)}
+
+/* MyClinic: mobile fit (phones ≤640px) — shrink the 16-tooth grid to screen
+   width and remove the icon action row below the chart. Applies to both the
+   examination form and the investigation chart (both import this file). */
+@media (max-width: 640px) {
+  /* 1. Remove the icon buttons below the chart on mobile */
+  .odontogram-root .chart-actions { display: none !important; }
+  /* 2. Fit the tooth grid to the viewport (no horizontal scroll) */
+  .odontogram-root .layout { padding: 8px; gap: 10px; }
+  .odontogram-root .tooth-grid { grid-template-columns: repeat(16, minmax(0, 1fr)) !important; gap: 2px; padding: 6px; }
+  .odontogram-root .tooth-grid .tooth-svg { height: auto !important; }
+  .odontogram-root .tooth-grid .tooth-svg svg { width: 100% !important; height: auto !important; max-height: 88px; }
+  .odontogram-root .tooth-grid .tooth-tile { min-height: 0 !important; }
+  .odontogram-root .tooth-grid .tooth-label-cell { font-size: 9px !important; min-width: 0 !important; min-height: 0 !important; padding: 1px 0; }
+  /* 3. Tighten the stacked control panel below the chart */
+  .odontogram-root .panel-body { padding: 10px; gap: 10px; max-height: none; }
+  .odontogram-root .topbar { padding: 10px 12px; }
+}
