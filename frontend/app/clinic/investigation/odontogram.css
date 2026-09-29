@@ -12,7 +12,11 @@
 @media (max-width: 640px) {
   /* 1. Remove the icon buttons below the chart on mobile */
   .odontogram-root .chart-actions { display: none !important; }
-  /* 2. Fit the tooth grid to the viewport (no horizontal scroll) */
+  /* 2. Remove the topbar row (moon/theme, settings, export/import buttons) on mobile */
+  .odontogram-root .topbar { display: none !important; }
+  /* 3. Remove the "Diagnoses" panel card on mobile */
+  .odontogram-root #diagnosesSection { display: none !important; }
+  /* 4. Fit the tooth grid to the viewport (no horizontal scroll) */
   .odontogram-root .layout { padding: 8px; gap: 10px; }
   .odontogram-root .tooth-grid { grid-template-columns: repeat(16, minmax(0, 1fr)) !important; gap: 2px; padding: 6px; }
   .odontogram-root .tooth-grid .tooth-svg { height: auto !important; }
