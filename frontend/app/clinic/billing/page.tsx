@@ -834,8 +834,6 @@ interface BillFormItem {
   description: string;
   quantity: string;
   unitPrice: string;
-  discount: string;
-  taxPercent: string;
 }
 
 interface BillFormValue {
@@ -855,8 +853,6 @@ const emptyItem = (): BillFormItem => ({
   description: "",
   quantity: "1",
   unitPrice: "",
-  discount: "0",
-  taxPercent: "0",
 });
 
 function BillForm({
@@ -884,8 +880,6 @@ function BillForm({
           description: it.description,
           quantity: String(it.quantity),
           unitPrice: String(it.unitPrice),
-          discount: String(it.discount ?? 0),
-          taxPercent: String(it.taxPercent ?? 0),
         }))
       : [emptyItem()]
   );
@@ -918,18 +912,12 @@ function BillForm({
   const computed = items.map((it) => {
     const qty = Math.max(Number(it.quantity) || 0, 0);
     const price = Math.max(Number(it.unitPrice) || 0, 0);
-    const gross = qty * price;
-    const disc = Math.min(Math.max(Number(it.discount) || 0, 0), gross);
-    const taxable = gross - disc;
-    const taxPct = Math.min(Math.max(Number(it.taxPercent) || 0, 0), 100);
-    const tax = taxable * (taxPct / 100);
-    return { gross, disc, tax, lineTotal: taxable + tax };
+    const lineTotal = qty * price;
+    return { gross: lineTotal, lineTotal };
   });
 
   const subtotal = computed.reduce((s, c) => s + c.gross, 0);
-  const discount = computed.reduce((s, c) => s + c.disc, 0);
-  const taxAmount = computed.reduce((s, c) => s + c.tax, 0);
-  const total = Math.max(subtotal - discount + taxAmount, 0);
+  const total = Math.max(subtotal, 0);
 
   const amountPaidNum = Math.min(Math.max(Number(amountPaid) || 0, 0), total);
   const balanceDue = total - amountPaidNum;
@@ -981,8 +969,8 @@ function BillForm({
       description: it.description.trim(),
       quantity: Number(it.quantity) || 1,
       unitPrice: Math.max(Number(it.unitPrice) || 0, 0),
-      discount: Math.max(Number(it.discount) || 0, 0),
-      taxPercent: Math.min(Math.max(Number(it.taxPercent) || 0, 0), 100),
+      discount: 0,
+      taxPercent: 0,
       lineTotal: 0,
     }));
 
@@ -1107,8 +1095,6 @@ function BillForm({
                   <TableHead className="min-w-44">Description</TableHead>
                   <TableHead className="w-20">Qty</TableHead>
                   <TableHead className="w-24">Unit Price</TableHead>
-                  <TableHead className="w-24">Discount</TableHead>
-                  <TableHead className="w-20">Tax %</TableHead>
                   <TableHead className="w-28 text-right">Amount</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
@@ -1159,34 +1145,6 @@ function BillForm({
                         value={it.unitPrice}
                         onChange={(e) => setItem(i, { unitPrice: e.target.value })}
                       />
-                    </TableCell>
-                    <TableCell className="p-1.5 align-middle">
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        className="h-9"
-                        placeholder="0"
-                        value={it.discount}
-                        onChange={(e) => setItem(i, { discount: e.target.value })}
-                      />
-                    </TableCell>
-                    <TableCell className="p-1.5 align-middle">
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.01"
-                          className="h-9 pr-6"
-                          placeholder="0"
-                          value={it.taxPercent}
-                          onChange={(e) => setItem(i, { taxPercent: e.target.value })}
-                        />
-                        <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-xs text-muted-foreground">
-                          %
-                        </span>
-                      </div>
                     </TableCell>
                     <TableCell className="p-1.5 text-right align-middle">
                       <span className="text-sm font-semibold tabular-nums text-foreground">
@@ -1260,36 +1218,6 @@ function BillForm({
                       onChange={(e) => setItem(i, { unitPrice: e.target.value })}
                     />
                   </div>
-                  <div>
-                    <Label className="mb-1 text-[11px] font-medium text-muted-foreground">Discount</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className="h-10"
-                      placeholder="0"
-                      value={it.discount}
-                      onChange={(e) => setItem(i, { discount: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <Label className="mb-1 text-[11px] font-medium text-muted-foreground">Tax %</Label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
-                        className="h-10 pr-7"
-                        placeholder="0"
-                        value={it.taxPercent}
-                        onChange={(e) => setItem(i, { taxPercent: e.target.value })}
-                      />
-                      <span className="pointer-events-none absolute inset-y-0 right-2.5 flex items-center text-xs text-muted-foreground">
-                        %
-                      </span>
-                    </div>
-                  </div>
                 </div>
                 <div className="flex items-center justify-between border-t border-border/60 pt-2">
                   <span className="text-sm font-bold tabular-nums text-foreground">
@@ -1335,8 +1263,6 @@ function BillForm({
           </header>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <SummaryRow label="Subtotal" value={formatINR(subtotal)} />
-            <SummaryRow label="Discount" value={`- ${formatINR(discount)}`} />
-            <SummaryRow label="Tax" value={formatINR(taxAmount)} />
             <div>
               <Label className={fieldLabel}>Total Amount</Label>
               <div className="flex h-9 items-center rounded-md border border-primary/30 bg-primary/5 px-3 text-sm font-bold text-primary tabular-nums">
