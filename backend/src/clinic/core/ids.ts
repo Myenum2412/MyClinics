@@ -115,6 +115,18 @@ export function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
+/**
+ * Normalizes an Indian/global phone/WhatsApp number to its last 10 digits
+ * (strips country code, spaces, +, dashes). Returns "" when too short to
+ * be a usable login identifier.
+ */
+export function normalizePhone(value: string | null | undefined): string {
+  if (!value) return "";
+  const digits = value.replace(/\D/g, "");
+  if (digits.length < 8) return "";
+  return digits.length > 10 ? digits.slice(-10) : digits;
+}
+
 /** Context used by the audit writer for system/tenantless actions. */
 export function systemContext(clinicId?: string): ClinicContext | null {
   return clinicId

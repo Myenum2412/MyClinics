@@ -1084,7 +1084,7 @@ export default function PatientsPage() {
                   <Mail className="size-4" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Portal Login (Email)</p>
+                  <p className="text-xs text-muted-foreground">Portal Login (Mobile / WhatsApp number)</p>
                   <p className="truncate text-sm font-medium text-foreground">{credentials.email}</p>
                 </div>
               </div>

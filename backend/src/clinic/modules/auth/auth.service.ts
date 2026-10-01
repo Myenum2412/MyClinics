@@ -10,6 +10,7 @@ import {
   generateClinicId,
   generateUserId,
   normalizeEmail,
+  normalizePhone,
   slugify,
 } from "@/clinic/core/ids";
 import {
@@ -216,7 +217,33 @@ export class AuthService {
   }
 
   async login(input: LoginInput, meta: { ip: string | null; userAgent: string | null }) {
-    const email = normalizeEmail(input.email);
+    // Accepts either an email or a mobile/WhatsApp number as the identifier.
+    // Legacy clients send { email }; newer clients send { identifier }.
+    const rawIdentifier = (input.identifier ?? (input as { email?: string }).email ?? "").trim();
+    if (rawIdentifier.includes("@")) {
+      return this.loginWithEmail(normalizeEmail(rawIdentifier), input.password, meta, input.clinicId ?? null);
+    }
+    const phoneKey = normalizePhone(rawIdentifier);
+    if (!phoneKey) {
+      void writeAudit(this.db, null, {
+        action: "login_failed",
+        entity: "user",
+        entityId: null,
+        metadata: { identifier: rawIdentifier, reason: "bad_identifier" },
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+      }).catch(()=>{});
+      throw new UnauthorizedError("Invalid email or WhatsApp number");
+    }
+    return this.loginWithPhone(phoneKey, rawIdentifier, input.password, meta, input.clinicId ?? null);
+  }
+
+  private async loginWithEmail(
+    email: string,
+    password: string,
+    meta: { ip: string | null; userAgent: string | null },
+    _clinicId: string | null
+  ) {
     const user = await this.repo.findUserByEmail(email);
     if (!user) {
       void writeAudit(this.db, null, {
@@ -243,7 +270,7 @@ export class AuthService {
       );
     }
 
-    const valid = await bcrypt.compare(input.password, user.passwordHash);
+    const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) {
       void writeAudit(this.db, userToCtx(user), {
         action: "login_failed",
@@ -256,10 +283,150 @@ export class AuthService {
       throw new UnauthorizedError("Invalid email or password");
     }
 
+    return this.finishLogin(user, meta);
+  }
+
+  /**
+   * Patient/staff dashboard login with a mobile or WhatsApp number + password.
+   *
+   * Resolution order:
+   *   1. users.phone (portal accounts store the patient's mobile there)
+   *   2. patients.mobile / patients.whatsapp -> linked users.patientId account
+   * Numbers are compared by last-10 digits so +91, spaces and dashes all match.
+   * When several accounts share one number (family contact) and share the
+   * same password, `clinicId` disambiguates; otherwise login asks for email.
+   */
+  private async loginWithPhone(
+    phoneKey: string,
+    rawIdentifier: string,
+    password: string,
+    meta: { ip: string | null; userAgent: string | null },
+    clinicId: string | null
+  ) {
+    const candidates = new Map<string, UserDoc>();
+
+    // 1) Direct portal-account phone match.
+    try {
+      const byPhone = await this.repo.findUserCandidatesByPhone(phoneKey);
+      for (const u of byPhone) {
+        if (normalizePhone(u.phone) === phoneKey && u.userId) {
+          candidates.set(u.userId, u);
+        }
+      }
+    } catch {
+      // candidate lookup must never block login
+    }
+
+    // 2) Patient-profile fallback: mobile / whatsapp -> linked portal user.
+    // Covers accounts where user.phone differs from patient.whatsapp.
+    try {
+      const { CLINIC_COLLECTIONS } = await import("@/clinic/core/collections");
+      const patients = await this.db
+        .collection(CLINIC_COLLECTIONS.patients)
+        .find({
+          $or: [{ mobile: { $regex: phoneKey } }, { whatsapp: { $regex: phoneKey } }],
+        })
+        .limit(50)
+        .toArray();
+      const { normalizePhone: norm } = await import("@/clinic/core/ids");
+      const matched = patients.filter(
+        (p: Record<string, unknown>) =>
+          norm(p.mobile as string) === phoneKey || norm(p.whatsapp as string | null) === phoneKey
+      );
+      const userIds = matched
+        .map((p: Record<string, unknown>) => p.userId as string | null)
+        .filter((v): v is string => typeof v === "string" && v.length > 0);
+      for (const userId of userIds) {
+        if (candidates.has(userId)) continue;
+        const u = await this.repo.findUserById(userId);
+        if (u) candidates.set(u.userId, u);
+      }
+    } catch {
+      // patient fallback is best-effort
+    }
+
+    let pool = [...candidates.values()];
+    if (clinicId) {
+      const scoped = pool.filter((u) => u.clinicId === clinicId);
+      if (scoped.length > 0) pool = scoped;
+    }
+
+    if (pool.length === 0) {
+      void writeAudit(this.db, null, {
+        action: "login_failed",
+        entity: "user",
+        entityId: null,
+        metadata: { phone: rawIdentifier, reason: "no_account" },
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+      }).catch(()=>{});
+      throw new UnauthorizedError("Invalid WhatsApp number or password");
+    }
+
+    // Several portal accounts may share one family number — try each
+    // password until one matches (timing-safe per account via bcrypt).
+    const passwordMatches: UserDoc[] = [];
+    for (const user of pool) {
+      if (user.authProvider === "google" || typeof user.passwordHash !== "string") continue;
+      try {
+        if (await bcrypt.compare(password, user.passwordHash)) passwordMatches.push(user);
+      } catch {
+        // ignore a single bad hash
+      }
+    }
+
+    if (passwordMatches.length === 0) {
+      const first = pool[0];
+      const googleOnly = pool.every(
+        (u) => u.authProvider === "google" || typeof u.passwordHash !== "string"
+      );
+      void writeAudit(this.db, userToCtx(first), {
+        action: "login_failed",
+        entity: "user",
+        entityId: first.userId,
+        metadata: { phone: rawIdentifier, reason: googleOnly ? "google_only_account" : "bad_password" },
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+      }).catch(()=>{});
+      throw new UnauthorizedError(
+        googleOnly
+          ? "This account uses Google sign-in — click Continue with Google"
+          : "Invalid WhatsApp number or password"
+      );
+    }
+
+    if (passwordMatches.length > 1 && !clinicId) {
+      void writeAudit(this.db, userToCtx(passwordMatches[0]), {
+        action: "login_failed",
+        entity: "user",
+        entityId: passwordMatches[0].userId,
+        metadata: { phone: rawIdentifier, reason: "ambiguous_phone" },
+        ip: meta.ip,
+        userAgent: meta.userAgent,
+      }).catch(()=>{});
+      throw new UnauthorizedError(
+        "Several accounts share this number — please log in with your email instead"
+      );
+    }
+
+    const user = (clinicId
+      ? passwordMatches.find((u) => u.clinicId === clinicId)
+      : passwordMatches[0]) ?? passwordMatches[0];
+
     if (user.status !== "active") {
       throw new UnauthorizedError("This account has been deactivated");
     }
 
+    return this.finishLogin(user, meta);
+  }
+
+  private async finishLogin(
+    user: UserDoc,
+    meta: { ip: string | null; userAgent: string | null }
+  ) {
+    if (user.status !== "active") {
+      throw new UnauthorizedError("This account has been deactivated");
+    }
     let clinicName: string | null = null;
     if (user.role !== "platform_admin" && user.clinicId) {
       const clinic = await this.repo.findClinicByClinicId(user.clinicId);

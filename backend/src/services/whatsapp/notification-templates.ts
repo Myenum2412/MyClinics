@@ -230,7 +230,7 @@ Password: {Password}`,
     recipient: "Patient",
     description: "Sent when a patient's portal login is reset or resent.",
     sample: `Hi {Patient First Name}, your patient portal login for *{Clinic Name}* has been reset.
-Email: {Email}
+Username (mobile/WhatsApp number): {Username}
 Password: {Password}`,
   },
   {

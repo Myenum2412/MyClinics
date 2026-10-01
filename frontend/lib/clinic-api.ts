@@ -764,12 +764,22 @@ export async function signupClinicGoogle(input: {
 }
 
 export async function login(input: {
-  email: string;
+  email?: string;
+  identifier?: string;
   password: string;
+  clinicId?: string;
 }): Promise<LoginResponse> {
+  // Backward compat: older callers pass { email }. The backend accepts
+  // either { email } or { identifier } where identifier is an email or a
+  // mobile/WhatsApp number.
+  const body: Record<string, string> =
+    input.identifier != null || input.email == null
+      ? { identifier: (input.identifier ?? input.email ?? "").trim(), password: input.password }
+      : { email: (input.email ?? "").trim(), password: input.password };
+  if (input.clinicId) body.clinicId = input.clinicId;
   const result = await request<LoginResponse>("/api/clinics/auth/login", {
     method: "POST",
-    body: JSON.stringify(input),
+    body: JSON.stringify(body),
   });
   setToken(result.token, result.tokenExpiresInSeconds);
   return result;

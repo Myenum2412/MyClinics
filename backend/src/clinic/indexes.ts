@@ -61,6 +61,9 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     // ── Users (accounts) ─────────────────────────────────────────────────
     users.createIndex({ email: 1 }, { unique: true }),
     users.createIndex({ userId: 1 }, { unique: true }),
+    // WhatsApp-number login: portal accounts are resolved via users.phone
+    // (exact digits vary, so the service re-checks last-10 in JS).
+    users.createIndex({ phone: 1 }),
     users.createIndex({ clinicId: 1, role: 1, status: 1 }),
     users.createIndex({ clinicId: 1, createdAt: -1 }),
     // Only one doctor/staff/patient profile linked per account per clinic.
@@ -107,6 +110,7 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     ),
     patients.createIndex({ clinicId: 1, doctorId: 1, status: 1, createdAt: -1 }),
     patients.createIndex({ clinicId: 1, mobile: 1 }),
+    patients.createIndex({ clinicId: 1, whatsapp: 1 }),
     patients.createIndex({ clinicId: 1, fullName: 1 }),
     patients.createIndex({ clinicId: 1, email: 1 }),
 

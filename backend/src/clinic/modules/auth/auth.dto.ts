@@ -36,8 +36,18 @@ export const googleSignupSchema = z.object({
 export type GoogleSignupInput = z.infer<typeof googleSignupSchema>;
 
 export const loginSchema = z.object({
-  email: emailSchema,
+  // Legacy email-only field (kept for backward compat).
+  email: emailSchema.optional(),
+  // Preferred login identifier: email OR mobile/WhatsApp number.
+  identifier: z.string().trim().min(1, "Email or WhatsApp number is required").max(150).optional(),
   password: z.string().min(1, "Password is required").max(200),
+  // Optional disambiguator when several portal accounts share one number
+  // (e.g. a family contact). When omitted and several accounts match the
+  // same number + password, login asks for email instead.
+  clinicId: z.string().trim().min(1).max(80).optional(),
+}).refine((v) => Boolean(v.email || v.identifier), {
+  message: "Email or WhatsApp number is required",
+  path: ["identifier"],
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

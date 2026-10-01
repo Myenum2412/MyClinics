@@ -12,6 +12,22 @@ export class AuthRepository {
       .findOne({ email });
   }
 
+  /**
+   * Candidate portal accounts whose stored phone ends with the given
+   * normalized digits. Phones are stored inconsistently (raw, +91 prefixed,
+   * spaced), so callers MUST re-check with `normalizePhone` in JS and pick
+   * the exact last-10 match. Capped to avoid full-collection scans.
+   */
+  async findUserCandidatesByPhone(last10: string): Promise<UserDoc[]> {
+    if (!last10) return [];
+    const escaped = last10.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return this.db
+      .collection<UserDoc>(CLINIC_COLLECTIONS.users)
+      .find({ phone: { $regex: escaped } })
+      .limit(100)
+      .toArray();
+  }
+
   findUserById(userId: string): Promise<UserDoc | null> {
     return this.db
       .collection<UserDoc>(CLINIC_COLLECTIONS.users)

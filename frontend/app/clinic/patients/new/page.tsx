@@ -147,7 +147,7 @@ export default function NewPatientPage() {
         setCreatedPatient({
           patientId: created.patientId,
           fullName: created.fullName,
-          email: form.email.trim(),
+          email: form.email.trim() || created.whatsapp || created.mobile || created.email || "",
           password: form.password,
           loginNotification: form.loginNotification,
         });
@@ -251,7 +251,7 @@ export default function NewPatientPage() {
                   <Mail className="size-4" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-xs text-muted-foreground">Portal Login (Email)</p>
+                  <p className="text-xs text-muted-foreground">Portal Login (Email or WhatsApp)</p>
                   <p className="truncate text-sm font-medium text-foreground">
                     {createdPatient.email}
                   </p>

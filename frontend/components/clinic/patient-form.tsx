@@ -394,9 +394,10 @@ export function PatientForm({
     }
 
     if (portalEnabled) {
-      if (!form.email.trim()) {
-        newErrors.email = "Email is required to enable portal access";
-      } else if (!validateEmail(form.email)) {
+      // Email is fully optional — the mobile number is the mandatory
+      // identifier and doubles as the portal login (WhatsApp number + password).
+      // Only the format is validated when an email is provided.
+      if (form.email.trim() && !validateEmail(form.email)) {
         newErrors.email = "Enter a valid email address";
       }
       if (isCreateMode) {
@@ -766,8 +767,8 @@ export function PatientForm({
             placeholder="john@example.com"
             helperText={
               portalEnabled
-                ? "Required — this is the patient's portal login username"
-                : undefined
+                ? "Optional — mobile number is the login ID; patient signs in with mobile/WhatsApp number + password"
+                : "Optional"
             }
             disabled={isViewMode}
           />

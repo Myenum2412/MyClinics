@@ -41,7 +41,7 @@ export function LoginForm({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -71,7 +71,11 @@ export function LoginForm({
     setError("");
 
     try {
-      const result = await login({ email, password });
+      const value = identifier.trim();
+      const body = value.includes("@")
+        ? { email: value, password }
+        : { identifier: value, password };
+      const result = await login(body);
       const destination =
         result.role === "platform_admin" ? "/orgmenu" : result.role === "patient" ? "/clinic/patient" : "/clinic";
       const safeCallback =
@@ -117,17 +121,21 @@ export function LoginForm({
 
           <Field>
             <FieldLabel htmlFor="email" className="text-black font-medium">
-              Email
+              Email or WhatsApp number
             </FieldLabel>
             <Input
               id="email"
-              type="email"
-              placeholder="m@example.com"
+              type="text"
+              placeholder="m@example.com or 98765 43210"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              autoComplete="username"
               className="bg-white! text-black placeholder:text-gray-400 border-gray-300 focus-visible:ring-[#2196F3]"
             />
+            <p className="text-xs text-black/60">
+              Patients can sign in with either their email or their WhatsApp number.
+            </p>
           </Field>
 
           <Field>

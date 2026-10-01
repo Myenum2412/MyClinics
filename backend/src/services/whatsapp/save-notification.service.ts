@@ -242,7 +242,8 @@ async function sendWelcomeMessageWithDocuments(
       ``,
       `🔐 *Patient Portal Login:*`,
       `  👤 Username: ${credentials.username}`,
-      `  🔑 Password: ${credentials.password}`
+      `  🔑 Password: ${credentials.password}`,
+      `  💡 Tip: you can log in with your email or this WhatsApp number.`
     );
   }
 
@@ -395,8 +396,13 @@ export async function notifyPatientCredentials(
     phone,
     [
       `Hi ${firstName(user)}, your patient portal login for *${clinicName}* has been reset.`,
-      `Email: ${user.email}`,
+      // Mobile is the login ID: when the account email is an auto-derived
+      // placeholder, show the WhatsApp number as the username instead.
+      typeof user.email === "string" && user.email.endsWith("@patient.mc")
+        ? `Username (WhatsApp number): ${user.whatsapp ?? user.phone ?? user.email}`
+        : `Username: ${user.email}`,
       `Password: ${user.password}`,
+      `Tip: you can log in with your mobile/WhatsApp number + password.`,
     ].join("\n"),
     "patient_credentials",
     undefined,
