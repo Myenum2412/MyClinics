@@ -36,6 +36,14 @@ export const createExaminationSchema = z.object({
     .min(2, "Oral findings are required")
     .max(5000),
   notes: optionalString(5000),
+  /** Medical history captured at examination time (moved here from patient registration). */
+  allergies: optionalString(2000),
+  medicalConditions: optionalString(2000),
+  previousSurgeries: optionalString(2000),
+  currentMedications: optionalString(2000),
+  patientHistory: optionalString(2000),
+  familyHistory: optionalString(2000),
+  habits: optionalString(2000),
 });
 
 export type CreateExaminationInput = z.infer<

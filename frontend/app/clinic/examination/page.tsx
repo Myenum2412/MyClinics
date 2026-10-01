@@ -97,6 +97,14 @@ interface FormState {
   issueType: IssueType | "";
   oralFindings: string;
   notes: string;
+  // Medical history (moved here from patient registration).
+  allergies: string;
+  medicalConditions: string;
+  previousSurgeries: string;
+  currentMedications: string;
+  patientHistory: string;
+  familyHistory: string;
+  habits: string;
   // Embedded investigation form (create mode only).
   includeInvestigation: boolean;
   showInvestigation: boolean;
@@ -115,6 +123,13 @@ function emptyForm(): FormState {
     issueType: "",
     oralFindings: "",
     notes: "",
+    allergies: "",
+    medicalConditions: "",
+    previousSurgeries: "",
+    currentMedications: "",
+    patientHistory: "",
+    familyHistory: "",
+    habits: "",
     includeInvestigation: true,
     showInvestigation: true,
     invTitle: "",
@@ -205,6 +220,13 @@ export default function ExaminationPage() {
       issueType: record.issueType,
       oralFindings: record.oralFindings,
       notes: record.notes ?? "",
+      allergies: record.allergies ?? "",
+      medicalConditions: record.medicalConditions ?? "",
+      previousSurgeries: record.previousSurgeries ?? "",
+      currentMedications: record.currentMedications ?? "",
+      patientHistory: record.patientHistory ?? "",
+      familyHistory: record.familyHistory ?? "",
+      habits: record.habits ?? "",
       includeInvestigation: false,
     });
     setLinkedInvTitle(null);
@@ -248,6 +270,13 @@ export default function ExaminationPage() {
         issueType: form.issueType,
         oralFindings: form.oralFindings.trim(),
         notes: form.notes.trim() || null,
+        allergies: form.allergies.trim() || null,
+        medicalConditions: form.medicalConditions.trim() || null,
+        previousSurgeries: form.previousSurgeries.trim() || null,
+        currentMedications: form.currentMedications.trim() || null,
+        patientHistory: form.patientHistory.trim() || null,
+        familyHistory: form.familyHistory.trim() || null,
+        habits: form.habits.trim() || null,
       };
       if (screen.mode === "create") {
         payload.patientId = form.patientId;
@@ -452,6 +481,98 @@ export default function ExaminationPage() {
                   setForm((f) => ({ ...f, notes: e.target.value }))
                 }
                 placeholder="Additional notes for this examination…"
+                disabled={readOnly}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Medical Information</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="exam-allergies">Known allergies</Label>
+              <Input
+                id="exam-allergies"
+                value={readOnly ? (screen.record.allergies ?? "") : form.allergies}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, allergies: e.target.value }))
+                }
+                placeholder="Penicillin, Nuts (comma-separated)"
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-conditions">Medical conditions</Label>
+              <Textarea
+                id="exam-conditions"
+                value={readOnly ? (screen.record.medicalConditions ?? "") : form.medicalConditions}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, medicalConditions: e.target.value }))
+                }
+                placeholder="Diabetes, Hypertension…"
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-surgeries">Previous surgeries / hospitalizations</Label>
+              <Textarea
+                id="exam-surgeries"
+                value={readOnly ? (screen.record.previousSurgeries ?? "") : form.previousSurgeries}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, previousSurgeries: e.target.value }))
+                }
+                placeholder="Appendectomy (2015)…"
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-meds">Current medications</Label>
+              <Textarea
+                id="exam-meds"
+                value={readOnly ? (screen.record.currentMedications ?? "") : form.currentMedications}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, currentMedications: e.target.value }))
+                }
+                placeholder="Aspirin 500mg (daily)…"
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-history">Patient history</Label>
+              <Textarea
+                id="exam-history"
+                value={readOnly ? (screen.record.patientHistory ?? "") : form.patientHistory}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, patientHistory: e.target.value }))
+                }
+                placeholder="Past illnesses, treatments, hospitalizations…"
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-family">Family history</Label>
+              <Textarea
+                id="exam-family"
+                value={readOnly ? (screen.record.familyHistory ?? "") : form.familyHistory}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, familyHistory: e.target.value }))
+                }
+                placeholder="Diabetes, heart disease in family…"
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-habits">Habits</Label>
+              <Textarea
+                id="exam-habits"
+                value={readOnly ? (screen.record.habits ?? "") : form.habits}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, habits: e.target.value }))
+                }
+                placeholder="Smoking, alcohol, diet, exercise…"
                 disabled={readOnly}
               />
             </div>

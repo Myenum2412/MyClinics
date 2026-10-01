@@ -115,6 +115,8 @@ export interface PatientFormState {
   doctorId: string | null;
   password: string;
   confirmPassword: string;
+  /** Typeable age (years) — convenience input that auto-fills dateOfBirth. */
+  age: string;
   portalAccess: "enable" | "disable";
   loginNotification: "whatsapp" | "email" | "none";
   attachments: AttachmentFile[];
@@ -168,6 +170,7 @@ export const EMPTY_FORM: PatientFormState = {
   doctorId: null,
   password: "",
   confirmPassword: "",
+  age: "",
   portalAccess: "enable",
   loginNotification: "none",
   attachments: [],
@@ -353,6 +356,11 @@ export function PatientForm({
     if (!merged.hpi) {
       merged.hpi = { presentingComplaint: "", onset: "", durationValue: "", durationUnit: "", progression: "", symptoms: "", aggravatingFactors: "", relievingFactors: "", associatedSymptoms: "", previousTreatment: "", additionalNotes: "" };
     }
+    // Prefill the typeable age from an existing date of birth (edit mode).
+    if (!merged.age && merged.dateOfBirth) {
+      const a = calculateAge(merged.dateOfBirth);
+      if (a !== null) merged.age = String(a);
+    }
     return merged;
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -383,8 +391,18 @@ export function PatientForm({
     if (!form.gender) {
       newErrors.gender = "Gender is required";
     }
-    if (!form.dateOfBirth) {
-      newErrors.dateOfBirth = "Date of birth is required";
+    // Date of birth is optional — staff may enter just the age instead.
+    if (form.dateOfBirth) {
+      const d = new Date(`${form.dateOfBirth}T00:00:00`);
+      if (Number.isNaN(d.getTime()) || d.getTime() > now().getTime()) {
+        newErrors.dateOfBirth = "Enter a valid date of birth";
+      }
+    }
+    if (form.age.trim()) {
+      const n = Number(form.age.trim());
+      if (!/^\d{1,3}$/.test(form.age.trim()) || n > 150) {
+        newErrors.age = "Enter a valid age (0–150)";
+      }
     }
     if (!form.address.trim()) {
       newErrors.address = "Full address is required";
@@ -466,6 +484,46 @@ export function PatientForm({
     }
   };
 
+  /** Typing an age auto-fills date of birth (same month/day, year shifted). */
+  const handleAgeChange = (v: string) => {
+    const digits = v.replace(/\D/g, "").slice(0, 3);
+    setForm((prev) => {
+      let dob = prev.dateOfBirth;
+      if (digits) {
+        const ageNum = parseInt(digits, 10);
+        if (ageNum <= 150) {
+          const [ty, tm, td] = toLocalDateISO(now()).split("-").map(Number);
+          dob = `${ty - ageNum}-${String(tm).padStart(2, "0")}-${String(td).padStart(2, "0")}`;
+        }
+      }
+      return { ...prev, age: digits, dateOfBirth: dob };
+    });
+    setErrors((prev) => {
+      if (!prev.age && !prev.dateOfBirth) return prev;
+      const next = { ...prev };
+      delete next.age;
+      delete next.dateOfBirth;
+      return next;
+    });
+  };
+
+  /** Picking a date of birth syncs the typeable age field. */
+  const handleDobChange = (v: string) => {
+    const a = v ? calculateAge(v) : null;
+    setForm((prev) => ({
+      ...prev,
+      dateOfBirth: v,
+      age: a !== null ? String(a) : v ? prev.age : "",
+    }));
+    setErrors((prev) => {
+      if (!prev.age && !prev.dateOfBirth) return prev;
+      const next = { ...prev };
+      delete next.age;
+      delete next.dateOfBirth;
+      return next;
+    });
+  };
+
   const handleProfileImage = (file: File | null) => {
     if (!file) return;
     if (!["image/jpeg", "image/png"].includes(file.type)) {
@@ -515,6 +573,7 @@ export function PatientForm({
             {renderViewField("Email", form.email)}
             {renderViewField("Gender", form.gender ? form.gender.charAt(0).toUpperCase() + form.gender.slice(1) : "—")}
             {renderViewField("Date of Birth", form.dateOfBirth)}
+            {renderViewField("Age", form.age || (calculatedAge !== null ? String(calculatedAge) : null))}
             {renderViewField("Blood Group", form.bloodGroup)}
             {renderViewField("Height (cm)", form.height)}
             {renderViewField("Weight (kg)", form.weight)}
@@ -544,19 +603,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="4. Medical Information">
-          <div className="space-y-4">
-            {renderViewField("Known Allergies", form.allergies)}
-            {renderViewField("Medical Conditions", form.medicalConditions)}
-            {renderViewField("Previous Surgeries / Hospitalizations", form.previousSurgeries)}
-            {renderViewField("Current Medications", form.currentMedications)}
-            {renderViewField("Patient History", form.patientHistory)}
-            {renderViewField("Family History", form.familyHistory)}
-            {renderViewField("Habits", form.habits)}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="5. Chief Complaint">
+        <SectionCard title="4. Chief Complaint">
           <div className="space-y-4">
             {form.chiefComplaints.map((c, idx) => (
               <div key={idx} className="rounded-lg border border-border/60 p-3 bg-muted/20 space-y-3">
@@ -571,7 +618,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="6. History of Presenting Illness">
+        <SectionCard title="5. History of Presenting Illness">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("Presenting Complaint", form.hpi.presentingComplaint)}
             {renderViewField("Onset", form.hpi.onset)}
@@ -588,14 +635,14 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="7. Identification">
+        <SectionCard title="6. Identification">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("ID Proof Type", form.idType)}
             {renderViewField("ID Number", form.idNumber)}
           </div>
         </SectionCard>
 
-        <SectionCard title="8. Vital Signs">
+        <SectionCard title="7. Vital Signs">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("Blood Pressure", form.bloodPressure ? `${form.bloodPressure} mmHg` : "—")}
             {renderViewField("Temperature", form.temperature ? `${form.temperature} °C` : "—")}
@@ -605,7 +652,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="9. Account & Portal Access">
+        <SectionCard title="8. Account & Portal Access">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField(
               "Assigned Doctor",
@@ -618,7 +665,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="10. Additional Information">
+        <SectionCard title="9. Additional Information">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("Referred By", form.referredBy)}
             {renderViewField("How Did You Hear About Us?", form.howDidYouHear)}
@@ -629,7 +676,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="11. Attachments">
+        <SectionCard title="10. Attachments">
           <div className="space-y-2">
             <Label className="text-sm font-medium text-foreground">Uploaded Documents</Label>
             <div className="text-foreground">
@@ -797,18 +844,21 @@ export function PatientForm({
             name="dateOfBirth"
             type="date"
             value={form.dateOfBirth}
-            onChange={(v) => handleChange("dateOfBirth", v)}
+            onChange={handleDobChange}
             error={errors.dateOfBirth}
-            required
+            helperText="Optional if age is entered"
             disabled={isViewMode}
           />
           <FormField
-            label="Age (Auto-calculated)"
+            label="Age"
             name="age"
-            type="text"
-            value={calculatedAge !== null ? calculatedAge : ""}
-            disabled
-            placeholder="Age"
+            type="number"
+            value={form.age}
+            onChange={handleAgeChange}
+            error={errors.age}
+            disabled={isViewMode}
+            placeholder="e.g. 30"
+            helperText="Type the age to auto-fill date of birth"
           />
           <FormField
             label="Blood Group"
@@ -976,119 +1026,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="4. Medical Information"
-        description="Shared with the assigned doctor for prescriptions and consultations"
-      >
-        <FormField
-          label="Known Allergies"
-          name="allergies"
-          value={form.allergies}
-          onChange={(v) => handleChange("allergies", v)}
-          placeholder="Penicillin, Nuts (comma-separated)"
-          helperText="Enter multiple allergies separated by commas"
-          disabled={isViewMode}
-        />
-        <FormField
-          label="Medical Conditions"
-          name="medicalConditions"
-          value={form.medicalConditions}
-          onChange={(v) => handleChange("medicalConditions", v)}
-          placeholder="Diabetes, Hypertension (comma-separated)"
-          helperText="Enter multiple conditions separated by commas"
-          disabled={isViewMode}
-        />
-        <FormField
-          label="Previous Surgeries / Hospitalizations"
-          name="previousSurgeries"
-          value={form.previousSurgeries}
-          onChange={(v) => handleChange("previousSurgeries", v)}
-          placeholder="Appendectomy (2015), Fracture treatment (2018)"
-          disabled={isViewMode}
-        >
-          <Textarea
-            value={form.previousSurgeries}
-            onChange={(e) => handleChange("previousSurgeries", e.target.value)}
-            placeholder="Describe any previous surgeries or hospitalizations"
-            rows={2}
-            className="h-10 w-full border-border font-normal"
-            disabled={isViewMode}
-          />
-        </FormField>
-        <FormField
-          label="Current Medications"
-          name="currentMedications"
-          value={form.currentMedications}
-          onChange={(v) => handleChange("currentMedications", v)}
-          placeholder="Aspirin 500mg (daily), Lisinopril 10mg (daily)"
-          disabled={isViewMode}
-        >
-          <Textarea
-            value={form.currentMedications}
-            onChange={(e) => handleChange("currentMedications", e.target.value)}
-            placeholder="List current medications with dosages"
-            rows={2}
-            className="h-10 w-full border-border font-normal"
-            disabled={isViewMode}
-          />
-        </FormField>
-        <FormField
-          label="Patient History"
-          name="patientHistory"
-          value={form.patientHistory}
-          onChange={(v) => handleChange("patientHistory", v)}
-          placeholder="Past illnesses, hospitalizations, chronic conditions"
-          helperText="Notes — previous episodes relevant to this patient"
-          disabled={isViewMode}
-        >
-          <Textarea
-            value={form.patientHistory}
-            onChange={(e) => handleChange("patientHistory", e.target.value)}
-            placeholder="Patient history notes — past illnesses, treatments, hospitalizations"
-            rows={2}
-            className="h-10 w-full border-border font-normal"
-            disabled={isViewMode}
-          />
-        </FormField>
-        <FormField
-          label="Family History"
-          name="familyHistory"
-          value={form.familyHistory}
-          onChange={(v) => handleChange("familyHistory", v)}
-          placeholder="Diabetes, Hypertension, Heart disease in family"
-          helperText="Notes — hereditary / family conditions"
-          disabled={isViewMode}
-        >
-          <Textarea
-            value={form.familyHistory}
-            onChange={(e) => handleChange("familyHistory", e.target.value)}
-            placeholder="Family history notes — parents, siblings, hereditary conditions"
-            rows={2}
-            className="h-10 w-full border-border font-normal"
-            disabled={isViewMode}
-          />
-        </FormField>
-        <FormField
-          label="Habits"
-          name="habits"
-          value={form.habits}
-          onChange={(v) => handleChange("habits", v)}
-          placeholder="Smoking, Alcohol, Tobacco, Diet, Exercise (comma-separated)"
-          helperText="e.g. Smoking - occasional, Alcohol - none, Vegetarian"
-          disabled={isViewMode}
-        >
-          <Textarea
-            value={form.habits}
-            onChange={(e) => handleChange("habits", e.target.value)}
-            placeholder="Smoking, Alcohol, Tobacco, Diet, Exercise, Sleep pattern"
-            rows={2}
-            className="h-10 w-full border-border font-normal"
-            disabled={isViewMode}
-          />
-        </FormField>
-      </SectionCard>
-
-      <SectionCard
-        title="5. Chief Complaint"
+        title="4. Chief Complaint"
         description="Primary reason for visit"
         action={
           <Button type="button" variant="outline" size="icon" className="shrink-0 rounded-full" onClick={() => setForm((prev) => ({ ...prev, chiefComplaints: [...prev.chiefComplaints, { complaint: "", duration: "", severity: "", notes: "" }] }))} title="Add another chief complaint">
@@ -1124,7 +1062,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="6. History of Presenting Illness">
+      <SectionCard title="5. History of Presenting Illness">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Presenting Complaint" name="hpi.presentingComplaint" value={form.hpi.presentingComplaint} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, presentingComplaint: v } }))} placeholder="Main complaint" />
           <FormField label="Onset" name="hpi.onset" value={form.hpi.onset} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, onset: v } }))} placeholder="Sudden / Gradual">
@@ -1149,7 +1087,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="7. Identification"
+        title="6. Identification"
         description="Optional — only fill if required by your clinic"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1178,7 +1116,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="8. Vital Signs" description="Optional — captured at registration, editable anytime">
+      <SectionCard title="7. Vital Signs" description="Optional — captured at registration, editable anytime">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             label="Blood Pressure"
@@ -1229,7 +1167,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="9. Account & Portal Access"
+        title="8. Account & Portal Access"
         description="Assign the patient to a doctor and optionally create patient portal credentials"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1362,7 +1300,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="10. Additional Information">
+      <SectionCard title="9. Additional Information">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             label="Referred By"
@@ -1421,7 +1359,7 @@ export function PatientForm({
 
       {!isCreateMode && (
         <SectionCard
-          title="11. Attachments"
+          title="10. Attachments"
           description="Optional - upload patient documents"
         >
         {isViewMode ? (

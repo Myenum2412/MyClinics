@@ -112,6 +112,13 @@ export class ExaminationService {
       investigationId,
       oralFindings: input.oralFindings,
       notes: input.notes ?? null,
+      allergies: input.allergies ?? null,
+      medicalConditions: input.medicalConditions ?? null,
+      previousSurgeries: input.previousSurgeries ?? null,
+      currentMedications: input.currentMedications ?? null,
+      patientHistory: input.patientHistory ?? null,
+      familyHistory: input.familyHistory ?? null,
+      habits: input.habits ?? null,
       createdBy: ctx.userId,
       createdByName: ctx.name,
     });
@@ -180,6 +187,17 @@ export class ExaminationService {
     if (input.issueType !== undefined) patch.issueType = input.issueType;
     if (input.oralFindings !== undefined) patch.oralFindings = input.oralFindings;
     if (input.notes !== undefined) patch.notes = input.notes;
+    for (const key of [
+      "allergies",
+      "medicalConditions",
+      "previousSurgeries",
+      "currentMedications",
+      "patientHistory",
+      "familyHistory",
+      "habits",
+    ] as const) {
+      if (input[key] !== undefined) patch[key] = input[key];
+    }
     if (input.doctorId !== undefined) {
       patch.doctorId = await this.resolveDoctor(clinicId, input.doctorId, ctx);
     }

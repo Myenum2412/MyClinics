@@ -34,6 +34,14 @@ export interface ExaminationDoc extends ClinicDocument {
   /** Oral examination findings (required). */
   oralFindings: string;
   notes: string | null;
+  /** Medical history captured at examination time (all optional). */
+  allergies: string | null;
+  medicalConditions: string | null;
+  previousSurgeries: string | null;
+  currentMedications: string | null;
+  patientHistory: string | null;
+  familyHistory: string | null;
+  habits: string | null;
   createdBy: string;
   createdByName: string | null;
   createdAt: Date;
@@ -53,6 +61,13 @@ export function examinationToPublic(doc: ExaminationDoc) {
     investigationId: doc.investigationId,
     oralFindings: doc.oralFindings,
     notes: doc.notes,
+    allergies: doc.allergies ?? null,
+    medicalConditions: doc.medicalConditions ?? null,
+    previousSurgeries: doc.previousSurgeries ?? null,
+    currentMedications: doc.currentMedications ?? null,
+    patientHistory: doc.patientHistory ?? null,
+    familyHistory: doc.familyHistory ?? null,
+    habits: doc.habits ?? null,
     createdBy: doc.createdBy,
     createdByName: doc.createdByName,
     clinicId: doc.clinicId,

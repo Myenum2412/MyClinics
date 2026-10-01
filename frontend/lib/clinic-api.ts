@@ -1528,6 +1528,14 @@ export interface Examination {
   investigationId: string | null;
   oralFindings: string;
   notes: string | null;
+  /** Medical history captured at examination time (all optional). */
+  allergies?: string | null;
+  medicalConditions?: string | null;
+  previousSurgeries?: string | null;
+  currentMedications?: string | null;
+  patientHistory?: string | null;
+  familyHistory?: string | null;
+  habits?: string | null;
   createdBy: string;
   createdByName: string | null;
   clinicId: string;
