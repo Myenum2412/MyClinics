@@ -44,6 +44,23 @@ export const createExaminationSchema = z.object({
   patientHistory: optionalString(2000),
   familyHistory: optionalString(2000),
   habits: optionalString(2000),
+  /** History of presenting illness (moved here from patient registration). */
+  hpi: z
+    .object({
+      presentingComplaint: optionalString(500),
+      onset: optionalString(50),
+      durationValue: optionalString(20),
+      durationUnit: optionalString(20),
+      progression: optionalString(50),
+      symptoms: optionalString(2000),
+      aggravatingFactors: optionalString(500),
+      relievingFactors: optionalString(500),
+      associatedSymptoms: optionalString(2000),
+      previousTreatment: optionalString(2000),
+      additionalNotes: optionalString(2000),
+    })
+    .optional()
+    .nullable(),
 });
 
 export type CreateExaminationInput = z.infer<

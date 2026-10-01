@@ -42,11 +42,28 @@ export interface ExaminationDoc extends ClinicDocument {
   patientHistory: string | null;
   familyHistory: string | null;
   habits: string | null;
+  /** History of presenting illness captured at examination time. */
+  hpi: ExaminationHpi | null;
   createdBy: string;
   createdByName: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;
+}
+
+/** Mirrors the patient registration HPI shape (all fields optional). */
+export interface ExaminationHpi {
+  presentingComplaint: string | null;
+  onset: string | null;
+  durationValue: string | null;
+  durationUnit: string | null;
+  progression: string | null;
+  symptoms: string | null;
+  aggravatingFactors: string | null;
+  relievingFactors: string | null;
+  associatedSymptoms: string | null;
+  previousTreatment: string | null;
+  additionalNotes: string | null;
 }
 
 export function examinationToPublic(doc: ExaminationDoc) {
@@ -68,6 +85,7 @@ export function examinationToPublic(doc: ExaminationDoc) {
     patientHistory: doc.patientHistory ?? null,
     familyHistory: doc.familyHistory ?? null,
     habits: doc.habits ?? null,
+    hpi: doc.hpi ?? null,
     createdBy: doc.createdBy,
     createdByName: doc.createdByName,
     clinicId: doc.clinicId,

@@ -119,6 +119,7 @@ export class ExaminationService {
       patientHistory: input.patientHistory ?? null,
       familyHistory: input.familyHistory ?? null,
       habits: input.habits ?? null,
+      hpi: input.hpi ?? null,
       createdBy: ctx.userId,
       createdByName: ctx.name,
     });
@@ -195,6 +196,7 @@ export class ExaminationService {
       "patientHistory",
       "familyHistory",
       "habits",
+      "hpi",
     ] as const) {
       if (input[key] !== undefined) patch[key] = input[key];
     }

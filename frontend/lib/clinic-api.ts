@@ -1536,11 +1536,28 @@ export interface Examination {
   patientHistory?: string | null;
   familyHistory?: string | null;
   habits?: string | null;
+  /** History of presenting illness captured at examination time. */
+  hpi?: ExaminationHpi | null;
   createdBy: string;
   createdByName: string | null;
   clinicId: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Mirrors the patient registration HPI shape (all fields optional). */
+export interface ExaminationHpi {
+  presentingComplaint: string | null;
+  onset: string | null;
+  durationValue: string | null;
+  durationUnit: string | null;
+  progression: string | null;
+  symptoms: string | null;
+  aggravatingFactors: string | null;
+  relievingFactors: string | null;
+  associatedSymptoms: string | null;
+  previousTreatment: string | null;
+  additionalNotes: string | null;
 }
 
 export function listExaminations(

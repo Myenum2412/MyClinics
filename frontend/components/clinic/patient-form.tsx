@@ -618,31 +618,14 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="5. History of Presenting Illness">
-          <div className="grid gap-4 md:grid-cols-2">
-            {renderViewField("Presenting Complaint", form.hpi.presentingComplaint)}
-            {renderViewField("Onset", form.hpi.onset)}
-            {renderViewField("Duration", form.hpi.durationValue ? `${form.hpi.durationValue} ${form.hpi.durationUnit}` : "—")}
-            {renderViewField("Progression", form.hpi.progression)}
-            {renderViewField("Symptoms", form.hpi.symptoms)}
-            {renderViewField("Aggravating Factors", form.hpi.aggravatingFactors)}
-            {renderViewField("Relieving Factors", form.hpi.relievingFactors)}
-          </div>
-          <div className="space-y-4 mt-4">
-            {renderViewField("Associated Symptoms", form.hpi.associatedSymptoms)}
-            {renderViewField("Previous Treatment", form.hpi.previousTreatment)}
-            {renderViewField("Additional Notes", form.hpi.additionalNotes)}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="6. Identification">
+        <SectionCard title="5. Identification">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("ID Proof Type", form.idType)}
             {renderViewField("ID Number", form.idNumber)}
           </div>
         </SectionCard>
 
-        <SectionCard title="7. Vital Signs">
+        <SectionCard title="6. Vital Signs">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("Blood Pressure", form.bloodPressure ? `${form.bloodPressure} mmHg` : "—")}
             {renderViewField("Temperature", form.temperature ? `${form.temperature} °C` : "—")}
@@ -652,7 +635,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="8. Account & Portal Access">
+        <SectionCard title="7. Account & Portal Access">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField(
               "Assigned Doctor",
@@ -665,7 +648,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="9. Additional Information">
+        <SectionCard title="8. Additional Information">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("Referred By", form.referredBy)}
             {renderViewField("How Did You Hear About Us?", form.howDidYouHear)}
@@ -676,7 +659,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="10. Attachments">
+        <SectionCard title="9. Attachments">
           <div className="space-y-2">
             <Label className="text-sm font-medium text-foreground">Uploaded Documents</Label>
             <div className="text-foreground">
@@ -1062,32 +1045,8 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="5. History of Presenting Illness">
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="Presenting Complaint" name="hpi.presentingComplaint" value={form.hpi.presentingComplaint} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, presentingComplaint: v } }))} placeholder="Main complaint" />
-          <FormField label="Onset" name="hpi.onset" value={form.hpi.onset} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, onset: v } }))} placeholder="Sudden / Gradual">
-            <Select value={form.hpi.onset} onValueChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, onset: v ?? "" } }))}><SelectTrigger className="h-10 w-full border-border font-normal"><SelectValue placeholder="Select onset" /></SelectTrigger><SelectContent><SelectItem value="Sudden">Sudden</SelectItem><SelectItem value="Gradual">Gradual</SelectItem></SelectContent></Select>
-          </FormField>
-          <div className="grid grid-cols-2 gap-2">
-            <FormField label="Duration" name="hpi.durationValue" type="number" value={form.hpi.durationValue} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, durationValue: v } }))} placeholder="Number" />
-            <FormField label="Unit" name="hpi.durationUnit" value={form.hpi.durationUnit} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, durationUnit: v } }))} placeholder="Days/Weeks/Months">
-              <Select value={form.hpi.durationUnit} onValueChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, durationUnit: v ?? "" } }))}><SelectTrigger className="h-10 w-full border-border font-normal"><SelectValue placeholder="Unit" /></SelectTrigger><SelectContent><SelectItem value="Days">Days</SelectItem><SelectItem value="Weeks">Weeks</SelectItem><SelectItem value="Months">Months</SelectItem></SelectContent></Select>
-            </FormField>
-          </div>
-          <FormField label="Progression" name="hpi.progression" value={form.hpi.progression} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, progression: v } }))} placeholder="Improving / Worsening / Stable">
-            <Select value={form.hpi.progression} onValueChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, progression: v ?? "" } }))}><SelectTrigger className="h-10 w-full border-border font-normal"><SelectValue placeholder="Select progression" /></SelectTrigger><SelectContent><SelectItem value="Improving">Improving</SelectItem><SelectItem value="Worsening">Worsening</SelectItem><SelectItem value="Stable">Stable</SelectItem></SelectContent></Select>
-          </FormField>
-          <FormField label="Aggravating Factors" name="hpi.aggravatingFactors" value={form.hpi.aggravatingFactors} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, aggravatingFactors: v } }))} placeholder="Factors that worsen" />
-          <FormField label="Relieving Factors" name="hpi.relievingFactors" value={form.hpi.relievingFactors} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, relievingFactors: v } }))} placeholder="Factors that relieve" />
-        </div>
-        <FormField label="Symptoms" name="hpi.symptoms" value={form.hpi.symptoms} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, symptoms: v } }))} placeholder="Describe symptoms"><Textarea value={form.hpi.symptoms} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, symptoms: e.target.value } }))} rows={2} className="h-10 w-full border-border font-normal" /></FormField>
-        <FormField label="Associated Symptoms" name="hpi.associatedSymptoms" value={form.hpi.associatedSymptoms} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, associatedSymptoms: v } }))} placeholder="Associated symptoms"><Textarea value={form.hpi.associatedSymptoms} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, associatedSymptoms: e.target.value } }))} rows={2} className="h-10 w-full border-border font-normal" /></FormField>
-        <FormField label="Previous Treatment" name="hpi.previousTreatment" value={form.hpi.previousTreatment} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, previousTreatment: v } }))} placeholder="Previous treatment details"><Textarea value={form.hpi.previousTreatment} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, previousTreatment: e.target.value } }))} rows={2} className="h-10 w-full border-border font-normal" /></FormField>
-        <FormField label="Additional Notes" name="hpi.additionalNotes" value={form.hpi.additionalNotes} onChange={(v) => setForm((p) => ({ ...p, hpi: { ...p.hpi, additionalNotes: v } }))} placeholder="Any additional notes"><Textarea value={form.hpi.additionalNotes} onChange={(e) => setForm((p) => ({ ...p, hpi: { ...p.hpi, additionalNotes: e.target.value } }))} rows={2} className="h-10 w-full border-border font-normal" /></FormField>
-      </SectionCard>
-
       <SectionCard
-        title="6. Identification"
+        title="5. Identification"
         description="Optional — only fill if required by your clinic"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1116,7 +1075,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="7. Vital Signs" description="Optional — captured at registration, editable anytime">
+      <SectionCard title="6. Vital Signs" description="Optional — captured at registration, editable anytime">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             label="Blood Pressure"
@@ -1167,7 +1126,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="8. Account & Portal Access"
+        title="7. Account & Portal Access"
         description="Assign the patient to a doctor and optionally create patient portal credentials"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1300,7 +1259,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="9. Additional Information">
+      <SectionCard title="8. Additional Information">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             label="Referred By"
@@ -1359,7 +1318,7 @@ export function PatientForm({
 
       {!isCreateMode && (
         <SectionCard
-          title="10. Attachments"
+          title="9. Attachments"
           description="Optional - upload patient documents"
         >
         {isViewMode ? (
