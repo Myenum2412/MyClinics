@@ -46,10 +46,6 @@ export default function QuickAddPage(){
   // Shared state for all forms — kept at page level for sync
   const [appt,setAppt]=useState({patient:"", doctor:"", department:"", visitType:"New Visit", date:todayISO(), time:"09:00", duration:"30", reason:"", priority:"Normal", status:"scheduled", symptoms:"", notes:"", reminder:"Same Day", whatsapp:"Yes", doctorNotify:"Yes"});
   const [rec,setRec]=useState({patient:"", visitDate:todayISO(), visitTime:"09:00", doctor:"", visitType:"New Visit", followUpDate:"", chiefComplaint:"", symptoms:"", diagnosis:"", icdCode:"", treatment:"", advice:"", bp:"", temp:"", pulse:"", allergies:"", labTests:"", internalNotes:""});
-  const [medicines,setMedicines]=useState([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]);
-  const addMedicine=()=> setMedicines(m=>[...m,{name:"", dosage:"", frequency:"", duration:"", instructions:""}]);
-  const removeMedicine=(i:number)=> setMedicines(m=> m.filter((_,idx)=> idx!==i));
-  const setMedicine=(i:number,patch:Partial<typeof medicines[0]>)=> setMedicines(m=> m.map((row,idx)=> idx===i? {...row,...patch}:row));
   const [treat,setTreat]=useState({patient:"", doctor:"", diagnosis:"", treatment:"", medicines:"", followUp:"", consent:""});
   const [rx,setRx]=useState({patient:"", doctor:"", diagnosis:"", notes:""});
   // Prescription medicines — multi-select rows like /clinic/prescriptions (at least 1)
@@ -147,12 +143,7 @@ export default function QuickAddPage(){
         payload.appointment = { date: appt.date, time: appt.time, reason: appt.reason, notes: appt.notes||null, department: appt.department, visitType: appt.visitType, duration: appt.duration, priority: appt.priority };
       }
       if(rec.patient && rec.diagnosis && rec.chiefComplaint){
-        const validMeds = medicines.filter(m=> m.name.trim());
-        if(validMeds.length===0){
-          toast.error("Add at least one medicine for Records");
-          return;
-        }
-        payload.record = { visitDate: rec.visitDate, visitTime: rec.visitTime, diagnosis: rec.diagnosis, chiefComplaint: rec.chiefComplaint, symptoms: rec.symptoms||null, treatment: rec.treatment||null, advice: rec.advice||null, icdCode: rec.icdCode||null, bp: rec.bp||null, temp: rec.temp||null, pulse: rec.pulse||null, allergies: rec.allergies||null, labTests: rec.labTests||null, internalNotes: rec.internalNotes||null, followUpDate: rec.followUpDate||null, medicines: validMeds };
+        payload.record = { visitDate: rec.visitDate, visitTime: rec.visitTime, diagnosis: rec.diagnosis, chiefComplaint: rec.chiefComplaint, symptoms: rec.symptoms||null, treatment: rec.treatment||null, advice: rec.advice||null, icdCode: rec.icdCode||null, bp: rec.bp||null, temp: rec.temp||null, pulse: rec.pulse||null, allergies: rec.allergies||null, labTests: rec.labTests||null, internalNotes: rec.internalNotes||null, followUpDate: rec.followUpDate||null };
       }
       // Prescription — multi-medicine select like /clinic/prescriptions (at least 1).
       const validRxMeds = rxMeds.filter(m=> m.name.trim());
@@ -242,8 +233,8 @@ export default function QuickAddPage(){
         })()}
       </CardContent></Card>
 
-      {/* 2 Records — optimized, no duplicate patient */}
-      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">2. Records — Medicine {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
+      {/* 2 Records — optimized, no duplicate patient (medicines live in Prescription below) */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">2. Records {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Visit date *</Label><Input type="date" value={rec.visitDate} onChange={e=>setRec({...rec,visitDate:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Visit time</Label><Input type="time" value={rec.visitTime} onChange={e=>setRec({...rec,visitTime:e.target.value})} className="mt-1 h-9"/></div>
@@ -253,21 +244,6 @@ export default function QuickAddPage(){
           <div className="sm:col-span-2"><Label className="text-xs">Symptoms</Label><Textarea value={rec.symptoms} onChange={e=>setRec({...rec,symptoms:e.target.value})} rows={2}/></div>
           <div><Label className="text-xs">Diagnosis *</Label><Input value={rec.diagnosis} onChange={e=>setRec({...rec,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">ICD Code</Label><Input value={rec.icdCode} onChange={e=>setRec({...rec,icdCode:e.target.value})} placeholder="e.g. I10" className="mt-1 h-9"/></div>
-        </div>
-        <div className="rounded-xl border p-3 space-y-3">
-          <div className="flex items-center justify-between"><p className="text-xs font-semibold">Medicines * (at least 1) — enterable + Add More</p><Button type="button" variant="outline" size="sm" onClick={addMedicine}>+ Add More</Button></div>
-          {medicines.map((med,i)=> (
-            <div key={i} className="grid sm:grid-cols-5 gap-2 items-end">
-              <select value={med.name} onChange={e=>setMedicine(i,{name:e.target.value})} className="h-9 rounded-xl border border-border bg-card px-3 text-sm"><option value="">Medicine *</option>{medicinesOpts.map(m=><option key={m} value={m}>{m}</option>)}</select>
-              <Input value={med.dosage} onChange={e=>setMedicine(i,{dosage:e.target.value})} placeholder="Dosage *"/>
-              <Input value={med.frequency} onChange={e=>setMedicine(i,{frequency:e.target.value})} placeholder="Frequency *"/>
-              <Input value={med.duration} onChange={e=>setMedicine(i,{duration:e.target.value})} placeholder="Duration *"/>
-              <div className="flex gap-1">
-                <select value={med.instructions} onChange={e=>setMedicine(i,{instructions:e.target.value})} className="h-9 flex-1 rounded-xl border border-border bg-card px-3 text-sm"><option value="">Instructions</option>{medInstructions.map(x=><option key={x} value={x}>{x}</option>)}</select>
-                {medicines.length>1 && <Button type="button" variant="ghost" size="sm" onClick={()=>removeMedicine(i)}>✕</Button>}
-              </div>
-            </div>
-          ))}
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2"><Label className="text-xs">Treatment / Procedures</Label><Textarea value={rec.treatment} onChange={e=>setRec({...rec,treatment:e.target.value})} rows={2}/></div>
