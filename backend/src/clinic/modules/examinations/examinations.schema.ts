@@ -44,6 +44,14 @@ export interface ExaminationDoc extends ClinicDocument {
   habits: string | null;
   /** History of presenting illness captured at examination time. */
   hpi: ExaminationHpi | null;
+  /** Chief complaints recorded at examination time (moved from registration). */
+  chiefComplaints: ExaminationChiefComplaint[] | null;
+  /** Vital signs captured at examination time (moved from registration). */
+  bloodPressure: string | null;
+  temperature: string | null;
+  pulse: string | null;
+  respiratoryRate: string | null;
+  spo2: string | null;
   createdBy: string;
   createdByName: string | null;
   createdAt: Date;
@@ -66,6 +74,14 @@ export interface ExaminationHpi {
   additionalNotes: string | null;
 }
 
+/** A single chief complaint entry recorded at examination time. */
+export interface ExaminationChiefComplaint {
+  complaint: string | null;
+  duration: string | null;
+  severity: string | null;
+  notes: string | null;
+}
+
 export function examinationToPublic(doc: ExaminationDoc) {
   return {
     examinationId: doc.examinationId,
@@ -86,6 +102,12 @@ export function examinationToPublic(doc: ExaminationDoc) {
     familyHistory: doc.familyHistory ?? null,
     habits: doc.habits ?? null,
     hpi: doc.hpi ?? null,
+    chiefComplaints: doc.chiefComplaints ?? null,
+    bloodPressure: doc.bloodPressure ?? null,
+    temperature: doc.temperature ?? null,
+    pulse: doc.pulse ?? null,
+    respiratoryRate: doc.respiratoryRate ?? null,
+    spo2: doc.spo2 ?? null,
     createdBy: doc.createdBy,
     createdByName: doc.createdByName,
     clinicId: doc.clinicId,

@@ -1538,6 +1538,14 @@ export interface Examination {
   habits?: string | null;
   /** History of presenting illness captured at examination time. */
   hpi?: ExaminationHpi | null;
+  /** Chief complaints recorded at examination time. */
+  chiefComplaints?: ExaminationChiefComplaint[] | null;
+  /** Vital signs captured at examination time. */
+  bloodPressure?: string | null;
+  temperature?: string | null;
+  pulse?: string | null;
+  respiratoryRate?: string | null;
+  spo2?: string | null;
   createdBy: string;
   createdByName: string | null;
   clinicId: string;
@@ -1558,6 +1566,14 @@ export interface ExaminationHpi {
   associatedSymptoms: string | null;
   previousTreatment: string | null;
   additionalNotes: string | null;
+}
+
+/** A single chief complaint entry recorded at examination time. */
+export interface ExaminationChiefComplaint {
+  complaint: string | null;
+  duration: string | null;
+  severity: string | null;
+  notes: string | null;
 }
 
 export function listExaminations(

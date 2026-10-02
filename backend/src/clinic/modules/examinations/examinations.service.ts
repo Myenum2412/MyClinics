@@ -120,6 +120,12 @@ export class ExaminationService {
       familyHistory: input.familyHistory ?? null,
       habits: input.habits ?? null,
       hpi: input.hpi ?? null,
+      chiefComplaints: input.chiefComplaints ?? null,
+      bloodPressure: input.bloodPressure ?? null,
+      temperature: input.temperature ?? null,
+      pulse: input.pulse ?? null,
+      respiratoryRate: input.respiratoryRate ?? null,
+      spo2: input.spo2 ?? null,
       createdBy: ctx.userId,
       createdByName: ctx.name,
     });
@@ -197,6 +203,12 @@ export class ExaminationService {
       "familyHistory",
       "habits",
       "hpi",
+      "chiefComplaints",
+      "bloodPressure",
+      "temperature",
+      "pulse",
+      "respiratoryRate",
+      "spo2",
     ] as const) {
       if (input[key] !== undefined) patch[key] = input[key];
     }

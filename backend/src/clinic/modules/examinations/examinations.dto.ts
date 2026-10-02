@@ -61,6 +61,25 @@ export const createExaminationSchema = z.object({
     })
     .optional()
     .nullable(),
+  /** Chief complaints (moved here from patient registration). */
+  chiefComplaints: z
+    .array(
+      z.object({
+        complaint: optionalString(500),
+        duration: optionalString(100),
+        severity: optionalString(50),
+        notes: optionalString(2000),
+      })
+    )
+    .max(20)
+    .optional()
+    .nullable(),
+  /** Vital signs captured at examination time (moved from registration). */
+  bloodPressure: optionalString(20),
+  temperature: optionalString(20),
+  pulse: optionalString(20),
+  respiratoryRate: optionalString(20),
+  spo2: optionalString(20),
 });
 
 export type CreateExaminationInput = z.infer<

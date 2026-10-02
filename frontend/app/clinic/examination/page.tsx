@@ -87,6 +87,14 @@ const ISSUE_BADGE: Record<IssueType, string> = {
 const HPI_ONSET_OPTIONS = ["Sudden", "Gradual"];
 const HPI_PROGRESSION_OPTIONS = ["Improving", "Worsening", "Stable"];
 const HPI_DURATION_UNITS = ["Days", "Weeks", "Months"];
+const COMPLAINT_SEVERITY_OPTIONS = ["Mild", "Moderate", "Severe"];
+
+export interface ExaminationComplaintRow {
+  complaint: string;
+  duration: string;
+  severity: string;
+  notes: string;
+}
 
 type Screen =
   | { name: "table" }
@@ -121,6 +129,14 @@ interface FormState {
   hpiAssociatedSymptoms: string;
   hpiPreviousTreatment: string;
   hpiAdditionalNotes: string;
+  // Chief complaints (moved here from patient registration).
+  chiefComplaints: ExaminationComplaintRow[];
+  // Vital signs (moved here from patient registration).
+  bloodPressure: string;
+  temperature: string;
+  pulse: string;
+  respiratoryRate: string;
+  spo2: string;
   // Embedded investigation form (create mode only).
   includeInvestigation: boolean;
   showInvestigation: boolean;
@@ -157,6 +173,12 @@ function emptyForm(): FormState {
     hpiAssociatedSymptoms: "",
     hpiPreviousTreatment: "",
     hpiAdditionalNotes: "",
+    chiefComplaints: [{ complaint: "", duration: "", severity: "", notes: "" }],
+    bloodPressure: "",
+    temperature: "",
+    pulse: "",
+    respiratoryRate: "",
+    spo2: "",
     includeInvestigation: true,
     showInvestigation: true,
     invTitle: "",
@@ -238,8 +260,8 @@ export default function ExaminationPage() {
     setScreen({ name: "form", mode: "create" });
   }
 
-  function openEdit(record: Examination) {
-    setForm({
+  function formFromRecord(record: Examination): FormState {
+    return {
       ...emptyForm(),
       patientId: record.patientId,
       visitDate: record.visitDate,
@@ -265,8 +287,26 @@ export default function ExaminationPage() {
       hpiAssociatedSymptoms: record.hpi?.associatedSymptoms ?? "",
       hpiPreviousTreatment: record.hpi?.previousTreatment ?? "",
       hpiAdditionalNotes: record.hpi?.additionalNotes ?? "",
+      chiefComplaints:
+        record.chiefComplaints && record.chiefComplaints.length > 0
+          ? record.chiefComplaints.map((c) => ({
+              complaint: c.complaint ?? "",
+              duration: c.duration ?? "",
+              severity: c.severity ?? "",
+              notes: c.notes ?? "",
+            }))
+          : [{ complaint: "", duration: "", severity: "", notes: "" }],
+      bloodPressure: record.bloodPressure ?? "",
+      temperature: record.temperature ?? "",
+      pulse: record.pulse ?? "",
+      respiratoryRate: record.respiratoryRate ?? "",
+      spo2: record.spo2 ?? "",
       includeInvestigation: false,
-    });
+    };
+  }
+
+  function openEdit(record: Examination) {
+    setForm(formFromRecord(record));
     setLinkedInvTitle(null);
     setScreen({ name: "form", mode: "edit", record });
     if (record.investigationId) {
@@ -278,6 +318,8 @@ export default function ExaminationPage() {
 
   function openView(record: Examination) {
     setLinkedInvTitle(null);
+    // Populate the form too so read-only rows render counts correctly.
+    setForm(formFromRecord(record));
     setScreen({ name: "form", mode: "view", record });
     if (record.investigationId) {
       getInvestigation(clinicId, record.investigationId)
@@ -328,6 +370,19 @@ export default function ExaminationPage() {
           previousTreatment: form.hpiPreviousTreatment.trim() || null,
           additionalNotes: form.hpiAdditionalNotes.trim() || null,
         },
+        chiefComplaints: form.chiefComplaints
+          .map((c) => ({
+            complaint: c.complaint.trim() || null,
+            duration: c.duration.trim() || null,
+            severity: c.severity || null,
+            notes: c.notes.trim() || null,
+          }))
+          .filter((c) => c.complaint || c.duration || c.severity || c.notes),
+        bloodPressure: form.bloodPressure.trim() || null,
+        temperature: form.temperature.trim() || null,
+        pulse: form.pulse.trim() || null,
+        respiratoryRate: form.respiratoryRate.trim() || null,
+        spo2: form.spo2.trim() || null,
       };
       if (screen.mode === "create") {
         payload.patientId = form.patientId;
@@ -534,6 +589,211 @@ export default function ExaminationPage() {
                 placeholder="Additional notes for this examination…"
                 disabled={readOnly}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+              <CardTitle className="text-base sm:text-lg">Chief Complaint</CardTitle>
+              {!readOnly && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setForm((f) => ({
+                      ...f,
+                      chiefComplaints: [
+                        ...f.chiefComplaints,
+                        { complaint: "", duration: "", severity: "", notes: "" },
+                      ],
+                    }))
+                  }
+                >
+                  <Plus className="size-4" />
+                  Add complaint
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {(readOnly ? (screen.record.chiefComplaints ?? []) : form.chiefComplaints).length === 0 && (
+              <p className="text-sm text-muted-foreground">No complaints recorded.</p>
+            )}
+            {(readOnly ? (screen.record.chiefComplaints ?? []) : form.chiefComplaints).map((c, idx) => (
+              <div key={idx} className="relative rounded-lg border border-border/60 bg-muted/10 p-4 pt-6">
+                {!readOnly && form.chiefComplaints.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-2 top-2 size-7 text-muted-foreground hover:text-destructive"
+                    onClick={() =>
+                      setForm((f) => ({
+                        ...f,
+                        chiefComplaints: f.chiefComplaints.filter((_, i) => i !== idx),
+                      }))
+                    }
+                    title="Remove"
+                  >
+                    <Trash className="size-4" />
+                  </Button>
+                )}
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label>Complaint{form.chiefComplaints.length > 1 ? ` #${idx + 1}` : ""}</Label>
+                    <Input
+                      value={c.complaint ?? ""}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          chiefComplaints: f.chiefComplaints.map((row, i) =>
+                            i === idx ? { ...row, complaint: e.target.value } : row
+                          ),
+                        }))
+                      }
+                      placeholder="e.g. Fever, Headache"
+                      disabled={readOnly}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Duration</Label>
+                    <Input
+                      value={c.duration ?? ""}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          chiefComplaints: f.chiefComplaints.map((row, i) =>
+                            i === idx ? { ...row, duration: e.target.value } : row
+                          ),
+                        }))
+                      }
+                      placeholder="e.g. 3 days, 2 weeks"
+                      disabled={readOnly}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Severity</Label>
+                    {readOnly ? (
+                      <Input value={c.severity ?? ""} disabled />
+                    ) : (
+                      <Select
+                        value={c.severity || "__none"}
+                        onValueChange={(v) =>
+                          setForm((f) => ({
+                            ...f,
+                            chiefComplaints: f.chiefComplaints.map((row, i) =>
+                              i === idx ? { ...row, severity: v === "__none" ? "" : (v ?? "") } : row
+                            ),
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select severity" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none">Not specified</SelectItem>
+                          {COMPLAINT_SEVERITY_OPTIONS.map((o) => (
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-3 space-y-2">
+                  <Label>Notes</Label>
+                  <Textarea
+                    value={c.notes ?? ""}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        chiefComplaints: f.chiefComplaints.map((row, i) =>
+                          i === idx ? { ...row, notes: e.target.value } : row
+                        ),
+                      }))
+                    }
+                    placeholder="Additional notes"
+                    rows={2}
+                    disabled={readOnly}
+                  />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Vital Signs</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="exam-bp">Blood pressure</Label>
+              <Input
+                id="exam-bp"
+                value={readOnly ? (screen.record.bloodPressure ?? "") : form.bloodPressure}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, bloodPressure: e.target.value }))
+                }
+                placeholder="120/80"
+                disabled={readOnly}
+              />
+              <p className="text-xs text-muted-foreground">mmHg, e.g. 120/80</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-temp">Temperature</Label>
+              <Input
+                id="exam-temp"
+                value={readOnly ? (screen.record.temperature ?? "") : form.temperature}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, temperature: e.target.value }))
+                }
+                placeholder="98.6"
+                disabled={readOnly}
+              />
+              <p className="text-xs text-muted-foreground">°F or °C</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-pulse">Pulse / heart rate</Label>
+              <Input
+                id="exam-pulse"
+                value={readOnly ? (screen.record.pulse ?? "") : form.pulse}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, pulse: e.target.value }))
+                }
+                placeholder="72"
+                disabled={readOnly}
+              />
+              <p className="text-xs text-muted-foreground">beats per minute (bpm)</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-rr">Respiratory rate</Label>
+              <Input
+                id="exam-rr"
+                value={readOnly ? (screen.record.respiratoryRate ?? "") : form.respiratoryRate}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, respiratoryRate: e.target.value }))
+                }
+                placeholder="16"
+                disabled={readOnly}
+              />
+              <p className="text-xs text-muted-foreground">breaths per minute</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-spo2">SpO₂ (oxygen saturation)</Label>
+              <Input
+                id="exam-spo2"
+                value={readOnly ? (screen.record.spo2 ?? "") : form.spo2}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, spo2: e.target.value }))
+                }
+                placeholder="98"
+                disabled={readOnly}
+              />
+              <p className="text-xs text-muted-foreground">%, e.g. 98</p>
             </div>
           </CardContent>
         </Card>

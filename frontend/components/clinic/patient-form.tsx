@@ -603,39 +603,14 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="4. Chief Complaint">
-          <div className="space-y-4">
-            {form.chiefComplaints.map((c, idx) => (
-              <div key={idx} className="rounded-lg border border-border/60 p-3 bg-muted/20 space-y-3">
-                <div className="grid gap-4 md:grid-cols-3">
-                  {renderViewField(`Complaint${form.chiefComplaints.length > 1 ? ` #${idx + 1}` : ""}`, c.complaint)}
-                  {renderViewField("Duration", c.duration)}
-                  {renderViewField("Severity", c.severity)}
-                </div>
-                {renderViewField("Notes", c.notes)}
-              </div>
-            ))}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="5. Identification">
+        <SectionCard title="4. Identification">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("ID Proof Type", form.idType)}
             {renderViewField("ID Number", form.idNumber)}
           </div>
         </SectionCard>
 
-        <SectionCard title="6. Vital Signs">
-          <div className="grid gap-4 md:grid-cols-2">
-            {renderViewField("Blood Pressure", form.bloodPressure ? `${form.bloodPressure} mmHg` : "—")}
-            {renderViewField("Temperature", form.temperature ? `${form.temperature} °C` : "—")}
-            {renderViewField("Pulse / Heart Rate", form.pulse ? `${form.pulse} bpm` : "—")}
-            {renderViewField("Respiratory Rate", form.respiratoryRate ? `${form.respiratoryRate} /min` : "—")}
-            {renderViewField("SpO₂ (Oxygen Saturation)", form.spo2 ? `${form.spo2} %` : "—")}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="7. Account & Portal Access">
+        <SectionCard title="5. Account & Portal Access">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField(
               "Assigned Doctor",
@@ -648,7 +623,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="8. Additional Information">
+        <SectionCard title="6. Additional Information">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField("Referred By", form.referredBy)}
             {renderViewField("How Did You Hear About Us?", form.howDidYouHear)}
@@ -659,7 +634,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="9. Attachments">
+        <SectionCard title="7. Attachments">
           <div className="space-y-2">
             <Label className="text-sm font-medium text-foreground">Uploaded Documents</Label>
             <div className="text-foreground">
@@ -1009,44 +984,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="4. Chief Complaint"
-        description="Primary reason for visit"
-        action={
-          <Button type="button" variant="outline" size="icon" className="shrink-0 rounded-full" onClick={() => setForm((prev) => ({ ...prev, chiefComplaints: [...prev.chiefComplaints, { complaint: "", duration: "", severity: "", notes: "" }] }))} title="Add another chief complaint">
-            <Plus className="size-4" />
-          </Button>
-        }
-      >
-        <div className="space-y-4">
-          {form.chiefComplaints.map((item, idx) => (
-            <div key={idx} className="relative rounded-lg border border-border/60 p-4 pt-6 bg-muted/10 space-y-4">
-              {form.chiefComplaints.length > 1 && (
-                <Button type="button" variant="ghost" size="icon" className="absolute right-2 top-2 size-7 text-muted-foreground hover:text-destructive" onClick={() => setForm((prev) => ({ ...prev, chiefComplaints: prev.chiefComplaints.filter((_, i) => i !== idx) }))} title="Remove">
-                  <Trash2 className="size-4" />
-                </Button>
-              )}
-              <div className="grid gap-4 md:grid-cols-3">
-                <FormField label={`Complaint${form.chiefComplaints.length > 1 ? ` #${idx + 1}` : ""}`} name={`chiefComplaints.${idx}.complaint`} value={item.complaint} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, complaint: v } : c) }))} placeholder="e.g. Fever, Headache" />
-                <FormField label="Duration" name={`chiefComplaints.${idx}.duration`} value={item.duration} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, duration: v } : c) }))} placeholder="e.g. 3 days, 2 weeks" />
-                <FormField label="Severity" name={`chiefComplaints.${idx}.severity`} value={item.severity} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, severity: v } : c) }))} placeholder="Mild / Moderate / Severe">
-                  <Select value={item.severity} onValueChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, severity: v ?? "" } : c) }))}>
-                    <SelectTrigger className="h-10 w-full border-border font-normal"><SelectValue placeholder="Select severity" /></SelectTrigger>
-                    <SelectContent>
-                      {["Mild", "Moderate", "Severe"].map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </FormField>
-              </div>
-              <FormField label="Notes" name={`chiefComplaints.${idx}.notes`} value={item.notes} onChange={(v) => setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, notes: v } : c) }))} placeholder="Additional notes">
-                <Textarea value={item.notes} onChange={(e) => { e.target.style.height = "auto"; e.target.style.height = `${e.target.scrollHeight}px`; setForm((p) => ({ ...p, chiefComplaints: p.chiefComplaints.map((c, i) => i === idx ? { ...c, notes: e.target.value } : c) })); }} onInput={(e) => { const t = e.target as HTMLTextAreaElement; t.style.height = "auto"; t.style.height = `${t.scrollHeight}px`; }} rows={2} className="border-border min-h-[56px] resize-none overflow-hidden" />
-              </FormField>
-            </div>
-          ))}
-        </div>
-      </SectionCard>
-
-      <SectionCard
-        title="5. Identification"
+        title="4. Identification"
         description="Optional — only fill if required by your clinic"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1075,58 +1013,8 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="6. Vital Signs" description="Optional — captured at registration, editable anytime">
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            label="Blood Pressure"
-            name="bloodPressure"
-            value={form.bloodPressure}
-            onChange={(v) => handleChange("bloodPressure", v)}
-            placeholder="120/80"
-            helperText="mmHg, e.g. 120/80"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Temperature"
-            name="temperature"
-            value={form.temperature}
-            onChange={(v) => handleChange("temperature", v)}
-            placeholder="98.6"
-            helperText="°F or °C"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Pulse / Heart Rate"
-            name="pulse"
-            value={form.pulse}
-            onChange={(v) => handleChange("pulse", v)}
-            placeholder="72"
-            helperText="beats per minute (bpm)"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="Respiratory Rate"
-            name="respiratoryRate"
-            value={form.respiratoryRate}
-            onChange={(v) => handleChange("respiratoryRate", v)}
-            placeholder="16"
-            helperText="breaths per minute"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="SpO₂ (Oxygen Saturation)"
-            name="spo2"
-            value={form.spo2}
-            onChange={(v) => handleChange("spo2", v)}
-            placeholder="98"
-            helperText="%, e.g. 98"
-            disabled={isViewMode}
-          />
-        </div>
-      </SectionCard>
-
       <SectionCard
-        title="7. Account & Portal Access"
+        title="5. Account & Portal Access"
         description="Assign the patient to a doctor and optionally create patient portal credentials"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1259,7 +1147,7 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="8. Additional Information">
+      <SectionCard title="6. Additional Information">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             label="Referred By"
@@ -1318,7 +1206,7 @@ export function PatientForm({
 
       {!isCreateMode && (
         <SectionCard
-          title="9. Attachments"
+          title="7. Attachments"
           description="Optional - upload patient documents"
         >
         {isViewMode ? (
