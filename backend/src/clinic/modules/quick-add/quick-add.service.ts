@@ -2,7 +2,7 @@ import type { Db } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import { requireClinicOf, type ClinicContext } from "@/clinic/core/context";
 import { BadRequestError, NotFoundError } from "@/clinic/core/errors";
-import { generateAppointmentId, generateRecordId, generatePrescriptionId } from "@/clinic/core/ids";
+import { generateAppointmentId, generateExaminationId, generateRecordId, generatePrescriptionId } from "@/clinic/core/ids";
 import { now as nowFn } from "@/clinic/core/datetime";
 import { writeAudit } from "@/clinic/core/audit";
 import { enqueueClinicNotification } from "@/services/whatsapp/notification.service";
@@ -143,11 +143,56 @@ export class QuickAddService {
       });
     }
 
+    // 4. Examination — direct insert (same shape as standalone examinations)
+    if (input.examination?.oralFindings && input.examination?.issueType && input.examination?.visitDate) {
+      hasData = true;
+      const examinationId = generateExaminationId();
+      const doc: any = {
+        clinicId,
+        examinationId,
+        patientId: input.patientId,
+        patientName: (patient as any).fullName,
+        doctorId: input.doctorId,
+        visitDate: input.examination.visitDate,
+        status: input.examination.status ?? "pending",
+        issueType: input.examination.issueType,
+        investigationId: null,
+        oralFindings: input.examination.oralFindings.trim(),
+        notes: input.examination.notes ?? null,
+        allergies: input.examination.allergies ?? null,
+        medicalConditions: input.examination.medicalConditions ?? null,
+        previousSurgeries: input.examination.previousSurgeries ?? null,
+        currentMedications: input.examination.currentMedications ?? null,
+        patientHistory: input.examination.patientHistory ?? null,
+        familyHistory: input.examination.familyHistory ?? null,
+        habits: input.examination.habits ?? null,
+        hpi: input.examination.hpi ?? null,
+        chiefComplaints: input.examination.chiefComplaints ?? null,
+        bloodPressure: input.examination.bloodPressure ?? null,
+        temperature: input.examination.temperature ?? null,
+        pulse: input.examination.pulse ?? null,
+        respiratoryRate: input.examination.respiratoryRate ?? null,
+        spo2: input.examination.spo2 ?? null,
+        createdBy: ctx.userId,
+        createdByName: (ctx as any).name ?? null,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await this.db.collection(CLINIC_COLLECTIONS.examinations).insertOne(doc);
+      results.examination = { examinationId, ...doc };
+      await writeAudit(this.db, ctx, {
+        action: "create",
+        entity: "examination",
+        entityId: examinationId,
+        metadata: { patientId: input.patientId, doctorId: input.doctorId, issueType: input.examination.issueType },
+      });
+    }
+
     if (!hasData) {
       throw new BadRequestError("No valid data provided for quick-add. Fill at least one section.");
     }
 
-    // 4. Single consolidated WhatsApp notification for this quick-add only
+    // 5. Single consolidated WhatsApp notification for this quick-add only
     // Build full data summary
     const patientName = (patient as any).fullName ?? "Patient";
     const doctorName = (doctor as any).name ?? "Doctor";
@@ -158,7 +203,7 @@ export class QuickAddService {
       const lines: string[] = [];
       lines.push(`Hi ${patientName},`);
       lines.push(``);
-      lines.push(`Your visit with Dr. ${doctorName} on ${input.record?.visitDate ?? input.appointment?.date ?? new Date().toISOString().slice(0, 10)} has been recorded at ${patientName.includes("My Clinic") ? "My Clinics" : "My Clinics"}:`);
+      lines.push(`Your visit with Dr. ${doctorName} on ${input.record?.visitDate ?? input.examination?.visitDate ?? input.appointment?.date ?? new Date().toISOString().slice(0, 10)} has been recorded at ${patientName.includes("My Clinic") ? "My Clinics" : "My Clinics"}:`);
       lines.push(``);
       if (results.appointment) {
         lines.push(`• Appointment: ${results.appointment.date} at ${results.appointment.time} — ${results.appointment.reason}`);
@@ -186,6 +231,13 @@ export class QuickAddService {
         if (results.prescription.diagnosis) lines.push(`  Diagnosis: ${results.prescription.diagnosis}`);
         if (med.instructions) lines.push(`  Instructions: ${med.instructions}`);
         if (results.prescription.notes) lines.push(`  Notes: ${results.prescription.notes}`);
+      }
+      if (results.examination) {
+        lines.push(`• Examination (${results.examination.visitDate} — ${results.examination.issueType}): ${results.examination.oralFindings}`);
+        if (results.examination.notes) lines.push(`  Notes: ${results.examination.notes}`);
+        if (results.examination.bloodPressure || results.examination.temperature || results.examination.pulse) {
+          lines.push(`  Vitals: BP ${results.examination.bloodPressure ?? "-"} | Temp ${results.examination.temperature ?? "-"} | Pulse ${results.examination.pulse ?? "-"}`);
+        }
       }
       lines.push(``);
       lines.push(`For full details, please login to your Patient Portal.`);

@@ -1659,8 +1659,29 @@ export function createQuickAdd(
       medicines: Array<{ name: string; dosage?: string; frequency?: string; duration?: string; instructions?: string }>;
     } | null;
     prescription?: { diagnosis?: string | null; medicine: string; dosage?: string | null; frequency?: string | null; duration?: string | null; instructions?: string | null; notes?: string | null; visitDate?: string } | null;
+    examination?: {
+      visitDate: string;
+      status?: string;
+      issueType: string;
+      oralFindings: string;
+      notes?: string | null;
+      allergies?: string | null;
+      medicalConditions?: string | null;
+      previousSurgeries?: string | null;
+      currentMedications?: string | null;
+      patientHistory?: string | null;
+      familyHistory?: string | null;
+      habits?: string | null;
+      hpi?: Record<string, string | null> | null;
+      chiefComplaints?: Array<{ complaint?: string | null; duration?: string | null; severity?: string | null; notes?: string | null }> | null;
+      bloodPressure?: string | null;
+      temperature?: string | null;
+      pulse?: string | null;
+      respiratoryRate?: string | null;
+      spo2?: string | null;
+    } | null;
   }
-): Promise<{ ok: true; appointment?: any; record?: any; prescription?: any; notification: { queued: boolean } }> {
+): Promise<{ ok: true; appointment?: any; record?: any; prescription?: any; examination?: any; notification: { queued: boolean } }> {
   return request(tenantPath(clinicId, "/quick-add"), {
     method: "POST",
     body: JSON.stringify(input),

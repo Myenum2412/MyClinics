@@ -57,6 +57,55 @@ export const quickAddSchema = z.object({
       visitDate: z.string().optional(),
     })
     .optional(),
+  examination: z
+    .object({
+      visitDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      status: z.enum(["pending", "in-progress", "completed", "cancelled"]).optional(),
+      issueType: z.enum(["hard", "soft"]),
+      oralFindings: z.string().trim().min(2).max(5000),
+      notes: z.string().max(5000).optional().nullable(),
+      allergies: z.string().max(2000).optional().nullable(),
+      medicalConditions: z.string().max(2000).optional().nullable(),
+      previousSurgeries: z.string().max(2000).optional().nullable(),
+      currentMedications: z.string().max(2000).optional().nullable(),
+      patientHistory: z.string().max(2000).optional().nullable(),
+      familyHistory: z.string().max(2000).optional().nullable(),
+      habits: z.string().max(2000).optional().nullable(),
+      hpi: z
+        .object({
+          presentingComplaint: z.string().max(500).optional().nullable(),
+          onset: z.string().max(50).optional().nullable(),
+          durationValue: z.string().max(20).optional().nullable(),
+          durationUnit: z.string().max(20).optional().nullable(),
+          progression: z.string().max(50).optional().nullable(),
+          symptoms: z.string().max(2000).optional().nullable(),
+          aggravatingFactors: z.string().max(500).optional().nullable(),
+          relievingFactors: z.string().max(500).optional().nullable(),
+          associatedSymptoms: z.string().max(2000).optional().nullable(),
+          previousTreatment: z.string().max(2000).optional().nullable(),
+          additionalNotes: z.string().max(2000).optional().nullable(),
+        })
+        .optional()
+        .nullable(),
+      chiefComplaints: z
+        .array(
+          z.object({
+            complaint: z.string().max(500).optional().nullable(),
+            duration: z.string().max(100).optional().nullable(),
+            severity: z.string().max(50).optional().nullable(),
+            notes: z.string().max(2000).optional().nullable(),
+          })
+        )
+        .max(20)
+        .optional()
+        .nullable(),
+      bloodPressure: z.string().max(20).optional().nullable(),
+      temperature: z.string().max(20).optional().nullable(),
+      pulse: z.string().max(20).optional().nullable(),
+      respiratoryRate: z.string().max(20).optional().nullable(),
+      spo2: z.string().max(20).optional().nullable(),
+    })
+    .optional(),
 });
 
 export type QuickAddInput = z.infer<typeof quickAddSchema>;

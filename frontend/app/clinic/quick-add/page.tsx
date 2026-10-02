@@ -40,6 +40,15 @@ export default function QuickAddPage(){
   const setMedicine=(i:number,patch:Partial<typeof medicines[0]>)=> setMedicines(m=> m.map((row,idx)=> idx===i? {...row,...patch}:row));
   const [treat,setTreat]=useState({patient:"", doctor:"", diagnosis:"", treatment:"", medicines:"", followUp:"", consent:""});
   const [rx,setRx]=useState({patient:"", doctor:"", diagnosis:"", medicine:"", dosage:"", frequency:"", duration:"", instructions:"", notes:""});
+  // Examination — same shape as /clinic/examination (without odontogram/investigation link)
+  const [exam,setExam]=useState({
+    visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"",
+    chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}],
+    bloodPressure:"", temperature:"", pulse:"", respiratoryRate:"", spo2:"",
+    allergies:"", medicalConditions:"", previousSurgeries:"", currentMedications:"", patientHistory:"", familyHistory:"", habits:"",
+    hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:"",
+  });
+  const setExamComplaint=(i:number,patch:Partial<typeof exam.chiefComplaints[0]>)=> setExam(s=>({...s, chiefComplaints: s.chiefComplaints.map((row,idx)=> idx===i? {...row,...patch}:row)}));
 
   useEffect(()=>{ if(sharedPatient){ setAppt(s=>({...s, patient:sharedPatient})); setRec(s=>({...s, patient:sharedPatient})); setTreat(s=>({...s, patient:sharedPatient})); setRx(s=>({...s, patient:sharedPatient})); }},[sharedPatient]);
   useEffect(()=>{ if(sharedDoctor){ setAppt(s=>({...s, doctor:sharedDoctor})); setRec(s=>({...s, doctor:sharedDoctor})); setTreat(s=>({...s, doctor:sharedDoctor})); setRx(s=>({...s, doctor:sharedDoctor})); }},[sharedDoctor]);
@@ -76,8 +85,20 @@ export default function QuickAddPage(){
       if(rx.patient && rx.medicine){
         payload.prescription = { diagnosis: rx.diagnosis||null, medicine: rx.medicine, dosage: rx.dosage||null, frequency: rx.frequency||null, duration: rx.duration||null, instructions: rx.instructions||null, notes: rx.notes||null, visitDate: todayISO() };
       }
-      if(!payload.appointment && !payload.record && !payload.prescription){
-        toast.error("Fill at least one section (Appointment, Records or Prescription)");
+      if(exam.oralFindings.trim() && exam.issueType){
+        const clean=(v:string)=> v.trim() || null;
+        const validComplaints = exam.chiefComplaints.map(c=>({ complaint: clean(c.complaint), duration: clean(c.duration), severity: c.severity || null, notes: clean(c.notes) })).filter(c=> c.complaint || c.duration || c.severity || c.notes);
+        payload.examination = {
+          visitDate: exam.visitDate, status: exam.status, issueType: exam.issueType,
+          oralFindings: exam.oralFindings.trim(), notes: clean(exam.notes),
+          allergies: clean(exam.allergies), medicalConditions: clean(exam.medicalConditions), previousSurgeries: clean(exam.previousSurgeries), currentMedications: clean(exam.currentMedications), patientHistory: clean(exam.patientHistory), familyHistory: clean(exam.familyHistory), habits: clean(exam.habits),
+          hpi: { presentingComplaint: clean(exam.hpiPresentingComplaint), onset: exam.hpiOnset || null, durationValue: clean(exam.hpiDurationValue), durationUnit: exam.hpiDurationUnit || null, progression: exam.hpiProgression || null, symptoms: clean(exam.hpiSymptoms), aggravatingFactors: clean(exam.hpiAggravatingFactors), relievingFactors: clean(exam.hpiRelievingFactors), associatedSymptoms: clean(exam.hpiAssociatedSymptoms), previousTreatment: clean(exam.hpiPreviousTreatment), additionalNotes: clean(exam.hpiAdditionalNotes) },
+          chiefComplaints: validComplaints.length? validComplaints : null,
+          bloodPressure: clean(exam.bloodPressure), temperature: clean(exam.temperature), pulse: clean(exam.pulse), respiratoryRate: clean(exam.respiratoryRate), spo2: clean(exam.spo2),
+        };
+      }
+      if(!payload.appointment && !payload.record && !payload.prescription && !payload.examination){
+        toast.error("Fill at least one section (Appointment, Records, Examination or Prescription)");
         return;
       }
       // Single submit — backend creates all and sends ONE consolidated WhatsApp notification with full data (quick-add only)
@@ -151,8 +172,65 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 3 Treatment — optimized */}
-      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">3. Treatment {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
+      {/* 3 Examination — same fields as /clinic/examination */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">3. Examination — Oral Findings {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div><Label className="text-xs">Visit date *</Label><Input type="date" value={exam.visitDate} onChange={e=>setExam({...exam,visitDate:e.target.value})} className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">Status</Label><select value={exam.status} onChange={e=>setExam({...exam,status:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="pending">Pending</option><option value="in-progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
+          <div><Label className="text-xs">Issue type *</Label><select value={exam.issueType} onChange={e=>setExam({...exam,issueType:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select (Hard / Soft)</option><option value="hard">Hard</option><option value="soft">Soft</option></select></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Oral findings *</Label><Textarea value={exam.oralFindings} onChange={e=>setExam({...exam,oralFindings:e.target.value})} rows={2} placeholder="Describe the oral examination findings…"/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Notes</Label><Textarea value={exam.notes} onChange={e=>setExam({...exam,notes:e.target.value})} rows={2} placeholder="Additional notes for this examination…"/></div>
+        </div>
+        <div className="rounded-xl border p-3 space-y-3">
+          <div className="flex items-center justify-between"><p className="text-xs font-semibold">Chief complaints</p><Button type="button" variant="outline" size="sm" onClick={()=>setExam(s=>({...s, chiefComplaints:[...s.chiefComplaints,{complaint:"",duration:"",severity:"",notes:""}]}))}>+ Add complaint</Button></div>
+          {exam.chiefComplaints.map((c,i)=> (
+            <div key={i} className="grid sm:grid-cols-4 gap-2 items-end">
+              <Input value={c.complaint} onChange={e=>setExamComplaint(i,{complaint:e.target.value})} placeholder="Complaint"/>
+              <Input value={c.duration} onChange={e=>setExamComplaint(i,{duration:e.target.value})} placeholder="Duration"/>
+              <select value={c.severity} onChange={e=>setExamComplaint(i,{severity:e.target.value})} className="h-9 rounded-xl border border-border bg-card px-3 text-sm"><option value="">Severity</option><option>Mild</option><option>Moderate</option><option>Severe</option></select>
+              <div className="flex gap-1">
+                <Input value={c.notes} onChange={e=>setExamComplaint(i,{notes:e.target.value})} placeholder="Notes" className="flex-1"/>
+                {exam.chiefComplaints.length>1 && <Button type="button" variant="ghost" size="sm" onClick={()=>setExam(s=>({...s, chiefComplaints: s.chiefComplaints.filter((_,idx)=> idx!==i)}))}>✕</Button>}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div><Label className="text-xs">Blood pressure</Label><Input value={exam.bloodPressure} onChange={e=>setExam({...exam,bloodPressure:e.target.value})} placeholder="120/80" className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">Temperature</Label><Input value={exam.temperature} onChange={e=>setExam({...exam,temperature:e.target.value})} placeholder="98.6" className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">Pulse</Label><Input value={exam.pulse} onChange={e=>setExam({...exam,pulse:e.target.value})} placeholder="72" className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">Respiratory rate</Label><Input value={exam.respiratoryRate} onChange={e=>setExam({...exam,respiratoryRate:e.target.value})} placeholder="16" className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">SpO₂</Label><Input value={exam.spo2} onChange={e=>setExam({...exam,spo2:e.target.value})} placeholder="98" className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">Allergies</Label><Input value={exam.allergies} onChange={e=>setExam({...exam,allergies:e.target.value})} placeholder="Penicillin, Nuts" className="mt-1 h-9"/></div>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2"><Label className="text-xs">Medical conditions</Label><Textarea value={exam.medicalConditions} onChange={e=>setExam({...exam,medicalConditions:e.target.value})} rows={2} placeholder="Diabetes, Hypertension…"/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Previous surgeries</Label><Textarea value={exam.previousSurgeries} onChange={e=>setExam({...exam,previousSurgeries:e.target.value})} rows={2} placeholder="Appendectomy (2015)…"/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Current medications</Label><Textarea value={exam.currentMedications} onChange={e=>setExam({...exam,currentMedications:e.target.value})} rows={2} placeholder="Aspirin 500mg (daily)…"/></div>
+          <div><Label className="text-xs">Patient history</Label><Textarea value={exam.patientHistory} onChange={e=>setExam({...exam,patientHistory:e.target.value})} rows={2}/></div>
+          <div><Label className="text-xs">Family history</Label><Textarea value={exam.familyHistory} onChange={e=>setExam({...exam,familyHistory:e.target.value})} rows={2}/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Habits</Label><Textarea value={exam.habits} onChange={e=>setExam({...exam,habits:e.target.value})} rows={2} placeholder="Smoking, alcohol, diet…"/></div>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <p className="text-xs font-semibold sm:col-span-2">History of presenting illness</p>
+          <div className="sm:col-span-2"><Label className="text-xs">Presenting complaint</Label><Input value={exam.hpiPresentingComplaint} onChange={e=>setExam({...exam,hpiPresentingComplaint:e.target.value})} className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">Onset</Label><select value={exam.hpiOnset} onChange={e=>setExam({...exam,hpiOnset:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Not specified</option><option>Sudden</option><option>Gradual</option></select></div>
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label className="text-xs">Duration</Label><Input type="number" value={exam.hpiDurationValue} onChange={e=>setExam({...exam,hpiDurationValue:e.target.value})} className="mt-1 h-9" placeholder="Number"/></div>
+            <div><Label className="text-xs">Unit</Label><select value={exam.hpiDurationUnit} onChange={e=>setExam({...exam,hpiDurationUnit:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Unit</option><option>Days</option><option>Weeks</option><option>Months</option></select></div>
+          </div>
+          <div><Label className="text-xs">Progression</Label><select value={exam.hpiProgression} onChange={e=>setExam({...exam,hpiProgression:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Not specified</option><option>Improving</option><option>Worsening</option><option>Stable</option></select></div>
+          <div><Label className="text-xs">Aggravating factors</Label><Input value={exam.hpiAggravatingFactors} onChange={e=>setExam({...exam,hpiAggravatingFactors:e.target.value})} className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">Relieving factors</Label><Input value={exam.hpiRelievingFactors} onChange={e=>setExam({...exam,hpiRelievingFactors:e.target.value})} className="mt-1 h-9"/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Symptoms</Label><Textarea value={exam.hpiSymptoms} onChange={e=>setExam({...exam,hpiSymptoms:e.target.value})} rows={2}/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Associated symptoms</Label><Textarea value={exam.hpiAssociatedSymptoms} onChange={e=>setExam({...exam,hpiAssociatedSymptoms:e.target.value})} rows={2}/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Previous treatment</Label><Textarea value={exam.hpiPreviousTreatment} onChange={e=>setExam({...exam,hpiPreviousTreatment:e.target.value})} rows={2}/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Additional notes</Label><Textarea value={exam.hpiAdditionalNotes} onChange={e=>setExam({...exam,hpiAdditionalNotes:e.target.value})} rows={2}/></div>
+        </div>
+      </CardContent></Card>
+
+      {/* 4 Treatment — optimized */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">4. Treatment {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Diagnosis *</Label><Input value={treat.diagnosis} onChange={e=>setTreat({...treat,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Treatment</Label><Input value={treat.treatment} onChange={e=>setTreat({...treat,treatment:e.target.value})} className="mt-1 h-9"/></div>
@@ -162,8 +240,8 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 4 Prescription — optimized */}
-      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">4. Prescription {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
+      {/* 5 Prescription — optimized */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">5. Prescription {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Diagnosis</Label><Input value={rx.diagnosis} onChange={e=>setRx({...rx,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Medicine *</Label><select value={rx.medicine} onChange={e=>setRx({...rx,medicine:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select</option>{medicinesOpts.slice(0,10).map(m=><option key={m} value={m}>{m}</option>)}</select></div>
