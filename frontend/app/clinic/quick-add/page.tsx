@@ -43,11 +43,10 @@ export default function QuickAddPage(){
     }
   };
 
-  // Shared state for all forms — kept at page level for sync
-  const [appt,setAppt]=useState({patient:"", doctor:"", department:"", visitType:"New Visit", date:todayISO(), time:"09:00", duration:"30", reason:"", priority:"Normal", status:"scheduled", symptoms:"", notes:"", reminder:"Same Day", whatsapp:"Yes", doctorNotify:"Yes"});
-  const [rec,setRec]=useState({patient:"", visitDate:todayISO(), visitTime:"09:00", doctor:"", visitType:"New Visit", followUpDate:"", chiefComplaint:"", symptoms:"", diagnosis:"", icdCode:"", treatment:"", advice:"", bp:"", temp:"", pulse:"", allergies:"", labTests:"", internalNotes:""});
-  const [treat,setTreat]=useState({patient:"", doctor:"", diagnosis:"", treatment:"", medicines:"", followUp:"", consent:""});
-  const [rx,setRx]=useState({patient:"", doctor:"", diagnosis:"", notes:""});
+  // Shared patient/doctor live only in the header above — sections reuse them,
+  // so no per-section patient/doctor mirrors.
+  const [rec,setRec]=useState({visitDate:todayISO(), visitTime:"09:00", followUpDate:"", chiefComplaint:"", symptoms:"", diagnosis:"", icdCode:"", treatment:"", advice:"", bp:"", temp:"", pulse:"", allergies:"", labTests:"", internalNotes:""});
+  const [rx,setRx]=useState({diagnosis:"", notes:""});
   // Prescription medicines — multi-select rows like /clinic/prescriptions (at least 1)
   const [rxMeds,setRxMeds]=useState([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]);
   const addRxMedicine=()=> setRxMeds(m=>[...m,{name:"", dosage:"", frequency:"", duration:"", instructions:""}]);
@@ -118,13 +117,7 @@ export default function QuickAddPage(){
     "other": "e.g. Root canal assessment — 46",
   };
 
-  useEffect(()=>{ if(sharedPatient){ setAppt(s=>({...s, patient:sharedPatient})); setRec(s=>({...s, patient:sharedPatient})); setTreat(s=>({...s, patient:sharedPatient})); setRx(s=>({...s, patient:sharedPatient})); }},[sharedPatient]);
-  useEffect(()=>{ if(sharedDoctor){ setAppt(s=>({...s, doctor:sharedDoctor})); setRec(s=>({...s, doctor:sharedDoctor})); setTreat(s=>({...s, doctor:sharedDoctor})); setRx(s=>({...s, doctor:sharedDoctor})); }},[sharedDoctor]);
 
-  const visitTypes=getOptions("visit_types");
-  const priorities=getOptions("appointment_priorities");
-  const durations=getOptions("appointment_durations");
-  const reminders=getOptions("reminder_options");
   const medInstructions=getOptions("medicine_instructions");
   const medicinesOpts=getOptions("medicines");
 
@@ -132,27 +125,29 @@ export default function QuickAddPage(){
     try{
       const pId=(name:string)=> patients.find(p=>p.fullName===name)?.patientId;
       const dId=(name:string)=> doctors.find(d=>d.name===name)?.doctorId;
-      const patientId = pId(sharedPatient) ?? pId(appt.patient) ?? pId(rec.patient) ?? pId(rx.patient);
-      const doctorId = dId(sharedDoctor) ?? dId(appt.doctor) ?? dId(rec.doctor) ?? dId(rx.doctor);
+      const patientId = pId(sharedPatient);
+      const doctorId = dId(sharedDoctor);
       if(!patientId || !doctorId){
         toast.error("Select patient and doctor");
         return;
       }
       const payload: any = { patientId, doctorId };
-      if(appt.patient && appt.doctor && appt.date && appt.time && appt.reason){
-        payload.appointment = { date: appt.date, time: appt.time, reason: appt.reason, notes: appt.notes||null, department: appt.department, visitType: appt.visitType, duration: appt.duration, priority: appt.priority };
+      const recTouched = rec.diagnosis.trim() || rec.chiefComplaint.trim();
+      if(recTouched && !(rec.diagnosis.trim() && rec.chiefComplaint.trim())){
+        toast.error("Records needs both diagnosis and chief complaint");
+        return;
       }
-      if(rec.patient && rec.diagnosis && rec.chiefComplaint){
+      if(rec.diagnosis.trim() && rec.chiefComplaint.trim()){
         payload.record = { visitDate: rec.visitDate, visitTime: rec.visitTime, diagnosis: rec.diagnosis, chiefComplaint: rec.chiefComplaint, symptoms: rec.symptoms||null, treatment: rec.treatment||null, advice: rec.advice||null, icdCode: rec.icdCode||null, bp: rec.bp||null, temp: rec.temp||null, pulse: rec.pulse||null, allergies: rec.allergies||null, labTests: rec.labTests||null, internalNotes: rec.internalNotes||null, followUpDate: rec.followUpDate||null };
       }
       // Prescription — multi-medicine select like /clinic/prescriptions (at least 1).
       const validRxMeds = rxMeds.filter(m=> m.name.trim());
       const rxTouched = rx.diagnosis.trim() || rx.notes.trim() || rxMeds.some(m=> m.name.trim()||m.dosage.trim()||m.frequency.trim()||m.duration.trim()||m.instructions.trim());
-      if(rx.patient && rxTouched && validRxMeds.length===0){
+      if(rxTouched && validRxMeds.length===0){
         toast.error("Add at least one medicine for Prescription");
         return;
       }
-      if(rx.patient && validRxMeds.length>0){
+      if(validRxMeds.length>0){
         payload.prescription = { diagnosis: rx.diagnosis||null, medicines: validRxMeds.map(m=>({ name: m.name.trim(), dosage: m.dosage.trim()||null, frequency: m.frequency.trim()||null, duration: m.duration.trim()||null, instructions: m.instructions.trim()||null })), notes: rx.notes||null, visitDate: todayISO() };
       }
       // Examination — same validation as /clinic/examination (issue type + oral findings min 2 chars).
@@ -197,8 +192,8 @@ export default function QuickAddPage(){
         } catch { chartData = null; }
         payload.investigation = { title: inv.title.trim(), category: inv.category, details: Object.keys(cleanDetails).length? cleanDetails : null, visitDate: inv.visitDate, status: inv.status, notes: inv.notes.trim() || null, medicalRecordId: inv.medicalRecordId || null, chartData };
       }
-      if(!payload.appointment && !payload.record && !payload.prescription && !payload.examination && !payload.investigation){
-        toast.error("Fill at least one section (Appointment, Records, Examination, Investigation or Prescription)");
+      if(!payload.record && !payload.prescription && !payload.examination && !payload.investigation){
+        toast.error("Fill at least one section (Records, Examination, Investigation or Prescription)");
         return;
       }
       // Single submit — backend creates all and sends ONE consolidated WhatsApp notification with full data (quick-add only)
@@ -214,7 +209,7 @@ export default function QuickAddPage(){
       {/* Premium header — patient optimized */}
       <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-violet-500/5 p-6">
         <h1 className="text-lg font-semibold tracking-tight">Quick Add — Fill blanks</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Select patient — doctor auto-shows. All cards below reuse // no Visit/Invoice Date.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Select patient — doctor auto-shows. All cards below reuse the shared patient and doctor.</p>
         <div className="mt-4 grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Patient *</Label><select value={sharedPatient} onChange={e=>onSharedPatient(e.target.value)} className="mt-1 h-10 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
           <div><Label className="text-xs">Doctor (auto)</Label><Input value={sharedDoctor} readOnly placeholder="Auto from patient" className="mt-1 h-10 bg-muted"/></div>
@@ -238,7 +233,6 @@ export default function QuickAddPage(){
         <div className="grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Visit date *</Label><Input type="date" value={rec.visitDate} onChange={e=>setRec({...rec,visitDate:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Visit time</Label><Input type="time" value={rec.visitTime} onChange={e=>setRec({...rec,visitTime:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Visit type *</Label><select value={rec.visitType} onChange={e=>setRec({...rec,visitType:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm">{visitTypes.map(o=><option key={o} value={o}>{o}</option>)}</select></div>
           <div><Label className="text-xs">Follow-up date</Label><Input type="date" value={rec.followUpDate} onChange={e=>setRec({...rec,followUpDate:e.target.value})} className="mt-1 h-9"/></div>
           <div className="sm:col-span-2"><Label className="text-xs">Chief complaint *</Label><Textarea value={rec.chiefComplaint} onChange={e=>setRec({...rec,chiefComplaint:e.target.value})} rows={2}/></div>
           <div className="sm:col-span-2"><Label className="text-xs">Symptoms</Label><Textarea value={rec.symptoms} onChange={e=>setRec({...rec,symptoms:e.target.value})} rows={2}/></div>
@@ -345,19 +339,8 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 5 Treatment — optimized */}
-      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">5. Treatment {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label className="text-xs">Diagnosis *</Label><Input value={treat.diagnosis} onChange={e=>setTreat({...treat,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Treatment</Label><Input value={treat.treatment} onChange={e=>setTreat({...treat,treatment:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Medicines</Label><select value={treat.medicines} onChange={e=>setTreat({...treat,medicines:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select</option>{medicinesOpts.slice(0,10).map(m=><option key={m} value={m}>{m}</option>)}</select></div>
-          <div><Label className="text-xs">Follow-up</Label><Input type="date" value={treat.followUp} onChange={e=>setTreat({...treat,followUp:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Patient Consent</Label><select value={treat.consent} onChange={e=>setTreat({...treat,consent:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select</option><option>Yes</option><option>No</option><option>Pending</option></select></div>
-        </div>
-      </CardContent></Card>
-
-      {/* 6 Prescription — select medicines */}
-      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">6. Prescription {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
+      {/* 5 Prescription — select medicines */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">5. Prescription {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2"><Label className="text-xs">Diagnosis</Label><Input value={rx.diagnosis} onChange={e=>setRx({...rx,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
         </div>
@@ -383,7 +366,7 @@ export default function QuickAddPage(){
 
 
       <div className="sticky bottom-4 flex justify-center gap-3 pt-2">
-        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setAppt(s=>({...s, reason:"", notes:""})); setRec(s=>({...s, chiefComplaint:"", diagnosis:""})); setTreat(s=>({...s, diagnosis:"", treatment:""})); setRx(s=>({...s, diagnosis:"", notes:""})); setRxMeds([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]); setExam({visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"", chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}], bloodPressure:"", temperature:"", pulse:"", respiratoryRate:"", spo2:"", allergies:"", medicalConditions:"", previousSurgeries:"", currentMedications:"", patientHistory:"", familyHistory:"", habits:"", hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:""}); setInv({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", medicalRecordId:"", showChart:true, details:{}}); toast.info("Cancelled"); }}>Cancel</Button>
+        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setRec(s=>({...s, chiefComplaint:"", diagnosis:""})); setRx(s=>({...s, diagnosis:"", notes:""})); setRxMeds([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]); setExam({visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"", chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}], bloodPressure:"", temperature:"", pulse:"", respiratoryRate:"", spo2:"", allergies:"", medicalConditions:"", previousSurgeries:"", currentMedications:"", patientHistory:"", familyHistory:"", habits:"", hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:""}); setInv({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", medicalRecordId:"", showChart:true, details:{}}); toast.info("Cancelled"); }}>Cancel</Button>
         <Button size="lg" className="h-11 px-8 shadow-lg" onClick={submitAll}>Save</Button>
       </div>
     </div>
