@@ -122,27 +122,37 @@ export class QuickAddService {
       });
     }
 
-    // 3. Prescription — direct insert
-    if (input.prescription?.medicine) {
+    // 3. Prescription — direct insert (multi-medicine, like standalone prescriptions)
+    {
+      const meds = (input.prescription?.medicines ?? []).filter((m) => m.name?.trim());
+      const legacySingle = input.prescription?.medicine?.trim();
+      if (legacySingle && meds.length === 0) {
+        meds.push({
+          name: legacySingle,
+          dosage: input.prescription?.dosage ?? null,
+          frequency: input.prescription?.frequency ?? null,
+          duration: input.prescription?.duration ?? null,
+          instructions: input.prescription?.instructions ?? null,
+        });
+      }
+      if (meds.length > 0) {
       hasData = true;
       const prescriptionId = generatePrescriptionId();
       const doc: any = {
         clinicId,
         prescriptionId,
         patientId: input.patientId,
-        doctorId: input.prescription.medicine ? input.doctorId : null,
-        visitDate: input.prescription.visitDate ?? new Date().toISOString().slice(0, 10),
-        diagnosis: input.prescription.diagnosis ?? null,
-        medicines: [
-          {
-            name: input.prescription.medicine,
-            dosage: input.prescription.dosage ?? null,
-            frequency: input.prescription.frequency ?? null,
-            duration: input.prescription.duration ?? null,
-            instructions: input.prescription.instructions ?? null,
-          },
-        ],
-        notes: input.prescription.notes ?? null,
+        doctorId: input.doctorId,
+        visitDate: input.prescription?.visitDate ?? new Date().toISOString().slice(0, 10),
+        diagnosis: input.prescription?.diagnosis ?? null,
+        medicines: meds.map((m: any) => ({
+          name: m.name.trim(),
+          dosage: m.dosage ?? null,
+          frequency: m.frequency ?? null,
+          duration: m.duration ?? null,
+          instructions: m.instructions ?? null,
+        })),
+        notes: input.prescription?.notes ?? null,
         createdBy: ctx.userId,
         createdAt: now,
         updatedAt: now,
@@ -153,8 +163,9 @@ export class QuickAddService {
         action: "create",
         entity: "prescription",
         entityId: prescriptionId,
-        metadata: { patientId: input.patientId, medicine: input.prescription.medicine },
+        metadata: { patientId: input.patientId, medicines: meds.map((m: any) => m.name) },
       });
+      }
     }
 
     // 4. Investigation — direct insert (same shape as standalone investigations)
@@ -293,10 +304,11 @@ export class QuickAddService {
         if (results.record.followUpDate) lines.push(`  Follow-up: ${results.record.followUpDate}`);
       }
       if (results.prescription) {
-        const med = results.prescription.medicines[0];
-        lines.push(`• Prescription: ${med.name}${med.dosage ? ` ${med.dosage}` : ""} ${med.frequency ?? ""} for ${med.duration ?? ""}`.trim());
+        const medList = (results.prescription.medicines ?? []).map((med: any) => `${med.name}${med.dosage ? ` ${med.dosage}` : ""}${med.frequency ? ` (${med.frequency})` : ""}${med.duration ? ` for ${med.duration}` : ""}`.trim()).join(", ");
+        lines.push(`• Prescription: ${medList}`);
         if (results.prescription.diagnosis) lines.push(`  Diagnosis: ${results.prescription.diagnosis}`);
-        if (med.instructions) lines.push(`  Instructions: ${med.instructions}`);
+        const withInstructions = (results.prescription.medicines ?? []).filter((med: any) => med.instructions);
+        for (const med of withInstructions) lines.push(`  ${med.name} — Instructions: ${med.instructions}`);
         if (results.prescription.notes) lines.push(`  Notes: ${results.prescription.notes}`);
       }
       if (results.examination) {

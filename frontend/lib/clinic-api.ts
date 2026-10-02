@@ -1658,7 +1658,7 @@ export function createQuickAdd(
       followUpDate?: string | null;
       medicines: Array<{ name: string; dosage?: string; frequency?: string; duration?: string; instructions?: string }>;
     } | null;
-    prescription?: { diagnosis?: string | null; medicine: string; dosage?: string | null; frequency?: string | null; duration?: string | null; instructions?: string | null; notes?: string | null; visitDate?: string } | null;
+    prescription?: { diagnosis?: string | null; medicine?: string; dosage?: string | null; frequency?: string | null; duration?: string | null; instructions?: string | null; medicines?: Array<{ name: string; dosage?: string | null; frequency?: string | null; duration?: string | null; instructions?: string | null }>; notes?: string | null; visitDate?: string } | null;
     examination?: {
       visitDate: string;
       status?: string;

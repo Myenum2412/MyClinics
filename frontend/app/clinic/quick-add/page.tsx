@@ -51,7 +51,12 @@ export default function QuickAddPage(){
   const removeMedicine=(i:number)=> setMedicines(m=> m.filter((_,idx)=> idx!==i));
   const setMedicine=(i:number,patch:Partial<typeof medicines[0]>)=> setMedicines(m=> m.map((row,idx)=> idx===i? {...row,...patch}:row));
   const [treat,setTreat]=useState({patient:"", doctor:"", diagnosis:"", treatment:"", medicines:"", followUp:"", consent:""});
-  const [rx,setRx]=useState({patient:"", doctor:"", diagnosis:"", medicine:"", dosage:"", frequency:"", duration:"", instructions:"", notes:""});
+  const [rx,setRx]=useState({patient:"", doctor:"", diagnosis:"", notes:""});
+  // Prescription medicines — multi-select rows like /clinic/prescriptions (at least 1)
+  const [rxMeds,setRxMeds]=useState([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]);
+  const addRxMedicine=()=> setRxMeds(m=>[...m,{name:"", dosage:"", frequency:"", duration:"", instructions:""}]);
+  const removeRxMedicine=(i:number)=> setRxMeds(m=> m.filter((_,idx)=> idx!==i));
+  const setRxMedicine=(i:number,patch:Partial<typeof rxMeds[0]>)=> setRxMeds(m=> m.map((row,idx)=> idx===i? {...row,...patch}:row));
   // Examination — full /clinic/examination form (patient/doctor come from the shared header)
   const [exam,setExam]=useState({
     visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"",
@@ -149,8 +154,15 @@ export default function QuickAddPage(){
         }
         payload.record = { visitDate: rec.visitDate, visitTime: rec.visitTime, diagnosis: rec.diagnosis, chiefComplaint: rec.chiefComplaint, symptoms: rec.symptoms||null, treatment: rec.treatment||null, advice: rec.advice||null, icdCode: rec.icdCode||null, bp: rec.bp||null, temp: rec.temp||null, pulse: rec.pulse||null, allergies: rec.allergies||null, labTests: rec.labTests||null, internalNotes: rec.internalNotes||null, followUpDate: rec.followUpDate||null, medicines: validMeds };
       }
-      if(rx.patient && rx.medicine){
-        payload.prescription = { diagnosis: rx.diagnosis||null, medicine: rx.medicine, dosage: rx.dosage||null, frequency: rx.frequency||null, duration: rx.duration||null, instructions: rx.instructions||null, notes: rx.notes||null, visitDate: todayISO() };
+      // Prescription — multi-medicine select like /clinic/prescriptions (at least 1).
+      const validRxMeds = rxMeds.filter(m=> m.name.trim());
+      const rxTouched = rx.diagnosis.trim() || rx.notes.trim() || rxMeds.some(m=> m.name.trim()||m.dosage.trim()||m.frequency.trim()||m.duration.trim()||m.instructions.trim());
+      if(rx.patient && rxTouched && validRxMeds.length===0){
+        toast.error("Add at least one medicine for Prescription");
+        return;
+      }
+      if(rx.patient && validRxMeds.length>0){
+        payload.prescription = { diagnosis: rx.diagnosis||null, medicines: validRxMeds.map(m=>({ name: m.name.trim(), dosage: m.dosage.trim()||null, frequency: m.frequency.trim()||null, duration: m.duration.trim()||null, instructions: m.instructions.trim()||null })), notes: rx.notes||null, visitDate: todayISO() };
       }
       // Examination — same validation as /clinic/examination (issue type + oral findings min 2 chars).
       // Guard first: touched-but-incomplete sections error instead of silently dropping data.
@@ -368,22 +380,34 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 6 Prescription — optimized */}
+      {/* 6 Prescription — select medicines */}
       <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">6. Prescription {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label className="text-xs">Diagnosis</Label><Input value={rx.diagnosis} onChange={e=>setRx({...rx,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Medicine *</Label><select value={rx.medicine} onChange={e=>setRx({...rx,medicine:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select</option>{medicinesOpts.slice(0,10).map(m=><option key={m} value={m}>{m}</option>)}</select></div>
-          <div><Label className="text-xs">Dosage</Label><Input value={rx.dosage} onChange={e=>setRx({...rx,dosage:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Frequency</Label><Input value={rx.frequency} onChange={e=>setRx({...rx,frequency:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Duration</Label><Input value={rx.duration} onChange={e=>setRx({...rx,duration:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Instructions</Label><select value={rx.instructions} onChange={e=>setRx({...rx,instructions:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select</option>{medInstructions.map(i=><option key={i} value={i}>{i}</option>)}</select></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Diagnosis</Label><Input value={rx.diagnosis} onChange={e=>setRx({...rx,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
+        </div>
+        <div className="rounded-xl border p-3 space-y-3">
+          <div className="flex items-center justify-between"><p className="text-xs font-semibold">Medicines * (at least 1) — select + Add More</p><Button type="button" variant="outline" size="sm" onClick={addRxMedicine}>+ Add More</Button></div>
+          {rxMeds.map((med,i)=> (
+            <div key={i} className="grid sm:grid-cols-5 gap-2 items-end">
+              <select value={med.name} onChange={e=>setRxMedicine(i,{name:e.target.value})} className="h-9 rounded-xl border border-border bg-card px-3 text-sm"><option value="">Medicine *</option>{medicinesOpts.map(m=><option key={m} value={m}>{m}</option>)}</select>
+              <Input value={med.dosage} onChange={e=>setRxMedicine(i,{dosage:e.target.value})} placeholder="Dosage"/>
+              <Input value={med.frequency} onChange={e=>setRxMedicine(i,{frequency:e.target.value})} placeholder="Frequency"/>
+              <Input value={med.duration} onChange={e=>setRxMedicine(i,{duration:e.target.value})} placeholder="Duration"/>
+              <div className="flex gap-1">
+                <select value={med.instructions} onChange={e=>setRxMedicine(i,{instructions:e.target.value})} className="h-9 flex-1 rounded-xl border border-border bg-card px-3 text-sm"><option value="">Instructions</option>{medInstructions.map(x=><option key={x} value={x}>{x}</option>)}</select>
+                {rxMeds.length>1 && <Button type="button" variant="ghost" size="sm" onClick={()=>removeRxMedicine(i)}>✕</Button>}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2"><Label className="text-xs">Notes</Label><Textarea value={rx.notes} onChange={e=>setRx({...rx,notes:e.target.value})} rows={2}/></div>
         </div>
       </CardContent></Card>
 
 
       <div className="sticky bottom-4 flex justify-center gap-3 pt-2">
-        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setAppt(s=>({...s, reason:"", notes:""})); setRec(s=>({...s, chiefComplaint:"", diagnosis:""})); setTreat(s=>({...s, diagnosis:"", treatment:""})); setRx(s=>({...s, diagnosis:"", medicine:"", notes:""})); setExam({visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"", chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}], bloodPressure:"", temperature:"", pulse:"", respiratoryRate:"", spo2:"", allergies:"", medicalConditions:"", previousSurgeries:"", currentMedications:"", patientHistory:"", familyHistory:"", habits:"", hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:""}); setInv({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", medicalRecordId:"", showChart:true, details:{}}); toast.info("Cancelled"); }}>Cancel</Button>
+        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setAppt(s=>({...s, reason:"", notes:""})); setRec(s=>({...s, chiefComplaint:"", diagnosis:""})); setTreat(s=>({...s, diagnosis:"", treatment:""})); setRx(s=>({...s, diagnosis:"", notes:""})); setRxMeds([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]); setExam({visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"", chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}], bloodPressure:"", temperature:"", pulse:"", respiratoryRate:"", spo2:"", allergies:"", medicalConditions:"", previousSurgeries:"", currentMedications:"", patientHistory:"", familyHistory:"", habits:"", hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:""}); setInv({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", medicalRecordId:"", showChart:true, details:{}}); toast.info("Cancelled"); }}>Cancel</Button>
         <Button size="lg" className="h-11 px-8 shadow-lg" onClick={submitAll}>Save</Button>
       </div>
     </div>

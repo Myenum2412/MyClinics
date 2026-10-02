@@ -48,11 +48,23 @@ export const quickAddSchema = z.object({
   prescription: z
     .object({
       diagnosis: z.string().max(1000).optional().nullable(),
-      medicine: z.string().min(1),
+      medicine: z.string().min(1).optional(),
       dosage: z.string().optional().nullable(),
       frequency: z.string().optional().nullable(),
       duration: z.string().optional().nullable(),
       instructions: z.string().optional().nullable(),
+      medicines: z
+        .array(
+          z.object({
+            name: z.string().min(1),
+            dosage: z.string().optional().nullable(),
+            frequency: z.string().optional().nullable(),
+            duration: z.string().optional().nullable(),
+            instructions: z.string().optional().nullable(),
+          })
+        )
+        .max(50)
+        .optional(),
       notes: z.string().max(2000).optional().nullable(),
       visitDate: z.string().optional(),
     })
