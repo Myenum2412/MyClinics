@@ -49,6 +49,44 @@ export default function QuickAddPage(){
     hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:"",
   });
   const setExamComplaint=(i:number,patch:Partial<typeof exam.chiefComplaints[0]>)=> setExam(s=>({...s, chiefComplaints: s.chiefComplaints.map((row,idx)=> idx===i? {...row,...patch}:row)}));
+  // Investigation — same shape as /clinic/investigation (without odontogram chart / record link)
+  const [inv,setInv]=useState({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", details:{} as Record<string,string>});
+  const INV_FIELDS: Record<string, Array<{key:string;label:string;placeholder:string}>> = {
+    "vital-test": [
+      { key: "bloodPressure", label: "Blood pressure", placeholder: "e.g. 120/80 mmHg" },
+      { key: "temperature", label: "Temperature", placeholder: "e.g. 98.6 °F" },
+      { key: "pulse", label: "Pulse", placeholder: "e.g. 72 bpm" },
+      { key: "respiratoryRate", label: "Respiratory rate", placeholder: "e.g. 16 /min" },
+      { key: "spo2", label: "SpO₂", placeholder: "e.g. 98 %" },
+      { key: "height", label: "Height", placeholder: "e.g. 170 cm" },
+      { key: "weight", label: "Weight", placeholder: "e.g. 68 kg" },
+      { key: "bloodSugar", label: "Blood sugar", placeholder: "e.g. 110 mg/dL (fasting)" },
+    ],
+    "x-ray": [
+      { key: "xrayType", label: "X-ray type", placeholder: "e.g. IOPA, OPG, CBCT, Chest" },
+      { key: "region", label: "Region / tooth", placeholder: "e.g. 46, upper arch" },
+      { key: "findings", label: "Findings", placeholder: "Radiographic findings…" },
+      { key: "impression", label: "Impression", placeholder: "Radiologist impression…" },
+    ],
+    "blood-report": [
+      { key: "testPanel", label: "Test / panel", placeholder: "e.g. CBC, FBS, Lipid profile, HbA1c" },
+      { key: "hemoglobin", label: "Hemoglobin", placeholder: "e.g. 13.5 g/dL" },
+      { key: "wbc", label: "WBC count", placeholder: "e.g. 7,200 /µL" },
+      { key: "platelets", label: "Platelet count", placeholder: "e.g. 2.4 L/µL" },
+      { key: "esr", label: "ESR", placeholder: "e.g. 12 mm/hr" },
+      { key: "fastingSugar", label: "Fasting sugar", placeholder: "e.g. 95 mg/dL" },
+      { key: "ppSugar", label: "PP sugar", placeholder: "e.g. 130 mg/dL" },
+      { key: "remarks", label: "Remarks", placeholder: "Pathologist remarks…" },
+    ],
+    "biopsy": [
+      { key: "biopsySite", label: "Biopsy site", placeholder: "e.g. left buccal mucosa" },
+      { key: "specimenType", label: "Specimen type", placeholder: "e.g. Incisional, Excisional, Punch, FNAC" },
+      { key: "clinicalDiagnosis", label: "Clinical diagnosis", placeholder: "Provisional clinical diagnosis…" },
+      { key: "grossFindings", label: "Gross findings", placeholder: "Specimen description…" },
+      { key: "labName", label: "Referred lab", placeholder: "Lab name…" },
+    ],
+    "other": [],
+  };
 
   useEffect(()=>{ if(sharedPatient){ setAppt(s=>({...s, patient:sharedPatient})); setRec(s=>({...s, patient:sharedPatient})); setTreat(s=>({...s, patient:sharedPatient})); setRx(s=>({...s, patient:sharedPatient})); }},[sharedPatient]);
   useEffect(()=>{ if(sharedDoctor){ setAppt(s=>({...s, doctor:sharedDoctor})); setRec(s=>({...s, doctor:sharedDoctor})); setTreat(s=>({...s, doctor:sharedDoctor})); setRx(s=>({...s, doctor:sharedDoctor})); }},[sharedDoctor]);
@@ -97,8 +135,13 @@ export default function QuickAddPage(){
           bloodPressure: clean(exam.bloodPressure), temperature: clean(exam.temperature), pulse: clean(exam.pulse), respiratoryRate: clean(exam.respiratoryRate), spo2: clean(exam.spo2),
         };
       }
-      if(!payload.appointment && !payload.record && !payload.prescription && !payload.examination){
-        toast.error("Fill at least one section (Appointment, Records, Examination or Prescription)");
+      if(inv.title.trim()){
+        const cleanDetails: Record<string,string> = {};
+        for(const [k,v] of Object.entries(inv.details)){ if(v.trim()) cleanDetails[k]=v.trim(); }
+        payload.investigation = { title: inv.title.trim(), category: inv.category, details: Object.keys(cleanDetails).length? cleanDetails : null, visitDate: inv.visitDate, status: inv.status, notes: inv.notes.trim() || null };
+      }
+      if(!payload.appointment && !payload.record && !payload.prescription && !payload.examination && !payload.investigation){
+        toast.error("Fill at least one section (Appointment, Records, Examination, Investigation or Prescription)");
         return;
       }
       // Single submit — backend creates all and sends ONE consolidated WhatsApp notification with full data (quick-add only)
@@ -229,8 +272,27 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 4 Treatment — optimized */}
-      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">4. Treatment {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
+      {/* 4 Investigation — same fields as /clinic/investigation (no odontogram) */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">4. Investigation {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div className="sm:col-span-2"><Label className="text-xs">Title *</Label><Input value={inv.title} onChange={e=>setInv({...inv,title:e.target.value})} placeholder="e.g. IOPA — 46" className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">Category</Label><select value={inv.category} onChange={e=>setInv({...inv,category:e.target.value, details:{}})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="vital-test">Vital Test</option><option value="x-ray">X-Ray</option><option value="blood-report">Blood Report</option><option value="biopsy">Biopsy</option><option value="other">Other</option></select></div>
+          <div><Label className="text-xs">Visit date *</Label><Input type="date" value={inv.visitDate} onChange={e=>setInv({...inv,visitDate:e.target.value})} className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">Status</Label><select value={inv.status} onChange={e=>setInv({...inv,status:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="pending">Pending</option><option value="in-progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Notes</Label><Textarea value={inv.notes} onChange={e=>setInv({...inv,notes:e.target.value})} rows={2} placeholder="Clinical notes for this investigation…"/></div>
+        </div>
+        {(INV_FIELDS[inv.category] ?? []).length>0 && (
+          <div className="grid sm:grid-cols-2 gap-4">
+            <p className="text-xs font-semibold sm:col-span-2">Report details — {inv.category}</p>
+            {(INV_FIELDS[inv.category] ?? []).map(f=> (
+              <div key={f.key}><Label className="text-xs">{f.label}</Label><Input value={inv.details[f.key] ?? ""} onChange={e=>setInv(s=>({...s, details:{...s.details, [f.key]:e.target.value}}))} placeholder={f.placeholder} className="mt-1 h-9"/></div>
+            ))}
+          </div>
+        )}
+      </CardContent></Card>
+
+      {/* 5 Treatment — optimized */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">5. Treatment {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Diagnosis *</Label><Input value={treat.diagnosis} onChange={e=>setTreat({...treat,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Treatment</Label><Input value={treat.treatment} onChange={e=>setTreat({...treat,treatment:e.target.value})} className="mt-1 h-9"/></div>
@@ -240,8 +302,8 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 5 Prescription — optimized */}
-      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">5. Prescription {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
+      {/* 6 Prescription — optimized */}
+      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">6. Prescription {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Diagnosis</Label><Input value={rx.diagnosis} onChange={e=>setRx({...rx,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Medicine *</Label><select value={rx.medicine} onChange={e=>setRx({...rx,medicine:e.target.value})} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm"><option value="">Select</option>{medicinesOpts.slice(0,10).map(m=><option key={m} value={m}>{m}</option>)}</select></div>

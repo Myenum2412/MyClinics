@@ -2,7 +2,7 @@ import type { Db } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import { requireClinicOf, type ClinicContext } from "@/clinic/core/context";
 import { BadRequestError, NotFoundError } from "@/clinic/core/errors";
-import { generateAppointmentId, generateExaminationId, generateRecordId, generatePrescriptionId } from "@/clinic/core/ids";
+import { generateAppointmentId, generateExaminationId, generateInvestigationId, generateRecordId, generatePrescriptionId } from "@/clinic/core/ids";
 import { now as nowFn } from "@/clinic/core/datetime";
 import { writeAudit } from "@/clinic/core/audit";
 import { enqueueClinicNotification } from "@/services/whatsapp/notification.service";
@@ -143,7 +143,42 @@ export class QuickAddService {
       });
     }
 
-    // 4. Examination — direct insert (same shape as standalone examinations)
+    // 4. Investigation — direct insert (no odontogram chart / record link in quick-add)
+    let quickAddInvestigationId: string | null = null;
+    if (input.investigation?.title?.trim() && input.investigation?.visitDate) {
+      hasData = true;
+      const investigationId = generateInvestigationId();
+      quickAddInvestigationId = investigationId;
+      const doc: any = {
+        clinicId,
+        investigationId,
+        patientId: input.patientId,
+        patientName: (patient as any).fullName,
+        doctorId: input.doctorId,
+        title: input.investigation.title.trim(),
+        notes: input.investigation.notes ?? null,
+        category: input.investigation.category ?? "other",
+        details: (input.investigation.details as Record<string, unknown> | undefined) ?? null,
+        visitDate: input.investigation.visitDate,
+        status: input.investigation.status ?? "pending",
+        chartData: null,
+        medicalRecordId: null,
+        createdBy: ctx.userId,
+        createdByName: (ctx as any).name ?? null,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await this.db.collection(CLINIC_COLLECTIONS.investigations).insertOne(doc);
+      results.investigation = { investigationId, ...doc };
+      await writeAudit(this.db, ctx, {
+        action: "create",
+        entity: "investigation",
+        entityId: investigationId,
+        metadata: { patientId: input.patientId, doctorId: input.doctorId, title: input.investigation.title },
+      });
+    }
+
+    // 5. Examination — direct insert (same shape as standalone examinations)
     if (input.examination?.oralFindings && input.examination?.issueType && input.examination?.visitDate) {
       hasData = true;
       const examinationId = generateExaminationId();
@@ -156,7 +191,7 @@ export class QuickAddService {
         visitDate: input.examination.visitDate,
         status: input.examination.status ?? "pending",
         issueType: input.examination.issueType,
-        investigationId: null,
+        investigationId: quickAddInvestigationId,
         oralFindings: input.examination.oralFindings.trim(),
         notes: input.examination.notes ?? null,
         allergies: input.examination.allergies ?? null,
@@ -192,7 +227,7 @@ export class QuickAddService {
       throw new BadRequestError("No valid data provided for quick-add. Fill at least one section.");
     }
 
-    // 5. Single consolidated WhatsApp notification for this quick-add only
+    // 6. Single consolidated WhatsApp notification for this quick-add only
     // Build full data summary
     const patientName = (patient as any).fullName ?? "Patient";
     const doctorName = (doctor as any).name ?? "Doctor";
@@ -238,6 +273,10 @@ export class QuickAddService {
         if (results.examination.bloodPressure || results.examination.temperature || results.examination.pulse) {
           lines.push(`  Vitals: BP ${results.examination.bloodPressure ?? "-"} | Temp ${results.examination.temperature ?? "-"} | Pulse ${results.examination.pulse ?? "-"}`);
         }
+      }
+      if (results.investigation) {
+        lines.push(`• Investigation (${results.investigation.visitDate} — ${results.investigation.category}): ${results.investigation.title}`);
+        if (results.investigation.notes) lines.push(`  Notes: ${results.investigation.notes}`);
       }
       lines.push(``);
       lines.push(`For full details, please login to your Patient Portal.`);

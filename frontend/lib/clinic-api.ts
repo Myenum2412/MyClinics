@@ -1680,8 +1680,16 @@ export function createQuickAdd(
       respiratoryRate?: string | null;
       spo2?: string | null;
     } | null;
+    investigation?: {
+      title: string;
+      category?: string;
+      details?: Record<string, unknown> | null;
+      visitDate: string;
+      status?: string;
+      notes?: string | null;
+    } | null;
   }
-): Promise<{ ok: true; appointment?: any; record?: any; prescription?: any; examination?: any; notification: { queued: boolean } }> {
+): Promise<{ ok: true; appointment?: any; record?: any; prescription?: any; examination?: any; investigation?: any; notification: { queued: boolean } }> {
   return request(tenantPath(clinicId, "/quick-add"), {
     method: "POST",
     body: JSON.stringify(input),

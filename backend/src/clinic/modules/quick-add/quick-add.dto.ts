@@ -106,6 +106,16 @@ export const quickAddSchema = z.object({
       spo2: z.string().max(20).optional().nullable(),
     })
     .optional(),
+  investigation: z
+    .object({
+      title: z.string().trim().min(2).max(200),
+      category: z.enum(["vital-test", "x-ray", "blood-report", "biopsy", "other"]).optional(),
+      details: z.record(z.string(), z.unknown()).optional().nullable(),
+      visitDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      status: z.enum(["pending", "in-progress", "completed", "cancelled"]).optional(),
+      notes: z.string().max(5000).optional().nullable(),
+    })
+    .optional(),
 });
 
 export type QuickAddInput = z.infer<typeof quickAddSchema>;
