@@ -1687,6 +1687,8 @@ export function createQuickAdd(
       visitDate: string;
       status?: string;
       notes?: string | null;
+      chartData?: Record<string, unknown> | null;
+      medicalRecordId?: string | null;
     } | null;
   }
 ): Promise<{ ok: true; appointment?: any; record?: any; prescription?: any; examination?: any; investigation?: any; notification: { queued: boolean } }> {

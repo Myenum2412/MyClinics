@@ -114,6 +114,8 @@ export const quickAddSchema = z.object({
       visitDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
       status: z.enum(["pending", "in-progress", "completed", "cancelled"]).optional(),
       notes: z.string().max(5000).optional().nullable(),
+      chartData: z.record(z.string(), z.unknown()).optional().nullable(),
+      medicalRecordId: z.string().trim().min(1).max(120).optional().nullable(),
     })
     .optional(),
 });

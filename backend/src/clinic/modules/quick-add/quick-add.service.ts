@@ -9,6 +9,20 @@ import { enqueueClinicNotification } from "@/services/whatsapp/notification.serv
 import { logger } from "@/lib/logger";
 import type { QuickAddInput } from "./quick-add.dto";
 
+/** Upper bound for the serialised odontogram chart payload (~1MB JSON). Mirrors investigations.service. */
+const MAX_CHART_BYTES = 1024 * 1024;
+
+/** Upper bound for the category-specific form payload. Mirrors investigations.service. */
+const MAX_DETAILS_BYTES = 32 * 1024;
+
+function jsonByteSize(value: unknown): number {
+  try {
+    return Buffer.byteLength(JSON.stringify(value) ?? "", "utf8");
+  } catch {
+    return Number.POSITIVE_INFINITY;
+  }
+}
+
 export class QuickAddService {
   constructor(private readonly db: Db) {}
 
@@ -143,10 +157,28 @@ export class QuickAddService {
       });
     }
 
-    // 4. Investigation — direct insert (no odontogram chart / record link in quick-add)
+    // 4. Investigation — direct insert (same shape as standalone investigations)
     let quickAddInvestigationId: string | null = null;
     if (input.investigation?.title?.trim() && input.investigation?.visitDate) {
       hasData = true;
+      if (input.investigation.chartData && jsonByteSize(input.investigation.chartData) > MAX_CHART_BYTES) {
+        throw new BadRequestError("Chart data is too large");
+      }
+      if (input.investigation.details && jsonByteSize(input.investigation.details) > MAX_DETAILS_BYTES) {
+        throw new BadRequestError("Report details are too large");
+      }
+      // Validate the optional medical-record link: must exist and belong to the same patient.
+      let medicalRecordId: string | null = null;
+      if (input.investigation.medicalRecordId) {
+        const record = await this.db
+          .collection<{ recordId: string; patientId: string }>(CLINIC_COLLECTIONS.medicalRecords)
+          .findOne({ clinicId, recordId: input.investigation.medicalRecordId });
+        if (!record) throw new BadRequestError("The linked medical record does not exist");
+        if (record.patientId !== input.patientId) {
+          throw new BadRequestError("The linked medical record belongs to a different patient");
+        }
+        medicalRecordId = input.investigation.medicalRecordId;
+      }
       const investigationId = generateInvestigationId();
       quickAddInvestigationId = investigationId;
       const doc: any = {
@@ -161,8 +193,8 @@ export class QuickAddService {
         details: (input.investigation.details as Record<string, unknown> | undefined) ?? null,
         visitDate: input.investigation.visitDate,
         status: input.investigation.status ?? "pending",
-        chartData: null,
-        medicalRecordId: null,
+        chartData: (input.investigation.chartData as Record<string, unknown> | undefined) ?? null,
+        medicalRecordId,
         createdBy: ctx.userId,
         createdByName: (ctx as any).name ?? null,
         createdAt: now,
@@ -174,7 +206,7 @@ export class QuickAddService {
         action: "create",
         entity: "investigation",
         entityId: investigationId,
-        metadata: { patientId: input.patientId, doctorId: input.doctorId, title: input.investigation.title },
+        metadata: { patientId: input.patientId, doctorId: input.doctorId, title: input.investigation.title, category: input.investigation.category ?? "other", medicalRecordId },
       });
     }
 

@@ -1,15 +1,27 @@
 "use client";
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { listPatients, listDoctors, listAppointments, updateAppointment, createQuickAdd, type Patient, type Doctor, type Appointment } from "@/lib/clinic-api";
+import { listPatients, listDoctors, listAppointments, listRecords, updateAppointment, createQuickAdd, type Patient, type Doctor, type Appointment, type MedicineRecord } from "@/lib/clinic-api";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { todayISO } from "@/lib/datetime";
+
+// Load odontogram + its CSS only when the "Other" investigation chart opens —
+// same lazy module as /clinic/investigation and /clinic/examination.
+const OdontogramShell = dynamic(
+  () => import("../investigation/odontogram-lazy").then((m) => m.OdontogramShell),
+  { ssr: false, loading: () => <div className="h-[420px] animate-pulse rounded-xl bg-muted/40" /> }
+);
+
+async function odontogramApi() {
+  return import("../investigation/odontogram-lazy");
+}
 
 export default function QuickAddPage(){
   const session = useRequireRole("staff" as any);
@@ -40,7 +52,7 @@ export default function QuickAddPage(){
   const setMedicine=(i:number,patch:Partial<typeof medicines[0]>)=> setMedicines(m=> m.map((row,idx)=> idx===i? {...row,...patch}:row));
   const [treat,setTreat]=useState({patient:"", doctor:"", diagnosis:"", treatment:"", medicines:"", followUp:"", consent:""});
   const [rx,setRx]=useState({patient:"", doctor:"", diagnosis:"", medicine:"", dosage:"", frequency:"", duration:"", instructions:"", notes:""});
-  // Examination — same shape as /clinic/examination (without odontogram/investigation link)
+  // Examination — full /clinic/examination form (patient/doctor come from the shared header)
   const [exam,setExam]=useState({
     visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"",
     chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}],
@@ -49,8 +61,18 @@ export default function QuickAddPage(){
     hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:"",
   });
   const setExamComplaint=(i:number,patch:Partial<typeof exam.chiefComplaints[0]>)=> setExam(s=>({...s, chiefComplaints: s.chiefComplaints.map((row,idx)=> idx===i? {...row,...patch}:row)}));
-  // Investigation — same shape as /clinic/investigation (without odontogram chart / record link)
-  const [inv,setInv]=useState({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", details:{} as Record<string,string>});
+  // Investigation — full /clinic/investigation form (incl. odontogram for "Other" + record link)
+  const [inv,setInv]=useState({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", medicalRecordId:"", showChart:true, details:{} as Record<string,string>});
+  const [invRecords,setInvRecords]=useState<MedicineRecord[]>([]);
+  const [invRecordsLoading,setInvRecordsLoading]=useState(false);
+  // Linked-record picker options follow the shared patient (same as /clinic/investigation).
+  useEffect(()=>{
+    if(!clinicId) return;
+    const pid=patients.find(p=>p.fullName===sharedPatient)?.patientId;
+    if(!pid){ setInvRecords([]); setInv(s=> s.medicalRecordId ? {...s, medicalRecordId:""} : s); return; }
+    setInvRecordsLoading(true);
+    listRecords(clinicId,{patientId:pid,limit:50}).then(r=>setInvRecords((r as any)?.items ?? [])).catch(()=>setInvRecords([])).finally(()=>setInvRecordsLoading(false));
+  },[clinicId, patients, sharedPatient]);
   const INV_FIELDS: Record<string, Array<{key:string;label:string;placeholder:string}>> = {
     "vital-test": [
       { key: "bloodPressure", label: "Blood pressure", placeholder: "e.g. 120/80 mmHg" },
@@ -86,6 +108,13 @@ export default function QuickAddPage(){
       { key: "labName", label: "Referred lab", placeholder: "Lab name…" },
     ],
     "other": [],
+  };
+  const INV_TITLE_PLACEHOLDERS: Record<string,string> = {
+    "vital-test": "e.g. Vitals — routine check",
+    "x-ray": "e.g. IOPA — 46",
+    "blood-report": "e.g. CBC + fasting sugar",
+    "biopsy": "e.g. Biopsy — left buccal mucosa",
+    "other": "e.g. Root canal assessment — 46",
   };
 
   useEffect(()=>{ if(sharedPatient){ setAppt(s=>({...s, patient:sharedPatient})); setRec(s=>({...s, patient:sharedPatient})); setTreat(s=>({...s, patient:sharedPatient})); setRx(s=>({...s, patient:sharedPatient})); }},[sharedPatient]);
@@ -123,7 +152,18 @@ export default function QuickAddPage(){
       if(rx.patient && rx.medicine){
         payload.prescription = { diagnosis: rx.diagnosis||null, medicine: rx.medicine, dosage: rx.dosage||null, frequency: rx.frequency||null, duration: rx.duration||null, instructions: rx.instructions||null, notes: rx.notes||null, visitDate: todayISO() };
       }
-      if(exam.oralFindings.trim() && exam.issueType){
+      // Examination — same validation as /clinic/examination (issue type + oral findings min 2 chars).
+      // Guard first: touched-but-incomplete sections error instead of silently dropping data.
+      const examTouched = exam.oralFindings.trim() || exam.issueType || exam.notes.trim()
+        || exam.chiefComplaints.some(c=> c.complaint.trim()||c.duration.trim()||c.severity||c.notes.trim())
+        || exam.bloodPressure.trim()||exam.temperature.trim()||exam.pulse.trim()||exam.respiratoryRate.trim()||exam.spo2.trim()
+        || exam.allergies.trim()||exam.medicalConditions.trim()||exam.previousSurgeries.trim()||exam.currentMedications.trim()||exam.patientHistory.trim()||exam.familyHistory.trim()||exam.habits.trim()
+        || exam.hpiPresentingComplaint.trim()||exam.hpiOnset||exam.hpiDurationValue.trim()||exam.hpiDurationUnit||exam.hpiProgression||exam.hpiSymptoms.trim()||exam.hpiAggravatingFactors.trim()||exam.hpiRelievingFactors.trim()||exam.hpiAssociatedSymptoms.trim()||exam.hpiPreviousTreatment.trim()||exam.hpiAdditionalNotes.trim();
+      if(examTouched && (!exam.issueType || exam.oralFindings.trim().length < 2)){
+        toast.error("Examination needs issue type (Hard / Soft) and oral findings (min 2 characters)");
+        return;
+      }
+      if(exam.issueType && exam.oralFindings.trim().length >= 2){
         const clean=(v:string)=> v.trim() || null;
         const validComplaints = exam.chiefComplaints.map(c=>({ complaint: clean(c.complaint), duration: clean(c.duration), severity: c.severity || null, notes: clean(c.notes) })).filter(c=> c.complaint || c.duration || c.severity || c.notes);
         payload.examination = {
@@ -135,10 +175,26 @@ export default function QuickAddPage(){
           bloodPressure: clean(exam.bloodPressure), temperature: clean(exam.temperature), pulse: clean(exam.pulse), respiratoryRate: clean(exam.respiratoryRate), spo2: clean(exam.spo2),
         };
       }
-      if(inv.title.trim()){
+      // Investigation — same validation as /clinic/investigation (title min 2 chars).
+      // Odontogram chart only applies to "Other", like /clinic/investigation and /clinic/examination.
+      const invDetailsTouched = Object.values(inv.details).some(v=> v.trim());
+      const invTouched = inv.title.trim() || inv.notes.trim() || invDetailsTouched;
+      if(invTouched && inv.title.trim().length < 2){
+        toast.error("Investigation needs a title (min 2 characters)");
+        return;
+      }
+      if(inv.title.trim().length >= 2){
         const cleanDetails: Record<string,string> = {};
         for(const [k,v] of Object.entries(inv.details)){ if(v.trim()) cleanDetails[k]=v.trim(); }
-        payload.investigation = { title: inv.title.trim(), category: inv.category, details: Object.keys(cleanDetails).length? cleanDetails : null, visitDate: inv.visitDate, status: inv.status, notes: inv.notes.trim() || null };
+        let chartData: Record<string, unknown> | null = null;
+        if(inv.category === "other"){
+          try {
+            const { getStatusChart } = await odontogramApi();
+            const chart = getStatusChart() as unknown;
+            if(chart && typeof chart === "object") chartData = chart as Record<string, unknown>;
+          } catch { chartData = null; }
+        }
+        payload.investigation = { title: inv.title.trim(), category: inv.category, details: Object.keys(cleanDetails).length? cleanDetails : null, visitDate: inv.visitDate, status: inv.status, notes: inv.notes.trim() || null, medicalRecordId: inv.medicalRecordId || null, chartData };
       }
       if(!payload.appointment && !payload.record && !payload.prescription && !payload.examination && !payload.investigation){
         toast.error("Fill at least one section (Appointment, Records, Examination, Investigation or Prescription)");
@@ -215,7 +271,7 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 3 Examination — same fields as /clinic/examination */}
+      {/* 3 Examination — full /clinic/examination form (details + complaints + vitals + medical + HPI) */}
       <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">3. Examination — Oral Findings {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Visit date *</Label><Input type="date" value={exam.visitDate} onChange={e=>setExam({...exam,visitDate:e.target.value})} className="mt-1 h-9"/></div>
@@ -272,13 +328,14 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 4 Investigation — same fields as /clinic/investigation (no odontogram) */}
+      {/* 4 Investigation — full /clinic/investigation form (report details + record link + odontogram) */}
       <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">4. Investigation {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2"><Label className="text-xs">Title *</Label><Input value={inv.title} onChange={e=>setInv({...inv,title:e.target.value})} placeholder="e.g. IOPA — 46" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Category</Label><select value={inv.category} onChange={e=>setInv({...inv,category:e.target.value, details:{}})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="vital-test">Vital Test</option><option value="x-ray">X-Ray</option><option value="blood-report">Blood Report</option><option value="biopsy">Biopsy</option><option value="other">Other</option></select></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Title *</Label><Input value={inv.title} onChange={e=>setInv({...inv,title:e.target.value})} placeholder={INV_TITLE_PLACEHOLDERS[inv.category] ?? "e.g. IOPA — 46"} className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">Report type</Label><select value={inv.category} onChange={e=>setInv({...inv,category:e.target.value, details:{}})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="vital-test">Vital Test</option><option value="x-ray">X-Ray</option><option value="blood-report">Blood Report</option><option value="biopsy">Biopsy</option><option value="other">Other</option></select></div>
           <div><Label className="text-xs">Visit date *</Label><Input type="date" value={inv.visitDate} onChange={e=>setInv({...inv,visitDate:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Status</Label><select value={inv.status} onChange={e=>setInv({...inv,status:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="pending">Pending</option><option value="in-progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
+          <div><Label className="text-xs">Linked medical record (optional)</Label><select value={inv.medicalRecordId} onChange={e=>setInv({...inv,medicalRecordId:e.target.value})} disabled={invRecordsLoading || !sharedPatient} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">{!sharedPatient ? "Select a patient first" : invRecordsLoading ? "Loading records…" : "No linked record"}</option>{invRecords.map(r=><option key={r.recordId} value={r.recordId}>{r.visitDate} — {r.diagnosis}</option>)}</select></div>
           <div className="sm:col-span-2"><Label className="text-xs">Notes</Label><Textarea value={inv.notes} onChange={e=>setInv({...inv,notes:e.target.value})} rows={2} placeholder="Clinical notes for this investigation…"/></div>
         </div>
         {(INV_FIELDS[inv.category] ?? []).length>0 && (
@@ -287,6 +344,19 @@ export default function QuickAddPage(){
             {(INV_FIELDS[inv.category] ?? []).map(f=> (
               <div key={f.key}><Label className="text-xs">{f.label}</Label><Input value={inv.details[f.key] ?? ""} onChange={e=>setInv(s=>({...s, details:{...s.details, [f.key]:e.target.value}}))} placeholder={f.placeholder} className="mt-1 h-9"/></div>
             ))}
+          </div>
+        )}
+        {inv.category === "other" && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold">Dental odontogram</Label>
+              <Button type="button" variant="ghost" size="sm" onClick={()=>setInv(s=>({...s, showChart:!s.showChart}))}>{inv.showChart ? "Hide" : "Show"}</Button>
+            </div>
+            {inv.showChart && (
+              <div className="isolate overflow-auto rounded-xl border bg-white">
+                <OdontogramShell key="quick-add-investigation" language="en" />
+              </div>
+            )}
           </div>
         )}
       </CardContent></Card>
@@ -317,7 +387,7 @@ export default function QuickAddPage(){
 
 
       <div className="sticky bottom-4 flex justify-center gap-3 pt-2">
-        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setAppt(s=>({...s, reason:"", notes:""})); setRec(s=>({...s, chiefComplaint:"", diagnosis:""})); toast.info("Cancelled"); }}>Cancel</Button>
+        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setAppt(s=>({...s, reason:"", notes:""})); setRec(s=>({...s, chiefComplaint:"", diagnosis:""})); setTreat(s=>({...s, diagnosis:"", treatment:""})); setRx(s=>({...s, diagnosis:"", medicine:"", notes:""})); setExam({visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"", chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}], bloodPressure:"", temperature:"", pulse:"", respiratoryRate:"", spo2:"", allergies:"", medicalConditions:"", previousSurgeries:"", currentMedications:"", patientHistory:"", familyHistory:"", habits:"", hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:""}); setInv({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", medicalRecordId:"", showChart:true, details:{}}); toast.info("Cancelled"); }}>Cancel</Button>
         <Button size="lg" className="h-11 px-8 shadow-lg" onClick={submitAll}>Save</Button>
       </div>
     </div>
