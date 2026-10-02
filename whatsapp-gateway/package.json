@@ -1,0 +1,24 @@
+{
+  "name": "whatsapp-gateway",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Standalone WhatsApp gateway (Baileys) for MyClinics. Owns WhatsApp connections; MyClinics API talks to it over HMAC-signed HTTP.",
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx src/index.ts",
+    "dev": "node --import tsx --watch src/index.ts"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.2",
+    "qrcode": "^1.5.4",
+    "tsx": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.0.0",
+    "@types/qrcode": "^1.5.5",
+    "typescript": "^5.6.3"
+  }
+}

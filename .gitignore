@@ -50,5 +50,9 @@ next-env.d.ts
 /backend/node_modules/
 /backend/whatsapp-session/
 
+# whatsapp-gateway (standalone service)
+/whatsapp-gateway/node_modules/
+/whatsapp-gateway/sessions/
+
 # scratch
 /frontend/scratch/
