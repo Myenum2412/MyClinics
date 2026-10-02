@@ -176,7 +176,7 @@ export default function QuickAddPage(){
         };
       }
       // Investigation — same validation as /clinic/investigation (title min 2 chars).
-      // Odontogram chart only applies to "Other", like /clinic/investigation and /clinic/examination.
+      // Odontogram chart always applies here, like the /clinic/examination form.
       const invDetailsTouched = Object.values(inv.details).some(v=> v.trim());
       const invTouched = inv.title.trim() || inv.notes.trim() || invDetailsTouched;
       if(invTouched && inv.title.trim().length < 2){
@@ -187,13 +187,11 @@ export default function QuickAddPage(){
         const cleanDetails: Record<string,string> = {};
         for(const [k,v] of Object.entries(inv.details)){ if(v.trim()) cleanDetails[k]=v.trim(); }
         let chartData: Record<string, unknown> | null = null;
-        if(inv.category === "other"){
-          try {
-            const { getStatusChart } = await odontogramApi();
-            const chart = getStatusChart() as unknown;
-            if(chart && typeof chart === "object") chartData = chart as Record<string, unknown>;
-          } catch { chartData = null; }
-        }
+        try {
+          const { getStatusChart } = await odontogramApi();
+          const chart = getStatusChart() as unknown;
+          if(chart && typeof chart === "object") chartData = chart as Record<string, unknown>;
+        } catch { chartData = null; }
         payload.investigation = { title: inv.title.trim(), category: inv.category, details: Object.keys(cleanDetails).length? cleanDetails : null, visitDate: inv.visitDate, status: inv.status, notes: inv.notes.trim() || null, medicalRecordId: inv.medicalRecordId || null, chartData };
       }
       if(!payload.appointment && !payload.record && !payload.prescription && !payload.examination && !payload.investigation){
@@ -346,19 +344,17 @@ export default function QuickAddPage(){
             ))}
           </div>
         )}
-        {inv.category === "other" && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold">Dental odontogram</Label>
-              <Button type="button" variant="ghost" size="sm" onClick={()=>setInv(s=>({...s, showChart:!s.showChart}))}>{inv.showChart ? "Hide" : "Show"}</Button>
-            </div>
-            {inv.showChart && (
-              <div className="isolate overflow-auto rounded-xl border bg-white">
-                <OdontogramShell key="quick-add-investigation" language="en" />
-              </div>
-            )}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-semibold">Dental odontogram</Label>
+            <Button type="button" variant="ghost" size="sm" onClick={()=>setInv(s=>({...s, showChart:!s.showChart}))}>{inv.showChart ? "Hide" : "Show"}</Button>
           </div>
-        )}
+          {inv.showChart && (
+            <div className="isolate overflow-auto rounded-xl border bg-white">
+              <OdontogramShell key="quick-add-investigation" language="en" />
+            </div>
+          )}
+        </div>
       </CardContent></Card>
 
       {/* 5 Treatment — optimized */}
