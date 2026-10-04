@@ -274,6 +274,22 @@ export default function QuickAddPage(){
             </div>
           ))}
         </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <p className="text-xs font-semibold sm:col-span-2">History of presenting illness</p>
+          <div className="sm:col-span-2"><Label className="text-xs">Presenting complaint</Label><Textarea value={exam.hpiPresentingComplaint} onChange={e=>setExam({...exam,hpiPresentingComplaint:e.target.value})} rows={3} placeholder="Main complaint"/></div>
+          <div><Label className="text-xs">Onset</Label><select value={exam.hpiOnset} onChange={e=>setExam({...exam,hpiOnset:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Not specified</option><option>Sudden</option><option>Gradual</option></select></div>
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label className="text-xs">Duration</Label><Input type="number" value={exam.hpiDurationValue} onChange={e=>setExam({...exam,hpiDurationValue:e.target.value})} className="mt-1 h-9" placeholder="Number"/></div>
+            <div><Label className="text-xs">Unit</Label><select value={exam.hpiDurationUnit} onChange={e=>setExam({...exam,hpiDurationUnit:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Unit</option><option>Days</option><option>Weeks</option><option>Months</option></select></div>
+          </div>
+          <div><Label className="text-xs">Progression</Label><select value={exam.hpiProgression} onChange={e=>setExam({...exam,hpiProgression:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Not specified</option><option>Improving</option><option>Worsening</option><option>Stable</option></select></div>
+          <div><Label className="text-xs">Aggravating factors</Label><Input value={exam.hpiAggravatingFactors} onChange={e=>setExam({...exam,hpiAggravatingFactors:e.target.value})} className="mt-1 h-9"/></div>
+          <div><Label className="text-xs">Relieving factors</Label><Input value={exam.hpiRelievingFactors} onChange={e=>setExam({...exam,hpiRelievingFactors:e.target.value})} className="mt-1 h-9"/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Symptoms</Label><Textarea value={exam.hpiSymptoms} onChange={e=>setExam({...exam,hpiSymptoms:e.target.value})} rows={2}/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Associated symptoms</Label><Textarea value={exam.hpiAssociatedSymptoms} onChange={e=>setExam({...exam,hpiAssociatedSymptoms:e.target.value})} rows={2}/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Previous treatment</Label><Textarea value={exam.hpiPreviousTreatment} onChange={e=>setExam({...exam,hpiPreviousTreatment:e.target.value})} rows={2}/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Additional notes</Label><Textarea value={exam.hpiAdditionalNotes} onChange={e=>setExam({...exam,hpiAdditionalNotes:e.target.value})} rows={2}/></div>
+        </div>
         <div className="grid sm:grid-cols-3 gap-4">
           <div><Label className="text-xs">Blood pressure</Label><Input value={exam.bloodPressure} onChange={e=>setExam({...exam,bloodPressure:e.target.value})} placeholder="120/80" className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Temperature</Label><Input value={exam.temperature} onChange={e=>setExam({...exam,temperature:e.target.value})} placeholder="98.6" className="mt-1 h-9"/></div>
@@ -289,22 +305,6 @@ export default function QuickAddPage(){
           <div><Label className="text-xs">Patient history</Label><Textarea value={exam.patientHistory} onChange={e=>setExam({...exam,patientHistory:e.target.value})} rows={2}/></div>
           <div><Label className="text-xs">Family history</Label><Textarea value={exam.familyHistory} onChange={e=>setExam({...exam,familyHistory:e.target.value})} rows={2}/></div>
           <div className="sm:col-span-2"><Label className="text-xs">Habits</Label><Textarea value={exam.habits} onChange={e=>setExam({...exam,habits:e.target.value})} rows={2} placeholder="Smoking, alcohol, diet…"/></div>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <p className="text-xs font-semibold sm:col-span-2">History of presenting illness</p>
-          <div className="sm:col-span-2"><Label className="text-xs">Presenting complaint</Label><Input value={exam.hpiPresentingComplaint} onChange={e=>setExam({...exam,hpiPresentingComplaint:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Onset</Label><select value={exam.hpiOnset} onChange={e=>setExam({...exam,hpiOnset:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Not specified</option><option>Sudden</option><option>Gradual</option></select></div>
-          <div className="grid grid-cols-2 gap-2">
-            <div><Label className="text-xs">Duration</Label><Input type="number" value={exam.hpiDurationValue} onChange={e=>setExam({...exam,hpiDurationValue:e.target.value})} className="mt-1 h-9" placeholder="Number"/></div>
-            <div><Label className="text-xs">Unit</Label><select value={exam.hpiDurationUnit} onChange={e=>setExam({...exam,hpiDurationUnit:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Unit</option><option>Days</option><option>Weeks</option><option>Months</option></select></div>
-          </div>
-          <div><Label className="text-xs">Progression</Label><select value={exam.hpiProgression} onChange={e=>setExam({...exam,hpiProgression:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Not specified</option><option>Improving</option><option>Worsening</option><option>Stable</option></select></div>
-          <div><Label className="text-xs">Aggravating factors</Label><Input value={exam.hpiAggravatingFactors} onChange={e=>setExam({...exam,hpiAggravatingFactors:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Relieving factors</Label><Input value={exam.hpiRelievingFactors} onChange={e=>setExam({...exam,hpiRelievingFactors:e.target.value})} className="mt-1 h-9"/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Symptoms</Label><Textarea value={exam.hpiSymptoms} onChange={e=>setExam({...exam,hpiSymptoms:e.target.value})} rows={2}/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Associated symptoms</Label><Textarea value={exam.hpiAssociatedSymptoms} onChange={e=>setExam({...exam,hpiAssociatedSymptoms:e.target.value})} rows={2}/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Previous treatment</Label><Textarea value={exam.hpiPreviousTreatment} onChange={e=>setExam({...exam,hpiPreviousTreatment:e.target.value})} rows={2}/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Additional notes</Label><Textarea value={exam.hpiAdditionalNotes} onChange={e=>setExam({...exam,hpiAdditionalNotes:e.target.value})} rows={2}/></div>
         </div>
       </CardContent></Card>
 

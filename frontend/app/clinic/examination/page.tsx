@@ -897,13 +897,14 @@ export default function ExaminationPage() {
           <CardContent className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="exam-hpi-complaint">Presenting complaint</Label>
-              <Input
+              <Textarea
                 id="exam-hpi-complaint"
                 value={readOnly ? (screen.record.hpi?.presentingComplaint ?? "") : form.hpiPresentingComplaint}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, hpiPresentingComplaint: e.target.value }))
                 }
                 placeholder="Main complaint"
+                rows={3}
                 disabled={readOnly}
               />
             </div>
