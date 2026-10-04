@@ -13,6 +13,7 @@ import { getDb } from "@/lib/db-pools";
  *   POST   /api/clinics/:clinicId/prescriptions               doctor+
  *   GET    /api/clinics/:clinicId/prescriptions               doctor+ | patient (own)
  *   GET    /api/clinics/:clinicId/prescriptions/:prescriptionId  doctor+ | patient (own)
+ *   GET    /api/clinics/:clinicId/prescriptions/:prescriptionId/pdf  doctor+ | patient (own)
  *   PATCH  /api/clinics/:clinicId/prescriptions/:prescriptionId  doctor+ | patient (own)
  *   DELETE /api/clinics/:clinicId/prescriptions/:prescriptionId  clinic_admin
  */
@@ -35,6 +36,12 @@ export function registerPrescriptionRoutes(app: FastifyInstance): void {
     "/api/clinics/:clinicId/prescriptions/:prescriptionId",
     { preHandler: [requireClinicAccess, requireRoles("doctor")] },
     async (request, reply) => controller.getById(request, reply)
+  );
+
+  app.get(
+    "/api/clinics/:clinicId/prescriptions/:prescriptionId/pdf",
+    { preHandler: [requireClinicAccess, requireRoles("doctor")] },
+    async (request, reply) => controller.downloadPdf(request, reply)
   );
 
   app.patch(

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
-import { myPrescriptions, listDoctors, type Prescription, type MedicineEntry, type Doctor } from "@/lib/clinic-api";
+import { myPrescriptions, listDoctors, downloadMyPrescriptionPdf, type Prescription, type MedicineEntry, type Doctor } from "@/lib/clinic-api";
 import { formatDate } from "@/lib/format-time";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,13 +15,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Pill, ChevronRight } from "lucide-react";
+import { Pill, ChevronRight, Download, Loader2 } from "lucide-react";
 
 export default function PatientPrescriptionsPage() {
   const session = useRequireRole("patient");
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!session?.clinicId) return;
@@ -35,6 +37,20 @@ export default function PatientPrescriptionsPage() {
   }, [session?.clinicId]);
 
   const doctorName = (id: string) => doctors.find((d) => d.doctorId === id)?.name ?? "Unknown doctor";
+
+  const handleDownloadPdf = async (presc: Prescription) => {
+    if (!session?.clinicId) return;
+    try {
+      setDownloadingId(presc.prescriptionId);
+      const filename = `prescription-${presc.visitDate}-${presc.prescriptionId.slice(0, 8)}.pdf`;
+      await downloadMyPrescriptionPdf(session.clinicId, presc.prescriptionId, filename);
+      toast.success("Prescription PDF downloaded.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Download failed");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -98,10 +114,27 @@ export default function PatientPrescriptionsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" className="gap-1.5">
-                      <ChevronRight className="size-4" />
-                      View
-                    </Button>
+                    <div className="inline-flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8"
+                        aria-label="Download PDF"
+                        title="Download PDF"
+                        disabled={downloadingId === presc.prescriptionId}
+                        onClick={() => handleDownloadPdf(presc)}
+                      >
+                        {downloadingId === presc.prescriptionId ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Download className="size-4" />
+                        )}
+                      </Button>
+                      <Button variant="ghost" size="sm" className="gap-1.5">
+                        <ChevronRight className="size-4" />
+                        View
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

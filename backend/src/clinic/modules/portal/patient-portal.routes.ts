@@ -46,6 +46,12 @@ export function registerPatientPortalRoutes(app: FastifyInstance): void {
   );
 
   app.get(
+    "/api/clinics/:clinicId/me/prescriptions/:prescriptionId/pdf",
+    { preHandler: requireClinicAccess },
+    async (request, reply) => prescriptions.downloadPdf(request, reply)
+  );
+
+  app.get(
     "/api/clinics/:clinicId/me/bills",
     { preHandler: requireClinicAccess },
     async (request, reply) => billing.getMine(request, reply)

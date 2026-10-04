@@ -1447,6 +1447,86 @@ export function deletePrescription(
   });
 }
 
+/** Downloads the prescription as a PDF and triggers the browser save dialog. */
+export async function downloadPrescriptionPdf(
+  clinicId: string,
+  prescriptionId: string,
+  filename: string
+): Promise<void> {
+  const token = typeof window !== "undefined" ? getStoredToken() : null;
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const csrf = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )clinic_csrf=([^;]+)/)?.[1] : null;
+  if (csrf) headers["X-CSRF-Token"] = decodeURIComponent(csrf);
+
+  const res = await fetch(`${API_BASE}${tenantPath(clinicId, `/prescriptions/${prescriptionId}/pdf`)}`, {
+    method: "GET",
+    headers,
+    cache: "no-store",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    let error = `Download failed (${res.status})`;
+    try {
+      const data = await res.json();
+      error = (data as { error?: string }).error ?? error;
+    } catch {
+      // non-JSON error body — keep the default message
+    }
+    throw new ClinicApiError(error, res.status);
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** Downloads the patient's own prescription as a PDF (patient portal). */
+export async function downloadMyPrescriptionPdf(
+  clinicId: string,
+  prescriptionId: string,
+  filename: string
+): Promise<void> {
+  const token = typeof window !== "undefined" ? getStoredToken() : null;
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const csrf = typeof document !== "undefined" ? document.cookie.match(/(?:^|; )clinic_csrf=([^;]+)/)?.[1] : null;
+  if (csrf) headers["X-CSRF-Token"] = decodeURIComponent(csrf);
+
+  const res = await fetch(`${API_BASE}${tenantPath(clinicId, `/me/prescriptions/${prescriptionId}/pdf`)}`, {
+    method: "GET",
+    headers,
+    cache: "no-store",
+    credentials: "include",
+  });
+  if (!res.ok) {
+    let error = `Download failed (${res.status})`;
+    try {
+      const data = await res.json();
+      error = (data as { error?: string }).error ?? error;
+    } catch {
+      // non-JSON error body — keep the default message
+    }
+    throw new ClinicApiError(error, res.status);
+  }
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 // ── Investigations ─────────────────────────────────────────────────────────
 
 export function listInvestigations(

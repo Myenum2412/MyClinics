@@ -9,6 +9,7 @@ import {
   type Patient,
   createPrescription,
   deletePrescription,
+  downloadPrescriptionPdf,
   listPrescriptions,
   listPatients,
   API_BASE_URL,
@@ -140,6 +141,7 @@ export default function PrescriptionsPage() {
   const [sortField, setSortField] = useState<"visitDate" | null>("visitDate");
   const [sortDesc, setSortDesc] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [visibleColumns] = useState<Record<string, boolean>>({
     select: true,
@@ -333,6 +335,21 @@ export default function PrescriptionsPage() {
     }
   };
 
+  // Download a single prescription as a PDF
+  const handleDownloadPdf = async (p: Prescription) => {
+    try {
+      setDownloadingId(p.prescriptionId);
+      const safePatient = (p.patientName || "prescription").replace(/[^A-Za-z0-9-]+/g, "_").slice(0, 40);
+      const filename = `prescription-${safePatient}-${p.prescriptionId.slice(0, 8)}.pdf`;
+      await downloadPrescriptionPdf(clinicId, p.prescriptionId, filename);
+      toast.success("Prescription PDF downloaded.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Download failed");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   // Detailed logs viewing
   const viewLogs = async (p: Prescription) => {
     setSelectedPrescription(p);
@@ -490,12 +507,26 @@ export default function PrescriptionsPage() {
               >
                 <ChevronLeft size={20} className="text-muted-foreground" />
               </button>
-              <div>
+              <div className="min-w-0 flex-1">
                 <h1 className="text-xl font-bold text-foreground sm:text-2xl">View Prescription</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Read-only view of the prescription details.
                 </p>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-1 h-9 gap-1.5"
+                disabled={downloadingId === viewing.prescriptionId}
+                onClick={() => handleDownloadPdf(viewing)}
+              >
+                {downloadingId === viewing.prescriptionId ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Download className="size-4" />
+                )}
+                Download PDF
+              </Button>
             </div>
           </div>
         </div>
@@ -812,6 +843,22 @@ export default function PrescriptionsPage() {
                         )}
 
                         <TableCell className="pr-4 text-right">
+                          <div className="inline-flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-7"
+                              aria-label="Download PDF"
+                              title="Download PDF"
+                              disabled={downloadingId === p.prescriptionId}
+                              onClick={() => handleDownloadPdf(p)}
+                            >
+                              {downloadingId === p.prescriptionId ? (
+                                <Loader2 className="size-4 animate-spin" />
+                              ) : (
+                                <Download className="size-4" />
+                              )}
+                            </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger render={
                               <Button
@@ -825,6 +872,13 @@ export default function PrescriptionsPage() {
                             <DropdownMenuContent align="end" className="w-44">
                               <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
                               <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                onClick={() => handleDownloadPdf(p)}
+                                className="text-xs"
+                              >
+                                <Download className="mr-2 size-3.5 text-muted-foreground" />
+                                Download PDF
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => {
                                   setViewing(p);
@@ -865,6 +919,7 @@ export default function PrescriptionsPage() {
                               )}
                             </DropdownMenuContent>
                           </DropdownMenu>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -964,6 +1019,21 @@ export default function PrescriptionsPage() {
                         </span>
                       )}
                       <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="size-9 rounded-xl text-muted-foreground"
+                          aria-label="Download PDF"
+                          title="Download PDF"
+                          disabled={downloadingId === p.prescriptionId}
+                          onClick={() => handleDownloadPdf(p)}
+                        >
+                          {downloadingId === p.prescriptionId ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Download className="size-4" />
+                          )}
+                        </Button>
                         <Button
                           variant="outline"
                           size="icon"
