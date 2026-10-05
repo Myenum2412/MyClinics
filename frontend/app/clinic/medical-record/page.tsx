@@ -1618,21 +1618,19 @@ export default function MedicalRecordPage() {
                   </div>
                 )}
 
-                {/* Files at this level */}
-                {!search.trim() && (levelFiles.length > 0 || activeFolderId) && (
+                {/* Files at this level — only inside a folder (Recent Files removed) */}
+                {!search.trim() && activeFolderId && (
                   <div className="mt-5">
                     <SectionHeading
-                      Icon={activeFolderId ? FolderUp : File}
-                      tint={activeFolderId ? "text-primary" : "text-muted-foreground"}
-                      title={activeFolderId ? folderName(activeFolderId) : "Recent Files"}
+                      Icon={FolderUp}
+                      tint="text-primary"
+                      title={folderName(activeFolderId)}
                       count={levelFiles.length}
                       countLabel="file"
                       action={
-                        activeFolderId ? (
-                          <Button variant="ghost" size="sm" onClick={() => setActiveFolderId(null)}>
-                            <FolderUp className="size-4" /> Up to root
-                          </Button>
-                        ) : undefined
+                        <Button variant="ghost" size="sm" onClick={() => setActiveFolderId(null)}>
+                          <FolderUp className="size-4" /> Up to root
+                        </Button>
                       }
                     />
                     {levelFiles.length > 0 && (
