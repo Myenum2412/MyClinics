@@ -2189,6 +2189,64 @@ export default function MedicalRecordPage() {
           </div>
         </div>
 
+        {/* Unified timeline — single card */}
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+          <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600"><History className="size-4" /></span>
+            <h3 className="text-sm font-semibold tracking-tight">Clinical Timeline</h3>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-700 dark:text-violet-300">{overview.patientRecords.length} visits</span>
+              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">{overview.patientPrescriptions.length} prescriptions</span>
+              <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">{overview.patientPrescriptions.flatMap(pr=>pr.medicines).length} medicines</span>
+              <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">{overview.patientRecords.filter(r=>r.treatment).length} treatments</span>
+              <span className="rounded-full bg-teal-500/10 px-2 py-0.5 text-xs font-medium text-teal-700 dark:text-teal-300">{overview.patientExaminations.length} examinations</span>
+              <span className="rounded-full bg-fuchsia-500/10 px-2 py-0.5 text-xs font-medium text-fuchsia-700 dark:text-fuchsia-300">{appointments.items.filter(a=>a.patientId===p.patientId).length} appointments</span>
+              <span className="rounded-full bg-slate-500/10 px-2 py-0.5 text-xs font-medium text-slate-700 dark:text-slate-300">{patientFiles.filter(f=>{ const k=displayFolderKey(f.folder); return k!=="bills" && k!=="billing"; }).length} files</span>
+            </div>
+          </div>
+          {(() => {
+            type TL = { date: string; kind: "visit"|"prescription"|"medicine"|"treatment"|"examination"|"appointment"|"file"; title: string; el: ReactNode };
+            const items: TL[] = [];
+            overview.patientRecords.forEach(r=>{
+              items.push({ date: r.visitDate, kind: "visit", title: r.diagnosis || "Visit", el: <MedicineRecordCard key={`v-${r.recordId}`} record={r} doctorName={doctorName} onDownload={handleRecordAttachmentDownload} /> });
+              if(r.treatment) items.push({ date: r.visitDate, kind: "treatment", title: r.treatment, el: <div key={`t-${r.recordId}`} className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-900/30 dark:bg-amber-500/5"><p className="text-sm text-muted-foreground">{r.diagnosis} · {doctorName(r.doctorId)}</p></div> });
+            });
+            overview.patientPrescriptions.forEach(pr=>{
+              items.push({ date: pr.visitDate, kind: "prescription", title: pr.diagnosis || "Prescription", el: <PrescriptionCard key={`p-${pr.prescriptionId}`} prescription={pr} doctorName={doctorName} /> });
+              pr.medicines.forEach((m,i)=> items.push({ date: pr.visitDate, kind: "medicine", title: m.name, el: <div key={`m-${pr.prescriptionId}-${i}`} className="rounded-xl border border-sky-200/60 bg-sky-50/50 p-3 dark:border-sky-900/30 dark:bg-sky-500/5"><p className="text-xs text-muted-foreground">{[m.dosage && `Dosage ${m.dosage}`, m.frequency, m.duration, m.instructions].filter(Boolean).join(" · ") || "—"} · {doctorName(pr.doctorId)}</p></div> }));
+            });
+            overview.patientExaminations.forEach(ex=>{
+              items.push({ date: ex.visitDate, kind: "examination", title: ex.oralFindings?.slice(0, 60) || "Examination", el: <div key={`e-${ex.examinationId}`} className="rounded-xl border border-teal-200/60 bg-teal-50/50 p-4 dark:border-teal-900/30 dark:bg-teal-500/5"><p className="text-sm font-medium text-foreground capitalize">{ex.issueType} · {ex.status.replace("-", " ")}</p><p className="mt-1 text-sm text-foreground">{ex.oralFindings}</p>{ex.notes && <p className="mt-1 text-xs text-muted-foreground">{ex.notes}</p>}</div> });
+            });
+            appointments.items.filter(a=>a.patientId===p.patientId).forEach(a=>{
+              items.push({ date: a.date, kind: "appointment", title: a.reason || `Appointment · ${APPT_STATUS_LABELS[a.status] ?? a.status}`, el: <div key={`a-${a.appointmentId}`} className="rounded-xl border border-fuchsia-200/60 bg-fuchsia-50/50 p-4 dark:border-fuchsia-900/30 dark:bg-fuchsia-500/5"><p className="text-sm font-medium text-foreground">{formatDate(a.date)} · {formatTime(a.time)} · Dr. {doctorName(a.doctorId)}</p><p className="mt-1 text-xs text-muted-foreground">{a.reason || "—"} · {APPT_STATUS_LABELS[a.status] ?? a.status}</p></div> });
+            });
+            patientFiles.filter(f=>{ const k=displayFolderKey(f.folder); return k!=="bills" && k!=="billing"; }).forEach(f=>{
+              items.push({ date: f.createdAt, kind: "file", title: f.fileName, el: <div key={`f-${f.fileId}`} className="flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-2.5 ring-1 ring-border">{fileIcon(f.mimeType, f.fileName)}<div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-foreground">{f.fileName}</p><p className="mt-0.5 text-xs text-muted-foreground">{folderName(f.folder)} · {formatDate(f.createdAt)}</p></div><Button variant="ghost" size="icon" aria-label="View file" className="size-8" onClick={() => handleDownload(f)}><Download className="size-4" /></Button></div> });
+            });
+            items.sort((a,b)=> b.date.localeCompare(a.date));
+            const dot = { visit: "bg-violet-500", prescription: "bg-emerald-500", medicine: "bg-sky-500", treatment: "bg-amber-500", examination: "bg-teal-500", appointment: "bg-fuchsia-500", file: "bg-slate-500" } as const;
+            if(items.length===0) return <p className="px-5 py-10 text-center text-sm text-muted-foreground">No clinical history yet.</p>;
+            return (
+              <div className="px-4 py-6 sm:px-5">
+                <Timeline defaultValue={items.length} className="w-full">
+                  {items.slice(0,20).map((it, idx)=> (
+                    <TimelineItem key={idx} step={idx+1} className="sm:group-data-[orientation=vertical]/timeline:ms-32">
+                      <TimelineHeader>
+                        <TimelineSeparator />
+                        <TimelineDate className="sm:group-data-[orientation=vertical]/timeline:absolute sm:group-data-[orientation=vertical]/timeline:-left-32 sm:group-data-[orientation=vertical]/timeline:w-20 sm:group-data-[orientation=vertical]/timeline:text-right capitalize">{it.kind} · {formatDate(it.date)}</TimelineDate>
+                        <TimelineTitle className="capitalize flex items-center gap-2"><span className={`size-2 rounded-full ${dot[it.kind]}`} /> {it.title}</TimelineTitle>
+                        <TimelineIndicator className={`${dot[it.kind]} border-transparent`} />
+                      </TimelineHeader>
+                      <TimelineContent>{it.el}</TimelineContent>
+                    </TimelineItem>
+                  ))}
+                </Timeline>
+              </div>
+            );
+          })()}
+        </div>
+
         {/* ── This patient's records (shown only on profile) ── */}
         <div className="grid gap-3 sm:gap-4">
           {/* Visit records */}
@@ -2447,56 +2505,6 @@ export default function MedicalRecordPage() {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Unified timeline — single card */}
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-          <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600"><History className="size-4" /></span>
-            <h3 className="text-sm font-semibold tracking-tight">Clinical Timeline</h3>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="rounded-full bg-violet-500/10 px-2 py-0.5 text-xs font-medium text-violet-700 dark:text-violet-300">{overview.patientRecords.length} visits</span>
-              <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">{overview.patientPrescriptions.length} prescriptions</span>
-              <span className="rounded-full bg-sky-500/10 px-2 py-0.5 text-xs font-medium text-sky-700 dark:text-sky-300">{overview.patientPrescriptions.flatMap(pr=>pr.medicines).length} medicines</span>
-              <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-300">{overview.patientRecords.filter(r=>r.treatment).length} treatments</span>
-              <span className="rounded-full bg-teal-500/10 px-2 py-0.5 text-xs font-medium text-teal-700 dark:text-teal-300">{overview.patientExaminations.length} examinations</span>
-            </div>
-          </div>
-          {(() => {
-            type TL = { date: string; kind: "visit"|"prescription"|"medicine"|"treatment"|"examination"; title: string; el: ReactNode };
-            const items: TL[] = [];
-            overview.patientRecords.forEach(r=>{
-              items.push({ date: r.visitDate, kind: "visit", title: r.diagnosis || "Visit", el: <MedicineRecordCard key={`v-${r.recordId}`} record={r} doctorName={doctorName} onDownload={handleRecordAttachmentDownload} /> });
-              if(r.treatment) items.push({ date: r.visitDate, kind: "treatment", title: r.treatment, el: <div key={`t-${r.recordId}`} className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-900/30 dark:bg-amber-500/5"><p className="text-sm text-muted-foreground">{r.diagnosis} · {doctorName(r.doctorId)}</p></div> });
-            });
-            overview.patientPrescriptions.forEach(pr=>{
-              items.push({ date: pr.visitDate, kind: "prescription", title: pr.diagnosis || "Prescription", el: <PrescriptionCard key={`p-${pr.prescriptionId}`} prescription={pr} doctorName={doctorName} /> });
-              pr.medicines.forEach((m,i)=> items.push({ date: pr.visitDate, kind: "medicine", title: m.name, el: <div key={`m-${pr.prescriptionId}-${i}`} className="rounded-xl border border-sky-200/60 bg-sky-50/50 p-3 dark:border-sky-900/30 dark:bg-sky-500/5"><p className="text-xs text-muted-foreground">{[m.dosage && `Dosage ${m.dosage}`, m.frequency, m.duration, m.instructions].filter(Boolean).join(" · ") || "—"} · {doctorName(pr.doctorId)}</p></div> }));
-            });
-            overview.patientExaminations.forEach(ex=>{
-              items.push({ date: ex.visitDate, kind: "examination", title: ex.oralFindings?.slice(0, 60) || "Examination", el: <div key={`e-${ex.examinationId}`} className="rounded-xl border border-teal-200/60 bg-teal-50/50 p-4 dark:border-teal-900/30 dark:bg-teal-500/5"><p className="text-sm font-medium text-foreground capitalize">{ex.issueType} · {ex.status.replace("-", " ")}</p><p className="mt-1 text-sm text-foreground">{ex.oralFindings}</p>{ex.notes && <p className="mt-1 text-xs text-muted-foreground">{ex.notes}</p>}</div> });
-            });
-            items.sort((a,b)=> b.date.localeCompare(a.date));
-            const dot = { visit: "bg-violet-500", prescription: "bg-emerald-500", medicine: "bg-sky-500", treatment: "bg-amber-500", examination: "bg-teal-500" } as const;
-            if(items.length===0) return <p className="px-5 py-10 text-center text-sm text-muted-foreground">No clinical history yet.</p>;
-            return (
-              <div className="px-4 py-6 sm:px-5">
-                <Timeline defaultValue={items.length} className="w-full">
-                  {items.slice(0,20).map((it, idx)=> (
-                    <TimelineItem key={idx} step={idx+1} className="sm:group-data-[orientation=vertical]/timeline:ms-32">
-                      <TimelineHeader>
-                        <TimelineSeparator />
-                        <TimelineDate className="sm:group-data-[orientation=vertical]/timeline:absolute sm:group-data-[orientation=vertical]/timeline:-left-32 sm:group-data-[orientation=vertical]/timeline:w-20 sm:group-data-[orientation=vertical]/timeline:text-right capitalize">{it.kind} · {formatDate(it.date)}</TimelineDate>
-                        <TimelineTitle className="capitalize flex items-center gap-2"><span className={`size-2 rounded-full ${dot[it.kind]}`} /> {it.title}</TimelineTitle>
-                        <TimelineIndicator className={`${dot[it.kind]} border-transparent`} />
-                      </TimelineHeader>
-                      <TimelineContent>{it.el}</TimelineContent>
-                    </TimelineItem>
-                  ))}
-                </Timeline>
-              </div>
-            );
-          })()}
         </div>
       </div>
     );
