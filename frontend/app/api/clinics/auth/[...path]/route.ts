@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND_URL =
-  process.env.BACKEND_URL?.trim() || "http://54.66.75.142:3100";
+  process.env.BACKEND_URL?.trim() ||
+  (process.env.NODE_ENV === "production" ? "https://api.myclinic.myenum.in" : "http://localhost:3100");
 
 async function proxy(req: NextRequest, path: string[]) {
   const url = `${BACKEND_URL}/api/clinics/auth/${path.join("/")}${req.nextUrl.search}`;
