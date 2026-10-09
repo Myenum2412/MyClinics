@@ -7,21 +7,30 @@ See [docs/whatsapp-gateway.md](../docs/whatsapp-gateway.md) for the full contrac
 ## Run locally
 
 ```bash
-cp .env.example .env   # set GATEWAY_SECRET (= API's), BACKEND_URL, GATEWAY_PORT
+# .env needs GATEWAY_SECRET (identical to the API's), BACKEND_URL, GATEWAY_PORT:
+cat > .env <<'EOF'
+GATEWAY_PORT=4100
+GATEWAY_SECRET=<same 64-char secret as the API's GATEWAY_SECRET>
+BACKEND_URL=http://127.0.0.1:3100
+EOF
 npm install
 npm start              # listens on GATEWAY_PORT (default 4100)
+curl -s http://127.0.0.1:4100/health
 ```
 
-## Production (13.239.83.200, same host as the API)
+## Production (54.66.75.142, same host as the API)
 
 ```bash
+chmod 400 /path/to/MyClinic.pem
 tar --exclude=node_modules -czf /tmp/gw.tar.gz .
-scp /tmp/gw.tar.gz ubuntu@13.239.83.200:~/
-ssh ubuntu@13.239.83.200
+scp -i /path/to/MyClinic.pem /tmp/gw.tar.gz ubuntu@54.66.75.142:~/
+ssh -i /path/to/MyClinic.pem ubuntu@54.66.75.142
 tar -xzf ~/gw.tar.gz -C ~/whatsapp-gateway && cd ~/whatsapp-gateway
 npm install --omit=dev
 # .env reuses the API's GATEWAY_SECRET, BACKEND_URL=http://127.0.0.1:3100
 pm2 start ecosystem.config.cjs --update-env && pm2 save
+# verify on the server:
+curl -s http://127.0.0.1:4100/health
 ```
 
 Then point the API at it (`backend/.env.local`):

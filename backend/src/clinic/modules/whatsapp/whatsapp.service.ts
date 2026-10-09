@@ -48,7 +48,31 @@ export class WhatsappService {
       }
       return { ok: true };
     } catch (err) {
-      logger.error("whatsapp gateway command failed", { clinicId, action, error: err instanceof Error ? err.message : String(err) });
+      const detail = err instanceof Error ? err.message : String(err);
+      logger.error("whatsapp gateway command failed", { clinicId, action, error: detail });
+      // Surface the actionable cause instead of a generic "unavailable":
+      // missing env vs gateway down vs gateway rejection need different fixes.
+      if (detail.includes("not configured")) {
+        throw new AppError(
+          "WhatsApp gateway is not configured (set GATEWAY_URL and GATEWAY_SECRET on the API, and GATEWAY_SECRET/BACKEND_URL on the gateway).",
+          502,
+          "GATEWAY_UNAVAILABLE",
+        );
+      }
+      if (err instanceof GatewayError && err.status === 0) {
+        throw new AppError(
+          `WhatsApp gateway is unreachable (${detail}). Is the gateway running at GATEWAY_URL?`,
+          502,
+          "GATEWAY_UNAVAILABLE",
+        );
+      }
+      if (err instanceof GatewayError && err.status > 0) {
+        throw new AppError(
+          `WhatsApp service error: ${detail.slice(0, 200)}`,
+          502,
+          "GATEWAY_UNAVAILABLE",
+        );
+      }
       throw new AppError("The WhatsApp service is unavailable right now. Please try again in a moment.", 502, "GATEWAY_UNAVAILABLE");
     }
   }

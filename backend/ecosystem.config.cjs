@@ -37,7 +37,7 @@ module.exports = {
 	deploy: {
 		production: {
 			user: "ubuntu",
-			host: "13.239.83.200",
+			host: "54.66.75.142",
 			ref: "origin/main",
 			repo: "git@github.com:Myenum2412/MyClinics.git",
 			path: "/var/www/myclinic",
