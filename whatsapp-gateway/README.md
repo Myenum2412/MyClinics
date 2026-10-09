@@ -18,13 +18,13 @@ npm start              # listens on GATEWAY_PORT (default 4100)
 curl -s http://127.0.0.1:4100/health
 ```
 
-## Production (54.66.75.142, same host as the API)
+## Production (13.239.83.200, same host as the API)
 
 ```bash
 chmod 400 /path/to/MyClinic.pem
 tar --exclude=node_modules -czf /tmp/gw.tar.gz .
-scp -i /path/to/MyClinic.pem /tmp/gw.tar.gz ubuntu@54.66.75.142:~/
-ssh -i /path/to/MyClinic.pem ubuntu@54.66.75.142
+scp -i /path/to/MyClinic.pem /tmp/gw.tar.gz ubuntu@13.239.83.200:~/
+ssh -i /path/to/MyClinic.pem ubuntu@13.239.83.200
 tar -xzf ~/gw.tar.gz -C ~/whatsapp-gateway && cd ~/whatsapp-gateway
 npm install --omit=dev
 # .env reuses the API's GATEWAY_SECRET, BACKEND_URL=http://127.0.0.1:3100
