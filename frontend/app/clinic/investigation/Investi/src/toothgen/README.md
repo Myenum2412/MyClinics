@@ -46,12 +46,22 @@ them as its activation contract.
 
 ## Verification
 
-Run all Python commands through `uv`:
+Run with system Python 3 (stdlib only, no dependencies).
+From `frontend/`:
 
 ```bash
-uv run tools/toothgen/build.py
-uv run tools/toothgen/verify.py
-uv run tools/toothgen/check_roundtrip.py
+npm run toothgen:build     # regenerate all SVG templates
+npm run toothgen:verify    # anatomy + contract checks
+npm run toothgen:roundtrip # path parse/serialize check
+npm run toothgen           # build + verify + roundtrip
+```
+
+Or directly:
+
+```bash
+python3 src/toothgen/build.py --set all
+python3 src/toothgen/verify.py
+python3 src/toothgen/check_roundtrip.py
 ```
 
 `verify.py` checks XML validity, root topology and ratios, clinical id/tag

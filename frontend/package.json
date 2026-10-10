@@ -6,7 +6,11 @@
     "dev": "next dev -p 3456",
     "build": "next build",
     "start": "next start -p 3456",
-    "lint": "eslint"
+    "lint": "eslint",
+    "toothgen:build": "python3 app/clinic/investigation/Investi/src/toothgen/build.py --set all",
+    "toothgen:verify": "python3 app/clinic/investigation/Investi/src/toothgen/verify.py",
+    "toothgen:roundtrip": "python3 app/clinic/investigation/Investi/src/toothgen/check_roundtrip.py",
+    "toothgen": "npm run toothgen:build && npm run toothgen:verify && npm run toothgen:roundtrip"
   },
   "dependencies": {
     "@assistant-ui/react": "^0.15.18",
