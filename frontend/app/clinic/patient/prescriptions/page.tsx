@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { myPrescriptions, listDoctors, downloadMyPrescriptionPdf, type Prescription, type MedicineEntry, type Doctor } from "@/lib/clinic-api";
 import { formatDate } from "@/lib/format-time";
-import { Button } from "@/components/ui/button";
+import { RowActions } from "@/components/ui/row-actions";
 import {
   Table,
   TableBody,
@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Pill, ChevronRight, Download, Loader2 } from "lucide-react";
+import { Pill, Download, Loader2 } from "lucide-react";
 
 export default function PatientPrescriptionsPage() {
   const session = useRequireRole("patient");
@@ -114,26 +114,23 @@ export default function PatientPrescriptionsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="inline-flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        aria-label="Download PDF"
-                        title="Download PDF"
-                        disabled={downloadingId === presc.prescriptionId}
-                        onClick={() => handleDownloadPdf(presc)}
-                      >
-                        {downloadingId === presc.prescriptionId ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          <Download className="size-4" />
-                        )}
-                      </Button>
-                      <Button variant="ghost" size="sm" className="gap-1.5">
-                        <ChevronRight className="size-4" />
-                        View
-                      </Button>
+                    <div className="inline-flex items-center justify-end">
+                      <RowActions
+                        onView={() => {}}
+                        extraBefore={[
+                          {
+                            label: "Download PDF",
+                            icon:
+                              downloadingId === presc.prescriptionId ? (
+                                <Loader2 className="mr-2 size-3.5 animate-spin" />
+                              ) : (
+                                <Download className="mr-2 size-3.5 text-muted-foreground" />
+                              ),
+                            onSelect: () => handleDownloadPdf(presc),
+                            disabled: downloadingId === presc.prescriptionId,
+                          },
+                        ]}
+                      />
                     </div>
                   </TableCell>
                 </TableRow>

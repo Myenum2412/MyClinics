@@ -28,6 +28,7 @@ import {
   updateInvestigation,
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { RowActions } from "@/components/ui/row-actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -55,13 +56,10 @@ import { formatDate } from "@/lib/format-time";
 import { todayISO } from "@/lib/datetime";
 import {
   ArrowLeft,
-  Eye,
   Loader2,
-  Pencil,
   Plus,
   Search,
   Stethoscope,
-  Trash,
 } from "lucide-react";
 
 const STATUS_OPTIONS: { value: InvestigationStatus; label: string }[] = [
@@ -905,44 +903,21 @@ export default function InvestigationPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            title="View"
-                            onClick={() => openView(item)}
-                            disabled={pendingRowId === item.investigationId}
-                          >
-                            {pendingRowId === item.investigationId ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                              <Eye className="size-4" />
-                            )}
-                          </Button>
-                          {canManage && (
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              title="Edit"
-                              onClick={() => openEdit(item)}
-                              disabled={pendingRowId === item.investigationId}
-                            >
-                              {pendingRowId === item.investigationId ? (
-                                <Loader2 className="size-4 animate-spin" />
-                              ) : (
-                                <Pencil className="size-4" />
-                              )}
-                            </Button>
-                          )}
-                          {canDelete && (
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              title="Delete"
-                              onClick={() => setDeleteTarget(item)}
-                            >
-                              <Trash className="size-4 text-destructive" />
-                            </Button>
-                          )}
+                          <RowActions
+                            onView={() => {
+                              if (pendingRowId === item.investigationId) return;
+                              openView(item);
+                            }}
+                            onEdit={
+                              canManage
+                                ? () => {
+                                    if (pendingRowId === item.investigationId) return;
+                                    openEdit(item);
+                                  }
+                                : undefined
+                            }
+                            onDelete={canDelete ? () => setDeleteTarget(item) : undefined}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -972,49 +947,21 @@ export default function InvestigationPage() {
                     <Badge className={`${STATUS_BADGE[item.status]} text-[11px]`}>
                       {item.status}
                     </Badge>
-                    <div className="flex items-center gap-1.5">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="size-9 rounded-xl text-muted-foreground"
-                        aria-label="View"
-                        onClick={() => openView(item)}
-                        disabled={pendingRowId === item.investigationId}
-                      >
-                        {pendingRowId === item.investigationId ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          <Eye className="size-4" />
-                        )}
-                      </Button>
-                      {canManage && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
-                          aria-label="Edit"
-                          onClick={() => openEdit(item)}
-                          disabled={pendingRowId === item.investigationId}
-                        >
-                          {pendingRowId === item.investigationId ? (
-                            <Loader2 className="size-4 animate-spin" />
-                          ) : (
-                            <Pencil className="size-4" />
-                          )}
-                        </Button>
-                      )}
-                      {canDelete && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
-                          aria-label="Delete"
-                          onClick={() => setDeleteTarget(item)}
-                        >
-                          <Trash className="size-4" />
-                        </Button>
-                      )}
-                    </div>
+                    <RowActions
+                      onView={() => {
+                        if (pendingRowId === item.investigationId) return;
+                        openView(item);
+                      }}
+                      onEdit={
+                        canManage
+                          ? () => {
+                              if (pendingRowId === item.investigationId) return;
+                              openEdit(item);
+                            }
+                          : undefined
+                      }
+                      onDelete={canDelete ? () => setDeleteTarget(item) : undefined}
+                    />
                   </div>
                 </div>
               ))}

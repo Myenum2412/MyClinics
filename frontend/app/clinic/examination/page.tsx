@@ -51,12 +51,12 @@ import {
   ArrowLeft,
   Eye,
   Loader2,
-  Pencil,
   Plus,
   Search,
   Stethoscope,
   Trash,
 } from "lucide-react";
+import { RowActions } from "@/components/ui/row-actions";
 
 const STATUS_OPTIONS: { value: ExaminationStatus; label: string }[] = [
   { value: "pending", label: "Pending" },
@@ -1359,35 +1359,12 @@ export default function ExaminationPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            title="View"
-                            onClick={() => openView(item)}
-                          >
-                            <Eye className="size-4" />
-                          </Button>
-                          {canManage && (
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              title="Edit"
-                              onClick={() => openEdit(item)}
-                            >
-                              <Pencil className="size-4" />
-                            </Button>
-                          )}
-                          {canDelete && (
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              title="Delete"
-                              onClick={() => setDeleteTarget(item)}
-                            >
-                              <Trash className="size-4 text-destructive" />
-                            </Button>
-                          )}
+                        <div className="flex justify-end">
+                          <RowActions
+                            onView={() => openView(item)}
+                            onEdit={canManage ? () => openEdit(item) : undefined}
+                            onDelete={canDelete ? () => setDeleteTarget(item) : undefined}
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -1417,37 +1394,11 @@ export default function ExaminationPage() {
                       {item.status}
                     </Badge>
                     <div className="flex items-center gap-1.5">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="size-9 rounded-xl text-muted-foreground"
-                        aria-label="View"
-                        onClick={() => openView(item)}
-                      >
-                        <Eye className="size-4" />
-                      </Button>
-                      {canManage && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
-                          aria-label="Edit"
-                          onClick={() => openEdit(item)}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                      )}
-                      {canDelete && (
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
-                          aria-label="Delete"
-                          onClick={() => setDeleteTarget(item)}
-                        >
-                          <Trash className="size-4" />
-                        </Button>
-                      )}
+                      <RowActions
+                        onView={() => openView(item)}
+                        onEdit={canManage ? () => openEdit(item) : undefined}
+                        onDelete={canDelete ? () => setDeleteTarget(item) : undefined}
+                      />
                     </div>
                   </div>
                 </div>

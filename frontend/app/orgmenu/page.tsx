@@ -10,7 +10,6 @@ import {
   listAllClinics,
   suspendClinic,
 } from "@/lib/clinic-api";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -29,6 +28,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Ban, Check } from "lucide-react";
+import { RowActions } from "@/components/ui/row-actions";
 import StatsGeneric from "@/components/stats-generic";
 import { formatDate } from "@/lib/datetime";
 
@@ -205,15 +206,32 @@ export default function OrgMenuDashboardPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {c.status === "active" ? (
-                        <Button variant="ghost" size="sm" onClick={() => handleSuspend(c)}>
-                          Suspend
-                        </Button>
-                      ) : (
-                        <Button variant="ghost" size="sm" onClick={() => handleActivate(c)}>
-                          Activate
-                        </Button>
-                      )}
+                      <div className="flex justify-end">
+                        <RowActions
+                          extraBefore={
+                            c.status === "active"
+                              ? [
+                                  {
+                                    label: "Suspend",
+                                    icon: <Ban className="mr-2 size-3.5 text-muted-foreground" />,
+                                    onSelect: () => handleSuspend(c),
+                                  },
+                                ]
+                              : []
+                          }
+                          extraAfter={
+                            c.status !== "active"
+                              ? [
+                                  {
+                                    label: "Activate",
+                                    icon: <Check className="mr-2 size-3.5 text-muted-foreground" />,
+                                    onSelect: () => handleActivate(c),
+                                  },
+                                ]
+                              : []
+                          }
+                        />
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

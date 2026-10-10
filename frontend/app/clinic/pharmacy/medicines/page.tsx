@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   listMedicines,
   deleteMedicine,
@@ -23,9 +24,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Pencil, Trash2 } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Pagination } from "@/components/ui/pagination"
+import { RowActions } from "@/components/ui/row-actions"
 import { PolarAngleAxis, RadialBar, RadialBarChart } from "recharts"
 import { ChartContainer } from "@/components/ui/chart"
 import {
@@ -49,6 +50,7 @@ const fmtMoney = (n: number) =>
 
 export default function PharmacyMedicinesPage() {
   const session = useRequireRole("billing_staff")
+  const router = useRouter()
   const clinicId = session?.clinicId ?? ""
 
   const [medicines, setMedicines] = React.useState<PharmacyMedicine[]>([])
@@ -302,18 +304,11 @@ export default function PharmacyMedicinesPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label="Edit" title="Edit"
-                          render={<Link href={`/clinic/pharmacy/medicines/${m.medicineId}/edit`} />}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon-sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" aria-label="Delete" title="Delete" onClick={() => setDeleteTarget(m)}>
-                          <Trash2 className="size-4" />
-                        </Button>
+                      <div className="flex justify-end">
+                        <RowActions
+                          onEdit={() => router.push(`/clinic/pharmacy/medicines/${m.medicineId}/edit`)}
+                          onDelete={() => setDeleteTarget(m)}
+                        />
                       </div>
                     </TableCell>
                   </TableRow>

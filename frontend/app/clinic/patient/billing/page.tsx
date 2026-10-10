@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { myBills, type Bill } from "@/lib/clinic-api";
 import { formatDate } from "@/lib/format-time";
-import { Button } from "@/components/ui/button";
+import { RowActions } from "@/components/ui/row-actions";
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, ChevronRight, Download, AlertCircle } from "lucide-react";
+import { CreditCard, Download, AlertCircle } from "lucide-react";
 
 export default function PatientBillingPage() {
   const session = useRequireRole("patient");
@@ -119,10 +119,17 @@ export default function PatientBillingPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" className="gap-1.5">
-                      <Download className="size-4" />
-                      PDF
-                    </Button>
+                    <div className="inline-flex items-center justify-end">
+                      <RowActions
+                        extraBefore={[
+                          {
+                            label: "PDF",
+                            icon: <Download className="mr-2 size-3.5 text-muted-foreground" />,
+                            onSelect: () => {},
+                          },
+                        ]}
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

@@ -55,7 +55,8 @@ import { Pagination } from "@/components/ui/pagination";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye, Send, Trash2, UsersRound, Phone } from "lucide-react";
+import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye, Send, UsersRound, Phone } from "lucide-react";
+import { RowActions } from "@/components/ui/row-actions";
 import { TableFilters } from "@/components/clinic/table-filters";
 import dynamic from "next/dynamic";
 import { sessionCan } from "@/hooks/use-clinic-session";
@@ -875,31 +876,24 @@ export default function PatientsPage() {
                         </TableCell>
                       )}
                       <TableCell className="text-right pr-6">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon-sm" onClick={() => setViewing(p)} aria-label="View" title="View"><Eye className="size-4" /></Button>
-                          <Button variant="ghost" size="icon-sm" onClick={() => setEditing(p)} aria-label="Edit" title="Edit"><Pencil className="size-4" /></Button>
-                          {canManage && p.userId && (
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              disabled={resending}
-                              onClick={() => handleResendCredentials(p)}
-                              aria-label="Resend" title="Resend"
-                            >
-                              <Send className="size-4" />
-                            </Button>
-                          )}
-                          {canManage && (
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              className="text-destructive hover:bg-destructive/10"
-                              onClick={() => setDeleteTarget(p)}
-                              aria-label="Delete" title="Delete"
-                            >
-                              <Trash2 className="size-4" />
-                            </Button>
-                          )}
+                        <div className="flex justify-end">
+                          <RowActions
+                            onView={() => setViewing(p)}
+                            onEdit={() => setEditing(p)}
+                            onDelete={canManage ? () => setDeleteTarget(p) : undefined}
+                            extraBefore={
+                              canManage && p.userId
+                                ? [
+                                    {
+                                      label: "Resend credentials",
+                                      icon: <Send className="mr-2 size-3.5 text-muted-foreground" />,
+                                      onSelect: () => handleResendCredentials(p),
+                                      disabled: resending,
+                                    },
+                                  ]
+                                : []
+                            }
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -974,48 +968,24 @@ export default function PatientsPage() {
                       )}
 
                       {/* Footer actions */}
-                      <div className="mt-2.5 flex items-center justify-end gap-1.5 border-t border-border/60 px-3.5 py-2.5">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl text-muted-foreground"
-                          onClick={() => setViewing(p)}
-                          aria-label="View" title="View"
-                        >
-                          <Eye className="size-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
-                          onClick={() => setEditing(p)}
-                          aria-label="Edit" title="Edit"
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        {canManage && p.userId && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="size-9 rounded-xl text-muted-foreground"
-                            disabled={resending}
-                            onClick={() => handleResendCredentials(p)}
-                            aria-label="Resend" title="Resend"
-                          >
-                            <Send className="size-4" />
-                          </Button>
-                        )}
-                        {canManage && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
-                            onClick={() => setDeleteTarget(p)}
-                            aria-label="Delete" title="Delete"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        )}
+                      <div className="mt-2.5 flex items-center justify-end border-t border-border/60 px-3.5 py-2.5">
+                        <RowActions
+                          onView={() => setViewing(p)}
+                          onEdit={() => setEditing(p)}
+                          onDelete={canManage ? () => setDeleteTarget(p) : undefined}
+                          extraBefore={
+                            canManage && p.userId
+                              ? [
+                                  {
+                                    label: "Resend credentials",
+                                    icon: <Send className="mr-2 size-3.5 text-muted-foreground" />,
+                                    onSelect: () => handleResendCredentials(p),
+                                    disabled: resending,
+                                  },
+                                ]
+                              : []
+                          }
+                        />
                       </div>
                     </article>
                   );

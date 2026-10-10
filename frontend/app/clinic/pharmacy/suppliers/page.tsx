@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRequireRole } from "@/hooks/use-clinic-session"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { listSuppliers, deleteSupplier, type PharmacySupplier } from "@/lib/clinic-api"
 import { toast } from "sonner"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -33,7 +34,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Pencil, Trash2 } from "lucide-react"
+import { RowActions } from "@/components/ui/row-actions"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Pagination } from "@/components/ui/pagination"
 
@@ -41,6 +42,7 @@ type SupplierStatus = "active" | "inactive"
 
 export default function PharmacySuppliersPage() {
   const session = useRequireRole("billing_staff")
+  const router = useRouter()
   const clinicId = session?.clinicId ?? ""
   const [suppliers, setSuppliers] = React.useState<PharmacySupplier[]>([])
   const [total, setTotal] = React.useState(0)
@@ -171,18 +173,11 @@ export default function PharmacySuppliersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label="Edit" title="Edit"
-                          render={<Link href={`/clinic/pharmacy/suppliers/${s.supplierId}/edit`} />}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon-sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive" aria-label="Delete" title="Delete" onClick={() => setDeleteTarget(s)}>
-                          <Trash2 className="size-4" />
-                        </Button>
+                      <div className="flex justify-end">
+                        <RowActions
+                          onEdit={() => router.push(`/clinic/pharmacy/suppliers/${s.supplierId}/edit`)}
+                          onDelete={() => setDeleteTarget(s)}
+                        />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -214,24 +209,10 @@ export default function PharmacySuppliersPage() {
                     </p>
                   ) : null}
                   <div className="mt-2 flex items-center justify-end gap-1.5 border-t border-border/60 pt-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
-                      aria-label="Edit" title="Edit"
-                      render={<Link href={`/clinic/pharmacy/suppliers/${s.supplierId}/edit`} />}
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
-                      aria-label="Delete" title="Delete"
-                      onClick={() => setDeleteTarget(s)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    <RowActions
+                      onEdit={() => router.push(`/clinic/pharmacy/suppliers/${s.supplierId}/edit`)}
+                      onDelete={() => setDeleteTarget(s)}
+                    />
                   </div>
                 </div>
               ))}

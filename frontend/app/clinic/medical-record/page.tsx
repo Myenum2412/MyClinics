@@ -40,6 +40,7 @@ import {
   uploadMedicalRecordFileVersion,
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { RowActions } from "@/components/ui/row-actions";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { FileUploadSystem, type FileUploadSystemHandle } from "@/components/clinic/file-upload-system";
 import { openInNewTab } from "@/lib/utils";
@@ -1977,15 +1978,7 @@ export default function MedicalRecordPage() {
                           </Select>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => handleDelete(a)}
-                            aria-label="Delete appointment"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
+                          <RowActions onDelete={() => handleDelete(a)} />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -2000,15 +1993,7 @@ export default function MedicalRecordPage() {
                       <p className="text-sm font-bold text-foreground tabular-nums">
                         {formatDate(a.date)} <span className="font-medium text-muted-foreground">· {formatTime(a.time)}</span>
                       </p>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="size-9 shrink-0 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
-                        onClick={() => handleDelete(a)}
-                        aria-label="Delete appointment"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <RowActions onDelete={() => handleDelete(a)} />
                     </div>
                     <p className="mt-1 truncate text-xs text-muted-foreground">Dr. {doctorName(a.doctorId)}</p>
                     {a.reason ? (

@@ -66,6 +66,7 @@ const StatsAppointments = dynamic(
   () => import("@/components/stats-appointments"),
   { loading: () => <div className="h-[270px]" aria-hidden="true" /> }
 );
+import { RowActions } from "@/components/ui/row-actions";
 import {
   AppointmentForm,
   appointmentToForm,
@@ -88,11 +89,9 @@ import {
   Plus,
   Trash2,
   Download,
-  Eye,
   RefreshCw,
   ChevronLeft,
   Phone,
-  Pencil,
   ArrowRightCircle,
   Star,
   Stethoscope,
@@ -1073,49 +1072,22 @@ export default function AppointmentsPage() {
                         )}
 
                         <TableCell className="pr-4">
-                          <div className="flex items-center justify-end gap-0.5">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-7 text-muted-foreground hover:text-foreground"
-                              aria-label="View details"
-                              onClick={() => {
+                          <div className="flex items-center justify-end">
+                            <RowActions
+                              onView={() => {
                                 setSelectedAppt(a);
                                 setViewing(true);
                               }}
-                            >
-                              <Eye className="size-3.5" />
-                            </Button>
-
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-7 text-primary hover:text-primary"
-                              aria-label="Edit appointment"
-                              onClick={() => setEditingAppt(a)}
-                            >
-                              <Pencil className="size-3.5" />
-                            </Button>
-
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-7 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                              aria-label="Delete appointment"
-                              onClick={() => setDeleteTarget(a)}
-                            >
-                              <Trash2 className="size-3.5" />
-                            </Button>
-
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="size-7 text-muted-foreground hover:text-primary"
-                              aria-label="WhatsApp logs"
-                              onClick={() => fetchNotificationLogs(a)}
-                            >
-                              <Bell className="size-3.5" />
-                            </Button>
+                              onEdit={() => setEditingAppt(a)}
+                              onDelete={() => setDeleteTarget(a)}
+                              extraBefore={[
+                                {
+                                  label: "WhatsApp logs",
+                                  icon: <Bell className="mr-2 size-3.5 text-muted-foreground" />,
+                                  onSelect: () => fetchNotificationLogs(a),
+                                },
+                              ]}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
@@ -1214,47 +1186,21 @@ export default function AppointmentsPage() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <div className="flex items-center gap-1.5">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl text-muted-foreground"
-                          aria-label="View details"
-                          onClick={() => {
-                            setSelectedAppt(a);
-                            setViewing(true);
-                          }}
-                        >
-                          <Eye className="size-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
-                          aria-label="Edit appointment"
-                          onClick={() => setEditingAppt(a)}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl text-muted-foreground"
-                          aria-label="WhatsApp logs"
-                          onClick={() => fetchNotificationLogs(a)}
-                        >
-                          <Bell className="size-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
-                          aria-label="Delete appointment"
-                          onClick={() => setDeleteTarget(a)}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
+                      <RowActions
+                        onView={() => {
+                          setSelectedAppt(a);
+                          setViewing(true);
+                        }}
+                        onEdit={() => setEditingAppt(a)}
+                        onDelete={() => setDeleteTarget(a)}
+                        extraBefore={[
+                          {
+                            label: "WhatsApp logs",
+                            icon: <Bell className="mr-2 size-3.5 text-muted-foreground" />,
+                            onSelect: () => fetchNotificationLogs(a),
+                          },
+                        ]}
+                      />
                     </div>
                   </article>
                 );

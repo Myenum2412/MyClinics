@@ -15,7 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/ui/pagination";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { FlaskConical, Plus, Eye, Pencil, Trash2, Search, Phone } from "lucide-react";
+import { FlaskConical, Plus, Pencil, Trash2, Search, Phone } from "lucide-react";
+import { RowActions } from "@/components/ui/row-actions";
 
 export default function LabsPage() {
   const session = useRequireRole("patient");
@@ -154,10 +155,12 @@ export default function LabsPage() {
                     <TableCell className="text-muted-foreground">{l.licenseNo ?? "—"}</TableCell>
                     <TableCell><Badge variant="outline">{l.status}</Badge></TableCell>
                     <TableCell className="text-right pr-6">
-                      <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon-sm" onClick={() => setViewing(l)} aria-label="View" title="View"><Eye className="size-4" /></Button>
-                        {canManage && <Button variant="ghost" size="icon-sm" onClick={() => setEditing(l)} aria-label="Edit" title="Edit"><Pencil className="size-4" /></Button>}
-                        {canManage && <Button variant="ghost" size="icon-sm" className="text-destructive hover:bg-destructive/10" onClick={() => setDeleteTarget(l)} aria-label="Delete" title="Delete"><Trash2 className="size-4" /></Button>}
+                      <div className="flex justify-end">
+                        <RowActions
+                          onView={() => setViewing(l)}
+                          onEdit={canManage ? () => setEditing(l) : undefined}
+                          onDelete={canManage ? () => setDeleteTarget(l) : undefined}
+                        />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -210,38 +213,12 @@ export default function LabsPage() {
                       </div>
 
                       {/* Footer actions */}
-                      <div className="mt-2.5 flex items-center justify-end gap-1.5 border-t border-border/60 px-3.5 py-2.5">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl text-muted-foreground"
-                          onClick={() => setViewing(l)}
-                          aria-label="View" title="View"
-                        >
-                          <Eye className="size-4" />
-                        </Button>
-                        {canManage && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
-                            onClick={() => setEditing(l)}
-                            aria-label="Edit" title="Edit"
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
-                        )}
-                        {canManage && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
-                            onClick={() => setDeleteTarget(l)}
-                            aria-label="Delete" title="Delete"
-                          >
-                            <Trash2 className="size-4" />
-                          </Button>
-                        )}
+                      <div className="mt-2.5 flex items-center justify-end border-t border-border/60 px-3.5 py-2.5">
+                        <RowActions
+                          onView={() => setViewing(l)}
+                          onEdit={canManage ? () => setEditing(l) : undefined}
+                          onDelete={canManage ? () => setDeleteTarget(l) : undefined}
+                        />
                       </div>
                     </article>
                   );

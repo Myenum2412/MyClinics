@@ -42,7 +42,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { EyeIcon, CheckIcon } from "@heroicons/react/24/outline"
+import { CheckIcon } from "@heroicons/react/24/outline"
+import { RowActions } from "@/components/ui/row-actions"
 import { Pagination } from "@/components/ui/pagination"
 import { Skeleton } from "@/components/ui/skeleton"
 
@@ -226,15 +227,21 @@ export default function PharmacyPurchasesPage() {
                         <StatusBadge status={p.status} />
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-1.5">
-                          <Button variant="ghost" size="icon-sm" aria-label="View" title="View" onClick={() => openDetail(p)}>
-                            <EyeIcon className="size-4" />
-                          </Button>
-                          {p.status === "draft" && (
-                            <Button variant="outline" size="icon-sm" aria-label="Receive" title="Receive" onClick={() => handleReceive(p)}>
-                              <CheckIcon className="size-4" />
-                            </Button>
-                          )}
+                        <div className="flex justify-end">
+                          <RowActions
+                            onView={() => openDetail(p)}
+                            extraBefore={
+                              p.status === "draft"
+                                ? [
+                                    {
+                                      label: "Receive",
+                                      icon: <CheckIcon className="mr-2 size-3.5 text-muted-foreground" />,
+                                      onSelect: () => handleReceive(p),
+                                    },
+                                  ]
+                                : []
+                            }
+                          />
                         </div>
                       </TableCell>
                     </TableRow>

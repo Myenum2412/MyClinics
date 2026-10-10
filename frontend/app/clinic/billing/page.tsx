@@ -43,6 +43,7 @@ import { PersonAvatar } from "@/components/clinic/person-avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { Pagination } from "@/components/ui/pagination";
+import { RowActions } from "@/components/ui/row-actions";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import dynamic from "next/dynamic";
 import { billStatusTone } from "@/lib/status-styles";
@@ -69,8 +70,6 @@ import {
   RotateCcw,
   FileText,
   Info,
-  Eye,
-  Pencil,
 } from "lucide-react";
 
 const STATUS_CLASS: Record<string, string> = {
@@ -660,27 +659,13 @@ export default function BillingPage() {
                       </TableCell>
                     )}
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8"
-                        onClick={() => handleDownloadPdf(b)}
-                      >
-                        <Download className="size-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon-sm" className="h-8 w-8" onClick={() => setViewing(b)} aria-label="View" title="View"><Eye className="size-4" /></Button>
-                      <Button variant="ghost" size="icon-sm" className="h-8 w-8" onClick={() => setEditing(b)} aria-label="Edit" title="Edit"><Pencil className="size-4" /></Button>
-                      {b.status !== "void" && (
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                          onClick={() => setVoidTarget(b)}
-                          aria-label="Void" title="Void"
-                        >
-                          <Trash className="size-4" />
-                        </Button>
-                      )}
+                      <RowActions
+                        onView={() => setViewing(b)}
+                        onEdit={() => setEditing(b)}
+                        onDelete={b.status !== "void" ? () => setVoidTarget(b) : undefined}
+                        deleteLabel="Void"
+                        extraBefore={[{ label: "Download PDF", icon: <Download className="size-3.5" />, onSelect: () => handleDownloadPdf(b) }]}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -753,46 +738,13 @@ export default function BillingPage() {
                           </DropdownMenu>
                         )
                       )}
-                      <div className="flex items-center gap-1.5">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl text-muted-foreground"
-                          aria-label="Download PDF"
-                          onClick={() => handleDownloadPdf(b)}
-                        >
-                          <Download className="size-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl text-muted-foreground"
-                          aria-label="View" title="View"
-                          onClick={() => setViewing(b)}
-                        >
-                          <Eye className="size-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary"
-                          aria-label="Edit" title="Edit"
-                          onClick={() => setEditing(b)}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        {b.status !== "void" && (
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive"
-                            aria-label="Void" title="Void"
-                            onClick={() => setVoidTarget(b)}
-                          >
-                            <Trash className="size-4" />
-                          </Button>
-                        )}
-                      </div>
+                      <RowActions
+                        onView={() => setViewing(b)}
+                        onEdit={() => setEditing(b)}
+                        onDelete={b.status !== "void" ? () => setVoidTarget(b) : undefined}
+                        deleteLabel="Void"
+                        extraBefore={[{ label: "Download PDF", icon: <Download className="size-3.5" />, onSelect: () => handleDownloadPdf(b) }]}
+                      />
                     </div>
                   </article>
                 );

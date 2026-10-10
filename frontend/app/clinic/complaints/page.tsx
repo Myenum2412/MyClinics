@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search, Eye, Pencil, Trash2, Plus, Users } from "lucide-react";
+import { Plus } from "lucide-react";
+import { RowActions } from "@/components/ui/row-actions";
 import { Pagination } from "@/components/ui/pagination";
 import { Checkbox } from "@/components/ui/checkbox";
 import { listPatients, listDoctors, listAppointments, type Patient, type Doctor, type Appointment } from "@/lib/clinic-api";
@@ -139,10 +140,12 @@ export default function TreatmentPage(){
               <TableCell className="text-xs max-w-[150px] truncate">{it.data["Medicines Prescribed"] || it.data["Medicines"] || "—"}</TableCell>
               <TableCell className="text-xs">{it.data["Follow-up Date"] || it.data["Follow-up Schedule"] || "—"}</TableCell>
               <TableCell><span className={`rounded-full px-2 py-0.5 text-xs ${it.type==="record"?"bg-blue-50 text-blue-700":"bg-emerald-50 text-emerald-700"}`}>{it.type}</span></TableCell>
-              <TableCell className="text-right"><div className="flex justify-end gap-0.5">
-                <Button variant="ghost" size="icon" className="size-7" onClick={()=>setViewing(it)}><Eye className="size-3.5"/></Button>
-                <Button variant="ghost" size="icon" className="size-7" onClick={()=>startEdit(it)}><Pencil className="size-3.5"/></Button>
-                <Button variant="ghost" size="icon" className="size-7 text-destructive" onClick={()=>save(items.filter(x=>x.id!==it.id))}><Trash2 className="size-3.5"/></Button>
+              <TableCell className="text-right"><div className="flex justify-end">
+                <RowActions
+                  onView={()=>setViewing(it)}
+                  onEdit={()=>startEdit(it)}
+                  onDelete={()=>save(items.filter(x=>x.id!==it.id))}
+                />
               </div></TableCell>
             </TableRow>)}</TableBody>
           </Table></div>
@@ -175,10 +178,12 @@ export default function TreatmentPage(){
                 {(it.data["Follow-up Date"] || it.data["Follow-up Schedule"]) ? (
                   <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{it.data["Follow-up Date"] || it.data["Follow-up Schedule"]}</p>
                 ) : null}
-                <div className="mt-2 flex items-center justify-end gap-1.5 border-t border-border/60 pt-2">
-                  <Button variant="outline" size="icon" className="size-9 rounded-xl text-muted-foreground" aria-label="View" onClick={()=>setViewing(it)}><Eye className="size-4"/></Button>
-                  <Button variant="outline" size="icon" className="size-9 rounded-xl border-primary/20 bg-primary/5 text-primary" aria-label="Edit" onClick={()=>startEdit(it)}><Pencil className="size-4"/></Button>
-                  <Button variant="outline" size="icon" className="size-9 rounded-xl border-destructive/20 bg-destructive/5 text-destructive" aria-label="Delete" onClick={()=>save(items.filter(x=>x.id!==it.id))}><Trash2 className="size-4"/></Button>
+                <div className="mt-2 flex items-center justify-end border-t border-border/60 pt-2">
+                  <RowActions
+                    onView={()=>setViewing(it)}
+                    onEdit={()=>startEdit(it)}
+                    onDelete={()=>save(items.filter(x=>x.id!==it.id))}
+                  />
                 </div>
               </div>
             ))}

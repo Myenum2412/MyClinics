@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { myRecords, listDoctors, type MedicineRecord, type Doctor } from "@/lib/clinic-api";
 import { formatDate } from "@/lib/format-time";
-import { Button } from "@/components/ui/button";
+import { RowActions } from "@/components/ui/row-actions";
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ChevronRight, Pill } from "lucide-react";
+import { Pill } from "lucide-react";
 
 export default function PatientMedicineRecordsPage() {
   const session = useRequireRole("patient");
@@ -87,10 +87,9 @@ export default function PatientMedicineRecordsPage() {
                     <p className="text-sm text-muted-foreground max-w-xs truncate">{record.notes || "—"}</p>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" className="gap-1.5">
-                      <ChevronRight className="size-4" />
-                      View
-                    </Button>
+                    <div className="inline-flex items-center justify-end">
+                      <RowActions onView={() => {}} />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
