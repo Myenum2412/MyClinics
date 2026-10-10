@@ -42,7 +42,7 @@ import { AnimateIn } from "@/components/animate-in";
 import { OnePlatform } from "@/components/one-platform";
 import { CardSwapSection } from "@/components/card-swap-section";
 import { PricingModern } from "@/components/smoothui/pricing-2";
-import HeroSection from "@/components/hero-section-1";
+import HeroSection from "@/components/hero-section-6";
 export default function Home() {
   return (
     <div className="flex min-h-svh flex-col">
