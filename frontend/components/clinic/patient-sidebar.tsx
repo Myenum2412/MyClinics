@@ -17,6 +17,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -150,7 +151,8 @@ export function PatientSidebar({
             align="end"
             sideOffset={6}
           >
-            <DropdownMenuLabel className="flex items-center gap-2 px-2 py-1.5">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="flex items-center gap-2 px-2 py-1.5">
               <Avatar className="size-8">
                 <AvatarFallback className="bg-primary/10 text-xs font-bold text-primary">
                   {initials(user.name)}
@@ -161,6 +163,7 @@ export function PatientSidebar({
                 <p className="truncate text-xs text-muted-foreground">{user.email}</p>
               </div>
             </DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => go("/clinic/patient/profile")}>
               <CircleUser className="size-4" />

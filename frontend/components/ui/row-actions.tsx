@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -61,7 +62,9 @@ export function RowActions({
         }
       />
       <DropdownMenuContent align={align} className="w-44">
-        <DropdownMenuLabel className="text-xs">{label}</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="text-xs">{label}</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         {extraBefore.map((item) => (
           <DropdownMenuItem

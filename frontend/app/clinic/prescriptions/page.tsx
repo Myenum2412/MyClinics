@@ -870,7 +870,9 @@ export default function PrescriptionsPage() {
                               </Button>
                             } />
                             <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
+                              <DropdownMenuGroup>
+                                <DropdownMenuLabel className="text-xs">Actions</DropdownMenuLabel>
+                              </DropdownMenuGroup>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => handleDownloadPdf(p)}
