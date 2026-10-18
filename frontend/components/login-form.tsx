@@ -82,7 +82,7 @@ export function LoginForm({
         callbackUrl && /^\/(?!\/)/.test(callbackUrl) ? callbackUrl : null;
       router.replace(safeCallback ?? destination);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid email or password.");
+      setError(err instanceof Error ? err.message : "Invalid email, phone number or password.");
     } finally {
       setLoading(false);
     }
@@ -121,7 +121,7 @@ export function LoginForm({
 
           <Field>
             <FieldLabel htmlFor="email" className="text-black font-medium">
-              Email or WhatsApp number
+              Email or Phone / WhatsApp number
             </FieldLabel>
             <Input
               id="email"
@@ -134,7 +134,7 @@ export function LoginForm({
               className="bg-white! text-black placeholder:text-gray-400 border-gray-300 focus-visible:ring-[#2196F3]"
             />
             <p className="text-xs text-black/60">
-              Patients can sign in with either their email or their WhatsApp number.
+              Patients can sign in with their email, phone number or WhatsApp number.
             </p>
           </Field>
 

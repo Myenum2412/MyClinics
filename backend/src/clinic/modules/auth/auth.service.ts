@@ -233,7 +233,7 @@ export class AuthService {
         ip: meta.ip,
         userAgent: meta.userAgent,
       }).catch(()=>{});
-      throw new UnauthorizedError("Invalid email or WhatsApp number");
+      throw new UnauthorizedError("Invalid email or phone number");
     }
     return this.loginWithPhone(phoneKey, rawIdentifier, input.password, meta, input.clinicId ?? null);
   }
@@ -360,7 +360,7 @@ export class AuthService {
         ip: meta.ip,
         userAgent: meta.userAgent,
       }).catch(()=>{});
-      throw new UnauthorizedError("Invalid WhatsApp number or password");
+      throw new UnauthorizedError("Invalid phone / WhatsApp number or password");
     }
 
     // Several portal accounts may share one family number — try each
@@ -391,7 +391,7 @@ export class AuthService {
       throw new UnauthorizedError(
         googleOnly
           ? "This account uses Google sign-in — click Continue with Google"
-          : "Invalid WhatsApp number or password"
+          : "Invalid phone / WhatsApp number or password"
       );
     }
 

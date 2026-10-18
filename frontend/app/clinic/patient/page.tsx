@@ -8,6 +8,7 @@ import {
   getMyPatient,
   listDoctors,
   listMedicalRecordFiles,
+  logout,
   myAppointments,
   myPrescriptions,
   type Appointment,
@@ -93,10 +94,13 @@ export default function PatientPortalDashboard() {
   );
   const [loading, setLoading] = useState(true);
 
-  const handleLogout = () => {
-    localStorage.removeItem("clinic_token");
-    document.cookie = "clinic_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
   };
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);

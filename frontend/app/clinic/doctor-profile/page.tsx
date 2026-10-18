@@ -11,6 +11,7 @@ import {
   getDoctor,
   getOwnClinic,
   listDoctors,
+  logout,
   updateDoctor,
   uploadAvatar,
   getAvatarUrl,
@@ -289,10 +290,13 @@ export default function DoctorProfilePage() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("clinic_token");
-    document.cookie = "clinic_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
   };
 
   if (loading || !form) {

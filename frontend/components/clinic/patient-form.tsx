@@ -114,7 +114,6 @@ export interface PatientFormState {
   notes: string;
   doctorId: string | null;
   password: string;
-  confirmPassword: string;
   /** Typeable age (years) — convenience input that auto-fills dateOfBirth. */
   age: string;
   portalAccess: "enable" | "disable";
@@ -169,7 +168,6 @@ export const EMPTY_FORM: PatientFormState = {
   notes: "",
   doctorId: null,
   password: "",
-  confirmPassword: "",
   age: "",
   portalAccess: "enable",
   loginNotification: "none",
@@ -413,7 +411,7 @@ export function PatientForm({
 
     if (portalEnabled) {
       // Email is fully optional — the mobile number is the mandatory
-      // identifier and doubles as the portal login (WhatsApp number + password).
+      // identifier and doubles as the portal login (phone / WhatsApp number + password).
       // Only the format is validated when an email is provided.
       if (form.email.trim() && !validateEmail(form.email)) {
         newErrors.email = "Enter a valid email address";
@@ -424,19 +422,9 @@ export function PatientForm({
         } else if (form.password.length < 8) {
           newErrors.password = "Password must be at least 8 characters";
         }
-        if (!form.confirmPassword) {
-          newErrors.confirmPassword = "Please confirm password";
-        } else if (form.password !== form.confirmPassword) {
-          newErrors.confirmPassword = "Passwords do not match";
-        }
       } else if (isEditMode && form.password && form.password.length > 0) {
         if (form.password.length < 8) {
           newErrors.password = "Password must be at least 8 characters";
-        }
-        if (!form.confirmPassword) {
-          newErrors.confirmPassword = "Please confirm password";
-        } else if (form.password !== form.confirmPassword) {
-          newErrors.confirmPassword = "Passwords do not match";
         }
       }
     }
@@ -1052,17 +1040,6 @@ export function PatientForm({
             placeholder="••••••••"
             helperText="Minimum 8 characters"
           />
-          <FormField
-            label="Confirm Password"
-            name="confirmPassword"
-            type="password"
-            value={form.confirmPassword}
-            onChange={(v) => handleChange("confirmPassword", v)}
-            error={errors.confirmPassword}
-            required={isCreateMode}
-            disabled={!portalEnabled || isViewMode}
-            placeholder="••••••••"
-          />
         </div>
 
         <div className="space-y-4 border-t border-border pt-4">
@@ -1088,7 +1065,6 @@ export function PatientForm({
                           ...prev,
                           portalAccess: "disable",
                           password: "",
-                          confirmPassword: "",
                           loginNotification: "none",
                         }));
                       }

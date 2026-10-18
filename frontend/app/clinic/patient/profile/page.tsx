@@ -6,6 +6,7 @@ import { useRequireRole } from "@/hooks/use-clinic-session";
 import {
   getMyPatient,
   getOwnClinic,
+  logout,
   updatePatient,
   type Patient,
   type Clinic,
@@ -258,10 +259,13 @@ export default function PatientProfilePage() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("clinic_token");
-    document.cookie = "clinic_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
   };
 
   if (loading || !patient || !form) {

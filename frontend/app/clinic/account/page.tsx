@@ -9,6 +9,7 @@ import {
   type WeeklyScheduleDay,
   getAvatarUrl,
   getOwnClinic,
+  logout,
   updateOwnClinic,
   uploadAvatar,
 } from "@/lib/clinic-api";
@@ -405,10 +406,13 @@ export default function AccountPage() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("clinic_token");
-    document.cookie = "clinic_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
   };
 
   const profile = useMemo(() => (clinic ? profileOf(clinic) : EMPTY_PROFILE), [clinic]);
