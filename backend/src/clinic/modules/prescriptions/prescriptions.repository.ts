@@ -1,5 +1,6 @@
 import { now as nowFn } from "@/clinic/core/datetime";
 import { escapeRegex } from "@/clinic/core/pagination";
+import { paginatedJoinList, matchEntityIds, idClause } from "@/clinic/core/list-query";
 import type { Db, WithId } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import type { PrescriptionDoc } from "@/clinic/modules/prescriptions/prescriptions.schema";
@@ -67,43 +68,40 @@ export class PrescriptionRepository {
     }
     const scoped = this.scoped(filter);
 
-    const pipeline: Record<string, unknown>[] = [
-      { $match: scoped },
-      { $lookup: { from: CLINIC_COLLECTIONS.patients, localField: "patientId", foreignField: "patientId", as: "patient" } },
-      { $unwind: { path: "$patient", preserveNullAndEmptyArrays: true } },
-      { $lookup: { from: CLINIC_COLLECTIONS.doctors, localField: "doctorId", foreignField: "doctorId", as: "doctor" } },
-      { $unwind: { path: "$doctor", preserveNullAndEmptyArrays: true } },
-    ];
+    const match: Record<string, unknown> = { ...scoped };
     if (query.q) {
       const safeQ = escapeRegex(query.q);
-      pipeline.push({
-        $match: {
-          $or: [
-            { "patient.fullName": { $regex: safeQ, $options: "i" } },
-            { "patient.mobile": { $regex: safeQ, $options: "i" } },
-            { "doctor.name": { $regex: safeQ, $options: "i" } },
-            { diagnosis: { $regex: safeQ, $options: "i" } },
-          ],
-        },
-      });
+      const [patientIds, doctorIds] = await Promise.all([
+        matchEntityIds(this.db, CLINIC_COLLECTIONS.patients, this.clinicId, "patientId", [
+          { fullName: { $regex: safeQ, $options: "i" } },
+          { mobile: { $regex: safeQ, $options: "i" } },
+        ]),
+        matchEntityIds(this.db, CLINIC_COLLECTIONS.doctors, this.clinicId, "doctorId", [
+          { name: { $regex: safeQ, $options: "i" } },
+        ]),
+      ]);
+      match.$or = [
+        ...idClause("patientId", patientIds),
+        ...idClause("doctorId", doctorIds),
+        { diagnosis: { $regex: safeQ, $options: "i" } },
+      ];
     }
-    pipeline.push({
-      $facet: {
-        items: [
-          { $sort: { visitDate: -1, createdAt: -1 } },
-          { $skip: query.skip },
-          { $limit: query.limit },
-          { $set: { patientName: "$patient.fullName", patientPhone: "$patient.mobile", doctorName: "$doctor.name" } },
-          { $unset: ["patient", "doctor"] },
-        ],
-        total: [{ $count: "count" }],
-      },
-    });
 
-    const [result] = await this.collection().aggregate(pipeline).toArray();
-    const items = (result?.items ?? []) as PrescriptionWithNames[];
-    const total = (result?.total?.[0]?.count as number | undefined) ?? 0;
-    return [items, total];
+    return paginatedJoinList<PrescriptionWithNames>({
+      collection: this.collection(),
+      match,
+      joins: [
+        { from: CLINIC_COLLECTIONS.patients, localField: "patientId", foreignField: "patientId", as: "patient" },
+        { from: CLINIC_COLLECTIONS.doctors, localField: "doctorId", foreignField: "doctorId", as: "doctor" },
+      ],
+      sort: { visitDate: -1, createdAt: -1 },
+      skip: query.skip,
+      limit: query.limit,
+      project: [
+        { $set: { patientName: "$patient.fullName", patientPhone: "$patient.mobile", doctorName: "$doctor.name" } },
+        { $unset: ["patient", "doctor"] },
+      ],
+    });
   }
 
   async insert(doc: Omit<PrescriptionDoc, "_id" | "clinicId" | "createdAt" | "updatedAt">): Promise<WithId<PrescriptionDoc>> {

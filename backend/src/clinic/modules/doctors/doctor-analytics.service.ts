@@ -286,29 +286,30 @@ export class DoctorAnalyticsService {
       };
     });
 
-    // Patients assigned (all-time) for this doctor
-    const patientsAssigned = await this.db
-      .collection<PatientDoc>(CLINIC_COLLECTIONS.patients)
-      .countDocuments({ clinicId, doctorId, status: { $ne: "deleted" } } as never);
-
-    // Recent slices (last 5-10 within range, sorted by date desc)
-    const recentAppointments = await this.db
-      .collection<AppointmentDoc>(CLINIC_COLLECTIONS.appointments)
-      .find({ clinicId, doctorId, date: { $gte: from, $lte: to } } as never)
-      .sort({ date: -1, time: -1 })
-      .limit(8)
-      .toArray();
-    const recentBills = await billsCol
-      .find({ clinicId, doctorId, status: { $ne: "void" } } as never)
-      .sort({ invoiceDate: -1, createdAt: -1 })
-      .limit(8)
-      .toArray();
-    const recentPatients = await this.db
-      .collection<PatientDoc>(CLINIC_COLLECTIONS.patients)
-      .find({ clinicId, doctorId, status: { $ne: "deleted" } } as never)
-      .sort({ updatedAt: -1, createdAt: -1 })
-      .limit(6)
-      .toArray();
+    // Patients assigned (all-time), recent slices — all independent, so run
+    // them together instead of as four sequential round trips.
+    const [patientsAssigned, recentAppointments, recentBills, recentPatients] = await Promise.all([
+      this.db
+        .collection<PatientDoc>(CLINIC_COLLECTIONS.patients)
+        .countDocuments({ clinicId, doctorId, status: { $ne: "deleted" } } as never),
+      this.db
+        .collection<AppointmentDoc>(CLINIC_COLLECTIONS.appointments)
+        .find({ clinicId, doctorId, date: { $gte: from, $lte: to } } as never)
+        .sort({ date: -1, time: -1 })
+        .limit(8)
+        .toArray(),
+      billsCol
+        .find({ clinicId, doctorId, status: { $ne: "void" } } as never)
+        .sort({ invoiceDate: -1, createdAt: -1 })
+        .limit(8)
+        .toArray(),
+      this.db
+        .collection<PatientDoc>(CLINIC_COLLECTIONS.patients)
+        .find({ clinicId, doctorId, status: { $ne: "deleted" } } as never)
+        .sort({ updatedAt: -1, createdAt: -1 })
+        .limit(6)
+        .toArray(),
+    ]);
 
     // For breakdown
     const byStatus = Object.entries(statusCounts).map(([status, count]) => ({

@@ -12,6 +12,7 @@ import {
   type Doctor,
   createAppointment,
   deleteAppointment,
+  getAppointmentStats,
   listAppointments,
   listDoctors,
   listPatients,
@@ -276,20 +277,9 @@ export default function AppointmentsPage() {
   // Clinic-wide counts for the stat cards — independent of the table's current page/filters.
   const loadStats = useCallback(() => {
     if (!clinicId) return;
-    Promise.allSettled([
-      listAppointments(clinicId, { limit: 1 }),
-      listAppointments(clinicId, { limit: 1, date: todayISO() }),
-      listAppointments(clinicId, { limit: 1, status: "completed" }),
-      listAppointments(clinicId, { limit: 1, status: "scheduled" }),
-    ]).then(([totalRes, todayRes, completedRes, scheduledRes]) => {
-      const count = (r: PromiseSettledResult<any>) => (r.status === "fulfilled" ? r.value?.total ?? 0 : 0);
-      setGlobalStats({
-        total: count(totalRes),
-        today: count(todayRes),
-        completed: count(completedRes),
-        scheduled: count(scheduledRes),
-      });
-    });
+    getAppointmentStats(clinicId)
+      .then((stats) => setGlobalStats(stats))
+      .catch(() => setGlobalStats({ total: 0, today: 0, completed: 0, scheduled: 0 }));
   }, [clinicId]);
 
   // The actual table data: real server-side pagination + filtering + search.

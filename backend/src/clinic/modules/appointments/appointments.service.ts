@@ -13,6 +13,7 @@ import type { CreateAppointmentInput, UpdateAppointmentInput } from "@/clinic/mo
 import { AppointmentRepository } from "@/clinic/modules/appointments/appointments.repository";
 import type { AppointmentDoc } from "@/clinic/modules/appointments/appointments.schema";
 import { now as nowFn } from "@/clinic/core/datetime";
+import { todayDateString } from "@/lib/stats";
 import {
   callNext,
   cancelQueue as cancelQueueToken,
@@ -203,6 +204,30 @@ export class AppointmentService {
   ) {
     const [items, total] = await this.repo(ctx).list(query);
     return { items, total };
+  }
+
+  /**
+   * Clinic-wide stat-card counts in one request. Previously the UI issued four
+   * separate list calls (each a full aggregation) just to read `.total`.
+   */
+  async getStats(ctx: ClinicContext): Promise<{
+    total: number;
+    today: number;
+    completed: number;
+    scheduled: number;
+  }> {
+    const clinicId = requireClinicOf(ctx);
+    const base: Record<string, unknown> = { clinicId };
+    if (ctx.role === "doctor" && ctx.doctorId) base.doctorId = ctx.doctorId;
+    if (ctx.role === "patient") base.patientId = ctx.patientId ?? null;
+    const col = this.db.collection(CLINIC_COLLECTIONS.appointments);
+    const [total, today, completed, scheduled] = await Promise.all([
+      col.countDocuments(base),
+      col.countDocuments({ ...base, date: todayDateString() }),
+      col.countDocuments({ ...base, status: "completed" }),
+      col.countDocuments({ ...base, status: "scheduled" }),
+    ]);
+    return { total, today, completed, scheduled };
   }
 
   async updateAppointment(

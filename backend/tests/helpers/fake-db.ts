@@ -16,8 +16,16 @@ function eq(value: unknown, filterValue: unknown): boolean {
   return value === filterValue;
 }
 
+/** Resolve a dotted field path (e.g. "supplier.name") against a document. */
+function getPath(obj: Doc, path: string): any {
+  if (!path.includes(".")) return obj[path];
+  return path
+    .split(".")
+    .reduce<any>((acc, key) => (acc == null ? acc : (acc as Doc)[key]), obj);
+}
+
 function operatorMatch(doc: Doc, key: string, op: Record<string, unknown>): boolean {
-  const value = doc[key];
+  const value = getPath(doc, key);
   for (const [operator, operandRaw] of Object.entries(op)) {
     const operand = operandRaw as any;
     switch (operator) {
@@ -69,11 +77,151 @@ function matches(doc: Doc, filter: Filter): boolean {
       if (!operatorMatch(doc, key, filterValue as Record<string, unknown>)) return false;
     } else if (filterValue === undefined) {
       // no constraint
-    } else if (!eq(doc[key], filterValue)) {
+    } else if (!eq(getPath(doc, key), filterValue)) {
       return false;
     }
   }
   return true;
+}
+
+// --- Aggregation pipeline support --------------------------------------------
+// The fake DB implements only the stages the app's repositories actually use
+// ($match/$sort/$skip/$limit/$lookup/$unwind/$set/$unset/$project/$facet/$count).
+
+function sortDocs(items: Doc[], spec: Record<string, 1 | -1>): Doc[] {
+  return [...items].sort((a, b) => {
+    for (const [key, dir] of Object.entries(spec)) {
+      const av = getPath(a, key);
+      const bv = getPath(b, key);
+      if (av === bv) continue;
+      if (av === undefined) return 1 * dir;
+      if (bv === undefined) return -1 * dir;
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+    }
+    return 0;
+  });
+}
+
+function evalExpr(row: Doc, expr: unknown): unknown {
+  if (typeof expr === "string" && expr.startsWith("$")) return getPath(row, expr.slice(1));
+  return expr;
+}
+
+function setPath(out: Doc, path: string, value: unknown): void {
+  if (!path.includes(".")) {
+    out[path] = value;
+    return;
+  }
+  const keys = path.split(".");
+  let cur = out;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+    if (typeof cur[key] !== "object" || cur[key] === null) cur[key] = {};
+    cur = cur[key];
+  }
+  cur[keys[keys.length - 1]] = value;
+}
+
+function projectRow(row: Doc, spec: Record<string, unknown>): Doc {
+  const entries = Object.entries(spec);
+  const hasInclusion = entries.some(([, v]) => v === 1 || (typeof v === "object" && v !== null));
+  if (hasInclusion) {
+    const out: Doc = {};
+    for (const [k, v] of entries) {
+      if (v === 1) out[k] = getPath(row, k);
+      else if (v === 0) continue;
+      else out[k] = evalExpr(row, v);
+    }
+    return out;
+  }
+  const out: Doc = { ...row };
+  for (const [k, v] of entries) if (v === 0) delete out[k];
+  return out;
+}
+
+function runPipeline(
+  input: Doc[],
+  stages: Record<string, any>[],
+  store: Map<string, Doc[]>
+): Doc[] {
+  let rows = input;
+  for (const stage of stages) {
+    if (stage.$match) {
+      rows = rows.filter((d) => matches(d, stage.$match));
+    } else if (stage.$sort) {
+      rows = sortDocs(rows, stage.$sort);
+    } else if (stage.$skip !== undefined) {
+      rows = rows.slice(stage.$skip);
+    } else if (stage.$limit !== undefined) {
+      rows = stage.$limit > 0 ? rows.slice(0, stage.$limit) : rows;
+    } else if (stage.$count) {
+      rows = [{ [stage.$count]: rows.length }];
+    } else if (stage.$lookup) {
+      const { from, localField, foreignField, as } = stage.$lookup;
+      const foreign = store.get(from) ?? [];
+      rows = rows.map((row) => {
+        const localVal = getPath(row, localField);
+        const found = foreign.filter((f) => eq(getPath(f, foreignField), localVal));
+        return { ...row, [as]: found.map((f) => ({ ...f })) };
+      });
+    } else if (stage.$unwind) {
+      const spec = typeof stage.$unwind === "string" ? { path: stage.$unwind } : stage.$unwind;
+      const field = String(spec.path).replace(/^\$/, "");
+      const preserve = spec.preserveNullAndEmptyArrays === true;
+      const next: Doc[] = [];
+      for (const row of rows) {
+        const value = getPath(row, field);
+        if (Array.isArray(value)) {
+          if (value.length === 0) {
+            if (preserve) {
+              const copy = { ...row };
+              delete copy[field];
+              next.push(copy);
+            }
+          } else {
+            for (const item of value) {
+              const copy = { ...row };
+              setPath(copy, field, item);
+              next.push(copy);
+            }
+          }
+        } else if (value === null || value === undefined) {
+          if (preserve) {
+            const copy = { ...row };
+            delete copy[field];
+            next.push(copy);
+          }
+        } else {
+          next.push({ ...row });
+        }
+      }
+      rows = next;
+    } else if (stage.$set || stage.$addFields) {
+      const spec = stage.$set ?? stage.$addFields;
+      rows = rows.map((row) => {
+        const out = { ...row };
+        for (const [k, expr] of Object.entries(spec)) setPath(out, k, evalExpr(row, expr));
+        return out;
+      });
+    } else if (stage.$unset) {
+      const fields = Array.isArray(stage.$unset) ? stage.$unset : [stage.$unset];
+      rows = rows.map((row) => {
+        const out = { ...row };
+        for (const f of fields) delete out[f];
+        return out;
+      });
+    } else if (stage.$project) {
+      rows = rows.map((row) => projectRow(row, stage.$project));
+    } else if (stage.$facet) {
+      const facets = stage.$facet as Record<string, Record<string, any>[]>;
+      const output: Doc = {};
+      for (const [key, sub] of Object.entries(facets)) output[key] = runPipeline(rows, sub, store);
+      rows = [output];
+    }
+    // Unknown stages are ignored — sufficient for the app's read pipelines.
+  }
+  return rows;
 }
 
 class FakeCursor {
@@ -173,6 +321,17 @@ export function createFakeDb(seed: Record<string, any[]> = {}): { db: Db; dump: 
         find(filter: Filter = {}, options: { projection?: Record<string, unknown> } = {}) {
           const matched = docs.filter((d) => matches(d, filter));
           return new FakeCursor(matched, options.projection);
+        },
+        aggregate(stages: Record<string, any>[] = []) {
+          return {
+            async toArray(): Promise<Doc[]> {
+              return runPipeline(docs.map((d) => ({ ...d })), stages, store);
+            },
+            async next(): Promise<Doc | null> {
+              const arr = runPipeline(docs.map((d) => ({ ...d })), stages, store);
+              return arr[0] ?? null;
+            },
+          };
         },
         async insertOne(doc: Doc) {
           const _id = doc._id ?? nextId();

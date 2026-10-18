@@ -85,6 +85,11 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
 
     // ── Doctors ──────────────────────────────────────────────────────────
     doctors.createIndex({ clinicId: 1, doctorId: 1 }, { unique: true }),
+    // Standalone join key: `$lookup` by doctorId (appointments/prescriptions/
+    // bills/medicine lists) can only use an index that STARTS with doctorId —
+    // the compound { clinicId, doctorId } index above does not qualify, which
+    // forced a full collection scan per joined row.
+    doctors.createIndex({ doctorId: 1 }),
     doctors.createIndex(
       { clinicId: 1, userId: 1 },
       { unique: true, partialFilterExpression: { userId: { $type: "string" } } }
@@ -104,6 +109,10 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
 
     // ── Patients ─────────────────────────────────────────────────────────
     patients.createIndex({ clinicId: 1, patientId: 1 }, { unique: true }),
+    // Standalone join key for `$lookup` by patientId (see doctors.doctorId).
+    patients.createIndex({ patientId: 1 }),
+    patients.createIndex({ clinicId: 1, createdAt: -1 }),
+    patients.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
     patients.createIndex(
       { clinicId: 1, userId: 1 },
       { unique: true, partialFilterExpression: { userId: { $type: "string" } } }
@@ -117,6 +126,10 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     // ── Appointments ─────────────────────────────────────────────────────
     appointments.createIndex({ clinicId: 1, appointmentId: 1 }, { unique: true }),
     appointments.createIndex({ clinicId: 1, doctorId: 1, date: -1, time: -1 }),
+    // Clinic-wide list sort (staff/admin) — no doctorId equality to use the
+    // index above.
+    appointments.createIndex({ clinicId: 1, date: -1, time: -1 }),
+    appointments.createIndex({ clinicId: 1, status: 1, date: -1, time: -1 }),
     appointments.createIndex({ clinicId: 1, patientId: 1, date: -1 }),
     // Double-booking prevention (unique slot per doctor).
     appointments.createIndex(
@@ -133,15 +146,18 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     medicine.createIndex({ clinicId: 1, recordId: 1 }, { unique: true }),
     medicine.createIndex({ clinicId: 1, patientId: 1, visitDate: -1 }),
     medicine.createIndex({ clinicId: 1, doctorId: 1, visitDate: -1 }),
+    medicine.createIndex({ clinicId: 1, visitDate: -1, createdAt: -1 }),
 
     // ── Prescriptions ────────────────────────────────────────────────────
     prescriptions.createIndex({ clinicId: 1, prescriptionId: 1 }, { unique: true }),
     prescriptions.createIndex({ clinicId: 1, patientId: 1, visitDate: -1 }),
     prescriptions.createIndex({ clinicId: 1, doctorId: 1, visitDate: -1 }),
+    prescriptions.createIndex({ clinicId: 1, visitDate: -1, createdAt: -1 }),
 
     // ── Billing ──────────────────────────────────────────────────────────
     bills.createIndex({ clinicId: 1, billId: 1 }, { unique: true }),
     bills.createIndex({ clinicId: 1, billNumber: 1 }, { unique: true }),
+    bills.createIndex({ clinicId: 1, createdAt: -1 }),
     bills.createIndex({ clinicId: 1, patientId: 1, createdAt: -1 }),
     bills.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
     bills.createIndex({ clinicId: 1, doctorId: 1, createdAt: -1 }),
@@ -152,6 +168,7 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     // ── Notifications ────────────────────────────────────────────────────
     notifications.createIndex({ clinicId: 1, recipientUserId: 1, createdAt: -1 }),
     notifications.createIndex({ clinicId: 1, recipientUserId: 1, readAt: 1 }),
+    notifications.createIndex({ clinicId: 1, recipientUserId: 1, readAt: 1, createdAt: -1 }),
 
     // ── Audit logs ───────────────────────────────────────────────────────
     auditLogs.createIndex({ clinicId: 1, createdAt: -1 }),
@@ -179,12 +196,14 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
 
     // ── Leads ───────────────────────────────────────────────────────────
     leads.createIndex({ clinicId: 1, leadId: 1 }, { unique: true }),
+    leads.createIndex({ clinicId: 1, receivedAt: -1 }),
+    leads.createIndex({ clinicId: 1, status: 1, receivedAt: -1 }),
     leads.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
     leads.createIndex({ clinicId: 1, assignedTo: 1, status: 1 }),
     leads.createIndex({ clinicId: 1, source: 1, createdAt: -1 }),
     leads.createIndex(
       { clinicId: 1, sourceRef: 1 },
-      { unique: true, sparse: true, partialFilterExpression: { sourceRef: { $type: "string" } } }
+      { unique: true, partialFilterExpression: { sourceRef: { $type: "string" } } }
     ),
 
     // ── Meta Business Integration ───────────────────────────────────────
@@ -192,7 +211,7 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     metaIntegrations.createIndex({ clinicId: 1, status: 1 }),
     metaIntegrations.createIndex(
       { metaBusinessId: 1 },
-      { unique: true, sparse: true, partialFilterExpression: { metaBusinessId: { $type: "string" } } }
+      { unique: true, partialFilterExpression: { metaBusinessId: { $type: "string" } } }
     ),
 
     metaPages.createIndex({ clinicId: 1, metaIntegrationId: 1 }),
@@ -221,7 +240,7 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     metaWhatsapp.createIndex({ clinicId: 1, metaIntegrationId: 1 }),
     metaWhatsapp.createIndex(
       { clinicId: 1, waBusinessId: 1 },
-      { unique: true, sparse: true, partialFilterExpression: { waBusinessId: { $type: "string" } } }
+      { unique: true, partialFilterExpression: { waBusinessId: { $type: "string" } } }
     ),
 
     metaWhatsappFollowups.createIndex({ clinicId: 1, leadId: 1 }, { unique: true }),
@@ -233,7 +252,7 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     metaWebhookEvents.createIndex({ eventKey: 1 }, { unique: true }),
     metaWebhookEvents.createIndex(
       { clinicId: 1, metaLeadId: 1 },
-      { unique: true, sparse: true, partialFilterExpression: { metaLeadId: { $type: "string" } } }
+      { unique: true, partialFilterExpression: { metaLeadId: { $type: "string" } } }
     ),
 
     metaSyncJobs.createIndex({ clinicId: 1, createdAt: -1 }),
@@ -263,6 +282,9 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     pharmacyStockMovements.createIndex({ clinicId: 1, batchNumber: 1 }),
     pharmacyStockMovements.createIndex({ clinicId: 1, movementType: 1, createdAt: -1 }),
     pharmacySuppliers.createIndex({ clinicId: 1, supplierId: 1 }, { unique: true }),
+    // Standalone join key for the purchase-list `$lookup` by supplierId.
+    pharmacySuppliers.createIndex({ supplierId: 1 }),
+    pharmacyMedicines.createIndex({ clinicId: 1, supplierId: 1 }),
     pharmacySuppliers.createIndex({ clinicId: 1, name: 1 }),
     pharmacySuppliers.createIndex(
       { clinicId: 1, gstNumber: 1 },

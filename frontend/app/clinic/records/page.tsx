@@ -344,10 +344,6 @@ export default function RecordsPage() {
       .catch(() => {});
   }, [clinicId]);
 
-  useEffect(() => {
-    loadStatsRecords();
-  }, [loadStatsRecords]);
-
   const load = useCallback(() => {
     if (!clinicId) return;
     setLoading(true);

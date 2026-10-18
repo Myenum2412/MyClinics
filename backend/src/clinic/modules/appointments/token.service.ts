@@ -112,21 +112,6 @@ async function getDoctor(
   return doc;
 }
 
-async function enrich(
-  db: Db,
-  clinicId: string,
-  appointment: WithId<AppointmentDoc>
-): Promise<QueueEnriched> {
-  const patient = await getPatient(db, clinicId, appointment.patientId);
-  const doctor = await getDoctor(db, clinicId, appointment.doctorId);
-  return {
-    appointment,
-    patientName: patient?.fullName ?? appointment.patientId,
-    patientPhone: patient?.whatsapp ?? patient?.mobile ?? null,
-    doctorName: doctor?.fullName ?? appointment.doctorId,
-  };
-}
-
 async function getQueueSettings(db: Db, clinicId: string): Promise<QueueSettings> {
   const doc = await db
     .collection<QueueSettings>(QUEUE_SETTINGS_COLLECTION)
@@ -547,13 +532,50 @@ export async function getQueueSnapshot(
 
   const next = eligible[0] ?? null;
 
-  const [currentE, nextE, waitingE, completedE, upcomingE] = await Promise.all([
-    current ? enrich(db, clinicId, current) : Promise.resolve(null),
-    next ? enrich(db, clinicId, next) : Promise.resolve(null),
-    Promise.all(eligible.map((a) => enrich(db, clinicId, a))),
-    Promise.all(completed.map((a) => enrich(db, clinicId, a))),
-    Promise.all(upcoming.map((a) => enrich(db, clinicId, a))),
+  // Batch-resolve patient/doctor names in two queries instead of two per row
+  // (the previous per-appointment `enrich` was 2N round trips per queue load).
+  const patientIds = [...new Set(all.map((a) => a.patientId).filter(Boolean))];
+  const doctorIds = [...new Set(all.map((a) => a.doctorId).filter(Boolean))];
+  const [patients, doctors] = await Promise.all([
+    patientIds.length
+      ? db
+          .collection(CLINIC_COLLECTIONS.patients)
+          .find(
+            { clinicId, patientId: { $in: patientIds } },
+            { projection: { patientId: 1, fullName: 1, mobile: 1, whatsapp: 1 } }
+          )
+          .toArray()
+      : Promise.resolve([] as Record<string, unknown>[]),
+    doctorIds.length
+      ? db
+          .collection(CLINIC_COLLECTIONS.doctors)
+          .find(
+            { clinicId, doctorId: { $in: doctorIds } },
+            { projection: { doctorId: 1, name: 1 } }
+          )
+          .toArray()
+      : Promise.resolve([] as Record<string, unknown>[]),
   ]);
+  const patientMap = new Map(patients.map((p) => [p.patientId as string, p]));
+  const doctorMap = new Map(doctors.map((d) => [d.doctorId as string, d]));
+  const enrich = (appointment: WithId<AppointmentDoc>): QueueEnriched => {
+    const patient = patientMap.get(appointment.patientId);
+    const doctor = doctorMap.get(appointment.doctorId);
+    return {
+      appointment,
+      patientName: (patient?.fullName as string) ?? appointment.patientId,
+      patientPhone: (patient?.whatsapp as string) ?? (patient?.mobile as string) ?? null,
+      doctorName: (doctor?.name as string) ?? appointment.doctorId,
+    };
+  };
+
+  const [currentE, nextE, waitingE, completedE, upcomingE] = [
+    current ? enrich(current) : null,
+    next ? enrich(next) : null,
+    eligible.map(enrich),
+    completed.map(enrich),
+    upcoming.map(enrich),
+  ];
 
   return {
     date,

@@ -45,17 +45,19 @@ import {
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const PATIENT_DATE_FMT = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: KOLKATA_TZ,
+});
+
 function parseDateComponents(dateStr: string, timeStr?: string) {
   const d = parseDate(dateStr);
   if (!d) {
     return { day: "24", monthYear: "Aug 2026", time: timeStr || "12:25 AM" };
   }
-  const parts = new Intl.DateTimeFormat("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: KOLKATA_TZ,
-  }).formatToParts(d);
+  const parts = PATIENT_DATE_FMT.formatToParts(d);
   const day = parts.find((p) => p.type === "day")?.value ?? "";
   const month = parts.find((p) => p.type === "month")?.value ?? "";
   const year = parts.find((p) => p.type === "year")?.value ?? "";

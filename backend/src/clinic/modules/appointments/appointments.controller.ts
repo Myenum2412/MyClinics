@@ -55,6 +55,13 @@ export class AppointmentController {
     });
   }
 
+  async stats(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (!ctx) throw new UnauthorizedError();
+    const db = await getAppointmentsDb();
+    return reply.send(await this.service(db).getStats(ctx));
+  }
+
   async getById(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();

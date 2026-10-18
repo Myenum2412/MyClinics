@@ -31,6 +31,7 @@ import {
 } from "@/services/whatsapp/save-notification.service";
 import { deleteFromR2, listR2Objects } from "@/lib/r2";
 import { indexEntity, removeEntity } from "@/services/search/indexer";
+import { todayDateString } from "@/lib/stats";
 
 export class PatientService {
   constructor(private readonly db: Db) {}
@@ -255,6 +256,28 @@ export class PatientService {
   ) {
     const [items, total] = await this.repo(ctx).list(query);
     return { items, total };
+  }
+
+  /**
+   * Clinic-wide stat-card counts in one request. Previously the UI issued four
+   * separate list calls (each a full query) just to read `.total`.
+   */
+  async getPatientStats(
+    ctx: ClinicContext
+  ): Promise<{ total: number; active: number; female: number; upcoming: number }> {
+    const clinicId = requireClinicOf(ctx);
+    const [counts, upcoming] = await Promise.all([
+      this.repo(ctx).countStats(),
+      (async () => {
+        const base: Record<string, unknown> = { clinicId };
+        if (ctx.role === "doctor" && ctx.doctorId) base.doctorId = ctx.doctorId;
+        if (ctx.role === "patient") base.patientId = ctx.patientId ?? null;
+        return this.db
+          .collection(CLINIC_COLLECTIONS.appointments)
+          .countDocuments({ ...base, status: "scheduled", date: { $gte: todayDateString() } });
+      })(),
+    ]);
+    return { ...counts, upcoming };
   }
 
   async updatePatient(

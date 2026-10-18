@@ -9,7 +9,7 @@ import {
   assignPatient,
   createPatient,
   deletePatient,
-  listAppointments,
+  getPatientStats,
   listPatients,
   resendPatientCredentials,
   updatePatient,
@@ -61,7 +61,6 @@ import { TableFilters } from "@/components/clinic/table-filters";
 import dynamic from "next/dynamic";
 import { sessionCan } from "@/hooks/use-clinic-session";
 import { patientStatusTone } from "@/lib/status-styles";
-import { todayISO } from "@/lib/datetime";
 
 const StatsGeneric = dynamic(() => import("@/components/stats-generic"), {
   loading: () => <div className="h-[270px]" aria-hidden="true" />,
@@ -209,21 +208,9 @@ export default function PatientsPage() {
   // Clinic-wide counts for the stat cards — independent of the table's current page/filters.
   const loadStats = useCallback(() => {
     if (!clinicId) return;
-    const today = todayISO();
-    Promise.allSettled([
-      listPatients(clinicId, { limit: 1 }),
-      listPatients(clinicId, { limit: 1, status: "active" }),
-      listPatients(clinicId, { limit: 1, gender: "female" }),
-      listAppointments(clinicId, { limit: 1, status: "scheduled", from: today }),
-    ]).then(([totalRes, activeRes, femaleRes, upcomingRes]) => {
-      const count = (r: PromiseSettledResult<any>) => (r.status === "fulfilled" ? r.value?.total ?? 0 : 0);
-      setGlobalStats({
-        total: count(totalRes),
-        active: count(activeRes),
-        female: count(femaleRes),
-        upcoming: count(upcomingRes),
-      });
-    });
+    getPatientStats(clinicId)
+      .then((stats) => setGlobalStats(stats))
+      .catch(() => setGlobalStats({ total: 0, active: 0, female: 0, upcoming: 0 }));
   }, [clinicId]);
 
   // The actual table data: real server-side pagination + filtering + search.

@@ -91,6 +91,17 @@ export class PatientRepository {
     return [items, total];
   }
 
+  /** Scope-aware counts for the stat cards, without loading any documents. */
+  async countStats(): Promise<{ total: number; active: number; female: number }> {
+    const col = this.collection();
+    const [total, active, female] = await Promise.all([
+      col.countDocuments(this.scoped()),
+      col.countDocuments(this.scoped({ status: "active" })),
+      col.countDocuments(this.scoped({ gender: "female" })),
+    ]);
+    return { total, active, female };
+  }
+
   async insert(doc: Omit<PatientDoc, "_id" | "clinicId" | "createdAt" | "updatedAt">): Promise<WithId<PatientDoc>> {
     const now = nowFn();
     await this.collection().insertOne({

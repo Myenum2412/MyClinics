@@ -15,6 +15,41 @@ export const KOLKATA_OFFSET = "+05:30";
 
 export type DateInput = string | number | Date | null | undefined;
 
+// Intl.DateTimeFormat construction is comparatively expensive, so build each
+// formatter once at module scope instead of on every call.
+const DATE_FMT = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  timeZone: KOLKATA_TZ,
+});
+const DATETIME_FMT = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+  timeZone: KOLKATA_TZ,
+});
+const TIME_FMT = new Intl.DateTimeFormat("en-IN", {
+  hour: "numeric",
+  minute: "2-digit",
+  hour12: true,
+  timeZone: KOLKATA_TZ,
+});
+const LOCAL_ISO_FMT = new Intl.DateTimeFormat("en-CA", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  timeZone: KOLKATA_TZ,
+});
+const MONTH_YEAR_FMT = new Intl.DateTimeFormat("en-IN", {
+  month: "long",
+  year: "numeric",
+  timeZone: KOLKATA_TZ,
+});
+
 /** Current instant. Prefer this over `new Date()` so all "now" usage is centralized. */
 export function now(): Date {
   return new Date();
@@ -41,51 +76,28 @@ export function parseDate(value: DateInput): Date | null {
 export function formatDate(value: DateInput): string {
   const d = parseDate(value);
   if (!d) return typeof value === "string" ? value : "—";
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: KOLKATA_TZ,
-  }).format(d);
+  return DATE_FMT.format(d);
 }
 
 /** "15 Jan 2024, 10:17 AM" in Asia/Kolkata. */
 export function formatDateTime(value: DateInput): string {
   const d = parseDate(value);
   if (!d) return typeof value === "string" ? value : "—";
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: KOLKATA_TZ,
-  }).format(d);
+  return DATETIME_FMT.format(d);
 }
 
 /** "10:17 AM" in Asia/Kolkata. */
 export function formatTimeOnly(value: DateInput): string {
   const d = parseDate(value);
   if (!d) return "—";
-  return new Intl.DateTimeFormat("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZone: KOLKATA_TZ,
-  }).format(d);
+  return TIME_FMT.format(d);
 }
 
 /** The local "YYYY-MM-DD" date in Asia/Kolkata for a given instant. */
 export function toLocalDateISO(date: DateInput = new Date()): string {
   const d = parseDate(date);
   if (!d) return "";
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    timeZone: KOLKATA_TZ,
-  }).formatToParts(d);
+  const parts = LOCAL_ISO_FMT.formatToParts(d);
   const y = parts.find((p) => p.type === "year")?.value ?? "";
   const m = parts.find((p) => p.type === "month")?.value ?? "";
   const day = parts.find((p) => p.type === "day")?.value ?? "";
@@ -125,11 +137,7 @@ export function daysAgo(n: number): Date {
 export function formatMonthYear(value: DateInput): string {
   const d = parseDate(value);
   if (!d) return typeof value === "string" ? value : "—";
-  return new Intl.DateTimeFormat("en-IN", {
-    month: "long",
-    year: "numeric",
-    timeZone: KOLKATA_TZ,
-  }).format(d);
+  return MONTH_YEAR_FMT.format(d);
 }
 
 /** Parse a "YYYY-MM-DD" calendar date as a Kolkata-local midnight instant. */

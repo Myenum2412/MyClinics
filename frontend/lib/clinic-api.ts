@@ -845,6 +845,16 @@ export function listPatients(
   return request(tenantPath(clinicId, `/patients?${params}`));
 }
 
+/** Clinic-wide stat-card counts in a single request. */
+export function getPatientStats(clinicId: string): Promise<{
+  total: number;
+  active: number;
+  female: number;
+  upcoming: number;
+}> {
+  return request(tenantPath(clinicId, "/patients/stats"));
+}
+
 /** Resolves patient names for a batch of ids in one round trip (e.g. for a page of appointments/bills). Empty when `ids` is empty. */
 export async function getPatientsByIds(clinicId: string, ids: string[]): Promise<Patient[]> {
   const unique = [...new Set(ids.filter(Boolean))];
@@ -943,6 +953,16 @@ export function listAppointments(
   if (query.page) params.set("page", String(query.page));
   params.set("limit", String(query.limit ?? 20));
   return request(tenantPath(clinicId, `/appointments?${params}`));
+}
+
+/** Clinic-wide stat-card counts in a single request. */
+export function getAppointmentStats(clinicId: string): Promise<{
+  total: number;
+  today: number;
+  completed: number;
+  scheduled: number;
+}> {
+  return request(tenantPath(clinicId, "/appointments/stats"));
 }
 
 export function createAppointment(
