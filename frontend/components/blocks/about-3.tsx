@@ -99,18 +99,6 @@ export default function AboutBlock() {
             </div>
           ))}
         </div>
-
-        <div className="mt-8 flex flex-wrap items-center gap-3 text-xs font-medium text-[#0D47A1]/60">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 border border-[#E3F2FD] shadow-sm">
-            <ShieldCheck className="size-3.5 text-[#0D47A1]" /> Private & secure
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 border border-[#E3F2FD] shadow-sm">
-            <MessageCircle className="size-3.5 text-[#2196F3]" /> WhatsApp + Web booking
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 border border-[#E3F2FD] shadow-sm">
-            <HeartPulse className="size-3.5 text-[#0D47A1]" /> Trusted by 500+ clinics
-          </span>
-        </div>
       </div>
     </section>
   )
