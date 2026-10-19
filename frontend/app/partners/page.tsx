@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { HeroHeader } from "@/components/hero-section-6-header";
 import { FooterSection } from "@/components/footer-section";
+import NewsletterBlock from "@/components/blocks/newsletter-2";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
@@ -47,6 +48,10 @@ export default function PartnersPage() {
 					/>
 				</section>
 			</main>
+
+			<div className="relative z-10">
+				<NewsletterBlock />
+			</div>
 
 			<div className="relative z-10">
 				<FooterSection />
