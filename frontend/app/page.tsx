@@ -1,6 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import HeroSection6 from "@/components/hero-section-6";
 import { FooterSection } from "@/components/footer-section";
+
+export const viewport: Viewport = {
+  themeColor: "#000000",
+  colorScheme: "dark",
+};
 
 export const metadata: Metadata = {
   title: {
@@ -37,9 +42,9 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <>
+    <div className="min-h-svh bg-black text-white selection:bg-blue-600 selection:text-white">
       <HeroSection6 />
       <FooterSection />
-    </>
+    </div>
   );
 }

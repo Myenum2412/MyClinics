@@ -36,7 +36,7 @@ export const HeroHeader = () => {
         <header>
             <nav
                 data-state={menuState && 'active'}
-                className="fixed top-0 z-20 w-full border-b border-blue-100 bg-white text-black max-lg:data-[state=active]:bottom-0"
+                className="fixed top-0 z-20 w-full border-b border-blue-900/50 bg-black/80 text-white backdrop-blur-xl max-lg:data-[state=active]:bottom-0 max-lg:data-[state=active]:bg-black"
             >
                 <div className="mx-auto max-w-7xl px-6">
                     <div className="relative flex flex-wrap items-center justify-between gap-6 py-5 lg:gap-0">
@@ -46,7 +46,7 @@ export const HeroHeader = () => {
                                 aria-label="home"
                                 className="flex items-center space-x-2"
                             >
-                                <Logo className="h-6 w-auto text-black" />
+                                <Logo className="h-6 w-auto text-white" />
                             </Link>
 
                             <button
@@ -58,11 +58,11 @@ export const HeroHeader = () => {
                                     aria-hidden
                                     className="in-data-[state=active]:rotate-180 in-data-[state=active]:scale-0 in-data-[state=active]:opacity-0 size-4.5 m-auto flex flex-col items-center justify-center gap-[7px] duration-200"
                                 >
-                                    <span className="h-0.5 w-full rounded-full bg-black" />
-                                    <span className="h-0.5 w-full rounded-full bg-black" />
+                                    <span className="h-0.5 w-full rounded-full bg-white" />
+                                    <span className="h-0.5 w-full rounded-full bg-white" />
                                 </div>
 
-                                <X className="in-data-[state=active]:rotate-0 in-data-[state=active]:scale-100 in-data-[state=active]:opacity-100 absolute inset-0 m-auto size-6 translate-x-[-3px] -rotate-180 scale-0 text-black opacity-0 duration-200" />
+                                <X className="in-data-[state=active]:rotate-0 in-data-[state=active]:scale-100 in-data-[state=active]:opacity-100 absolute inset-0 m-auto size-6 translate-x-[-3px] -rotate-180 scale-0 text-white opacity-0 duration-200" />
                             </button>
 
                             <div className="max-lg:hidden">
@@ -71,7 +71,7 @@ export const HeroHeader = () => {
                                         <li key={index}>
                                             <Link
                                                 href={item.href}
-                                                className="block text-black/60 duration-150 hover:text-blue-700"
+                                                className="block text-white/60 duration-150 hover:text-blue-400"
                                             >
                                                 <span>{item.name}</span>
                                             </Link>
@@ -88,7 +88,7 @@ export const HeroHeader = () => {
                                         <li key={index}>
                                             <Link
                                                 href={item.href}
-                                                className="block py-3 text-2xl font-medium text-black hover:text-blue-700"
+                                                className="block py-3 text-2xl font-medium text-white hover:text-blue-400"
                                             >
                                                 <span>{item.name}</span>
                                             </Link>
@@ -101,7 +101,7 @@ export const HeroHeader = () => {
                                     variant="outline"
                                     size="sm"
                                     nativeButton={false}
-                                    className="border-black/15 bg-white text-black hover:bg-blue-50 hover:text-blue-800"
+                                    className="border-blue-500/40 bg-transparent text-white hover:bg-blue-950 hover:text-blue-300 focus-visible:border-blue-500 focus-visible:ring-blue-500/60 dark:border-blue-500/40 dark:bg-transparent dark:hover:bg-blue-950 dark:hover:text-blue-300"
                                     render={
                                         <Link href="/login">
                                             <span>Login</span>
@@ -111,7 +111,7 @@ export const HeroHeader = () => {
                                 <Button
                                     size="sm"
                                     nativeButton={false}
-                                    className="bg-blue-700 text-white hover:bg-blue-800"
+                                    className="bg-blue-600 text-white hover:bg-blue-500 focus-visible:border-blue-500 focus-visible:ring-blue-500/60"
                                     render={
                                         <Link href="/signup/clinic">
                                             <span>Sign Up</span>
