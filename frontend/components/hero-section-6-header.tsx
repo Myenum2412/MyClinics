@@ -1,6 +1,6 @@
 'use client'
+import Image from 'next/image'
 import Link from 'next/link'
-import { Logo } from '@/components/logo'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import React from 'react'
@@ -43,10 +43,17 @@ export const HeroHeader = () => {
                         <div className="flex w-full items-center justify-between gap-12 lg:w-auto">
                             <Link
                                 href="/"
-                                aria-label="home"
+                                aria-label="My Clinics home"
                                 className="flex items-center space-x-2"
                             >
-                                <Logo className="h-6 w-auto text-white" />
+                                <Image
+                                    src="/logo-wordmark.png"
+                                    alt="My Clinics"
+                                    width={433}
+                                    height={138}
+                                    priority
+                                    className="h-9 w-auto"
+                                />
                             </Link>
 
                             <button

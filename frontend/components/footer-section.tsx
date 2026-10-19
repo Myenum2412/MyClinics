@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Separator } from "@/components/ui/separator";
 import { footerBrand, footerColumns } from "@/lib/footer-data";
 
@@ -17,8 +18,14 @@ export function FooterSection() {
 			<div className="mx-auto w-full max-w-5xl">
 				<div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
 					<div className="lg:col-span-1">
-						<Link className="text-sm font-bold tracking-[-0.04em] text-white" href="/">
-							{footerBrand.name}
+						<Link className="inline-flex" href="/" aria-label={footerBrand.name}>
+							<Image
+								src="/logo-wordmark.png"
+								alt={footerBrand.name}
+								width={433}
+								height={138}
+								className="h-8 w-auto"
+							/>
 						</Link>
 						<p className="mt-3 max-w-xs text-pretty text-sm leading-relaxed text-white/60">
 							{footerBrand.tagline}
