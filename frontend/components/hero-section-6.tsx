@@ -44,21 +44,23 @@ export default function HeroSection() {
                             </div>
 
                             <div className="mx-auto max-w-7xl max-xl:px-2">
-                                <div className="relative aspect-square overflow-hidden rounded-3xl bg-blue-950/60 ring-1 ring-blue-900 shadow-[0_0_140px_-40px_rgba(37,99,235,0.75)] md:aspect-5/3 lg:aspect-video">
-                                    <Image
-                                        src="/homebg.png"
-                                        alt="The My Clinics dashboard, showing appointments, patients, revenue and billing"
-                                        width={1788}
-                                        height={880}
-                                        priority
-                                        sizes="(max-width: 768px) 100vw, 1280px"
-                                        className="size-full object-cover object-top"
-                                    />
+                                <div className="relative rounded-3xl bg-blue-950/60 p-2 ring-1 ring-blue-900 shadow-[0_0_140px_-40px_rgba(37,99,235,0.75)]">
+                                    <div className="relative aspect-[1788/880] overflow-hidden rounded-2xl ring-1 ring-blue-500/20">
+                                        <Image
+                                            src="/homebg.png"
+                                            alt="The My Clinics dashboard, showing appointments, patients, revenue and billing"
+                                            width={1788}
+                                            height={880}
+                                            priority
+                                            sizes="(max-width: 768px) 100vw, 1280px"
+                                            className="size-full object-cover object-top"
+                                        />
 
-                                    <div
-                                        aria-hidden
-                                        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.6),transparent_50%)]"
-                                    />
+                                        <div
+                                            aria-hidden
+                                            className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.35),transparent_30%)]"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
