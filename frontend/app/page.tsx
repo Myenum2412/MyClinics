@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import HeroSection6 from "@/components/hero-section-6";
+import { FooterSection } from "@/components/footer-section";
 
 export const metadata: Metadata = {
   title: {
@@ -35,5 +36,10 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  return <HeroSection6 />;
+  return (
+    <>
+      <HeroSection6 />
+      <FooterSection />
+    </>
+  );
 }
