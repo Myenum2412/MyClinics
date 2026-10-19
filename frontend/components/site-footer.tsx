@@ -29,6 +29,15 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "Contact", href: "/#contact" },
     ],
   },
+  {
+    title: "Partner",
+    links: [
+      { label: "Partnerships", href: "/partners" },
+      { label: "Become a Partner", href: "/partners#become-a-partner" },
+      { label: "Integration Partners", href: "/partners#integrations" },
+      { label: "Partner Login", href: "/partners#partner-login" },
+    ],
+  },
 ];
 
 const socials = [
@@ -56,7 +65,7 @@ export function SiteFooter() {
               </a>
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
             {columns.map((col) => (
               <div key={col.title}>
                 <h3 className="font-heading text-sm font-bold tracking-tight">{col.title}</h3>
