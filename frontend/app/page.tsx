@@ -51,7 +51,7 @@ export default function Home() {
         className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
       >
         <Image
-          src="/homebg.png"
+          src="/homebgp.png"
           alt=""
           fill
           sizes="100vw"
