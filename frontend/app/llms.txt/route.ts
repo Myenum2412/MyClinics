@@ -19,9 +19,6 @@ export async function GET() {
     "",
     "## Helpful URLs",
     `- Main Website: ${SITE}`,
-    `- Product FAQs & Help: ${SITE}/faq`,
-    `- Pricing Plans: ${SITE}/pricing`,
-    `- Clinical Knowledge Blog: ${SITE}/blog`,
     ""
   ];
 
