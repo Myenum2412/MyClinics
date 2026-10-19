@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { logout } from "@/lib/clinic-api";
 import {
   CalendarDays,
   ChevronDown,
@@ -32,6 +33,7 @@ import {
   FileText,
   Folder,
   Home,
+  LogOut,
   Microscope,
   ReceiptText,
 } from "lucide-react";
@@ -69,6 +71,15 @@ export function PatientSidebar({
   const go = (href: string) => {
     if (isMobile) setOpenMobile(false);
     router.push(href);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      router.replace("/login");
+      router.refresh();
+    }
   };
 
   return (
@@ -168,6 +179,14 @@ export function PatientSidebar({
             <DropdownMenuItem onClick={() => go("/clinic/patient/profile")}>
               <CircleUser className="size-4" />
               View Profile
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-destructive focus:text-destructive"
+            >
+              <LogOut className="size-4" />
+              Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
