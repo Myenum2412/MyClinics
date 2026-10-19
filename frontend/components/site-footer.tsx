@@ -35,7 +35,6 @@ const columns: { title: string; links: { label: string; href: string }[] }[] = [
       { label: "Partnerships", href: "/partners" },
       { label: "Become a Partner", href: "/partners#become-a-partner" },
       { label: "Integration Partners", href: "/partners#integrations" },
-      { label: "Partner Login", href: "/partners#partner-login" },
     ],
   },
 ];

@@ -186,40 +186,6 @@ export default function PartnersPage() {
             </div>
           </div>
         </section>
-
-        {/* Partner portal / login */}
-        <section
-          id="partner-login"
-          className="scroll-mt-24 border-t bg-muted/40 px-4 py-16 sm:px-6 lg:px-8"
-        >
-          <div className="mx-auto max-w-3xl rounded-3xl border bg-gradient-to-r from-primary/10 via-background to-primary/5 p-8 text-center sm:p-12">
-            <h2 className="font-heading text-2xl font-bold tracking-tight sm:text-3xl">
-              Partner portal &amp; login
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-              The partner portal — referral tracking, activation status and payout history — is
-              rolling out in phases. Ask for early access and we will set up your account.
-            </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-              <a
-                href={`mailto:${PARTNER_EMAIL}?subject=Partner%20portal%20early%20access`}
-                className={buttonVariants({ size: "lg", className: "rounded-xl px-6" })}
-              >
-                Request portal access <ArrowRight className="ml-2 size-4" />
-              </a>
-              <Link
-                href="/signup"
-                className={buttonVariants({
-                  variant: "outline",
-                  size: "lg",
-                  className: "rounded-xl px-6",
-                })}
-              >
-                Create a clinic account
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
 
       <SiteFooter />
