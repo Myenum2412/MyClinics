@@ -5,9 +5,9 @@ import { footerBrand, footerColumns } from "@/lib/footer-data";
 
 const columns = [
 	footerColumns.product,
-	footerColumns.account,
 	footerColumns.resources,
-	footerColumns.legal,
+	footerColumns.company,
+	footerColumns.partner,
 ] as const;
 
 export function FooterSection() {
@@ -42,11 +42,6 @@ export function FooterSection() {
 											href={link.href}
 										>
 											{link.label}
-											{"badge" in link && link.badge ? (
-												<span className="ml-1.5 rounded-full bg-blue-600/20 px-1.5 py-0.5 text-[10px] font-medium text-blue-300">
-													{link.badge}
-												</span>
-											) : null}
 										</Link>
 									</li>
 								))}

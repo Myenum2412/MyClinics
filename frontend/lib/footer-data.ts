@@ -7,7 +7,6 @@ export const footerBrand = {
 export type FooterLinkItem = {
 	label: string;
 	href: string;
-	badge?: string;
 };
 
 export type FooterColumn = {
@@ -19,30 +18,36 @@ export const footerColumns = {
 	product: {
 		title: "Product",
 		links: [
-			{ label: "Book an appointment", href: "/signup/clinic" },
-			{ label: "Prescription demo", href: "/rx-demo" },
-			{ label: "Clinic login", href: "/login" },
-		],
-	},
-	account: {
-		title: "Account",
-		links: [
-			{ label: "Log in", href: "/login" },
-			{ label: "Create clinic account", href: "/signup/clinic", badge: "New" },
+			{ label: "Home", href: "/" },
+			{ label: "Features", href: "/#features" },
+			{ label: "Pricing", href: "/#pricing" },
+			{ label: "Changelog", href: "/changelog" },
 		],
 	},
 	resources: {
 		title: "Resources",
 		links: [
-			{ label: "Sitemap", href: "/sitemap.xml" },
-			{ label: "Docs for AI assistants", href: "/llms.txt" },
+			{ label: "Blog", href: "/blog" },
+			{ label: "Docs", href: "/docs" },
+			{ label: "FAQs", href: "/faq" },
+			{ label: "Support", href: "#" },
 		],
 	},
-	legal: {
-		title: "Legal",
+	company: {
+		title: "Company",
 		links: [
-			{ label: "Privacy policy", href: "/privacy" },
-			{ label: "Terms of service", href: "/terms" },
+			{ label: "About", href: "#" },
+			{ label: "Careers", href: "/careers" },
+			{ label: "Contact", href: "/#contact" },
+		],
+	},
+	partner: {
+		title: "Partner",
+		links: [
+			{ label: "Partnerships", href: "/partners" },
+			{ label: "Become a Partner", href: "/partners#become-a-partner" },
+			{ label: "Integration Partners", href: "/partners#integrations" },
+			{ label: "Partner Login", href: "/partners#partner-login" },
 		],
 	},
 } satisfies Record<string, FooterColumn>;
