@@ -46,7 +46,7 @@ export default function LogoCloud() {
     const isLarge = useMedia('(min-width: 64rem)')
 
     return (
-        <section className="border-y border-blue-900/50 bg-black">
+        <section className="border-y border-blue-900/50 bg-black/40 backdrop-blur-sm">
             <div className="relative m-auto max-w-7xl text-white **:fill-white/70 [&_svg:hover]:fill-blue-400 lg:px-6">
                 {isLarge ? (
                     <div className="relative flex items-center justify-between px-6 py-12">

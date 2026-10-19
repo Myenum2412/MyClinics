@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Image from "next/image";
 import HeroSection6 from "@/components/hero-section-6";
 import { FooterSection } from "@/components/footer-section";
 
@@ -42,9 +43,26 @@ export const metadata: Metadata = {
 
 export default function Home() {
   return (
-    <div className="min-h-svh bg-black text-white selection:bg-blue-600 selection:text-white">
-      <HeroSection6 />
-      <FooterSection />
+    <div className="relative isolate min-h-svh bg-black text-white selection:bg-blue-600 selection:text-white">
+      {/* Dimmed dashboard backdrop, pinned to the viewport so it never stretches. */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+      >
+        <Image
+          src="/homebg.png"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover object-top opacity-25"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.55),rgba(0,0,0,0.9))]" />
+      </div>
+
+      <div className="relative z-10">
+        <HeroSection6 />
+        <FooterSection />
+      </div>
     </div>
   );
 }

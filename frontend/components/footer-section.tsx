@@ -13,7 +13,7 @@ export function FooterSection() {
 	const year = new Date().getFullYear();
 
 	return (
-		<footer className="border-t border-blue-900/50 bg-black px-4 py-8 text-white md:py-12">
+		<footer className="border-t border-blue-900/50 bg-black/60 px-4 py-8 text-white backdrop-blur-sm md:py-12">
 			<div className="mx-auto w-full max-w-5xl">
 				<div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-5">
 					<div className="lg:col-span-1">

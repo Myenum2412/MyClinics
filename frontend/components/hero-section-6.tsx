@@ -10,7 +10,7 @@ export default function HeroSection() {
         <>
             <HeroHeader />
 
-            <main className="bg-black text-white">
+            <main className="text-white">
                 <section className="relative overflow-hidden pt-20">
                     <div
                         aria-hidden
@@ -45,27 +45,19 @@ export default function HeroSection() {
 
                             <div className="mx-auto max-w-7xl max-xl:px-2">
                                 <div className="relative aspect-square overflow-hidden rounded-3xl bg-blue-950/60 ring-1 ring-blue-900 shadow-[0_0_140px_-40px_rgba(37,99,235,0.75)] md:aspect-5/3 lg:aspect-video">
-                                    <div className="absolute left-4 top-4 z-10 min-w-4xl rounded-2xl bg-white p-2 shadow-lg ring ring-blue-500/40 before:absolute before:-inset-px before:z-10 before:size-56 before:rounded-tl-2xl before:border-l before:border-t before:border-blue-300/40 before:mask-radial-at-top-left before:mask-radial-from-65% before:mask-radial-[100%_60%] lg:left-16 lg:top-16 lg:min-w-5xl xl:min-w-7xl">
-                                        <div
-                                            aria-hidden
-                                            className="absolute inset-0 z-1 rounded-2xl bg-blue-900/5"
-                                        />
-                                        <Image
-                                            className="relative aspect-15/8 rounded-2xl bg-white object-cover object-top"
-                                            src="/aidps.png"
-                                            alt="My Clinics app screen"
-                                            width={1254}
-                                            height={1254}
-                                        />
-                                    </div>
-
                                     <Image
-                                        src="/bghome.png"
-                                        alt=""
-                                        width={1672}
-                                        height={941}
+                                        src="/homebg.png"
+                                        alt="The My Clinics dashboard, showing appointments, patients, revenue and billing"
+                                        width={1788}
+                                        height={880}
+                                        priority
                                         sizes="(max-width: 768px) 100vw, 1280px"
-                                        className="size-full rounded-3xl object-cover object-bottom"
+                                        className="size-full object-cover object-top"
+                                    />
+
+                                    <div
+                                        aria-hidden
+                                        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(0,0,0,0.6),transparent_50%)]"
                                     />
                                 </div>
                             </div>
