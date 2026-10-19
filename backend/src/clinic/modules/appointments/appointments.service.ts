@@ -86,18 +86,24 @@ export class AppointmentService {
       .limit(1)
       .toArray();
     let next = (last[0]?.tokenNumber ?? 0) + 1;
-    for (const doc of missing) {
-      await col.updateOne(
-        { clinicId, appointmentId: doc.appointmentId },
-        {
-          $set: {
-            tokenNumber: next++,
-            session: session as any,
-            queueStatus: doc.queueStatus ?? "waiting",
-            checkedInAt: doc.checkedInAt ?? nowFn(),
-            updatedAt: nowFn(),
+    if (missing.length > 0) {
+      // Single round trip instead of one updateOne per missing row.
+      await col.bulkWrite(
+        missing.map((doc) => ({
+          updateOne: {
+            filter: { clinicId, appointmentId: doc.appointmentId },
+            update: {
+              $set: {
+                tokenNumber: next++,
+                session: session as any,
+                queueStatus: doc.queueStatus ?? "waiting",
+                checkedInAt: doc.checkedInAt ?? nowFn(),
+                updatedAt: nowFn(),
+              },
+            },
           },
-        }
+        })),
+        { ordered: false }
       );
     }
   }

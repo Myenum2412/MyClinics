@@ -532,10 +532,12 @@ function setToken(token: string, _ttlSeconds: number): void {
   // SEC-002: do NOT persist to localStorage or JS cookie. Keep only in-memory for backward-compat Authorization header.
   // The httpOnly cookie is set by the server via Set-Cookie; JS must not set it.
   inMemoryToken = token;
+  invalidateSessionCache();
 }
 
 export function clearSession(): void {
   inMemoryToken = null;
+  invalidateSessionCache();
   if (typeof window !== "undefined") {
     // Clear in-memory and ask server to clear httpOnly cookies via logout endpoint.
     // Also clear any legacy localStorage cookie for migration.
@@ -574,6 +576,16 @@ const getCache = new Map<string, { data: unknown; expires: number }>();
 const pendingGets = new Map<string, Promise<unknown>>();
 const GET_CACHE_TTL_MS = 30_000;
 const GET_SWR_MS = 60_000;
+
+/**
+ * Session cache: /auth/me is `no-store`, so without an explicit cache every
+ * route navigation re-fetched it before the page could render. Memoising the
+ * resolved session for a short window (and invalidating on auth changes)
+ * removes that serial round trip from navigation.
+ */
+const SESSION_CACHE_TTL_MS = 60_000;
+let sessionCache: { data: ClinicSession | null; expires: number } | null = null;
+let sessionFetch: Promise<ClinicSession | null> | null = null;
 
 function invalidateCacheForPath(path: string) {
   // Mutations only invalidate GETs for same clinic prefix, not entire cache
@@ -653,6 +665,9 @@ async function doFetch<T>(url: string, path: string, init: RequestInit, headers:
     try { data = await res.json(); } catch { data = {}; }
     if (!res.ok) {
       const err = data as { error?: string; code?: string };
+      // A 401 means the session is gone (expired/revoked) even if we still had
+      // it cached — drop the cached session so the next navigation re-checks.
+      if (res.status === 401) invalidateSessionCache();
       throw new ClinicApiError(err.error ?? `Request failed (${res.status})`, res.status, err.code);
     }
     if (cacheable) {
@@ -705,18 +720,53 @@ async function slideSession(): Promise<boolean> {
 
 /** Returns the current session, fetching from server (httpOnly cookie). */
 export async function ensureSession(): Promise<ClinicSession | null> {
-  try {
-    const s = await request<ClinicSession>("/api/clinics/auth/me", { cache: "no-store" });
-    return s;
-  } catch {
-    // Fallback: try local decode for legacy in-memory token
-    const token = getStoredToken();
-    if (token && !isTokenExpired(token)) return sessionFromToken(token);
-    if (token) {
-      if (await slideSession()) return sessionFromToken(getStoredToken()!);
+  // Serve from the in-memory session cache when fresh. Without this, every
+  // page navigation (each page calls useRequireRole → ensureSession) re-hit
+  // /auth/me before it could render, adding a full round trip per navigation.
+  const cachedSession = getCachedSession();
+  if (cachedSession !== undefined) return cachedSession;
+  if (sessionFetch) return sessionFetch;
+  sessionFetch = (async () => {
+    try {
+      const s = await request<ClinicSession>("/api/clinics/auth/me", { cache: "no-store" });
+      sessionCache = { data: s, expires: nowMs() + SESSION_CACHE_TTL_MS };
+      return s;
+    } catch {
+      // Fallback: try local decode for legacy in-memory token
+      const token = getStoredToken();
+      if (token && !isTokenExpired(token)) {
+        const s = sessionFromToken(token);
+        if (s) sessionCache = { data: s, expires: nowMs() + SESSION_CACHE_TTL_MS };
+        return s;
+      }
+      if (token) {
+        if (await slideSession()) {
+          const s = sessionFromToken(getStoredToken()!);
+          if (s) sessionCache = { data: s, expires: nowMs() + SESSION_CACHE_TTL_MS };
+          return s;
+        }
+      }
+      // Cache the negative result briefly so a burst of mounts doesn't hammer
+      // the endpoint while an unauthenticated user is being redirected.
+      sessionCache = { data: null, expires: nowMs() + 5_000 };
+      return null;
+    } finally {
+      sessionFetch = null;
     }
-    return null;
-  }
+  })();
+  return sessionFetch;
+}
+
+/** Synchronous accessor for the cached session (undefined = not yet fetched). */
+export function getCachedSession(): ClinicSession | null | undefined {
+  if (sessionCache && sessionCache.expires > nowMs()) return sessionCache.data;
+  return undefined;
+}
+
+/** Drops the session cache (call on login/logout/deactivation). */
+export function invalidateSessionCache(): void {
+  sessionCache = null;
+  sessionFetch = null;
 }
 
 export function getSession(): ClinicSession | null {

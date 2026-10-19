@@ -33,6 +33,22 @@ export class LeadRepository {
     return this.collection().countDocuments({ clinicId: this.clinicId, ...filter });
   }
 
+  /**
+   * Average first-response time (ms), computed server-side. Previously the
+   * service fetched up to 10k full lead documents and reduced them in JS.
+   */
+  async avgFirstResponseMs(): Promise<number | null> {
+    const rows = await this.collection()
+      .aggregate<{ avg: number | null }>([
+        { $match: { clinicId: this.clinicId, firstResponseAt: { $type: "date" } } },
+        { $project: { diff: { $subtract: ["$firstResponseAt", "$receivedAt"] } } },
+        { $group: { _id: null, avg: { $avg: "$diff" } } },
+      ])
+      .toArray();
+    const avg = rows[0]?.avg;
+    return typeof avg === "number" && Number.isFinite(avg) ? Math.round(avg) : null;
+  }
+
   async create(
     doc: Omit<LeadDoc, "_id" | "clinicId" | "createdAt" | "updatedAt">
   ): Promise<WithId<LeadDoc>> {

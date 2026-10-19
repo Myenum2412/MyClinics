@@ -114,7 +114,7 @@ export default function PatientPortalDashboard() {
       const [patient, apptRes, filesRes, presRes, docsRes] = await Promise.all([
         getMyPatient(session.clinicId),
         myAppointments(session.clinicId, { limit: 20 }),
-        listMedicalRecordFiles(session.clinicId),
+        listMedicalRecordFiles(session.clinicId, { limit: 50 }),
         myPrescriptions(session.clinicId, { limit: 20 }),
         listDoctors(session.clinicId, { status: "active", limit: 100 }),
       ]);

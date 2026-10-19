@@ -110,23 +110,14 @@ export class LeadService {
   /** Workflow analytics for section 38 (response times, conversion rates). */
   async workflowStats(ctx: ClinicContext): Promise<LeadWorkflowStats> {
     const repo = this.repo(ctx);
-    const [all, fb, ig, appt, converted] = await Promise.all([
+    const [all, fb, ig, appt, converted, avgFirstResponseMs] = await Promise.all([
       repo.count(),
       repo.count({ source: "meta_facebook" }),
       repo.count({ source: "meta_instagram" }),
       repo.count({ appointmentBookedAt: { $ne: null } }),
       repo.count({ status: "converted" }),
+      repo.avgFirstResponseMs(),
     ]);
-    const leads = await repo.list({}, 10000);
-    const responded = leads.filter((l) => l.firstResponseAt);
-    let avgFirstResponseMs: number | null = null;
-    if (responded.length > 0) {
-      const sum = responded.reduce(
-        (acc, l) => acc + (l.firstResponseAt!.getTime() - l.receivedAt.getTime()),
-        0
-      );
-      avgFirstResponseMs = Math.round(sum / responded.length);
-    }
     return {
       totalLeads: all,
       metaLeads: fb + ig,

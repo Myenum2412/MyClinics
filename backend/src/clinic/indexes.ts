@@ -50,12 +50,17 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
   const avatars = db.collection(CLINIC_COLLECTIONS.avatars);
   const investigations = db.collection(CLINIC_COLLECTIONS.investigations);
   const examinations = db.collection(CLINIC_COLLECTIONS.examinations);
+  const labs = db.collection(CLINIC_COLLECTIONS.labs);
+  const medicalRecordFiles = db.collection(CLINIC_COLLECTIONS.medicalRecordFiles);
+  const medicalRecordFolders = db.collection(CLINIC_COLLECTIONS.medicalRecordFolders);
+  const clinicWelcomeDocuments = db.collection(CLINIC_COLLECTIONS.clinicWelcomeDocuments);
 
   const indexSpecs = [
     // ── Clinics ──────────────────────────────────────────────────────────
     clinics.createIndex({ clinicId: 1 }, { unique: true }),
     clinics.createIndex({ slug: 1 }, { unique: true }),
     clinics.createIndex({ status: 1, createdAt: -1 }),
+    clinics.createIndex({ createdAt: -1 }),
     clinics.createIndex({ name: 1 }),
 
     // ── Users (accounts) ─────────────────────────────────────────────────
@@ -96,6 +101,8 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     ),
     doctors.createIndex({ clinicId: 1, specialization: 1 }),
     doctors.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
+    doctors.createIndex({ clinicId: 1, createdAt: -1 }),
+    doctors.createIndex({ clinicId: 1, specialization: 1, createdAt: -1 }),
     doctors.createIndex({ clinicId: 1, name: 1 }),
 
     // ── Staff ────────────────────────────────────────────────────────────
@@ -106,6 +113,8 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     ),
     staff.createIndex({ clinicId: 1, position: 1 }),
     staff.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
+    staff.createIndex({ clinicId: 1, createdAt: -1 }),
+    staff.createIndex({ clinicId: 1, position: 1, createdAt: -1 }),
 
     // ── Patients ─────────────────────────────────────────────────────────
     patients.createIndex({ clinicId: 1, patientId: 1 }, { unique: true }),
@@ -138,8 +147,13 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     ),
     // Token queue snapshot queries (clinic/doctor/date + queue state + token order).
     appointments.createIndex({ clinicId: 1, date: 1, queueStatus: 1 }),
+    // Clinic-wide queue ordering (doctorId omitted): getEligible/callNext sort
+    // by priority then tokenNumber, which the index above cannot drive.
+    appointments.createIndex({ clinicId: 1, date: 1, queueStatus: 1, priority: -1, tokenNumber: 1 }),
     appointments.createIndex({ clinicId: 1, doctorId: 1, date: 1, queueStatus: 1, priority: -1, tokenNumber: 1 }),
     appointments.createIndex({ clinicId: 1, doctorId: 1, date: 1, session: 1, tokenNumber: -1 }),
+    // Patient appointment list sorts by (date, time).
+    appointments.createIndex({ clinicId: 1, patientId: 1, date: -1, time: -1 }),
     db.collection("clc_queue_settings").createIndex({ clinicId: 1 }, { unique: true }),
 
     // ── Medicine ─────────────────────────────────────────────────────────
@@ -166,6 +180,7 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     settings.createIndex({ clinicId: 1 }, { unique: true }),
 
     // ── Notifications ────────────────────────────────────────────────────
+    notifications.createIndex({ clinicId: 1, notificationId: 1 }, { unique: true }),
     notifications.createIndex({ clinicId: 1, recipientUserId: 1, createdAt: -1 }),
     notifications.createIndex({ clinicId: 1, recipientUserId: 1, readAt: 1 }),
     notifications.createIndex({ clinicId: 1, recipientUserId: 1, readAt: 1, createdAt: -1 }),
@@ -184,6 +199,10 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     // (no clinicId filter). Without this, every cron tick does a full-collection scan.
     prescriptionNotifications.createIndex({ status: 1, attempts: 1, createdAt: -1 }),
     prescriptionNotifications.createIndex({ status: 1, waNotificationId: 1 }),
+    // Clinic notification feed + per-prescription lookup + cron status sync.
+    prescriptionNotifications.createIndex({ clinicId: 1, createdAt: -1 }),
+    prescriptionNotifications.createIndex({ clinicId: 1, prescriptionId: 1, createdAt: -1 }),
+    prescriptionNotifications.createIndex({ status: 1, createdAt: -1 }),
 
     // ── Appointment Notifications ─────────────────────────────────────────
     // Per-clinic index (used when queuing from clinic context)
@@ -193,6 +212,10 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     // (no clinicId filter). Without this, every cron tick does a full-collection scan.
     appointmentNotifications.createIndex({ status: 1, attempts: 1, scheduledTime: 1 }),
     appointmentNotifications.createIndex({ status: 1, waNotificationId: 1 }),
+    // Clinic notification feed + per-appointment lookup + cron status sync.
+    appointmentNotifications.createIndex({ clinicId: 1, createdAt: -1 }),
+    appointmentNotifications.createIndex({ clinicId: 1, appointmentId: 1, createdAt: -1 }),
+    appointmentNotifications.createIndex({ status: 1, createdAt: -1 }),
 
     // ── Leads ───────────────────────────────────────────────────────────
     leads.createIndex({ clinicId: 1, leadId: 1 }, { unique: true }),
@@ -276,11 +299,19 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     pharmacyInventory.createIndex({ clinicId: 1, barcode: 1 }),
     pharmacyInventory.createIndex({ clinicId: 1, status: 1, expiryDate: 1 }),
     pharmacyInventory.createIndex({ clinicId: 1, supplierId: 1 }),
+    // Default inventory list sort + FEFO/FIFO batch selection.
+    pharmacyInventory.createIndex({ clinicId: 1, lastUpdated: -1 }),
+    pharmacyInventory.createIndex({ clinicId: 1, medicineId: 1, expiryDate: 1, createdAt: 1 }),
+    // Alert scans (low stock / reorder) sorted by quantity.
+    pharmacyInventory.createIndex({ clinicId: 1, status: 1, quantityAvailable: 1 }),
+    pharmacyInventory.createIndex({ clinicId: 1, reorderStatus: 1, quantityAvailable: 1 }),
     pharmacyStockMovements.createIndex({ clinicId: 1, movementId: 1 }, { unique: true }),
     pharmacyStockMovements.createIndex({ clinicId: 1, transactionId: 1 }),
     pharmacyStockMovements.createIndex({ clinicId: 1, medicineId: 1, createdAt: -1 }),
     pharmacyStockMovements.createIndex({ clinicId: 1, batchNumber: 1 }),
     pharmacyStockMovements.createIndex({ clinicId: 1, movementType: 1, createdAt: -1 }),
+    // Default (unfiltered / date-only) movements list + reports.
+    pharmacyStockMovements.createIndex({ clinicId: 1, createdAt: -1 }),
     pharmacySuppliers.createIndex({ clinicId: 1, supplierId: 1 }, { unique: true }),
     // Standalone join key for the purchase-list `$lookup` by supplierId.
     pharmacySuppliers.createIndex({ supplierId: 1 }),
@@ -293,15 +324,24 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     pharmacyPurchases.createIndex({ clinicId: 1, purchaseId: 1 }, { unique: true }),
     pharmacyPurchases.createIndex({ clinicId: 1, invoiceNumber: 1 }),
     pharmacyPurchases.createIndex({ clinicId: 1, supplierId: 1, purchaseDate: -1 }),
+    // Clinic-wide purchases list (no supplier filter) + reports.
+    pharmacyPurchases.createIndex({ clinicId: 1, purchaseDate: -1, createdAt: -1 }),
+    pharmacyPurchases.createIndex({ clinicId: 1, supplierId: 1, purchaseDate: -1, createdAt: -1 }),
     pharmacySales.createIndex({ clinicId: 1, saleId: 1 }, { unique: true }),
     pharmacySales.createIndex({ clinicId: 1, invoiceNumber: 1 }),
     pharmacySales.createIndex({ clinicId: 1, saleDate: -1 }),
+    // Default list secondary sort + patient sales list.
+    pharmacySales.createIndex({ clinicId: 1, saleDate: -1, createdAt: -1 }),
+    pharmacySales.createIndex({ clinicId: 1, patientId: 1, saleDate: -1 }),
     pharmacyAdjustments.createIndex({ clinicId: 1, adjustmentId: 1 }, { unique: true }),
     pharmacyAdjustments.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
+    pharmacyAdjustments.createIndex({ clinicId: 1, createdAt: -1 }),
     pharmacyTransfers.createIndex({ clinicId: 1, transferId: 1 }, { unique: true }),
     pharmacyTransfers.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
+    pharmacyTransfers.createIndex({ clinicId: 1, createdAt: -1 }),
     pharmacyReturns.createIndex({ clinicId: 1, returnId: 1 }, { unique: true }),
     pharmacyReturns.createIndex({ clinicId: 1, type: 1, createdAt: -1 }),
+    pharmacyReturns.createIndex({ clinicId: 1, createdAt: -1 }),
 
     // ── Avatars (binaries stored in MongoDB) ────────────────────────────
     avatars.createIndex({ clinicId: 1, ownerType: 1, ownerId: 1 }, { unique: true }),
@@ -312,6 +352,10 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     investigations.createIndex({ clinicId: 1, doctorId: 1, visitDate: -1 }),
     investigations.createIndex({ clinicId: 1, medicalRecordId: 1 }),
     investigations.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
+    // Clinic-wide list sort by (visitDate, createdAt).
+    investigations.createIndex({ clinicId: 1, visitDate: -1, createdAt: -1 }),
+    investigations.createIndex({ clinicId: 1, status: 1, visitDate: -1, createdAt: -1 }),
+    investigations.createIndex({ clinicId: 1, category: 1, visitDate: -1, createdAt: -1 }),
 
     // ── Examinations ─────────────────────────────────────────────────────
     examinations.createIndex({ clinicId: 1, examinationId: 1 }, { unique: true }),
@@ -319,6 +363,31 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     examinations.createIndex({ clinicId: 1, doctorId: 1, visitDate: -1 }),
     examinations.createIndex({ clinicId: 1, investigationId: 1 }),
     examinations.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
+    // Clinic-wide list sort by (visitDate, createdAt).
+    examinations.createIndex({ clinicId: 1, visitDate: -1, createdAt: -1 }),
+    examinations.createIndex({ clinicId: 1, status: 1, visitDate: -1, createdAt: -1 }),
+
+    // ── Labs (directory) ─────────────────────────────────────────────────
+    labs.createIndex({ clinicId: 1, labId: 1 }, { unique: true }),
+    labs.createIndex({ clinicId: 1, createdAt: -1 }),
+    labs.createIndex({ clinicId: 1, status: 1, createdAt: -1 }),
+
+    // ── Medical record drive (folders + files) ───────────────────────────
+    // These two collections previously had NO indexes, so the folder tree
+    // walk and the file list ($lookup + $facet) did a full collection scan.
+    medicalRecordFolders.createIndex({ clinicId: 1, folderId: 1 }, { unique: true }),
+    medicalRecordFolders.createIndex({ clinicId: 1, patientId: 1, isDefault: -1, createdAt: 1 }),
+    medicalRecordFolders.createIndex({ clinicId: 1, parentFolderId: 1 }),
+    medicalRecordFolders.createIndex({ clinicId: 1, patientId: 1 }),
+    medicalRecordFiles.createIndex({ clinicId: 1, fileId: 1 }, { unique: true }),
+    medicalRecordFiles.createIndex({ clinicId: 1, createdAt: -1 }),
+    medicalRecordFiles.createIndex({ clinicId: 1, patientId: 1, createdAt: -1 }),
+    medicalRecordFiles.createIndex({ clinicId: 1, folder: 1 }),
+    medicalRecordFiles.createIndex({ clinicId: 1, patientId: 1, folder: 1 }),
+
+    // ── Clinic welcome documents ─────────────────────────────────────────
+    clinicWelcomeDocuments.createIndex({ clinicId: 1, documentId: 1 }, { unique: true }),
+    clinicWelcomeDocuments.createIndex({ clinicId: 1, createdAt: -1 }),
   ];
 
   // A single failing index (e.g. a unique index hitting pre-existing

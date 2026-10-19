@@ -38,7 +38,7 @@ export class DashboardService {
             .toArray()
         : Promise.resolve([] as any[]);
 
-      const [apptCount, patientCount, doctorCount, rxCount, revenueRows, recentBills, recentAppointments, recentPatients] =
+      const [apptCount, patientCount, doctorCount, rxCount, revenueRows, recentBills, recentAppointments, recentPatients, doctors] =
         await Promise.all([
           appointmentsCol.countDocuments({ clinicId, ...doctorFilter } as any),
           patientsCol.countDocuments({ clinicId, status: { $ne: "deleted" }, ...doctorFilter } as any),
@@ -65,13 +65,13 @@ export class DashboardService {
             .sort({ createdAt: -1 })
             .limit(5)
             .toArray(),
+          // doctors map (small projection) for calendar titles — fetched in the
+          // same round-trip batch instead of a serial query afterwards.
+          doctorsCol
+            .find({ clinicId }, { projection: { doctorId: 1, name: 1 } })
+            .limit(50)
+            .toArray(),
         ]);
-
-      // also fetch doctors map small projection for calendar titles
-      const doctors = await doctorsCol
-        .find({ clinicId }, { projection: { doctorId: 1, name: 1 } })
-        .limit(50)
-        .toArray();
 
       const totalRevenue = (revenueRows[0]?.totalRevenue as number | undefined) ?? 0;
       const paidRevenue = (revenueRows[0]?.paidRevenue as number | undefined) ?? 0;

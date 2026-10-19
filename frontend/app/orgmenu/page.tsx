@@ -39,12 +39,21 @@ export default function OrgMenuDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [q, setQ] = useState("");
+  // Debounced copy of the search term that drives the server request. `q` still
+  // filters the visible rows instantly (StatsGeneric), so typing stays snappy
+  // while we fire one request per pause instead of one per keystroke.
+  const [serverQ, setServerQ] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setServerQ(q.trim()), 300);
+    return () => clearTimeout(t);
+  }, [q]);
 
   const load = useCallback(() => {
     setLoading(true);
     listAllClinics({
       status: statusFilter === "all" ? undefined : statusFilter,
-      q: q || undefined,
+      q: serverQ || undefined,
       limit: 100,
     })
       .then((res) => {
@@ -54,7 +63,7 @@ export default function OrgMenuDashboardPage() {
       })
       .catch(() => toast.error("Failed to load clinics"))
       .finally(() => setLoading(false));
-  }, [statusFilter, q]);
+  }, [statusFilter, serverQ]);
 
   useEffect(() => {
     if (session.session) load();

@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/db-pools";
+import { cached } from "@/lib/cache";
 import { nowMs } from "@/clinic/core/datetime";
 import { logger } from "@/lib/logger";
 
@@ -7,27 +8,35 @@ const COLLECTION = "clc_revoked_jtis";
 // In-memory fallback when Mongo is unavailable (tests)
 const memRevoked = new Map<string, number>();
 
+/**
+ * Revocation check with a short negative cache. The vast majority of requests
+ * carry a non-revoked jti, so a Mongo round trip per request was pure overhead
+ * on the hot path. A 15s TTL bounds staleness while removing the per-request
+ * DB lookup; `revokeJti` still short-circuits immediately via `memRevoked`.
+ */
 export async function isRevoked(jti: string): Promise<boolean> {
   if (!jti) return false;
-  // Check memory first
+  // Check memory first — a revocation performed by this process is immediate.
   const exp = memRevoked.get(jti);
   if (exp !== undefined) {
     if (exp > nowMs()) return true;
     memRevoked.delete(jti);
   }
-  try {
-    const db = await getDb();
-    const doc = await db.collection(COLLECTION).findOne({ jti });
-    if (!doc) return false;
-    if ((doc.expiresAt as number) <= nowMs()) {
-      // Lazy cleanup
-      await db.collection(COLLECTION).deleteOne({ jti }).catch(() => {});
+  return cached(`clc:revoked:${jti}`, 15_000, async () => {
+    try {
+      const db = await getDb();
+      const doc = await db.collection(COLLECTION).findOne({ jti });
+      if (!doc) return false;
+      if ((doc.expiresAt as number) <= nowMs()) {
+        // Lazy cleanup
+        await db.collection(COLLECTION).deleteOne({ jti }).catch(() => {});
+        return false;
+      }
+      return true;
+    } catch {
       return false;
     }
-    return true;
-  } catch {
-    return false;
-  }
+  });
 }
 
 export async function revokeJti(jti: string, expiresAtMs: number): Promise<void> {

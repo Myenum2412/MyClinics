@@ -7,27 +7,32 @@ import {
   type ClinicSession,
   can,
   ensureSession,
+  getCachedSession,
   getSession,
 } from "@/lib/clinic-api";
 
 /**
- * Client-side session hook. The JWT lives in localStorage (mirrored in a
- * cookie for the server-side proxy), so only client components can read it.
- * Workspaces are protected twice: the proxy redirects unauthenticated
+ * Client-side session hook. The JWT lives in an httpOnly cookie (mirrored in
+ * memory right after login for the current tab), so only client components can
+ * read it. Workspaces are protected twice: the proxy redirects unauthenticated
  * requests, and this hook re-verifies + enforces role minimums.
+ *
+ * The session is memoised in `clinic-api` (getCachedSession), so navigating
+ * between pages reuses the already-resolved session instead of blocking each
+ * page render on a fresh `/auth/me` round trip.
  */
 export function useClinicSession(): {
   session: ClinicSession | null;
   loading: boolean;
   reload: () => Promise<void>;
 } {
-  const [session, setSession] = useState<ClinicSession | null>(() =>
-    getSession()
+  const [session, setSession] = useState<ClinicSession | null>(
+    () => getCachedSession() ?? getSession()
   );
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => getCachedSession() === undefined);
 
   const reload = useCallback(async () => {
-    setLoading(true);
+    if (getCachedSession() === undefined) setLoading(true);
     setSession(await ensureSession());
     setLoading(false);
   }, []);

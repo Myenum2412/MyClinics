@@ -513,6 +513,17 @@ export class PharmacySupplierRepository {
     return [items, total];
   }
 
+  /** Just the id→name pairs actually referenced — avoids loading the whole supplier catalogue. */
+  async namesByIds(supplierIds: string[]): Promise<Map<string, string>> {
+    const map = new Map<string, string>();
+    if (supplierIds.length === 0) return map;
+    const rows = await this.collection()
+      .find(this.scoped({ supplierId: { $in: supplierIds } }), { projection: { supplierId: 1, name: 1 } })
+      .toArray();
+    for (const r of rows) map.set(r.supplierId, r.name);
+    return map;
+  }
+
   async insert(
     doc: Omit<PharmacySupplierDoc, "_id" | "clinicId" | "createdAt" | "updatedAt">
   ): Promise<WithId<PharmacySupplierDoc>> {

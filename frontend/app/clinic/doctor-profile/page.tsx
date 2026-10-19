@@ -166,36 +166,45 @@ export default function DoctorProfilePage() {
     if (!clinicId) return;
     setLoading(true);
     try {
-      // Fetch clinic details
-      const clinicData = await getOwnClinic(clinicId).catch(() => null);
+      // These three requests are independent — fire them together instead of
+      // awaiting clinic → doctor → avatar one after another (was 3 serial RTTs).
+      const clinicPromise = getOwnClinic(clinicId).catch(() => null);
+      const doctorPromise = doctorIdFromSession
+        ? getDoctor(clinicId, doctorIdFromSession).catch(() => null)
+        : Promise.resolve<Doctor | null>(null);
+      const avatarPromise = doctorIdFromSession
+        ? getAvatarUrl(clinicId, "doctor", doctorIdFromSession).catch(() => null)
+        : Promise.resolve<{ url: string } | null>(null);
+
+      const [clinicData, sessionDoc, sessionAvatar] = await Promise.all([
+        clinicPromise,
+        doctorPromise,
+        avatarPromise,
+      ]);
       setClinic(clinicData);
 
-      // Fetch doctor details
-      let docData: Doctor | null = null;
-      if (doctorIdFromSession) {
-        try {
-          docData = await getDoctor(clinicId, doctorIdFromSession);
-        } catch {
-          // fallback
-        }
-      }
+      let docData: Doctor | null = sessionDoc;
       if (!docData) {
         const list = await listDoctors(clinicId, { limit: 10 });
-        if ((list.items ?? []).length > 0) {
-          docData = list.items[0];
-        }
+        docData = list.items?.[0] ?? null;
       }
 
       setDoctor(docData);
       setForm(doctorFormOf(docData, session?.name ?? "Doctor"));
 
       if (docData?.doctorId) {
-        try {
-          const res = await getAvatarUrl(clinicId, "doctor", docData.doctorId);
-          setAvatarUrl(res.url);
-        } catch {
-          setAvatarUrl(null);
+        if (docData.doctorId === doctorIdFromSession) {
+          setAvatarUrl(sessionAvatar?.url ?? null);
+        } else {
+          try {
+            const res = await getAvatarUrl(clinicId, "doctor", docData.doctorId);
+            setAvatarUrl(res.url);
+          } catch {
+            setAvatarUrl(null);
+          }
         }
+      } else {
+        setAvatarUrl(null);
       }
     } catch (e) {
       toast.error("Failed to load doctor profile");

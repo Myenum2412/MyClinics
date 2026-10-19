@@ -1018,31 +1018,45 @@ export default function MedicalRecordPage() {
       let waSkippedNoPhone = 0;
       let waFailed = 0;
       let waLarge = 0;
-      for (const file of Array.from(fileList)) {
-        if (file.size > MAX_FILE_BYTES) {
-          toast.error(`${file.name} exceeds 25MB — skipped`);
-          failed += 1;
-          continue;
-        }
-        if (!isAllowedFile(file)) {
-          toast.error(`${file.name} — only PDF, DOCX, XLSX, JPG, PNG, TIFF and DICOM files are allowed`);
-          failed += 1;
-          continue;
-        }
-        try {
-          const res = await uploadMedicalRecordFile(clinicId, selectedPatient.patientId, file, target);
-          uploaded += 1;
-          if (res.whatsapp) {
-            if (res.whatsapp.status === "queued") waQueued += 1;
-            else if (res.whatsapp.status === "skipped_no_phone") waSkippedNoPhone += 1;
-            else waFailed += 1;
-            if (res.whatsapp.largeFile) waLarge += 1;
+      // Upload a few files at a time. Sequential await-in-loop made a 10-file
+      // drop take 10× a single upload; an unbounded Promise.all would burst the
+      // server and the WhatsApp queue, so cap concurrency instead.
+      const files = Array.from(fileList);
+      const CONCURRENCY = 3;
+      let cursor = 0;
+      const worker = async () => {
+        for (;;) {
+          const i = cursor++;
+          if (i >= files.length) return;
+          const file = files[i];
+          if (file.size > MAX_FILE_BYTES) {
+            toast.error(`${file.name} exceeds 25MB — skipped`);
+            failed += 1;
+            continue;
           }
-        } catch (err) {
-          failed += 1;
-          toast.error(err instanceof Error ? err.message : `Failed to upload ${file.name}`);
+          if (!isAllowedFile(file)) {
+            toast.error(`${file.name} — only PDF, DOCX, XLSX, JPG, PNG, TIFF and DICOM files are allowed`);
+            failed += 1;
+            continue;
+          }
+          try {
+            const res = await uploadMedicalRecordFile(clinicId, selectedPatient.patientId, file, target);
+            uploaded += 1;
+            if (res.whatsapp) {
+              if (res.whatsapp.status === "queued") waQueued += 1;
+              else if (res.whatsapp.status === "skipped_no_phone") waSkippedNoPhone += 1;
+              else waFailed += 1;
+              if (res.whatsapp.largeFile) waLarge += 1;
+            }
+          } catch (err) {
+            failed += 1;
+            toast.error(err instanceof Error ? err.message : `Failed to upload ${file.name}`);
+          }
         }
-      }
+      };
+      await Promise.all(
+        Array.from({ length: Math.min(CONCURRENCY, files.length) }, () => worker())
+      );
       if (uploaded > 0) {
         const name = selectedPatient.fullName;
         let msg = `${uploaded} file${uploaded === 1 ? "" : "s"} added to ${name}'s medical record`;

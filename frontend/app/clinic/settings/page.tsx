@@ -39,6 +39,8 @@ import {
 // The QR itself only rotates every ~20-60s (WhatsApp's own protocol); polling every second just
 // adds request churn and increases the odds of catching a transient gap between rotations.
 const WHATSAPP_POLL_MS = 4_000;
+// Once the session is connected/stable there is nothing to watch for, so back off.
+const WHATSAPP_IDLE_POLL_MS = 30_000;
 
 /** Deep links that open the saved UPI ID in the user's payment app. */
 function upiAppLinks(upiId: string): { label: string; href: string }[] {
@@ -132,14 +134,58 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Latest session snapshot, read by the poll scheduler without re-arming the
+  // effect on every poll (which would reset the backoff timer each time).
+  const waSessionRef = useRef(waSession);
+  useEffect(() => {
+    waSessionRef.current = waSession;
+  }, [waSession]);
+
   useEffect(() => {
     const clinicId = session?.clinicId;
     if (!clinicId) return;
-    queueMicrotask(() => void pollWhatsapp(clinicId));
-    const timer = setInterval(() => {
-      void pollWhatsapp(clinicId);
-    }, WHATSAPP_POLL_MS);
-    return () => clearInterval(timer);
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const schedule = () => {
+      if (cancelled) return;
+      const stage = waSessionRef.current?.stage;
+      // Poll quickly only while the user is waiting on a QR / connection;
+      // otherwise back off. Hidden tabs are skipped entirely and re-synced on
+      // focus, so a backgrounded settings tab stops generating traffic.
+      const waiting =
+        stage === "qr" ||
+        stage === "authenticated" ||
+        stage === "unconfigured" ||
+        stage === "idle" ||
+        stage === "disconnected";
+      const delay = waiting ? WHATSAPP_POLL_MS : WHATSAPP_IDLE_POLL_MS;
+      timer = setTimeout(tick, delay);
+    };
+
+    const tick = async () => {
+      if (cancelled) return;
+      if (typeof document !== "undefined" && document.hidden) {
+        schedule();
+        return;
+      }
+      await pollWhatsapp(clinicId);
+      schedule();
+    };
+
+    const onVisibility = () => {
+      if (!cancelled && typeof document !== "undefined" && !document.hidden) {
+        void pollWhatsapp(clinicId);
+      }
+    };
+
+    void tick();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [pollWhatsapp, session?.clinicId]);
 
   // Auto-show QR: if clinic has no whatsapp session (unconfigured/disconnected), auto-trigger connect

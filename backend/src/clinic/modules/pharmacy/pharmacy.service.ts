@@ -382,11 +382,9 @@ export class PharmacyService {
     const supplierIds = Array.from(
       new Set(items.map((i) => i.supplierId).filter(Boolean) as string[])
     );
-    const supplierMap = new Map<string, string>();
-    if (supplierIds.length) {
-      const [suppliers] = await this.supplierRepo(ctx).list({ skip: 0, limit: 10_000 });
-      for (const s of suppliers) supplierMap.set(s.supplierId, s.name);
-    }
+    const supplierMap = supplierIds.length
+      ? await this.supplierRepo(ctx).namesByIds(supplierIds)
+      : new Map<string, string>();
     const rows = items.map((i) => ({
       ...i,
       supplierName: i.supplierId ? (supplierMap.get(i.supplierId) ?? null) : null,

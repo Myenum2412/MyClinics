@@ -78,6 +78,14 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
   const [search, setSearch] = React.useState("")
   const [status, setStatus] = React.useState(initialStatus)
   const [category, setCategory] = React.useState("")
+  // Debounced term used for the request; `search` still filters rows instantly
+  // so typing is responsive without firing a request on every keystroke.
+  const [serverSearch, setServerSearch] = React.useState("")
+
+  React.useEffect(() => {
+    const t = setTimeout(() => setServerSearch(search.trim()), 300)
+    return () => clearTimeout(t)
+  }, [search])
 
   const [detail, setDetail] = React.useState<PharmacyInventory | null>(null)
 
@@ -93,7 +101,7 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
     if (!clinicId) return
     setLoading(true)
     listInventory(clinicId, {
-      search: search || undefined,
+      search: serverSearch || undefined,
       status: status || undefined,
       category: category || undefined,
       limit: 500,
@@ -103,7 +111,7 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
         toast.error(e instanceof Error ? e.message : "Failed to load inventory")
       })
       .finally(() => setLoading(false))
-  }, [clinicId, search, status, category])
+  }, [clinicId, serverSearch, status, category])
 
   React.useEffect(() => {
     if (!clinicId) return
