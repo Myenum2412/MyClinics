@@ -32,11 +32,17 @@ export default function PartnersPage() {
 			<main className="relative z-10 flex min-h-[60svh] flex-1 items-center justify-center px-6 pt-24 pb-16 sm:pt-28">
 				<section
 					id="become-a-partner"
-					className="flex w-full flex-col items-center justify-center text-center"
+					className="flex w-full max-w-2xl flex-col items-center justify-center text-center"
 				>
+					<h1 className="text-balance text-4xl font-semibold tracking-tight text-blue-950 sm:text-5xl md:text-6xl">
+						Grow together with My Clinics
+					</h1>
+					<p className="mt-4 max-w-xl text-pretty text-base leading-relaxed text-slate-700 sm:text-lg">
+						Join our partner network and bring smarter clinic management to more practices.
+					</p>
 					<Button
 						nativeButton={false}
-						className="h-14 rounded-full bg-blue-600 px-12 text-base font-semibold text-white shadow-[0_18px_60px_-12px_rgba(29,78,216,0.9)] ring-1 ring-white/30 transition-transform hover:scale-105 hover:bg-blue-500 focus-visible:border-blue-500 focus-visible:ring-blue-500/60"
+						className="mt-8 h-14 rounded-full bg-blue-600 px-12 text-base font-semibold text-white shadow-[0_18px_60px_-12px_rgba(29,78,216,0.9)] ring-1 ring-white/30 transition-transform hover:scale-105 hover:bg-blue-500 focus-visible:border-blue-500 focus-visible:ring-blue-500/60"
 						render={<Link href="/signup/clinic">Join Now</Link>}
 					/>
 				</section>
