@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { getOwnClinic } from "@/lib/clinic-api";
 import { DoctorSidebar } from "@/components/clinic/doctor-sidebar";
+import { LabSidebar } from "@/components/clinic/lab-sidebar";
 import { PatientHeader } from "@/components/clinic/patient-header";
 import { PatientBottomNav } from "@/components/clinic/patient-bottom-nav";
 import { PatientSidebar } from "@/components/clinic/patient-sidebar";
@@ -49,6 +50,12 @@ export default function ClinicLayout({
     <SidebarProvider>
       {session.role === "doctor" ? (
         <DoctorSidebar
+          clinicName={clinicName}
+          clinicId={session.clinicId ?? ""}
+          user={{ name: session.name ?? "User", email: session.email ?? "" }}
+        />
+      ) : session.role === "lab_technician" ? (
+        <LabSidebar
           clinicName={clinicName}
           clinicId={session.clinicId ?? ""}
           user={{ name: session.name ?? "User", email: session.email ?? "" }}

@@ -30,6 +30,14 @@ const GOOGLE_ERRORS: Record<string, string> = {
     "No clinic account matches this Google email. Sign in with your email and password, or create a clinic.",
 };
 
+/** Workspace each role lands in after a successful login. */
+function destinationFor(role: string | undefined): string {
+  if (role === "platform_admin") return "/orgmenu";
+  if (role === "patient") return "/clinic/patient";
+  if (role === "lab_technician") return "/clinic/lab";
+  return "/clinic";
+}
+
 export function LoginForm({
   className,
   callbackUrl,
@@ -54,8 +62,7 @@ export function LoginForm({
       const expires = Number(searchParams.get("google_expires") ?? 0);
       storeSessionToken(googleToken, expires);
       const session = getSession();
-      const destination =
-        session?.role === "platform_admin" ? "/orgmenu" : session?.role === "patient" ? "/clinic/patient" : "/clinic";
+      const destination = destinationFor(session?.role);
       router.replace(destination);
       router.refresh();
       return;
@@ -76,8 +83,7 @@ export function LoginForm({
         ? { email: value, password }
         : { identifier: value, password };
       const result = await login(body);
-      const destination =
-        result.role === "platform_admin" ? "/orgmenu" : result.role === "patient" ? "/clinic/patient" : "/clinic";
+      const destination = destinationFor(result.role);
       const safeCallback =
         callbackUrl && /^\/(?!\/)/.test(callbackUrl) ? callbackUrl : null;
       router.replace(safeCallback ?? destination);

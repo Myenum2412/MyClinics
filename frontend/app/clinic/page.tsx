@@ -18,11 +18,15 @@ export default function ClinicPage() {
     if (session.role === "patient") {
       router.replace("/clinic/patient");
     }
+    if (session.role === "lab_technician") {
+      router.replace("/clinic/lab");
+    }
   }, [session?.role, session, router]);
 
   if (!session) return null;
   if (session.role === "platform_admin") return null;
   if (session.role === "patient") return null;
+  if (session.role === "lab_technician") return null;
   if (!session.clinicId) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 p-8 text-center">
