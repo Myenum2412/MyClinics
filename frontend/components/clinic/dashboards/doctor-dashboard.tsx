@@ -25,7 +25,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MetricStatGrid } from "@/components/metric-stat-cards";
 import { BillingOverviewCard } from "@/components/clinic/billing-overview-card";
 import { RecentAppointmentsCard } from "@/components/clinic/recent-appointments-card";
+import { DoctorsTableCard } from "@/components/clinic/dashboards/doctors-table-card";
+import { LabsTableCard } from "@/components/clinic/dashboards/labs-table-card";
 import { PersonAvatar } from "@/components/clinic/person-avatar";
+import { sessionCan } from "@/hooks/use-clinic-session";
 import {
   Folder,
   ArrowRight,
@@ -338,6 +341,7 @@ function DoctorPatientsCard({
 export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const clinicId = session.clinicId ?? "";
   const isDoctorRole = session.role === "doctor";
+  const canManage = sessionCan(session, "clinic_admin");
 
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -502,6 +506,14 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           <BillingOverviewCard bills={bills} loading={loading} />
         )}
       </div>
+
+      {/* Doctors (left) + Labs (right) — same row */}
+      {clinicId && (
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+          <DoctorsTableCard clinicId={clinicId} canManage={canManage} />
+          <LabsTableCard clinicId={clinicId} canManage={canManage} />
+        </div>
+      )}
     </div>
   );
 }
