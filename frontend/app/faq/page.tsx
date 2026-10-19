@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { FaqsBlock } from "@/components/blocks/faqs-5";
+import FaqsBlock from "@/components/blocks/faqs-5-7ovr";
 import { buttonVariants } from "@/components/ui/button";
 import { buildFaqPageSchema } from "@/lib/aeo-geo-faqs";
 import { ArrowRight, MessageSquare, Clock, ShieldCheck } from "lucide-react";
@@ -73,12 +73,8 @@ export default function FaqPage() {
       <SiteHeader />
 
       <main className="flex-1">
-        {/* Interactive FAQ Block */}
-        <FaqsBlock
-          title="Frequently Asked Questions"
-          subtitle="Everything doctors, clinic managers, and patients need to know about My Clinics software, setup, and features."
-          badge="Product & Software Help Center"
-        />
+        {/* Interactive FAQ Block — @7ovr/faqs-5 (searchable FAQ with category tabs) */}
+        <FaqsBlock />
 
         {/* Informational Callout Grid */}
         <section className="w-full border-t bg-muted/40 px-4 py-16 sm:px-6 lg:px-8">
