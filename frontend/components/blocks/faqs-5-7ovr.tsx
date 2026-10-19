@@ -130,9 +130,6 @@ export default function FaqsBlock() {
     <section className="flex min-h-svh w-full items-start justify-center bg-muted/30 px-6 py-16 text-foreground">
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-8">
         <div className="flex flex-col items-center gap-3 text-center">
-          <span className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-            Help center
-          </span>
           <h2 className="font-heading text-3xl font-bold tracking-tight sm:text-4xl">
             How can we help?
           </h2>
