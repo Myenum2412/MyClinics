@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/site-footer";
 import FaqsBlock from "@/components/blocks/faqs-5-7ovr";
 import { buttonVariants } from "@/components/ui/button";
 import { buildFaqPageSchema } from "@/lib/aeo-geo-faqs";
-import { ArrowRight, MessageSquare, Clock, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "My Clinics Software FAQs — Everything You Need to Know | My Clinics",
@@ -76,59 +76,11 @@ export default function FaqPage() {
         {/* Interactive FAQ Block — @7ovr/faqs-5 (searchable FAQ with category tabs) */}
         <FaqsBlock />
 
-        {/* Informational Callout Grid */}
+        {/* Conversion CTA */}
         <section className="w-full border-t bg-muted/40 px-4 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-5xl">
-            <div className="text-center mb-10">
-              <h2 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                Built for Fast, Flawless Clinic Operations
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground sm:text-base">
-                Everything you need to automate your front desk, eliminate no-shows, and provide modern patient care.
-              </p>
-            </div>
-
-            <div className="grid gap-6 sm:grid-cols-3">
-              <div className="rounded-2xl border bg-card p-6 shadow-xs">
-                <div className="mb-4 inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <MessageSquare className="size-5" />
-                </div>
-                <h3 className="font-semibold text-foreground">24/7 WhatsApp AI Assistant</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Patients book, reschedule, or check doctor timings directly over WhatsApp at any hour, reducing front-desk calls by up to 65%.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border bg-card p-6 shadow-xs">
-                <div className="mb-4 inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Clock className="size-5" />
-                </div>
-                <h3 className="font-semibold text-foreground">Live Queue & Turn Alerts</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Real-time token counters and automated 30-minute turn alerts notify patients when it is their turn, eliminating waiting-room chaos.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border bg-card p-6 shadow-xs">
-                <div className="mb-4 inline-flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <ShieldCheck className="size-5" />
-                </div>
-                <h3 className="font-semibold text-foreground">Strict Data Isolation</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Every clinic has an isolated tenant database. Your patient records, prescriptions, and financial data are private and 100% owned by you.
-                </p>
-              </div>
-            </div>
-
-            {/* Bottom CTA */}
-            <div className="mt-12 rounded-3xl border bg-gradient-to-r from-primary/10 via-background to-primary/5 p-8 text-center sm:p-12">
-              <h3 className="text-2xl font-bold tracking-tight sm:text-3xl">
-                Ready to run your clinic on autopilot?
-              </h3>
-              <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
-                Join 500+ clinics modernizing patient care, WhatsApp booking, and OPD operations with My Clinics.
-              </p>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+            <div className="rounded-3xl border bg-gradient-to-r from-primary/10 via-background to-primary/5 p-8 text-center sm:p-12">
+              <div className="flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href="/signup"
                   className={buttonVariants({
