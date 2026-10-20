@@ -62,7 +62,7 @@ const features = [
 
 export default function FeaturesBlock() {
   return (
-    <section className="relative w-full px-6 py-20 text-white">
+    <section className="relative w-full bg-black px-6 py-20 text-white">
       <div className="mx-auto w-full max-w-5xl">
         <div className="mx-auto max-w-2xl text-center">
           <span className="text-sm font-medium tracking-widest text-blue-400 uppercase">
