@@ -111,7 +111,7 @@ export default function PartnersJoinForm() {
   }
 
   return (
-    <div className="w-full max-w-2xl rounded-2xl bg-white p-6 text-left text-zinc-900 shadow-2xl shadow-black/20 sm:p-8">
+    <div className="w-full max-w-2xl rounded-2xl bg-white p-6 text-left text-zinc-900 sm:p-8">
       <h2 className="text-xl font-semibold text-zinc-900">
         Become a My Clinics partner
       </h2>
@@ -233,11 +233,11 @@ export default function PartnersJoinForm() {
           />
         </div>
 
-        <div className="flex flex-col gap-2 sm:col-span-2 sm:flex-row sm:items-center sm:justify-end">
+        <div className="sm:col-span-2">
           <Button
             type="submit"
             disabled={submitting}
-            className="h-11 bg-blue-600 px-8 text-white hover:bg-blue-500"
+            className="h-11 w-full justify-center bg-blue-600 px-8 text-white hover:bg-blue-500"
           >
             {submitting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
             Submit
