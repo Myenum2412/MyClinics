@@ -20,7 +20,7 @@ export const footerColumns = {
 		links: [
 			{ label: "Home", href: "/" },
 			{ label: "Features", href: "/#features" },
-			{ label: "Pricing", href: "/#pricing" },
+			{ label: "Pricing", href: "/pricing" },
 			{ label: "Changelog", href: "/changelog" },
 		],
 	},
