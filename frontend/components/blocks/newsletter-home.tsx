@@ -8,8 +8,8 @@ import { ArrowRight, Lock } from "lucide-react"
 
 export default function NewsletterHomeBlock() {
   return (
-    <section className="relative w-full bg-black px-6 py-20 text-white">
-      <div className="mx-auto w-full max-w-5xl rounded-2xl bg-blue-950/40 px-6 py-12 ring-1 ring-blue-900 sm:px-12 sm:py-14">
+    <section className="relative w-full bg-blue-950 px-6 py-20 text-white">
+      <div className="mx-auto w-full max-w-5xl rounded-2xl bg-blue-900/40 px-6 py-12 ring-1 ring-blue-800 sm:px-12 sm:py-14">
         <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between md:gap-16">
           <div className="flex flex-col gap-3 md:max-w-sm">
             <p className="text-sm font-medium tracking-widest text-blue-400 uppercase">
