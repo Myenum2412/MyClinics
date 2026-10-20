@@ -16,14 +16,28 @@ type MapMarker<M extends Marker> = Omit<M, "lat" | "lng"> & {
   y: number
 }
 
+export interface MapRegion {
+  lat: { min: number; max: number }
+  lng: { min: number; max: number }
+}
+
 export interface DottedMapProps<
   M extends Marker = Marker,
 > extends React.SVGProps<SVGSVGElement> {
   width?: number
   height?: number
   mapSamples?: number
-  /** Restrict the dots to these countries. Omit for the whole world. */
+  /**
+   * Restrict the dots to these countries, by **ISO3 id** (e.g. `["IND"]`, not
+   * `"India"`). The library indexes its geojson by id.
+   *
+   * Upstream bug in svg-dotted-map v2.0.1: supplying `countries` without a
+   * `region` makes `createMap` throw or return zero points. Always pass
+   * `region` alongside `countries`.
+   */
   countries?: string[]
+  /** Bounding box to sample, e.g. `{ lat: {min:6.5,max:37.5}, lng: {min:68,max:97.5} }`. */
+  region?: MapRegion
   markers?: M[]
   dotColor?: string
   markerColor?: string
@@ -45,6 +59,7 @@ export function DottedMap<M extends Marker = Marker>({
   height = 75,
   mapSamples = 5000,
   countries,
+  region,
   markers = [],
   dotColor = "currentColor",
   markerColor = "#FF6900",
@@ -61,11 +76,13 @@ export function DottedMap<M extends Marker = Marker>({
     height,
     mapSamples,
     countries,
+    region,
   })
   const processedMarkers = addMarkers(markers)
 
-  // Compute stagger helpers in a single, simple pass
-  const { xStep, yToRowIndex } = React.useMemo(() => {
+  // Compute stagger helpers in a single, simple pass. Not memoized: `points`
+  // is a fresh array on every render, so a memo keyed on it would never hit.
+  const { xStep, yToRowIndex } = (() => {
     const sorted = [...points].sort((a, b) => a.y - b.y || a.x - b.x)
     const rowMap = new Map<number, number>()
     let step = 0
@@ -87,7 +104,7 @@ export function DottedMap<M extends Marker = Marker>({
     }
 
     return { xStep: step || 1, yToRowIndex: rowMap }
-  }, [points])
+  })()
 
   return (
     <svg

@@ -7,7 +7,14 @@ import PartnersJoinForm from "@/components/blocks/partners-join-form";
 import { DottedMap } from "@/components/magicui/dotted-map";
 
 // New Delhi — the home base we light up on the map.
-const INDIA_MARKER = { lat: 28.6139, lng: 77.209, size: 0.75, pulse: true };
+const INDIA_MARKER = { lat: 28.6139, lng: 77.209, size: 0.9, pulse: true };
+
+// India's bounding box, and a near-square viewBox matching its Mercator aspect
+// so the outline isn't stretched.
+const INDIA_REGION = {
+  lat: { min: 6.5, max: 37.5 },
+  lng: { min: 68, max: 97.5 },
+};
 
 export const metadata: Metadata = {
   title: "Partners",
@@ -51,28 +58,29 @@ export default function PartnersPage() {
       {/* Dotted world map — India lit up as our home base. */}
       <section
         id="where-we-are"
-        className="relative z-10 flex w-full flex-col items-center px-6 py-20"
+        className="relative z-10 flex w-full flex-col items-center bg-white px-6 py-20 text-zinc-900"
       >
         <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
             Join our team
           </h2>
-          <p className="mt-3 max-w-xl text-pretty text-base leading-relaxed text-slate-300">
+          <p className="mt-3 max-w-xl text-pretty text-base leading-relaxed text-zinc-600">
             We&apos;re building the future of clinic management from India — and
             we&apos;re growing. Come shape it with us.
           </p>
 
-          <div className="mt-10 w-full">
+          <div className="mt-10 w-full max-w-sm">
             <DottedMap
-              countries={["India"]}
-              width={600}
-              height={300}
+              countries={["IND"]}
+              region={INDIA_REGION}
+              width={300}
+              height={346}
               mapSamples={6000}
               markers={[INDIA_MARKER]}
-              dotColor="#60a5fa"
-              markerColor="#3b82f6"
-              className="w-full text-blue-400/70"
-              aria-label="Dotted world map highlighting India"
+              dotColor="#000000"
+              markerColor="#000000"
+              className="w-full text-zinc-900"
+              aria-label="Dotted map of India"
             />
           </div>
         </div>
