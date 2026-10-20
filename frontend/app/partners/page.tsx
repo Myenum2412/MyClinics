@@ -77,9 +77,9 @@ export default function PartnersPage() {
       {/* Dotted world map with our markers. */}
       <section
         id="where-we-are"
-        className="relative z-10 flex w-full flex-col items-center bg-white px-6 py-20 text-zinc-900"
+        className="relative z-10 flex w-full flex-col items-center bg-white py-20 text-zinc-900"
       >
-        <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
+        <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-6 text-center">
           <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
             Join our team
           </h2>
@@ -87,67 +87,67 @@ export default function PartnersPage() {
             We&apos;re building the future of clinic management from India — and
             we&apos;re growing. Come shape it with us.
           </p>
+        </div>
 
-          <div className="relative mt-10 h-[500px] w-full overflow-hidden rounded-lg border border-zinc-200">
-            <div
-              aria-hidden
-              className="absolute inset-0 bg-radial from-transparent to-white to-200%"
-            />
-            <DottedMap<MyMarker>
-              markers={markers}
-              dotColor="#000000"
-              markerColor="#000000"
-              aria-label="Dotted world map marking Seoul and New York City"
-              renderMarkerOverlay={({ marker, x, y, r, index }) => {
-                const { countryCode, label } = marker.overlay
-                const href = `https://flagcdn.com/w80/${countryCode}.webp`
+        <div className="relative mt-10 h-[500px] w-full overflow-hidden">
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-radial from-transparent to-white to-200%"
+          />
+          <DottedMap<MyMarker>
+            markers={markers}
+            dotColor="#000000"
+            markerColor="#000000"
+            aria-label="Dotted world map marking Seoul and New York City"
+            renderMarkerOverlay={({ marker, x, y, r, index }) => {
+              const { countryCode, label } = marker.overlay
+              const href = `https://flagcdn.com/w80/${countryCode}.webp`
 
-                const clipId = `${id}-flag-clip-${index}`.replace(/:/g, "-")
-                const imgR = r * 0.75
+              const clipId = `${id}-flag-clip-${index}`.replace(/:/g, "-")
+              const imgR = r * 0.75
 
-                const fontSize = r * 0.9
-                const pillH = r * 1.5
-                const pillW = label.length * (fontSize * 0.62) + r * 1.4
-                const pillX = x + r + r * 0.6
-                const pillY = y - pillH / 2
+              const fontSize = r * 0.9
+              const pillH = r * 1.5
+              const pillW = label.length * (fontSize * 0.62) + r * 1.4
+              const pillX = x + r + r * 0.6
+              const pillY = y - pillH / 2
 
-                return (
-                  <g style={{ pointerEvents: "none" }}>
-                    <clipPath id={clipId}>
-                      <circle cx={x} cy={y} r={imgR} />
-                    </clipPath>
+              return (
+                <g style={{ pointerEvents: "none" }}>
+                  <clipPath id={clipId}>
+                    <circle cx={x} cy={y} r={imgR} />
+                  </clipPath>
 
-                    <image
-                      href={href}
-                      x={x - imgR}
-                      y={y - imgR}
-                      width={imgR * 2}
-                      height={imgR * 2}
-                      preserveAspectRatio="xMidYMid slice"
-                      clipPath={`url(#${clipId})`}
-                    />
+                  <image
+                    href={href}
+                    x={x - imgR}
+                    y={y - imgR}
+                    width={imgR * 2}
+                    height={imgR * 2}
+                    preserveAspectRatio="xMidYMid slice"
+                    clipPath={`url(#${clipId})`}
+                  />
 
-                    <rect
-                      x={pillX}
-                      y={pillY}
-                      width={pillW}
-                      height={pillH}
-                      rx={pillH / 2}
-                      fill="rgba(0,0,0,0.55)"
-                    />
-                    <text
-                      x={pillX + r * 0.7}
-                      y={y + fontSize * 0.35}
-                      fontSize={fontSize}
-                      fill="white"
-                    >
-                      {label}
-                    </text>
-                  </g>
-                )
-              }}
-            />
-          </div>
+                  <rect
+                    x={pillX}
+                    y={pillY}
+                    width={pillW}
+                    height={pillH}
+                    rx={pillH / 2}
+                    fill="rgba(0,0,0,0.55)"
+                  />
+                  <text
+                    x={pillX + r * 0.7}
+                    y={y + fontSize * 0.35}
+                    fontSize={fontSize}
+                    fill="white"
+                  >
+                    {label}
+                  </text>
+                </g>
+              )
+            }}
+          />
         </div>
       </section>
 
