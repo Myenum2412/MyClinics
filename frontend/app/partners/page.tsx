@@ -77,26 +77,26 @@ export default function PartnersPage() {
       {/* Dotted world map with our markers. */}
       <section
         id="where-we-are"
-        className="relative z-10 flex w-full flex-col items-center bg-black px-6 py-20 text-white"
+        className="relative z-10 flex w-full flex-col items-center bg-white px-6 py-20 text-zinc-900"
       >
         <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
             Join our team
           </h2>
-          <p className="mt-3 max-w-xl text-pretty text-base leading-relaxed text-slate-300">
+          <p className="mt-3 max-w-xl text-pretty text-base leading-relaxed text-zinc-600">
             We&apos;re building the future of clinic management from India — and
             we&apos;re growing. Come shape it with us.
           </p>
 
-          <div className="relative mt-10 h-[500px] w-full overflow-hidden rounded-lg border border-white/10">
+          <div className="relative mt-10 h-[500px] w-full overflow-hidden rounded-lg border border-zinc-200">
             <div
               aria-hidden
-              className="absolute inset-0 bg-radial from-transparent to-black to-200%"
+              className="absolute inset-0 bg-radial from-transparent to-white to-200%"
             />
             <DottedMap<MyMarker>
               markers={markers}
-              dotColor="rgba(255,255,255,0.35)"
-              markerColor="#ffffff"
+              dotColor="#000000"
+              markerColor="#000000"
               aria-label="Dotted world map marking Seoul and New York City"
               renderMarkerOverlay={({ marker, x, y, r, index }) => {
                 const { countryCode, label } = marker.overlay
