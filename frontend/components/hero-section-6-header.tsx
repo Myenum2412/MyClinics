@@ -8,7 +8,7 @@ import React from 'react'
 const menuItems = [
     { name: 'Product', href: '#link' },
     { name: 'Solutions', href: '#link' },
-    { name: 'Pricing', href: '#link' },
+    { name: 'Pricing', href: '/pricing' },
     { name: 'Company', href: '#link' },
 ]
 

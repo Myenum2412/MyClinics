@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Header } from "@/components/header";
+import { HeroHeader } from "@/components/hero-section-6-header";
 import PricingBlock from "@/components/blocks/pricing-1";
 import { FooterSection } from "@/components/footer-section";
 
@@ -12,8 +12,9 @@ export const metadata: Metadata = {
 export default function PricingPage() {
   return (
     <div className="flex min-h-svh flex-col bg-background">
-      <Header />
-      <main className="flex-1">
+      {/* Same fixed, dark header as the home page. */}
+      <HeroHeader />
+      <main className="flex-1 pt-20">
         <PricingBlock />
       </main>
       <FooterSection />
