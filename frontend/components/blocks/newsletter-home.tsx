@@ -9,16 +9,16 @@ import { ArrowRight, Lock } from "lucide-react"
 export default function NewsletterHomeBlock() {
   return (
     <section className="relative w-full bg-blue-950 px-6 py-20 text-white">
-      <div className="mx-auto w-full max-w-5xl rounded-2xl bg-blue-900/40 px-6 py-12 ring-1 ring-blue-800 sm:px-12 sm:py-14">
+      <div className="mx-auto w-full max-w-5xl rounded-2xl bg-white px-6 py-12 text-zinc-900 shadow-2xl shadow-black/20 sm:px-12 sm:py-14">
         <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between md:gap-16">
           <div className="flex flex-col gap-3 md:max-w-sm">
-            <p className="text-sm font-medium tracking-widest text-blue-400 uppercase">
+            <p className="text-sm font-medium tracking-widest text-blue-600 uppercase">
               Clinic Newsletter
             </p>
-            <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            <h2 className="text-2xl font-bold tracking-tight text-zinc-900 sm:text-3xl">
               Clinic growth, delivered monthly
             </h2>
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-zinc-600">
               Product updates, growth tips and practical playbooks from the My
               Clinics team, landing in your inbox every month.
             </p>
@@ -38,7 +38,7 @@ export default function NewsletterHomeBlock() {
                   required
                   placeholder="work@company.com"
                   aria-label="Email address"
-                  className="flex-1 border-blue-800 bg-black text-white placeholder:text-white/40 focus-visible:border-blue-500 focus-visible:ring-blue-500/40"
+                  className="flex-1 border-zinc-300 bg-white text-zinc-900 placeholder:text-zinc-400 focus-visible:border-blue-500 focus-visible:ring-blue-500/40"
                 />
                 <Button
                   type="submit"
@@ -52,17 +52,17 @@ export default function NewsletterHomeBlock() {
                 <Checkbox
                   id="newsletter-consent-home"
                   name="consent"
-                  className="border-blue-700 bg-blue-950/60 data-checked:border-blue-500 data-checked:bg-blue-500"
+                  className="border-zinc-300 bg-white data-checked:border-blue-500 data-checked:bg-blue-500"
                 />
                 <label
                   htmlFor="newsletter-consent-home"
-                  className="text-sm font-normal text-white/70"
+                  className="text-sm font-normal text-zinc-600"
                 >
                   I agree to receive the My Clinics newsletter.
                 </label>
               </div>
             </form>
-            <p className="flex items-center gap-1.5 text-xs text-white/50">
+            <p className="flex items-center gap-1.5 text-xs text-zinc-500">
               <Lock aria-hidden="true" className="shrink-0" size={12} />
               Your data stays private. Unsubscribe any time, no questions
               asked.
