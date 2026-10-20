@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button'
 import React from 'react'
 
 const menuItems = [
-    { name: 'Product', href: '#link' },
-    { name: 'Solutions', href: '#link' },
+    { name: 'Features', href: '/#features' },
     { name: 'Pricing', href: '/pricing' },
-    { name: 'Company', href: '#link' },
+    { name: 'Partners', href: '/partners' },
+    { name: 'Contact', href: '/#contact' },
 ]
 
 export const HeroHeader = () => {
