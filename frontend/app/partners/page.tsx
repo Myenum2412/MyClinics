@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { HeroHeader } from "@/components/hero-section-6-header";
 import { FooterSection } from "@/components/footer-section";
 import NewsletterBlock from "@/components/blocks/newsletter-2";
-import { Button } from "@/components/ui/button";
+import PartnersJoinForm from "@/components/blocks/partners-join-form";
 
 export const metadata: Metadata = {
 	title: "Partners",
@@ -41,11 +40,7 @@ export default function PartnersPage() {
 					<p className="mt-4 max-w-xl text-pretty text-base leading-relaxed text-slate-700 sm:text-lg">
 						Join our partner network and bring smarter clinic management to more practices.
 					</p>
-					<Button
-						nativeButton={false}
-						className="mt-8 h-14 rounded-full bg-blue-600 px-12 text-base font-semibold text-white shadow-[0_18px_60px_-12px_rgba(29,78,216,0.9)] ring-1 ring-white/30 transition-transform hover:scale-105 hover:bg-blue-500 focus-visible:border-blue-500 focus-visible:ring-blue-500/60"
-						render={<Link href="/signup/clinic">Join Now</Link>}
-					/>
+					<PartnersJoinForm />
 				</section>
 			</main>
 
