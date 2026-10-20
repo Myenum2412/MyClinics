@@ -11,29 +11,27 @@ import type { Marker } from "@/components/magicui/dotted-map";
 
 type CountryCode = Lowercase<TCountryCode>
 
-type MapMarker = Marker & {
+type MyMarker = Marker & {
   overlay: {
     countryCode: CountryCode
     label: string
   }
 }
 
-// Our home base — the flag and label ride along as a marker overlay.
-const INDIA_MARKERS: MapMarker[] = [
+const markers: MyMarker[] = [
   {
-    lat: 28.6139,
-    lng: 77.209,
-    size: 10,
-    overlay: { countryCode: "in", label: "New Delhi" },
+    lat: 37.5665,
+    lng: 126.978,
+    size: 2.8,
+    overlay: { countryCode: "kr", label: "Seoul" },
+  },
+  {
+    lat: 40.7128,
+    lng: -74.006,
+    size: 2.8,
+    overlay: { countryCode: "us", label: "NYC" },
   },
 ]
-
-// India's bounding box, and a near-square viewBox matching its Mercator aspect
-// so the outline isn't stretched. `countries` must be an ISO3 id, not a name.
-const INDIA_REGION = {
-  lat: { min: 6.5, max: 37.5 },
-  lng: { min: 68, max: 97.5 },
-};
 
 export const metadata: Metadata = {
   title: "Partners",
@@ -76,36 +74,30 @@ export default function PartnersPage() {
         </section>
       </main>
 
-      {/* Dotted world map — India lit up as our home base. */}
+      {/* Dotted world map with our markers. */}
       <section
         id="where-we-are"
-        className="relative z-10 flex w-full flex-col items-center bg-white px-6 py-20 text-zinc-900"
+        className="relative z-10 flex w-full flex-col items-center bg-black px-6 py-20 text-white"
       >
         <div className="mx-auto flex w-full max-w-4xl flex-col items-center text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
+          <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
             Join our team
           </h2>
-          <p className="mt-3 max-w-xl text-pretty text-base leading-relaxed text-zinc-600">
+          <p className="mt-3 max-w-xl text-pretty text-base leading-relaxed text-slate-300">
             We&apos;re building the future of clinic management from India — and
             we&apos;re growing. Come shape it with us.
           </p>
 
-          <div className="relative mt-10 h-[420px] w-full max-w-sm overflow-hidden rounded-lg">
+          <div className="relative mt-10 h-[500px] w-full overflow-hidden rounded-lg border border-white/10">
             <div
               aria-hidden
-              className="absolute inset-0 bg-radial from-transparent to-white to-200%"
+              className="absolute inset-0 bg-radial from-transparent to-black to-200%"
             />
-            <DottedMap<MapMarker>
-              countries={["IND"]}
-              region={INDIA_REGION}
-              width={300}
-              height={346}
-              mapSamples={6000}
-              markers={INDIA_MARKERS}
-              dotColor="#000000"
-              markerColor="#000000"
-              className="w-full text-zinc-900"
-              aria-label="Dotted map of India"
+            <DottedMap<MyMarker>
+              markers={markers}
+              dotColor="rgba(255,255,255,0.35)"
+              markerColor="#ffffff"
+              aria-label="Dotted world map marking Seoul and New York City"
               renderMarkerOverlay={({ marker, x, y, r, index }) => {
                 const { countryCode, label } = marker.overlay
                 const href = `https://flagcdn.com/w80/${countryCode}.webp`
