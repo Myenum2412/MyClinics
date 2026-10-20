@@ -20,10 +20,10 @@ type MyMarker = Marker & {
 
 const markers: MyMarker[] = [
   {
-    lat: 37.5665,
-    lng: 126.978,
+    lat: 28.6139,
+    lng: 77.209,
     size: 2.8,
-    overlay: { countryCode: "kr", label: "Seoul" },
+    overlay: { countryCode: "in", label: "New Delhi" },
   },
   {
     lat: 40.7128,
@@ -98,7 +98,7 @@ export default function PartnersPage() {
             markers={markers}
             dotColor="#000000"
             markerColor="#000000"
-            aria-label="Dotted world map marking Seoul and New York City"
+            aria-label="Dotted world map marking New Delhi and New York City"
             renderMarkerOverlay={({ marker, x, y, r, index }) => {
               const { countryCode, label } = marker.overlay
               const href = `https://flagcdn.com/w80/${countryCode}.webp`
