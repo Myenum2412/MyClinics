@@ -6,7 +6,7 @@ import IntegrationsBlock from "@/components/blocks/integrations-4";
 export const metadata: Metadata = {
   title: "Integrations",
   description:
-    "Connect My Clinics with WhatsApp, Google Calendar, Razorpay, Tally, GoDaddy, Google Drive and Zapier — so your clinic runs without double entry.",
+    "Connect My Clinics with WhatsApp, Google Calendar, Razorpay, GoDaddy and Google Drive — so your clinic runs without double entry.",
 };
 
 export default function IntegrationsPage() {

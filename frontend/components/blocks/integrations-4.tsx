@@ -1,28 +1,20 @@
 "use client"
 
 import { useState } from "react"
-import {
-  BookOpen,
-  CalendarDays,
-  Check,
-  CreditCard,
-  HardDrive,
-  MessageCircle,
-  Search,
-  Workflow,
-} from "lucide-react"
+import { Check, Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { Drive } from "@/components/ui/svgs/drive"
 import { Godaddy } from "@/components/ui/svgs/godaddy"
+import { GoogleCalendar } from "@/components/ui/svgs/googleCalendar"
+import { Razorpay } from "@/components/ui/svgs/razorpay"
+import { WhatsappIcon } from "@/components/ui/svgs/whatsappIcon"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
   Card,
-  CardContent,
   CardDescription,
-  CardFooter,
-  CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -45,7 +37,7 @@ const integrations: Integration[] = [
     name: "WhatsApp Business",
     description:
       "Send booking confirmations, reminders and prescriptions straight to the patient's chat.",
-    icon: (p: IconProps) => <MessageCircle {...p} />,
+    icon: (p: IconProps) => <WhatsappIcon {...p} />,
     category: "Messaging",
     defaultConnected: true,
   },
@@ -54,7 +46,7 @@ const integrations: Integration[] = [
     name: "Google Calendar",
     description:
       "Two-way sync so every appointment lands on the doctor's personal calendar.",
-    icon: (p: IconProps) => <CalendarDays {...p} />,
+    icon: (p: IconProps) => <GoogleCalendar {...p} />,
     category: "Scheduling",
     defaultConnected: true,
   },
@@ -63,23 +55,15 @@ const integrations: Integration[] = [
     name: "Razorpay",
     description:
       "Collect consultation fees and settle UPI, card and netbanking payments.",
-    icon: (p: IconProps) => <CreditCard {...p} />,
+    icon: (p: IconProps) => <Razorpay {...p} />,
     category: "Payments",
-  },
-  {
-    id: "tally",
-    name: "Tally",
-    description:
-      "Export GST-ready invoices and daily collections straight into your books.",
-    icon: (p: IconProps) => <BookOpen {...p} />,
-    category: "Accounting",
   },
   {
     id: "google-drive",
     name: "Google Drive",
     description:
       "Back up reports, prescriptions and patient documents automatically.",
-    icon: (p: IconProps) => <HardDrive {...p} />,
+    icon: (p: IconProps) => <Drive {...p} />,
     category: "Storage",
   },
   {
@@ -90,14 +74,6 @@ const integrations: Integration[] = [
     icon: (p: IconProps) => <Godaddy {...p} />,
     category: "Domains",
     wordmark: true,
-  },
-  {
-    id: "zapier",
-    name: "Zapier",
-    description:
-      "Trigger your own workflows when a patient books, arrives or pays a bill.",
-    icon: (p: IconProps) => <Workflow {...p} />,
-    category: "Automation",
   },
 ]
 
@@ -124,7 +100,7 @@ export default function IntegrationsBlock() {
       id="integrations"
       className="flex w-full scroll-mt-24 justify-center bg-muted/30 px-6 py-16 text-foreground sm:py-20"
     >
-      <div className="mx-auto w-full max-w-5xl">
+      <div className="mx-auto w-full max-w-7xl">
         <div className="mx-auto flex w-full max-w-xl flex-col items-center text-center">
           <h1 className="font-heading text-4xl font-semibold tracking-tight sm:text-5xl">
             Integrations
@@ -146,7 +122,7 @@ export default function IntegrationsBlock() {
         </div>
 
         {filteredIntegrations.length > 0 ? (
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+          <div className="mt-10 flex flex-col gap-3">
             {filteredIntegrations.map((integration) => {
               const isOn = Boolean(connected[integration.id])
               const Icon = integration.icon
@@ -154,16 +130,16 @@ export default function IntegrationsBlock() {
                 <Card
                   key={integration.id}
                   className={cn(
-                    "flex flex-col gap-0 transition-colors",
+                    "w-full gap-0 py-0 transition-colors",
                     isOn && "border-primary/40 bg-primary/[0.03]"
                   )}
                 >
-                  <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
-                    <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-6">
+                    <div className="flex min-w-0 items-center gap-3 sm:w-64 sm:shrink-0">
                       <span
                         className={cn(
-                          "flex h-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-foreground transition-colors",
-                          integration.wordmark ? "w-20" : "size-10",
+                          "flex h-11 shrink-0 items-center justify-center rounded-lg border border-border bg-muted text-foreground transition-colors",
+                          integration.wordmark ? "w-24" : "w-11",
                           isOn && "border-primary/30 bg-primary/10 text-primary"
                         )}
                       >
@@ -171,50 +147,48 @@ export default function IntegrationsBlock() {
                           className={cn(
                             integration.wordmark
                               ? "h-4 w-auto text-foreground"
-                              : "size-5"
+                              : "size-6"
                           )}
                         />
                       </span>
-                      <div className="space-y-0.5">
-                        <CardTitle className="text-base leading-none">
+                      <div className="min-w-0">
+                        <CardTitle className="truncate text-base">
                           {integration.name}
                         </CardTitle>
-                        <CardDescription className="text-xs">
+                        <CardDescription className="mt-0.5 text-xs">
                           {integration.category}
                         </CardDescription>
                       </div>
                     </div>
-                    <Switch
-                      checked={isOn}
-                      onCheckedChange={() => toggle(integration.id)}
-                      aria-label={`Toggle ${integration.name}`}
-                    />
-                  </CardHeader>
 
-                  <CardContent className="flex-1 py-4">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="min-w-0 flex-1 text-sm text-muted-foreground">
                       {integration.description}
                     </p>
-                  </CardContent>
 
-                  <CardFooter className="items-center justify-between">
-                    {isOn ? (
-                      <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
-                        <Check data-icon="inline-start" className="size-3.5" />
-                        Connected
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline">Not connected</Badge>
-                    )}
-                    <Button
-                      variant={isOn ? "ghost" : "default"}
-                      size="sm"
-                      onClick={() => toggle(integration.id)}
-                      className={cn(isOn && "text-muted-foreground")}
-                    >
-                      {isOn ? "Disconnect" : "Connect"}
-                    </Button>
-                  </CardFooter>
+                    <div className="flex shrink-0 flex-wrap items-center gap-2.5 sm:justify-end">
+                      {isOn ? (
+                        <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
+                          <Check data-icon="inline-start" className="size-3.5" />
+                          Connected
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline">Not connected</Badge>
+                      )}
+                      <Switch
+                        checked={isOn}
+                        onCheckedChange={() => toggle(integration.id)}
+                        aria-label={`Toggle ${integration.name}`}
+                      />
+                      <Button
+                        variant={isOn ? "ghost" : "default"}
+                        size="sm"
+                        onClick={() => toggle(integration.id)}
+                        className={cn(isOn && "text-muted-foreground")}
+                      >
+                        {isOn ? "Disconnect" : "Connect"}
+                      </Button>
+                    </div>
+                  </div>
                 </Card>
               )
             })}
