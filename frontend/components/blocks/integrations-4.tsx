@@ -1,8 +1,10 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 import { Check, Search } from "lucide-react"
 
+import { useClinicSession } from "@/hooks/use-clinic-session"
 import { cn } from "@/lib/utils"
 import { Drive } from "@/components/ui/svgs/drive"
 import { Godaddy } from "@/components/ui/svgs/godaddy"
@@ -78,6 +80,8 @@ const integrations: Integration[] = [
 ]
 
 export default function IntegrationsBlock() {
+  const { session, loading: sessionLoading } = useClinicSession()
+  const signedIn = Boolean(session)
   const [connected, setConnected] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(
       integrations.map((i) => [i.id, Boolean(i.defaultConnected)])
@@ -166,27 +170,58 @@ export default function IntegrationsBlock() {
                     </p>
 
                     <div className="flex shrink-0 flex-wrap items-center gap-2.5 sm:justify-end">
-                      {isOn ? (
-                        <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
-                          <Check data-icon="inline-start" className="size-3.5" />
-                          Connected
-                        </Badge>
+                      {sessionLoading ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled
+                          className="text-muted-foreground"
+                        >
+                          Checking…
+                        </Button>
+                      ) : signedIn ? (
+                        <>
+                          {isOn ? (
+                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
+                              <Check
+                                data-icon="inline-start"
+                                className="size-3.5"
+                              />
+                              Connected
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">Not connected</Badge>
+                          )}
+                          <Switch
+                            checked={isOn}
+                            onCheckedChange={() => toggle(integration.id)}
+                            aria-label={`Toggle ${integration.name}`}
+                          />
+                          <Button
+                            variant={isOn ? "ghost" : "default"}
+                            size="sm"
+                            onClick={() => toggle(integration.id)}
+                            className={cn(isOn && "text-muted-foreground")}
+                          >
+                            {isOn ? "Disconnect" : "Connect"}
+                          </Button>
+                        </>
                       ) : (
-                        <Badge variant="outline">Not connected</Badge>
+                        <Button
+                          size="sm"
+                          nativeButton={false}
+                          render={
+                            <Link
+                              href={{
+                                pathname: "/login",
+                                query: { callbackUrl: "/integrations" },
+                              }}
+                            />
+                          }
+                        >
+                          Connect
+                        </Button>
                       )}
-                      <Switch
-                        checked={isOn}
-                        onCheckedChange={() => toggle(integration.id)}
-                        aria-label={`Toggle ${integration.name}`}
-                      />
-                      <Button
-                        variant={isOn ? "ghost" : "default"}
-                        size="sm"
-                        onClick={() => toggle(integration.id)}
-                        className={cn(isOn && "text-muted-foreground")}
-                      >
-                        {isOn ? "Disconnect" : "Connect"}
-                      </Button>
                     </div>
                   </div>
                 </Card>
