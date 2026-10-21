@@ -8,7 +8,7 @@ import {
   CreditCard,
   HardDrive,
   MessageCircle,
-  Plug,
+  Search,
   Workflow,
 } from "lucide-react"
 
@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils"
 import { Godaddy } from "@/components/ui/svgs/godaddy"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Card,
   CardContent,
@@ -106,11 +107,17 @@ export default function IntegrationsBlock() {
       integrations.map((i) => [i.id, Boolean(i.defaultConnected)])
     )
   )
+  const [query, setQuery] = useState("")
 
   const toggle = (id: string) =>
     setConnected((prev) => ({ ...prev, [id]: !prev[id] }))
 
-  const connectedCount = integrations.filter((i) => connected[i.id]).length
+  const normalizedQuery = query.trim().toLowerCase()
+  const filteredIntegrations = integrations.filter((integration) =>
+    `${integration.name} ${integration.category} ${integration.description}`
+      .toLowerCase()
+      .includes(normalizedQuery)
+  )
 
   return (
     <section
@@ -118,101 +125,107 @@ export default function IntegrationsBlock() {
       className="flex w-full scroll-mt-24 justify-center bg-muted/30 px-6 py-16 text-foreground sm:py-20"
     >
       <div className="mx-auto w-full max-w-5xl">
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="space-y-2">
-            <Badge variant="secondary">
-              <Plug data-icon="inline-start" className="size-3.5" />
-              Popular integrations
-            </Badge>
-            <h2 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
-              Works with the tools you already use
-            </h2>
-            <p className="max-w-prose text-sm text-muted-foreground">
-              Turn on the connections your clinic needs — no copy-paste, no
-              double entry, no extra logins for your staff.
+        <div className="mx-auto flex w-full max-w-xl flex-col items-center text-center">
+          <h1 className="font-heading text-4xl font-semibold tracking-tight sm:text-5xl">
+            Integrations
+          </h1>
+          <div className="relative mt-6 w-full">
+            <Search
+              aria-hidden="true"
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search integrations..."
+              aria-label="Search integrations"
+              className="h-11 w-full bg-background pl-10"
+            />
+          </div>
+        </div>
+
+        {filteredIntegrations.length > 0 ? (
+          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {filteredIntegrations.map((integration) => {
+              const isOn = Boolean(connected[integration.id])
+              const Icon = integration.icon
+              return (
+                <Card
+                  key={integration.id}
+                  className={cn(
+                    "flex flex-col gap-0 transition-colors",
+                    isOn && "border-primary/40 bg-primary/[0.03]"
+                  )}
+                >
+                  <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={cn(
+                          "flex h-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-foreground transition-colors",
+                          integration.wordmark ? "w-20" : "size-10",
+                          isOn && "border-primary/30 bg-primary/10 text-primary"
+                        )}
+                      >
+                        <Icon
+                          className={cn(
+                            integration.wordmark
+                              ? "h-4 w-auto text-foreground"
+                              : "size-5"
+                          )}
+                        />
+                      </span>
+                      <div className="space-y-0.5">
+                        <CardTitle className="text-base leading-none">
+                          {integration.name}
+                        </CardTitle>
+                        <CardDescription className="text-xs">
+                          {integration.category}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={isOn}
+                      onCheckedChange={() => toggle(integration.id)}
+                      aria-label={`Toggle ${integration.name}`}
+                    />
+                  </CardHeader>
+
+                  <CardContent className="flex-1 py-4">
+                    <p className="text-sm text-muted-foreground">
+                      {integration.description}
+                    </p>
+                  </CardContent>
+
+                  <CardFooter className="items-center justify-between">
+                    {isOn ? (
+                      <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
+                        <Check data-icon="inline-start" className="size-3.5" />
+                        Connected
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">Not connected</Badge>
+                    )}
+                    <Button
+                      variant={isOn ? "ghost" : "default"}
+                      size="sm"
+                      onClick={() => toggle(integration.id)}
+                      className={cn(isOn && "text-muted-foreground")}
+                    >
+                      {isOn ? "Disconnect" : "Connect"}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="mt-10 rounded-xl border border-dashed border-border bg-background/60 px-6 py-16 text-center">
+            <p className="text-sm text-muted-foreground">
+              No integrations found for “{query.trim()}”.
             </p>
           </div>
-          <p className="text-sm whitespace-nowrap text-muted-foreground">
-            <span className="font-medium text-foreground tabular-nums">
-              {connectedCount}
-            </span>{" "}
-            of {integrations.length} connected
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-          {integrations.map((integration) => {
-            const isOn = Boolean(connected[integration.id])
-            const Icon = integration.icon
-            return (
-              <Card
-                key={integration.id}
-                className={cn(
-                  "flex flex-col gap-0 transition-colors",
-                  isOn && "border-primary/40 bg-primary/[0.03]"
-                )}
-              >
-                <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={cn(
-                        "flex h-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted text-foreground transition-colors",
-                        integration.wordmark ? "w-20" : "size-10",
-                        isOn && "border-primary/30 bg-primary/10 text-primary"
-                      )}
-                    >
-                      <Icon
-                        className={cn(
-                          integration.wordmark
-                            ? "h-4 w-auto text-foreground"
-                            : "size-5"
-                        )}
-                      />
-                    </span>
-                    <div className="space-y-0.5">
-                      <CardTitle className="text-base leading-none">
-                        {integration.name}
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        {integration.category}
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={isOn}
-                    onCheckedChange={() => toggle(integration.id)}
-                    aria-label={`Toggle ${integration.name}`}
-                  />
-                </CardHeader>
-
-                <CardContent className="flex-1 py-4">
-                  <p className="text-sm text-muted-foreground">
-                    {integration.description}
-                  </p>
-                </CardContent>
-
-                <CardFooter className="items-center justify-between">
-                  {isOn ? (
-                    <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
-                      <Check data-icon="inline-start" className="size-3.5" />
-                      Connected
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">Not connected</Badge>
-                  )}
-                  <Button
-                    variant={isOn ? "ghost" : "default"}
-                    size="sm"
-                    onClick={() => toggle(integration.id)}
-                    className={cn(isOn && "text-muted-foreground")}
-                  >
-                    {isOn ? "Disconnect" : "Connect"}
-                  </Button>
-                </CardFooter>
-              </Card>
-            )
-          })}
-        </div>
+        )}
       </div>
     </section>
   )
