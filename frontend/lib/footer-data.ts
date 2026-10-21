@@ -21,6 +21,7 @@ export const footerColumns = {
 			{ label: "Home", href: "/" },
 			{ label: "Features", href: "/#features" },
 			{ label: "Pricing", href: "/pricing" },
+			{ label: "Integrations", href: "/integrations" },
 			{ label: "Changelog", href: "/changelog" },
 		],
 	},

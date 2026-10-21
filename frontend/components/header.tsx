@@ -19,6 +19,10 @@ export const navLinks = [
 		href: "/pricing",
 	},
 	{
+		label: "Integrations",
+		href: "/integrations",
+	},
+	{
 		label: "Contact",
 		href: "/#contact",
 	},

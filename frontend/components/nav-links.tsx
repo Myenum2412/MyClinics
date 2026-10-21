@@ -40,7 +40,7 @@ export const productLinks: LinkItemType[] = [
 	},
 	{
 		label: "Integrations",
-		href: "#",
+		href: "/integrations",
 		description: "Connect your apps and services",
 		icon: (
 			<PlugIcon

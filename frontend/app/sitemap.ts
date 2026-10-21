@@ -7,7 +7,7 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myclinic.myenum.in";
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = nowDate();
 
-  const staticRoutes = ["", "/privacy", "/terms", "/login"].map((path) => ({
+  const staticRoutes = ["", "/pricing", "/integrations", "/privacy", "/terms", "/login"].map((path) => ({
     url: `${SITE}${path}`,
     lastModified: now,
     changeFrequency: "weekly" as const,
