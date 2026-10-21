@@ -41,8 +41,12 @@ module.exports = {
 			ref: "origin/main",
 			repo: "git@github.com:Myenum2412/MyClinics.git",
 			path: "/var/www/myclinic",
-			"pre-deploy": "git pull && cd backend && cp ../../shared/.env.local .env.local",
-			"post-deploy": "cd backend && npm install --omit=dev && pm2 reload ecosystem.config.cjs --update-env && pm2 save",
+			// Deploy targets are read-only checkouts: discard lockfile churn from the
+			// previous deploy's `npm install` (npm rewrites peer flags), then fast-forward.
+			"pre-deploy": "git checkout -- package-lock.json backend/package-lock.json 2>/dev/null; git pull --ff-only && cd backend && cp ../../shared/.env.local .env.local",
+			// --no-save stops npm from rewriting the workspace lockfile, which used to
+			// leave the checkout dirty and break the next deploy's `git pull`.
+			"post-deploy": "cd backend && npm install --omit=dev --no-save && pm2 reload ecosystem.config.cjs --update-env && pm2 save",
 		},
 	},
 };
