@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { useState } from "react"
 import { Check, Search } from "lucide-react"
@@ -102,14 +103,31 @@ export default function IntegrationsBlock() {
   return (
     <section
       id="integrations"
-      className="flex w-full scroll-mt-24 justify-center bg-muted/30 px-6 py-16 text-foreground sm:py-20"
+      className="w-full scroll-mt-24 text-foreground"
     >
-      <div className="mx-auto w-full max-w-7xl">
-        <div className="mx-auto flex w-full max-w-xl flex-col items-center text-center">
+      <div className="relative isolate overflow-hidden border-b border-border">
+        <Image
+          src="/inter.png"
+          alt=""
+          aria-hidden="true"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center opacity-60 sm:opacity-100"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background"
+        />
+        <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center px-6 pt-16 pb-14 text-center sm:pt-20 sm:pb-16">
           <h1 className="font-heading text-4xl font-semibold tracking-tight sm:text-5xl">
             Integrations
           </h1>
-          <div className="relative mt-6 w-full">
+          <p className="mt-3 max-w-2xl text-pretty text-sm text-muted-foreground sm:text-base">
+            Connect the apps your clinic already uses and keep everything in
+            sync.
+          </p>
+          <div className="relative mt-6 w-full max-w-xl">
             <Search
               aria-hidden="true"
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
@@ -124,9 +142,12 @@ export default function IntegrationsBlock() {
             />
           </div>
         </div>
+      </div>
 
-        {filteredIntegrations.length > 0 ? (
-          <div className="mt-10 flex flex-col gap-3">
+      <div className="bg-muted/30 px-6 py-10 sm:py-12">
+        <div className="mx-auto w-full max-w-7xl">
+          {filteredIntegrations.length > 0 ? (
+            <div className="flex flex-col gap-3">
             {filteredIntegrations.map((integration) => {
               const isOn = Boolean(connected[integration.id])
               const Icon = integration.icon
@@ -229,12 +250,13 @@ export default function IntegrationsBlock() {
             })}
           </div>
         ) : (
-          <div className="mt-10 rounded-xl border border-dashed border-border bg-background/60 px-6 py-16 text-center">
+          <div className="rounded-xl border border-dashed border-border bg-background/60 px-6 py-16 text-center">
             <p className="text-sm text-muted-foreground">
               No integrations found for “{query.trim()}”.
             </p>
           </div>
         )}
+        </div>
       </div>
     </section>
   )
