@@ -98,7 +98,14 @@ import {
   Stethoscope,
 } from "lucide-react";
 
-const STATUSES: AppointmentStatus[] = ["rescheduled", "completed", "cancelled", "no_show"];
+const STATUSES: AppointmentStatus[] = [
+  "scheduled",
+  "confirmed",
+  "completed",
+  "cancelled",
+  "no_show",
+  "rescheduled",
+];
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
   scheduled: "Scheduled",
@@ -126,6 +133,9 @@ export default function AppointmentsPage() {
   const canManage = sessionCan(session, "staff");
 
   const [callingNext, setCallingNext] = useState(false);
+  // Rows whose status update is in flight — lets us paint the new badge immediately
+  // while blocking a second change on the same row.
+  const [savingStatusIds, setSavingStatusIds] = useState<Set<string>>(new Set());
 
   const handleCallNext = async () => {
     if (!clinicId) return;
@@ -442,6 +452,19 @@ export default function AppointmentsPage() {
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [rescheduleTime, setRescheduleTime] = useState("");
 
+  // Updates the row (and any open View/history copy) without waiting for a refetch.
+  function applyStatusLocally(appointmentId: string, status: AppointmentStatus) {
+    setAppointments((prev) =>
+      prev.map((a) => (a.appointmentId === appointmentId ? { ...a, status } : a))
+    );
+    setSelectedAppt((prev) =>
+      prev && prev.appointmentId === appointmentId ? { ...prev, status } : prev
+    );
+    setHistory((prev) =>
+      prev.map((h) => (h.appointmentId === appointmentId ? { ...h, status } : h))
+    );
+  }
+
   async function handleStatus(appointment: Appointment, status: AppointmentStatus) {
     if (!status) return;
     if (status === "rescheduled") {
@@ -451,15 +474,29 @@ export default function AppointmentsPage() {
       return;
     }
     const id = appointment.appointmentId;
+    if (savingStatusIds.has(id)) return;
+    const previousStatus = appointment.status;
+    // Optimistic: the badge changes on click instead of after the round trip + refetch,
+    // which used to blank the whole table behind a loading skeleton.
+    applyStatusLocally(id, status);
+    setSavingStatusIds((prev) => new Set(prev).add(id));
     try {
       if (status === "completed") await queueComplete(clinicId, id);
       else if (status === "no_show") await queueNoShow(clinicId, id);
       else if (status === "cancelled") await queueCancel(clinicId, id);
       else await updateAppointment(clinicId, id, { status });
       toast.success(`Appointment marked ${STATUS_LABELS[status]}.`);
-      loadData();
+      // Refresh the stat cards in the background (no table skeleton/flicker).
+      loadStats();
     } catch (e) {
+      applyStatusLocally(id, previousStatus);
       toast.error(e instanceof Error ? e.message : "Failed to update appointment");
+    } finally {
+      setSavingStatusIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   }
   async function handleRescheduleConfirm() {
@@ -1040,6 +1077,7 @@ export default function AppointmentsPage() {
                             <Select
                               value={a.status}
                               onValueChange={(v) => handleStatus(a, v as AppointmentStatus)}
+                              disabled={savingStatusIds.has(a.appointmentId)}
                             >
                               <SelectTrigger className={`h-7 text-[11px] font-semibold w-28 rounded-full ${STATUS_CLASS[a.status]}`}>
                                 <SelectValue />
@@ -1164,6 +1202,7 @@ export default function AppointmentsPage() {
                       <Select
                         value={a.status}
                         onValueChange={(v) => handleStatus(a, v as AppointmentStatus)}
+                        disabled={savingStatusIds.has(a.appointmentId)}
                       >
                         <SelectTrigger className={`h-8 min-w-28 rounded-full text-[11px] font-semibold ${STATUS_CLASS[a.status]}`}>
                           <SelectValue />

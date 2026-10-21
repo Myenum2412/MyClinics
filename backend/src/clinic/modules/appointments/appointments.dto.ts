@@ -1,11 +1,10 @@
 import { z } from "zod";
+import { APPOINTMENT_STATUSES } from "@/clinic/modules/appointments/appointments.schema";
 
-export const APPOINTMENT_STATUSES = [
-  "scheduled",
-  "completed",
-  "cancelled",
-  "no_show",
-] as const;
+// Re-exported so validation and persistence share one source of truth. Keeping a
+// second local list here previously rejected valid statuses ("confirmed",
+// "rescheduled") with "Invalid option: expected one of ...".
+export { APPOINTMENT_STATUSES };
 
 export const appointmentSchema = z.object({
   patientId: z.string().startsWith("pat_"),

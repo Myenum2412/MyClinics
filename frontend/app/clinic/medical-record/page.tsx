@@ -115,7 +115,14 @@ import { Timeline, TimelineContent, TimelineDate, TimelineHeader, TimelineIndica
 
 const MAX_FILE_BYTES = 25 * 1024 * 1024;
 
-const APPT_STATUSES: AppointmentStatus[] = ["scheduled", "completed", "cancelled", "no_show"];
+const APPT_STATUSES: AppointmentStatus[] = [
+  "scheduled",
+  "confirmed",
+  "completed",
+  "cancelled",
+  "no_show",
+  "rescheduled",
+];
 
 const APPT_STATUS_LABELS: Record<AppointmentStatus, string> = {
   scheduled: "Scheduled",
@@ -1912,11 +1919,26 @@ export default function MedicalRecordPage() {
     );
 
     async function handleStatusChange(a: Appointment, status: AppointmentStatus) {
+      if (status === a.status) return;
+      const previousStatus = a.status;
+      // Update the row locally instead of calling refresh() — that refetched eight
+      // endpoints (records, prescriptions, examinations, files…) just to change one badge.
+      setAppointments((prev) => ({
+        ...prev,
+        items: prev.items.map((x) =>
+          x.appointmentId === a.appointmentId ? { ...x, status } : x
+        ),
+      }));
       try {
         await updateAppointment(clinicId, a.appointmentId, { status });
         toast.success(`Status updated to ${APPT_STATUS_LABELS[status]}.`);
-        refresh();
       } catch (err) {
+        setAppointments((prev) => ({
+          ...prev,
+          items: prev.items.map((x) =>
+            x.appointmentId === a.appointmentId ? { ...x, status: previousStatus } : x
+          ),
+        }));
         toast.error(err instanceof Error ? err.message : "Failed to update status");
       }
     }

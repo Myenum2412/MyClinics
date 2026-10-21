@@ -7,10 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { listPatients, listDoctors, listAppointments, listRecords, updateAppointment, createQuickAdd, type Patient, type Doctor, type Appointment, type MedicineRecord } from "@/lib/clinic-api";
+import { listPatients, listDoctors, listAppointments, listRecords, updateAppointment, deleteAppointment, createQuickAdd, type Patient, type Doctor, type Appointment, type AppointmentStatus, type MedicineRecord } from "@/lib/clinic-api";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { todayISO } from "@/lib/datetime";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Pencil, Trash2 } from "lucide-react";
 
 // Load odontogram + its CSS only when the "Other" investigation chart opens —
 // same lazy module as /clinic/investigation and /clinic/examination.
@@ -32,6 +43,79 @@ export default function QuickAddPage(){
   const [sharedPatient,setSharedPatient]=useState("");
   const [sharedDoctor,setSharedDoctor]=useState("");
   const [appointments,setAppointments]=useState<Appointment[]>([]);
+  const [savingStatusId,setSavingStatusId]=useState<string | null>(null);
+  // Optimistic status change: paint immediately, revert only if the API rejects it.
+  async function changeAppointmentStatus(id:string, status:AppointmentStatus, previous:AppointmentStatus){
+    if(id===savingStatusId) return;
+    setAppointments(prev=>prev.map(a=>a.appointmentId===id?{...a,status}:a));
+    setSavingStatusId(id);
+    try{
+      await updateAppointment(clinicId,id,{status});
+      toast.success("Status updated");
+    }catch(err){
+      setAppointments(prev=>prev.map(a=>a.appointmentId===id?{...a,status:previous}:a));
+      toast.error(err instanceof Error ? err.message : "Failed to update status");
+    }finally{
+      setSavingStatusId(null);
+    }
+  }
+
+  // ── Appointment selection / edit / delete ────────────────────────────────
+  const [selectedApptIds,setSelectedApptIds]=useState<Set<string>>(new Set());
+  const [apptDeleteTarget,setApptDeleteTarget]=useState<string[]|null>(null);
+  const [editAppt,setEditAppt]=useState<Appointment|null>(null);
+  const [editApptForm,setEditApptForm]=useState({doctorId:"",date:"",time:"",reason:""});
+  const [savingAppt,setSavingAppt]=useState(false);
+
+  function openEditAppt(a:Appointment){
+    setEditAppt(a);
+    setEditApptForm({doctorId:a.doctorId,date:a.date,time:a.time,reason:a.reason ?? ""});
+  }
+
+  async function saveApptEdit(){
+    if(!editAppt) return;
+    const {doctorId,date,time,reason}=editApptForm;
+    if(!doctorId || !date || !time){ toast.error("Doctor, date and time are required"); return; }
+    setSavingAppt(true);
+    try{
+      const updated = await updateAppointment(clinicId, editAppt.appointmentId, {
+        doctorId, date, time, reason: reason.trim() || null,
+      });
+      setAppointments(prev=>prev.map(a=>a.appointmentId===editAppt.appointmentId?{
+        ...a,
+        doctorId,
+        date,
+        time,
+        reason: reason.trim() || null,
+        status: updated.status,
+        tokenNumber: updated.tokenNumber ?? a.tokenNumber,
+        session: updated.session ?? a.session,
+      }:a));
+      toast.success("Appointment updated");
+      setEditAppt(null);
+    }catch(err){
+      toast.error(err instanceof Error ? err.message : "Failed to update appointment");
+    }finally{
+      setSavingAppt(false);
+    }
+  }
+
+  async function deleteAppointments(ids:string[]){
+    if(ids.length===0) return;
+    const results = await Promise.allSettled(ids.map(id=>deleteAppointment(clinicId,id)));
+    const deleted = ids.filter((_,i)=>results[i].status==="fulfilled");
+    if(deleted.length){
+      setAppointments(prev=>prev.filter(a=>!deleted.includes(a.appointmentId)));
+      setSelectedApptIds(prev=>{
+        const next=new Set(prev);
+        deleted.forEach(id=>next.delete(id));
+        return next;
+      });
+      toast.success(deleted.length===1?"Appointment deleted":`${deleted.length} appointments deleted`);
+    }
+    const failed = ids.length - deleted.length;
+    if(failed) toast.error(`${failed} appointment${failed===1?"":"s"} could not be deleted`);
+  }
   useEffect(()=>{ if(!clinicId) return; listPatients(clinicId,{limit:100}).then(r=>setPatients((r as any)?.items ?? [])).catch(()=>{}); listDoctors(clinicId,{limit:100}).then(r=>setDoctors((r as any)?.items ?? [])).catch(()=>{}); listAppointments(clinicId,{limit:100}).then(r=>setAppointments((r as any)?.items ?? [])).catch(()=>{}); },[clinicId]);
   // auto-show doctor when patient selected
   const onSharedPatient=(name:string)=>{
@@ -224,7 +308,84 @@ export default function QuickAddPage(){
           const appts = pid ? appointments.filter(a=>a.patientId===pid) : [];
           if(!sharedPatient) return <p className="text-sm text-muted-foreground">Select patient above to see appointments.</p>;
           if(appts.length===0) return <p className="text-sm text-muted-foreground">No appointments for this patient.</p>;
-          return <div className="overflow-hidden rounded-xl border"><table className="w-full text-sm"><thead className="bg-muted text-xs"><tr><th className="p-2 text-left">Date</th><th className="p-2 text-left">Time</th><th className="p-2 text-left">Reason</th><th className="p-2 text-left">Status</th></tr></thead><tbody>{appts.map(a=> <tr key={a.appointmentId} className="border-t"><td className="p-2">{a.date}</td><td className="p-2">{a.time}</td><td className="p-2">{a.reason||"—"}</td><td className="p-2"><select value={a.status} onChange={async e=>{ try{ await updateAppointment(clinicId,a.appointmentId,{status:e.target.value as any}); toast.success("Status updated"); const r=await listAppointments(clinicId,{limit:100}); setAppointments((r as any)?.items ?? []);}catch(err:any){ toast.error(err.message);} }} className="h-7 rounded-lg border bg-card px-2 text-xs"><option value="scheduled">Scheduled</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option><option value="no_show">No Show</option></select></td></tr>)}</tbody></table></div>;
+          const visibleIds = appts.map(a=>a.appointmentId);
+          const selectedVisible = visibleIds.filter(id=>selectedApptIds.has(id));
+          const allSelected = visibleIds.length>0 && selectedVisible.length===visibleIds.length;
+          const toggleAll = () => setSelectedApptIds(prev=>{
+            const next=new Set(prev);
+            if(allSelected) visibleIds.forEach(id=>next.delete(id));
+            else visibleIds.forEach(id=>next.add(id));
+            return next;
+          });
+          const toggleOne = (id:string) => setSelectedApptIds(prev=>{
+            const next=new Set(prev);
+            if(next.has(id)) next.delete(id); else next.add(id);
+            return next;
+          });
+          return (
+            <>
+              {selectedVisible.length>0 && (
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2">
+                  <span className="text-xs font-semibold text-destructive">{selectedVisible.length} selected</span>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={()=>setSelectedApptIds(new Set())}>Clear</Button>
+                    <Button variant="outline" size="sm" className="h-7 gap-1.5 border-destructive/30 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={()=>setApptDeleteTarget(selectedVisible)}>
+                      <Trash2 className="size-3.5"/> Delete selected
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <div className="overflow-x-auto rounded-xl border">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted text-xs">
+                    <tr>
+                      <th className="w-8 p-2">
+                        <Checkbox checked={allSelected} onCheckedChange={toggleAll} aria-label="Select all appointments"/>
+                      </th>
+                      <th className="p-2 text-left">Date</th>
+                      <th className="p-2 text-left">Time</th>
+                      <th className="p-2 text-left">Doctor</th>
+                      <th className="p-2 text-left">Reason</th>
+                      <th className="p-2 text-left">Status</th>
+                      <th className="p-2 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {appts.map(a=>{
+                      const doctorLabel = a.doctorName || doctors.find(d=>d.doctorId===a.doctorId)?.name || "—";
+                      return (
+                        <tr key={a.appointmentId} className="border-t align-middle">
+                          <td className="p-2">
+                            <Checkbox checked={selectedApptIds.has(a.appointmentId)} onCheckedChange={()=>toggleOne(a.appointmentId)} aria-label={`Select appointment ${a.date} ${a.time}`}/>
+                          </td>
+                          <td className="whitespace-nowrap p-2">{a.date}</td>
+                          <td className="whitespace-nowrap p-2">{a.time}</td>
+                          <td className="p-2">{doctorLabel}</td>
+                          <td className="max-w-[200px] truncate p-2">{a.reason || "—"}</td>
+                          <td className="p-2">
+                            <select value={a.status} disabled={savingStatusId===a.appointmentId} onChange={e=>changeAppointmentStatus(a.appointmentId, e.target.value as AppointmentStatus, a.status)} className="h-7 rounded-lg border bg-card px-2 text-xs disabled:opacity-60">
+                              <option value="scheduled">Scheduled</option>
+                              <option value="confirmed">Confirmed</option>
+                              <option value="completed">Completed</option>
+                              <option value="cancelled">Cancelled</option>
+                              <option value="no_show">No Show</option>
+                              <option value="rescheduled">Rescheduled</option>
+                            </select>
+                          </td>
+                          <td className="p-2">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs" onClick={()=>openEditAppt(a)}><Pencil className="size-3"/> Edit</Button>
+                              <Button variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={()=>setApptDeleteTarget([a.appointmentId])}><Trash2 className="size-3"/> Delete</Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          );
         })()}
       </CardContent></Card>
 
@@ -364,6 +525,41 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
+
+      {/* Edit appointment */}
+      <Dialog open={!!editAppt} onOpenChange={(open)=>{ if(!open) setEditAppt(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit appointment</DialogTitle>
+            <DialogDescription>Change the doctor, slot or reason for this appointment.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <Label className="text-xs">Doctor *</Label>
+              <select value={editApptForm.doctorId} onChange={e=>setEditApptForm(f=>({...f,doctorId:e.target.value}))} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm">
+                <option value="">Select doctor</option>
+                {doctors.map(d=><option key={d.doctorId} value={d.doctorId}>{d.name}</option>)}
+              </select>
+            </div>
+            <div><Label className="text-xs">Date *</Label><Input type="date" value={editApptForm.date} onChange={e=>setEditApptForm(f=>({...f,date:e.target.value}))} className="mt-1 h-9"/></div>
+            <div><Label className="text-xs">Time *</Label><Input type="time" value={editApptForm.time} onChange={e=>setEditApptForm(f=>({...f,time:e.target.value}))} className="mt-1 h-9"/></div>
+            <div className="sm:col-span-2"><Label className="text-xs">Reason</Label><Input value={editApptForm.reason} onChange={e=>setEditApptForm(f=>({...f,reason:e.target.value}))} className="mt-1 h-9" placeholder="Reason for visit"/></div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={()=>setEditAppt(null)} disabled={savingAppt}>Cancel</Button>
+            <Button onClick={saveApptEdit} disabled={savingAppt}>{savingAppt ? "Saving..." : "Save changes"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete appointment(s) */}
+      <ConfirmDeleteDialog
+        open={!!apptDeleteTarget}
+        onOpenChange={(open)=>{ if(!open) setApptDeleteTarget(null); }}
+        title={apptDeleteTarget && apptDeleteTarget.length>1 ? `Delete ${apptDeleteTarget.length} appointments?` : "Delete this appointment?"}
+        description="The appointment will be removed and cancellation alerts will be queued for the patient and doctor."
+        onConfirm={async ()=>{ await deleteAppointments(apptDeleteTarget ?? []); setApptDeleteTarget(null); }}
+      />
 
       <div className="sticky bottom-4 flex justify-center gap-3 pt-2">
         <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setRec(s=>({...s, chiefComplaint:"", diagnosis:""})); setRx(s=>({...s, diagnosis:"", notes:""})); setRxMeds([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]); setExam({visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"", chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}], bloodPressure:"", temperature:"", pulse:"", respiratoryRate:"", spo2:"", allergies:"", medicalConditions:"", previousSurgeries:"", currentMedications:"", patientHistory:"", familyHistory:"", habits:"", hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:""}); setInv({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", medicalRecordId:"", showChart:true, details:{}}); toast.info("Cancelled"); }}>Cancel</Button>
