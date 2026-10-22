@@ -242,7 +242,11 @@ const orphanFiles = files.filter(
                         <Table>
                           <TableBody>
                             {folderFiles.map((f) => (
-                              <TableRow key={f.fileId} className="hover:bg-muted/50">
+                              <TableRow
+                                key={f.fileId}
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => handleOpen(f)}
+                              >
                                 <TableCell className="min-w-0">
                                   <div className="flex items-center gap-3">
                                     <FileText className="size-4 shrink-0 text-primary" />
@@ -259,7 +263,10 @@ const orphanFiles = files.filter(
                                     variant="outline"
                                     size="sm"
                                     className="gap-1.5"
-                                    onClick={() => handleOpen(f)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleOpen(f);
+                                    }}
                                   >
                                     <Eye className="size-4" />
                                     View
@@ -285,7 +292,11 @@ const orphanFiles = files.filter(
                     <Table>
                       <TableBody>
                         {orphanFiles.map((f) => (
-                          <TableRow key={f.fileId} className="hover:bg-muted/50">
+                          <TableRow
+                            key={f.fileId}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleOpen(f)}
+                          >
                             <TableCell className="min-w-0">
                               <div className="flex items-center gap-3">
                                 <FileText className="size-4 shrink-0 text-primary" />
@@ -302,7 +313,10 @@ const orphanFiles = files.filter(
                                 variant="outline"
                                 size="sm"
                                 className="gap-1.5"
-                                onClick={() => handleOpen(f)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpen(f);
+                                }}
                               >
                                 <Eye className="size-4" />
                                 View

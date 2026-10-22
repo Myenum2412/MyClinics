@@ -452,8 +452,19 @@ function FileRow({
   return (
     <div
       draggable={draggable}
-      onDoubleClick={() => onDownload(file)}
-      title="Double-click to view"
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).closest("button, a, input, select, textarea, [role='menuitem']")) return;
+        onDownload(file);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onDownload(file);
+        }
+      }}
+      title="Click to view"
       onDragStart={(e) => onDragStart(e, file)}
       onDragOver={(e) => {
         if (e.dataTransfer.getData("application/x-mrf-move")) {
@@ -470,7 +481,7 @@ function FileRow({
           onDropMove(file);
         }
       }}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ring-1 ring-border transition hover:bg-muted ${over ? "bg-accent ring-primary/25" : "bg-background"}`}
+      className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 ring-1 ring-border transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${over ? "bg-accent ring-primary/25" : "bg-background"}`}
     >
       {fileIcon(file.mimeType, file.fileName)}
       <div className="min-w-0 flex-1">
@@ -2506,7 +2517,23 @@ export default function MedicalRecordPage() {
             ) : (
               <div className="space-y-1.5 px-4 py-4 sm:px-5">
                 {[...patientFiles].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((f) => (
-                  <div key={f.fileId} className="flex items-center gap-3 rounded-lg bg-background px-3 py-2.5 ring-1 ring-border">
+                  <div
+                    key={f.fileId}
+                    role="button"
+                    tabIndex={0}
+                    title="Click to view"
+                    onClick={(e) => {
+                      if ((e.target as HTMLElement).closest("button, a, input, select, textarea")) return;
+                      handleDownload(f);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleDownload(f);
+                      }
+                    }}
+                    className="flex cursor-pointer items-center gap-3 rounded-lg bg-background px-3 py-2.5 ring-1 ring-border transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  >
                     {fileIcon(f.mimeType, f.fileName)}
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-foreground">{f.fileName}</p>
