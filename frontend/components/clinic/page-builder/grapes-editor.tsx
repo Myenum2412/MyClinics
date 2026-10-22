@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Eye,
   FileArchive,
+  Images,
   Loader2,
   Monitor,
   Redo2,
@@ -173,8 +174,8 @@ export function GrapesEditor({ clinicId }: { clinicId: string }) {
       editor.on("update", scheduleDraft);
       editor.on("undo", syncHistory);
       editor.on("redo", syncHistory);
-      editor.on("run:preview", () => setPreviewing(true));
-      editor.on("stop:preview", () => setPreviewing(false));
+      editor.on("command:run:preview", () => setPreviewing(true));
+      editor.on("command:stop:preview", () => setPreviewing(false));
       editor.on("device:select", (next) => {
         const name = next?.get("name");
         if (name === "Desktop" || name === "Tablet" || name === "Mobile") {
@@ -263,6 +264,10 @@ export function GrapesEditor({ clinicId }: { clinicId: string }) {
 
   const handleImport = useCallback(() => {
     editorRef.current?.runCommand("gjs-open-import-webpage");
+  }, []);
+
+  const handleAssets = useCallback(() => {
+    editorRef.current?.runCommand("open-assets");
   }, []);
 
   const handleExportZip = useCallback(() => {
@@ -396,6 +401,9 @@ export function GrapesEditor({ clinicId }: { clinicId: string }) {
         </Button>
         <Button variant="ghost" size="icon-sm" onClick={handleImport} title="Import HTML">
           <Upload className="size-4" />
+        </Button>
+        <Button variant="ghost" size="icon-sm" onClick={handleAssets} title="Open assets">
+          <Images className="size-4" />
         </Button>
         <Button
           variant="ghost"
