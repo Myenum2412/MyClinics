@@ -1,7 +1,7 @@
 export type GrapesWebsiteData = {
   html: string;
   css: string;
-  /** GrapesJS project data, kept so the editor reopens with full fidelity. */
+  /** Legacy GrapesJS project data, kept so previously published pages keep rendering. */
   project?: unknown;
 };
 

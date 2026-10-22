@@ -1,7 +1,7 @@
 "use client";
 
 import { useRequireRole } from "@/hooks/use-clinic-session";
-import { GrapesEditor } from "@/components/clinic/page-builder/grapes-editor";
+import { PageBuilderEditor } from "@/components/clinic/page-builder/page-builder-editor";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function PageBuilderPage() {
@@ -16,5 +16,5 @@ export default function PageBuilderPage() {
     );
   }
 
-  return <GrapesEditor clinicId={session.clinicId} />;
+  return <PageBuilderEditor clinicId={session.clinicId} />;
 }

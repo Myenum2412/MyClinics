@@ -2,14 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { Render } from "@puckeditor/core";
 import { Loader2 } from "lucide-react";
 import { getPublicClinicWebsite } from "@/lib/clinic-api";
 import { isGrapesWebsiteData, type GrapesWebsiteData } from "@/lib/website";
+import {
+  isPageBuilderData,
+  pageBuilderConfig,
+  type PageBuilderData,
+} from "@/components/clinic/page-builder/config";
 
 type SiteState =
   | { status: "loading" }
   | { status: "missing" }
-  | { status: "ready"; data: GrapesWebsiteData; clinicName: string };
+  | { status: "puck"; data: PageBuilderData; clinicName: string }
+  | { status: "legacy"; data: GrapesWebsiteData; clinicName: string };
 
 export default function ClinicPublicSitePage() {
   const { clinicId } = useParams<{ clinicId: string }>();
@@ -22,15 +29,19 @@ export default function ClinicPublicSitePage() {
     getPublicClinicWebsite(clinicId)
       .then((site) => {
         if (!active) return;
-        if (!isGrapesWebsiteData(site.websitePage.data)) {
+        const data = site.websitePage.data;
+
+        if (isPageBuilderData(data)) {
+          setState({ status: "puck", data, clinicName: site.clinic.name });
+        } else if (isGrapesWebsiteData(data)) {
+          // Pages published before the Puck builder are still served until
+          // the clinic publishes a new Puck page.
+          setState({ status: "legacy", data, clinicName: site.clinic.name });
+        } else {
           setState({ status: "missing" });
           return;
         }
-        setState({
-          status: "ready",
-          data: site.websitePage.data,
-          clinicName: site.clinic.name,
-        });
+
         document.title = site.clinic.name;
         if (site.clinic.description) {
           const meta = document.querySelector('meta[name="description"]');
@@ -66,6 +77,14 @@ export default function ClinicPublicSitePage() {
             This clinic has not published its website. Please check back later.
           </p>
         </div>
+      </div>
+    );
+  }
+
+  if (state.status === "puck") {
+    return (
+      <div className="min-h-dvh bg-background" data-clinic-site={state.clinicName}>
+        <Render config={pageBuilderConfig} data={state.data} />
       </div>
     );
   }

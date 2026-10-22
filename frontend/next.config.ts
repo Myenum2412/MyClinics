@@ -82,11 +82,11 @@ const nextConfig: NextConfig = {
               "default-src 'self'",
               // SEC-008: removed 'unsafe-eval' (not needed for Next/Tailwind). Kept 'unsafe-inline' for Next hydration + Tailwind, scoped.
               "script-src 'self' 'unsafe-inline' https://*.myenum.in https://www.googletagmanager.com https://www.google-analytics.com https://*.googletagmanager.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://rsms.me",
               "img-src 'self' data: https: blob: https://www.googletagmanager.com https://www.google-analytics.com",
               "media-src 'self' https: data: blob:",
               "frame-src 'self' https:",
-              "font-src 'self' data: https://fonts.gstatic.com",
+              "font-src 'self' data: https://fonts.gstatic.com https://rsms.me",
               "connect-src 'self' https://api.myclinic.myenum.in https://*.myenum.in https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://region1.google-analytics.com",
               "frame-ancestors 'none'",
               "object-src 'none'",

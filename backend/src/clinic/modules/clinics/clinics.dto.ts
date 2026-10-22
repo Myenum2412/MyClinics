@@ -100,7 +100,7 @@ export const updateClinicSchema = z.object({
   profile: clinicProfileSchema.optional(),
   websitePage: z
     .object({
-      /** GrapesJS page data (HTML, CSS and project JSON). Size-checked in the service. */
+      /** Published page data (Puck, or a legacy HTML page). Size-checked in the service. */
       data: z.unknown(),
     })
     .optional(),

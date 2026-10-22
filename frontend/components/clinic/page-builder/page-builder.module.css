@@ -1,0 +1,16 @@
+.editor :global([class*="PuckLayout"]) {
+  height: 100%;
+}
+
+.editor :global([class*="PuckLayout-inner"]) {
+  height: 100%;
+}
+
+/* With the iframe disabled, Puck renders the page inline. Make that inline
+   preview its own scroll container so long pages can be edited normally. */
+.editor :global([data-puck-preview]) {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
