@@ -4,31 +4,33 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Puck } from "@puckeditor/core";
 import "@puckeditor/core/puck.css";
 import { toast } from "sonner";
-import { Download, ExternalLink, Loader2, RotateCcw } from "lucide-react";
+import { Download, ExternalLink, Loader2, Palette, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getOwnClinic, publishClinicWebsitePage } from "@/lib/clinic-api";
 import {
-  defaultPageBuilderData,
   isPageBuilderData,
-  makeDefaultPageBuilderData,
   pageBuilderConfig,
   type PageBuilderData,
 } from "./config";
+import { makeThemeTemplate, PAGE_THEME_OPTIONS } from "./templates";
+import type { ThemePreset } from "./theme";
 import styles from "./page-builder.module.css";
 
-function cloneDefaultData(): PageBuilderData {
-  return structuredClone(defaultPageBuilderData);
+function initialData(): PageBuilderData {
+  return makeThemeTemplate("medical", "My Clinic");
 }
 
 export function PageBuilderEditor({ clinicId }: { clinicId: string }) {
   const draftKey = `myclinics.page-builder.${clinicId}.draft`;
 
-  const [data, setData] = useState<PageBuilderData>(() => cloneDefaultData());
+  const [data, setData] = useState<PageBuilderData>(() => initialData());
   const [ready, setReady] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
+  const [activeTheme, setActiveTheme] = useState<ThemePreset>("medical");
   const [publishedAt, setPublishedAt] = useState<string | null>(null);
   const dataRef = useRef<PageBuilderData>(data);
+  const activeThemeRef = useRef<ThemePreset>("medical");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -53,10 +55,13 @@ export function PageBuilderEditor({ clinicId }: { clinicId: string }) {
         const next =
           publishedPuckPage ??
           fallback ??
-          makeDefaultPageBuilderData(clinic.name || "My Clinic");
+          makeThemeTemplate("medical", clinic.name || "My Clinic");
 
         setData(next);
         dataRef.current = next;
+        const nextTheme = next.root.props?.theme ?? "medical";
+        setActiveTheme(nextTheme);
+        activeThemeRef.current = nextTheme;
         // Legacy HTML pages are still live, but they are not editable here.
         setPublishedAt(publishedPuckPage ? clinic.websitePage?.publishedAt ?? null : null);
       } catch {
@@ -64,6 +69,9 @@ export function PageBuilderEditor({ clinicId }: { clinicId: string }) {
         if (fallback) {
           setData(fallback);
           dataRef.current = fallback;
+          const nextTheme = fallback.root.props?.theme ?? "medical";
+          setActiveTheme(nextTheme);
+          activeThemeRef.current = nextTheme;
         }
         toast.error("Could not load the website settings");
       } finally {
@@ -86,6 +94,14 @@ export function PageBuilderEditor({ clinicId }: { clinicId: string }) {
   const handleChange = useCallback(
     (next: PageBuilderData) => {
       dataRef.current = next;
+      const nextTheme = next.root.props?.theme ?? "medical";
+      if (activeThemeRef.current !== nextTheme) {
+        activeThemeRef.current = nextTheme;
+        setActiveTheme(nextTheme);
+        // Keep Puck's controlled data in sync only when the root theme
+        // changes, so normal typing does not re-render the whole editor.
+        setData(next);
+      }
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
         try {
@@ -121,17 +137,57 @@ export function PageBuilderEditor({ clinicId }: { clinicId: string }) {
   );
 
   const handleReset = useCallback(() => {
-    const fresh = cloneDefaultData();
+    if (
+      !window.confirm(
+        "Reset the page to the current theme's starter layout? Your unpublished edits will be lost."
+      )
+    ) {
+      return;
+    }
+    const current = dataRef.current;
+    const theme = current.root.props?.theme ?? "medical";
+    const clinicName = current.root.props?.clinicName || "My Clinic";
+    const fresh = makeThemeTemplate(theme, clinicName);
     dataRef.current = fresh;
     setData(fresh);
+    setActiveTheme(theme);
+    activeThemeRef.current = theme;
     setEditorKey((key) => key + 1);
     try {
       localStorage.removeItem(draftKey);
     } catch {
       // Ignore storage failures; the editor still resets in memory.
     }
-    toast.success("Editor reset to the default layout");
+    toast.success("Layout reset to the current theme");
   }, [draftKey]);
+
+  const applyTheme = useCallback(
+    (theme: ThemePreset) => {
+      const option = PAGE_THEME_OPTIONS.find((item) => item.value === theme);
+      if (
+        !window.confirm(
+          `Apply the ${option?.label ?? theme} theme? This replaces the current page content with a ready-made layout for that theme.`
+        )
+      ) {
+        return;
+      }
+
+      const clinicName = dataRef.current.root.props?.clinicName || "My Clinic";
+      const fresh = makeThemeTemplate(theme, clinicName);
+      dataRef.current = fresh;
+      setData(fresh);
+      setActiveTheme(theme);
+      activeThemeRef.current = theme;
+      setEditorKey((key) => key + 1);
+      try {
+        localStorage.setItem(draftKey, JSON.stringify(fresh));
+      } catch {
+        // Publishing still works without draft storage.
+      }
+      toast.success(`${option?.label ?? theme} theme applied`);
+    },
+    [draftKey]
+  );
 
   const handleExport = useCallback(() => {
     const blob = new Blob([JSON.stringify(dataRef.current, null, 2)], {
@@ -179,13 +235,54 @@ export function PageBuilderEditor({ clinicId }: { clinicId: string }) {
           </Button>
           <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">
             <RotateCcw className="size-4" />
-            Reset
+            Reset layout
           </Button>
         </div>
       </div>
 
+      <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="mr-1 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
+            <Palette className="size-4 text-primary" />
+            Starter themes
+          </span>
+          {PAGE_THEME_OPTIONS.map((option) => {
+            const isActive = activeTheme === option.value;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => applyTheme(option.value)}
+                title={option.description}
+                className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                  isActive
+                    ? "border-primary bg-primary/10 text-primary shadow-sm"
+                    : "border-border bg-background text-foreground hover:border-primary/40 hover:bg-muted/60"
+                }`}
+              >
+                <span className="flex -space-x-1">
+                  <span
+                    className="size-4 rounded-full border-2 border-background shadow-sm"
+                    style={{ backgroundColor: option.primary }}
+                  />
+                  <span
+                    className="size-4 rounded-full border-2 border-background shadow-sm"
+                    style={{ backgroundColor: option.accent }}
+                  />
+                </span>
+                {option.label}
+                {isActive ? <span className="text-[10px] uppercase">Active</span> : null}
+              </button>
+            );
+          })}
+          <span className="ml-auto text-xs text-muted-foreground">
+            Applying a theme replaces the layout. Fine-tune colours, fonts and radius in the Page tab →
+          </span>
+        </div>
+      </div>
+
       <div
-        className={`${styles.editor} h-[calc(100dvh-14rem)] min-h-[620px] w-full max-w-none min-w-0 overflow-hidden rounded-xl border border-border bg-background shadow-sm`}
+        className={`${styles.editor} h-[calc(100dvh-17rem)] min-h-[620px] w-full max-w-none min-w-0 overflow-hidden rounded-xl border border-border bg-background shadow-sm`}
       >
         {ready ? (
           <Puck

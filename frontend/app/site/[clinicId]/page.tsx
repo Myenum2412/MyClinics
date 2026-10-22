@@ -31,8 +31,13 @@ export default function ClinicPublicSitePage() {
         if (!active) return;
         const data = site.websitePage.data;
 
+        let pageTitle = site.clinic.name;
+        let pageDescription = site.clinic.description;
+
         if (isPageBuilderData(data)) {
           setState({ status: "puck", data, clinicName: site.clinic.name });
+          pageTitle = data.root.props?.seoTitle || pageTitle;
+          pageDescription = data.root.props?.seoDescription || pageDescription;
         } else if (isGrapesWebsiteData(data)) {
           // Pages published before the Puck builder are still served until
           // the clinic publishes a new Puck page.
@@ -42,10 +47,10 @@ export default function ClinicPublicSitePage() {
           return;
         }
 
-        document.title = site.clinic.name;
-        if (site.clinic.description) {
+        document.title = pageTitle;
+        if (pageDescription) {
           const meta = document.querySelector('meta[name="description"]');
-          if (meta) meta.setAttribute("content", site.clinic.description);
+          if (meta) meta.setAttribute("content", pageDescription);
         }
       })
       .catch(() => {
