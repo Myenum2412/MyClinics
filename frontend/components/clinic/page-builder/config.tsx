@@ -649,7 +649,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
         className={`min-h-full ${ROOT_BG[background]}`}
         style={{ "--primary": primaryColor || "#0f766e" } as CSSProperties}
       >
-        <header className="border-b border-border bg-background/90 backdrop-blur">
+        <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
           <div
             className={`mx-auto flex w-full items-center justify-between gap-4 px-4 py-4 sm:px-8 ${ROOT_WIDTH[width]}`}
           >
