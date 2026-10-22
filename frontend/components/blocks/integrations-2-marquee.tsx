@@ -74,6 +74,16 @@ export default function IntegrationsMarquee() {
       id="integrations"
       className="relative w-full scroll-mt-24 overflow-hidden border-y border-blue-900/50 bg-black px-6 py-20 text-white"
     >
+      <div
+        className="absolute inset-0 z-0 opacity-10"
+        style={{
+          backgroundImage: "url('/inter.png')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+        aria-hidden="true"
+      />
       <div className="mx-auto w-full max-w-5xl text-center">
         <span className="text-sm font-medium tracking-widest text-blue-400 uppercase">
           Integrations
