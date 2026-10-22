@@ -72,7 +72,11 @@ export default function ClinicPublicSitePage() {
 
   return (
     <div className="min-h-dvh bg-background" data-clinic-site={state.clinicName}>
-      <style dangerouslySetInnerHTML={{ __html: state.data.css }} />
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `${state.data.css}\n.mc-shell { max-width: none; }`,
+        }}
+      />
       <div dangerouslySetInnerHTML={{ __html: state.data.html }} />
     </div>
   );

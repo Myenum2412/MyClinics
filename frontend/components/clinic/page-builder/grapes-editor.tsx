@@ -144,6 +144,10 @@ export function GrapesEditor({ clinicId }: { clinicId: string }) {
             "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
           ],
         },
+        // The starter layout used to cap the page at 1120px. Keep projects
+        // saved before that change full width in the editor preview too.
+        protectedCss:
+          '* { box-sizing: border-box; } body { margin: 0; } .mc-shell { max-width: none; }',
         assetManager: {
           upload: false,
         },
