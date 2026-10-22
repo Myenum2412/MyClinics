@@ -11,6 +11,7 @@ import {
   pageBuilderConfig,
   type PageBuilderData,
 } from "@/components/clinic/page-builder/config";
+import { WebsiteBuilderProvider } from "@/components/clinic/page-builder/runtime";
 
 type SiteState =
   | { status: "loading" }
@@ -36,8 +37,28 @@ export default function ClinicPublicSitePage() {
 
         if (isPageBuilderData(data)) {
           setState({ status: "puck", data, clinicName: site.clinic.name });
-          pageTitle = data.root.props?.seoTitle || pageTitle;
-          pageDescription = data.root.props?.seoDescription || pageDescription;
+          const root = data.root.props;
+          pageTitle = root?.seoTitle || pageTitle;
+          pageDescription = root?.seoDescription || pageDescription;
+
+          if (root?.faviconUrl) {
+            let icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+            if (!icon) {
+              icon = document.createElement("link");
+              icon.rel = "icon";
+              document.head.appendChild(icon);
+            }
+            icon.href = root.faviconUrl;
+          }
+          if (root?.ogImageUrl) {
+            let image = document.querySelector<HTMLMetaElement>('meta[property="og:image"]');
+            if (!image) {
+              image = document.createElement("meta");
+              image.setAttribute("property", "og:image");
+              document.head.appendChild(image);
+            }
+            image.content = root.ogImageUrl;
+          }
         } else if (isGrapesWebsiteData(data)) {
           // Pages published before the Puck builder are still served until
           // the clinic publishes a new Puck page.
@@ -89,7 +110,9 @@ export default function ClinicPublicSitePage() {
   if (state.status === "puck") {
     return (
       <div className="min-h-dvh bg-background" data-clinic-site={state.clinicName}>
-        <Render config={pageBuilderConfig} data={state.data} />
+        <WebsiteBuilderProvider clinicId={clinicId}>
+          <Render config={pageBuilderConfig} data={state.data} />
+        </WebsiteBuilderProvider>
       </div>
     );
   }

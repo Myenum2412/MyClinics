@@ -61,6 +61,10 @@ export function generateExaminationId(): string {
   return `exm_${randomToken(12)}`;
 }
 
+export function generateWebsiteMediaId(): string {
+  return `wbm_${randomToken(12)}`;
+}
+
 // ── Pharmacy Management ─────────────────────────────────────────────────────
 export function generatePharmacySettingsId(): string {
   return `phs_${randomToken(12)}`;

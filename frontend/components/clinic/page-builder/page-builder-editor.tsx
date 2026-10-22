@@ -1,10 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Puck } from "@puckeditor/core";
+import { Puck, usePuck } from "@puckeditor/core";
 import "@puckeditor/core/puck.css";
 import { toast } from "sonner";
-import { Download, ExternalLink, Loader2, Palette, RotateCcw } from "lucide-react";
+import {
+  Download,
+  ExternalLink,
+  Loader2,
+  Monitor,
+  Palette,
+  Redo2,
+  RotateCcw,
+  Smartphone,
+  Tablet,
+  Undo2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getOwnClinic, publishClinicWebsitePage } from "@/lib/clinic-api";
 import {
@@ -14,10 +25,42 @@ import {
 } from "./config";
 import { makeThemeTemplate, PAGE_THEME_OPTIONS } from "./templates";
 import type { ThemePreset } from "./theme";
+import { WebsiteBuilderProvider } from "./runtime";
 import styles from "./page-builder.module.css";
 
 function initialData(): PageBuilderData {
   return makeThemeTemplate("medical", "My Clinic");
+}
+
+function HistoryActions() {
+  const { history } = usePuck();
+  const canUndo = history.hasPast;
+  const canRedo = history.hasFuture;
+
+  return (
+    <div className="flex items-center gap-1 pr-1">
+      <button
+        type="button"
+        title="Undo (Ctrl/Cmd+Z)"
+        aria-label="Undo"
+        disabled={!canUndo}
+        onClick={() => history.back()}
+        className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <Undo2 className="size-4" />
+      </button>
+      <button
+        type="button"
+        title="Redo (Ctrl/Cmd+Shift+Z)"
+        aria-label="Redo"
+        disabled={!canRedo}
+        onClick={() => history.forward()}
+        className="flex size-8 items-center justify-center rounded-md border border-border bg-background text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <Redo2 className="size-4" />
+      </button>
+    </div>
+  );
 }
 
 export function PageBuilderEditor({ clinicId }: { clinicId: string }) {
@@ -285,16 +328,46 @@ export function PageBuilderEditor({ clinicId }: { clinicId: string }) {
         className={`${styles.editor} h-[calc(100dvh-17rem)] min-h-[620px] w-full max-w-none min-w-0 overflow-hidden rounded-xl border border-border bg-background shadow-sm`}
       >
         {ready ? (
-          <Puck
-            key={`${editorKey}-${clinicId}`}
-            config={pageBuilderConfig}
-            data={data}
-            iframe={{ enabled: false }}
-            headerTitle="Website Builder"
-            headerPath="Clinic website"
-            onChange={handleChange}
-            onPublish={handlePublish}
-          />
+          <WebsiteBuilderProvider clinicId={clinicId}>
+            <Puck
+              key={`${editorKey}-${clinicId}`}
+              config={pageBuilderConfig}
+              data={data}
+              iframe={{ enabled: false }}
+              headerTitle="Website Builder"
+              headerPath="Clinic website"
+              viewports={[
+                {
+                  width: 1280,
+                  height: "auto",
+                  label: "Desktop",
+                  icon: <Monitor className="size-4" />,
+                },
+                {
+                  width: 768,
+                  height: "auto",
+                  label: "Tablet",
+                  icon: <Tablet className="size-4" />,
+                },
+                {
+                  width: 390,
+                  height: "auto",
+                  label: "Mobile",
+                  icon: <Smartphone className="size-4" />,
+                },
+              ]}
+              overrides={{
+                headerActions: ({ children }) => (
+                  <div className="flex items-center gap-1">
+                    <HistoryActions />
+                    {children}
+                  </div>
+                ),
+              }}
+              onChange={handleChange}
+              onPublish={handlePublish}
+            />
+          </WebsiteBuilderProvider>
         ) : (
           <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
             <Loader2 className="size-6 animate-spin text-primary" />

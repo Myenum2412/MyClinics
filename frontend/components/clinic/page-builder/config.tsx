@@ -25,6 +25,8 @@ import {
   type RadiusChoice,
   type ThemePreset,
 } from "./theme";
+import { imageField, optionalImageField } from "./media";
+import { BeforeAfterSlider, WebsiteContactForm } from "./interactive";
 
 type Align = "left" | "center" | "right";
 type Tone = "light" | "soft" | "brand" | "dark";
@@ -46,8 +48,12 @@ export type PageBuilderRootProps = {
   radius: RadiusChoice;
   buttonShape: ButtonShape;
   headerStyle: HeaderStyle;
+  sectionSpacing?: "compact" | "cozy" | "airy";
+  imageRadius?: "theme" | "none" | "soft" | "round";
   clinicName: string;
   logoUrl: string;
+  faviconUrl?: string;
+  ogImageUrl?: string;
   tagline: string;
   bookingLabel: string;
   bookingHref: string;
@@ -79,6 +85,8 @@ export type PageBuilderComponents = {
     tone: Tone;
     imageUrl: string;
     imageAlt: string;
+    imagePosition?: "center" | "top" | "bottom";
+    overlay?: "theme" | "soft" | "medium" | "strong";
     stats: { value: string; label: string }[];
   };
   Heading: {
@@ -103,6 +111,9 @@ export type PageBuilderComponents = {
     caption: string;
     size: "small" | "medium" | "large" | "full";
     rounded: "none" | "md" | "xl";
+    href?: string;
+    aspect?: "auto" | "4/3" | "16/9" | "1/1";
+    objectPosition?: "center" | "top" | "bottom";
   };
   Features: {
     title: string;
@@ -114,7 +125,7 @@ export type PageBuilderComponents = {
     title: string;
     subtitle: string;
     columns: "2" | "3" | "4";
-    items: { icon: string; title: string; description: string; href: string }[];
+    items: { icon: string; title: string; description: string; href: string; imageUrl?: string }[];
   };
   Stats: {
     tone: "light" | "brand" | "dark";
@@ -123,12 +134,19 @@ export type PageBuilderComponents = {
   Doctors: {
     title: string;
     subtitle: string;
-    items: { name: string; specialty: string; imageUrl: string; bio: string; href: string }[];
+    items: {
+      name: string;
+      specialty: string;
+      imageUrl: string;
+      bio: string;
+      href: string;
+      credentials?: string;
+    }[];
   };
   Testimonials: {
     title: string;
     subtitle: string;
-    items: { quote: string; name: string; role: string; rating: number }[];
+    items: { quote: string; name: string; role: string; rating: number; imageUrl?: string }[];
   };
   FAQ: {
     title: string;
@@ -147,6 +165,7 @@ export type PageBuilderComponents = {
     title: string;
     subtitle: string;
     columns: "2" | "3" | "4";
+    aspect?: "4/3" | "1/1" | "16/9";
     images: { src: string; alt: string; caption: string }[];
   };
   Process: {
@@ -164,6 +183,64 @@ export type PageBuilderComponents = {
     title: string;
     body: string;
     tone: "info" | "success" | "warning";
+  };
+  BeforeAfter: {
+    title: string;
+    subtitle: string;
+    beforeImage: string;
+    afterImage: string;
+    beforeAlt: string;
+    afterAlt: string;
+    beforeLabel: string;
+    afterLabel: string;
+    aspect: "4/3" | "16/9" | "1/1" | "3/4";
+  };
+  VideoEmbed: {
+    title: string;
+    subtitle: string;
+    videoUrl: string;
+    posterUrl: string;
+    caption: string;
+    aspect: "16/9" | "4/3" | "1/1";
+  };
+  Pricing: {
+    title: string;
+    subtitle: string;
+    note: string;
+    plans: {
+      name: string;
+      price: string;
+      period: string;
+      description: string;
+      features: string;
+      ctaLabel: string;
+      ctaHref: string;
+      featured: "no" | "yes";
+    }[];
+  };
+  InsurancePartners: {
+    title: string;
+    subtitle: string;
+    note: string;
+    items: { name: string; logoUrl: string; href: string }[];
+  };
+  OpeningHours: {
+    title: string;
+    subtitle: string;
+    note: string;
+    days: { day: string; hours: string }[];
+  };
+  ContactForm: {
+    title: string;
+    subtitle: string;
+    nameLabel: string;
+    phoneLabel: string;
+    emailLabel: string;
+    serviceLabel: string;
+    messageLabel: string;
+    buttonLabel: string;
+    successMessage: string;
+    privacyNote: string;
   };
   ClinicDetails: {
     name: string;
@@ -253,6 +330,77 @@ const DIVIDER_SPACING: Record<PageBuilderComponents["Divider"]["spacing"], strin
   md: "my-8",
   lg: "my-12",
 };
+
+const SECTION_GAP: Record<"compact" | "cozy" | "airy", string> = {
+  compact: "gap-6 [&>div]:gap-6",
+  cozy: "gap-10 [&>div]:gap-10",
+  airy: "gap-16 [&>div]:gap-16",
+};
+
+const IMAGE_RADIUS_VALUES: Record<"theme" | "none" | "soft" | "round", string> = {
+  theme: "var(--site-radius)",
+  none: "0px",
+  soft: "calc(var(--site-radius) * 0.65)",
+  round: "9999px",
+};
+
+const OBJECT_POSITION: Record<"center" | "top" | "bottom", string> = {
+  center: "object-center",
+  top: "object-top",
+  bottom: "object-bottom",
+};
+
+const GALLERY_ASPECT: Record<"4/3" | "1/1" | "16/9", string> = {
+  "4/3": "aspect-[4/3]",
+  "1/1": "aspect-square",
+  "16/9": "aspect-video",
+};
+
+const IMAGE_ASPECT: Record<"auto" | "4/3" | "16/9" | "1/1", string> = {
+  auto: "h-auto",
+  "4/3": "aspect-[4/3] object-cover",
+  "16/9": "aspect-video object-cover",
+  "1/1": "aspect-square object-cover",
+};
+
+const VIDEO_ASPECT: Record<"16/9" | "4/3" | "1/1", string> = {
+  "16/9": "aspect-video",
+  "4/3": "aspect-[4/3]",
+  "1/1": "aspect-square",
+};
+
+function splitFeatures(value: string | undefined): string[] {
+  return (value ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+/** Accepts watch/share URLs as well as ready-to-use embed URLs. */
+function videoEmbedUrl(value: string | undefined): string | null {
+  const safe = safeEmbedUrl(value);
+  if (!safe) return null;
+  try {
+    const url = new URL(safe);
+    const host = url.hostname.replace(/^www\./, "");
+    if (host === "youtu.be") {
+      const id = url.pathname.split("/").filter(Boolean)[0];
+      return id ? `https://www.youtube.com/embed/${encodeURIComponent(id)}` : safe;
+    }
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      const id = url.searchParams.get("v");
+      if (id) return `https://www.youtube.com/embed/${encodeURIComponent(id)}`;
+      if (url.pathname.startsWith("/embed/")) return safe;
+    }
+    if (host === "vimeo.com") {
+      const id = url.pathname.split("/").filter(Boolean)[0];
+      if (id && /^\d+$/.test(id)) return `https://player.vimeo.com/video/${id}`;
+    }
+    return safe;
+  } catch {
+    return null;
+  }
+}
 
 const CARD =
   "rounded-[var(--site-radius)] border border-[var(--site-border)] bg-[var(--site-surface)]";
@@ -409,12 +557,24 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
         "Stats",
         "Process",
         "Gallery",
+        "BeforeAfter",
+        "VideoEmbed",
         "Callout",
       ],
     },
     clinic: {
       title: "Clinic & trust",
-      components: ["Doctors", "Testimonials", "FAQ", "AppointmentCTA", "ClinicDetails"],
+      components: [
+        "Doctors",
+        "Testimonials",
+        "FAQ",
+        "AppointmentCTA",
+        "ContactForm",
+        "OpeningHours",
+        "InsurancePartners",
+        "Pricing",
+        "ClinicDetails",
+      ],
     },
     layout: {
       title: "Layout",
@@ -438,6 +598,8 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
         tone: "light",
         imageUrl: "",
         imageAlt: "Clinic team at work",
+        imagePosition: "center",
+        overlay: "theme",
         stats: [],
       },
       fields: {
@@ -476,8 +638,27 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             { label: "Dark", value: "dark" },
           ],
         },
-        imageUrl: { type: "text", label: "Image URL" },
+        imageUrl: imageField("Hero image"),
         imageAlt: { type: "text", label: "Image alt text" },
+        imagePosition: {
+          type: "select",
+          label: "Image focus",
+          options: [
+            { label: "Center", value: "center" },
+            { label: "Top", value: "top" },
+            { label: "Bottom", value: "bottom" },
+          ],
+        },
+        overlay: {
+          type: "select",
+          label: "Background overlay",
+          options: [
+            { label: "Theme default", value: "theme" },
+            { label: "Light", value: "soft" },
+            { label: "Medium", value: "medium" },
+            { label: "Strong", value: "strong" },
+          ],
+        },
         stats: {
           type: "array",
           label: "Hero stats / trust badges",
@@ -502,12 +683,23 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
         tone,
         imageUrl,
         imageAlt,
+        imagePosition,
+        overlay,
         stats,
       }) => {
         const items = Array.isArray(stats) ? stats.filter((item) => item.value || item.label) : [];
         const isImage = layout === "image";
         const isSplit = layout === "split";
         const darkText = isImage || tone === "brand" || tone === "dark";
+        const focusClass = OBJECT_POSITION[imagePosition ?? "center"] ?? OBJECT_POSITION.center;
+        const overlayStyle =
+          overlay === "soft"
+            ? { background: "rgba(15, 23, 42, 0.42)" }
+            : overlay === "medium"
+              ? { background: "rgba(15, 23, 42, 0.62)" }
+              : overlay === "strong"
+                ? { background: "rgba(15, 23, 42, 0.82)" }
+                : { background: "var(--site-hero-overlay, rgba(15, 23, 42, 0.72))" };
 
         const toneClass = isImage
           ? "relative overflow-hidden border-0 bg-slate-950 text-white"
@@ -616,15 +808,12 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
                 <img
                   src={imageUrl}
                   alt={imageAlt}
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className={`absolute inset-0 h-full w-full object-cover ${focusClass}`}
                 />
               ) : (
                 <div className="absolute inset-0 bg-[var(--site-primary)]" />
               )}
-              <div
-                className="absolute inset-0"
-                style={{ background: "var(--site-hero-overlay, rgba(15, 23, 42, 0.72))" }}
-              />
+              <div className="absolute inset-0" style={overlayStyle} />
               <div className={`relative z-10 flex flex-col gap-5 ${ALIGN_TEXT[align]}`}>
                 {textContent}
               </div>
@@ -641,7 +830,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
                   <img
                     src={imageUrl}
                     alt={imageAlt}
-                    className="h-full min-h-[260px] w-full object-cover"
+                    className={`h-full min-h-[260px] w-full object-cover ${focusClass}`}
                   />
                 ) : (
                   <div className="flex h-full min-h-[260px] flex-col items-center justify-center gap-2 p-6 text-center text-sm text-[var(--site-muted)]">
@@ -835,11 +1024,34 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
         caption: "",
         size: "large",
         rounded: "xl",
+        href: "",
+        aspect: "auto",
+        objectPosition: "center",
       },
       fields: {
-        src: { type: "text", label: "Image URL" },
+        src: imageField("Image"),
         alt: { type: "text", label: "Alt text" },
         caption: { type: "text", label: "Caption" },
+        href: { type: "text", label: "Optional link" },
+        aspect: {
+          type: "select",
+          label: "Crop / aspect",
+          options: [
+            { label: "Natural", value: "auto" },
+            { label: "Landscape (4:3)", value: "4/3" },
+            { label: "Wide (16:9)", value: "16/9" },
+            { label: "Square", value: "1/1" },
+          ],
+        },
+        objectPosition: {
+          type: "select",
+          label: "Image focus",
+          options: [
+            { label: "Center", value: "center" },
+            { label: "Top", value: "top" },
+            { label: "Bottom", value: "bottom" },
+          ],
+        },
         size: {
           type: "select",
           label: "Size",
@@ -860,29 +1072,39 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
           ],
         },
       },
-      render: ({ src, alt, caption, size, rounded }) => (
-        <figure className={`mx-auto w-full ${IMAGE_SIZE[size]}`}>
-          {src ? (
-            <img
-              src={src}
-              alt={alt}
-              loading="lazy"
-              className={`h-auto w-full object-cover shadow-sm ${IMAGE_ROUNDED[rounded]}`}
-            />
-          ) : (
-            <div
-              className={`flex aspect-video w-full items-center justify-center bg-[var(--site-primary-soft)] text-sm text-[var(--site-muted)] ${IMAGE_ROUNDED[rounded]}`}
-            >
-              Add an image URL in the sidebar
-            </div>
-          )}
-          {caption ? (
-            <figcaption className="mt-2 text-center text-xs text-[var(--site-muted)]">
-              {caption}
-            </figcaption>
-          ) : null}
-        </figure>
-      ),
+      render: ({ src, alt, caption, size, rounded, href, aspect, objectPosition }) => {
+        const image = src ? (
+          <img
+            src={src}
+            alt={alt}
+            loading="lazy"
+            className={`w-full shadow-sm ${IMAGE_ASPECT[aspect ?? "auto"]} ${OBJECT_POSITION[objectPosition ?? "center"] ?? OBJECT_POSITION.center} ${IMAGE_ROUNDED[rounded]}`}
+          />
+        ) : (
+          <div
+            className={`flex aspect-video w-full items-center justify-center bg-[var(--site-primary-soft)] text-sm text-[var(--site-muted)] ${IMAGE_ROUNDED[rounded]}`}
+          >
+            Upload an image in the sidebar
+          </div>
+        );
+
+        return (
+          <figure className={`mx-auto w-full ${IMAGE_SIZE[size]}`}>
+            {href ? (
+              <a href={safeHref(href)} className="block">
+                {image}
+              </a>
+            ) : (
+              image
+            )}
+            {caption ? (
+              <figcaption className="mt-2 text-center text-xs text-[var(--site-muted)]">
+                {caption}
+              </figcaption>
+            ) : null}
+          </figure>
+        );
+      },
     },
     Features: {
       label: "Feature grid",
@@ -970,18 +1192,21 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             title: "General consultation",
             description: "A thorough assessment and a clear plan for your health.",
             href: "#appointment",
+            imageUrl: "",
           },
           {
             icon: "🛡",
             title: "Preventive care",
             description: "Screenings and check-ups that help you stay well.",
             href: "#appointment",
+            imageUrl: "",
           },
           {
             icon: "🔬",
             title: "Diagnostics",
             description: "On-site testing and fast, accurate results.",
             href: "#appointment",
+            imageUrl: "",
           },
         ],
       },
@@ -1005,12 +1230,14 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             title: { type: "text", label: "Title" },
             description: { type: "textarea", label: "Description" },
             href: { type: "text", label: "Link" },
+            imageUrl: optionalImageField("Optional service image"),
           },
           defaultItemProps: {
             icon: "✚",
             title: "Service",
             description: "Describe this service in a sentence.",
             href: "#appointment",
+            imageUrl: "",
           },
           getItemSummary: (item) => item.title || "Service",
         },
@@ -1023,8 +1250,16 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
               <a
                 key={`${item.title}-${index}`}
                 href={safeHref(item.href)}
-                className={`${CARD} group flex flex-col p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg`}
+                className={`${CARD} group flex flex-col overflow-hidden p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg`}
               >
+                {item.imageUrl ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    loading="lazy"
+                    className="mb-4 aspect-[16/9] w-full rounded-[var(--site-image-radius)] object-cover"
+                  />
+                ) : null}
                 <span className="flex size-11 items-center justify-center rounded-[calc(var(--site-radius)*0.8)] bg-[var(--site-primary-soft)] text-xl">
                   {item.icon || "✚"}
                 </span>
@@ -1114,6 +1349,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             imageUrl: "/website/doctor-1.webp",
             bio: "Focused on preventive care and long-term wellbeing for the whole family.",
             href: "#appointment",
+            credentials: "MBBS, MD",
           },
           {
             name: "Dr. Rohan Mehta",
@@ -1121,6 +1357,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             imageUrl: "/website/doctor-2.webp",
             bio: "Combines careful diagnostics with a calm, patient-first approach.",
             href: "#appointment",
+            credentials: "MBBS, MS",
           },
           {
             name: "Dr. Neha Shah",
@@ -1128,6 +1365,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             imageUrl: "/website/doctor-3.webp",
             bio: "Helping patients feel informed, comfortable and confident in their care.",
             href: "#appointment",
+            credentials: "MBBS, DCH",
           },
         ],
       },
@@ -1140,9 +1378,10 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
           arrayFields: {
             name: { type: "text", label: "Name" },
             specialty: { type: "text", label: "Specialty" },
-            imageUrl: { type: "text", label: "Photo URL" },
+            imageUrl: imageField("Photo"),
             bio: { type: "textarea", label: "Short bio" },
             href: { type: "text", label: "Profile / booking link" },
+            credentials: { type: "text", label: "Qualifications / credentials" },
           },
           defaultItemProps: {
             name: "Dr. New Team Member",
@@ -1150,6 +1389,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             imageUrl: "",
             bio: "Add a short introduction.",
             href: "#appointment",
+            credentials: "",
           },
           getItemSummary: (item) => item.name || "Doctor",
         },
@@ -1184,6 +1424,9 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
                   <h3 className="text-lg font-bold text-[var(--site-text)]" style={HEADING_STYLE}>
                     {item.name}
                   </h3>
+                  {item.credentials ? (
+                    <p className="text-xs font-medium text-[var(--site-muted)]">{item.credentials}</p>
+                  ) : null}
                   <p className="text-sm leading-relaxed text-[var(--site-muted)]">{item.bio}</p>
                   {item.href ? (
                     <a
@@ -1212,6 +1455,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             name: "Priya S.",
             role: "Patient",
             rating: 5,
+            imageUrl: "",
           },
           {
             quote:
@@ -1219,6 +1463,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             name: "Arjun M.",
             role: "Patient",
             rating: 5,
+            imageUrl: "",
           },
           {
             quote:
@@ -1226,6 +1471,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             name: "Meera K.",
             role: "Parent",
             rating: 5,
+            imageUrl: "",
           },
         ],
       },
@@ -1240,12 +1486,14 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             name: { type: "text", label: "Patient name" },
             role: { type: "text", label: "Role / context" },
             rating: { type: "number", label: "Rating (1–5)", min: 1, max: 5 },
+            imageUrl: optionalImageField("Patient photo (optional)"),
           },
           defaultItemProps: {
             quote: "Share the patient experience here.",
             name: "Patient name",
             role: "Patient",
             rating: 5,
+            imageUrl: "",
           },
           getItemSummary: (item) => item.name || "Testimonial",
         },
@@ -1264,9 +1512,18 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
                   “{item.quote}”
                 </blockquote>
                 <figcaption className="mt-4 flex items-center gap-3 border-t border-[var(--site-border)] pt-4">
-                  <span className="flex size-9 items-center justify-center rounded-full bg-[var(--site-primary-soft)] text-xs font-bold text-[var(--site-primary-text)]">
-                    {initials(item.name) || "P"}
-                  </span>
+                  {item.imageUrl ? (
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      loading="lazy"
+                      className="size-9 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span className="flex size-9 items-center justify-center rounded-full bg-[var(--site-primary-soft)] text-xs font-bold text-[var(--site-primary-text)]">
+                      {initials(item.name) || "P"}
+                    </span>
+                  )}
                   <span>
                     <span className="block text-sm font-semibold text-[var(--site-text)]">
                       {item.name}
@@ -1417,6 +1674,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
         title: "Inside our clinic",
         subtitle: "A calm, modern space designed around your comfort.",
         columns: "3",
+        aspect: "4/3",
         images: [
           { src: "/website/medical-hero.webp", alt: "Doctor consulting a patient", caption: "Consultations" },
           { src: "/website/dental-clinic-1.webp", alt: "Modern treatment room", caption: "Treatment rooms" },
@@ -1435,11 +1693,20 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             { label: "4 columns", value: "4" },
           ],
         },
+        aspect: {
+          type: "select",
+          label: "Image crop",
+          options: [
+            { label: "Landscape (4:3)", value: "4/3" },
+            { label: "Square", value: "1/1" },
+            { label: "Wide (16:9)", value: "16/9" },
+          ],
+        },
         images: {
           type: "array",
           label: "Images",
           arrayFields: {
-            src: { type: "text", label: "Image URL" },
+            src: imageField("Photo"),
             alt: { type: "text", label: "Alt text" },
             caption: { type: "text", label: "Caption" },
           },
@@ -1451,7 +1718,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
           getItemSummary: (item) => item.caption || item.alt || "Image",
         },
       },
-      render: ({ title, subtitle, columns, images }) => (
+      render: ({ title, subtitle, columns, aspect, images }) => (
         <section className="flex flex-col gap-6 scroll-mt-24" id="gallery">
           <SectionHeading title={title} subtitle={subtitle} />
           <div className={`grid grid-cols-1 gap-4 ${FEATURE_COLUMNS[columns]}`}>
@@ -1462,10 +1729,10 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
                     src={image.src}
                     alt={image.alt}
                     loading="lazy"
-                    className="aspect-[4/3] w-full rounded-[var(--site-radius)] object-cover shadow-sm transition duration-500 group-hover:scale-[1.02]"
+                    className={`w-full rounded-[var(--site-image-radius)] object-cover shadow-sm transition duration-500 group-hover:scale-[1.02] ${GALLERY_ASPECT[aspect ?? "4/3"] ?? GALLERY_ASPECT["4/3"]}`}
                   />
                 ) : (
-                  <div className="flex aspect-[4/3] w-full items-center justify-center rounded-[var(--site-radius)] bg-[var(--site-primary-soft)] text-sm text-[var(--site-muted)]">
+                  <div className={`flex w-full items-center justify-center rounded-[var(--site-image-radius)] bg-[var(--site-primary-soft)] text-sm text-[var(--site-muted)] ${GALLERY_ASPECT[aspect ?? "4/3"] ?? GALLERY_ASPECT["4/3"]}`}>
                     Add an image
                   </div>
                 )}
@@ -1562,6 +1829,427 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
           <p className="text-sm font-semibold">{title}</p>
           <p className="mt-1 text-sm leading-relaxed opacity-80">{body}</p>
         </aside>
+      ),
+    },
+    BeforeAfter: {
+      label: "Before & after",
+      defaultProps: {
+        title: "See the difference",
+        subtitle: "Drag the slider to compare a real before-and-after result.",
+        beforeImage: "/website/dental-clinic-1.webp",
+        afterImage: "/website/dental-clinic-3.webp",
+        beforeAlt: "Before treatment",
+        afterAlt: "After treatment",
+        beforeLabel: "Before",
+        afterLabel: "After",
+        aspect: "4/3",
+      },
+      fields: {
+        title: { type: "text", label: "Title" },
+        subtitle: { type: "textarea", label: "Subtitle" },
+        beforeImage: imageField("Before image"),
+        afterImage: imageField("After image"),
+        beforeAlt: { type: "text", label: "Before alt text" },
+        afterAlt: { type: "text", label: "After alt text" },
+        beforeLabel: { type: "text", label: "Before label" },
+        afterLabel: { type: "text", label: "After label" },
+        aspect: {
+          type: "select",
+          label: "Image crop",
+          options: [
+            { label: "Landscape (4:3)", value: "4/3" },
+            { label: "Wide (16:9)", value: "16/9" },
+            { label: "Square", value: "1/1" },
+            { label: "Portrait (3:4)", value: "3/4" },
+          ],
+        },
+      },
+      render: ({
+        title,
+        subtitle,
+        beforeImage,
+        afterImage,
+        beforeAlt,
+        afterAlt,
+        beforeLabel,
+        afterLabel,
+        aspect,
+      }) => (
+        <section className="flex flex-col gap-6 scroll-mt-24" id="before-after">
+          <SectionHeading title={title} subtitle={subtitle} />
+          <BeforeAfterSlider
+            beforeImage={beforeImage}
+            afterImage={afterImage}
+            beforeAlt={beforeAlt}
+            afterAlt={afterAlt}
+            beforeLabel={beforeLabel}
+            afterLabel={afterLabel}
+            aspect={aspect}
+          />
+        </section>
+      ),
+    },
+    VideoEmbed: {
+      label: "Video",
+      defaultProps: {
+        title: "A look inside our clinic",
+        subtitle: "Meet the team and see how we care for patients.",
+        videoUrl: "",
+        posterUrl: "",
+        caption: "",
+        aspect: "16/9",
+      },
+      fields: {
+        title: { type: "text", label: "Title" },
+        subtitle: { type: "textarea", label: "Subtitle" },
+        videoUrl: { type: "text", label: "Video URL (YouTube, Vimeo or MP4)" },
+        posterUrl: imageField("Poster image (optional)"),
+        caption: { type: "text", label: "Caption" },
+        aspect: {
+          type: "select",
+          label: "Video shape",
+          options: [
+            { label: "Wide (16:9)", value: "16/9" },
+            { label: "Landscape (4:3)", value: "4/3" },
+            { label: "Square", value: "1/1" },
+          ],
+        },
+      },
+      render: ({ title, subtitle, videoUrl, posterUrl, caption, aspect }) => {
+        const embed = videoEmbedUrl(videoUrl);
+        const directVideo = safeEmbedUrl(videoUrl);
+        const isFile = directVideo ? /\.(mp4|webm|ogg)(\?|#|$)/i.test(directVideo) : false;
+        const frame = VIDEO_ASPECT[aspect ?? "16/9"] ?? VIDEO_ASPECT["16/9"];
+
+        return (
+          <section className="flex flex-col gap-6 scroll-mt-24" id="video">
+            <SectionHeading title={title} subtitle={subtitle} />
+            <div className={`overflow-hidden rounded-[calc(var(--site-radius)*1.2)] bg-slate-950 shadow-sm ${frame}`}>
+              {isFile && directVideo ? (
+                <video
+                  src={directVideo}
+                  poster={posterUrl || undefined}
+                  controls
+                  playsInline
+                  className="h-full w-full object-cover"
+                />
+              ) : embed ? (
+                <iframe
+                  src={embed}
+                  title={title || "Clinic video"}
+                  className="h-full w-full border-0"
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <div className="flex h-full min-h-[220px] flex-col items-center justify-center gap-2 p-6 text-center text-sm text-white/70">
+                  <span className="text-3xl">▶</span>
+                  Add a YouTube, Vimeo or MP4 URL in the sidebar
+                </div>
+              )}
+            </div>
+            {caption ? (
+              <p className="-mt-3 text-center text-xs text-[var(--site-muted)]">{caption}</p>
+            ) : null}
+          </section>
+        );
+      },
+    },
+    Pricing: {
+      label: "Pricing / packages",
+      defaultProps: {
+        title: "Simple, transparent pricing",
+        subtitle: "Choose the level of care that fits your needs. No hidden fees.",
+        note: "Prices shown are indicative. Ask our team about insurance and payment plans.",
+        plans: [
+          {
+            name: "Essential",
+            price: "₹499",
+            period: "per visit",
+            description: "A focused consultation for a single concern.",
+            features: "Consultation with a clinician\nClear treatment plan\nDigital prescription",
+            ctaLabel: "Book essential",
+            ctaHref: "#appointment",
+            featured: "no",
+          },
+          {
+            name: "Complete",
+            price: "₹1,499",
+            period: "per visit",
+            description: "A comprehensive assessment with follow-up support.",
+            features: "Extended consultation\nOn-site diagnostics\nFollow-up check-in\nPriority booking",
+            ctaLabel: "Book complete",
+            ctaHref: "#appointment",
+            featured: "yes",
+          },
+          {
+            name: "Family",
+            price: "₹2,499",
+            period: "per year",
+            description: "Ongoing preventive care for the whole household.",
+            features: "Annual health checks\nVaccination reminders\nFamily care coordinator",
+            ctaLabel: "Talk to us",
+            ctaHref: "#contact",
+            featured: "no",
+          },
+        ],
+      },
+      fields: {
+        title: { type: "text", label: "Title" },
+        subtitle: { type: "textarea", label: "Subtitle" },
+        note: { type: "textarea", label: "Footnote" },
+        plans: {
+          type: "array",
+          label: "Plans",
+          arrayFields: {
+            name: { type: "text", label: "Plan name" },
+            price: { type: "text", label: "Price" },
+            period: { type: "text", label: "Period" },
+            description: { type: "textarea", label: "Description" },
+            features: { type: "textarea", label: "Features (one per line)" },
+            ctaLabel: { type: "text", label: "Button label" },
+            ctaHref: { type: "text", label: "Button link" },
+            featured: {
+              type: "select",
+              label: "Highlight this plan",
+              options: [
+                { label: "No", value: "no" },
+                { label: "Yes", value: "yes" },
+              ],
+            },
+          },
+          defaultItemProps: {
+            name: "New plan",
+            price: "₹0",
+            period: "per visit",
+            description: "Describe who this plan is for.",
+            features: "Feature one\nFeature two",
+            ctaLabel: "Get started",
+            ctaHref: "#appointment",
+            featured: "no",
+          },
+          getItemSummary: (item) => item.name || "Plan",
+        },
+      },
+      render: ({ title, subtitle, note, plans }) => (
+        <section className="flex flex-col gap-6 scroll-mt-24" id="pricing">
+          <SectionHeading title={title} subtitle={subtitle} />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {plans.map((plan, index) => {
+              const featured = plan.featured === "yes";
+              return (
+                <article
+                  key={`${plan.name}-${index}`}
+                  className={`${CARD} relative flex flex-col p-6 shadow-sm ${
+                    featured ? "border-[var(--site-primary)] ring-2 ring-[var(--site-primary)]/15" : ""
+                  }`}
+                >
+                  {featured ? (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--site-primary)] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--site-on-primary)]">
+                      Most popular
+                    </span>
+                  ) : null}
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--site-primary-text)]">
+                    {plan.name}
+                  </p>
+                  <div className="mt-3 flex items-baseline gap-1.5">
+                    <span className="text-3xl font-extrabold tracking-tight text-[var(--site-text)]" style={HEADING_STYLE}>
+                      {plan.price}
+                    </span>
+                    {plan.period ? (
+                      <span className="text-xs font-medium text-[var(--site-muted)]">{plan.period}</span>
+                    ) : null}
+                  </div>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--site-muted)]">{plan.description}</p>
+                  {splitFeatures(plan.features).length ? (
+                    <ul className="mt-5 flex flex-1 flex-col gap-2.5">
+                      {splitFeatures(plan.features).map((feature) => (
+                        <li key={feature} className="flex items-start gap-2 text-sm text-[var(--site-text)]">
+                          <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-[var(--site-primary-soft)] text-[10px] font-bold text-[var(--site-primary-text)]">
+                            ✓
+                          </span>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div className="flex-1" />
+                  )}
+                  <a
+                    href={safeHref(plan.ctaHref)}
+                    className={`mt-6 ${buttonClass(featured ? "primary" : "outline")}`}
+                  >
+                    {plan.ctaLabel || "Get started"}
+                  </a>
+                </article>
+              );
+            })}
+          </div>
+          {note ? <p className="text-center text-xs text-[var(--site-muted)]">{note}</p> : null}
+        </section>
+      ),
+    },
+    InsurancePartners: {
+      label: "Insurance / partners",
+      defaultProps: {
+        title: "Insurance & partners",
+        subtitle: "We work with leading insurers and healthcare partners to make care easier.",
+        note: "Ask our front desk to verify your cover before your visit.",
+        items: [
+          { name: "Insurance partner", logoUrl: "", href: "" },
+          { name: "Corporate health", logoUrl: "", href: "" },
+          { name: "Diagnostics partner", logoUrl: "", href: "" },
+          { name: "Community clinic", logoUrl: "", href: "" },
+        ],
+      },
+      fields: {
+        title: { type: "text", label: "Title" },
+        subtitle: { type: "textarea", label: "Subtitle" },
+        note: { type: "textarea", label: "Footnote" },
+        items: {
+          type: "array",
+          label: "Partners",
+          arrayFields: {
+            name: { type: "text", label: "Name" },
+            logoUrl: imageField("Logo"),
+            href: { type: "text", label: "Optional link" },
+          },
+          defaultItemProps: { name: "Partner", logoUrl: "", href: "" },
+          getItemSummary: (item) => item.name || "Partner",
+        },
+      },
+      render: ({ title, subtitle, note, items }) => (
+        <section className="flex flex-col gap-6 scroll-mt-24" id="partners">
+          <SectionHeading title={title} subtitle={subtitle} />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {items.map((item, index) => {
+              const content = (
+                <div className="flex min-h-24 items-center justify-center rounded-[var(--site-radius)] border border-[var(--site-border)] bg-[var(--site-surface)] px-4 py-5 text-center shadow-sm transition hover:shadow-md">
+                  {item.logoUrl ? (
+                    <img
+                      src={item.logoUrl}
+                      alt={item.name}
+                      loading="lazy"
+                      className="max-h-12 w-auto max-w-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-sm font-semibold text-[var(--site-muted)]">{item.name}</span>
+                  )}
+                </div>
+              );
+              return item.href ? (
+                <a key={`${item.name}-${index}`} href={safeHref(item.href)} className="block">
+                  {content}
+                </a>
+              ) : (
+                <div key={`${item.name}-${index}`}>{content}</div>
+              );
+            })}
+          </div>
+          {note ? <p className="text-center text-xs text-[var(--site-muted)]">{note}</p> : null}
+        </section>
+      ),
+    },
+    OpeningHours: {
+      label: "Opening hours",
+      defaultProps: {
+        title: "Opening hours",
+        subtitle: "Plan your visit around the times that suit you best.",
+        note: "Emergency support is available outside these hours — call the clinic.",
+        days: [
+          { day: "Monday", hours: "9:00 AM – 6:00 PM" },
+          { day: "Tuesday", hours: "9:00 AM – 6:00 PM" },
+          { day: "Wednesday", hours: "9:00 AM – 6:00 PM" },
+          { day: "Thursday", hours: "9:00 AM – 6:00 PM" },
+          { day: "Friday", hours: "9:00 AM – 6:00 PM" },
+          { day: "Saturday", hours: "9:00 AM – 2:00 PM" },
+          { day: "Sunday", hours: "Closed" },
+        ],
+      },
+      fields: {
+        title: { type: "text", label: "Title" },
+        subtitle: { type: "textarea", label: "Subtitle" },
+        note: { type: "textarea", label: "Footnote" },
+        days: {
+          type: "array",
+          label: "Days",
+          arrayFields: {
+            day: { type: "text", label: "Day" },
+            hours: { type: "text", label: "Hours" },
+          },
+          defaultItemProps: { day: "Day", hours: "9:00 AM – 5:00 PM" },
+          getItemSummary: (item) => item.day || "Day",
+        },
+      },
+      render: ({ title, subtitle, note, days }) => (
+        <section className="flex flex-col gap-6 scroll-mt-24" id="hours">
+          <SectionHeading title={title} subtitle={subtitle} />
+          <div className={`${CARD} overflow-hidden shadow-sm`}>
+            {days.map((item, index) => (
+              <div
+                key={`${item.day}-${index}`}
+                className={`flex items-center justify-between gap-4 px-5 py-3.5 text-sm ${
+                  index === 0 ? "" : "border-t border-[var(--site-border)]"
+                }`}
+              >
+                <span className="font-semibold text-[var(--site-text)]">{item.day}</span>
+                <span
+                  className={`text-right ${
+                    /closed/i.test(item.hours)
+                      ? "font-medium text-[var(--site-muted)]"
+                      : "font-semibold text-[var(--site-primary-text)]"
+                  }`}
+                >
+                  {item.hours}
+                </span>
+              </div>
+            ))}
+          </div>
+          {note ? <p className="text-center text-xs text-[var(--site-muted)]">{note}</p> : null}
+        </section>
+      ),
+    },
+    ContactForm: {
+      label: "Contact form",
+      defaultProps: {
+        title: "Send us a message",
+        subtitle: "Tell us what you need and our team will get back to you during clinic hours.",
+        nameLabel: "Your name",
+        phoneLabel: "Phone / WhatsApp",
+        emailLabel: "Email",
+        serviceLabel: "Service or concern",
+        messageLabel: "How can we help?",
+        buttonLabel: "Send message",
+        successMessage: "Thank you — your message is with our team.",
+        privacyNote: "We only use your details to respond to this enquiry.",
+      },
+      fields: {
+        title: { type: "text", label: "Title" },
+        subtitle: { type: "textarea", label: "Subtitle" },
+        nameLabel: { type: "text", label: "Name field label" },
+        phoneLabel: { type: "text", label: "Phone field label" },
+        emailLabel: { type: "text", label: "Email field label" },
+        serviceLabel: { type: "text", label: "Service field label" },
+        messageLabel: { type: "text", label: "Message field label" },
+        buttonLabel: { type: "text", label: "Button label" },
+        successMessage: { type: "text", label: "Success message" },
+        privacyNote: { type: "textarea", label: "Privacy / consent note" },
+      },
+      render: (props) => (
+        <WebsiteContactForm
+          title={props.title}
+          subtitle={props.subtitle}
+          nameLabel={props.nameLabel}
+          phoneLabel={props.phoneLabel}
+          emailLabel={props.emailLabel}
+          serviceLabel={props.serviceLabel}
+          messageLabel={props.messageLabel}
+          buttonLabel={props.buttonLabel}
+          successMessage={props.successMessage}
+          privacyNote={props.privacyNote}
+        />
       ),
     },
     ClinicDetails: {
@@ -1757,6 +2445,25 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
         label: "Header style",
         options: HEADER_STYLE_OPTIONS,
       },
+      sectionSpacing: {
+        type: "select",
+        label: "Section spacing",
+        options: [
+          { label: "Compact", value: "compact" },
+          { label: "Comfortable", value: "cozy" },
+          { label: "Airy", value: "airy" },
+        ],
+      },
+      imageRadius: {
+        type: "select",
+        label: "Image corners",
+        options: [
+          { label: "Match theme", value: "theme" },
+          { label: "Square", value: "none" },
+          { label: "Soft", value: "soft" },
+          { label: "Round", value: "round" },
+        ],
+      },
       background: {
         type: "select",
         label: "Page background wash",
@@ -1777,7 +2484,9 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
         ],
       },
       clinicName: { type: "text", label: "Clinic name" },
-      logoUrl: { type: "text", label: "Logo URL" },
+      logoUrl: imageField("Logo"),
+      faviconUrl: optionalImageField("Favicon (browser tab icon)"),
+      ogImageUrl: optionalImageField("Social share image"),
       tagline: { type: "text", label: "Tagline" },
       bookingLabel: { type: "text", label: "Header button label" },
       bookingHref: { type: "text", label: "Header button link" },
@@ -1835,8 +2544,12 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
       radius: "theme",
       buttonShape: "theme",
       headerStyle: "theme",
+      sectionSpacing: "cozy",
+      imageRadius: "theme",
       clinicName: "My Clinic",
       logoUrl: "",
+      faviconUrl: "",
+      ogImageUrl: "",
       tagline: "Care that puts you first",
       bookingLabel: "Book an appointment",
       bookingHref: "#appointment",
@@ -1871,8 +2584,12 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
         radius,
         buttonShape,
         headerStyle,
+        sectionSpacing,
+        imageRadius,
         clinicName,
         logoUrl,
+        faviconUrl,
+        ogImageUrl,
         tagline,
         bookingLabel,
         bookingHref,
@@ -1904,6 +2621,10 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
         buttonShape,
         headerStyle,
       });
+
+      const sectionGap = SECTION_GAP[sectionSpacing ?? "cozy"] ?? SECTION_GAP.cozy;
+      const imageRadiusValue =
+        IMAGE_RADIUS_VALUES[imageRadius ?? "theme"] ?? IMAGE_RADIUS_VALUES.theme;
 
       const nav =
         Array.isArray(navItems) && navItems.length
@@ -1956,12 +2677,15 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
           className="min-h-full"
           style={{
             ...(themeCssVars(activeTheme) as CSSProperties),
+            "--site-image-radius": imageRadiusValue,
             fontFamily: "var(--site-font-body)",
             color: "var(--site-text)",
             backgroundColor: pageBackground,
-          }}
+          } as CSSProperties}
         >
           <link rel="stylesheet" href={GOOGLE_FONTS_HREF} />
+          {faviconUrl ? <link rel="icon" href={faviconUrl} /> : null}
+          {ogImageUrl ? <meta property="og:image" content={ogImageUrl} /> : null}
           {announcement ? (
             <div className="bg-[var(--site-accent)] px-4 py-2 text-center text-xs font-semibold tracking-wide text-[var(--site-on-accent)]">
               {announcementHref ? (
@@ -2086,7 +2810,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
             id="home"
             className={`mx-auto w-full px-4 py-10 sm:px-8 ${ROOT_WIDTH[width]}`}
           >
-            <div className="flex w-full flex-col gap-10 [&>div]:flex [&>div]:flex-col [&>div]:gap-10">
+            <div className={`flex w-full flex-col [&>div]:flex [&>div]:flex-col ${sectionGap}`}>
               {children}
             </div>
           </main>
@@ -2206,8 +2930,12 @@ export function makeDefaultPageBuilderData(clinicName: string): PageBuilderData 
     radius: "theme",
     buttonShape: "theme",
     headerStyle: "theme",
+    sectionSpacing: "cozy",
+    imageRadius: "theme",
     clinicName,
     logoUrl: "",
+    faviconUrl: "",
+    ogImageUrl: "",
     tagline: "Care that puts you first",
     bookingLabel: "Book an appointment",
     bookingHref: "#appointment",
@@ -2245,6 +2973,8 @@ export function makeDefaultPageBuilderData(clinicName: string): PageBuilderData 
           tone: "light",
           imageUrl: "/website/medical-hero.webp",
           imageAlt: "Clinic team at work",
+          imagePosition: "center",
+          overlay: "theme",
           stats: [
             { value: "25+", label: "Years of care" },
             { value: "40k+", label: "Patients served" },

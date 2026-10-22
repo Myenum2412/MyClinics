@@ -51,6 +51,7 @@ export const CLINIC_COLLECTIONS = {
   metaSyncJobs: "clc_meta_sync_jobs",
   metaOauthStates: "clc_meta_oauth_states",
   avatars: "clc_avatars",
+  websiteMedia: "clc_website_media",
   labs: "clc_labs",
   investigations: "clc_investigations",
   examinations: "clc_examinations",

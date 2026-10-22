@@ -915,6 +915,69 @@ export function getPublicClinicWebsite(
   });
 }
 
+// ── Website builder media ──────────────────────────────────────────────────
+
+export interface WebsiteMedia {
+  mediaId: string;
+  url: string;
+  fileName: string;
+  contentType: string;
+  size: number;
+  createdAt: string;
+}
+
+function websiteMediaPath(clinicId: string, mediaId?: string): string {
+  const base = tenantPath(clinicId, "/website/media");
+  return mediaId ? `${base}/${encodeURIComponent(mediaId)}` : base;
+}
+
+export function listWebsiteMedia(
+  clinicId: string
+): Promise<{ media: WebsiteMedia[] }> {
+  return request(websiteMediaPath(clinicId), { cache: "no-store" });
+}
+
+export function deleteWebsiteMedia(
+  clinicId: string,
+  mediaId: string
+): Promise<{ ok: boolean }> {
+  return request(websiteMediaPath(clinicId, mediaId), { method: "DELETE" });
+}
+
+export async function uploadWebsiteMedia(
+  clinicId: string,
+  file: File
+): Promise<WebsiteMedia> {
+  const form = new FormData();
+  form.append("file", file);
+
+  const headers: Record<string, string> = {};
+  const token = typeof window !== "undefined" ? getStoredToken() : null;
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const csrf = getCsrfToken();
+  if (csrf) headers["X-CSRF-Token"] = csrf;
+
+  const res = await fetch(`${API_BASE}${websiteMediaPath(clinicId)}`, {
+    method: "POST",
+    headers,
+    body: form,
+    cache: "no-store",
+    credentials: "include",
+  });
+
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    data = {};
+  }
+  if (!res.ok) {
+    const err = data as { error?: string };
+    throw new ClinicApiError(err.error ?? `Image upload failed (${res.status})`, res.status);
+  }
+  return (data as { media: WebsiteMedia }).media;
+}
+
 // ── Patients ───────────────────────────────────────────────────────────────
 
 export function listPatients(
