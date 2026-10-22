@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { getDb } from "@/lib/db-pools";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
+import { sanitizeWebsitePageData } from "@/clinic/modules/clinics/website-sanitizer";
 
 interface PublicWebsiteDoc {
   clinicId: string;
@@ -23,7 +24,7 @@ interface PublicWebsiteDoc {
  *   GET /api/public/clinics/:identity/website
  *
  * `identity` may be the clinicId or slug. Only active clinics with a
- * published Puck page are returned; everything else 404s.
+ * published website page are returned; everything else 404s.
  */
 export function registerPublicClinicWebsiteRoutes(app: FastifyInstance): void {
   app.get("/api/public/clinics/:identity/website", async (request, reply) => {
@@ -59,6 +60,15 @@ export function registerPublicClinicWebsiteRoutes(app: FastifyInstance): void {
         return reply.code(404).send({ error: "Website not found" });
       }
 
+      const sanitized = sanitizeWebsitePageData(clinic.websitePage.data);
+      const publicData =
+        sanitized && typeof sanitized === "object" && typeof (sanitized as { html?: unknown }).html === "string"
+          ? {
+              html: (sanitized as { html: string }).html,
+              css: (sanitized as { css?: unknown }).css ?? "",
+            }
+          : sanitized;
+
       return reply.send({
         clinic: {
           clinicId: clinic.clinicId,
@@ -69,7 +79,7 @@ export function registerPublicClinicWebsiteRoutes(app: FastifyInstance): void {
           address: clinic.address ?? null,
           description: clinic.description ?? null,
         },
-        websitePage: clinic.websitePage,
+        websitePage: { ...clinic.websitePage, data: publicData },
       });
     } catch {
       return reply.code(500).send({ error: "Failed to load website" });

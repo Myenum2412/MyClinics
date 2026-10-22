@@ -57,7 +57,7 @@ export interface ClinicDoc extends ClinicDocument {
     weeklySchedule?: WeeklyScheduleDay[];
   };
   profile?: ClinicProfile;
-  /** Published Puck page for the clinic's public website. */
+  /** Published GrapesJS page for the clinic's public website. */
   websitePage?: {
     data: unknown;
     publishedAt: string | null;

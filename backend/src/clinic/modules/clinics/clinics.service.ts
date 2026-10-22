@@ -18,6 +18,7 @@ import type { ClinicDoc, ClinicProfile, UserDoc } from "@/clinic/core/types";
 import type { CreateClinicInput, UpdateClinicInput } from "@/clinic/modules/clinics/clinics.dto";
 import { ClinicOwnRepository, ClinicRepository } from "@/clinic/modules/clinics/clinics.repository";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
+import { sanitizeWebsitePageData } from "@/clinic/modules/clinics/website-sanitizer";
 
 /** Merges a partial profile patch into the stored profile (preserves arrays/social links). */
 function mergeProfile(
@@ -307,13 +308,14 @@ export class ClinicService {
       patch.profile = mergeProfile(current.profile, input.profile);
     }
     if (input.websitePage !== undefined) {
-      const serialized = JSON.stringify(input.websitePage.data ?? null);
-      if (serialized.length > 1_500_000) {
-        throw new BadRequestError("Website page is too large (max 1.5 MB)");
+      const sanitized = sanitizeWebsitePageData(input.websitePage.data ?? null);
+      const serialized = JSON.stringify(sanitized);
+      if (serialized.length > 8_000_000) {
+        throw new BadRequestError("Website page is too large (max 8 MB)");
       }
       const stamp = nowFn();
       patch.websitePage = {
-        data: input.websitePage.data ?? null,
+        data: sanitized,
         publishedAt: stamp.toISOString(),
         updatedAt: stamp,
       };

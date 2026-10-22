@@ -898,7 +898,7 @@ export function updateOwnClinic(
   });
 }
 
-/** Publishes the clinic's Puck page to its public website. */
+/** Publishes the clinic's GrapesJS page to its public website. */
 export function publishClinicWebsitePage(
   clinicId: string,
   data: unknown

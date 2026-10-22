@@ -24,6 +24,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/clinic/settings": "Settings",
   "/clinic/lab": "Lab Dashboard",
   "/clinic/lab/reports": "Lab Reports",
+  "/clinic/page-builder": "Website Builder",
 }
 
 function pageTitleFor(pathname: string): string {

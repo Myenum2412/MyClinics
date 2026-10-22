@@ -2,19 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Render } from "@measured/puck";
 import { Loader2 } from "lucide-react";
 import { getPublicClinicWebsite } from "@/lib/clinic-api";
-import {
-  isPageBuilderData,
-  pageBuilderConfig,
-  type PageBuilderData,
-} from "@/components/clinic/page-builder/config";
+import { isGrapesWebsiteData, type GrapesWebsiteData } from "@/lib/website";
 
 type SiteState =
   | { status: "loading" }
   | { status: "missing" }
-  | { status: "ready"; data: PageBuilderData; clinicName: string };
+  | { status: "ready"; data: GrapesWebsiteData; clinicName: string };
 
 export default function ClinicPublicSitePage() {
   const { clinicId } = useParams<{ clinicId: string }>();
@@ -27,7 +22,7 @@ export default function ClinicPublicSitePage() {
     getPublicClinicWebsite(clinicId)
       .then((site) => {
         if (!active) return;
-        if (!isPageBuilderData(site.websitePage.data)) {
+        if (!isGrapesWebsiteData(site.websitePage.data)) {
           setState({ status: "missing" });
           return;
         }
@@ -76,8 +71,9 @@ export default function ClinicPublicSitePage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
-      <Render config={pageBuilderConfig} data={state.data} />
+    <div className="min-h-dvh bg-background" data-clinic-site={state.clinicName}>
+      <style dangerouslySetInnerHTML={{ __html: state.data.css }} />
+      <div dangerouslySetInnerHTML={{ __html: state.data.html }} />
     </div>
   );
 }
