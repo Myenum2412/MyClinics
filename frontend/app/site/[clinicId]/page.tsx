@@ -2,20 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Render } from "@puckeditor/core";
 import { Loader2 } from "lucide-react";
 import { getPublicClinicWebsite } from "@/lib/clinic-api";
 import { isGrapesWebsiteData, type GrapesWebsiteData } from "@/lib/website";
-import {
-  isPageBuilderData,
-  pageBuilderConfig,
-  type PageBuilderData,
-} from "@/components/clinic/page-builder/config";
 
 type SiteState =
   | { status: "loading" }
   | { status: "missing" }
-  | { status: "puck"; data: PageBuilderData; clinicName: string }
   | { status: "legacy"; data: GrapesWebsiteData; clinicName: string };
 
 export default function ClinicPublicSitePage() {
@@ -34,14 +27,10 @@ export default function ClinicPublicSitePage() {
         let pageTitle = site.clinic.name;
         let pageDescription = site.clinic.description;
 
-        if (isPageBuilderData(data)) {
-          setState({ status: "puck", data, clinicName: site.clinic.name });
-          pageTitle = data.root.props?.seoTitle || pageTitle;
-          pageDescription = data.root.props?.seoDescription || pageDescription;
-        } else if (isGrapesWebsiteData(data)) {
-          // Pages published before the Puck builder are still served until
-          // the clinic publishes a new Puck page.
+        if (isGrapesWebsiteData(data)) {
           setState({ status: "legacy", data, clinicName: site.clinic.name });
+          pageTitle = data.seoTitle || pageTitle;
+          pageDescription = data.seoDescription || pageDescription;
         } else {
           setState({ status: "missing" });
           return;
@@ -82,14 +71,6 @@ export default function ClinicPublicSitePage() {
             This clinic has not published its website. Please check back later.
           </p>
         </div>
-      </div>
-    );
-  }
-
-  if (state.status === "puck") {
-    return (
-      <div className="min-h-dvh bg-background" data-clinic-site={state.clinicName}>
-        <Render config={pageBuilderConfig} data={state.data} />
       </div>
     );
   }
