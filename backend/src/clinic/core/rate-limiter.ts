@@ -82,7 +82,6 @@ export class SlidingWindowLimiter {
 
 export const AUTH_LIMITER = new SlidingWindowLimiter(60_000, 10);
 export const API_LIMITER = new SlidingWindowLimiter(60_000, 600);
-export const PUBLIC_LEAD_LIMITER = new SlidingWindowLimiter(10 * 60_000, 5);
 
 // Attempt distributed limit via Valkey if configured; fallback to in-memory.
 let redisForLimit: Redis | null = null;

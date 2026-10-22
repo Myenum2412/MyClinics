@@ -48,7 +48,6 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
   const pharmacyTransfers = db.collection(CLINIC_COLLECTIONS.pharmacyTransfers);
   const pharmacyReturns = db.collection(CLINIC_COLLECTIONS.pharmacyReturns);
   const avatars = db.collection(CLINIC_COLLECTIONS.avatars);
-  const websiteMedia = db.collection(CLINIC_COLLECTIONS.websiteMedia);
   const investigations = db.collection(CLINIC_COLLECTIONS.investigations);
   const examinations = db.collection(CLINIC_COLLECTIONS.examinations);
   const labs = db.collection(CLINIC_COLLECTIONS.labs);
@@ -346,10 +345,6 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
 
     // ── Avatars (binaries stored in MongoDB) ────────────────────────────
     avatars.createIndex({ clinicId: 1, ownerType: 1, ownerId: 1 }, { unique: true }),
-
-    // ── Website builder media (binaries stored in MongoDB) ───────────────
-    websiteMedia.createIndex({ clinicId: 1, mediaId: 1 }, { unique: true }),
-    websiteMedia.createIndex({ clinicId: 1, createdAt: -1 }),
 
     // ── Investigations ───────────────────────────────────────────────────
     investigations.createIndex({ clinicId: 1, investigationId: 1 }, { unique: true }),

@@ -18,7 +18,6 @@ import { registerWhatsappRoutes } from "@/clinic/modules/whatsapp/whatsapp.route
 import { registerAuditLogRoutes } from "@/clinic/modules/audit-logs/audit-logs.routes";
 import { registerPatientPortalRoutes } from "@/clinic/modules/portal/patient-portal.routes";
 import { registerAvatarRoutes } from "@/clinic/modules/avatars/avatars.routes";
-import { registerWebsiteMediaRoutes } from "@/clinic/modules/website-media/website-media.routes";
 import { registerReportsRoutes } from "@/clinic/modules/reports/reports.routes";
 import { registerLeadRoutes } from "@/clinic/modules/leads/leads.routes";
 import { registerPharmacyRoutes } from "@/clinic/modules/pharmacy/pharmacy.routes";
@@ -80,7 +79,6 @@ export function registerClinicApi(app: FastifyInstance): void {
     registerAuditLogRoutes(tenantApi);
     registerPatientPortalRoutes(tenantApi);
     registerAvatarRoutes(tenantApi);
-    registerWebsiteMediaRoutes(tenantApi);
     registerReportsRoutes(tenantApi);
     registerLeadRoutes(tenantApi);
     registerSearchRoutes(tenantApi);
