@@ -1190,7 +1190,7 @@ export const pageBuilderConfig: Config<PageBuilderComponents, PageBuilderRootPro
                       href={safeHref(item.href)}
                       className="mt-2 text-xs font-bold uppercase tracking-[0.14em] text-[var(--site-primary-text)] hover:underline"
                     >
-                      Book with {item.name.split(" ").slice(0, 2).join(" ")} →
+                      Book with {item.name} →
                     </a>
                   ) : null}
                 </div>
