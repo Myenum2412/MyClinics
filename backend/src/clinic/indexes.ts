@@ -48,6 +48,10 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
   const pharmacyTransfers = db.collection(CLINIC_COLLECTIONS.pharmacyTransfers);
   const pharmacyReturns = db.collection(CLINIC_COLLECTIONS.pharmacyReturns);
   const avatars = db.collection(CLINIC_COLLECTIONS.avatars);
+  const crmContacts = db.collection(CLINIC_COLLECTIONS.crmContacts);
+  const crmCompanies = db.collection(CLINIC_COLLECTIONS.crmCompanies);
+  const crmDeals = db.collection(CLINIC_COLLECTIONS.crmDeals);
+  const crmActivities = db.collection(CLINIC_COLLECTIONS.crmActivities);
   const investigations = db.collection(CLINIC_COLLECTIONS.investigations);
   const examinations = db.collection(CLINIC_COLLECTIONS.examinations);
   const labs = db.collection(CLINIC_COLLECTIONS.labs);
@@ -345,6 +349,39 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
 
     // ── Avatars (binaries stored in MongoDB) ────────────────────────────
     avatars.createIndex({ clinicId: 1, ownerType: 1, ownerId: 1 }, { unique: true }),
+
+    // ── CRM Contacts ────────────────────────────────────────────────────
+    crmContacts.createIndex({ clinicId: 1, contactId: 1 }, { unique: true }),
+    crmContacts.createIndex({ clinicId: 1, email: 1 }, { partialFilterExpression: { archivedAt: null } }),
+    crmContacts.createIndex({ clinicId: 1, companyId: 1 }),
+    crmContacts.createIndex({ clinicId: 1, ownerId: 1 }),
+    crmContacts.createIndex({ clinicId: 1, archivedAt: 1 }),
+    crmContacts.createIndex({ clinicId: 1, source: 1 }),
+    crmContacts.createIndex({ clinicId: 1, createdAt: -1 }),
+    crmContacts.createIndex({ clinicId: 1, lastActivityAt: -1 }),
+
+    // ── CRM Companies ───────────────────────────────────────────────────
+    crmCompanies.createIndex({ clinicId: 1, companyId: 1 }, { unique: true }),
+    crmCompanies.createIndex({ clinicId: 1, domain: 1 }, { partialFilterExpression: { archivedAt: null } }),
+    crmCompanies.createIndex({ clinicId: 1, ownerId: 1 }),
+    crmCompanies.createIndex({ clinicId: 1, archivedAt: 1 }),
+    crmCompanies.createIndex({ clinicId: 1, createdAt: -1 }),
+
+    // ── CRM Deals ───────────────────────────────────────────────────────
+    crmDeals.createIndex({ clinicId: 1, dealId: 1 }, { unique: true }),
+    crmDeals.createIndex({ clinicId: 1, companyId: 1 }),
+    crmDeals.createIndex({ clinicId: 1, ownerId: 1 }),
+    crmDeals.createIndex({ clinicId: 1, stage: 1 }),
+    crmDeals.createIndex({ clinicId: 1, archivedAt: 1 }),
+    crmDeals.createIndex({ clinicId: 1, createdAt: -1 }),
+
+    // ── CRM Activities ──────────────────────────────────────────────────
+    crmActivities.createIndex({ clinicId: 1, activityId: 1 }, { unique: true }),
+    crmActivities.createIndex({ clinicId: 1, contactId: 1 }),
+    crmActivities.createIndex({ clinicId: 1, companyId: 1 }),
+    crmActivities.createIndex({ clinicId: 1, dealId: 1 }),
+    crmActivities.createIndex({ clinicId: 1, createdById: 1 }),
+    crmActivities.createIndex({ clinicId: 1, createdAt: -1 }),
 
     // ── Investigations ───────────────────────────────────────────────────
     investigations.createIndex({ clinicId: 1, investigationId: 1 }, { unique: true }),

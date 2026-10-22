@@ -127,6 +127,23 @@ export function normalizePhone(value: string | null | undefined): string {
   return digits.length > 10 ? digits.slice(-10) : digits;
 }
 
+
+export function generateContactId(): string {
+  return `cnt_${randomToken(12)}`;
+}
+
+export function generateCompanyId(): string {
+  return `cmp_${randomToken(12)}`;
+}
+
+export function generateDealId(): string {
+  return `del_${randomToken(12)}`;
+}
+
+export function generateActivityId(): string {
+  return `act_${randomToken(12)}`;
+}
+
 /** Context used by the audit writer for system/tenantless actions. */
 export function systemContext(clinicId?: string): ClinicContext | null {
   return clinicId

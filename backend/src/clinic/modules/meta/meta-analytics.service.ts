@@ -1,7 +1,7 @@
 import type { Db, WithId } from "mongodb";
 import { MetaRepository } from "@/clinic/modules/meta/meta.repository";
-import type { LeadDoc } from "@/clinic/modules/leads/leads.schema";
 import type { MetaLeadAttributionDoc } from "@/clinic/modules/meta/meta-schema";
+import { getContactRepository } from "@/clinic/modules/crm-contacts/crm-contacts.repository";
 
 /**
  * MetaAnalyticsService — clinic-specific Meta performance analytics (section 39).
@@ -36,12 +36,10 @@ export class MetaAnalyticsService {
   }> {
     const repo = new MetaRepository(this.db);
     const attributions = await repo.attributions().find({ clinicId }).toArray();
-    const leadDocs = (await new (
-      await import("@/clinic/modules/leads/leads.repository")
-    ).LeadRepository(this.db, clinicId).list({}, 100000)) as WithId<LeadDoc>[];
-
-    const leadById = new Map<string, WithId<LeadDoc>>();
-    for (const l of leadDocs) leadById.set(l.leadId, l);
+    const contactRepo = await getContactRepository({ clinicId } as any);
+    const contacts = await contactRepo.list({ clinicId }, { createdAt: -1 }, 100000);
+    const contactById = new Map<string, any>();
+    for (const c of contacts) contactById.set(c.contactId, c);
 
     const byPlatform = { facebook: 0, instagram: 0, unknown: 0 };
     const campaignMap = new Map<string, { campaignId: string | null; campaignName: string | null; leads: number; appointments: number; converted: number }>();
@@ -54,7 +52,7 @@ export class MetaAnalyticsService {
 
     for (const a of attributions as WithId<MetaLeadAttributionDoc>[]) {
       byPlatform[a.platform] += 1;
-      const lead = leadById.get(a.leadId);
+      const lead = contactById.get(a.leadId);
       const hasAppt = Boolean(lead?.appointmentBookedAt);
       const isConverted = lead?.status === "converted";
       if (hasAppt) appointmentsGenerated += 1;

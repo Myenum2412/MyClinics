@@ -3542,8 +3542,179 @@ export async function downloadPharmacyReport(
   URL.revokeObjectURL(objectUrl);
 }
 
+// ── CRM (Contacts, Companies, Deals) ────────────────────────────────────
+
+export interface Contact {
+  contactId: string;
+  firstName: string;
+  lastName: string | null;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  title: string | null;
+  seniority: string | null;
+  function: string | null;
+  linkedinUrl: string | null;
+  twitterUrl: string | null;
+  githubUrl: string | null;
+  imageUrl: string | null;
+  enrichmentStatus: string;
+  companyId: string | null;
+  ownerId: string | null;
+  source: string;
+  lastActivityAt: string | null;
+  archivedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ListContactsInput {
+  archived?: boolean;
+  q?: string;
+  ownerId?: string;
+  companyId?: string;
+  source?: string;
+  page?: number;
+  limit?: number;
+  sort?: string;
+}
+
+export interface ListContactsOutput {
+  rows: Contact[];
+  total: number;
+  page: number;
+  limit: number;
+  facetCounts: Record<string, Record<string, number>>;
+}
+
+function crmPath(clinicId: string, suffix: string): string {
+  return tenantPath(clinicId, `/crm${suffix}`);
+}
+
+export function listContacts(
+  clinicId: string,
+  input: ListContactsInput = {}
+): Promise<ListContactsOutput> {
+  const params = new URLSearchParams();
+  if (input.archived !== undefined) params.set("archived", String(input.archived));
+  if (input.q) params.set("q", input.q);
+  if (input.ownerId) params.set("ownerId", input.ownerId);
+  if (input.companyId) params.set("companyId", input.companyId);
+  if (input.source) params.set("source", input.source);
+  if (input.page) params.set("page", String(input.page));
+  if (input.limit) params.set("limit", String(input.limit));
+  if (input.sort) params.set("sort", input.sort);
+  return request(crmPath(clinicId, `/contacts?${params}`), { cache: "no-store" });
+}
+
+export function getContact(
+  clinicId: string,
+  contactId: string
+): Promise<{ contact: Contact }> {
+  return request(crmPath(clinicId, `/contacts/${encodeURIComponent(contactId)}`), { cache: "no-store" });
+}
+
+export function createContact(
+  clinicId: string,
+  input: Record<string, unknown>
+): Promise<{ contact: Contact }> {
+  return request(crmPath(clinicId, "/contacts"), {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export function updateContact(
+  clinicId: string,
+  contactId: string,
+  input: Record<string, unknown>
+): Promise<{ contact: Contact }> {
+  return request(crmPath(clinicId, `/contacts/${encodeURIComponent(contactId)}`), {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export function archiveContact(
+  clinicId: string,
+  contactId: string
+): Promise<{ ok: boolean }> {
+  return request(crmPath(clinicId, `/contacts/${encodeURIComponent(contactId)}/archive`), {
+    method: "POST",
+  });
+}
+
+export function restoreContact(
+  clinicId: string,
+  contactId: string
+): Promise<{ ok: boolean }> {
+  return request(crmPath(clinicId, `/contacts/${encodeURIComponent(contactId)}/restore`), {
+    method: "POST",
+  });
+}
+
+export function deleteContact(
+  clinicId: string,
+  contactId: string
+): Promise<{ ok: boolean }> {
+  return request(crmPath(clinicId, `/contacts/${encodeURIComponent(contactId)}`), {
+    method: "DELETE",
+  });
+}
+
+export function bulkArchiveContacts(
+  clinicId: string,
+  ids: string[]
+): Promise<{ count: number }> {
+  return request(crmPath(clinicId, "/contacts/bulk/archive"), {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export function bulkRestoreContacts(
+  clinicId: string,
+  ids: string[]
+): Promise<{ count: number }> {
+  return request(crmPath(clinicId, "/contacts/bulk/restore"), {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export function bulkDeleteContacts(
+  clinicId: string,
+  ids: string[]
+): Promise<{ count: number }> {
+  return request(crmPath(clinicId, "/contacts/bulk/delete"), {
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+}
+
+export function bulkUpdateContactOwner(
+  clinicId: string,
+  ids: string[],
+  ownerId: string | null
+): Promise<{ count: number }> {
+  return request(crmPath(clinicId, "/contacts/bulk/owner"), {
+    method: "POST",
+    body: JSON.stringify({ ids, ownerId }),
+  });
+}
+
+export function bulkUpdateContactCompany(
+  clinicId: string,
+  ids: string[],
+  companyId: string | null
+): Promise<{ count: number }> {
+  return request(crmPath(clinicId, "/contacts/bulk/company"), {
+    method: "POST",
+    body: JSON.stringify({ ids, companyId }),
+  });
+}
+
 // ── Labs ─────────────────────────────────────────────────────────────────
-export interface Lab { labId:string; labName:string; name?:string; contactPerson:string|null; phone:string|null; email:string|null; address:string|null; city:string|null; state:string|null; pincode:string|null; licenseNo:string|null; labType:string|null; userId?:string|null; status:string; createdAt:string; }
 export function listLabs(clinicId:string):Promise<PageResult<Lab>>{ return request(tenantPath(clinicId,"/labs?limit=100")); }
 export function createLab(clinicId:string,input:Record<string,unknown>):Promise<Lab>{ return request(tenantPath(clinicId,"/labs"),{method:"POST",body:JSON.stringify(input)}); }
 export function getLab(clinicId:string,labId:string):Promise<Lab>{ return request(tenantPath(clinicId,`/labs/${labId}`)); }

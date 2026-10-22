@@ -1,13 +1,13 @@
 import type { Db, WithId } from "mongodb";
 import { now as nowFn } from "@/clinic/core/datetime";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
-import { generateUuid } from "@/clinic/core/ids";
+import { generateUuid, generateContactId } from "@/clinic/core/ids";
 import { MetaRepository } from "@/clinic/modules/meta/meta.repository";
 import type { MetaApiClient } from "@/clinic/modules/meta/meta-client";
 import { MetaTokenService } from "@/clinic/modules/meta/meta-token.service";
 import { MetaCampaignService } from "@/clinic/modules/meta/meta-campaign.service";
-import { LeadRepository } from "@/clinic/modules/leads/leads.repository";
-import type { LeadDoc } from "@/clinic/modules/leads/leads.schema";
+import { ContactRepository } from "@/clinic/modules/crm-contacts/crm-contacts.repository";
+import type { ContactDocument } from "@/clinic/modules/crm-contacts/crm-contacts.schema";
 import type { MetaLeadAttributionDoc } from "@/clinic/modules/meta/meta-schema";
 import { BadRequestError, NotFoundError } from "@/clinic/core/errors";
 
@@ -58,14 +58,15 @@ export class MetaLeadService {
    */
   async ingestLead(clinicId: string, metaLeadId: string): Promise<{
     duplicate: boolean;
-    lead: WithId<LeadDoc> | null;
+    contact: WithId<ContactDocument> | null;
     attribution: WithId<MetaLeadAttributionDoc> | null;
   }> {
-    const leadRepo = new LeadRepository(this.db, clinicId);
-    const existingByRef = await leadRepo.findBySourceRef(`meta:${metaLeadId}`);
+    const contactRepo = new ContactRepository(this.db, { clinicId } as any);
+    const existingByRef = await contactRepo.findBySourceRef(`meta:${metaLeadId}`);
     if (existingByRef) {
-      const attr = await this.repo().getAttributionByLead(clinicId, existingByRef.leadId);
-      return { duplicate: true, lead: existingByRef, attribution: attr };
+      const contact = existingByRef as WithId<ContactDocument>;
+      const attr = await this.repo().getAttributionByLead(clinicId, contact.contactId);
+      return { duplicate: true, contact, attribution: attr };
     }
 
     const integration = await this.repo().getIntegration(clinicId);
@@ -94,33 +95,21 @@ export class MetaLeadService {
       ? await new MetaCampaignService(this.db).resolveForCampaign(clinicId, detail.campaign_id)
       : null;
 
-    const lead = await leadRepo.create({
-      leadId: `led_${generateUuid().slice(0, 12)}`,
-      source: platform === "instagram" ? "meta_instagram" : "meta_facebook",
-      sourceRef: `meta:${metaLeadId}`,
-      name: parsed.name,
-      phone: parsed.phone,
+    const contact = await contactRepo.create({
+      clinicId,
+      contactId: generateContactId(),
+      firstName: parsed.name?.split(" ")[0] ?? "Meta",
+      lastName: parsed.name?.split(" ").slice(1).join(" ") ?? "Lead",
       email: parsed.email,
-      formAnswers: parsed.answers,
-      consent: parsed.consent,
-      status: "new",
-      priority: campaignMapping ? "high" : "normal",
-      department: campaignMapping?.department ?? null,
-      service: campaignMapping?.service ?? null,
-      team: campaignMapping?.team ?? null,
-      assignedTo: campaignMapping?.doctorId ?? null,
-      assignedAt: campaignMapping?.doctorId ? nowFn() : null,
-      receivedAt: parsed.submittedAt ?? nowFn(),
-      firstResponseAt: null,
-      firstContactAt: null,
-      contactAttempts: 0,
-      appointmentBookedAt: null,
-      convertedAt: null,
+      phone: parsed.phone,
+      companyId: campaignMapping?.companyId ?? null,
+      ownerId: campaignMapping?.doctorId ?? null,
+      source: "META",
     });
 
     await this.repo().upsertAttribution(clinicId, {
       attributionId: `mat_${generateUuid().slice(0, 12)}`,
-      leadId: lead.leadId,
+      leadId: contact.contactId,
       metaLeadId,
       businessId: integration.metaBusinessId,
       pageId: detail.page_id ?? null,
@@ -139,20 +128,20 @@ export class MetaLeadService {
     });
 
     // ── Clinic-local automations (section 37) ──────────────────────────
-    await this.fireAutomations(clinicId, lead);
+    await this.fireAutomations(clinicId, contact as WithId<ContactDocument>);
 
     await this.repo().upsertIntegration(clinicId, { lastSyncedAt: nowFn() });
     return {
       duplicate: false,
-      lead,
-      attribution: await this.repo().getAttributionByLead(clinicId, lead.leadId),
+      contact: contact as WithId<ContactDocument>,
+      attribution: await this.repo().getAttributionByLead(clinicId, contact.contactId),
     };
   }
 
   /** Automation engine — scoped to the clinic tenant only. */
-  private async fireAutomations(clinicId: string, lead: WithId<LeadDoc>): Promise<void> {
+  private async fireAutomations(clinicId: string, contact: WithId<ContactDocument>): Promise<void> {
     // WHEN Meta Lead Created → internal notification to assigned staff / team.
-    const recipient = lead.assignedTo;
+    const recipient = contact.ownerId;
     if (recipient) {
       await this.db.collection(CLINIC_COLLECTIONS.notifications).insertOne({
         notificationId: `ntf_${generateUuid().slice(0, 12)}`,
@@ -160,8 +149,8 @@ export class MetaLeadService {
         recipientUserId: recipient,
         type: "general",
         title: "New Meta lead assigned",
-        body: `Lead ${lead.name ?? lead.phone ?? lead.email ?? lead.leadId} was captured from Meta and assigned to you.`,
-        link: `/clinic/leads/${lead.leadId}`,
+        body: `Lead ${contact.firstName} ${contact.lastName ?? ""} ${contact.email ?? contact.phone ?? contact.contactId} was captured from Meta and assigned to you.`,
+        link: `/clinic/crm/contacts/${contact.contactId}`,
         readAt: null,
         createdAt: nowFn(),
       } as never);
@@ -176,8 +165,8 @@ export class MetaLeadService {
       actorDoctorId: null,
       actorPatientId: null,
       action: "meta_lead_automation",
-      entity: "lead",
-      entityId: lead.leadId,
+      entity: "contact",
+      entityId: contact.contactId,
       metadata: { automation: "create_follow_up", slaMinutes: 5 },
       ip: null,
       userAgent: null,
