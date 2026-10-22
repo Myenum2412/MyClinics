@@ -1,0 +1,7 @@
+.editor :global([class*="PuckLayout"]) {
+  height: 100%;
+}
+
+.editor :global([class*="PuckLayout-inner"]) {
+  height: 100%;
+}

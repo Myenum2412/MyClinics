@@ -1,0 +1,83 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { Render } from "@measured/puck";
+import { Loader2 } from "lucide-react";
+import { getPublicClinicWebsite } from "@/lib/clinic-api";
+import {
+  isPageBuilderData,
+  pageBuilderConfig,
+  type PageBuilderData,
+} from "@/components/clinic/page-builder/config";
+
+type SiteState =
+  | { status: "loading" }
+  | { status: "missing" }
+  | { status: "ready"; data: PageBuilderData; clinicName: string };
+
+export default function ClinicPublicSitePage() {
+  const { clinicId } = useParams<{ clinicId: string }>();
+  const [state, setState] = useState<SiteState>({ status: "loading" });
+
+  useEffect(() => {
+    if (!clinicId) return;
+    let active = true;
+
+    getPublicClinicWebsite(clinicId)
+      .then((site) => {
+        if (!active) return;
+        if (!isPageBuilderData(site.websitePage.data)) {
+          setState({ status: "missing" });
+          return;
+        }
+        setState({
+          status: "ready",
+          data: site.websitePage.data,
+          clinicName: site.clinic.name,
+        });
+        document.title = site.clinic.name;
+        if (site.clinic.description) {
+          const meta = document.querySelector('meta[name="description"]');
+          if (meta) meta.setAttribute("content", site.clinic.description);
+        }
+      })
+      .catch(() => {
+        if (active) setState({ status: "missing" });
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [clinicId]);
+
+  if (state.status === "loading") {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-muted/40">
+        <div className="flex flex-col items-center gap-3 text-muted-foreground">
+          <Loader2 className="size-6 animate-spin text-primary" />
+          <p className="text-sm font-medium">Loading website…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.status === "missing") {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-muted/40 px-4">
+        <div className="max-w-md text-center">
+          <h1 className="text-xl font-semibold text-foreground">Website not published yet</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            This clinic has not published its website. Please check back later.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-dvh bg-background">
+      <Render config={pageBuilderConfig} data={state.data} />
+    </div>
+  );
+}

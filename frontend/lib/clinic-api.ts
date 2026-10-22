@@ -131,8 +131,28 @@ export interface Clinic {
     weeklySchedule?: WeeklyScheduleDay[];
   };
   profile?: ClinicProfile;
+  websitePage?: ClinicWebsitePage | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ClinicWebsitePage {
+  data: unknown;
+  publishedAt: string | null;
+  updatedAt?: string;
+}
+
+export interface PublicClinicWebsite {
+  clinic: {
+    clinicId: string;
+    slug: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+    address: string | null;
+    description: string | null;
+  };
+  websitePage: ClinicWebsitePage;
 }
 
 export interface ClinicUser {
@@ -875,6 +895,23 @@ export function updateOwnClinic(
   return request("/api/clinics/me", {
     method: "PATCH",
     body: JSON.stringify(input),
+  });
+}
+
+/** Publishes the clinic's Puck page to its public website. */
+export function publishClinicWebsitePage(
+  clinicId: string,
+  data: unknown
+): Promise<Clinic> {
+  return updateOwnClinic(clinicId, { websitePage: { data } });
+}
+
+/** Public website payload — no authentication required. */
+export function getPublicClinicWebsite(
+  identity: string
+): Promise<PublicClinicWebsite> {
+  return request(`/api/public/clinics/${encodeURIComponent(identity)}/website`, {
+    cache: "no-store",
   });
 }
 

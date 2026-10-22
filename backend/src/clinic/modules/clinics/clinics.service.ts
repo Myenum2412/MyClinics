@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import type { Db, WithId } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
 import {
+  BadRequestError,
   ConflictError,
   NotFoundError,
 } from "@/clinic/core/errors";
@@ -304,6 +305,18 @@ export class ClinicService {
     }
     if (input.profile !== undefined) {
       patch.profile = mergeProfile(current.profile, input.profile);
+    }
+    if (input.websitePage !== undefined) {
+      const serialized = JSON.stringify(input.websitePage.data ?? null);
+      if (serialized.length > 1_500_000) {
+        throw new BadRequestError("Website page is too large (max 1.5 MB)");
+      }
+      const stamp = nowFn();
+      patch.websitePage = {
+        data: input.websitePage.data ?? null,
+        publishedAt: stamp.toISOString(),
+        updatedAt: stamp,
+      };
     }
     if (input.profile?.addressLine1 !== undefined || input.profile?.addressLine2 !== undefined) {
       const a1 = input.profile.addressLine1 ?? current.profile?.addressLine1 ?? null;

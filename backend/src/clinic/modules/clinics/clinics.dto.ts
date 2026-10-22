@@ -98,6 +98,12 @@ export const updateClinicSchema = z.object({
     })
     .optional(),
   profile: clinicProfileSchema.optional(),
+  websitePage: z
+    .object({
+      /** Puck page data. Validated for size in the service, not shape. */
+      data: z.unknown(),
+    })
+    .optional(),
 });
 
 export type UpdateClinicInput = z.infer<typeof updateClinicSchema>;
