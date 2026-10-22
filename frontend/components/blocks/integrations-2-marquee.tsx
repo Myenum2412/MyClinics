@@ -75,7 +75,7 @@ export default function IntegrationsMarquee() {
       className="relative w-full scroll-mt-24 overflow-hidden border-y border-blue-900/50 bg-black px-6 py-20 text-white"
     >
       <div
-        className="absolute inset-0 z-0 opacity-10"
+        className="absolute inset-0 z-0 opacity-30"
         style={{
           backgroundImage: "url('/inter.png')",
           backgroundSize: "cover",
