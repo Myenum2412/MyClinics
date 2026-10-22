@@ -150,7 +150,7 @@ a {
 
 .mc-shell {
   width: 100%;
-  max-width: 1120px;
+  max-width: none;
   margin: 0 auto;
   padding: 0 24px;
 }

@@ -324,7 +324,7 @@ export function GrapesEditor({ clinicId }: { clinicId: string }) {
   }, [clinicId, draftKey, publishing]);
 
   return (
-    <div className="space-y-4">
+    <div className="w-full max-w-none space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Website Builder</h1>
@@ -422,7 +422,7 @@ export function GrapesEditor({ clinicId }: { clinicId: string }) {
         </span>
       </div>
 
-      <div className={`${styles.editor} relative h-[calc(100dvh-17rem)] min-h-[640px] overflow-hidden rounded-xl border border-border bg-background shadow-sm`}>
+      <div className={`${styles.editor} relative h-[calc(100dvh-17rem)] min-h-[640px] w-full max-w-none min-w-0 overflow-hidden rounded-xl border border-border bg-background shadow-sm`}>
         {!ready ? (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background text-muted-foreground">
             <Loader2 className="size-6 animate-spin text-primary" />
