@@ -30,7 +30,6 @@ import {
   AlertCircle,
   Camera,
   User,
-  ShieldCheck,
   KeyRound,
   Mail,
   CheckCircle,
@@ -335,8 +334,6 @@ export function PatientForm({
   const { getOptions } = useDropdownOptions(clinicId);
   const bloodGroups = getOptions("blood_groups");
   const maritalStatuses = getOptions("marital_statuses");
-  const howDidYouHear = getOptions("how_did_you_hear");
-  const idProofTypes = getOptions("id_proof_types");
 
   const [form, setForm] = useState<PatientFormState>(() => {
     const merged = { ...EMPTY_FORM, ...initialData } as PatientFormState;
@@ -591,14 +588,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="4. Identification">
-          <div className="grid gap-4 md:grid-cols-2">
-            {renderViewField("ID Proof Type", form.idType)}
-            {renderViewField("ID Number", form.idNumber)}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="5. Account & Portal Access">
+        <SectionCard title="4. Account & Portal Access">
           <div className="grid gap-4 md:grid-cols-2">
             {renderViewField(
               "Assigned Doctor",
@@ -611,18 +601,7 @@ export function PatientForm({
           </div>
         </SectionCard>
 
-        <SectionCard title="6. Additional Information">
-          <div className="grid gap-4 md:grid-cols-2">
-            {renderViewField("Referred By", form.referredBy)}
-            {renderViewField("How Did You Hear About Us?", form.howDidYouHear)}
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">Internal Notes</Label>
-            <div className="text-foreground">{form.notes || "—"}</div>
-          </div>
-        </SectionCard>
-
-        <SectionCard title="7. Attachments">
+        <SectionCard title="5. Attachments">
           <div className="space-y-2">
             <Label className="text-sm font-medium text-foreground">Uploaded Documents</Label>
             <div className="text-foreground">
@@ -972,37 +951,7 @@ export function PatientForm({
       </SectionCard>
 
       <SectionCard
-        title="4. Identification"
-        description="Optional — only fill if required by your clinic"
-      >
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="ID Proof Type" name="idType" error={errors.idType} disabled={isViewMode}>
-            <Select value={form.idType} onValueChange={(v) => handleChange("idType", v)} disabled={isViewMode}>
-              <SelectTrigger className="h-10 w-full border-border font-normal">
-                <SelectValue placeholder="Select ID proof type" />
-              </SelectTrigger>
-              <SelectContent>
-                {idProofTypes.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormField>
-          <FormField
-            label="ID Number"
-            name="idNumber"
-            value={form.idNumber}
-            onChange={(v) => handleChange("idNumber", v)}
-            placeholder="Enter the ID number"
-            disabled={isViewMode}
-          />
-        </div>
-      </SectionCard>
-
-      <SectionCard
-        title="5. Account & Portal Access"
+        title="4. Account & Portal Access"
         description="Assign the patient to a doctor and optionally create patient portal credentials"
       >
         <div className="grid gap-4 md:grid-cols-2">
@@ -1123,66 +1072,9 @@ export function PatientForm({
         </div>
       </SectionCard>
 
-      <SectionCard title="6. Additional Information">
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            label="Referred By"
-            name="referredBy"
-            value={form.referredBy}
-            onChange={(v) => handleChange("referredBy", v)}
-            placeholder="Doctor name or clinic name"
-            disabled={isViewMode}
-          />
-          <FormField
-            label="How Did You Hear About Us?"
-            name="howDidYouHear"
-            error={errors.howDidYouHear}
-            disabled={isViewMode}
-          >
-            <Select
-              value={form.howDidYouHear}
-              onValueChange={(v) => handleChange("howDidYouHear", v)}
-              disabled={isViewMode}
-            >
-              <SelectTrigger className="h-10 w-full border-border font-normal">
-                <SelectValue placeholder="Select option" />
-              </SelectTrigger>
-              <SelectContent>
-                {howDidYouHear.map((option) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormField>
-        </div>
-        <FormField
-          label="Internal Notes"
-          name="notes"
-          value={form.notes}
-          onChange={(v) => handleChange("notes", v)}
-          placeholder="Add any additional notes (visible only to clinic staff)"
-          disabled={isViewMode}
-        >
-          <Textarea
-            value={form.notes}
-            onChange={(e) => handleChange("notes", e.target.value)}
-            placeholder="Internal notes — visible only to authorized clinic staff"
-            rows={3}
-            className="h-10 w-full border-border font-normal"
-            disabled={isViewMode}
-          />
-          <p className="text-xs text-warning flex items-center gap-1">
-            <ShieldCheck className="size-3.5" />
-            Visible only to authorized clinic staff, never to the patient
-          </p>
-        </FormField>
-      </SectionCard>
-
       {!isCreateMode && (
         <SectionCard
-          title="7. Attachments"
+          title="5. Attachments"
           description="Optional - upload patient documents"
         >
         {isViewMode ? (
