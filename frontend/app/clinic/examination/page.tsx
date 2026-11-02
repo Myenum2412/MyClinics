@@ -83,9 +83,6 @@ const ISSUE_BADGE: Record<IssueType, string> = {
   soft: "bg-sky-100 text-sky-800",
 };
 
-const HPI_ONSET_OPTIONS = ["Sudden", "Gradual"];
-const HPI_PROGRESSION_OPTIONS = ["Improving", "Worsening", "Stable"];
-const HPI_DURATION_UNITS = ["Days", "Weeks", "Months"];
 
 export interface ExaminationComplaintRow {
   complaint: string;
@@ -718,176 +715,18 @@ export default function ExaminationPage() {
           <CardHeader>
             <CardTitle className="text-base sm:text-lg">History of Presenting Illness</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="exam-hpi-complaint">Presenting complaint</Label>
-              <Textarea
-                id="exam-hpi-complaint"
-                value={readOnly ? (screen.record.hpi?.presentingComplaint ?? "") : form.hpiPresentingComplaint}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, hpiPresentingComplaint: e.target.value }))
-                }
-                placeholder="Main complaint"
-                rows={3}
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Onset</Label>
-              {readOnly ? (
-                <Input value={screen.record.hpi?.onset ?? ""} disabled />
-              ) : (
-                <Select
-                  value={form.hpiOnset || "__none"}
-                  onValueChange={(v) =>
-                    setForm((f) => ({ ...f, hpiOnset: v === "__none" ? "" : (v ?? "") }))
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select onset" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none">Not specified</SelectItem>
-                    {HPI_ONSET_OPTIONS.map((o) => (
-                      <SelectItem key={o} value={o}>{o}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-2">
-                <Label htmlFor="exam-hpi-duration">Duration</Label>
-                <Input
-                  id="exam-hpi-duration"
-                  type="number"
-                  value={readOnly ? (screen.record.hpi?.durationValue ?? "") : form.hpiDurationValue}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, hpiDurationValue: e.target.value }))
-                  }
-                  placeholder="Number"
-                  disabled={readOnly}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Unit</Label>
-                {readOnly ? (
-                  <Input value={screen.record.hpi?.durationUnit ?? ""} disabled />
-                ) : (
-                  <Select
-                    value={form.hpiDurationUnit || "__none"}
-                    onValueChange={(v) =>
-                      setForm((f) => ({ ...f, hpiDurationUnit: v === "__none" ? "" : (v ?? "") }))
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Unit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none">Not specified</SelectItem>
-                      {HPI_DURATION_UNITS.map((o) => (
-                        <SelectItem key={o} value={o}>{o}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Progression</Label>
-              {readOnly ? (
-                <Input value={screen.record.hpi?.progression ?? ""} disabled />
-              ) : (
-                <Select
-                  value={form.hpiProgression || "__none"}
-                  onValueChange={(v) =>
-                    setForm((f) => ({ ...f, hpiProgression: v === "__none" ? "" : (v ?? "") }))
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select progression" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__none">Not specified</SelectItem>
-                    {HPI_PROGRESSION_OPTIONS.map((o) => (
-                      <SelectItem key={o} value={o}>{o}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="exam-hpi-aggravating">Aggravating factors</Label>
-              <Input
-                id="exam-hpi-aggravating"
-                value={readOnly ? (screen.record.hpi?.aggravatingFactors ?? "") : form.hpiAggravatingFactors}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, hpiAggravatingFactors: e.target.value }))
-                }
-                placeholder="Factors that worsen"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="exam-hpi-relieving">Relieving factors</Label>
-              <Input
-                id="exam-hpi-relieving"
-                value={readOnly ? (screen.record.hpi?.relievingFactors ?? "") : form.hpiRelievingFactors}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, hpiRelievingFactors: e.target.value }))
-                }
-                placeholder="Factors that relieve"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="exam-hpi-symptoms">Symptoms</Label>
-              <Textarea
-                id="exam-hpi-symptoms"
-                value={readOnly ? (screen.record.hpi?.symptoms ?? "") : form.hpiSymptoms}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, hpiSymptoms: e.target.value }))
-                }
-                placeholder="Describe symptoms"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="exam-hpi-associated">Associated symptoms</Label>
-              <Textarea
-                id="exam-hpi-associated"
-                value={readOnly ? (screen.record.hpi?.associatedSymptoms ?? "") : form.hpiAssociatedSymptoms}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, hpiAssociatedSymptoms: e.target.value }))
-                }
-                placeholder="Associated symptoms"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="exam-hpi-treatment">Previous treatment</Label>
-              <Textarea
-                id="exam-hpi-treatment"
-                value={readOnly ? (screen.record.hpi?.previousTreatment ?? "") : form.hpiPreviousTreatment}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, hpiPreviousTreatment: e.target.value }))
-                }
-                placeholder="Previous treatment details"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="exam-hpi-notes">Additional notes</Label>
-              <Textarea
-                id="exam-hpi-notes"
-                value={readOnly ? (screen.record.hpi?.additionalNotes ?? "") : form.hpiAdditionalNotes}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, hpiAdditionalNotes: e.target.value }))
-                }
-                placeholder="Any additional notes"
-                disabled={readOnly}
-              />
-            </div>
+          <CardContent className="space-y-2">
+            <Label htmlFor="exam-hpi-complaint">Presenting complaint</Label>
+            <Textarea
+              id="exam-hpi-complaint"
+              value={readOnly ? (screen.record.hpi?.presentingComplaint ?? "") : form.hpiPresentingComplaint}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, hpiPresentingComplaint: e.target.value }))
+              }
+              placeholder="Describe the history of presenting illness…"
+              rows={5}
+              disabled={readOnly}
+            />
           </CardContent>
         </Card>
 
