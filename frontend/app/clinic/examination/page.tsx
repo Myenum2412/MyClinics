@@ -2,28 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-  OdontogramShell,
-  getStatusChart,
-} from "react-advanced-odontogram";
-import "../investigation/odontogram.css";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import {
   type Examination,
   type ExaminationStatus,
-  type MedicineRecord,
   createExamination,
-  createInvestigation,
   deleteExamination,
-  getInvestigation,
   listExaminations,
-  listRecords,
   updateExamination,
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,7 +39,6 @@ import { formatDate } from "@/lib/format-time";
 import { todayISO } from "@/lib/datetime";
 import {
   ArrowLeft,
-  Eye,
   Loader2,
   Plus,
   Search,
@@ -132,14 +121,6 @@ interface FormState {
   pulse: string;
   respiratoryRate: string;
   spo2: string;
-  // Embedded investigation form (create mode only).
-  includeInvestigation: boolean;
-  showInvestigation: boolean;
-  invTitle: string;
-  invVisitDate: string;
-  invStatus: ExaminationStatus;
-  invNotes: string;
-  invMedicalRecordId: string;
 }
 
 function emptyForm(): FormState {
@@ -174,13 +155,6 @@ function emptyForm(): FormState {
     pulse: "",
     respiratoryRate: "",
     spo2: "",
-    includeInvestigation: true,
-    showInvestigation: true,
-    invTitle: "",
-    invVisitDate: todayISO(),
-    invStatus: "pending",
-    invNotes: "",
-    invMedicalRecordId: "",
   };
 }
 
@@ -198,11 +172,8 @@ export default function ExaminationPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   const [form, setForm] = useState<FormState>(emptyForm());
-  const [records, setRecords] = useState<MedicineRecord[]>([]);
-  const [recordsLoading, setRecordsLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Examination | null>(null);
-  const [linkedInvTitle, setLinkedInvTitle] = useState<string | null>(null);
 
   const load = useCallback(() => {
     if (!clinicId) return;
@@ -221,21 +192,6 @@ export default function ExaminationPage() {
   useEffect(() => {
     load();
   }, [load]);
-
-  // Medical records of the selected patient for the embedded
-  // investigation's link picker (create mode only).
-  useEffect(() => {
-    if (screen.name !== "form" || screen.mode !== "create" || !clinicId) return;
-    if (!form.patientId) {
-      setRecords([]);
-      return;
-    }
-    setRecordsLoading(true);
-    listRecords(clinicId, { patientId: form.patientId, limit: 50 })
-      .then((res) => setRecords(res.items ?? []))
-      .catch(() => setRecords([]))
-      .finally(() => setRecordsLoading(false));
-  }, [screen, form.patientId, clinicId]);
 
   const filteredItems = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -296,31 +252,18 @@ export default function ExaminationPage() {
       pulse: record.pulse ?? "",
       respiratoryRate: record.respiratoryRate ?? "",
       spo2: record.spo2 ?? "",
-      includeInvestigation: false,
     };
   }
 
   function openEdit(record: Examination) {
     setForm(formFromRecord(record));
-    setLinkedInvTitle(null);
     setScreen({ name: "form", mode: "edit", record });
-    if (record.investigationId) {
-      getInvestigation(clinicId, record.investigationId)
-        .then((inv) => setLinkedInvTitle(inv.title))
-        .catch(() => setLinkedInvTitle(null));
-    }
   }
 
   function openView(record: Examination) {
-    setLinkedInvTitle(null);
     // Populate the form too so read-only rows render counts correctly.
     setForm(formFromRecord(record));
     setScreen({ name: "form", mode: "view", record });
-    if (record.investigationId) {
-      getInvestigation(clinicId, record.investigationId)
-        .then((inv) => setLinkedInvTitle(inv.title))
-        .catch(() => setLinkedInvTitle(null));
-    }
   }
 
   async function handleSave() {
@@ -381,33 +324,6 @@ export default function ExaminationPage() {
       };
       if (screen.mode === "create") {
         payload.patientId = form.patientId;
-        // Create the embedded investigation first so its id can be linked.
-        if (form.includeInvestigation) {
-          if (form.invTitle.trim().length < 2) {
-            toast.error("Please enter the investigation title");
-            setSaving(false);
-            return;
-          }
-          let chartData: Record<string, unknown> | null = null;
-          try {
-            const chart = getStatusChart() as unknown;
-            if (chart && typeof chart === "object") {
-              chartData = chart as Record<string, unknown>;
-            }
-          } catch {
-            chartData = null;
-          }
-          const inv = await createInvestigation(clinicId, {
-            patientId: form.patientId,
-            title: form.invTitle.trim(),
-            visitDate: form.invVisitDate,
-            status: form.invStatus,
-            notes: form.invNotes.trim() || null,
-            medicalRecordId: form.invMedicalRecordId || null,
-            chartData,
-          });
-          payload.investigationId = inv.investigationId;
-        }
         await createExamination(clinicId, payload);
         toast.success("Examination created successfully");
       } else {
@@ -623,91 +539,18 @@ export default function ExaminationPage() {
           <CardHeader>
             <CardTitle className="text-base sm:text-lg">Medical Information</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-3 sm:gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="exam-allergies">Known allergies</Label>
-              <Input
-                id="exam-allergies"
-                value={readOnly ? (screen.record.allergies ?? "") : form.allergies}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, allergies: e.target.value }))
-                }
-                placeholder="Penicillin, Nuts (comma-separated)"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="exam-conditions">Medical conditions</Label>
-              <Textarea
-                id="exam-conditions"
-                value={readOnly ? (screen.record.medicalConditions ?? "") : form.medicalConditions}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, medicalConditions: e.target.value }))
-                }
-                placeholder="Diabetes, Hypertension…"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="exam-surgeries">Previous surgeries / hospitalizations</Label>
-              <Textarea
-                id="exam-surgeries"
-                value={readOnly ? (screen.record.previousSurgeries ?? "") : form.previousSurgeries}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, previousSurgeries: e.target.value }))
-                }
-                placeholder="Appendectomy (2015)…"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="exam-meds">Current medications</Label>
-              <Textarea
-                id="exam-meds"
-                value={readOnly ? (screen.record.currentMedications ?? "") : form.currentMedications}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, currentMedications: e.target.value }))
-                }
-                placeholder="Aspirin 500mg (daily)…"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="exam-history">Patient history</Label>
-              <Textarea
-                id="exam-history"
-                value={readOnly ? (screen.record.patientHistory ?? "") : form.patientHistory}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, patientHistory: e.target.value }))
-                }
-                placeholder="Past illnesses, treatments, hospitalizations…"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="exam-family">Family history</Label>
-              <Textarea
-                id="exam-family"
-                value={readOnly ? (screen.record.familyHistory ?? "") : form.familyHistory}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, familyHistory: e.target.value }))
-                }
-                placeholder="Diabetes, heart disease in family…"
-                disabled={readOnly}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="exam-habits">Habits</Label>
-              <Textarea
-                id="exam-habits"
-                value={readOnly ? (screen.record.habits ?? "") : form.habits}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, habits: e.target.value }))
-                }
-                placeholder="Smoking, alcohol, diet, exercise…"
-                disabled={readOnly}
-              />
-            </div>
+          <CardContent className="space-y-2">
+            <Label htmlFor="exam-medical-info">Medical Information</Label>
+            <Textarea
+              id="exam-medical-info"
+              value={readOnly ? (screen.record.medicalConditions ?? "") : form.medicalConditions}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, medicalConditions: e.target.value }))
+              }
+              placeholder="Enter the patient's medical information…"
+              rows={5}
+              disabled={readOnly}
+            />
           </CardContent>
         </Card>
 
@@ -730,170 +573,6 @@ export default function ExaminationPage() {
           </CardContent>
         </Card>
 
-        {mode === "create" && (
-          <Card>
-            <CardHeader>
-              <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-                <CardTitle className="text-base sm:text-lg">Investigation</CardTitle>
-                <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-4">
-                  <label className="flex cursor-pointer items-center gap-2 text-xs font-medium sm:text-sm">
-                    <Checkbox
-                      checked={form.includeInvestigation}
-                      onCheckedChange={(v) =>
-                        setForm((f) => ({
-                          ...f,
-                          includeInvestigation: v === true,
-                        }))
-                      }
-                    />
-                    Include investigation
-                  </label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setForm((f) => ({
-                        ...f,
-                        showInvestigation: !f.showInvestigation,
-                      }))
-                    }
-                  >
-                    {form.showInvestigation ? "Hide" : "Show"}
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            {form.showInvestigation && (
-              <CardContent className="grid gap-3 sm:grid-cols-2 sm:gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="exam-inv-title">Title</Label>
-                  <Input
-                    id="exam-inv-title"
-                    value={form.invTitle}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, invTitle: e.target.value }))
-                    }
-                    placeholder="e.g. Root canal assessment — 46"
-                    disabled={!form.includeInvestigation}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="exam-inv-date">Visit date</Label>
-                  <Input
-                    id="exam-inv-date"
-                    type="date"
-                    value={form.invVisitDate}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, invVisitDate: e.target.value }))
-                    }
-                    disabled={!form.includeInvestigation}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select
-                    value={form.invStatus}
-                    onValueChange={(v) =>
-                      setForm((f) => ({
-                        ...f,
-                        invStatus: v as ExaminationStatus,
-                      }))
-                    }
-                    disabled={!form.includeInvestigation}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUS_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Linked medical record (optional)</Label>
-                  <Select
-                    value={form.invMedicalRecordId || "__none"}
-                    onValueChange={(v) =>
-                      setForm((f) => ({
-                        ...f,
-                        invMedicalRecordId: !v || v === "__none" ? "" : v,
-                      }))
-                    }
-                    disabled={
-                      !form.includeInvestigation ||
-                      recordsLoading ||
-                      !form.patientId
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue
-                        placeholder={
-                          !form.patientId
-                            ? "Select a patient first"
-                            : recordsLoading
-                              ? "Loading records…"
-                              : "No linked record"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none">No linked record</SelectItem>
-                      {records.map((r) => (
-                        <SelectItem key={r.recordId} value={r.recordId}>
-                          {r.visitDate} — {r.diagnosis}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="exam-inv-notes">Notes</Label>
-                  <Textarea
-                    id="exam-inv-notes"
-                    value={form.invNotes}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, invNotes: e.target.value }))
-                    }
-                    placeholder="Clinical notes for this investigation…"
-                    disabled={!form.includeInvestigation}
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label>Dental odontogram</Label>
-                  <div className="isolate overflow-auto rounded-xl border bg-white">
-                    <OdontogramShell
-                      key="exam-new-investigation"
-                      language="en"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            )}
-          </Card>
-        )}
-
-        {mode !== "create" && screen.record.investigationId && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Linked investigation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-                <p className="min-w-0 flex-1 truncate text-sm font-medium">
-                  {linkedInvTitle ?? screen.record.investigationId}
-                </p>
-                <Button variant="outline" size="sm" className="w-full justify-center sm:w-auto" render={<a href="/clinic/investigation" />}>
-                  <Eye className="size-4" />
-                  Open investigations
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {mode !== "view" && (
           <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
@@ -988,7 +667,6 @@ export default function ExaminationPage() {
                     <TableHead>Issues</TableHead>
                     <TableHead>Oral findings</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Investigation</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1013,13 +691,6 @@ export default function ExaminationPage() {
                         <Badge className={STATUS_BADGE[item.status]}>
                           {item.status}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {item.investigationId ? (
-                          <Badge variant="outline">Linked</Badge>
-                        ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
-                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end">
@@ -1050,7 +721,6 @@ export default function ExaminationPage() {
                   <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{item.oralFindings}</p>
                   <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
                     {formatDate(item.visitDate)}
-                    {item.investigationId ? " · Linked investigation" : ""}
                   </p>
                   <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/60 pt-2">
                     <Badge className={`${STATUS_BADGE[item.status]} text-[11px]`}>
