@@ -144,7 +144,6 @@ export default function QuickAddPage(){
     allergies:"", medicalConditions:"", previousSurgeries:"", currentMedications:"", patientHistory:"", familyHistory:"", habits:"",
     hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:"",
   });
-  const setExamComplaint=(i:number,patch:Partial<typeof exam.chiefComplaints[0]>)=> setExam(s=>({...s, chiefComplaints: s.chiefComplaints.map((row,idx)=> idx===i? {...row,...patch}:row)}));
   // Investigation — full /clinic/investigation form (incl. odontogram for "Other" + record link)
   const [inv,setInv]=useState({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", medicalRecordId:"", showChart:true, details:{} as Record<string,string>});
   const [invRecords,setInvRecords]=useState<MedicineRecord[]>([]);
@@ -418,38 +417,12 @@ export default function QuickAddPage(){
           <div><Label className="text-xs">Visit date *</Label><Input type="date" value={exam.visitDate} onChange={e=>setExam({...exam,visitDate:e.target.value})} className="mt-1 h-9"/></div>
           <div><Label className="text-xs">Status</Label><select value={exam.status} onChange={e=>setExam({...exam,status:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="pending">Pending</option><option value="in-progress">In Progress</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select></div>
           <div><Label className="text-xs">Issue type *</Label><select value={exam.issueType} onChange={e=>setExam({...exam,issueType:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select (Hard / Soft)</option><option value="hard">Hard</option><option value="soft">Soft</option></select></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Chief Complaint</Label><Textarea value={exam.chiefComplaints[0]?.complaint ?? ""} onChange={e=>setExam(s=>({...s, chiefComplaints: s.chiefComplaints.length ? s.chiefComplaints.map((row,i)=> i===0 ? {...row, complaint:e.target.value} : row) : [{complaint:e.target.value,duration:"",severity:"",notes:""}]}))} rows={2} placeholder="Enter the patient's chief complaint…"/></div>
           <div className="sm:col-span-2"><Label className="text-xs">Oral findings *</Label><Textarea value={exam.oralFindings} onChange={e=>setExam({...exam,oralFindings:e.target.value})} rows={2} placeholder="Describe the oral examination findings…"/></div>
           <div className="sm:col-span-2"><Label className="text-xs">Notes</Label><Textarea value={exam.notes} onChange={e=>setExam({...exam,notes:e.target.value})} rows={2} placeholder="Additional notes for this examination…"/></div>
         </div>
-        <div className="rounded-xl border p-3 space-y-3">
-          <div className="flex items-center justify-between"><p className="text-xs font-semibold">Chief complaints</p><Button type="button" variant="outline" size="sm" onClick={()=>setExam(s=>({...s, chiefComplaints:[...s.chiefComplaints,{complaint:"",duration:"",severity:"",notes:""}]}))}>+ Add complaint</Button></div>
-          {exam.chiefComplaints.map((c,i)=> (
-            <div key={i} className="grid sm:grid-cols-4 gap-2 items-end">
-              <Input value={c.complaint} onChange={e=>setExamComplaint(i,{complaint:e.target.value})} placeholder="Complaint"/>
-              <Input value={c.duration} onChange={e=>setExamComplaint(i,{duration:e.target.value})} placeholder="Duration"/>
-              <select value={c.severity} onChange={e=>setExamComplaint(i,{severity:e.target.value})} className="h-9 rounded-xl border border-border bg-card px-3 text-sm"><option value="">Severity</option><option>Mild</option><option>Moderate</option><option>Severe</option></select>
-              <div className="flex gap-1">
-                <Input value={c.notes} onChange={e=>setExamComplaint(i,{notes:e.target.value})} placeholder="Notes" className="flex-1"/>
-                {exam.chiefComplaints.length>1 && <Button type="button" variant="ghost" size="sm" onClick={()=>setExam(s=>({...s, chiefComplaints: s.chiefComplaints.filter((_,idx)=> idx!==i)}))}>✕</Button>}
-              </div>
-            </div>
-          ))}
-        </div>
         <div className="grid sm:grid-cols-2 gap-4">
-          <p className="text-xs font-semibold sm:col-span-2">History of presenting illness</p>
-          <div className="sm:col-span-2"><Label className="text-xs">Presenting complaint</Label><Textarea value={exam.hpiPresentingComplaint} onChange={e=>setExam({...exam,hpiPresentingComplaint:e.target.value})} rows={3} placeholder="Main complaint"/></div>
-          <div><Label className="text-xs">Onset</Label><select value={exam.hpiOnset} onChange={e=>setExam({...exam,hpiOnset:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Not specified</option><option>Sudden</option><option>Gradual</option></select></div>
-          <div className="grid grid-cols-2 gap-2">
-            <div><Label className="text-xs">Duration</Label><Input type="number" value={exam.hpiDurationValue} onChange={e=>setExam({...exam,hpiDurationValue:e.target.value})} className="mt-1 h-9" placeholder="Number"/></div>
-            <div><Label className="text-xs">Unit</Label><select value={exam.hpiDurationUnit} onChange={e=>setExam({...exam,hpiDurationUnit:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Unit</option><option>Days</option><option>Weeks</option><option>Months</option></select></div>
-          </div>
-          <div><Label className="text-xs">Progression</Label><select value={exam.hpiProgression} onChange={e=>setExam({...exam,hpiProgression:e.target.value})} className="mt-1 h-9 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Not specified</option><option>Improving</option><option>Worsening</option><option>Stable</option></select></div>
-          <div><Label className="text-xs">Aggravating factors</Label><Input value={exam.hpiAggravatingFactors} onChange={e=>setExam({...exam,hpiAggravatingFactors:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Relieving factors</Label><Input value={exam.hpiRelievingFactors} onChange={e=>setExam({...exam,hpiRelievingFactors:e.target.value})} className="mt-1 h-9"/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Symptoms</Label><Textarea value={exam.hpiSymptoms} onChange={e=>setExam({...exam,hpiSymptoms:e.target.value})} rows={2}/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Associated symptoms</Label><Textarea value={exam.hpiAssociatedSymptoms} onChange={e=>setExam({...exam,hpiAssociatedSymptoms:e.target.value})} rows={2}/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Previous treatment</Label><Textarea value={exam.hpiPreviousTreatment} onChange={e=>setExam({...exam,hpiPreviousTreatment:e.target.value})} rows={2}/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Additional notes</Label><Textarea value={exam.hpiAdditionalNotes} onChange={e=>setExam({...exam,hpiAdditionalNotes:e.target.value})} rows={2}/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">History of Presenting Illness</Label><Textarea value={exam.hpiPresentingComplaint} onChange={e=>setExam({...exam,hpiPresentingComplaint:e.target.value})} rows={4} placeholder="Describe the history of presenting illness…"/></div>
         </div>
         <div className="grid sm:grid-cols-3 gap-4">
           <div><Label className="text-xs">Blood pressure</Label><Input value={exam.bloodPressure} onChange={e=>setExam({...exam,bloodPressure:e.target.value})} placeholder="120/80" className="mt-1 h-9"/></div>
