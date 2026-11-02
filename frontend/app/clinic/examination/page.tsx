@@ -565,6 +565,37 @@ export default function ExaminationPage() {
               )}
             </div>
             <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="exam-chief-complaint">Chief Complaint</Label>
+              <Textarea
+                id="exam-chief-complaint"
+                value={
+                  readOnly
+                    ? (screen.record.chiefComplaints?.[0]?.complaint ?? "")
+                    : (form.chiefComplaints[0]?.complaint ?? "")
+                }
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    chiefComplaints:
+                      f.chiefComplaints.length > 0
+                        ? f.chiefComplaints.map((row, i) =>
+                            i === 0 ? { ...row, complaint: e.target.value } : row
+                          )
+                        : [
+                            {
+                              complaint: e.target.value,
+                              duration: "",
+                              severity: "",
+                              notes: "",
+                            },
+                          ],
+                  }))
+                }
+                placeholder="Enter the patient's chief complaint…"
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="exam-oral">Oral findings</Label>
               <Textarea
                 id="exam-oral"
