@@ -93,6 +93,9 @@ interface FormState {
   issueType: IssueType | "";
   oralFindings: string;
   notes: string;
+  // Intra oral examination
+  softTissueNote: string;
+  hardTissueNote: string;
   // Medical history (moved here from patient registration).
   allergies: string;
   medicalConditions: string;
@@ -131,6 +134,8 @@ function emptyForm(): FormState {
     issueType: "",
     oralFindings: "",
     notes: "",
+    softTissueNote: "",
+    hardTissueNote: "",
     allergies: "",
     medicalConditions: "",
     previousSurgeries: "",
@@ -201,7 +206,9 @@ export default function ExaminationPage() {
       return (
         item.patientName.toLowerCase().includes(term) ||
         item.oralFindings.toLowerCase().includes(term) ||
-        (item.notes ?? "").toLowerCase().includes(term)
+        (item.notes ?? "").toLowerCase().includes(term) ||
+        (item.softTissueNote ?? "").toLowerCase().includes(term) ||
+        (item.hardTissueNote ?? "").toLowerCase().includes(term)
       );
     });
   }, [items, searchTerm, statusFilter]);
@@ -220,6 +227,8 @@ export default function ExaminationPage() {
       issueType: record.issueType,
       oralFindings: record.oralFindings,
       notes: record.notes ?? "",
+      softTissueNote: record.softTissueNote ?? "",
+      hardTissueNote: record.hardTissueNote ?? "",
       allergies: record.allergies ?? "",
       medicalConditions: record.medicalConditions ?? "",
       previousSurgeries: record.previousSurgeries ?? "",
@@ -272,12 +281,32 @@ export default function ExaminationPage() {
       toast.error("Please select a patient");
       return;
     }
-    if (!form.issueType) {
+    let issueType = form.issueType;
+    if (!issueType) {
+      if (form.softTissueNote.trim() && !form.hardTissueNote.trim()) {
+        issueType = "soft";
+      } else if (form.hardTissueNote.trim() && !form.softTissueNote.trim()) {
+        issueType = "hard";
+      } else if (form.softTissueNote.trim() || form.hardTissueNote.trim()) {
+        issueType = "soft";
+      }
+    }
+    if (!issueType) {
       toast.error("Please select the issue type (Hard / Soft)");
       return;
     }
-    if (form.oralFindings.trim().length < 2) {
-      toast.error("Please enter the oral findings");
+
+    const effectiveOral =
+      form.oralFindings.trim() ||
+      [
+        form.softTissueNote.trim() ? `Soft tissue: ${form.softTissueNote.trim()}` : "",
+        form.hardTissueNote.trim() ? `Hard tissue: ${form.hardTissueNote.trim()}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+    if (effectiveOral.length < 2) {
+      toast.error("Please enter the oral findings or intra oral examination notes");
       return;
     }
     setSaving(true);
@@ -285,8 +314,10 @@ export default function ExaminationPage() {
       const payload: Record<string, unknown> = {
         visitDate: form.visitDate,
         status: form.status,
-        issueType: form.issueType,
-        oralFindings: form.oralFindings.trim(),
+        issueType,
+        oralFindings: effectiveOral,
+        softTissueNote: form.softTissueNote.trim() || null,
+        hardTissueNote: form.hardTissueNote.trim() || null,
         notes: form.notes.trim() || null,
         allergies: form.allergies.trim() || null,
         medicalConditions: form.medicalConditions.trim() || null,
@@ -529,6 +560,48 @@ export default function ExaminationPage() {
                   setForm((f) => ({ ...f, notes: e.target.value }))
                 }
                 placeholder="Additional notes for this examination…"
+                disabled={readOnly}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">Intra Oral Examination</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="exam-soft-tissue">Soft tissue note</Label>
+              <Textarea
+                id="exam-soft-tissue"
+                value={
+                  readOnly
+                    ? (screen.record.softTissueNote ?? "")
+                    : form.softTissueNote
+                }
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, softTissueNote: e.target.value }))
+                }
+                placeholder="Enter soft tissue notes…"
+                rows={4}
+                disabled={readOnly}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="exam-hard-tissue">Hard tissue note</Label>
+              <Textarea
+                id="exam-hard-tissue"
+                value={
+                  readOnly
+                    ? (screen.record.hardTissueNote ?? "")
+                    : form.hardTissueNote
+                }
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, hardTissueNote: e.target.value }))
+                }
+                placeholder="Enter hard tissue notes…"
+                rows={4}
                 disabled={readOnly}
               />
             </div>

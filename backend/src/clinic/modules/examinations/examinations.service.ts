@@ -126,6 +126,8 @@ export class ExaminationService {
       pulse: input.pulse ?? null,
       respiratoryRate: input.respiratoryRate ?? null,
       spo2: input.spo2 ?? null,
+      softTissueNote: input.softTissueNote ?? null,
+      hardTissueNote: input.hardTissueNote ?? null,
       createdBy: ctx.userId,
       createdByName: ctx.name,
     });
@@ -209,6 +211,8 @@ export class ExaminationService {
       "pulse",
       "respiratoryRate",
       "spo2",
+      "softTissueNote",
+      "hardTissueNote",
     ] as const) {
       if (input[key] !== undefined) patch[key] = input[key];
     }

@@ -80,6 +80,8 @@ export const createExaminationSchema = z.object({
   pulse: optionalString(20),
   respiratoryRate: optionalString(20),
   spo2: optionalString(20),
+  softTissueNote: optionalString(5000),
+  hardTissueNote: optionalString(5000),
 });
 
 export type CreateExaminationInput = z.infer<

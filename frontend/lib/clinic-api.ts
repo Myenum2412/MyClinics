@@ -1733,6 +1733,9 @@ export interface Examination {
   pulse?: string | null;
   respiratoryRate?: string | null;
   spo2?: string | null;
+  /** Intra Oral Examination notes */
+  softTissueNote?: string | null;
+  hardTissueNote?: string | null;
   createdBy: string;
   createdByName: string | null;
   clinicId: string;

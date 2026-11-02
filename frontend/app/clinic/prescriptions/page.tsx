@@ -148,7 +148,6 @@ export default function PrescriptionsPage() {
     visitDate: true,
     patient: true,
     doctor: true,
-    diagnosis: true,
     medicines: true,
     status: true,
   });
@@ -405,7 +404,7 @@ export default function PrescriptionsPage() {
               <div>
                 <h1 className="text-xl font-bold text-foreground sm:text-2xl">Create Prescription</h1>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Write diagnosis and prescribe medication. Respective patients will receive secure automated WhatsApp alerts.
+                  Prescribe medication. Respective patients will receive secure automated WhatsApp alerts.
                 </p>
               </div>
             </div>
@@ -698,12 +697,6 @@ export default function PrescriptionsPage() {
                       </TableHead>
                     )}
 
-                    {visibleColumns.diagnosis && (
-                      <TableHead>
-                        Diagnosis
-                      </TableHead>
-                    )}
-
                     {visibleColumns.medicines && (
                       <TableHead>
                         Medicines
@@ -780,12 +773,6 @@ export default function PrescriptionsPage() {
                                 {doctorLabel}
                               </span>
                             </div>
-                          </TableCell>
-                        )}
-
-                        {visibleColumns.diagnosis && (
-                          <TableCell className="max-w-44 truncate text-xs text-muted-foreground">
-                            {p.diagnosis ?? "—"}
                           </TableCell>
                         )}
 
@@ -975,14 +962,11 @@ export default function PrescriptionsPage() {
                       )}
                     </div>
 
-                    {/* Doctor + diagnosis */}
+                    {/* Doctor */}
                     <div className="px-3.5">
                       {visibleColumns.doctor && (
                         <p className="truncate text-[11px] text-muted-foreground">Dr. {doctorLabel}</p>
                       )}
-                      {visibleColumns.diagnosis && p.diagnosis ? (
-                        <p className="mt-0.5 truncate text-xs font-medium text-foreground">{p.diagnosis}</p>
-                      ) : null}
                     </div>
 
                     {/* Medicines */}
@@ -1256,11 +1240,11 @@ function PrescriptionForm({
   return (
     <form onSubmit={submit} className="space-y-6">
       <fieldset disabled={readOnly} className="space-y-6 border-0 p-0 m-0">
-      {/* 1. PATIENT & DIAGNOSIS */}
+      {/* 1. PATIENT DETAILS */}
       <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold text-foreground">
-            1. Patient &amp; Diagnosis
+            1. Patient Details
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1277,10 +1261,6 @@ function PrescriptionForm({
               </Label>
               <Input type="date" value={form.visitDate} onChange={(e) => set("visitDate", e.target.value)} required className="border border-border focus:ring-ring" />
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-sm font-medium text-foreground">Diagnosis</Label>
-            <Input value={form.diagnosis} onChange={(e) => set("diagnosis", e.target.value)} placeholder="Diagnosis details..." className="border border-border focus:ring-ring" />
           </div>
         </CardContent>
       </Card>

@@ -52,6 +52,9 @@ export interface ExaminationDoc extends ClinicDocument {
   pulse: string | null;
   respiratoryRate: string | null;
   spo2: string | null;
+  /** Intra Oral Examination notes */
+  softTissueNote?: string | null;
+  hardTissueNote?: string | null;
   createdBy: string;
   createdByName: string | null;
   createdAt: Date;
@@ -108,6 +111,8 @@ export function examinationToPublic(doc: ExaminationDoc) {
     pulse: doc.pulse ?? null,
     respiratoryRate: doc.respiratoryRate ?? null,
     spo2: doc.spo2 ?? null,
+    softTissueNote: doc.softTissueNote ?? null,
+    hardTissueNote: doc.hardTissueNote ?? null,
     createdBy: doc.createdBy,
     createdByName: doc.createdByName,
     clinicId: doc.clinicId,
