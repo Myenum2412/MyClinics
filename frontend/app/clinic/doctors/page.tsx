@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { PincodeLookup } from "@/components/clinic/pincode-lookup";
 import {
   WhatsAppInput,
@@ -41,6 +42,8 @@ import {
   AlertCircle,
   Activity,
   Phone,
+  ShieldCheck,
+  ShieldOff,
 } from "lucide-react";
 import { DoctorOverviewAnalytics } from "@/src/components/clinic/doctor-overview-analytics";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -116,7 +119,7 @@ interface DoctorFormState {
   confirmPassword: string;
   role: string;
   status: string;
-  allowLogin: string;
+  allowLogin: boolean;
   // 4. Consultation schedule
   schedule: DaySchedule[];
   // 5. Additional information
@@ -155,7 +158,7 @@ const EMPTY_FORM: DoctorFormState = {
   confirmPassword: "",
   role: "Doctor",
   status: "active",
-  allowLogin: "yes",
+  allowLogin: false,
   schedule: DEFAULT_DAYS.map((day) => ({ day, ...DEFAULT_SLOT })),
   about: "",
   languages: "",
@@ -205,7 +208,9 @@ function doctorToForm(doctor: Doctor): DoctorFormState {
     confirmPassword: "",
     role: "Doctor",
     status: doctor.status,
-    allowLogin: doctor.allowLogin === false ? "no" : "yes",
+    // Default to off unless the doctor explicitly has login access. Legacy
+    // records without the flag fall back to whether a login account exists.
+    allowLogin: doctor.allowLogin === true || (doctor.allowLogin == null && Boolean(doctor.userId)),
     schedule:
       schedule.length > 0 ? schedule : DEFAULT_DAYS.map((day) => ({ day, ...DEFAULT_SLOT })),
     about: doctor.about ?? "",
@@ -311,7 +316,7 @@ export default function DoctorsPage() {
         languages: form.languages.trim() || null,
         notes: form.notes.trim() || null,
         username: form.username.trim() || null,
-        allowLogin: form.allowLogin === "yes",
+        allowLogin: form.allowLogin,
         scheduleDays: form.schedule
           .filter((s) => s.start && s.end && s.end > s.start)
           .map((s) => s.day),
@@ -330,16 +335,23 @@ export default function DoctorsPage() {
             toast.warning("Doctor updated, but the profile photo could not be uploaded");
           }
         }
-        // Reset the login password when a new one was provided.
-        if (form.password) {
-          try {
+        // Keep the login account in sync with the access-control toggle:
+        // ON creates/reactivates the account, OFF deactivates it.
+        try {
+          if (form.allowLogin) {
             if (editing.userId) {
               await updateClinicUser(clinicId, editing.userId, {
                 phone: form.phone.trim() || null,
                 whatsapp: form.whatsapp.trim() || null,
-                password: form.password,
+                status: "active",
+                ...(form.password ? { password: form.password } : {}),
               });
-            } else if (form.email.trim()) {
+              toast.success(
+                form.password
+                  ? "Doctor updated — new login password sent via WhatsApp"
+                  : "Doctor updated with login access"
+              );
+            } else {
               await createClinicUser(clinicId, {
                 name: form.name.trim(),
                 email: form.email.trim(),
@@ -349,17 +361,24 @@ export default function DoctorsPage() {
                 whatsapp: form.whatsapp.trim() || null,
                 doctorId: editing.doctorId,
               });
+              toast.success("Doctor updated — login access turned on");
             }
-            toast.success("Doctor updated — new login password sent via WhatsApp");
-          } catch (e) {
-            toast.error(
-              `Doctor updated, but the password could not be reset: ${
-                e instanceof Error ? e.message : "unknown error"
-              }`
+          } else {
+            if (editing.userId) {
+              await updateClinicUser(clinicId, editing.userId, { status: "inactive" });
+            }
+            toast.success(
+              editing.userId
+                ? "Doctor updated — login access turned off"
+                : "Doctor updated"
             );
           }
-        } else {
-          toast.success("Doctor updated");
+        } catch (e) {
+          toast.error(
+            `Doctor updated, but login access could not be changed: ${
+              e instanceof Error ? e.message : "unknown error"
+            }`
+          );
         }
       } else {
         const created = await createDoctor(clinicId, payload);
@@ -372,8 +391,8 @@ export default function DoctorsPage() {
           }
         }
 
-        // Create the login account when Allow Login is enabled.
-        if (form.allowLogin === "yes" && form.password && form.email.trim()) {
+        // Create the login account only when access control is turned on.
+        if (form.allowLogin && form.password && form.email.trim()) {
           try {
             await createClinicUser(clinicId, {
               name: form.name.trim(),
@@ -530,7 +549,7 @@ export default function DoctorsPage() {
           <div className="space-y-6">
             <DoctorForm
               initial={EMPTY_FORM}
-              isEdit={false}
+              hasLoginAccount={false}
               saving={saving}
               onSave={async (form) => {
                 await handleSave(form);
@@ -569,7 +588,7 @@ export default function DoctorsPage() {
           <div className="space-y-6">
             <DoctorForm
               initial={doctorToForm(editing)}
-              isEdit={true}
+              hasLoginAccount={Boolean(editing.userId)}
               saving={saving}
               onSave={async (form) => {
                 await handleSave(form);
@@ -639,7 +658,7 @@ export default function DoctorsPage() {
                 <div className="p-4">
                   <DoctorForm
                     initial={doctorToForm(viewing)}
-                    isEdit={true}
+                    hasLoginAccount={Boolean(viewing.userId)}
                     saving={false}
                     readOnly={true}
                   />
@@ -908,13 +927,13 @@ export default function DoctorsPage() {
 
 function DoctorForm({
   initial,
-  isEdit,
+  hasLoginAccount = false,
   saving,
   onSave,
   readOnly,
 }: {
   initial: DoctorFormState;
-  isEdit: boolean;
+  hasLoginAccount?: boolean;
   saving: boolean;
   onSave?: (form: DoctorFormState) => Promise<void>;
   readOnly?: boolean;
@@ -1023,11 +1042,19 @@ function DoctorForm({
       const fee = Number(form.fee.trim());
       if (Number.isNaN(fee) || fee < 0) errs.fee = "Enter a valid consultation fee";
     }
-    if (!form.username.trim()) errs.username = "Username is required";
-    else if (form.username.trim().length < 3) errs.username = "Username must be at least 3 characters";
-    if (!isEdit && !form.password) errs.password = "Password is required";
-    else if (form.password && form.password.length < 8) errs.password = "Password must be at least 8 characters";
-    if (form.password && form.confirmPassword !== form.password) errs.confirmPassword = "Passwords do not match";
+    // Credentials are only required while login access is turned on.
+    if (form.allowLogin) {
+      if (!form.username.trim()) errs.username = "Username is required";
+      else if (form.username.trim().length < 3) errs.username = "Username must be at least 3 characters";
+      if (!hasLoginAccount && !form.password) {
+        errs.password = "Password is required to create a login account";
+      } else if (form.password && form.password.length < 8) {
+        errs.password = "Password must be at least 8 characters";
+      }
+      if (form.password && form.confirmPassword !== form.password) {
+        errs.confirmPassword = "Passwords do not match";
+      }
+    }
     if (form.pincode.trim() && !/^[1-9]\d{5}$/.test(form.pincode.trim())) {
       errs.pincode = "Enter a valid Indian pincode";
     }
@@ -1359,122 +1386,37 @@ function DoctorForm({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="grid gap-2">
-            <Label className="text-sm font-medium text-foreground">
-              Username <RequiredStar />
-            </Label>
-            <Input
-              value={form.username}
-              onChange={(e) => set("username", e.target.value)}
-              placeholder="Enter username"
-              className={inputBase("username")}
-            />
-            <FieldError message={errors.username} />
-          </div>
-
-          <div className="grid gap-2">
-            <Label className="text-sm font-medium text-foreground">
-              Password <RequiredStar />
-            </Label>
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                value={form.password}
-                onChange={(e) => set("password", e.target.value)}
-                placeholder="Enter password"
-                className={`${inputBase("password")} pr-10`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((s) => !s)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
-              >
-                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-2">
+              <Label className="text-sm font-medium text-foreground">Role</Label>
+              <Select value={form.role} onValueChange={(v) => set("role", v ?? "Doctor")}>
+                <SelectTrigger className={`${inputBase("role")} w-full`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Doctor">Doctor</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <FieldError message={errors.password} />
-          </div>
 
-          <div className="grid gap-2">
-            <Label className="text-sm font-medium text-foreground">
-              Confirm Password <RequiredStar />
-            </Label>
-            <div className="relative">
-              <Input
-                type={showConfirmPassword ? "text" : "password"}
-                value={form.confirmPassword}
-                onChange={(e) => set("confirmPassword", e.target.value)}
-                placeholder="Confirm password"
-                className={`${inputBase("confirmPassword")} pr-10`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword((s) => !s)}
-                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
-              >
-                {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
+            <div className="grid gap-2">
+              <Label className="text-sm font-medium text-foreground">Status</Label>
+              <Select value={form.status} onValueChange={(v) => set("status", v ?? "active")}>
+                <SelectTrigger className={`${inputBase("status")} w-full`}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <FieldError message={errors.confirmPassword} />
           </div>
-
-          <div className="grid gap-2">
-            <Label className="text-sm font-medium text-foreground">Role</Label>
-            <Select value={form.role} onValueChange={(v) => set("role", v ?? "Doctor")}>
-              <SelectTrigger className={`${inputBase("role")} w-full`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Doctor">Doctor</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-2">
-            <Label className="text-sm font-medium text-foreground">Status</Label>
-            <Select value={form.status} onValueChange={(v) => set("status", v ?? "active")}>
-              <SelectTrigger className={`${inputBase("status")} w-full`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid gap-2 md:col-span-2">
-            <Label className="text-sm font-medium text-foreground">Allow Login</Label>
-            <div className="mt-3 space-y-2">
-              {(["yes", "no"] as const).map((option) => (
-                <label
-                  key={option}
-                  className="flex items-center gap-3 rounded-lg p-3 hover:bg-accent"
-                >
-                  <input
-                    type="radio"
-                    name="allow-login"
-                    value={option}
-                    checked={form.allowLogin === option}
-                    onChange={() => set("allowLogin", option)}
-                    className="h-4 w-4 border-primary/30 text-primary"
-                  />
-                  <span className="text-sm font-medium text-foreground">
-                    {option === "yes" ? "Yes, create login account" : "No, access only"}
-                  </span>
-                </label>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              A login account is created with the doctor&apos;s email and password.
-            </p>
-          </div>
-        </div>
-      </CardContent>
+          <p className="text-xs text-muted-foreground">
+            Doctor login access is managed in the Doctor Access Control section at the
+            bottom of this form.
+          </p>
+        </CardContent>
       </Card>
 
       {/* 4. CONSULTATION SCHEDULE */}
@@ -1591,6 +1533,145 @@ function DoctorForm({
           </div>
         </div>
       </CardContent>
+      </Card>
+
+      {/* 6. DOCTOR ACCESS CONTROL */}
+      <Card className="border-border bg-gradient-to-b from-muted/50 to-transparent">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base font-semibold text-foreground">
+            6. Doctor Access Control
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div
+            className={`flex items-start justify-between gap-4 rounded-lg border p-4 transition-colors ${
+              form.allowLogin
+                ? "border-primary/30 bg-primary/5"
+                : "border-border bg-muted/30"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <span
+                className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
+                  form.allowLogin
+                    ? "bg-primary/10 text-primary"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {form.allowLogin ? (
+                  <ShieldCheck className="size-4" />
+                ) : (
+                  <ShieldOff className="size-4" />
+                )}
+              </span>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-semibold text-foreground">Login Access</p>
+                  <Badge
+                    variant="outline"
+                    className={
+                      form.allowLogin
+                        ? "border-success/25 bg-success/10 text-success hover:bg-success/10"
+                        : "border-border bg-muted text-muted-foreground hover:bg-muted"
+                    }
+                  >
+                    {form.allowLogin ? "ON" : "OFF"}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {form.allowLogin
+                    ? "The doctor can sign in to the clinic with the account credentials below."
+                    : "Access is off. The doctor cannot sign in until you turn this on."}
+                </p>
+              </div>
+            </div>
+            <Switch
+              checked={form.allowLogin}
+              onCheckedChange={(checked) => set("allowLogin", checked)}
+              aria-label="Toggle doctor login access"
+              className="mt-0.5"
+            />
+          </div>
+
+          {form.allowLogin && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-2">
+                <Label className="text-sm font-medium text-foreground">
+                  Username <RequiredStar />
+                </Label>
+                <Input
+                  value={form.username}
+                  onChange={(e) => set("username", e.target.value)}
+                  placeholder="Enter username"
+                  className={inputBase("username")}
+                />
+                <FieldError message={errors.username} />
+              </div>
+
+              <div className="grid gap-2">
+                <Label className="text-sm font-medium text-foreground">
+                  {hasLoginAccount ? "New Password" : "Password"}{" "}
+                  {!hasLoginAccount && <RequiredStar />}
+                </Label>
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={(e) => set("password", e.target.value)}
+                    placeholder={
+                      hasLoginAccount ? "Leave blank to keep current password" : "Enter password"
+                    }
+                    className={`${inputBase("password")} pr-10`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((s) => !s)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                <FieldError message={errors.password} />
+              </div>
+
+              <div className="grid gap-2">
+                <Label className="text-sm font-medium text-foreground">Confirm Password</Label>
+                <div className="relative">
+                  <Input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={form.confirmPassword}
+                    onChange={(e) => set("confirmPassword", e.target.value)}
+                    placeholder="Confirm password"
+                    className={`${inputBase("confirmPassword")} pr-10`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((s) => !s)}
+                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
+                  </button>
+                </div>
+                <FieldError message={errors.confirmPassword} />
+              </div>
+
+              <div className="grid gap-2 md:col-span-2">
+                <p className="text-xs text-muted-foreground">
+                  Login uses the doctor&apos;s email address (
+                  {form.email || "add an email in Personal Information"}) and the password
+                  above. Turning access off deactivates the account without deleting the
+                  doctor.
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
       </Card>
       </fieldset>
 

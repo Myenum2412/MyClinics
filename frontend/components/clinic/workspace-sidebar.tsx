@@ -64,13 +64,13 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Clinical",
     items: [
-      { title: "Appointments", url: "/clinic/appointments", icon: <CalendarDaysIcon className="size-5" />, match: "prefix", roles: ["patient", "doctor", "staff", "clinic_admin"] },
       { title: "Patients", url: "/clinic/patients", icon: <UsersIcon className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
+      { title: "Examination", url: "/clinic/examination", icon: <ClipboardListIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin", "lab_technician"] },
+      { title: "Investigation", url: "/clinic/investigation", icon: <MagnifyingGlassIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin", "lab_technician"] },
       { title: "Medical Records", url: "/clinic/medical-record", icon: <FolderOpenIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
       { title: "Treatment", url: "/clinic/complaints", icon: <HeartPulse className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
-      { title: "Investigation", url: "/clinic/investigation", icon: <MagnifyingGlassIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin", "lab_technician"] },
-      { title: "Examination", url: "/clinic/examination", icon: <ClipboardListIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin", "lab_technician"] },
       { title: "Prescriptions", url: "/clinic/prescriptions", icon: <PillIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
+      { title: "Appointments", url: "/clinic/appointments", icon: <CalendarDaysIcon className="size-5" />, match: "prefix", roles: ["patient", "doctor", "staff", "clinic_admin"] },
       { title: "Medicine", url: "/clinic/records", icon: <RecordsIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
       {
         title: "Pharmacy", url: "/clinic/pharmacy", icon: <Pill className="size-5" />, match: "prefix", roles: ["clinic_admin", "pharmacy_manager", "pharmacist", "inventory_staff", "billing_staff"],

@@ -53,14 +53,39 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     match: "exact",
   },
   {
-    title: "Appointments",
-    url: "/clinic/appointments",
-    icon: <CalendarDaysIcon className="size-6" />,
-  },
-  {
     title: "Patients",
     url: "/clinic/patients",
     icon: <UsersIcon className="size-6" />,
+  },
+  {
+    title: "Examination",
+    url: "/clinic/examination",
+    icon: <ExaminationIcon className="size-6" />,
+  },
+  {
+    title: "Investigation",
+    url: "/clinic/investigation",
+    icon: <MagnifyingGlassIcon className="size-6" />,
+  },
+  {
+    title: "Medical Records",
+    url: "/clinic/medical-record",
+    icon: <FolderOpenIcon className="size-6" />,
+  },
+  {
+    title: "Treatment",
+    url: "/clinic/complaints",
+    icon: <HeartPulse className="size-6" />,
+  },
+  {
+    title: "Prescriptions",
+    url: "/clinic/prescriptions",
+    icon: <PillIcon className="size-6" />,
+  },
+  {
+    title: "Appointments",
+    url: "/clinic/appointments",
+    icon: <CalendarDaysIcon className="size-6" />,
   },
   {
     title: "Doctors",
@@ -71,31 +96,6 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     title: "Medicine",
     url: "/clinic/records",
     icon: <RecordsIcon className="size-6" />,
-  },
-  {
-    title: "Medical Record",
-    url: "/clinic/medical-record",
-    icon: <FolderOpenIcon className="size-6" />,
-  },
-  {
-    title: "Prescriptions",
-    url: "/clinic/prescriptions",
-    icon: <PillIcon className="size-6" />,
-  },
-  {
-    title: "Treatment",
-    url: "/clinic/complaints",
-    icon: <HeartPulse className="size-6" />,
-  },
-  {
-    title: "Investigation",
-    url: "/clinic/investigation",
-    icon: <MagnifyingGlassIcon className="size-6" />,
-  },
-  {
-    title: "Examination",
-    url: "/clinic/examination",
-    icon: <ExaminationIcon className="size-6" />,
   },
   {
     title: "Notifications",
