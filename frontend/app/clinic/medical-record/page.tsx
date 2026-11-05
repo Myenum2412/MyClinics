@@ -1485,7 +1485,7 @@ export default function MedicalRecordPage() {
         {/* ── Patient list (root) ── */}
         {!selectedPatient && (
           <>
-            <div className="relative mt-4 w-full max-w-md">
+            <div className="relative mx-auto mt-4 w-full max-w-md">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-black" />
               <Input
                 value={search}
@@ -1502,7 +1502,9 @@ export default function MedicalRecordPage() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="mt-4 grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
+              <Card className="mt-4 bg-white text-black">
+                <CardContent className="p-3 sm:p-4">
+                  <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
                 {filteredPatients.map((p) => {
                   const stats = patientStats.get(p.patientId) ?? { files: 0, fileSize: 0, records: 0, prescriptions: 0, examinations: 0, last: null };
                   return (
@@ -1541,7 +1543,9 @@ export default function MedicalRecordPage() {
                     </button>
                   );
                 })}
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
           </>
