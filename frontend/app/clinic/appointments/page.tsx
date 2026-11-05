@@ -759,7 +759,7 @@ export default function AppointmentsPage() {
             />
 
             {/* Patient Appointment History */}
-            <Card className="shadow-sm">
+            <Card className="rounded-none shadow-sm">
               <CardContent className="p-5">
                 <div className="mb-4 flex items-center gap-2">
                   <Clock className="size-4 text-primary" />
@@ -931,7 +931,7 @@ export default function AppointmentsPage() {
       )}
 
       {/* Main Table Card */}
-      <Card className="shadow-sm">
+      <Card className="rounded-none shadow-sm">
         <CardContent className="p-0">
           {loading ? (
             <div className="space-y-4 p-4 sm:p-6">

@@ -180,7 +180,7 @@ export default function LabDashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
         {/* Recent reports */}
-        <Card className="border-border shadow-sm lg:col-span-2">
+        <Card className="border-border rounded-none shadow-sm lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between gap-2 border-b bg-muted/20 py-4">
             <div>
               <CardTitle className="flex items-center gap-2 text-base font-semibold">

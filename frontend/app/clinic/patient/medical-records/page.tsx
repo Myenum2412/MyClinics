@@ -155,7 +155,7 @@ const orphanFiles = files.filter(
       </div>
 
       {/* My Appointments */}
-      <Card>
+      <Card className="rounded-none">
         <CardHeader className="border-b border-border px-5 py-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold text-foreground">My Appointments</CardTitle>
@@ -335,7 +335,7 @@ const orphanFiles = files.filter(
       </Card>
 
       {/* Medical Records */}
-      <Card>
+      <Card className="rounded-none">
         <CardHeader className="border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">

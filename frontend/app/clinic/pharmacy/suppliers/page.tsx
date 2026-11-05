@@ -126,7 +126,7 @@ export default function PharmacySuppliersPage() {
         </div>
       )}
 
-      <Card className="shadow-sm">
+      <Card className="rounded-none shadow-sm">
         <CardContent className="p-0">
           <div className="flex flex-wrap items-center gap-2 border-b border-border p-3 sm:p-4">
             <span className="text-sm font-medium">Suppliers <span className="text-muted-foreground">({total})</span></span>

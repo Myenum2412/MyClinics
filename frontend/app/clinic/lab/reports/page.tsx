@@ -130,7 +130,7 @@ export default function LabReportsPage() {
         </div>
       </div>
 
-      <Card className="border-border shadow-sm">
+      <Card className="border-border rounded-none shadow-sm">
         <CardContent className="p-0">
           {loading ? (
             <div className="space-y-3 p-4 sm:p-6">

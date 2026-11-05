@@ -145,7 +145,7 @@ export default function OrgMenuDashboardPage() {
         </div>
       )}
 
-      <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
+      <Card className="rounded-none border shadow-sm transition-shadow duration-200 hover:shadow-md">
         <CardHeader>
           <CardTitle>All clinics</CardTitle>
         </CardHeader>

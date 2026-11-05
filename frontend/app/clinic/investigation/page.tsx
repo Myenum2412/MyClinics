@@ -799,7 +799,7 @@ export default function InvestigationPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-none">
         <CardContent className="p-0">
           {loading ? (
             <div className="space-y-2 p-4">

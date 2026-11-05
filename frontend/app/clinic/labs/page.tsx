@@ -133,7 +133,7 @@ export default function LabsPage() {
         <div className="relative flex-1 max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" /><Input placeholder="Search labs..." value={q} onChange={(e) => { setQ(e.target.value); setCurrentPage(1); }} className="pl-9 h-9" /></div>
       </div>
 
-      <Card className="border-border shadow-sm"><CardContent className="p-0">
+      <Card className="border-border rounded-none shadow-sm"><CardContent className="p-0">
         {loading ? <div className="p-4 sm:p-6 space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
           : filtered.length === 0 ? <div className="py-12 text-center text-sm text-muted-foreground">No labs found.</div>
             : <>

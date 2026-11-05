@@ -222,7 +222,7 @@ export default function OrgClinicDetailPage() {
         </Card>
       )}
 
-      <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
+      <Card className="rounded-none border shadow-sm transition-shadow duration-200 hover:shadow-md">
         <CardHeader>
           <CardTitle>Patients</CardTitle>
         </CardHeader>

@@ -797,7 +797,7 @@ export default function RecordsPage() {
         </div>
       )}
 
-      <Card className="border-border shadow-sm">
+      <Card className="border-border rounded-none shadow-sm">
         <CardContent className="p-0">
           {loading ? (
             <div className="p-4 sm:p-6 space-y-3">

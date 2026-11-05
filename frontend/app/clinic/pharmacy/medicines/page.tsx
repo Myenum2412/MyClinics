@@ -234,7 +234,7 @@ export default function PharmacyMedicinesPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-none">
         <CardContent className="pt-5 overflow-x-auto">
           <Table className="min-w-[900px]">
             <TableHeader>

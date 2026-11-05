@@ -628,7 +628,7 @@ export default function PrescriptionsPage() {
       )}
 
       {/* Main Table Card */}
-      <Card className="shadow-sm">
+      <Card className="rounded-none shadow-sm">
         <CardContent className="p-0">
           {loading ? (
             <div className="space-y-4 p-4 sm:p-6">

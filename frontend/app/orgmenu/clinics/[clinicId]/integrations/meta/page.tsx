@@ -346,7 +346,7 @@ export default function MetaIntegrationPage() {
         </TabsContent>
 
         <TabsContent value="campaigns">
-          <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
+          <Card className="rounded-none border shadow-sm transition-shadow duration-200 hover:shadow-md">
             <CardHeader>
               <CardTitle>Campaign → Clinic Routing</CardTitle>
             </CardHeader>
@@ -399,7 +399,7 @@ export default function MetaIntegrationPage() {
         </TabsContent>
 
         <TabsContent value="sync">
-          <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
+          <Card className="rounded-none border shadow-sm transition-shadow duration-200 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Synchronization</CardTitle>
@@ -448,7 +448,7 @@ export default function MetaIntegrationPage() {
         </TabsContent>
 
         <TabsContent value="webhooks">
-          <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
+          <Card className="rounded-none border shadow-sm transition-shadow duration-200 hover:shadow-md">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>Webhook Events</CardTitle>
@@ -483,7 +483,7 @@ export default function MetaIntegrationPage() {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <Card className="rounded-2xl border shadow-sm transition-shadow duration-200 hover:shadow-md">
+          <Card className="rounded-none border shadow-sm transition-shadow duration-200 hover:shadow-md">
             <CardHeader><CardTitle>Meta Performance Analytics</CardTitle></CardHeader>
             <CardContent>
               {analytics ? (
@@ -554,7 +554,7 @@ function Stat({ label, value }: { label: string; value: number | string }) {
 
 function AssetTable({ title, rows, columns }: { title: string; rows: Array<Record<string, unknown>>; columns: Array<[string, string]> }) {
   return (
-    <Card className="mt-3 rounded-2xl border shadow-sm">
+    <Card className="mt-3 rounded-none border shadow-sm">
       <CardHeader><CardTitle className="text-base">{title}</CardTitle></CardHeader>
       <CardContent>
         {rows.length === 0 ? (

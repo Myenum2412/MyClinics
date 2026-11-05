@@ -194,7 +194,7 @@ export default function ContactsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-none">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Contacts</CardTitle>
