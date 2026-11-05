@@ -13,11 +13,13 @@ import {
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { SectionCard } from "@/components/clinic/section-card";
 import {
   Select,
   SelectContent,
@@ -43,6 +45,7 @@ import {
   Plus,
   Search,
   Stethoscope,
+  Trash,
 } from "lucide-react";
 import { RowActions } from "@/components/ui/row-actions";
 
@@ -179,6 +182,8 @@ export default function ExaminationPage() {
   const [form, setForm] = useState<FormState>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Examination | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const load = useCallback(() => {
     if (!clinicId) return;
@@ -187,6 +192,7 @@ export default function ExaminationPage() {
       .then((res) => {
         setItems(res.items ?? []);
         setTotal(res.total ?? 0);
+        setSelectedIds(new Set());
       })
       .catch((e) =>
         toast.error(e instanceof Error ? e.message : "Failed to load examinations")
@@ -382,6 +388,36 @@ export default function ExaminationPage() {
     }
   }
 
+  const toggleSelectRow = (examinationId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(examinationId)) next.delete(examinationId);
+      else next.add(examinationId);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredItems.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(filteredItems.map((item) => item.examinationId)));
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      await Promise.all(
+        Array.from(selectedIds).map((id) => deleteExamination(clinicId, id))
+      );
+      toast.success(`Deleted ${selectedIds.size} examinations`);
+      setSelectedIds(new Set());
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete selected examinations");
+      load();
+    } finally {
+      setBulkDeleteOpen(false);
+    }
+  }
+
   if (screen.name === "form") {
     const mode = screen.mode;
     const readOnly = mode === "view";
@@ -414,11 +450,11 @@ export default function ExaminationPage() {
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Details</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2 sm:gap-4">
+        <SectionCard
+          title="1. Details"
+          description="Select the patient, visit date, status and issue type"
+        >
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             <div className="space-y-2">
               <Label>Patient</Label>
               {mode === "create" ? (
@@ -563,14 +599,11 @@ export default function ExaminationPage() {
                 disabled={readOnly}
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base sm:text-lg">Intra Oral Examination</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <SectionCard title="2. Intra Oral Examination">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="exam-soft-tissue">Soft tissue note</Label>
               <Textarea
@@ -605,14 +638,11 @@ export default function ExaminationPage() {
                 disabled={readOnly}
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base sm:text-lg">Medical Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <SectionCard title="3. Medical Information">
+          <div className="space-y-2">
             <Label htmlFor="exam-medical-info">Medical Information</Label>
             <Textarea
               id="exam-medical-info"
@@ -624,14 +654,11 @@ export default function ExaminationPage() {
               rows={5}
               disabled={readOnly}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base sm:text-lg">History of Presenting Illness</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <SectionCard title="4. History of Presenting Illness">
+          <div className="space-y-2">
             <Label htmlFor="exam-hpi-complaint">Presenting complaint</Label>
             <Textarea
               id="exam-hpi-complaint"
@@ -643,8 +670,8 @@ export default function ExaminationPage() {
               rows={5}
               disabled={readOnly}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </SectionCard>
 
 
         {mode !== "view" && (
@@ -710,6 +737,35 @@ export default function ExaminationPage() {
         </CardContent>
       </Card>
 
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 shadow-sm transition-all animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-primary tabular-nums">
+              {selectedIds.size} selected
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-muted-foreground hover:text-foreground text-xs"
+              onClick={() => setSelectedIds(new Set())}
+            >
+              Clear selection
+            </Button>
+          </div>
+          {canDelete && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setBulkDeleteOpen(true)}
+              className="h-8 gap-1.5 shadow-sm"
+            >
+              <Trash className="size-3.5" />
+              Delete Selected
+            </Button>
+          )}
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
           {loading ? (
@@ -735,6 +791,13 @@ export default function ExaminationPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12 pl-4">
+                      <Checkbox
+                        checked={selectedIds.size === filteredItems.length && filteredItems.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                        aria-label="Select all"
+                      />
+                    </TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Patient</TableHead>
                     <TableHead>Issues</TableHead>
@@ -746,6 +809,13 @@ export default function ExaminationPage() {
                 <TableBody>
                   {filteredItems.map((item) => (
                     <TableRow key={item.examinationId}>
+                      <TableCell className="pl-4">
+                        <Checkbox
+                          checked={selectedIds.has(item.examinationId)}
+                          onCheckedChange={() => toggleSelectRow(item.examinationId)}
+                          aria-label={`Select examination for ${item.patientName}`}
+                        />
+                      </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {formatDate(item.visitDate)}
                       </TableCell>
@@ -784,6 +854,11 @@ export default function ExaminationPage() {
               {filteredItems.map((item) => (
                 <div key={item.examinationId} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
                   <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedIds.has(item.examinationId)}
+                      onCheckedChange={() => toggleSelectRow(item.examinationId)}
+                      aria-label={`Select examination for ${item.patientName}`}
+                    />
                     <p className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">
                       {item.patientName}
                     </p>
@@ -827,6 +902,17 @@ export default function ExaminationPage() {
             : undefined
         }
         onConfirm={handleDelete}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(open) => {
+          if (!open) setBulkDeleteOpen(false);
+        }}
+        title="Delete selected examinations?"
+        description={`This will permanently delete all ${selectedIds.size} selected examinations. This action cannot be undone.`}
+        confirmLabel="Delete All"
+        onConfirm={handleBulkDelete}
       />
     </div>
   );
