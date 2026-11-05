@@ -234,7 +234,7 @@ function fileIcon(mimeType: string | null, name: string) {
     return <FileSpreadsheet className="size-5 text-success" />;
   if (m.includes("pdf") || m.includes("word") || m.includes("document"))
     return <FileText className="size-5 text-primary" />;
-  return <File className="size-5 text-muted-foreground" />;
+  return <File className="size-5 text-black" />;
 }
 
 // ── Medicine-record metadata parsing (kept from the legacy page) ──────────
@@ -292,7 +292,7 @@ const FOLDER_META: Record<string, { title: string; icon: typeof Folder; tint: st
   certificates: { title: "Certificates", icon: ShieldCheck, tint: "text-teal-600", bg: "bg-teal-100", hint: "Medical certificates and letters" },
   bills: { title: "Bills and Invoices", icon: FileSpreadsheet, tint: "text-orange-600", bg: "bg-orange-100", hint: "Billing and payment records" },
   insurance: { title: "Insurance", icon: ShieldCheck, tint: "text-rose-600", bg: "bg-rose-100", hint: "Insurance documents and claims" },
-  "other-documents": { title: "Other Documents", icon: Folder, tint: "text-muted-foreground", bg: "bg-muted", hint: "Miscellaneous documents" },
+  "other-documents": { title: "Other Documents", icon: Folder, tint: "text-black", bg: "bg-muted", hint: "Miscellaneous documents" },
   medicine: { title: "Medicine", icon: Pill, tint: "text-primary", bg: "bg-primary/10", hint: "Medicines and medication records" },
   billing: { title: "Billing", icon: FileSpreadsheet, tint: "text-orange-600", bg: "bg-orange-100", hint: "Bills and payment records" },
   appointments: { title: "Appointments", icon: CalendarDays, tint: "text-fuchsia-600", bg: "bg-fuchsia-100", hint: "Appointment documents" },
@@ -366,15 +366,15 @@ function FolderCard({
           onDropUpload(folder, e.dataTransfer.files);
         }
       }}
-      className={`group relative flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition hover:border-primary/40 hover:shadow-sm sm:gap-2 sm:p-5 ${over ? "border-primary/50 bg-accent" : "border-border bg-background"}`}
+      className={`group relative flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-center transition hover:border-primary/40 hover:shadow-sm sm:gap-2 sm:p-5 ${over ? "border-primary/50 bg-accent" : "border-border bg-white"}`}
       onClick={onOpen}
     >
       <span className={`flex size-10 items-center justify-center rounded-xl sm:size-12 ${meta.bg} ${meta.tint}`}>
         <Icon className="size-5 sm:size-6" />
       </span>
       <div className="min-w-0 w-full">
-        <p className="truncate text-xs font-semibold text-foreground sm:text-sm">{meta.title}</p>
-        <p className="mt-0.5 text-[11px] text-muted-foreground sm:text-xs">
+        <p className="truncate text-xs font-semibold text-black sm:text-sm">{meta.title}</p>
+        <p className="mt-0.5 text-[11px] text-black sm:text-xs">
           {count} file{count === 1 ? "" : "s"}
         </p>
       </div>
@@ -481,12 +481,12 @@ function FileRow({
           onDropMove(file);
         }
       }}
-      className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 ring-1 ring-border transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${over ? "bg-accent ring-primary/25" : "bg-background"}`}
+      className={`flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 ring-1 ring-border transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${over ? "bg-accent ring-primary/25" : "bg-white"}`}
     >
       {fileIcon(file.mimeType, file.fileName)}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-foreground">{file.fileName}</p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+        <p className="truncate text-sm font-medium text-black">{file.fileName}</p>
+        <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-black">
           <span>{formatSize(file.size)}</span>
           <span>·</span>
           <span>{formatDate(file.createdAt)}</span>
@@ -581,7 +581,7 @@ function SectionHeading({
       <span className={`flex size-8 items-center justify-center rounded-full bg-muted ${tint}`}>
         <Icon className="size-4" />
       </span>
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+      <h2 className="text-sm font-semibold text-black">{title}</h2>
       <Badge variant="secondary">
         {count} {countLabel}
         {count === 1 ? "" : "s"}
@@ -626,41 +626,41 @@ function MedicineRecordCard({
   }, [meta]);
 
   return (
-    <Card className="border-border">
+    <Card className="border-border bg-white text-black">
       <CardContent className="p-4">
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="bg-primary/10 text-primary hover:bg-primary/10">
             {formatDate(record.visitDate)}
           </Badge>
-          <span className="text-xs text-muted-foreground">Doctor: {doctorName(record.doctorId)}</span>
+          <span className="text-xs text-black">Doctor: {doctorName(record.doctorId)}</span>
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Diagnosis</p>
-            <p className="text-sm font-medium text-foreground">{record.diagnosis}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-black">Diagnosis</p>
+            <p className="text-sm font-medium text-black">{record.diagnosis}</p>
           </div>
           {record.symptoms && (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Symptoms</p>
-              <p className="text-sm text-foreground">{record.symptoms}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-black">Symptoms</p>
+              <p className="text-sm text-black">{record.symptoms}</p>
             </div>
           )}
           {record.treatment && (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Treatment</p>
-              <p className="text-sm text-foreground">{record.treatment}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-black">Treatment</p>
+              <p className="text-sm text-black">{record.treatment}</p>
             </div>
           )}
           {metaFields.map((f) => (
             <div key={f.label}>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{f.label}</p>
-              <p className="text-sm text-foreground">{f.value}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-black">{f.label}</p>
+              <p className="text-sm text-black">{f.value}</p>
             </div>
           ))}
           {!meta && record.notes && (
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Notes</p>
-              <p className="text-sm text-foreground">{record.notes}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-black">Notes</p>
+              <p className="text-sm text-black">{record.notes}</p>
             </div>
           )}
         </div>
@@ -675,7 +675,7 @@ function MedicineRecordCard({
                   if (a.fileId) onDownload(a.fileId, a.name);
                   else if (a.url) openInNewTab(a.url);
                 }}
-                className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground ring-1 ring-border hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2 py-1 text-xs text-black ring-1 ring-border hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Download className="size-3" />
                 {a.name}
@@ -696,23 +696,23 @@ function PrescriptionCard({
   doctorName: (doctorId: string | null) => string;
 }) {
   return (
-    <Card className="border-success/20">
+    <Card className="border-success/20 bg-white text-black">
       <CardContent className="p-4">
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="bg-success/10 text-success hover:bg-success/10">
             {formatDate(prescription.visitDate)}
           </Badge>
-          <span className="text-xs text-muted-foreground">Doctor: {doctorName(prescription.doctorId)}</span>
+          <span className="text-xs text-black">Doctor: {doctorName(prescription.doctorId)}</span>
         </div>
         {prescription.diagnosis && (
           <div className="mt-3">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Diagnosis</p>
-            <p className="text-sm font-medium text-foreground">{prescription.diagnosis}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-black">Diagnosis</p>
+            <p className="text-sm font-medium text-black">{prescription.diagnosis}</p>
           </div>
         )}
         <div className="mt-3 hidden overflow-hidden rounded-lg ring-1 ring-border sm:block">
           <table className="w-full text-left text-sm">
-            <thead className="bg-muted text-xs uppercase tracking-wide text-muted-foreground">
+            <thead className="bg-muted text-xs uppercase tracking-wide text-black">
               <tr>
                 <th className="px-3 py-2 font-medium">Medicine</th>
                 <th className="px-3 py-2 font-medium">Dosage</th>
@@ -724,11 +724,11 @@ function PrescriptionCard({
             <tbody className="divide-y divide-border">
               {prescription.medicines.map((m, i) => (
                 <tr key={i}>
-                  <td className="px-3 py-2 font-medium text-foreground">{m.name}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{m.dosage ?? "—"}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{m.frequency ?? "—"}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{m.duration ?? "—"}</td>
-                  <td className="px-3 py-2 text-muted-foreground">{m.instructions ?? "—"}</td>
+                  <td className="px-3 py-2 font-medium text-black">{m.name}</td>
+                  <td className="px-3 py-2 text-black">{m.dosage ?? "—"}</td>
+                  <td className="px-3 py-2 text-black">{m.frequency ?? "—"}</td>
+                  <td className="px-3 py-2 text-black">{m.duration ?? "—"}</td>
+                  <td className="px-3 py-2 text-black">{m.instructions ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -738,19 +738,19 @@ function PrescriptionCard({
         <div className="mt-3 space-y-2 sm:hidden">
           {prescription.medicines.map((m, i) => (
             <div key={i} className="rounded-lg bg-muted/50 px-3 py-2 ring-1 ring-border">
-              <p className="text-sm font-semibold text-foreground">{m.name}</p>
-              <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+              <p className="text-sm font-semibold text-black">{m.name}</p>
+              <p className="mt-0.5 text-xs leading-relaxed text-black">
                 {[m.dosage, m.frequency, m.duration].filter(Boolean).join(" · ") || "—"}
               </p>
               {m.instructions ? (
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">{m.instructions}</p>
+                <p className="mt-0.5 truncate text-xs text-black">{m.instructions}</p>
               ) : null}
             </div>
           ))}
         </div>
         {prescription.notes && (
-          <p className="mt-3 text-sm text-foreground">
-            <span className="font-medium text-muted-foreground">Notes: </span>
+          <p className="mt-3 text-sm text-black">
+            <span className="font-medium text-black">Notes: </span>
             {prescription.notes}
           </p>
         )}
@@ -1414,10 +1414,10 @@ export default function MedicalRecordPage() {
               >
                 <ArrowLeft className="size-4" /> All Patients
               </Button>
-              <ArrowRight className="size-4 text-muted-foreground" />
+              <ArrowRight className="size-4 text-black" />
               <button
                 type="button"
-                className="text-sm font-semibold text-foreground hover:text-primary"
+                className="text-sm font-semibold text-black hover:text-primary"
                 onClick={() => {
                   setActiveFolderId(null);
                   setSearch("");
@@ -1427,15 +1427,15 @@ export default function MedicalRecordPage() {
               </button>
               {activeFolderId && (
                 <>
-                  <ArrowRight className="size-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-muted-foreground">{folderName(activeFolderId)}</span>
+                  <ArrowRight className="size-4 text-black" />
+                  <span className="text-sm font-medium text-black">{folderName(activeFolderId)}</span>
                 </>
               )}
             </>
           ) : (
             <>
               <Users className="size-5 shrink-0 text-primary" />
-              <h1 className="text-lg font-bold text-foreground sm:text-xl">Medical Records</h1>
+              <h1 className="text-lg font-bold text-black sm:text-xl">Medical Records</h1>
             </>
           )}
           <div className="ml-auto flex w-full flex-wrap items-center gap-2 sm:w-auto">
@@ -1470,7 +1470,7 @@ export default function MedicalRecordPage() {
             </Badge>
             {view === "drive" && (
               <div className="relative w-full sm:ml-auto sm:max-w-xs">
-                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-black" />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -1486,7 +1486,7 @@ export default function MedicalRecordPage() {
         {!selectedPatient && (
           <>
             <div className="relative mt-4 w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-black" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -1495,10 +1495,10 @@ export default function MedicalRecordPage() {
               />
             </div>
             {filteredPatients.length === 0 ? (
-              <Card className="mt-6">
+              <Card className="mt-6 bg-white text-black">
                 <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
-                  <Users className="size-8 text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">No patients found</p>
+                  <Users className="size-8 text-black" />
+                  <p className="text-sm text-black">No patients found</p>
                 </CardContent>
               </Card>
             ) : (
@@ -1514,27 +1514,27 @@ export default function MedicalRecordPage() {
                         setActiveFolderId(null);
                         setSearch("");
                       }}
-                      className="group flex items-center gap-2 rounded-xl border border-border bg-background p-3 text-left transition hover:border-primary/40 hover:shadow-sm sm:gap-3 sm:p-4"
+                      className="group flex items-center gap-2 rounded-xl border border-border bg-white p-3 text-left transition hover:border-primary/40 hover:shadow-sm sm:gap-3 sm:p-4"
                     >
                       <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-9 shrink-0 text-xs sm:size-11 sm:text-sm" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
+                        <p className="truncate text-sm font-semibold text-black group-hover:text-primary">
                           {p.fullName}
                         </p>
-                        <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground sm:text-xs">
+                        <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-black sm:text-xs">
                           <span className="tabular-nums">{calculateAge(p.dateOfBirth) ?? "—"} yrs</span>
                           <span>·</span>
                           <span className="capitalize">{p.gender ?? "—"}</span>
                           <span className="hidden sm:inline">·</span>
                           <span className="hidden items-center gap-1 sm:inline-flex"><Phone className="size-3" />{p.mobile}</span>
                         </p>
-                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground sm:hidden">
+                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-black sm:hidden">
                           <Phone className="size-3 shrink-0" /><span className="truncate font-mono">{p.mobile}</span>
                         </p>
-                        <p className="mt-1 truncate text-[11px] text-muted-foreground sm:hidden">
+                        <p className="mt-1 truncate text-[11px] text-black sm:hidden">
                           {stats.files} files · {stats.records} records
                         </p>
-                        <p className="mt-1 hidden text-xs text-muted-foreground sm:block">
+                        <p className="mt-1 hidden text-xs text-black sm:block">
                           {stats.files} files · {stats.records} records · {stats.prescriptions} prescriptions · {stats.examinations} examinations
                         </p>
                       </div>
@@ -1557,7 +1557,7 @@ export default function MedicalRecordPage() {
                   type="button"
                   onClick={() => setView(v)}
                   className={`flex-1 rounded-md px-4 py-1.5 text-sm font-medium transition ${
-                    view === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    view === v ? "bg-background text-black shadow-sm" : "text-black hover:text-black"
                   }`}
                 >
                   {v === "drive" ? "Files" : "Overview"}
@@ -1580,11 +1580,11 @@ export default function MedicalRecordPage() {
                 {/* Search results */}
                 {search.trim() && (
                   <div className="mt-4 space-y-2">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    <p className="text-xs font-medium uppercase tracking-wide text-black">
                       Search results in {selectedPatient.fullName}&apos;s records
                     </p>
                     {searchFiles.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No matching files</p>
+                      <p className="text-sm text-black">No matching files</p>
                     ) : (
                       searchFiles.map((f) => (
                         <FileRow
@@ -1720,10 +1720,10 @@ export default function MedicalRecordPage() {
         <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-primary/10">
           <div className="rounded-2xl border-2 border-dashed border-primary/50 bg-background/95 px-10 py-8 text-center shadow-xl">
             <UploadCloud className="mx-auto size-10 text-primary" />
-            <p className="mt-2 text-lg font-semibold text-foreground">
+            <p className="mt-2 text-lg font-semibold text-black">
               Drop to upload into {folderName(currentFolderKey)}
             </p>
-            <p className="text-sm text-muted-foreground">PDF · DOCX · XLSX · JPG · PNG · TIFF · DICOM (max 25MB)</p>
+            <p className="text-sm text-black">PDF · DOCX · XLSX · JPG · PNG · TIFF · DICOM (max 25MB)</p>
           </div>
         </div>
       )}
@@ -1824,11 +1824,11 @@ export default function MedicalRecordPage() {
           </DialogHeader>
           <div className="space-y-2">
             {versionsFile && (
-              <div className="flex items-center gap-3 rounded-lg bg-accent p-3 ring-1 ring-primary/25">
+              <div className="flex items-center gap-3 rounded-lg bg-white p-3 ring-1 ring-primary/25">
                 {fileIcon(versionsFile.mimeType, versionsFile.fileName)}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground">v{versionsFile.version} · current</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-semibold text-black">v{versionsFile.version} · current</p>
+                  <p className="text-xs text-black">
                     {formatSize(versionsFile.size)} · {formatDate(versionsFile.createdAt)}
                     {versionsFile.uploadedByName ? ` · by ${versionsFile.uploadedByName}` : ""}
                   </p>
@@ -1839,11 +1839,11 @@ export default function MedicalRecordPage() {
               </div>
             )}
             {versionsFile?.versions.map((v) => (
-              <div key={v.version} className="flex items-center gap-3 rounded-lg bg-muted p-3 ring-1 ring-border">
+              <div key={v.version} className="flex items-center gap-3 rounded-lg bg-white p-3 ring-1 ring-border">
                 {fileIcon(v.mimeType, v.fileName)}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground">v{v.version}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-medium text-black">v{v.version}</p>
+                  <p className="text-xs text-black">
                     {v.fileName} · {formatSize(v.size)} · {formatDate(v.createdAt)}
                     {v.uploadedByName ? ` · by ${v.uploadedByName}` : ""}
                   </p>
@@ -1851,7 +1851,7 @@ export default function MedicalRecordPage() {
               </div>
             ))}
             {versionsFile && versionsFile.versions.length === 0 && (
-              <p className="text-sm text-muted-foreground">No older versions.</p>
+              <p className="text-sm text-black">No older versions.</p>
             )}
           </div>
         </DialogContent>
@@ -1867,10 +1867,10 @@ export default function MedicalRecordPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center gap-3 rounded-lg border border-dashed border-border p-6">
-            <UploadCloud className="size-8 text-muted-foreground" />
+            <UploadCloud className="size-8 text-black" />
             <div>
-              <p className="text-sm font-medium text-foreground">Choose a replacement file</p>
-              <p className="text-xs text-muted-foreground">PDF · DOCX · XLSX · JPG · PNG · TIFF · DICOM (max 25MB)</p>
+              <p className="text-sm font-medium text-black">Choose a replacement file</p>
+              <p className="text-xs text-black">PDF · DOCX · XLSX · JPG · PNG · TIFF · DICOM (max 25MB)</p>
             </div>
             <Button
               className="ml-auto"
@@ -1966,7 +1966,7 @@ export default function MedicalRecordPage() {
 
     return (
       <div className="mt-4 space-y-4">
-        <Card>
+        <Card className="bg-white text-black">
           <CardContent className="p-4 sm:p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <SectionHeading
@@ -1978,13 +1978,13 @@ export default function MedicalRecordPage() {
               />
               <Link
                 href="/clinic/appointments"
-                className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground sm:w-auto"
+                className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-black sm:w-auto"
               >
                 Book Appointment
               </Link>
             </div>
             {patientAppointments.length === 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">No appointments for this patient yet.</p>
+              <p className="mt-3 text-sm text-black">No appointments for this patient yet.</p>
             ) : (
               <>
               {/* Desktop table */}
@@ -2004,9 +2004,9 @@ export default function MedicalRecordPage() {
                     {patientAppointments.map((a) => (
                       <TableRow key={a.appointmentId}>
                         <TableCell className="text-sm whitespace-nowrap">{formatDate(a.date)}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{formatTime(a.time)}</TableCell>
+                        <TableCell className="text-sm text-black whitespace-nowrap">{formatTime(a.time)}</TableCell>
                         <TableCell className="text-sm">{doctorName(a.doctorId)}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{a.reason || "—"}</TableCell>
+                        <TableCell className="text-sm text-black">{a.reason || "—"}</TableCell>
                         <TableCell>
                           <Select
                             value={a.status}
@@ -2035,16 +2035,16 @@ export default function MedicalRecordPage() {
               {/* Mobile cards */}
               <div className="mt-3 space-y-2.5 md:hidden">
                 {patientAppointments.map((a) => (
-                  <div key={a.appointmentId} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+                  <div key={a.appointmentId} className="rounded-xl border border-border bg-white text-black p-3 shadow-2xs">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-bold text-foreground tabular-nums">
-                        {formatDate(a.date)} <span className="font-medium text-muted-foreground">· {formatTime(a.time)}</span>
+                      <p className="text-sm font-bold text-black tabular-nums">
+                        {formatDate(a.date)} <span className="font-medium text-black">· {formatTime(a.time)}</span>
                       </p>
                       <RowActions onDelete={() => handleDelete(a)} />
                     </div>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">Dr. {doctorName(a.doctorId)}</p>
+                    <p className="mt-1 truncate text-xs text-black">Dr. {doctorName(a.doctorId)}</p>
                     {a.reason ? (
-                      <p className="mt-1 truncate text-xs text-muted-foreground">{a.reason}</p>
+                      <p className="mt-1 truncate text-xs text-black">{a.reason}</p>
                     ) : null}
                     <div className="mt-2">
                       <Select
@@ -2080,7 +2080,7 @@ export default function MedicalRecordPage() {
     return (
       <div className="mt-4 space-y-4 sm:mt-6 sm:space-y-6">
         {/* ── Hero patient card — Linear / Stripe premium ── */}
-        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card">
+        <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white text-black">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-violet-500/[0.04] pointer-events-none" />
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border/60 to-transparent" />
           <div className="relative p-4 sm:p-7">
@@ -2092,23 +2092,23 @@ export default function MedicalRecordPage() {
                 </span>
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="text-[17px] font-semibold tracking-tight text-foreground">{p.fullName}</h2>
-                <p className="mt-1 flex flex-wrap items-center gap-2 text-[13px] leading-none text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-foreground">{calculateAge(p.dateOfBirth) ?? "—"} yrs</span>
-                  <span className="text-muted-foreground/40">·</span>
+                <h2 className="text-[17px] font-semibold tracking-tight text-black">{p.fullName}</h2>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-[13px] leading-none text-black">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-black">{calculateAge(p.dateOfBirth) ?? "—"} yrs</span>
+                  <span className="text-black/40">·</span>
                   <span className="capitalize">{p.gender ?? "—"}</span>
-                  {p.bloodGroup && <><span className="text-muted-foreground/40">·</span><span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-600 dark:bg-red-500/10 dark:text-red-400">{p.bloodGroup}</span></>}
+                  {p.bloodGroup && <><span className="text-black/40">·</span><span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-600 dark:bg-red-500/10 dark:text-red-400">{p.bloodGroup}</span></>}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {p.allergies.length > 0 ? p.allergies.map((a, i) => (
                     <span key={i} className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 dark:border-amber-900/50 dark:bg-amber-500/10 dark:text-amber-400">{a}</span>
                   )) : <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">● No allergies on file</span>}
                 </div>
-                {(p.address || p.city) && <p className="mt-3 max-w-xl text-[13px] leading-relaxed text-muted-foreground">{[p.address, p.city, p.state, p.pincode].filter(Boolean).join(", ")}</p>}
+                {(p.address || p.city) && <p className="mt-3 max-w-xl text-[13px] leading-relaxed text-black">{[p.address, p.city, p.state, p.pincode].filter(Boolean).join(", ")}</p>}
               </div>
               <div className="flex w-full flex-col gap-2 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 backdrop-blur-sm sm:w-auto">
-                <span className="inline-flex items-center gap-2 text-[13px] font-medium text-foreground"><span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><Stethoscope className="size-3.5" /></span>{doctorName(p.doctorId)}</span>
-                {p.mobile && <span className="inline-flex items-center gap-2 text-[13px] text-muted-foreground"><span className="flex size-7 items-center justify-center rounded-lg bg-muted text-muted-foreground"><Phone className="size-3.5" /></span>{p.mobile}</span>}
+                <span className="inline-flex items-center gap-2 text-[13px] font-medium text-black"><span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary"><Stethoscope className="size-3.5" /></span>{doctorName(p.doctorId)}</span>
+                {p.mobile && <span className="inline-flex items-center gap-2 text-[13px] text-black"><span className="flex size-7 items-center justify-center rounded-lg bg-muted text-black"><Phone className="size-3.5" /></span>{p.mobile}</span>}
               </div>
             </div>
           </div>
@@ -2116,53 +2116,53 @@ export default function MedicalRecordPage() {
 
         {/* ── Clinical overview — 3-up bento ── */}
         <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
-          <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-4 transition-all duration-200 hover:border-border sm:p-5">
+          <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-white text-black p-4 transition-all duration-200 hover:border-border sm:p-5">
             <div className="absolute -right-6 -top-6 size-20 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/10 transition" />
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Care timeline</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-black">Care timeline</p>
             <div className="mt-4 space-y-4">
               <div>
-                <p className="text-xs font-medium text-muted-foreground">Last visit</p>
-                <p className="mt-1 text-[15px] font-semibold tracking-tight text-foreground">{overview.lastVisit ? formatDate(overview.lastVisit) : "No visits yet"}</p>
+                <p className="text-xs font-medium text-black">Last visit</p>
+                <p className="mt-1 text-[15px] font-semibold tracking-tight text-black">{overview.lastVisit ? formatDate(overview.lastVisit) : "No visits yet"}</p>
               </div>
               <div className="h-px bg-border/60" />
               <div>
-                <p className="text-xs font-medium text-muted-foreground">Next appointment</p>
+                <p className="text-xs font-medium text-black">Next appointment</p>
                 {overview.nextAppointment ? (
                   <div className="mt-1.5 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5">
                     <CalendarDays className="size-3.5 text-primary" />
                     <span className="text-sm font-semibold text-primary">{formatDate(overview.nextAppointment.date)}</span>
                     <span className="text-xs text-primary/70">{overview.nextAppointment.time}</span>
                   </div>
-                ) : <p className="mt-1 text-sm text-muted-foreground">No upcoming appointments</p>}
+                ) : <p className="mt-1 text-sm text-black">No upcoming appointments</p>}
               </div>
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-4 sm:p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Medical history</p>
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white text-black p-4 sm:p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-black">Medical history</p>
             <div className="mt-4 space-y-3">
               <div className="rounded-xl bg-muted/40 p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Conditions</p>
-                <p className="mt-1 text-sm leading-relaxed text-foreground">{p.medicalConditions || <span className="text-muted-foreground">— None on file</span>}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-black">Conditions</p>
+                <p className="mt-1 text-sm leading-relaxed text-black">{p.medicalConditions || <span className="text-black">— None on file</span>}</p>
               </div>
               <div className="rounded-xl bg-muted/40 p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Surgeries</p>
-                <p className="mt-1 text-sm leading-relaxed text-foreground">{p.previousSurgeries || <span className="text-muted-foreground">— None on file</span>}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-black">Surgeries</p>
+                <p className="mt-1 text-sm leading-relaxed text-black">{p.previousSurgeries || <span className="text-black">— None on file</span>}</p>
               </div>
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-4 sm:p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Current medications</p>
-            <p className="mt-4 text-sm leading-relaxed text-foreground">{p.currentMedications || <span className="text-muted-foreground">No active medications</span>}</p>
-            {p.currentMedications && <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground"><span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active regimen</div>}
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-white text-black p-4 sm:p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-black">Current medications</p>
+            <p className="mt-4 text-sm leading-relaxed text-black">{p.currentMedications || <span className="text-black">No active medications</span>}</p>
+            {p.currentMedications && <div className="mt-4 flex items-center gap-2 text-xs text-black"><span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active regimen</div>}
           </div>
         </div>
 
         {/* ── Patient full details ── */}
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-white text-black">
           <div className="flex items-center gap-3 border-b border-border/60 px-5 py-4">
             <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Users className="size-4" /></span>
             <h3 className="text-sm font-semibold tracking-tight">Patient Details</h3>
-            <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-medium ${p.status==="active" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-muted text-muted-foreground"}`}>{p.status}</span>
+            <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-medium ${p.status==="active" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "bg-muted text-black"}`}>{p.status}</span>
           </div>
           <div className="grid gap-4 p-4 sm:gap-6 sm:p-5 lg:grid-cols-3 sm:grid-cols-2">
             {[
@@ -2205,12 +2205,12 @@ export default function MedicalRecordPage() {
               ]},
             ].map((section) => (
               <div key={section.label} className="space-y-3">
-                <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{section.label}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-black">{section.label}</p>
                 <div className="space-y-2.5">
                   {section.items.map(([k, val]) => (
                     <div key={k}>
-                      <p className="text-xs font-medium text-muted-foreground">{k}</p>
-                      <p className="mt-0.5 text-sm leading-relaxed text-foreground break-words">{val as string}</p>
+                      <p className="text-xs font-medium text-black">{k}</p>
+                      <p className="mt-0.5 text-sm leading-relaxed text-black break-words">{val as string}</p>
                     </div>
                   ))}
                 </div>
@@ -2220,7 +2220,7 @@ export default function MedicalRecordPage() {
         </div>
 
         {/* Unified timeline — single card */}
-        <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+        <div className="overflow-hidden rounded-2xl border border-border/60 bg-white text-black">
           <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
             <span className="flex size-8 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600"><History className="size-4" /></span>
             <h3 className="text-sm font-semibold tracking-tight">Clinical Timeline</h3>
@@ -2239,24 +2239,24 @@ export default function MedicalRecordPage() {
             const items: TL[] = [];
             overview.patientRecords.forEach(r=>{
               items.push({ date: r.visitDate, kind: "visit", title: r.diagnosis || "Visit", el: <MedicineRecordCard key={`v-${r.recordId}`} record={r} doctorName={doctorName} onDownload={handleRecordAttachmentDownload} /> });
-              if(r.treatment) items.push({ date: r.visitDate, kind: "treatment", title: r.treatment, el: <div key={`t-${r.recordId}`} className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-900/30 dark:bg-amber-500/5"><p className="text-sm text-muted-foreground">{r.diagnosis} · {doctorName(r.doctorId)}</p></div> });
+              if(r.treatment) items.push({ date: r.visitDate, kind: "treatment", title: r.treatment, el: <div key={`t-${r.recordId}`} className="rounded-xl border border-amber-200/60 bg-amber-50/50 p-4 dark:border-amber-900/30 dark:bg-amber-500/5"><p className="text-sm text-black">{r.diagnosis} · {doctorName(r.doctorId)}</p></div> });
             });
             overview.patientPrescriptions.forEach(pr=>{
               items.push({ date: pr.visitDate, kind: "prescription", title: pr.diagnosis || "Prescription", el: <PrescriptionCard key={`p-${pr.prescriptionId}`} prescription={pr} doctorName={doctorName} /> });
-              pr.medicines.forEach((m,i)=> items.push({ date: pr.visitDate, kind: "medicine", title: m.name, el: <div key={`m-${pr.prescriptionId}-${i}`} className="rounded-xl border border-sky-200/60 bg-sky-50/50 p-3 dark:border-sky-900/30 dark:bg-sky-500/5"><p className="text-xs text-muted-foreground">{[m.dosage && `Dosage ${m.dosage}`, m.frequency, m.duration, m.instructions].filter(Boolean).join(" · ") || "—"} · {doctorName(pr.doctorId)}</p></div> }));
+              pr.medicines.forEach((m,i)=> items.push({ date: pr.visitDate, kind: "medicine", title: m.name, el: <div key={`m-${pr.prescriptionId}-${i}`} className="rounded-xl border border-sky-200/60 bg-sky-50/50 p-3 dark:border-sky-900/30 dark:bg-sky-500/5"><p className="text-xs text-black">{[m.dosage && `Dosage ${m.dosage}`, m.frequency, m.duration, m.instructions].filter(Boolean).join(" · ") || "—"} · {doctorName(pr.doctorId)}</p></div> }));
             });
             overview.patientExaminations.forEach(ex=>{
-              items.push({ date: ex.visitDate, kind: "examination", title: ex.oralFindings?.slice(0, 60) || "Examination", el: <div key={`e-${ex.examinationId}`} className="rounded-xl border border-teal-200/60 bg-teal-50/50 p-4 dark:border-teal-900/30 dark:bg-teal-500/5"><p className="text-sm font-medium text-foreground capitalize">{ex.issueType} · {ex.status.replace("-", " ")}</p><p className="mt-1 text-sm text-foreground">{ex.oralFindings}</p>{ex.notes && <p className="mt-1 text-xs text-muted-foreground">{ex.notes}</p>}</div> });
+              items.push({ date: ex.visitDate, kind: "examination", title: ex.oralFindings?.slice(0, 60) || "Examination", el: <div key={`e-${ex.examinationId}`} className="rounded-xl border border-teal-200/60 bg-teal-50/50 p-4 dark:border-teal-900/30 dark:bg-teal-500/5"><p className="text-sm font-medium text-black capitalize">{ex.issueType} · {ex.status.replace("-", " ")}</p><p className="mt-1 text-sm text-black">{ex.oralFindings}</p>{ex.notes && <p className="mt-1 text-xs text-black">{ex.notes}</p>}</div> });
             });
             appointments.items.filter(a=>a.patientId===p.patientId).forEach(a=>{
-              items.push({ date: a.date, kind: "appointment", title: a.reason || `Appointment · ${APPT_STATUS_LABELS[a.status] ?? a.status}`, el: <div key={`a-${a.appointmentId}`} className="rounded-xl border border-fuchsia-200/60 bg-fuchsia-50/50 p-4 dark:border-fuchsia-900/30 dark:bg-fuchsia-500/5"><p className="text-sm font-medium text-foreground">{formatDate(a.date)} · {formatTime(a.time)} · Dr. {doctorName(a.doctorId)}</p><p className="mt-1 text-xs text-muted-foreground">{a.reason || "—"} · {APPT_STATUS_LABELS[a.status] ?? a.status}</p></div> });
+              items.push({ date: a.date, kind: "appointment", title: a.reason || `Appointment · ${APPT_STATUS_LABELS[a.status] ?? a.status}`, el: <div key={`a-${a.appointmentId}`} className="rounded-xl border border-fuchsia-200/60 bg-fuchsia-50/50 p-4 dark:border-fuchsia-900/30 dark:bg-fuchsia-500/5"><p className="text-sm font-medium text-black">{formatDate(a.date)} · {formatTime(a.time)} · Dr. {doctorName(a.doctorId)}</p><p className="mt-1 text-xs text-black">{a.reason || "—"} · {APPT_STATUS_LABELS[a.status] ?? a.status}</p></div> });
             });
             patientFiles.filter(f=>{ const k=displayFolderKey(f.folder); return k!=="bills" && k!=="billing"; }).forEach(f=>{
-              items.push({ date: f.createdAt, kind: "file", title: f.fileName, el: <div key={`f-${f.fileId}`} className="flex items-center gap-3 rounded-xl border border-border bg-background px-3 py-2.5 ring-1 ring-border">{fileIcon(f.mimeType, f.fileName)}<div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-foreground">{f.fileName}</p><p className="mt-0.5 text-xs text-muted-foreground">{folderName(f.folder)} · {formatDate(f.createdAt)}</p></div><Button variant="ghost" size="icon" aria-label="View file" className="size-8" onClick={() => handleDownload(f)}><Download className="size-4" /></Button></div> });
+              items.push({ date: f.createdAt, kind: "file", title: f.fileName, el: <div key={`f-${f.fileId}`} className="flex items-center gap-3 rounded-xl border border-border bg-white px-3 py-2.5 ring-1 ring-border">{fileIcon(f.mimeType, f.fileName)}<div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-black">{f.fileName}</p><p className="mt-0.5 text-xs text-black">{folderName(f.folder)} · {formatDate(f.createdAt)}</p></div><Button variant="ghost" size="icon" aria-label="View file" className="size-8" onClick={() => handleDownload(f)}><Download className="size-4" /></Button></div> });
             });
             items.sort((a,b)=> b.date.localeCompare(a.date));
             const dot = { visit: "bg-violet-500", prescription: "bg-emerald-500", medicine: "bg-sky-500", treatment: "bg-amber-500", examination: "bg-teal-500", appointment: "bg-fuchsia-500", file: "bg-slate-500" } as const;
-            if(items.length===0) return <p className="px-5 py-10 text-center text-sm text-muted-foreground">No clinical history yet.</p>;
+            if(items.length===0) return <p className="px-5 py-10 text-center text-sm text-black">No clinical history yet.</p>;
             return (
               <div className="px-4 py-6 sm:px-5">
                 <Timeline defaultValue={items.length} className="w-full">
@@ -2280,20 +2280,20 @@ export default function MedicalRecordPage() {
         {/* ── This patient's records (shown only on profile) ── */}
         <div className="grid gap-3 sm:gap-4">
           {/* Visit records */}
-          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+          <div className="overflow-hidden rounded-2xl border border-border/60 bg-white text-black">
             <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
               <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><Stethoscope className="size-4" /></span>
               <h3 className="text-sm font-semibold tracking-tight">Visit Records</h3>
               <Badge variant="outline" className="text-xs">{overview.patientRecords.length}</Badge>
               <Link
                 href="/clinic/records"
-                className="ml-auto inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground sm:w-auto"
+                className="ml-auto inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-black sm:w-auto"
               >
                 Open Records
               </Link>
             </div>
             {overview.patientRecords.length === 0 ? (
-              <p className="px-5 py-8 text-center text-sm text-muted-foreground">No visit records for this patient yet.</p>
+              <p className="px-5 py-8 text-center text-sm text-black">No visit records for this patient yet.</p>
             ) : (
               <>
               <div className="hidden overflow-x-auto md:block">
@@ -2312,16 +2312,16 @@ export default function MedicalRecordPage() {
                       const doctorLabel = doctorName(r.doctorId);
                       return (
                         <TableRow key={r.recordId} className="hover:bg-muted/30 border-b border-border last:border-0">
-                          <TableCell className="text-muted-foreground whitespace-nowrap">{formatDate(r.visitDate)}</TableCell>
+                          <TableCell className="text-black whitespace-nowrap">{formatDate(r.visitDate)}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2.5">
                               <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={r.doctorId} name={doctorLabel} />
-                              <span className="text-xs text-foreground font-medium">{doctorLabel}</span>
+                              <span className="text-xs text-black font-medium">{doctorLabel}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="max-w-48 truncate font-medium text-foreground">{r.diagnosis || "—"}</TableCell>
-                          <TableCell className="max-w-40 truncate text-muted-foreground">{r.symptoms || "—"}</TableCell>
-                          <TableCell className="max-w-40 truncate text-muted-foreground">{r.treatment || "—"}</TableCell>
+                          <TableCell className="max-w-48 truncate font-medium text-black">{r.diagnosis || "—"}</TableCell>
+                          <TableCell className="max-w-40 truncate text-black">{r.symptoms || "—"}</TableCell>
+                          <TableCell className="max-w-40 truncate text-black">{r.treatment || "—"}</TableCell>
                         </TableRow>
                       );
                     })}
@@ -2333,19 +2333,19 @@ export default function MedicalRecordPage() {
                 {[...overview.patientRecords].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((r) => {
                   const doctorLabel = doctorName(r.doctorId);
                   return (
-                    <div key={r.recordId} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+                    <div key={r.recordId} className="rounded-xl border border-border bg-white text-black p-3 shadow-2xs">
                       <div className="flex items-center justify-between gap-2">
                         <Badge className="bg-primary/10 text-primary hover:bg-primary/10 tabular-nums">
                           {formatDate(r.visitDate)}
                         </Badge>
-                        <span className="truncate text-[11px] text-muted-foreground">Dr. {doctorLabel}</span>
+                        <span className="truncate text-[11px] text-black">Dr. {doctorLabel}</span>
                       </div>
-                      <p className="mt-1.5 truncate text-sm font-semibold text-foreground">{r.diagnosis || "—"}</p>
+                      <p className="mt-1.5 truncate text-sm font-semibold text-black">{r.diagnosis || "—"}</p>
                       {r.symptoms ? (
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.symptoms}</p>
+                        <p className="mt-0.5 truncate text-xs text-black">{r.symptoms}</p>
                       ) : null}
                       {r.treatment ? (
-                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{r.treatment}</p>
+                        <p className="mt-0.5 truncate text-xs text-black">{r.treatment}</p>
                       ) : null}
                     </div>
                   );
@@ -2356,20 +2356,20 @@ export default function MedicalRecordPage() {
           </div>
 
           {/* Prescriptions */}
-          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+          <div className="overflow-hidden rounded-2xl border border-border/60 bg-white text-black">
             <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
               <span className="flex size-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600"><Pill className="size-4" /></span>
               <h3 className="text-sm font-semibold tracking-tight">Prescriptions</h3>
               <Badge variant="outline" className="text-xs">{overview.patientPrescriptions.length}</Badge>
               <Link
                 href="/clinic/prescriptions"
-                className="ml-auto inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground sm:w-auto"
+                className="ml-auto inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-black sm:w-auto"
               >
                 Open Prescriptions
               </Link>
             </div>
             {overview.patientPrescriptions.length === 0 ? (
-              <p className="px-5 py-8 text-center text-sm text-muted-foreground">No prescriptions for this patient yet.</p>
+              <p className="px-5 py-8 text-center text-sm text-black">No prescriptions for this patient yet.</p>
             ) : (
               <>
               <div className="hidden overflow-x-auto md:block">
@@ -2387,19 +2387,19 @@ export default function MedicalRecordPage() {
                       const doctorLabel = doctorName(pr.doctorId);
                       return (
                         <TableRow key={pr.prescriptionId} className="border-b border-border transition-colors hover:bg-muted/30">
-                          <TableCell className="font-medium text-xs tabular-nums text-foreground whitespace-nowrap">{formatDate(pr.visitDate)}</TableCell>
+                          <TableCell className="font-medium text-xs tabular-nums text-black whitespace-nowrap">{formatDate(pr.visitDate)}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2.5">
                               <PersonAvatar clinicId={clinicId} ownerType="doctor" ownerId={pr.doctorId} name={doctorLabel} />
-                              <span className="text-xs text-foreground font-medium">{doctorLabel}</span>
+                              <span className="text-xs text-black font-medium">{doctorLabel}</span>
                             </div>
                           </TableCell>
-                          <TableCell className="max-w-44 truncate text-xs text-muted-foreground">{pr.diagnosis ?? "—"}</TableCell>
+                          <TableCell className="max-w-44 truncate text-xs text-black">{pr.diagnosis ?? "—"}</TableCell>
                           <TableCell className="max-w-52">
-                            <ul className="list-disc pl-4 text-[11px] text-muted-foreground leading-tight space-y-0.5">
+                            <ul className="list-disc pl-4 text-[11px] text-black leading-tight space-y-0.5">
                               {(pr.medicines ?? []).slice(0, 2).map((m, i) => (
                                 <li key={i} className="truncate">
-                                  <span className="font-semibold text-foreground/80">{m.name}</span>{" "}
+                                  <span className="font-semibold text-black/80">{m.name}</span>{" "}
                                   {m.dosage && `(${m.dosage})`}
                                 </li>
                               ))}
@@ -2419,20 +2419,20 @@ export default function MedicalRecordPage() {
               {/* Mobile cards */}
               <div className="space-y-2.5 px-4 py-4 md:hidden">
                 {[...overview.patientPrescriptions].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((pr) => (
-                  <div key={pr.prescriptionId} className="rounded-xl border border-success/20 bg-card p-3 shadow-2xs">
+                  <div key={pr.prescriptionId} className="rounded-xl border border-success/20 bg-white text-black p-3 shadow-2xs">
                     <div className="flex items-center justify-between gap-2">
                       <Badge className="bg-success/10 text-success hover:bg-success/10 tabular-nums">
                         {formatDate(pr.visitDate)}
                       </Badge>
-                      <span className="truncate text-[11px] text-muted-foreground">Dr. {doctorName(pr.doctorId)}</span>
+                      <span className="truncate text-[11px] text-black">Dr. {doctorName(pr.doctorId)}</span>
                     </div>
                     {pr.diagnosis ? (
-                      <p className="mt-1.5 truncate text-sm font-semibold text-foreground">{pr.diagnosis}</p>
+                      <p className="mt-1.5 truncate text-sm font-semibold text-black">{pr.diagnosis}</p>
                     ) : null}
                     <ul className="mt-1 space-y-0.5">
                       {(pr.medicines ?? []).map((m, i) => (
-                        <li key={i} className="truncate text-xs text-muted-foreground">
-                          <span className="font-semibold text-foreground/80">{m.name}</span>
+                        <li key={i} className="truncate text-xs text-black">
+                          <span className="font-semibold text-black/80">{m.name}</span>
                           {m.dosage ? <span> · {m.dosage}</span> : null}
                           {m.frequency ? <span> · {m.frequency}</span> : null}
                         </li>
@@ -2446,20 +2446,20 @@ export default function MedicalRecordPage() {
           </div>
 
           {/* Examinations */}
-          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+          <div className="overflow-hidden rounded-2xl border border-border/60 bg-white text-black">
             <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
               <span className="flex size-8 items-center justify-center rounded-lg bg-teal-500/10 text-teal-600"><ClipboardList className="size-4" /></span>
               <h3 className="text-sm font-semibold tracking-tight">Examinations</h3>
               <Badge variant="outline" className="text-xs">{overview.patientExaminations.length}</Badge>
               <Link
                 href="/clinic/examination"
-                className="ml-auto inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-foreground sm:w-auto"
+                className="ml-auto inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[0.8rem] font-medium transition-all hover:bg-muted hover:text-black sm:w-auto"
               >
                 Open Examinations
               </Link>
             </div>
             {overview.patientExaminations.length === 0 ? (
-              <p className="px-5 py-8 text-center text-sm text-muted-foreground">No examinations for this patient yet.</p>
+              <p className="px-5 py-8 text-center text-sm text-black">No examinations for this patient yet.</p>
             ) : (
               <>
               <div className="hidden overflow-x-auto md:block">
@@ -2476,9 +2476,9 @@ export default function MedicalRecordPage() {
                     {[...overview.patientExaminations].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((e) => (
                       <TableRow key={e.examinationId}>
                         <TableCell className="whitespace-nowrap text-sm">{formatDate(e.visitDate)}</TableCell>
-                        <TableCell className="text-sm capitalize text-muted-foreground">{e.issueType || "—"}</TableCell>
-                        <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{e.oralFindings || "—"}</TableCell>
-                        <TableCell className="text-sm capitalize text-muted-foreground">{e.status.replace("-", " ")}</TableCell>
+                        <TableCell className="text-sm capitalize text-black">{e.issueType || "—"}</TableCell>
+                        <TableCell className="max-w-xs truncate text-sm text-black">{e.oralFindings || "—"}</TableCell>
+                        <TableCell className="text-sm capitalize text-black">{e.status.replace("-", " ")}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -2487,16 +2487,16 @@ export default function MedicalRecordPage() {
               {/* Mobile cards */}
               <div className="space-y-2.5 px-4 py-4 md:hidden">
                 {[...overview.patientExaminations].sort((a, b) => b.visitDate.localeCompare(a.visitDate)).map((e) => (
-                  <div key={e.examinationId} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
+                  <div key={e.examinationId} className="rounded-xl border border-border bg-white text-black p-3 shadow-2xs">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-bold text-foreground tabular-nums">{formatDate(e.visitDate)}</p>
+                      <p className="text-sm font-bold text-black tabular-nums">{formatDate(e.visitDate)}</p>
                       <span className="shrink-0 rounded-full bg-teal-500/10 px-2 py-0.5 text-[11px] font-semibold capitalize text-teal-700 dark:text-teal-300">
                         {e.status.replace("-", " ")}
                       </span>
                     </div>
-                    <p className="mt-1 truncate text-xs font-medium capitalize text-foreground">{e.issueType || "—"}</p>
+                    <p className="mt-1 truncate text-xs font-medium capitalize text-black">{e.issueType || "—"}</p>
                     {e.oralFindings ? (
-                      <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{e.oralFindings}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-black">{e.oralFindings}</p>
                     ) : null}
                   </div>
                 ))}
@@ -2506,14 +2506,14 @@ export default function MedicalRecordPage() {
           </div>
 
           {/* Files & documents */}
-          <div className="overflow-hidden rounded-2xl border border-border/60 bg-card">
+          <div className="overflow-hidden rounded-2xl border border-border/60 bg-white text-black">
             <div className="flex flex-wrap items-center gap-2 border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
               <span className="flex size-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600"><FileText className="size-4" /></span>
               <h3 className="text-sm font-semibold tracking-tight">Files & Documents</h3>
               <Badge variant="outline" className="text-xs">{patientFiles.length}</Badge>
             </div>
             {patientFiles.length === 0 ? (
-              <p className="px-5 py-8 text-center text-sm text-muted-foreground">No files for this patient yet.</p>
+              <p className="px-5 py-8 text-center text-sm text-black">No files for this patient yet.</p>
             ) : (
               <div className="space-y-1.5 px-4 py-4 sm:px-5">
                 {[...patientFiles].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map((f) => (
@@ -2536,8 +2536,8 @@ export default function MedicalRecordPage() {
                   >
                     {fileIcon(f.mimeType, f.fileName)}
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">{f.fileName}</p>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+                      <p className="truncate text-sm font-medium text-black">{f.fileName}</p>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-black">
                         <span>{formatDate(f.createdAt)}</span>
                         <span>·</span>
                         <span>{folderName(f.folder)}</span>
