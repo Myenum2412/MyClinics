@@ -74,7 +74,8 @@ export default function PharmacyPurchasesPage() {
   const [medicines, setMedicines] = React.useState<PharmacyMedicine[]>([])
   const [loading, setLoading] = React.useState(true)
   const [initialLoading, setInitialLoading] = React.useState(true)
-  const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("")
+  // Dropdown status filter was removed; stays empty (all).
+  const [statusFilter] = React.useState<StatusFilter>("")
   const [search, setSearch] = React.useState("")
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
   const [detail, setDetail] = React.useState<PharmacyPurchase | null>(null)
@@ -188,12 +189,6 @@ export default function PharmacyPurchasesPage() {
         <CardContent className="p-0">
           <div className="flex flex-wrap items-center gap-2 p-4 border-b border-border">
             <span className="text-sm font-medium">Purchase Orders <span className="text-muted-foreground">({total})</span></span>
-            <div className="ml-auto flex items-center gap-2">
-            <Select value={statusFilter || "__all__"} onValueChange={(v) => { setStatusFilter((v === "__all__" ? "" : v) as StatusFilter); setPage(1) }}>
-              <SelectTrigger className="h-9 w-32"><SelectValue placeholder="All statuses" /></SelectTrigger>
-              <SelectContent><SelectItem value="__all__">All</SelectItem><SelectItem value="draft">Draft</SelectItem><SelectItem value="received">Received</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent>
-            </Select>
-            </div>
           </div>
           <div className="overflow-x-auto">
             <Table>

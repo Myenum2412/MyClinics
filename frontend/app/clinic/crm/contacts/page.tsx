@@ -58,8 +58,9 @@ export default function ContactsPage() {
   const [facetCounts, setFacetCounts] = useState<Record<string, Record<string, number>>>({});
   const [archived, setArchived] = useState(false);
   const [search, setSearch] = useState("");
-  const [sourceFilter, setSourceFilter] = useState("");
-  const [ownerFilter, setOwnerFilter] = useState("");
+  // Dropdown filters were removed; these stay empty (all).
+  const [sourceFilter] = useState("");
+  const [ownerFilter] = useState("");
   const [companyFilter, setCompanyFilter] = useState("");
   const [sort, setSort] = useState("-createdAt");
   const [creating, setCreating] = useState(false);
@@ -168,32 +169,6 @@ export default function ContactsPage() {
               className="w-64"
               onKeyDown={(e) => e.key === "Enter" && void load()}
             />
-            <Select value={sourceFilter} onValueChange={setSourceFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All sources" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All sources</SelectItem>
-                {SOURCES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All owners" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All owners</SelectItem>
-                {Object.entries(facetCounts.owner ?? {}).map(([id, count]) => (
-                  <SelectItem key={id} value={id}>
-                    {id} ({count})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
           <div className="flex items-center gap-2">
             <Input

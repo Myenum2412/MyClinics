@@ -50,7 +50,8 @@ export default function PharmacySuppliersPage() {
   const pageSize = 20
   const [loading, setLoading] = React.useState(true)
   const [search, setSearch] = React.useState("")
-  const [statusFilter, setStatusFilter] = React.useState<"all" | SupplierStatus>("all")
+  // Dropdown status filter was removed; stays pinned to "all".
+  const [statusFilter] = React.useState<"all" | SupplierStatus>("all")
 
   const [initialLoading, setInitialLoading] = React.useState(true)
   const [deleteTarget, setDeleteTarget] = React.useState<PharmacySupplier | null>(null)
@@ -129,10 +130,6 @@ export default function PharmacySuppliersPage() {
         <CardContent className="p-0">
           <div className="flex flex-wrap items-center gap-2 border-b border-border p-3 sm:p-4">
             <span className="text-sm font-medium">Suppliers <span className="text-muted-foreground">({total})</span></span>
-            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter((v as "all" | SupplierStatus) ?? "all"); setPage(1) }}>
-              <SelectTrigger className="h-9 min-w-[140px] flex-1 sm:ml-auto sm:flex-none sm:w-40"><SelectValue placeholder="All statuses" /></SelectTrigger>
-              <SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent>
-            </Select>
           </div>
           {loading ? (
             <div className="space-y-2 p-4"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>

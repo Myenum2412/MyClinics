@@ -37,7 +37,8 @@ export default function OrgMenuDashboardPage() {
   const session = useClinicSession();
   const [items, setItems] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("all");
+  // Dropdown status filter was removed; stays pinned to "all".
+  const [statusFilter] = useState("all");
   const [q, setQ] = useState("");
   // Debounced copy of the search term that drives the server request. `q` still
   // filters the visible rows instantly (StatsGeneric), so typing stays snappy
@@ -140,20 +141,6 @@ export default function OrgMenuDashboardPage() {
             searchTerm={q}
             onSearchChange={setQ}
             searchPlaceholder="Search clinic name, admin, email..."
-            action={
-              <div className="flex items-center gap-2">
-                <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
-                  <SelectTrigger className="h-9 w-36">
-                    <SelectValue placeholder="All statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All statuses</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="suspended">Suspended</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            }
           />
         </div>
       )}

@@ -60,7 +60,8 @@ export default function PharmacyMedicinesPage() {
   const [loading, setLoading] = React.useState(true)
   const [search, setSearch] = React.useState("")
   const [category, setCategory] = React.useState("")
-  const [status, setStatus] = React.useState("all")
+  // Dropdown status filter was removed; stays pinned to "all".
+  const [status] = React.useState("all")
   const [selected, setSelected] = React.useState<Set<string>>(new Set())
   const [bulkAction, setBulkAction] = React.useState("activate")
 
@@ -208,16 +209,6 @@ export default function PharmacyMedicinesPage() {
             onChange={(e) => { setCategory(e.target.value); setPage(1) }}
             className="h-9 w-44"
           />
-          <Select value={status} onValueChange={(v) => { setStatus(v ?? "all"); setPage(1) }}>
-            <SelectTrigger className="h-9 w-36">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
 
           <div className="ml-auto flex items-center gap-2">
             <Checkbox

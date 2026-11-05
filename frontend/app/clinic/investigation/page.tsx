@@ -214,8 +214,9 @@ export default function InvestigationPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  // Dropdown filters were removed; these stay pinned to "all".
+  const [statusFilter] = useState<string>("all");
+  const [categoryFilter] = useState<string>("all");
 
   const [form, setForm] = useState<FormState>(emptyForm());
   const [records, setRecords] = useState<MedicineRecord[]>([]);
@@ -795,38 +796,6 @@ export default function InvestigationPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Select
-            value={categoryFilter}
-            onValueChange={(v) => setCategoryFilter(v ?? "all")}
-          >
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="All types" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              {CATEGORY_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v ?? "all")}
-          >
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              {STATUS_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </CardContent>
       </Card>
 

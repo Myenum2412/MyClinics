@@ -125,7 +125,8 @@ export default function BillingPage() {
   const [statsBills, setStatsBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("all");
+  // Dropdown status filter was removed; stays pinned to "all".
+  const [statusFilter] = useState("all");
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<Bill | null>(null);
   const [viewing, setViewing] = useState<Bill | null>(null);
@@ -475,23 +476,10 @@ export default function BillingPage() {
             }}
             searchPlaceholder="Search bills, patient, status..."
             action={
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="flex h-9 w-full items-center justify-between rounded-lg border border-input bg-transparent px-3 text-sm sm:w-36">
-                    {statusFilter === "all" ? "All Statuses" : statusFilter} <ChevronDown className="size-4 opacity-50" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-36">
-                    {["all","draft","issued","paid","void"].map((s) => (
-                      <DropdownMenuItem key={s} onClick={() => { setStatusFilter(s); setPageIndex(0); }}>{s === "all" ? "All Statuses" : s}</DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                <Button className="flex h-9 w-full items-center justify-center gap-1.5 shadow-sm sm:w-auto" onClick={() => setCreating(true)}>
-                  <Plus className="size-4" />
-                  New Bill
-                </Button>
-              </div>
+              <Button className="flex h-9 w-full items-center justify-center gap-1.5 shadow-sm sm:w-auto" onClick={() => setCreating(true)}>
+                <Plus className="size-4" />
+                New Bill
+              </Button>
             }
           />
         </div>

@@ -176,7 +176,8 @@ export default function ExaminationPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  // Dropdown filters were removed; statusFilter stays pinned to "all".
+  const [statusFilter] = useState<string>("all");
 
   const [form, setForm] = useState<FormState>(emptyForm());
   const [saving, setSaving] = useState(false);
@@ -717,22 +718,6 @@ export default function ExaminationPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v ?? "all")}
-          >
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="All statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              {STATUS_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </SectionCard>
 

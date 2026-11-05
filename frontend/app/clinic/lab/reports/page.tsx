@@ -62,8 +62,9 @@ export default function LabReportsPage() {
   const [items, setItems] = useState<Investigation[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState("all");
-  const [category, setCategory] = useState("all");
+  // Dropdown filters were removed; these stay pinned to "all".
+  const [status] = useState("all");
+  const [category] = useState("all");
   const [page, setPage] = useState(1);
   const [viewing, setViewing] = useState<Investigation | null>(null);
 
@@ -127,32 +128,6 @@ export default function LabReportsPage() {
             className="h-9 pl-9"
           />
         </div>
-        <Select value={status} onValueChange={(v) => { setStatus(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-9 w-full sm:w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {INVESTIGATION_STATUS_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={category} onValueChange={(v) => { setCategory(v ?? "all"); setPage(1); }}>
-          <SelectTrigger className="h-9 w-full sm:w-44">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All categories</SelectItem>
-            {INVESTIGATION_CATEGORY_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       <Card className="border-border shadow-sm">

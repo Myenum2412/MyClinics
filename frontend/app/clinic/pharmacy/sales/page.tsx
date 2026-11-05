@@ -64,7 +64,8 @@ export default function PharmacySalesPage() {
   const [initialLoading, setInitialLoading] = React.useState(true)
   const [search, setSearch] = React.useState("")
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
-  const [statusFilter, setStatusFilter] = React.useState<"" | SaleStatus>("")
+  // Dropdown status filter was removed; stays empty (all).
+  const [statusFilter] = React.useState<"" | SaleStatus>("")
   const [detail, setDetail] = React.useState<PharmacySale | null>(null)
 
   // The medicine catalog is a bounded lookup table (used to show line-item names in a sale's
@@ -159,10 +160,6 @@ export default function PharmacySalesPage() {
         <CardContent className="p-0">
           <div className="flex flex-wrap items-center gap-2 border-b border-border p-3 sm:p-4">
             <span className="text-sm font-medium">Sales <span className="text-muted-foreground">({total})</span></span>
-            <Select value={statusFilter || "__all__"} onValueChange={(v) => { setStatusFilter((v === "__all__" ? "" : v) as "" | SaleStatus); setPage(1) }}>
-              <SelectTrigger className="h-9 min-w-[140px] flex-1 sm:ml-auto sm:flex-none sm:w-40"><SelectValue placeholder="All statuses" /></SelectTrigger>
-              <SelectContent><SelectItem value="__all__">All statuses</SelectItem><SelectItem value="completed">Completed</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem><SelectItem value="refunded">Refunded</SelectItem></SelectContent>
-            </Select>
           </div>
           {/* Desktop table — hidden on mobile */}
           <div className="hidden overflow-x-auto md:block">
