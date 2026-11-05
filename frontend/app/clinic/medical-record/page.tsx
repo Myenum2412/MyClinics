@@ -1440,6 +1440,16 @@ export default function MedicalRecordPage() {
           )}
           <div className="ml-auto flex w-full flex-wrap items-center gap-2 sm:w-auto">
             {!canManage && <Badge variant="secondary">Upload-only access</Badge>}
+            {!selectedPatient && (
+              <Card className="rounded-xl bg-white text-black shadow-sm">
+                <CardContent className="p-2 sm:p-3">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-black" />
+                    <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search patients…" className="pl-9 h-9" />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             {clipboard && canManage && (
               <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => handlePaste()}>
                 <ClipboardCopy className="size-4" /> Paste
@@ -1485,15 +1495,6 @@ export default function MedicalRecordPage() {
         {/* ── Patient list (root) ── */}
         {!selectedPatient && (
           <>
-            <div className="relative mx-auto mt-4 w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-black" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search patients…"
-                className="pl-9"
-              />
-            </div>
             {filteredPatients.length === 0 ? (
               <Card className="mt-6 bg-white text-black">
                 <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
