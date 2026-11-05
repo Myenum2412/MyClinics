@@ -1431,46 +1431,66 @@ export default function MedicalRecordPage() {
                   <span className="text-sm font-medium text-black">{folderName(activeFolderId)}</span>
                 </>
               )}
+              <div className="ml-auto flex w-full flex-wrap items-center gap-2 sm:w-auto">
+                {!canManage && <Badge variant="secondary">Upload-only access</Badge>}
+                {clipboard && canManage && (
+                  <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => handlePaste()}>
+                    <ClipboardCopy className="size-4" /> Paste
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => uploadSystemRef.current?.openFilePicker()}
+                  disabled={!selectedPatient}
+                  className="h-9 flex-1 justify-center sm:flex-none"
+                >
+                  <UploadCloud className="size-4" /> Upload
+                </Button>
+                {canManage && selectedPatient && (
+                  <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => setNewFolderOpen(true)}>
+                    <FolderPlus className="size-4" /> New Folder
+                  </Button>
+                )}
+              </div>
             </>
           ) : (
-            <>
-              <Users className="size-5 shrink-0 text-primary" />
-              <h1 className="text-lg font-bold text-black sm:text-xl">Medical Records</h1>
-            </>
-          )}
-          <div className="ml-auto flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            {!canManage && <Badge variant="secondary">Upload-only access</Badge>}
-            {!selectedPatient && (
-              <Card className="rounded-xl bg-white text-black shadow-sm">
-                <CardContent className="p-2 sm:p-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-black" />
-                    <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search patients…" className="pl-9 h-9" />
+            <Card className="bg-white text-black">
+              <CardContent className="flex flex-col gap-3 p-4 sm:p-5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Users className="size-5 shrink-0 text-primary" />
+                  <h1 className="text-lg font-bold text-black sm:text-xl">Medical Records</h1>
+                  {!canManage && <Badge variant="secondary">Upload-only access</Badge>}
+                  <div className="ml-auto flex flex-wrap items-center gap-2">
+                    {clipboard && canManage && (
+                      <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => handlePaste()}>
+                        <ClipboardCopy className="size-4" /> Paste
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => uploadSystemRef.current?.openFilePicker()}
+                      disabled={!selectedPatient}
+                      className="h-9 flex-1 justify-center sm:flex-none"
+                    >
+                      <UploadCloud className="size-4" /> Upload
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-            {clipboard && canManage && (
-              <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => handlePaste()}>
-                <ClipboardCopy className="size-4" /> Paste
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => uploadSystemRef.current?.openFilePicker()}
-              disabled={!selectedPatient}
-              className="h-9 flex-1 justify-center sm:flex-none"
-            >
-              <UploadCloud className="size-4" /> Upload
-            </Button>
-            {canManage && selectedPatient && (
-              <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => setNewFolderOpen(true)}>
-                <FolderPlus className="size-4" /> New Folder
-              </Button>
-            )}
-
-          </div>
+                </div>
+                <div className="mx-auto w-full max-w-md">
+                  <Card className="rounded-xl bg-white text-black shadow-sm">
+                    <CardContent className="p-2 sm:p-3">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-black" />
+                        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search patients…" className="pl-9 h-9" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {selectedPatient && (
