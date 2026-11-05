@@ -1007,7 +1007,6 @@ export function PatientForm({
               />
             )}
           </FormField>
-          <div />
           <FormField
             label="Portal Password"
             name="password"
