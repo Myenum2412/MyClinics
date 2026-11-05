@@ -1072,7 +1072,7 @@ export function PatientForm({
           </FormField>
         </div>
 
-        <div className="space-y-4 border-t border-border pt-4">
+        <div className="grid gap-4 border-t border-border pt-4 md:grid-cols-2">
           <div>
             <Label className="text-sm font-medium text-foreground">
               Patient Portal Access
