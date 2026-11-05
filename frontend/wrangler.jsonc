@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "myclinic-web",
+  "account_id": "c77119278e2de58a84edd0202af456e2",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-03-01",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "vars": {
+    "NODE_ENV": "production",
+    "BACKEND_URL": "https://api.myclinic.myenum.in",
+    "AUTH_URL": "https://myclinic.myenum.in",
+    "AUTH_TRUST_HOST": "true",
+    "OPEN_NEXT": "1"
+  }
+}

@@ -100,11 +100,11 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     if (process.env.SKIP_API_PROXY === "1") return [];
-    // On Vercel, external rewrites cause 502 ROUTER_EXTERNAL_TARGET_ERROR
+    // On Vercel / Cloudflare edge workers, external rewrites cause target errors
     // when the backend is temporarily unreachable. Use the resilient
     // Route Handler at app/api/[...path]/route.ts instead (returns 503
     // JSON instead of crashing the edge).
-    if (process.env.VERCEL === "1") return [];
+    if (process.env.VERCEL === "1" || process.env.CLOUDFLARE === "1" || process.env.CF_PAGES === "1" || process.env.OPEN_NEXT === "1") return [];
     return [
       {
         source: "/api/auth/:path*",

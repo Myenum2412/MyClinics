@@ -1,4 +1,4 @@
-name: Auto Deploy (Vercel + AWS)
+name: Auto Deploy (Cloudflare + AWS)
 on:
   push:
     branches: [main]
@@ -7,21 +7,30 @@ jobs:
   noop:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Deploy workflow — Vercel handles frontend via native GitHub integration; backend requires AWS/EC2 secrets to run."
+      - run: echo "Deploy workflow — Cloudflare handles frontend; backend requires AWS/EC2 secrets to run."
 
-  vercel:
+  cloudflare-frontend:
     runs-on: ubuntu-latest
-    # Skipped if VERCEL_TOKEN missing — project already auto-deploys via Vercel's native GitHub integration (see Vercel Dashboard → Settings → Git)
-    # Keep this job only if you need a custom CLI deploy; otherwise native integration handles `push to main → prod deploy`.
-    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    # Skipped if CLOUDFLARE_API_TOKEN missing (e.g. if using Cloudflare's native GitHub integration)
+    if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
-      - uses: amondnet/vercel-action@v25
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: team_dc7W4dvpm5VOkH4vHgVrIc9F
-          vercel-project-id: prj_xdBCIcujyZxESXuPdscb9yemKvOv
-          vercel-args: --prod
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+      - name: Build Cloudflare worker bundle
+        run: npm run build:cloudflare -w frontend
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: 'frontend'
+          command: deploy
 
   backend-aws:
     runs-on: ubuntu-latest
