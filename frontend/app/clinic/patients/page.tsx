@@ -48,14 +48,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DoctorSelect } from "@/components/clinic/pickers";
+import { DoctorSelect, useDoctorOptions } from "@/components/clinic/pickers";
+import {
+  PatientForm as PatientDetailViewForm,
+  type PatientFormState as PatientDetailViewFormState,
+} from "@/components/clinic/patient-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { Pagination } from "@/components/ui/pagination";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Pencil, Eye, Send, UsersRound, Phone } from "lucide-react";
+import { Plus, Search, Download, Trash, ChevronLeft, ChevronRight, KeyRound, Mail, Eye, Send, UsersRound, Phone } from "lucide-react";
 import { RowActions } from "@/components/ui/row-actions";
 import { TableFilters } from "@/components/clinic/table-filters";
 import dynamic from "next/dynamic";
@@ -168,6 +172,7 @@ export default function PatientsPage() {
   const clinicId = session?.clinicId ?? "";
   const { getOptions } = useDropdownOptions(clinicId);
   const bloodGroups = getOptions("blood_groups");
+  const doctors = useDoctorOptions(clinicId);
   const [items, setItems] = useState<Patient[]>([]);
   const [total, setTotal] = useState(0);
   const [globalStats, setGlobalStats] = useState<{ total: number; active: number; female: number; upcoming: number } | null>(null);
@@ -604,81 +609,28 @@ export default function PatientsPage() {
       <div className="flex flex-col gap-6">
         <Card className="border-border shadow-sm">
           <CardHeader className="border-b border-border bg-muted/20 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setViewing(null)}
-                  aria-label="Back to patients"
-                  className="size-8"
-                >
-                  <ChevronLeft className="size-4" />
-                </Button>
-                <CardTitle className="text-lg font-semibold">Patient Information</CardTitle>
-              </div>
+            <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5"
-                onClick={() => setEditing(viewing)}
+                variant="ghost"
+                size="icon"
+                onClick={() => setViewing(null)}
+                aria-label="Back to patients"
+                className="size-8"
               >
-                <Pencil className="size-4" />
-                Edit
+                <ChevronLeft className="size-4" />
               </Button>
+              <CardTitle className="text-lg font-semibold">Patient Information</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-6">
-            <PatientForm
+            {/* Same shared form as /clinic/patients/new, rendered in read-only view mode */}
+            <PatientDetailViewForm
               clinicId={clinicId}
-              initial={{
-                fullName: viewing.fullName,
-                mobile: viewing.mobile,
-                whatsapp: viewing.whatsapp ?? "",
-                email: viewing.email ?? "",
-                gender: viewing.gender ?? "",
-                dateOfBirth: viewing.dateOfBirth ?? "",
-                bloodGroup: viewing.bloodGroup ?? "",
-                address: viewing.address ?? "",
-                city: viewing.city ?? "",
-                state: viewing.state ?? "",
-                pincode: viewing.pincode ?? "",
-                height: viewing.height ?? "",
-                weight: viewing.weight ?? "",
-                bloodPressure: (viewing as any).bloodPressure ?? "",
-                temperature: (viewing as any).temperature ?? "",
-                pulse: (viewing as any).pulse ?? "",
-                respiratoryRate: (viewing as any).respiratoryRate ?? "",
-                spo2: (viewing as any).spo2 ?? "",
-                occupation: viewing.occupation ?? "",
-                maritalStatus: viewing.maritalStatus ?? "",
-                emergencyContactName: viewing.emergencyContactName ?? "",
-                emergencyContactRelationship: viewing.emergencyContactRelationship ?? "",
-                emergencyContactMobile: viewing.emergencyContactMobile ?? "",
-                allergies: (viewing.allergies ?? []).join(", "),
-                medicalConditions: viewing.medicalConditions ?? "",
-                previousSurgeries: viewing.previousSurgeries ?? "",
-                currentMedications: viewing.currentMedications ?? "",
-                familyHistory: viewing.familyHistory ?? "",
-                patientHistory: viewing.patientHistory ?? "",
-                habits: viewing.habits ?? "",
-                idType: viewing.idType ?? "",
-                idNumber: viewing.idNumber ?? "",
-                insuranceProvider: viewing.insuranceProvider ?? "",
-                insurancePolicyNumber: viewing.insurancePolicyNumber ?? "",
-                insurancePolicyHolderName: viewing.insurancePolicyHolderName ?? "",
-                insuranceValidTill: viewing.insuranceValidTill ?? "",
-                referredBy: viewing.referredBy ?? "",
-                howDidYouHear: viewing.howDidYouHear ?? "",
-                notes: viewing.notes ?? "",
-                status: viewing.status ?? "active",
-                doctorId: viewing.doctorId,
-                password: "",
-                profileImage: null,
-                patientId: viewing.patientId,
-              }}
-              saving={false}
-              readOnly={true}
+              initialData={toPatientDetailViewFormState(viewing)}
+              mode="view"
+              doctors={doctors}
+              onEdit={() => setEditing(viewing)}
+              onClose={() => setViewing(null)}
             />
           </CardContent>
         </Card>
@@ -1066,6 +1018,52 @@ export default function PatientsPage() {
       </Dialog>
     </div>
   );
+}
+
+/**
+ * Map a `Patient` API record into the shared `PatientForm` (`components/clinic/patient-form.tsx`)
+ * initial data. The shared form merges this with `EMPTY_FORM` and auto-migrates the legacy
+ * single emergency contact into its array, and derives age from date of birth.
+ */
+function toPatientDetailViewFormState(p: Patient): Partial<PatientDetailViewFormState> {
+  return {
+    fullName: p.fullName,
+    mobile: p.mobile,
+    whatsapp: p.whatsapp ?? "",
+    email: p.email ?? "",
+    gender: p.gender ?? "",
+    dateOfBirth: p.dateOfBirth ?? "",
+    bloodGroup: p.bloodGroup ?? "",
+    height: p.height ?? "",
+    weight: p.weight ?? "",
+    bloodPressure: p.bloodPressure ?? "",
+    temperature: p.temperature ?? "",
+    pulse: p.pulse ?? "",
+    respiratoryRate: p.respiratoryRate ?? "",
+    spo2: p.spo2 ?? "",
+    occupation: p.occupation ?? "",
+    maritalStatus: p.maritalStatus ?? "",
+    address: p.address ?? "",
+    city: p.city ?? "",
+    state: p.state ?? "",
+    pincode: p.pincode ?? "",
+    emergencyContactName: p.emergencyContactName ?? "",
+    emergencyContactRelationship: p.emergencyContactRelationship ?? "",
+    emergencyContactMobile: p.emergencyContactMobile ?? "",
+    allergies: (p.allergies ?? []).join(", "),
+    idType: p.idType ?? "",
+    idNumber: p.idNumber ?? "",
+    insuranceProvider: p.insuranceProvider ?? "",
+    insurancePolicyNumber: p.insurancePolicyNumber ?? "",
+    insurancePolicyHolderName: p.insurancePolicyHolderName ?? "",
+    insuranceValidTill: p.insuranceValidTill ?? "",
+    referredBy: p.referredBy ?? "",
+    howDidYouHear: p.howDidYouHear ?? "",
+    notes: p.notes ?? "",
+    doctorId: p.doctorId,
+    portalAccess: p.userId ? "enable" : "disable",
+    patientId: p.patientId,
+  };
 }
 
 function PatientForm({

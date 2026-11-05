@@ -620,6 +620,7 @@ export function PatientForm({
         <div className="flex gap-3 border-t border-border pt-8">
           {onEdit && (
             <Button
+              type="button"
               variant="outline"
               onClick={onEdit}
             >
@@ -628,6 +629,7 @@ export function PatientForm({
           )}
           {onClose && (
             <Button
+              type="button"
               variant="outline"
               onClick={onClose}
               className="border-primary/30 text-primary hover:bg-accent"
@@ -1114,6 +1116,7 @@ export function PatientForm({
 
       <div className="flex gap-3 border-t border-border pt-8">
         <Button
+          type="button"
           variant="outline"
           onClick={onClose}
           disabled={saving}
