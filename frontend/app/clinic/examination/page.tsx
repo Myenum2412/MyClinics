@@ -13,7 +13,6 @@ import {
 } from "@/lib/clinic-api";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -707,8 +706,8 @@ export default function ExaminationPage() {
         )}
       </div>
 
-      <Card>
-        <CardContent className="flex flex-col gap-2.5 p-4 sm:flex-row sm:gap-3 sm:p-6">
+      <SectionCard title="1. Search & Filters">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -734,8 +733,8 @@ export default function ExaminationPage() {
               ))}
             </SelectContent>
           </Select>
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
 
       {selectedIds.size > 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 shadow-sm transition-all animate-in fade-in slide-in-from-top-2">
@@ -766,8 +765,7 @@ export default function ExaminationPage() {
         </div>
       )}
 
-      <Card>
-        <CardContent className="p-0">
+      <SectionCard title="2. Examinations">
           {loading ? (
             <div className="space-y-2 p-4">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -887,8 +885,7 @@ export default function ExaminationPage() {
             </div>
             </>
           )}
-        </CardContent>
-      </Card>
+        </SectionCard>
 
       <ConfirmDeleteDialog
         open={deleteTarget !== null}
