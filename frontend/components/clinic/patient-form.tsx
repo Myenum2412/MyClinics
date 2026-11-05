@@ -30,12 +30,12 @@ import {
   AlertCircle,
   Camera,
   User,
-  KeyRound,
-  Mail,
-  CheckCircle,
-  ExternalLink,
   Plus,
   Trash2,
+  Copy,
+  Dices,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { now, toLocalDateISO } from "@/lib/datetime";
 
@@ -203,6 +203,29 @@ const calculateAge = (dateOfBirth: string): number | null => {
   return age >= 0 ? age : null;
 };
 
+/** Charset avoids visually confusable characters (0/O, 1/l/I) — passwords are shared via WhatsApp. */
+const PASSWORD_LENGTH = 12;
+const PASSWORD_CHARSET =
+  "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$&*";
+
+/** Cryptographically random portal password so staff don't have to invent one. */
+function generatePasswordValue(length = PASSWORD_LENGTH): string {
+  try {
+    const values = new Uint32Array(length);
+    crypto.getRandomValues(values);
+    return Array.from(
+      values,
+      (v) => PASSWORD_CHARSET[v % PASSWORD_CHARSET.length]
+    ).join("");
+  } catch {
+    return Array.from(
+      { length },
+      () =>
+        PASSWORD_CHARSET[Math.floor(Math.random() * PASSWORD_CHARSET.length)]
+    ).join("");
+  }
+}
+
 function FormField({
   label,
   name,
@@ -361,6 +384,7 @@ export function PatientForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const portalEnabled = form.portalAccess === "enable";
@@ -450,7 +474,7 @@ export function PatientForm({
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [form, portalEnabled, isCreateMode, isEditMode]);
+  }, [form, portalEnabled, isCreateMode, isEditMode, setErrors]);
 
   const handleChange = (
     field: keyof PatientFormState,
@@ -527,6 +551,11 @@ export function PatientForm({
     setProfileImage(file);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  /** Auto-generate a strong portal password (also clears any password error). */
+  const handleGeneratePassword = () => {
+    handleChange("password", generatePasswordValue());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -982,15 +1011,66 @@ export function PatientForm({
           <FormField
             label="Portal Password"
             name="password"
-            type="password"
-            value={form.password}
-            onChange={(v) => handleChange("password", v)}
             error={errors.password}
             required={isCreateMode}
-            disabled={!portalEnabled || isViewMode}
-            placeholder="••••••••"
-            helperText="Minimum 8 characters"
-          />
+            helperText="Minimum 8 characters — use the generate button for a strong auto-generated password"
+          >
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={(e) => handleChange("password", e.target.value)}
+                  disabled={!portalEnabled || isViewMode}
+                  placeholder="••••••••"
+                  className={`border pr-10 ${
+                    errors.password
+                      ? "border-destructive focus:ring-destructive"
+                      : "border-border focus:ring-ring"
+                  }`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  disabled={!portalEnabled || !form.password}
+                  title={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  handleGeneratePassword();
+                  setShowPassword(true);
+                }}
+                disabled={!portalEnabled || isViewMode}
+                title="Auto-generate password"
+              >
+                <Dices className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  if (!form.password) return;
+                  navigator.clipboard
+                    .writeText(form.password)
+                    .then(() => toast.success("Password copied to clipboard"))
+                    .catch(() => toast.error("Could not copy password"));
+                }}
+                disabled={!portalEnabled || isViewMode || !form.password}
+                title="Copy password"
+              >
+                <Copy className="size-4" />
+              </Button>
+            </div>
+          </FormField>
         </div>
 
         <div className="space-y-4 border-t border-border pt-4">
@@ -1011,7 +1091,20 @@ export function PatientForm({
                     checked={form.portalAccess === option}
                     onChange={(e) => {
                       handleChange("portalAccess", e.target.value as "enable" | "disable");
-                      if (e.target.value === "disable") {
+                      if (e.target.value === "enable") {
+                        // Auto-generate a password so the patient never gets one manually chosen (and weak).
+                        setForm((prev) =>
+                          isCreateMode && !prev.password
+                            ? { ...prev, portalAccess: "enable", password: generatePasswordValue() }
+                            : prev
+                        );
+                        setErrors((prev) => {
+                          if (!prev.password) return prev;
+                          const next = { ...prev };
+                          delete next.password;
+                          return next;
+                        });
+                      } else {
                         setForm((prev) => ({
                           ...prev,
                           portalAccess: "disable",
