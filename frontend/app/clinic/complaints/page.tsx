@@ -24,7 +24,7 @@ function useStore(key: string){
   return [items, save] as const;
 }
 
-const COLS=["Patient","Visit Date","Doctor","Diagnosis / Plan","Treatment / Objective","Medicines","Follow-up","Type"];
+const COLS=["Patient","Appointment","Doctor","Follow-up Date","Final Diagnosis","Type"];
 
 export default function TreatmentPage(){
   const session = useRequireRole("staff" as any);
@@ -135,12 +135,10 @@ export default function TreatmentPage(){
             <TableBody>{paged.length===0 ? <TableRow><TableCell colSpan={COLS.length+2} className="py-16 text-center text-sm text-muted-foreground">{items.length===0 ? "No entries yet — click Add Record/Plan." : "No match."}</TableCell></TableRow> : paged.map(it=><TableRow key={it.id} className="hover:bg-muted/30">
               <TableCell><Checkbox checked={selected.has(it.id)} onCheckedChange={v=> setSelected(s=>{ const n=new Set(s); if(v) n.add(it.id); else n.delete(it.id); return n; })} /></TableCell>
               <TableCell className="text-xs">{it.patient}</TableCell>
-              <TableCell className="text-xs">{it.data["Visit Date & Time"] || it.data["Visit Date"] || "—"}</TableCell>
+              <TableCell className="text-xs">{it.data["Appointment"] || it.data["Visit Date & Time"] || it.data["Visit Date"] || "—"}</TableCell>
               <TableCell className="text-xs">{it.data["Doctor"] || "—"}</TableCell>
-              <TableCell className="text-xs max-w-[150px] truncate">{it.data["Diagnosis"] || it.data["Diagnosis / Clinical Impression"] || "—"}</TableCell>
-              <TableCell className="text-xs max-w-[150px] truncate">{it.data["Treatment Given"] || it.data["Treatment Objective"] || "—"}</TableCell>
-              <TableCell className="text-xs max-w-[150px] truncate">{it.data["Medicines Prescribed"] || it.data["Medicines"] || "—"}</TableCell>
               <TableCell className="text-xs">{it.data["Follow-up Date"] || it.data["Follow-up Schedule"] || "—"}</TableCell>
+              <TableCell className="text-xs max-w-[200px] truncate">{it.data["Diagnosis"] || it.data["Diagnosis / Clinical Impression"] || "—"}</TableCell>
               <TableCell><span className={`rounded-full px-2 py-0.5 text-xs ${it.type==="record"?"bg-blue-50 text-blue-700":"bg-emerald-50 text-emerald-700"}`}>{it.type}</span></TableCell>
               <TableCell className="text-right"><div className="flex justify-end">
                 <RowActions
@@ -165,18 +163,12 @@ export default function TreatmentPage(){
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${it.type==="record"?"bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400":"bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"}`}>{it.type}</span>
                 </div>
                 <p className="mt-1.5 truncate text-[11px] text-muted-foreground tabular-nums">
-                  {it.data["Visit Date & Time"] || it.data["Visit Date"] || "—"}
+                  {it.data["Appointment"] || it.data["Visit Date & Time"] || it.data["Visit Date"] || "—"}
                   {it.data["Doctor"] ? ` · Dr. ${it.data["Doctor"]}` : ""}
                 </p>
                 <p className="mt-1 truncate text-xs text-foreground">
-                  <span className="font-semibold">Dx: </span>{it.data["Diagnosis"] || it.data["Diagnosis / Clinical Impression"] || "—"}
+                  <span className="font-semibold">Final Diagnosis: </span>{it.data["Diagnosis"] || it.data["Diagnosis / Clinical Impression"] || "—"}
                 </p>
-                <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                  {it.data["Treatment Given"] || it.data["Treatment Objective"] || "—"}
-                </p>
-                {(it.data["Medicines Prescribed"] || it.data["Medicines"]) ? (
-                  <p className="mt-0.5 truncate text-xs text-muted-foreground">{it.data["Medicines Prescribed"] || it.data["Medicines"]}</p>
-                ) : null}
                 {(it.data["Follow-up Date"] || it.data["Follow-up Schedule"]) ? (
                   <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{it.data["Follow-up Date"] || it.data["Follow-up Schedule"]}</p>
                 ) : null}
