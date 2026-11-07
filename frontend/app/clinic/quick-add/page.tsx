@@ -140,9 +140,8 @@ export default function QuickAddPage(){
   const [exam,setExam]=useState({
     visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"",
     chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}],
-    bloodPressure:"", temperature:"", pulse:"", respiratoryRate:"", spo2:"",
-    allergies:"", medicalConditions:"", previousSurgeries:"", currentMedications:"", patientHistory:"", familyHistory:"", habits:"",
-    hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:"",
+    medicalConditions:"", patientHistory:"", habits:"",
+    hpiPresentingComplaint:"",
   });
   // Investigation — full /clinic/investigation form (incl. odontogram for "Other" + record link)
   const [inv,setInv]=useState({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", medicalRecordId:"", showChart:true, details:{} as Record<string,string>});
@@ -237,9 +236,8 @@ export default function QuickAddPage(){
       // Guard first: touched-but-incomplete sections error instead of silently dropping data.
       const examTouched = exam.oralFindings.trim() || exam.issueType || exam.notes.trim()
         || exam.chiefComplaints.some(c=> c.complaint.trim()||c.duration.trim()||c.severity||c.notes.trim())
-        || exam.bloodPressure.trim()||exam.temperature.trim()||exam.pulse.trim()||exam.respiratoryRate.trim()||exam.spo2.trim()
-        || exam.allergies.trim()||exam.medicalConditions.trim()||exam.previousSurgeries.trim()||exam.currentMedications.trim()||exam.patientHistory.trim()||exam.familyHistory.trim()||exam.habits.trim()
-        || exam.hpiPresentingComplaint.trim()||exam.hpiOnset||exam.hpiDurationValue.trim()||exam.hpiDurationUnit||exam.hpiProgression||exam.hpiSymptoms.trim()||exam.hpiAggravatingFactors.trim()||exam.hpiRelievingFactors.trim()||exam.hpiAssociatedSymptoms.trim()||exam.hpiPreviousTreatment.trim()||exam.hpiAdditionalNotes.trim();
+        || exam.medicalConditions.trim()||exam.patientHistory.trim()||exam.habits.trim()
+        || exam.hpiPresentingComplaint.trim();
       if(examTouched && (!exam.issueType || exam.oralFindings.trim().length < 2)){
         toast.error("Examination needs issue type (Hard / Soft) and oral findings (min 2 characters)");
         return;
@@ -250,10 +248,10 @@ export default function QuickAddPage(){
         payload.examination = {
           visitDate: exam.visitDate, status: exam.status, issueType: exam.issueType,
           oralFindings: exam.oralFindings.trim(), notes: clean(exam.notes),
-          allergies: clean(exam.allergies), medicalConditions: clean(exam.medicalConditions), previousSurgeries: clean(exam.previousSurgeries), currentMedications: clean(exam.currentMedications), patientHistory: clean(exam.patientHistory), familyHistory: clean(exam.familyHistory), habits: clean(exam.habits),
-          hpi: { presentingComplaint: clean(exam.hpiPresentingComplaint), onset: exam.hpiOnset || null, durationValue: clean(exam.hpiDurationValue), durationUnit: exam.hpiDurationUnit || null, progression: exam.hpiProgression || null, symptoms: clean(exam.hpiSymptoms), aggravatingFactors: clean(exam.hpiAggravatingFactors), relievingFactors: clean(exam.hpiRelievingFactors), associatedSymptoms: clean(exam.hpiAssociatedSymptoms), previousTreatment: clean(exam.hpiPreviousTreatment), additionalNotes: clean(exam.hpiAdditionalNotes) },
+          medicalConditions: clean(exam.medicalConditions),
+          patientHistory: clean(exam.patientHistory), habits: clean(exam.habits),
+          hpi: { presentingComplaint: clean(exam.hpiPresentingComplaint) },
           chiefComplaints: validComplaints.length? validComplaints : null,
-          bloodPressure: clean(exam.bloodPressure), temperature: clean(exam.temperature), pulse: clean(exam.pulse), respiratoryRate: clean(exam.respiratoryRate), spo2: clean(exam.spo2),
         };
       }
       // Investigation — same validation as /clinic/investigation (title min 2 chars).
@@ -411,7 +409,7 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 3 Examination — full /clinic/examination form (details + complaints + vitals + medical + HPI) */}
+      {/* 3 Examination — simple /clinic/examination form */}
       <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">3. Examination — Oral Findings {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Visit date *</Label><Input type="date" value={exam.visitDate} onChange={e=>setExam({...exam,visitDate:e.target.value})} className="mt-1 h-9"/></div>
@@ -424,20 +422,9 @@ export default function QuickAddPage(){
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2"><Label className="text-xs">History of Presenting Illness</Label><Textarea value={exam.hpiPresentingComplaint} onChange={e=>setExam({...exam,hpiPresentingComplaint:e.target.value})} rows={4} placeholder="Describe the history of presenting illness…"/></div>
         </div>
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div><Label className="text-xs">Blood pressure</Label><Input value={exam.bloodPressure} onChange={e=>setExam({...exam,bloodPressure:e.target.value})} placeholder="120/80" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Temperature</Label><Input value={exam.temperature} onChange={e=>setExam({...exam,temperature:e.target.value})} placeholder="98.6" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Pulse</Label><Input value={exam.pulse} onChange={e=>setExam({...exam,pulse:e.target.value})} placeholder="72" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Respiratory rate</Label><Input value={exam.respiratoryRate} onChange={e=>setExam({...exam,respiratoryRate:e.target.value})} placeholder="16" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">SpO₂</Label><Input value={exam.spo2} onChange={e=>setExam({...exam,spo2:e.target.value})} placeholder="98" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Allergies</Label><Input value={exam.allergies} onChange={e=>setExam({...exam,allergies:e.target.value})} placeholder="Penicillin, Nuts" className="mt-1 h-9"/></div>
-        </div>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2"><Label className="text-xs">Medical conditions</Label><Textarea value={exam.medicalConditions} onChange={e=>setExam({...exam,medicalConditions:e.target.value})} rows={2} placeholder="Diabetes, Hypertension…"/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Previous surgeries</Label><Textarea value={exam.previousSurgeries} onChange={e=>setExam({...exam,previousSurgeries:e.target.value})} rows={2} placeholder="Appendectomy (2015)…"/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Current medications</Label><Textarea value={exam.currentMedications} onChange={e=>setExam({...exam,currentMedications:e.target.value})} rows={2} placeholder="Aspirin 500mg (daily)…"/></div>
-          <div><Label className="text-xs">Patient history</Label><Textarea value={exam.patientHistory} onChange={e=>setExam({...exam,patientHistory:e.target.value})} rows={2}/></div>
-          <div><Label className="text-xs">Family history</Label><Textarea value={exam.familyHistory} onChange={e=>setExam({...exam,familyHistory:e.target.value})} rows={2}/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Medical Information</Label><Textarea value={exam.medicalConditions} onChange={e=>setExam({...exam,medicalConditions:e.target.value})} rows={2} placeholder="Diabetes, Hypertension…"/></div>
+          <div className="sm:col-span-2"><Label className="text-xs">Dental History</Label><Textarea value={exam.patientHistory} onChange={e=>setExam({...exam,patientHistory:e.target.value})} rows={2} placeholder="Past dental treatments, extractions, braces…"/></div>
           <div className="sm:col-span-2"><Label className="text-xs">Habits</Label><Textarea value={exam.habits} onChange={e=>setExam({...exam,habits:e.target.value})} rows={2} placeholder="Smoking, alcohol, diet…"/></div>
         </div>
       </CardContent></Card>
@@ -535,7 +522,7 @@ export default function QuickAddPage(){
       />
 
       <div className="sticky bottom-4 flex justify-center gap-3 pt-2">
-        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setRec(s=>({...s, chiefComplaint:"", diagnosis:""})); setRx(s=>({...s, diagnosis:"", notes:""})); setRxMeds([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]); setExam({visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"", chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}], bloodPressure:"", temperature:"", pulse:"", respiratoryRate:"", spo2:"", allergies:"", medicalConditions:"", previousSurgeries:"", currentMedications:"", patientHistory:"", familyHistory:"", habits:"", hpiPresentingComplaint:"", hpiOnset:"", hpiDurationValue:"", hpiDurationUnit:"", hpiProgression:"", hpiSymptoms:"", hpiAggravatingFactors:"", hpiRelievingFactors:"", hpiAssociatedSymptoms:"", hpiPreviousTreatment:"", hpiAdditionalNotes:""}); setInv({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", medicalRecordId:"", showChart:true, details:{}}); toast.info("Cancelled"); }}>Cancel</Button>
+        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setRec(s=>({...s, chiefComplaint:"", diagnosis:""})); setRx(s=>({...s, diagnosis:"", notes:""})); setRxMeds([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]); setExam({visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"", chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}], medicalConditions:"", patientHistory:"", habits:"", hpiPresentingComplaint:""}); setInv({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", medicalRecordId:"", showChart:true, details:{}}); toast.info("Cancelled"); }}>Cancel</Button>
         <Button size="lg" className="h-11 px-8 shadow-lg" onClick={submitAll}>Save</Button>
       </div>
     </div>
