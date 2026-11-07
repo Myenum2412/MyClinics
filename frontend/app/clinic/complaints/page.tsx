@@ -116,8 +116,8 @@ export default function TreatmentPage(){
               <select value={v["Doctor"]||""} onChange={e=>SV("Doctor", e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select doctor</option>{doctors.map(d=> <option key={d.doctorId} value={d.name}>{d.name}</option>)}</select>
             </div>
             <div className="space-y-2">
-              <Label>Diagnosis *</Label>
-              <select value={v["Diagnosis"]||v["Diagnosis / Clinical Impression"]||""} onChange={e=>{SV("Diagnosis", e.target.value); SV("Diagnosis / Clinical Impression", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select diagnosis</option><option value="Fever">Fever</option><option value="Infection">Infection</option><option value="Diabetes">Diabetes</option><option value="Hypertension">Hypertension</option><option value="Other">Other</option></select>
+              <Label>Final Diagnosis *</Label>
+              <Textarea value={v["Diagnosis"]||v["Diagnosis / Clinical Impression"]||""} onChange={e=>{SV("Diagnosis", e.target.value); SV("Diagnosis / Clinical Impression", e.target.value)}} rows={2} placeholder="Type final diagnosis..." className="mt-1" />
             </div>
             <div className="space-y-2">
               <Label>Treatment Given</Label>
