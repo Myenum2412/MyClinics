@@ -116,24 +116,12 @@ export default function TreatmentPage(){
               <select value={v["Doctor"]||""} onChange={e=>SV("Doctor", e.target.value)} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select doctor</option>{doctors.map(d=> <option key={d.doctorId} value={d.name}>{d.name}</option>)}</select>
             </div>
             <div className="space-y-2">
-              <Label>Final Diagnosis *</Label>
-              <Textarea value={v["Diagnosis"]||v["Diagnosis / Clinical Impression"]||""} onChange={e=>{SV("Diagnosis", e.target.value); SV("Diagnosis / Clinical Impression", e.target.value)}} rows={2} placeholder="Type final diagnosis..." className="mt-1" />
-            </div>
-            <div className="space-y-2">
-              <Label>Treatment Given</Label>
-              <select value={v["Treatment Given"]||v["Treatment Objective"]||""} onChange={e=>{SV("Treatment Given", e.target.value); SV("Treatment Objective", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select treatment</option><option value="Medication">Medication</option><option value="Therapy">Therapy</option><option value="Surgery">Surgery</option><option value="Observation">Observation</option></select>
-            </div>
-            <div className="space-y-2">
-              <Label>Medicines</Label>
-              <select value={v["Medicines Prescribed"]||v["Medicines"]||""} onChange={e=>{SV("Medicines Prescribed", e.target.value); SV("Medicines", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select medicines</option>{prescriptions.map((pr:any)=> <option key={pr.prescriptionId} value={pr.medicines?.map((m:any)=>m.name).join(", ")}>{pr.medicines?.map((m:any)=>m.name).join(", ").slice(0,40) || pr.diagnosis || pr.prescriptionId.slice(0,6)}</option>)}<option value="Paracetamol">Paracetamol</option><option value="Antibiotic">Antibiotic</option><option value="Other">Other</option></select>
-            </div>
-            <div className="space-y-2">
               <Label>Follow-up Date</Label>
               <select value={v["Follow-up Date"]||v["Follow-up Schedule"]||""} onChange={e=>{SV("Follow-up Date", e.target.value); SV("Follow-up Schedule", e.target.value)}} className="mt-1 h-9 w-full rounded-none border border-border bg-card px-3 text-sm shadow-2xs focus:border-primary/40 focus:ring-2 focus:ring-primary/10"><option value="">Select follow-up</option><option value="Follow-up in 3 days">Follow-up in 3 days</option><option value="Follow-up in 7 days">Follow-up in 7 days</option><option value="Follow-up in 14 days">Follow-up in 14 days</option></select>
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label>Notes</Label>
-              <Textarea value={v["Doctor Notes"]||v["Doctor's Remarks"]||""} onChange={e=>{SV("Doctor Notes", e.target.value); SV("Doctor's Remarks", e.target.value)}} rows={3} placeholder="Type notes..." className="mt-1" />
+              <Label>Final Diagnosis *</Label>
+              <Textarea value={v["Diagnosis"]||v["Diagnosis / Clinical Impression"]||""} onChange={e=>{SV("Diagnosis", e.target.value); SV("Diagnosis / Clinical Impression", e.target.value)}} rows={4} placeholder="Type final diagnosis notes..." className="mt-1" />
             </div>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row"><Button variant="outline" className="w-full justify-center sm:w-auto" onClick={()=>setOpen(false)}>Cancel</Button><Button className="w-full justify-center sm:w-auto" onClick={submit}>{editing?"Update":"Save"}</Button></div>
