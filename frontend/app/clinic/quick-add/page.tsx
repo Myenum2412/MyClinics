@@ -4,11 +4,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { listPatients, listDoctors, listAppointments, updateAppointment, deleteAppointment, createQuickAdd, type Patient, type Doctor, type Appointment, type AppointmentStatus } from "@/lib/clinic-api";
+import { listPatients, listDoctors, listAppointments, updateAppointment, deleteAppointment, type Patient, type Doctor, type Appointment, type AppointmentStatus } from "@/lib/clinic-api";
 import { useRequireRole } from "@/hooks/use-clinic-session";
-import { todayISO } from "@/lib/datetime";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import {
@@ -116,31 +114,6 @@ export default function QuickAddPage(){
 
   // Shared patient/doctor live only in the header above — sections reuse them,
   // so no per-section patient/doctor mirrors.
-  const [rec,setRec]=useState({visitDate:todayISO(), visitTime:"09:00", followUpDate:"", chiefComplaint:"", symptoms:"", diagnosis:"", icdCode:"", treatment:"", advice:"", bp:"", temp:"", pulse:"", allergies:"", labTests:"", internalNotes:""});
-
-  async function submitAll(){
-    try{
-      const pId=(name:string)=> patients.find(p=>p.fullName===name)?.patientId;
-      const dId=(name:string)=> doctors.find(d=>d.name===name)?.doctorId;
-      const patientId = pId(sharedPatient);
-      const doctorId = dId(sharedDoctor);
-      if(!patientId || !doctorId){
-        toast.error("Select patient and doctor");
-        return;
-      }
-      if(!rec.diagnosis.trim() || !rec.chiefComplaint.trim()){
-        toast.error("Records needs both diagnosis and chief complaint");
-        return;
-      }
-      const payload: any = {
-        patientId, doctorId,
-        record: { visitDate: rec.visitDate, visitTime: rec.visitTime, diagnosis: rec.diagnosis, chiefComplaint: rec.chiefComplaint, symptoms: rec.symptoms||null, treatment: rec.treatment||null, advice: rec.advice||null, icdCode: rec.icdCode||null, bp: rec.bp||null, temp: rec.temp||null, pulse: rec.pulse||null, allergies: rec.allergies||null, labTests: rec.labTests||null, internalNotes: rec.internalNotes||null, followUpDate: rec.followUpDate||null },
-      };
-      // Single submit — backend creates the record and sends ONE consolidated WhatsApp notification with full data (quick-add only)
-      await createQuickAdd(clinicId, payload);
-      toast.success("Quick Fill saved and single notification sent");
-    }catch(e:any){ toast.error(e.message); }
-  }
 
   const optimized = sharedPatient && sharedDoctor;
 
@@ -148,8 +121,8 @@ export default function QuickAddPage(){
     <div className="flex flex-col gap-6">
       {/* Premium header — patient optimized */}
       <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-violet-500/5 p-6">
-        <h1 className="text-lg font-semibold tracking-tight">Quick Add — Fill blanks</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Select patient — doctor auto-shows. Update appointments and fill the Records card below.</p>
+        <h1 className="text-lg font-semibold tracking-tight">Quick Add — Appointments</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Select patient — doctor auto-shows. Status changes apply instantly.</p>
         <div className="mt-4 grid sm:grid-cols-2 gap-4">
           <div><Label className="text-xs">Patient *</Label><select value={sharedPatient} onChange={e=>onSharedPatient(e.target.value)} className="mt-1 h-10 w-full rounded-xl border border-border bg-card px-3 text-sm"><option value="">Select patient</option>{patients.map(p=><option key={p.patientId} value={p.fullName}>{p.fullName}</option>)}</select></div>
           <div><Label className="text-xs">Doctor (auto)</Label><Input value={sharedDoctor} readOnly placeholder="Auto from patient" className="mt-1 h-10 bg-muted"/></div>
@@ -245,28 +218,6 @@ export default function QuickAddPage(){
         })()}
       </CardContent></Card>
 
-      {/* 2 Records — optimized, no duplicate patient */}
-      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">2. Records {optimized && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-xs font-normal">{sharedPatient}</span>}</CardTitle></CardHeader><CardContent className="space-y-4">
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label className="text-xs">Visit date *</Label><Input type="date" value={rec.visitDate} onChange={e=>setRec({...rec,visitDate:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Visit time</Label><Input type="time" value={rec.visitTime} onChange={e=>setRec({...rec,visitTime:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Follow-up date</Label><Input type="date" value={rec.followUpDate} onChange={e=>setRec({...rec,followUpDate:e.target.value})} className="mt-1 h-9"/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Chief complaint *</Label><Textarea value={rec.chiefComplaint} onChange={e=>setRec({...rec,chiefComplaint:e.target.value})} rows={2}/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Symptoms</Label><Textarea value={rec.symptoms} onChange={e=>setRec({...rec,symptoms:e.target.value})} rows={2}/></div>
-          <div><Label className="text-xs">Diagnosis *</Label><Input value={rec.diagnosis} onChange={e=>setRec({...rec,diagnosis:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">ICD Code</Label><Input value={rec.icdCode} onChange={e=>setRec({...rec,icdCode:e.target.value})} placeholder="e.g. I10" className="mt-1 h-9"/></div>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2"><Label className="text-xs">Treatment / Procedures</Label><Textarea value={rec.treatment} onChange={e=>setRec({...rec,treatment:e.target.value})} rows={2}/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Advice to patient</Label><Textarea value={rec.advice} onChange={e=>setRec({...rec,advice:e.target.value})} rows={2}/></div>
-          <div><Label className="text-xs">Vitals — BP</Label><Input value={rec.bp} onChange={e=>setRec({...rec,bp:e.target.value})} placeholder="120/80" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Temperature °C</Label><Input value={rec.temp} onChange={e=>setRec({...rec,temp:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Pulse bpm</Label><Input value={rec.pulse} onChange={e=>setRec({...rec,pulse:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Allergies</Label><Input value={rec.allergies} onChange={e=>setRec({...rec,allergies:e.target.value})} className="mt-1 h-9"/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Lab tests</Label><Textarea value={rec.labTests} onChange={e=>setRec({...rec,labTests:e.target.value})} rows={2}/></div>
-          <div className="sm:col-span-2"><Label className="text-xs">Internal notes</Label><Textarea value={rec.internalNotes} onChange={e=>setRec({...rec,internalNotes:e.target.value})} rows={2}/></div>
-        </div>
-      </CardContent></Card>
 
       {/* Edit appointment */}
       <Dialog open={!!editAppt} onOpenChange={(open)=>{ if(!open) setEditAppt(null); }}>
@@ -303,10 +254,6 @@ export default function QuickAddPage(){
         onConfirm={async ()=>{ await deleteAppointments(apptDeleteTarget ?? []); setApptDeleteTarget(null); }}
       />
 
-      <div className="sticky bottom-4 flex justify-center gap-3 pt-2">
-        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setRec(s=>({...s, chiefComplaint:"", diagnosis:""})); toast.info("Cancelled"); }}>Cancel</Button>
-        <Button size="lg" className="h-11 px-8 shadow-lg" onClick={submitAll}>Save</Button>
-      </div>
     </div>
   );
 }
