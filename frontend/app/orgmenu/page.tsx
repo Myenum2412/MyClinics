@@ -58,9 +58,11 @@ export default function OrgMenuDashboardPage() {
       limit: 100,
     })
       .then((res) => {
-        const raw: Clinic[] = (res as any)?.items ?? [];
-        // Only show clinics that have both email and phone — drop incomplete/test rows
-        setItems(raw.filter((c) => !!c.email?.trim() && !!c.phone?.trim()));
+        // Show every clinic on the platform. Missing email/phone values are
+        // filled server-side from the clinic admin account, so there is no
+        // reason to hide rows here.
+        const raw: Clinic[] = res?.items ?? [];
+        setItems(raw);
       })
       .catch(() => toast.error("Failed to load clinics"))
       .finally(() => setLoading(false));

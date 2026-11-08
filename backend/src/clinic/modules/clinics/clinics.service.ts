@@ -89,14 +89,59 @@ export class ClinicService {
     return new ClinicOwnRepository(this.db, requireClinicOf(ctx));
   }
 
+  /**
+   * Clinics created through signup only store the admin's email/phone on the
+   * user document, leaving the clinic's own contact fields null. Fill those
+   * gaps from the clinic_admin account so the platform listing always shows
+   * contact details instead of dropping the row.
+   */
+  private async withAdminContact(
+    clinics: WithId<ClinicDoc>[]
+  ): Promise<WithId<ClinicDoc>[]> {
+    const missing = clinics
+      .filter((c) => !c.email?.trim() || !c.phone?.trim())
+      .map((c) => c.clinicId);
+    if (missing.length === 0) return clinics;
+
+    const admins = await this.db
+      .collection<UserDoc>(CLINIC_COLLECTIONS.users)
+      .find({ clinicId: { $in: missing }, role: "clinic_admin" })
+      .project<Pick<UserDoc, "clinicId" | "email" | "phone">>({
+        clinicId: 1,
+        email: 1,
+        phone: 1,
+      })
+      .toArray();
+
+    const contactByClinic = new Map<string, { email: string | null; phone: string | null }>();
+    for (const admin of admins) {
+      if (!admin.clinicId || contactByClinic.has(admin.clinicId)) continue;
+      contactByClinic.set(admin.clinicId, {
+        email: admin.email ?? null,
+        phone: admin.phone ?? null,
+      });
+    }
+
+    return clinics.map((clinic) => {
+      const contact = contactByClinic.get(clinic.clinicId);
+      if (!contact) return clinic;
+      return {
+        ...clinic,
+        email: clinic.email?.trim() ? clinic.email : contact.email,
+        phone: clinic.phone?.trim() ? clinic.phone : contact.phone,
+      };
+    });
+  }
+
   // ── Platform admin operations ──────────────────────────────────────────
 
   async listClinics(query: { status?: string; q?: string; skip: number; limit: number }, ctx: ClinicContext) {
     const repo = this.platformRepo();
-    const [items, total] = await Promise.all([
+    const [clinics, total] = await Promise.all([
       repo.list(query),
       repo.count(query),
     ]);
+    const items = await this.withAdminContact(clinics);
     await writeAudit(this.db, ctx, {
       action: "list",
       entity: "clinic",
