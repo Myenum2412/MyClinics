@@ -214,7 +214,9 @@ export class ClinicService {
   async getClinic(clinicId: string): Promise<WithId<ClinicDoc>> {
     const clinic = await this.platformRepo().findById(clinicId);
     if (!clinic) throw new NotFoundError("Clinic not found");
-    return clinic;
+    // Fill clinic contact gaps from the admin account, same as the list view.
+    const [enriched] = await this.withAdminContact([clinic]);
+    return enriched;
   }
 
   async getClinicStats(clinicId: string): Promise<{
