@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { listPatients, listDoctors, listAppointments, updateAppointment, deleteAppointment, createQuickAdd, createMedicine, type Patient, type Doctor, type Appointment, type AppointmentStatus } from "@/lib/clinic-api";
+import { listPatients, listDoctors, listAppointments, updateAppointment, deleteAppointment, createQuickAdd, type Patient, type Doctor, type Appointment, type AppointmentStatus } from "@/lib/clinic-api";
 import { useRequireRole } from "@/hooks/use-clinic-session";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { todayISO } from "@/lib/datetime";
@@ -180,7 +180,6 @@ export default function QuickAddPage(){
   const removeRxMedicine=(i:number)=> setRxMeds(m=> m.filter((_,idx)=> idx!==i));
   const setRxMedicine=(i:number,patch:Partial<typeof rxMeds[0]>)=> setRxMeds(m=> m.map((row,idx)=> idx===i? {...row,...patch}:row));
   // 6. Medicine — simple /clinic/pharmacy/medicines form (details only)
-  const [med,setMed]=useState({name:"", genericName:"", brand:"", category:"", dosageForm:"", strength:"", unit:"", manufacturer:"", purchasePrice:"", sellingPrice:"", expiryDate:""});
 
   const medInstructions=getOptions("medicine_instructions");
   const medicinesOpts=getOptions("medicines");
@@ -222,13 +221,8 @@ export default function QuickAddPage(){
         toast.error("Add at least one medicine for Prescription");
         return;
       }
-      // ── Medicine ──
-      const medTouched = med.name.trim() || med.genericName.trim() || med.brand.trim() || med.category.trim()
-        || med.dosageForm.trim() || med.strength.trim() || med.unit.trim() || med.manufacturer.trim()
-        || med.purchasePrice.trim() || med.sellingPrice.trim() || med.expiryDate.trim();
-
-      if(!examTouched && !invTouched && !trtTouched && !rxTouched && !medTouched){
-        toast.error("Fill at least one section (Examination, Investigation, Treatment, Prescription or Medicine)");
+      if(!examTouched && !invTouched && !trtTouched && !rxTouched){
+        toast.error("Fill at least one section (Examination, Investigation, Treatment or Prescription)");
         return;
       }
       if((examTouched || invTouched || rxTouched) && (!patientId || !doctorId)){
@@ -290,22 +284,6 @@ export default function QuickAddPage(){
           localStorage.setItem("treatment_combined", JSON.stringify([entry, ...(Array.isArray(existing)?existing:[])]));
 
         }catch{ /* local-only; ignore parse errors */ }
-      }
-      if(medTouched){
-        await createMedicine(clinicId, {
-          name: med.name.trim(),
-          genericName: med.genericName.trim() || null,
-          brand: med.brand.trim() || null,
-          category: med.category.trim() || null,
-          dosageForm: med.dosageForm.trim() || null,
-          strength: med.strength.trim() || null,
-          unit: med.unit.trim() || null,
-          manufacturer: med.manufacturer.trim() || null,
-          purchasePrice: med.purchasePrice.trim() === "" ? 0 : Number(med.purchasePrice),
-          sellingPrice: med.sellingPrice.trim() === "" ? 0 : Number(med.sellingPrice),
-          expiryDate: med.expiryDate || null,
-          prescriptionRequired: false, reorderLevel: 0, minStockLevel: 0, taxPercent: 0, discount: 0, status: "active",
-        });
       }
       toast.success(quickAddRan ? "Quick Fill saved — single notification sent" : "Saved successfully");
     }catch(e:any){ toast.error(e.message); }
@@ -486,22 +464,6 @@ export default function QuickAddPage(){
         </div>
       </CardContent></Card>
 
-      {/* 6 Medicine — simple /clinic/pharmacy/medicines form (details only) */}
-      <Card className="rounded-2xl"><CardHeader className="pb-3"><CardTitle className="text-sm font-semibold flex items-center gap-2">6. Medicine</CardTitle></CardHeader><CardContent className="space-y-4">
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div><Label className="text-xs">Medicine name *</Label><Input value={med.name} onChange={e=>setMed({...med,name:e.target.value})} placeholder="e.g. Paracetamol 650" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Generic name</Label><Input value={med.genericName} onChange={e=>setMed({...med,genericName:e.target.value})} placeholder="e.g. Paracetamol" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Brand</Label><Input value={med.brand} onChange={e=>setMed({...med,brand:e.target.value})} placeholder="e.g. Dolo" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Category</Label><Input value={med.category} onChange={e=>setMed({...med,category:e.target.value})} placeholder="e.g. Analgesic" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Dosage form</Label><Input value={med.dosageForm} onChange={e=>setMed({...med,dosageForm:e.target.value})} placeholder="e.g. Tablet, Syrup" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Strength</Label><Input value={med.strength} onChange={e=>setMed({...med,strength:e.target.value})} placeholder="e.g. 650 mg" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Unit</Label><Input value={med.unit} onChange={e=>setMed({...med,unit:e.target.value})} placeholder="e.g. Tablet, Bottle" className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Manufacturer</Label><Input value={med.manufacturer} onChange={e=>setMed({...med,manufacturer:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Purchase price</Label><Input type="number" min="0" value={med.purchasePrice} onChange={e=>setMed({...med,purchasePrice:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Selling price</Label><Input type="number" min="0" value={med.sellingPrice} onChange={e=>setMed({...med,sellingPrice:e.target.value})} className="mt-1 h-9"/></div>
-          <div><Label className="text-xs">Expiry date</Label><Input type="date" value={med.expiryDate} onChange={e=>setMed({...med,expiryDate:e.target.value})} className="mt-1 h-9"/></div>
-        </div>
-      </CardContent></Card>
 
       {/* Edit appointment */}
       <Dialog open={!!editAppt} onOpenChange={(open)=>{ if(!open) setEditAppt(null); }}>
@@ -539,7 +501,7 @@ export default function QuickAddPage(){
       />
 
       <div className="sticky bottom-4 flex justify-center gap-3 pt-2">
-        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setExam({visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"", chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}], medicalConditions:"", patientHistory:"", habits:"", hpiPresentingComplaint:""}); setInv({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", details:{}}); setTrt({followUpDate:"", finalDiagnosis:""}); setRx({diagnosis:"", notes:""}); setRxMeds([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]); setMed({name:"", genericName:"", brand:"", category:"", dosageForm:"", strength:"", unit:"", manufacturer:"", purchasePrice:"", sellingPrice:"", expiryDate:""}); toast.info("Cancelled"); }}>Cancel</Button>
+        <Button variant="outline" size="lg" className="h-11 px-8" onClick={()=>{ setSharedPatient(""); setSharedDoctor(""); setExam({visitDate:todayISO(), status:"pending", issueType:"", oralFindings:"", notes:"", chiefComplaints:[{complaint:"", duration:"", severity:"", notes:""}], medicalConditions:"", patientHistory:"", habits:"", hpiPresentingComplaint:""}); setInv({title:"", category:"vital-test", visitDate:todayISO(), status:"pending", notes:"", details:{}}); setTrt({followUpDate:"", finalDiagnosis:""}); setRx({diagnosis:"", notes:""}); setRxMeds([{name:"", dosage:"", frequency:"", duration:"", instructions:""}]); toast.info("Cancelled"); }}>Cancel</Button>
         <Button size="lg" className="h-11 px-8 shadow-lg" onClick={submitAll}>Save</Button>
       </div>
     </div>
