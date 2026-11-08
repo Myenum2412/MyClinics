@@ -139,9 +139,6 @@ export function LoginForm({
               autoComplete="username"
               className="bg-white! text-black placeholder:text-gray-400 border-gray-300 focus-visible:ring-[#2196F3]"
             />
-            <p className="text-xs text-black/60">
-              Patients can sign in with their email, phone number or WhatsApp number.
-            </p>
           </Field>
 
           <Field>
