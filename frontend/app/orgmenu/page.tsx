@@ -13,13 +13,8 @@ import {
 } from "@/lib/clinic-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -29,8 +24,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Ban, Check } from "lucide-react";
+import { Ban, Check, Trash2 } from "lucide-react";
 import { RowActions } from "@/components/ui/row-actions";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import StatsGeneric from "@/components/stats-generic";
 import { formatDate } from "@/lib/datetime";
 
@@ -45,6 +41,9 @@ export default function OrgMenuDashboardPage() {
   // filters the visible rows instantly (StatsGeneric), so typing stays snappy
   // while we fire one request per pause instead of one per keystroke.
   const [serverQ, setServerQ] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteTarget, setDeleteTarget] = useState<Clinic | null>(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setServerQ(q.trim()), 300);
@@ -64,6 +63,8 @@ export default function OrgMenuDashboardPage() {
         // reason to hide rows here.
         const raw: Clinic[] = res?.items ?? [];
         setItems(raw);
+        // Drop stale selections when the list reloads (search/mutation).
+        setSelectedIds(new Set());
       })
       .catch(() => toast.error("Failed to load clinics"))
       .finally(() => setLoading(false));
@@ -95,19 +96,49 @@ export default function OrgMenuDashboardPage() {
   }
 
   async function handleDelete(clinic: Clinic) {
-    if (
-      !confirm(
-        `Delete ${clinic.name}? The clinic will be removed from the platform and its members will be blocked from login.`
-      )
-    )
-      return;
-    try {
-      await deleteClinic(clinic.clinicId);
-      toast.success("Clinic deleted");
-      load();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete clinic");
+    // Errors intentionally propagate to ConfirmDeleteDialog so it can show
+    // the failure inline and stay open.
+    await deleteClinic(clinic.clinicId);
+    toast.success("Clinic deleted");
+    load();
+  }
+
+  async function handleBulkDelete() {
+    const ids = Array.from(selectedIds);
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await deleteClinic(id);
+      } catch {
+        failed += 1;
+      }
     }
+    const deleted = ids.length - failed;
+    setSelectedIds(new Set());
+    load();
+    if (deleted > 0) {
+      toast.success(`Deleted ${deleted} clinic${deleted === 1 ? "" : "s"}`);
+    }
+    if (failed > 0) {
+      toast.error(`Failed to delete ${failed} clinic${failed === 1 ? "" : "s"}`);
+    }
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === items.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(items.map((c) => c.clinicId)));
+    }
+  }
+
+  function toggleSelectRow(clinicId: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(clinicId)) next.delete(clinicId);
+      else next.add(clinicId);
+      return next;
+    });
   }
 
   const totalClinics = items.length;
@@ -164,6 +195,33 @@ export default function OrgMenuDashboardPage() {
         </div>
       )}
 
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 shadow-sm animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-primary tabular-nums">
+              {selectedIds.size} selected
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => setSelectedIds(new Set())}
+            >
+              Clear selection
+            </Button>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-8 gap-1.5 shadow-sm"
+            onClick={() => setBulkDeleteOpen(true)}
+          >
+            <Trash2 className="size-3.5" />
+            Delete selected
+          </Button>
+        </div>
+      )}
+
       <Card className="rounded-none border shadow-sm transition-shadow duration-200 hover:shadow-md">
         <CardHeader>
           <CardTitle>All clinics</CardTitle>
@@ -180,9 +238,16 @@ export default function OrgMenuDashboardPage() {
             </p>
           ) : (
             <div className="overflow-x-auto">
-            <Table className="min-w-[700px]">
+            <Table className="min-w-[740px]">
               <TableHeader>
                 <TableRow className="border-b bg-muted/30 hover:bg-muted/30">
+                  <TableHead className="w-10 pl-1">
+                    <Checkbox
+                      checked={items.length > 0 && selectedIds.size === items.length}
+                      onCheckedChange={toggleSelectAll}
+                      aria-label="Select all clinics"
+                    />
+                  </TableHead>
                   <TableHead>Clinic</TableHead>
                   <TableHead>Clinic ID</TableHead>
                   <TableHead>Email</TableHead>
@@ -194,7 +259,19 @@ export default function OrgMenuDashboardPage() {
               </TableHeader>
               <TableBody>
                 {items.map((c) => (
-                  <TableRow className="transition-colors duration-150 hover:bg-muted/40" key={c.clinicId}>
+                  <TableRow
+                    className={`transition-colors duration-150 hover:bg-muted/40 ${
+                      selectedIds.has(c.clinicId) ? "bg-muted/40" : ""
+                    }`}
+                    key={c.clinicId}
+                  >
+                    <TableCell className="w-10 pl-1">
+                      <Checkbox
+                        checked={selectedIds.has(c.clinicId)}
+                        onCheckedChange={() => toggleSelectRow(c.clinicId)}
+                        aria-label={`Select ${c.name}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <Link
                         href={`/orgmenu/clinics/${c.clinicId}`}
@@ -223,10 +300,10 @@ export default function OrgMenuDashboardPage() {
                     <TableCell className="text-right">
                       <div className="flex justify-end">
                         <RowActions
-                          onDelete={() => handleDelete(c)}
+                          onDelete={() => setDeleteTarget(c)}
                           deleteLabel="Delete clinic"
-                          extraBefore={
-                            c.status === "active"
+                          extraBefore={[
+                            ...(c.status === "active"
                               ? [
                                   {
                                     label: "Suspend",
@@ -234,10 +311,8 @@ export default function OrgMenuDashboardPage() {
                                     onSelect: () => handleSuspend(c),
                                   },
                                 ]
-                              : []
-                          }
-                          extraAfter={
-                            c.status !== "active"
+                              : []),
+                            ...(c.status !== "active"
                               ? [
                                   {
                                     label: "Activate",
@@ -245,8 +320,8 @@ export default function OrgMenuDashboardPage() {
                                     onSelect: () => handleActivate(c),
                                   },
                                 ]
-                              : []
-                          }
+                              : []),
+                          ]}
                         />
                       </div>
                     </TableCell>
@@ -258,6 +333,28 @@ export default function OrgMenuDashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmDeleteDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={`Delete clinic ${deleteTarget?.name ?? ""}?`}
+        description="The clinic will be removed from the platform and its members will be blocked from login. Its records are retained but hidden."
+        confirmLabel="Delete clinic"
+        onConfirm={async () => {
+          if (deleteTarget) await handleDelete(deleteTarget);
+        }}
+      />
+
+      <ConfirmDeleteDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        title={`Delete ${selectedIds.size} selected clinic${selectedIds.size === 1 ? "" : "s"}?`}
+        description="The selected clinics will be removed from the platform and their members will be blocked from login. Their records are retained but hidden."
+        confirmLabel="Delete selected"
+        onConfirm={handleBulkDelete}
+      />
     </div>
   );
 }
