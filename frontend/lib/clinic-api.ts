@@ -612,7 +612,13 @@ function invalidateCacheForPath(path: string) {
   const m = path.match(/^\/api\/clinics\/([^/]+)/);
   const prefix = m ? `/api/clinics/${m[1]}` : null;
   if (!prefix) { getCache.clear(); return; }
-  for (const k of getCache.keys()) if (k.includes(prefix)) getCache.delete(k);
+  for (const k of getCache.keys()) {
+    if (k.includes(prefix)) getCache.delete(k);
+    // The platform-wide clinic list is cached under `/api/clinics?...`, which
+    // has no clinic id in the key. Drop it after suspend/activate/delete so
+    // the /orgmenu table reflects the change immediately.
+    else if (k.includes("/api/clinics?") || k.endsWith("/api/clinics")) getCache.delete(k);
+  }
 }
 
 async function request<T>(
@@ -2735,6 +2741,10 @@ export function suspendClinic(clinicId: string): Promise<{ ok: true }> {
 
 export function activateClinic(clinicId: string): Promise<{ ok: true }> {
   return request(`/api/clinics/${clinicId}/activate`, { method: "POST" });
+}
+
+export function deleteClinic(clinicId: string): Promise<{ ok: true }> {
+  return request(`/api/clinics/${clinicId}`, { method: "DELETE" });
 }
 
 export function getAnyClinic(clinicId: string): Promise<Clinic> {

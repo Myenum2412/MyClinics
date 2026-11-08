@@ -323,6 +323,21 @@ export class ClinicService {
     });
   }
 
+  async deleteClinic(clinicId: string, ctx: ClinicContext): Promise<void> {
+    const existing = await this.platformRepo().findById(clinicId);
+    if (!existing || existing.status === "deleted") {
+      throw new NotFoundError("Clinic not found");
+    }
+    const ok = await this.platformRepo().softDelete(clinicId);
+    if (!ok) throw new NotFoundError("Clinic not found");
+    await writeAudit(this.db, ctx, {
+      action: "delete",
+      entity: "clinic",
+      entityId: clinicId,
+      metadata: { name: existing.name, softDelete: true },
+    });
+  }
+
   // ── Clinic member operations (scoped to own session clinic) ────────────
 
   async getOwnClinic(ctx: ClinicContext): Promise<WithId<ClinicDoc>> {

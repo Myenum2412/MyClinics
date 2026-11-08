@@ -16,6 +16,7 @@ import {
  *   PATCH  /api/clinics/:clinicId        platform_admin | clinic_admin (own)
  *   POST   /api/clinics/:clinicId/suspend   platform_admin
  *   POST   /api/clinics/:clinicId/activate  platform_admin
+ *   DELETE /api/clinics/:clinicId           platform_admin (soft delete)
  *   GET    /api/clinics/me               any clinic member (own clinic)
  *   PATCH  /api/clinics/me               clinic_admin (own clinic)
  */
@@ -58,6 +59,12 @@ export function registerClinicRoutes(app: FastifyInstance): void {
     "/api/clinics/:clinicId/activate",
     { preHandler: [requireClinicAccess, requireRoles("platform_admin")] },
     async (request, reply) => controller.activate(request, reply)
+  );
+
+  app.delete(
+    "/api/clinics/:clinicId",
+    { preHandler: [requireClinicAccess, requireRoles("platform_admin")] },
+    async (request, reply) => controller.remove(request, reply)
   );
 
   app.get("/api/clinics/me", async (request, reply) => controller.getOwn(request, reply));

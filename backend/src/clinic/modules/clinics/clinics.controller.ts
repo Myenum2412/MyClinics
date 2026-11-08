@@ -100,6 +100,15 @@ export class ClinicController {
     return reply.send({ ok: true });
   }
 
+  async remove(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (!ctx) throw new UnauthorizedError();
+    const { clinicId } = request.params as { clinicId: string };
+    const db = await getDb();
+    await this.service(db).deleteClinic(clinicId, ctx);
+    return reply.send({ ok: true });
+  }
+
   async getOwn(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
     const ctx = request.clinic;
     if (!ctx) throw new UnauthorizedError();

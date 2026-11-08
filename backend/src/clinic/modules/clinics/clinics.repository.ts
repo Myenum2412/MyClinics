@@ -56,8 +56,10 @@ export class ClinicRepository {
   }
 
   async list(query: ClinicListQuery): Promise<WithId<ClinicDoc>[]> {
-    const filter: Record<string, unknown> = {};
-    if (query.status && query.status !== "all") filter.status = query.status;
+    // Soft-deleted clinics stay in the collection for audit/history but must
+    // never appear in platform listings.
+    const filter: Record<string, unknown> = { status: { $ne: "deleted" } };
+    if (query.status && query.status !== "all" && query.status !== "deleted") filter.status = query.status;
     if (query.q) {
       filter.$or = [
         { name: { $regex: query.q, $options: "i" } },
@@ -74,8 +76,8 @@ export class ClinicRepository {
   }
 
   async count(query: { status?: string; q?: string } = {}): Promise<number> {
-    const filter: Record<string, unknown> = {};
-    if (query.status && query.status !== "all") filter.status = query.status;
+    const filter: Record<string, unknown> = { status: { $ne: "deleted" } };
+    if (query.status && query.status !== "all" && query.status !== "deleted") filter.status = query.status;
     if (query.q) {
       filter.$or = [
         { name: { $regex: query.q, $options: "i" } },
@@ -98,6 +100,14 @@ export class ClinicRepository {
     const result = await this.collection().updateOne(
       { clinicId },
       { $set: { status, updatedAt: nowFn() } }
+    );
+    return result.matchedCount === 1;
+  }
+
+  async softDelete(clinicId: string): Promise<boolean> {
+    const result = await this.collection().updateOne(
+      { clinicId, status: { $ne: "deleted" } },
+      { $set: { status: "deleted", deletedAt: nowFn(), updatedAt: nowFn() } }
     );
     return result.matchedCount === 1;
   }

@@ -7,6 +7,7 @@ import { useClinicSession } from "@/hooks/use-clinic-session";
 import {
   type Clinic,
   activateClinic,
+  deleteClinic,
   listAllClinics,
   suspendClinic,
 } from "@/lib/clinic-api";
@@ -90,6 +91,22 @@ export default function OrgMenuDashboardPage() {
       load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to activate clinic");
+    }
+  }
+
+  async function handleDelete(clinic: Clinic) {
+    if (
+      !confirm(
+        `Delete ${clinic.name}? The clinic will be removed from the platform and its members will be blocked from login.`
+      )
+    )
+      return;
+    try {
+      await deleteClinic(clinic.clinicId);
+      toast.success("Clinic deleted");
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to delete clinic");
     }
   }
 
@@ -206,6 +223,8 @@ export default function OrgMenuDashboardPage() {
                     <TableCell className="text-right">
                       <div className="flex justify-end">
                         <RowActions
+                          onDelete={() => handleDelete(c)}
+                          deleteLabel="Delete clinic"
                           extraBefore={
                             c.status === "active"
                               ? [
