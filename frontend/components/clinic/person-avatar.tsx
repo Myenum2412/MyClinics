@@ -83,7 +83,14 @@ export function PersonAvatar({
     if (!promise) {
       promise = getAvatarUrl(clinicId, ownerType, ownerId)
         .then((res) => res.url)
-        .catch(() => null);
+        .catch(() => null)
+        // Do not cache "no avatar" forever — a logo uploaded later (any
+        // tab/device) must be picked up on the next mount instead of the
+        // initials staying until a full browser reload.
+        .then((u) => {
+          if (u === null && cache.get(key) === promise) cache.delete(key);
+          return u;
+        });
       cache.set(key, promise);
     }
     let cancelled = false;

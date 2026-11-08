@@ -14,6 +14,7 @@ import {
   uploadAvatar,
 } from "@/lib/clinic-api";
 import { formatMonthYear } from "@/lib/datetime";
+import { bustAvatarCache } from "@/components/clinic/person-avatar";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -342,6 +343,10 @@ export default function AccountPage() {
     }
     try {
       const res = await uploadAvatar(clinicId, "clinic", clinicId, file);
+      // Bust the shared avatar cache so the app sidebar (and every other
+      // PersonAvatar) re-fetches the new logo instead of keeping the
+      // pre-upload "no avatar" initials for the rest of the session.
+      bustAvatarCache(clinicId, "clinic", clinicId);
       setLogoUrl(res.url);
       toast.success("Clinic logo updated");
     } catch (e) {
