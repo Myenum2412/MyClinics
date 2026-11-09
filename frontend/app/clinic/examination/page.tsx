@@ -954,8 +954,8 @@ export default function ExaminationPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-center gap-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+        <div className="flex min-w-0 items-center gap-3">
           <div className="flex size-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground">
             <Stethoscope className="size-4" aria-hidden="true" />
           </div>
@@ -970,21 +970,21 @@ export default function ExaminationPage() {
             </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-full sm:w-56">
-            <Search
-              className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <Input
-              type="search"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search examinations..."
-              className="h-7 w-full pl-8 text-sm"
-              aria-label="Search examinations by patient, findings or notes"
-            />
-          </div>
+        <div className="relative w-full lg:w-80">
+          <Search
+            className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            type="search"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Search examinations..."
+            className="h-7 w-full pl-8 text-sm"
+            aria-label="Search examinations by patient, findings or notes"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-2 lg:justify-end">
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
