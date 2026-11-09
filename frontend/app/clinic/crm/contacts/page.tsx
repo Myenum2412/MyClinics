@@ -168,17 +168,16 @@ export default function ContactsPage() {
   return (
     <div className="flex flex-col gap-4">
       <Card className="border-dashed" variant="outline">
-        <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-          <div className="flex items-center gap-3">
-            <Input
-              placeholder="Search contacts..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-64"
-              onKeyDown={(e) => e.key === "Enter" && void load()}
-            />
-          </div>
-          <div className="flex items-center gap-2">
+        <CardContent className="grid grid-cols-1 gap-3 py-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+          <div aria-hidden="true" />
+          <Input
+            placeholder="Search contacts..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full lg:w-80 lg:justify-self-center"
+            onKeyDown={(e) => e.key === "Enter" && void load()}
+          />
+          <div className="flex items-center gap-2 lg:justify-end">
             <Input
               placeholder="New contact name"
               value={newContactName}

@@ -114,9 +114,10 @@ export default function LabsPage() {
 
   return (
     <div className="flex flex-col gap-4 sm:gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
         <div className="flex min-w-0 items-center gap-2"><FlaskConical className="size-5 shrink-0 text-primary" /><h1 className="text-lg font-bold sm:text-xl">Labs</h1><Badge variant="secondary">{filtered.length}</Badge></div>
-        {canManage && <Button className="w-full justify-center sm:w-auto" render={<Link href="/clinic/labs/new" />}><Plus className="size-4" />Create Lab</Button>}
+        <div className="relative w-full lg:w-80"><Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" /><Input placeholder="Search labs..." value={q} onChange={(e) => { setQ(e.target.value); setCurrentPage(1); }} className="pl-9 h-9" /></div>
+        <div className="flex lg:justify-end">{canManage && <Button className="w-full justify-center sm:w-auto" render={<Link href="/clinic/labs/new" />}><Plus className="size-4" />Create Lab</Button>}</div>
       </div>
 
       {selectedIds.size > 0 && canManage && (
@@ -128,10 +129,6 @@ export default function LabsPage() {
           </div>
         </div>
       )}
-
-      <div className="flex items-center gap-2">
-        <div className="relative flex-1 max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" /><Input placeholder="Search labs..." value={q} onChange={(e) => { setQ(e.target.value); setCurrentPage(1); }} className="pl-9 h-9" /></div>
-      </div>
 
       <Card className="gap-0 rounded-none border border-border py-0 ring-0 shadow-sm"><CardContent className="p-0">
         {loading ? <div className="p-4 sm:p-6 space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>

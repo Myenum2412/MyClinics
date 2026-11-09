@@ -119,14 +119,13 @@ export default function LabReportsPage() {
 
   return (
     <div className="flex w-full flex-col gap-4 sm:gap-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <FileText className="size-5 shrink-0 text-primary" />
-        <h1 className="text-lg font-bold sm:text-xl">Lab Reports</h1>
-        <Badge variant="secondary">{filtered.length}</Badge>
-      </div>
-
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative flex-1 sm:max-w-sm">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
+        <div className="flex min-w-0 items-center gap-2">
+          <FileText className="size-5 shrink-0 text-primary" />
+          <h1 className="text-lg font-bold sm:text-xl">Lab Reports</h1>
+          <Badge variant="secondary">{filtered.length}</Badge>
+        </div>
+        <div className="relative w-full lg:w-80">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search by patient, report or remarks..."
@@ -135,6 +134,7 @@ export default function LabReportsPage() {
             className="h-9 pl-9"
           />
         </div>
+        <div aria-hidden="true" />
       </div>
 
       <Card className="gap-0 rounded-none border border-border py-0 ring-0 shadow-sm">

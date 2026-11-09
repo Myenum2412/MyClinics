@@ -780,7 +780,7 @@ export default function InvestigationPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
         <div className="min-w-0">
           <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Investigations</h1>
           <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
@@ -788,27 +788,24 @@ export default function InvestigationPage() {
             {total > 0 ? ` — ${total} total` : ""}.
           </p>
         </div>
-        {canManage && (
-          <Button onClick={openCreate} className="w-full justify-center sm:w-auto">
-            <Plus className="size-4" />
-            New Investigation
-          </Button>
-        )}
+        <div className="relative w-full lg:w-80">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            className="pl-9"
+            placeholder="Search by type, title, patient or notes…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex lg:justify-end">
+          {canManage && (
+            <Button onClick={openCreate} className="w-full justify-center sm:w-auto">
+              <Plus className="size-4" />
+              New Investigation
+            </Button>
+          )}
+        </div>
       </div>
-
-      <Card>
-        <CardContent className="flex flex-col gap-2.5 p-4 sm:flex-row sm:gap-3 sm:p-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder="Search by type, title, patient or notes…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </CardContent>
-      </Card>
 
       <Card className="gap-0 rounded-none border border-border py-0 ring-0">
         <CardContent className="p-0">
