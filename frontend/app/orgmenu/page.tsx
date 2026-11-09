@@ -26,6 +26,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Ban, Check, Trash2 } from "lucide-react";
 import { RowActions } from "@/components/ui/row-actions";
+import { Pagination } from "@/components/ui/pagination";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import StatsGeneric from "@/components/stats-generic";
 import { formatDate } from "@/lib/datetime";
@@ -222,11 +223,11 @@ export default function OrgMenuDashboardPage() {
         </div>
       )}
 
-      <Card className="rounded-none border shadow-sm transition-shadow duration-200 hover:shadow-md">
-        <CardHeader>
+      <Card className="gap-0 rounded-none border py-0 ring-0 shadow-sm transition-shadow duration-200 hover:shadow-md">
+        <CardHeader className="py-4">
           <CardTitle>All clinics</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
             <div className="space-y-2">
               <Skeleton className="h-10 w-full rounded-xl" />
@@ -332,6 +333,16 @@ export default function OrgMenuDashboardPage() {
             </div>
           )}
         </CardContent>
+        {items.length > 0 && (
+          <Pagination
+            page={1}
+            pageSize={Math.max(items.length, 1)}
+            totalItems={items.length}
+            onPageChange={() => {}}
+            itemLabel="clinics"
+            showControls={false}
+          />
+        )}
       </Card>
 
       <ConfirmDeleteDialog

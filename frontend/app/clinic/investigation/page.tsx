@@ -35,6 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Pagination } from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -799,7 +800,7 @@ export default function InvestigationPage() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-none">
+      <Card className="gap-0 rounded-none border border-border py-0 ring-0">
         <CardContent className="p-0">
           {loading ? (
             <div className="space-y-2 p-4">
@@ -935,6 +936,14 @@ export default function InvestigationPage() {
                 </div>
               ))}
             </div>
+            <Pagination
+              page={1}
+              pageSize={Math.max(filteredItems.length, 1)}
+              totalItems={filteredItems.length}
+              onPageChange={() => {}}
+              itemLabel="investigations"
+              showControls={false}
+            />
             </>
           )}
         </CardContent>

@@ -234,8 +234,8 @@ export default function PharmacyMedicinesPage() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-none">
-        <CardContent className="pt-5 overflow-x-auto">
+      <Card className="gap-0 rounded-none border border-border py-0 ring-0">
+        <CardContent className="overflow-x-auto p-0">
           <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">

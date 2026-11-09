@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Search, Filter, ChevronDown, ChevronUp, Archive, RotateCcw } from "lucide-react";
+import { Pagination } from "@/components/ui/pagination";
 
 const SOURCES = [
   "MANUAL",
@@ -194,24 +195,14 @@ export default function ContactsPage() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-none">
-        <CardHeader>
+      <Card className="gap-0 rounded-none border border-border py-0 ring-0">
+        <CardHeader className="py-4">
           <div className="flex items-center justify-between">
             <CardTitle>Contacts</CardTitle>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              {total} total
-              {page > 1 && (
-                <Button variant="ghost" size="sm" onClick={() => setPage((p) => p - 1)} disabled={page === 1}>
-                  <ChevronLeft className="size-4" />
-                </Button>
-              )}
-              <Button variant="ghost" size="sm" onClick={() => setPage((p) => p + 1)} disabled={page * limit >= total}>
-                <ChevronRight className="size-4" />
-              </Button>
-            </div>
+            <span className="text-sm text-muted-foreground">{total} total</span>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
             <Skeleton className="h-40 w-full" />
           ) : error ? (
@@ -278,6 +269,15 @@ export default function ContactsPage() {
             </Table>
           )}
         </CardContent>
+        {contacts.length > 0 && (
+          <Pagination
+            page={page}
+            pageSize={limit}
+            totalItems={total}
+            onPageChange={setPage}
+            itemLabel="contacts"
+          />
+        )}
       </Card>
     </div>
   );

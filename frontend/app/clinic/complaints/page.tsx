@@ -128,7 +128,7 @@ export default function TreatmentPage(){
         </div>}
       </div>
 
-      <Card className="rounded-none shadow-sm"><CardContent className="p-0">
+      <Card className="gap-0 rounded-none border border-border py-0 ring-0 shadow-sm"><CardContent className="p-0">
         {/* Desktop table — hidden on mobile */}
         <div className="hidden overflow-x-auto md:block"><Table>
             <TableHeader><TableRow className="bg-muted/40"><TableHead className="w-10"><Checkbox checked={allChecked} onCheckedChange={v=> setSelected(v ? new Set(filtered.map(i=>i.id)) : new Set())} /></TableHead>{COLS.map(c=><TableHead key={c} className="text-xs whitespace-nowrap">{c}</TableHead>)}<TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>

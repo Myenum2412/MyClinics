@@ -710,7 +710,7 @@ export default function PatientsPage() {
       )}
 
       {/* Main card containing listing */}
-      <Card className="border-border rounded-none shadow-sm">
+      <Card className="gap-0 rounded-none border border-border py-0 ring-0 shadow-sm">
         <CardContent className="p-0">
           {loading ? (
             <div className="p-4 sm:p-6 space-y-3">
@@ -733,7 +733,7 @@ export default function PatientsPage() {
           ) : (
             <>
               {/* Desktop table — hidden on mobile */}
-              <div className="hidden overflow-x-auto -mx-6 px-6 md:block">
+              <div className="hidden overflow-x-auto md:block">
               <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">

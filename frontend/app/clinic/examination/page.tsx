@@ -63,6 +63,7 @@ import {
 import { PatientSelect } from "@/components/clinic/pickers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RowActions } from "@/components/ui/row-actions";
+import { TableShell } from "@/components/ui/table-shell";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/format-time";
 import { todayISO } from "@/lib/datetime";
@@ -1054,7 +1055,7 @@ export default function ExaminationPage() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-none border border-border bg-card">
+      <TableShell>
         {loading ? (
           <div className="space-y-2 p-4">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -1244,7 +1245,7 @@ export default function ExaminationPage() {
             </div>
           </>
         )}
-      </div>
+      </TableShell>
 
       <ConfirmDeleteDialog
         open={deleteTarget !== null}

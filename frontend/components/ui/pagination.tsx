@@ -10,24 +10,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-function getPageNumbers(page: number, totalPages: number): (number | "ellipsis")[] {
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  }
-  const candidates = new Set<number>([1, 2, page - 1, page, page + 1, totalPages - 1, totalPages]);
-  const sorted = [...candidates]
-    .filter((p) => p >= 1 && p <= totalPages)
-    .sort((a, b) => a - b);
-  const result: (number | "ellipsis")[] = [];
-  let prev = 0;
-  for (const p of sorted) {
-    if (p - prev > 1) result.push("ellipsis");
-    result.push(p);
-    prev = p;
-  }
-  return result;
-}
-
 export interface PaginationProps {
   page: number;
   pageSize: number;
@@ -36,8 +18,14 @@ export interface PaginationProps {
   pageSizeOptions?: number[];
   onPageSizeChange?: (size: number) => void;
   itemLabel?: string;
+  /** Hide the prev/next controls for tables that render every row. */
+  showControls?: boolean;
 }
 
+/**
+ * Table footer matching the `@7ovr/table-1` block: a muted result count on the
+ * left and compact previous / next controls on the right.
+ */
 export function Pagination({
   page,
   pageSize,
@@ -46,28 +34,26 @@ export function Pagination({
   pageSizeOptions,
   onPageSizeChange,
   itemLabel = "items",
+  showControls = true,
 }: PaginationProps) {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-  const start = totalItems === 0 ? 0 : (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, totalItems);
-  const pageNumbers = getPageNumbers(page, totalPages);
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+  const label =
+    itemLabel.charAt(0).toUpperCase() + itemLabel.slice(1).toLowerCase();
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3">
-      <p className="text-sm text-muted-foreground">
-        Showing{" "}
-        <span className="font-medium text-foreground">
-          {start}–{end}
-        </span>{" "}
-        of <span className="font-medium text-foreground">{totalItems}</span> {itemLabel}
+    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border bg-muted/20 px-4 py-2.5">
+      <p className="text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">{totalItems}</span>{" "}
+        {totalItems === 1 ? label.replace(/s$/i, "") : label}
       </p>
-      <div className="flex items-center gap-2">
-        {pageSizeOptions && onPageSizeChange && (
+      <div className="flex items-center gap-1.5">
+        {showControls && pageSizeOptions && onPageSizeChange && (
           <Select
             value={String(pageSize)}
             onValueChange={(value) => onPageSizeChange(Number(value))}
           >
-            <SelectTrigger className="h-8 w-[110px] gap-1 text-xs">
+            <SelectTrigger className="h-7 w-[100px] gap-1 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent align="end">
@@ -79,45 +65,33 @@ export function Pagination({
             </SelectContent>
           </Select>
         )}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="icon"
-            className="size-8"
-            disabled={page <= 1}
-            onClick={() => onPageChange(page - 1)}
-            aria-label="Previous page"
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          {pageNumbers.map((num, i) =>
-            num === "ellipsis" ? (
-              <span key={`e-${i}`} className="px-1 text-sm text-muted-foreground">
-                …
-              </span>
-            ) : (
-              <Button
-                key={num}
-                variant={num === page ? "default" : "outline"}
-                size="icon"
-                className="size-8"
-                onClick={() => onPageChange(num)}
-              >
-                {num}
-              </Button>
-            )
-          )}
-          <Button
-            variant="outline"
-            size="icon"
-            className="size-8"
-            disabled={page >= totalPages}
-            onClick={() => onPageChange(page + 1)}
-            aria-label="Next page"
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-        </div>
+        {showControls && (
+          <>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-7"
+              disabled={safePage <= 1}
+              onClick={() => onPageChange(safePage - 1)}
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="size-3.5" aria-hidden="true" />
+            </Button>
+            <span className="px-1 text-xs text-muted-foreground tabular-nums">
+              Page {safePage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-7"
+              disabled={safePage >= totalPages}
+              onClick={() => onPageChange(safePage + 1)}
+              aria-label="Next page"
+            >
+              <ChevronRight className="size-3.5" aria-hidden="true" />
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

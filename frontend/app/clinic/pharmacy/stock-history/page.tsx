@@ -164,7 +164,7 @@ export default function PharmacyStockHistoryPage() {
         </CardContent>
       </Card>
 
-      <Card className="rounded-none shadow-sm">
+      <Card className="gap-0 rounded-none border border-border py-0 ring-0 shadow-sm">
         <CardContent className="p-0">
           {loading ? (
             <div className="space-y-4 p-4">

@@ -130,7 +130,7 @@ export default function LabReportsPage() {
         </div>
       </div>
 
-      <Card className="border-border rounded-none shadow-sm">
+      <Card className="gap-0 rounded-none border border-border py-0 ring-0 shadow-sm">
         <CardContent className="p-0">
           {loading ? (
             <div className="space-y-3 p-4 sm:p-6">
@@ -145,7 +145,7 @@ export default function LabReportsPage() {
           ) : (
             <>
               {/* Desktop table */}
-              <div className="hidden overflow-x-auto -mx-6 px-6 md:block">
+              <div className="hidden overflow-x-auto md:block">
                 <Table className="min-w-[720px]">
                   <TableHeader>
                     <TableRow className="border-b bg-muted/40 hover:bg-muted/40">

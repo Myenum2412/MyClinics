@@ -133,12 +133,12 @@ export default function LabsPage() {
         <div className="relative flex-1 max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" /><Input placeholder="Search labs..." value={q} onChange={(e) => { setQ(e.target.value); setCurrentPage(1); }} className="pl-9 h-9" /></div>
       </div>
 
-      <Card className="border-border rounded-none shadow-sm"><CardContent className="p-0">
+      <Card className="gap-0 rounded-none border border-border py-0 ring-0 shadow-sm"><CardContent className="p-0">
         {loading ? <div className="p-4 sm:p-6 space-y-3"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></div>
           : filtered.length === 0 ? <div className="py-12 text-center text-sm text-muted-foreground">No labs found.</div>
             : <>
               {/* Desktop table — hidden on mobile */}
-              <div className="hidden overflow-x-auto -mx-6 px-6 md:block"><Table className="min-w-[720px]">
+              <div className="hidden overflow-x-auto md:block"><Table className="min-w-[720px]">
                 <TableHeader><TableRow className="border-b bg-muted/40 hover:bg-muted/40">
                   <TableHead className="w-12"><Checkbox checked={paginated.length > 0 && selectedIds.size === paginated.length} onCheckedChange={toggleAll} aria-label="Select all" /></TableHead>
                   <TableHead>Lab Name</TableHead><TableHead>Contact</TableHead><TableHead>Phone</TableHead><TableHead>Email</TableHead><TableHead>Lab Type</TableHead><TableHead>License</TableHead><TableHead>Status</TableHead>
