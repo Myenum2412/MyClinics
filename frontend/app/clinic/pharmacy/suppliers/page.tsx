@@ -37,6 +37,12 @@ import {
 import { RowActions } from "@/components/ui/row-actions"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Pagination } from "@/components/ui/pagination"
+import {
+  RowCheckbox,
+  SelectAllCheckbox,
+  TableSelectionBar,
+  useRowSelection,
+} from "@/components/ui/table-selection"
 
 type SupplierStatus = "active" | "inactive"
 
@@ -102,6 +108,7 @@ export default function PharmacySuppliersPage() {
   if (!session) return null
 
   const filtered = suppliers
+  const selection = useRowSelection(filtered, (s) => s.supplierId)
 
   async function confirmDelete() {
     if (!clinicId || !deleteTarget) return
@@ -141,10 +148,21 @@ export default function PharmacySuppliersPage() {
             </div>
           ) : (
             <>
+            <TableSelectionBar
+              count={selection.selectedIds.size}
+              onClear={selection.clear}
+            />
             {/* Desktop table — hidden on mobile */}
             <div className="hidden overflow-x-auto md:block"><Table>
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="w-10 pl-4">
+                    <SelectAllCheckbox
+                      checked={selection.allSelected}
+                      indeterminate={selection.someSelected && !selection.allSelected}
+                      onCheckedChange={selection.toggleAll}
+                    />
+                  </TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Contact Person</TableHead>
                   <TableHead>Phone</TableHead>
@@ -158,6 +176,13 @@ export default function PharmacySuppliersPage() {
               <TableBody>
                 {filtered.map((s) => (
                   <TableRow key={s.supplierId} className="hover:bg-muted/30 transition-colors">
+                    <TableCell className="pl-4">
+                      <RowCheckbox
+                        checked={selection.selectedIds.has(s.supplierId)}
+                        onCheckedChange={(checked) => selection.toggleOne(s.supplierId, checked)}
+                        label={`Select ${s.name}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{s.name}</TableCell>
                     <TableCell>{s.contactPerson ?? "—"}</TableCell>
                     <TableCell>{s.phone ?? "—"}</TableCell>

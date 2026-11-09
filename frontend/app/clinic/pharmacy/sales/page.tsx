@@ -25,6 +25,12 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Pagination } from "@/components/ui/pagination"
+import {
+  RowCheckbox,
+  SelectAllCheckbox,
+  TableSelectionBar,
+  useRowSelection,
+} from "@/components/ui/table-selection"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
@@ -124,6 +130,7 @@ export default function PharmacySalesPage() {
   if (!session) return null
 
   const filtered = sales
+  const selection = useRowSelection(filtered, (s) => s.saleId)
 
   async function openDetail(s: PharmacySale) {
     try {
@@ -161,11 +168,22 @@ export default function PharmacySalesPage() {
           <div className="flex flex-wrap items-center gap-2 border-b border-border p-3 sm:p-4">
             <span className="text-sm font-medium">Sales <span className="text-muted-foreground">({total})</span></span>
           </div>
+          <TableSelectionBar
+            count={selection.selectedIds.size}
+            onClear={selection.clear}
+          />
           {/* Desktop table — hidden on mobile */}
           <div className="hidden overflow-x-auto md:block">
           <Table className="min-w-[900px]">
             <TableHeader>
               <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                <TableHead className="w-10 pl-4">
+                  <SelectAllCheckbox
+                    checked={selection.allSelected}
+                    indeterminate={selection.someSelected && !selection.allSelected}
+                    onCheckedChange={selection.toggleAll}
+                  />
+                </TableHead>
                 <TableHead>Invoice #</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Patient</TableHead>
@@ -186,6 +204,13 @@ export default function PharmacySalesPage() {
               ) : (
                 filtered.map((s) => (
                   <TableRow key={s.saleId} className="cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => openDetail(s)}>
+                    <TableCell className="pl-4">
+                      <RowCheckbox
+                        checked={selection.selectedIds.has(s.saleId)}
+                        onCheckedChange={(checked) => selection.toggleOne(s.saleId, checked)}
+                        label={`Select sale ${s.invoiceNumber}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{s.invoiceNumber}</TableCell>
                     <TableCell>{new Date(s.saleDate).toLocaleDateString()}</TableCell>
                     <TableCell>{s.patientId ? (s.patientName ?? s.patientId) : "Walk-in"}</TableCell>

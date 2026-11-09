@@ -45,6 +45,12 @@ import { Badge } from "@/components/ui/badge"
 import { CheckIcon } from "@heroicons/react/24/outline"
 import { RowActions } from "@/components/ui/row-actions"
 import { Pagination } from "@/components/ui/pagination"
+import {
+  RowCheckbox,
+  SelectAllCheckbox,
+  TableSelectionBar,
+  useRowSelection,
+} from "@/components/ui/table-selection"
 import { Skeleton } from "@/components/ui/skeleton"
 
 const fmtMoney = (n: number) =>
@@ -152,6 +158,7 @@ export default function PharmacyPurchasesPage() {
   if (!session) return null
 
   const filtered = purchases
+  const selection = useRowSelection(filtered, (p) => p.purchaseId)
 
   async function openDetail(p: PharmacyPurchase) {
     try {
@@ -190,10 +197,21 @@ export default function PharmacyPurchasesPage() {
           <div className="flex flex-wrap items-center gap-2 p-4 border-b border-border">
             <span className="text-sm font-medium">Purchase Orders <span className="text-muted-foreground">({total})</span></span>
           </div>
+          <TableSelectionBar
+            count={selection.selectedIds.size}
+            onClear={selection.clear}
+          />
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                  <TableHead className="w-10 pl-4">
+                    <SelectAllCheckbox
+                      checked={selection.allSelected}
+                      indeterminate={selection.someSelected && !selection.allSelected}
+                      onCheckedChange={selection.toggleAll}
+                    />
+                  </TableHead>
                   <TableHead>Invoice #</TableHead>
                   <TableHead>Supplier</TableHead>
                   <TableHead>Date</TableHead>
@@ -211,6 +229,13 @@ export default function PharmacyPurchasesPage() {
                 ) : (
                   filtered.map((p) => (
                     <TableRow key={p.purchaseId} className="hover:bg-muted/30 transition-colors">
+                      <TableCell className="pl-4">
+                        <RowCheckbox
+                          checked={selection.selectedIds.has(p.purchaseId)}
+                          onCheckedChange={(checked) => selection.toggleOne(p.purchaseId, checked)}
+                          label={`Select purchase ${p.invoiceNumber}`}
+                        />
+                      </TableCell>
                       <TableCell className="font-medium">{p.invoiceNumber}</TableCell>
                       <TableCell>{supplierName(p)}</TableCell>
                       <TableCell>

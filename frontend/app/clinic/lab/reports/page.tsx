@@ -12,6 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import {
+  RowCheckbox,
+  SelectAllCheckbox,
+  TableSelectionBar,
+  useRowSelection,
+} from "@/components/ui/table-selection";
+import {
   Table,
   TableBody,
   TableCell,
@@ -109,6 +115,7 @@ export default function LabReportsPage() {
     () => (viewing ? investigationDetailEntries(viewing.details, viewing.category) : []),
     [viewing]
   );
+  const selection = useRowSelection(paginated, (r) => r.investigationId);
 
   return (
     <div className="flex w-full flex-col gap-4 sm:gap-6">
@@ -144,11 +151,22 @@ export default function LabReportsPage() {
             </div>
           ) : (
             <>
+              <TableSelectionBar
+                count={selection.selectedIds.size}
+                onClear={selection.clear}
+              />
               {/* Desktop table */}
               <div className="hidden overflow-x-auto md:block">
                 <Table className="min-w-[720px]">
                   <TableHeader>
                     <TableRow className="border-b bg-muted/40 hover:bg-muted/40">
+                      <TableHead className="w-10 pl-4">
+                        <SelectAllCheckbox
+                          checked={selection.allSelected}
+                          indeterminate={selection.someSelected && !selection.allSelected}
+                          onCheckedChange={selection.toggleAll}
+                        />
+                      </TableHead>
                       <TableHead>Patient</TableHead>
                       <TableHead>Report</TableHead>
                       <TableHead>Category</TableHead>
@@ -164,6 +182,13 @@ export default function LabReportsPage() {
                         key={r.investigationId}
                         className="border-b last:border-0 hover:bg-muted/30"
                       >
+                        <TableCell className="pl-4">
+                          <RowCheckbox
+                            checked={selection.selectedIds.has(r.investigationId)}
+                            onCheckedChange={(checked) => selection.toggleOne(r.investigationId, checked)}
+                            label={`Select ${r.title || r.patientName || "report"}`}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">
                           {r.patientName || "—"}
                         </TableCell>

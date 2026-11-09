@@ -14,6 +14,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Pagination } from "@/components/ui/pagination"
+import {
+  RowCheckbox,
+  SelectAllCheckbox,
+  TableSelectionBar,
+  useRowSelection,
+} from "@/components/ui/table-selection"
 
 type MovementType = "" | "purchase" | "sale" | "return" | "adjustment" | "transfer" | "write_off" | "opening_stock" | "reserve" | "release"
 
@@ -87,6 +93,7 @@ export default function PharmacyStockHistoryPage() {
   }, [clinicId, debouncedSearch, type, from, to, page])
 
   const pageRows = movements
+  const selection = useRowSelection(pageRows, (mv) => mv.movementId)
   const safePage = page
 
   const resetFilters = () => { setSearch(""); setType(""); setFrom(""); setTo(""); setPage(0) }
@@ -178,11 +185,22 @@ export default function PharmacyStockHistoryPage() {
             </div>
           ) : (
             <>
+              <TableSelectionBar
+                count={selection.selectedIds.size}
+                onClear={selection.clear}
+              />
               {/* Desktop table — hidden on mobile */}
               <div className="hidden overflow-x-auto md:block">
                 <Table className="min-w-[900px]">
                   <TableHeader>
                     <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                      <TableHead className="w-10 pl-4">
+                        <SelectAllCheckbox
+                          checked={selection.allSelected}
+                          indeterminate={selection.someSelected && !selection.allSelected}
+                          onCheckedChange={selection.toggleAll}
+                        />
+                      </TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Medicine</TableHead>
                       <TableHead>Batch</TableHead>
@@ -203,6 +221,13 @@ export default function PharmacyStockHistoryPage() {
                       const changedColor = changed > 0 ? "text-emerald-600" : changed < 0 ? "text-red-600" : "text-muted-foreground"
                       return (
                         <TableRow key={mv.movementId} className="hover:bg-muted/30">
+                          <TableCell className="pl-4">
+                            <RowCheckbox
+                              checked={selection.selectedIds.has(mv.movementId)}
+                              onCheckedChange={(checked) => selection.toggleOne(mv.movementId, checked)}
+                              label={`Select movement ${name}`}
+                            />
+                          </TableCell>
                           <TableCell className="tabular-nums">{fmtDate(mv.createdAt)}</TableCell>
                           <TableCell className="font-medium">{name}</TableCell>
                           <TableCell>{mv.batchNumber || "—"}</TableCell>

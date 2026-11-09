@@ -37,6 +37,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/ui/pagination";
 import {
+  RowCheckbox,
+  SelectAllCheckbox,
+  TableSelectionBar,
+  useRowSelection,
+} from "@/components/ui/table-selection";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -352,6 +358,10 @@ export default function InvestigationPage() {
       );
     });
   }, [items, searchTerm, statusFilter, categoryFilter]);
+  const selection = useRowSelection(
+    filteredItems,
+    (item) => item.investigationId
+  );
 
   function openCreate() {
     setForm(emptyForm());
@@ -820,11 +830,22 @@ export default function InvestigationPage() {
             </div>
           ) : (
             <>
+            <TableSelectionBar
+              count={selection.selectedIds.size}
+              onClear={selection.clear}
+            />
             {/* Desktop table — hidden on mobile */}
             <div className="hidden overflow-x-auto md:block">
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-10 pl-4">
+                      <SelectAllCheckbox
+                        checked={selection.allSelected}
+                        indeterminate={selection.someSelected && !selection.allSelected}
+                        onCheckedChange={selection.toggleAll}
+                      />
+                    </TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Patient</TableHead>
                     <TableHead>Category</TableHead>
@@ -838,6 +859,13 @@ export default function InvestigationPage() {
                 <TableBody>
                   {filteredItems.map((item) => (
                     <TableRow key={item.investigationId}>
+                      <TableCell className="pl-4">
+                        <RowCheckbox
+                          checked={selection.selectedIds.has(item.investigationId)}
+                          onCheckedChange={(checked) => selection.toggleOne(item.investigationId, checked)}
+                          label={`Select ${item.title}`}
+                        />
+                      </TableCell>
                       <TableCell className="whitespace-nowrap">
                         {formatDate(item.visitDate)}
                       </TableCell>

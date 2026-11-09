@@ -33,6 +33,12 @@ import {
 } from "@/components/ui/select";
 import { Plus, Search, Filter, ChevronDown, ChevronUp, Archive, RotateCcw } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
+import {
+  RowCheckbox,
+  SelectAllCheckbox,
+  TableSelectionBar,
+  useRowSelection,
+} from "@/components/ui/table-selection";
 
 const SOURCES = [
   "MANUAL",
@@ -67,6 +73,7 @@ export default function ContactsPage() {
   const [creating, setCreating] = useState(false);
   const [newContactName, setNewContactName] = useState("");
   const searchParamsRef = useRef(searchParams);
+  const selection = useRowSelection(contacts, (c) => c.contactId);
 
   useEffect(() => {
     searchParamsRef.current = searchParams;
@@ -217,9 +224,18 @@ export default function ContactsPage() {
               {archived ? "No archived contacts." : "No contacts yet. Add your first contact above."}
             </p>
           ) : (
+            <>
+            <TableSelectionBar count={selection.selectedIds.size} onClear={selection.clear} />
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10 pl-4">
+                    <SelectAllCheckbox
+                      checked={selection.allSelected}
+                      indeterminate={selection.someSelected && !selection.allSelected}
+                      onCheckedChange={selection.toggleAll}
+                    />
+                  </TableHead>
                   <TableHead onClick={() => handleSort("name")} className="cursor-pointer">
                     Name <span className="ml-1">{sort === "name" ? <ChevronUp /> : sort === "-name" ? <ChevronDown /> : null}</span>
                   </TableHead>
@@ -243,6 +259,13 @@ export default function ContactsPage() {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => router.push(`/clinic/crm/contacts/${c.contactId}`)}
                   >
+                    <TableCell className="pl-4">
+                      <RowCheckbox
+                        checked={selection.selectedIds.has(c.contactId)}
+                        onCheckedChange={(checked) => selection.toggleOne(c.contactId, checked)}
+                        label={`Select ${c.name}`}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{c.source}</Badge>
@@ -267,6 +290,7 @@ export default function ContactsPage() {
                 ))}
               </TableBody>
             </Table>
+            </>
           )}
         </CardContent>
         {contacts.length > 0 && (

@@ -41,6 +41,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  RowCheckbox,
+  SelectAllCheckbox,
+  TableSelectionBar,
+  useRowSelection,
+} from "@/components/ui/table-selection"
 
 const fmtMoney = (n: number) =>
   `₹${new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(n || 0)}`
@@ -88,6 +94,7 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
   }, [search])
 
   const [detail, setDetail] = React.useState<PharmacyInventory | null>(null)
+  const selection = useRowSelection(rows, (inv) => inv.inventoryId)
 
   const supplierName = React.useCallback(
     (id: string | null) => {
@@ -154,11 +161,22 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
             </Select>
             <span className="ml-auto text-xs text-muted-foreground tabular-nums">{rows.length} items</span>
           </div>
+          <TableSelectionBar
+            count={selection.selectedIds.size}
+            onClear={selection.clear}
+          />
           {/* Desktop table — hidden on mobile */}
           <div className="hidden overflow-x-auto md:block">
           <Table className="min-w-[800px]">
             <TableHeader>
               <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                <TableHead className="w-10 pl-4">
+                  <SelectAllCheckbox
+                    checked={selection.allSelected}
+                    indeterminate={selection.someSelected && !selection.allSelected}
+                    onCheckedChange={selection.toggleAll}
+                  />
+                </TableHead>
                 <TableHead>Medicine</TableHead>
                 <TableHead>Batch</TableHead>
                 <TableHead>Supplier</TableHead>
@@ -182,6 +200,13 @@ function InventoryInner({ clinicId }: { clinicId: string }) {
                     onClick={() => setDetail(inv)}
                     className="cursor-pointer hover:bg-muted/30 border-b border-border last:border-0"
                   >
+                    <TableCell className="pl-4">
+                      <RowCheckbox
+                        checked={selection.selectedIds.has(inv.inventoryId)}
+                        onCheckedChange={(checked) => selection.toggleOne(inv.inventoryId, checked)}
+                        label={`Select ${inv.name}`}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="min-w-0">
                         <p className="truncate font-medium">{inv.name}</p>
