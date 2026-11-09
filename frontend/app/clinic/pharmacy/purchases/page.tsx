@@ -49,6 +49,7 @@ import {
   RowCheckbox,
   SelectAllCheckbox,
   TableSelectionBar,
+  rowViewClick,
   useRowSelection,
 } from "@/components/ui/table-selection"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -228,7 +229,7 @@ export default function PharmacyPurchasesPage() {
                   <TableRow><TableCell colSpan={7}><div className="py-16 text-center"><p className="text-sm text-muted-foreground">{search || statusFilter ? "No purchases match your search or filters." : "No purchase orders yet — create your first one to get started."}</p></div></TableCell></TableRow>
                 ) : (
                   filtered.map((p) => (
-                    <TableRow key={p.purchaseId} className="hover:bg-muted/30 transition-colors">
+                    <TableRow key={p.purchaseId} className="cursor-pointer hover:bg-muted/30 transition-colors" onClick={rowViewClick(() => openDetail(p))}>
                       <TableCell className="pl-4">
                         <RowCheckbox
                           checked={selection.selectedIds.has(p.purchaseId)}

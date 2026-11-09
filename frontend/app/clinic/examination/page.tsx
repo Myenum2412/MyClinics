@@ -64,6 +64,7 @@ import { PatientSelect } from "@/components/clinic/pickers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RowActions } from "@/components/ui/row-actions";
 import { TableShell } from "@/components/ui/table-shell";
+import { rowViewClick } from "@/components/ui/table-selection";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/format-time";
 import { todayISO } from "@/lib/datetime";
@@ -1113,7 +1114,8 @@ export default function ExaminationPage() {
                       <TableRow
                         key={row.id}
                         data-state={row.getIsSelected() ? "selected" : undefined}
-                        className="border-b border-border transition-colors duration-100 last:border-b-0 hover:bg-muted/30"
+                        onClick={rowViewClick(() => openView(row.original))}
+                        className="cursor-pointer border-b border-border transition-colors duration-100 last:border-b-0 hover:bg-muted/30"
                       >
                         {row.getVisibleCells().map((cell) => (
                           <TableCell

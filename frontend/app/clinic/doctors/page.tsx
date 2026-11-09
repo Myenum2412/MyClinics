@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { rowViewClick } from "@/components/ui/table-selection";
 import { Switch } from "@/components/ui/switch";
 import { PincodeLookup } from "@/components/clinic/pincode-lookup";
 import {
@@ -767,7 +768,9 @@ export default function DoctorsPage() {
                   {paginatedItems.map((d) => (
                     <TableRow
                       key={d.doctorId}
-                      className={`hover:bg-muted/30 border-b border-border last:border-0 ${selectedIds.has(d.doctorId) ? "bg-muted/30" : ""}`}
+                      data-state={selectedIds.has(d.doctorId) ? "selected" : undefined}
+                      onClick={rowViewClick(() => setViewing(d))}
+                      className={`cursor-pointer hover:bg-muted/30 border-b border-border last:border-0 ${selectedIds.has(d.doctorId) ? "bg-muted/30" : ""}`}
                     >
                       {visibleColumns.select && (
                         <TableCell className="pl-6">

@@ -55,6 +55,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { rowViewClick } from "@/components/ui/table-selection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { Pagination } from "@/components/ui/pagination";
@@ -1001,7 +1002,14 @@ export default function AppointmentsPage() {
                     const dLabel = a.doctorName || doctorMap.get(a.doctorId)?.name || "Unknown Doctor";
 
                     return (
-                      <TableRow key={a.appointmentId} className="hover:bg-muted/30 transition-colors">
+                      <TableRow
+                        key={a.appointmentId}
+                        onClick={rowViewClick(() => {
+                          setSelectedAppt(a);
+                          setViewing(true);
+                        })}
+                        className="cursor-pointer hover:bg-muted/30 transition-colors"
+                      >
                         <TableCell className="pl-4">
                           <Checkbox
                             checked={selectedIds.has(a.appointmentId)}

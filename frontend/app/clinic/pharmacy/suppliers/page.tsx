@@ -41,6 +41,7 @@ import {
   RowCheckbox,
   SelectAllCheckbox,
   TableSelectionBar,
+  rowViewClick,
   useRowSelection,
 } from "@/components/ui/table-selection"
 
@@ -175,7 +176,7 @@ export default function PharmacySuppliersPage() {
               </TableHeader>
               <TableBody>
                 {filtered.map((s) => (
-                  <TableRow key={s.supplierId} className="hover:bg-muted/30 transition-colors">
+                  <TableRow key={s.supplierId} className="cursor-pointer hover:bg-muted/30 transition-colors" onClick={rowViewClick(() => router.push(`/clinic/pharmacy/suppliers/${s.supplierId}/edit`))}>
                     <TableCell className="pl-4">
                       <RowCheckbox
                         checked={selection.selectedIds.has(s.supplierId)}

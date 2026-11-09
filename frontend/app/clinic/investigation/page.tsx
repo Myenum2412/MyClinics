@@ -40,6 +40,7 @@ import {
   RowCheckbox,
   SelectAllCheckbox,
   TableSelectionBar,
+  rowViewClick,
   useRowSelection,
 } from "@/components/ui/table-selection";
 import {
@@ -855,7 +856,7 @@ export default function InvestigationPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredItems.map((item) => (
-                    <TableRow key={item.investigationId}>
+                    <TableRow key={item.investigationId} className="cursor-pointer" onClick={rowViewClick(() => openView(item))}>
                       <TableCell className="pl-4">
                         <RowCheckbox
                           checked={selection.selectedIds.has(item.investigationId)}

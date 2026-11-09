@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { rowViewClick } from "@/components/ui/table-selection";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -595,7 +596,7 @@ export default function BillingPage() {
               </TableHeader>
               <TableBody>
                 {sortedItems.map((b) => (
-                  <TableRow key={b.billId} className={selectedIds.has(b.billId) ? "bg-muted/30" : ""}>
+                  <TableRow key={b.billId} data-state={selectedIds.has(b.billId) ? "selected" : undefined} onClick={rowViewClick(() => setViewing(b))} className={`cursor-pointer ${selectedIds.has(b.billId) ? "bg-muted/30" : ""}`}>
                     {visibleColumns.select && (
                       <TableCell>
                         <Checkbox

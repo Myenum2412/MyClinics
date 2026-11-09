@@ -56,6 +56,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty";
 import { Pagination } from "@/components/ui/pagination";
+import { rowViewClick } from "@/components/ui/table-selection";
 import { useDropdownOptions } from "@/lib/dropdown-options";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -758,7 +759,8 @@ export default function PatientsPage() {
                   {items.map((p) => (
                     <TableRow
                       key={p.patientId}
-                      className={`hover:bg-muted/30 border-b border-border last:border-0 ${selectedIds.has(p.patientId) ? "bg-muted/30" : ""}`}
+                      onClick={rowViewClick(() => setViewing(p))}
+                      className={`cursor-pointer hover:bg-muted/30 border-b border-border last:border-0 ${selectedIds.has(p.patientId) ? "bg-muted/30" : ""}`}
                     >
                       {visibleColumns.select && (
                         <TableCell className="pl-6">

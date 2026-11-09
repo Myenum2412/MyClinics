@@ -12,6 +12,7 @@ import { Plus } from "lucide-react";
 import { RowActions } from "@/components/ui/row-actions";
 import { Pagination } from "@/components/ui/pagination";
 import { Checkbox } from "@/components/ui/checkbox";
+import { rowViewClick } from "@/components/ui/table-selection";
 import { listPatients, listDoctors, listAppointments, type Patient, type Doctor, type Appointment } from "@/lib/clinic-api";
 import StatsTreatment from "@/components/stats-treatment";
 import { useRequireRole } from "@/hooks/use-clinic-session";
@@ -132,7 +133,7 @@ export default function TreatmentPage(){
         {/* Desktop table — hidden on mobile */}
         <div className="hidden overflow-x-auto md:block"><Table>
             <TableHeader><TableRow className="bg-muted/40"><TableHead className="w-10"><Checkbox checked={allChecked} onCheckedChange={v=> setSelected(v ? new Set(filtered.map(i=>i.id)) : new Set())} /></TableHead>{COLS.map(c=><TableHead key={c} className="text-xs whitespace-nowrap">{c}</TableHead>)}<TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-            <TableBody>{paged.length===0 ? <TableRow><TableCell colSpan={COLS.length+2} className="py-16 text-center text-sm text-muted-foreground">{items.length===0 ? "No entries yet — click Add Record/Plan." : "No match."}</TableCell></TableRow> : paged.map(it=><TableRow key={it.id} className="hover:bg-muted/30">
+            <TableBody>{paged.length===0 ? <TableRow><TableCell colSpan={COLS.length+2} className="py-16 text-center text-sm text-muted-foreground">{items.length===0 ? "No entries yet — click Add Record/Plan." : "No match."}</TableCell></TableRow> : paged.map(it=><TableRow key={it.id} className="cursor-pointer hover:bg-muted/30" onClick={rowViewClick(()=>setViewing(it))}>
               <TableCell><Checkbox checked={selected.has(it.id)} onCheckedChange={v=> setSelected(s=>{ const n=new Set(s); if(v) n.add(it.id); else n.delete(it.id); return n; })} /></TableCell>
               <TableCell className="text-xs">{it.patient}</TableCell>
               <TableCell className="text-xs">{it.data["Appointment"] || it.data["Visit Date & Time"] || it.data["Visit Date"] || "—"}</TableCell>

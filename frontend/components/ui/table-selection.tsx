@@ -90,8 +90,7 @@ export function RowCheckbox({
   );
 }
 
-/** Muted count bar shown above the table while rows are selected. */
-export function TableSelectionBar({
+/** Muted count bar shown above the table while rows are selected. */export function TableSelectionBar({
   count,
   onClear,
   children,
@@ -119,4 +118,21 @@ export function TableSelectionBar({
       {children}
     </div>
   );
+}
+
+/**
+ * Row click → open the view page. Ignores clicks on interactive controls
+ * (checkboxes, buttons, selects, inputs, links) so those keep working.
+ */
+export function rowViewClick(view: () => void) {
+  return (event: React.MouseEvent) => {
+    if (
+      (event.target as HTMLElement).closest(
+        "button, a, input, select, textarea, label, [role='checkbox']"
+      )
+    ) {
+      return;
+    }
+    view();
+  };
 }

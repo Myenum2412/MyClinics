@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
+import { rowViewClick } from "@/components/ui/table-selection"
 import {
   Table,
   TableBody,
@@ -273,7 +274,7 @@ export default function PharmacyMedicinesPage() {
                 </TableRow>
               ) : (
                 medicines.map((m) => (
-                  <TableRow key={m.medicineId} data-selected={selected.has(m.medicineId)}>
+                  <TableRow key={m.medicineId} data-state={selected.has(m.medicineId) ? "selected" : undefined} className="cursor-pointer" onClick={rowViewClick(() => router.push(`/clinic/pharmacy/medicines/${m.medicineId}/edit`))}>
                     <TableCell>
                       <Checkbox
                         checked={selected.has(m.medicineId)}

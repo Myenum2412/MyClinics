@@ -15,6 +15,7 @@ import {
   RowCheckbox,
   SelectAllCheckbox,
   TableSelectionBar,
+  rowViewClick,
   useRowSelection,
 } from "@/components/ui/table-selection";
 import {
@@ -180,7 +181,8 @@ export default function LabReportsPage() {
                     {paginated.map((r) => (
                       <TableRow
                         key={r.investigationId}
-                        className="border-b last:border-0 hover:bg-muted/30"
+                        onClick={rowViewClick(() => setViewing(r))}
+                        className="cursor-pointer border-b last:border-0 hover:bg-muted/30"
                       >
                         <TableCell className="pl-4">
                           <RowCheckbox

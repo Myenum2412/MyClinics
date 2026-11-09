@@ -27,12 +27,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Ban, Check, Trash2 } from "lucide-react";
 import { RowActions } from "@/components/ui/row-actions";
 import { Pagination } from "@/components/ui/pagination";
+import { rowViewClick } from "@/components/ui/table-selection";
+import { useRouter } from "next/navigation";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import StatsGeneric from "@/components/stats-generic";
 import { formatDate } from "@/lib/datetime";
 
 export default function OrgMenuDashboardPage() {
   const session = useClinicSession();
+  const router = useRouter();
   const [items, setItems] = useState<Clinic[]>([]);
   const [loading, setLoading] = useState(true);
   // Dropdown status filter was removed; stays pinned to "all".
@@ -261,10 +264,11 @@ export default function OrgMenuDashboardPage() {
               <TableBody>
                 {items.map((c) => (
                   <TableRow
-                    className={`transition-colors duration-150 hover:bg-muted/40 ${
+                    className={`cursor-pointer transition-colors duration-150 hover:bg-muted/40 ${
                       selectedIds.has(c.clinicId) ? "bg-muted/40" : ""
                     }`}
                     key={c.clinicId}
+                    onClick={rowViewClick(() => router.push(`/orgmenu/clinics/${c.clinicId}`))}
                   >
                     <TableCell className="w-10 pl-1">
                       <Checkbox

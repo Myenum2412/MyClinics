@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
+import { rowViewClick } from "@/components/ui/table-selection";
 import { Badge } from "@/components/ui/badge";
 import { Pagination } from "@/components/ui/pagination";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
@@ -142,7 +143,7 @@ export default function LabsPage() {
                   <TableHead className="text-right pr-6">Actions</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>{paginated.map((l) => (
-                  <TableRow key={l.labId} className={`hover:bg-muted/30 border-b last:border-0 ${selectedIds.has(l.labId) ? "bg-muted/30" : ""}`}>
+                  <TableRow key={l.labId} onClick={rowViewClick(() => setViewing(l))} className={`cursor-pointer hover:bg-muted/30 border-b last:border-0 ${selectedIds.has(l.labId) ? "bg-muted/30" : ""}`}>
                     <TableCell><Checkbox checked={selectedIds.has(l.labId)} onCheckedChange={() => toggleOne(l.labId)} aria-label={`Select ${l.labName}`} /></TableCell>
                     <TableCell className="font-medium">{(l as any).labName ?? (l as any).name ?? "—"}</TableCell>
                     <TableCell className="text-muted-foreground">{l.contactPerson ?? "—"}</TableCell>

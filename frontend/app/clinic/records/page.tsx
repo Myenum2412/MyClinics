@@ -39,6 +39,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { rowViewClick } from "@/components/ui/table-selection";
 import {
   Plus,
   Search,
@@ -853,7 +854,9 @@ export default function RecordsPage() {
                   {paginatedItems.map((r) => (
                     <TableRow
                       key={r.recordId}
-                      className={`hover:bg-muted/30 border-b border-border last:border-0 ${
+                      data-state={selectedIds.has(r.recordId) ? "selected" : undefined}
+                      onClick={rowViewClick(() => setViewing(r))}
+                      className={`cursor-pointer hover:bg-muted/30 border-b border-border last:border-0 ${
                         selectedIds.has(r.recordId) ? "bg-muted/30" : ""
                       }`}
                     >
