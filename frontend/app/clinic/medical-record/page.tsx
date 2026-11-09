@@ -1478,7 +1478,7 @@ export default function MedicalRecordPage() {
                     </Button>
                   </div>
                 </div>
-                <div className="mx-auto w-full max-w-md">
+                <div className="w-full">
                   <Card className="rounded-xl bg-white text-black shadow-sm">
                     <CardContent className="p-2 sm:p-3">
                       <div className="relative">
