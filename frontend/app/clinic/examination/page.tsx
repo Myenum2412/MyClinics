@@ -2,6 +2,22 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import {
+  type ColumnDef,
+  type ColumnVisibilityState,
+  type RowSelectionState,
+  type SortingState,
+  columnVisibilityFeature,
+  createPaginatedRowModel,
+  createSortedRowModel,
+  flexRender,
+  rowPaginationFeature,
+  rowSelectionFeature,
+  rowSortingFeature,
+  sortFn_datetime,
+  tableFeatures,
+  useTable,
+} from "@tanstack/react-table";
 import { useRequireRole, sessionCan } from "@/hooks/use-clinic-session";
 import {
   type Examination,
@@ -19,6 +35,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/clinic/section-card";
+import { PersonAvatar } from "@/components/clinic/person-avatar";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -36,17 +62,36 @@ import {
 } from "@/components/ui/table";
 import { PatientSelect } from "@/components/clinic/pickers";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RowActions } from "@/components/ui/row-actions";
+import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/format-time";
 import { todayISO } from "@/lib/datetime";
 import {
+  ArrowDown,
   ArrowLeft,
+  ArrowUp,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsUpDown,
+  Columns,
   Loader2,
   Plus,
   Search,
   Stethoscope,
   Trash,
 } from "lucide-react";
-import { RowActions } from "@/components/ui/row-actions";
+
+const TABLE_FEATURES = tableFeatures({
+  rowSortingFeature,
+  rowPaginationFeature,
+  rowSelectionFeature,
+  columnVisibilityFeature,
+  sortedRowModel: createSortedRowModel(),
+  paginatedRowModel: createPaginatedRowModel(),
+  sortFns: {
+    datetime: sortFn_datetime,
+  },
+});
 
 const STATUS_OPTIONS: { value: ExaminationStatus; label: string }[] = [
   { value: "pending", label: "Pending" },
@@ -73,6 +118,49 @@ const ISSUE_BADGE: Record<IssueType, string> = {
   hard: "bg-red-100 text-red-800",
   soft: "bg-sky-100 text-sky-800",
 };
+
+const STATUS_LABEL: Record<ExaminationStatus, string> = {
+  pending: "Pending",
+  "in-progress": "In Progress",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
+const STATUS_VARIANT: Record<
+  ExaminationStatus,
+  "default" | "secondary" | "outline"
+> = {
+  pending: "outline",
+  "in-progress": "secondary",
+  completed: "default",
+  cancelled: "outline",
+};
+
+const ISSUE_VARIANT: Record<IssueType, "destructive" | "secondary"> = {
+  hard: "destructive",
+  soft: "secondary",
+};
+
+const COLUMN_LABELS: Record<string, string> = {
+  patientName: "Patient",
+  issueType: "Issues",
+  oralFindings: "Oral findings",
+  status: "Status",
+  visitDate: "Date",
+};
+
+function SortIcon({ sorted }: { sorted: false | "asc" | "desc" }) {
+  if (sorted === "asc")
+    return <ArrowUp className="size-3.5" aria-hidden="true" />;
+  if (sorted === "desc")
+    return <ArrowDown className="size-3.5" aria-hidden="true" />;
+  return (
+    <ChevronsUpDown
+      className="size-3.5 text-muted-foreground/60"
+      aria-hidden="true"
+    />
+  );
+}
 
 
 export interface ExaminationComplaintRow {
@@ -165,6 +253,52 @@ function emptyForm(): FormState {
   };
 }
 
+function formFromRecord(record: Examination): FormState {
+  return {
+    ...emptyForm(),
+    patientId: record.patientId,
+    visitDate: record.visitDate,
+    status: record.status,
+    issueType: record.issueType,
+    oralFindings: record.oralFindings,
+    notes: record.notes ?? "",
+    softTissueNote: record.softTissueNote ?? "",
+    hardTissueNote: record.hardTissueNote ?? "",
+    allergies: record.allergies ?? "",
+    medicalConditions: record.medicalConditions ?? "",
+    previousSurgeries: record.previousSurgeries ?? "",
+    currentMedications: record.currentMedications ?? "",
+    patientHistory: record.patientHistory ?? "",
+    familyHistory: record.familyHistory ?? "",
+    habits: record.habits ?? "",
+    hpiPresentingComplaint: record.hpi?.presentingComplaint ?? "",
+    hpiOnset: record.hpi?.onset ?? "",
+    hpiDurationValue: record.hpi?.durationValue ?? "",
+    hpiDurationUnit: record.hpi?.durationUnit ?? "",
+    hpiProgression: record.hpi?.progression ?? "",
+    hpiSymptoms: record.hpi?.symptoms ?? "",
+    hpiAggravatingFactors: record.hpi?.aggravatingFactors ?? "",
+    hpiRelievingFactors: record.hpi?.relievingFactors ?? "",
+    hpiAssociatedSymptoms: record.hpi?.associatedSymptoms ?? "",
+    hpiPreviousTreatment: record.hpi?.previousTreatment ?? "",
+    hpiAdditionalNotes: record.hpi?.additionalNotes ?? "",
+    chiefComplaints:
+      record.chiefComplaints && record.chiefComplaints.length > 0
+        ? record.chiefComplaints.map((c) => ({
+            complaint: c.complaint ?? "",
+            duration: c.duration ?? "",
+            severity: c.severity ?? "",
+            notes: c.notes ?? "",
+          }))
+        : [{ complaint: "", duration: "", severity: "", notes: "" }],
+    bloodPressure: record.bloodPressure ?? "",
+    temperature: record.temperature ?? "",
+    pulse: record.pulse ?? "",
+    respiratoryRate: record.respiratoryRate ?? "",
+    spo2: record.spo2 ?? "",
+  };
+}
+
 export default function ExaminationPage() {
   const session = useRequireRole("patient");
   const clinicId = session?.clinicId ?? "";
@@ -183,7 +317,13 @@ export default function ExaminationPage() {
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Examination | null>(null);
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "visitDate", desc: true },
+  ]);
+  const [columnVisibility, setColumnVisibility] =
+    useState<ColumnVisibilityState>({});
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const selectedIds = useMemo(() => new Set(Object.keys(rowSelection)), [rowSelection]);
 
   const load = useCallback(() => {
     if (!clinicId) return;
@@ -192,7 +332,7 @@ export default function ExaminationPage() {
       .then((res) => {
         setItems(res.items ?? []);
         setTotal(res.total ?? 0);
-        setSelectedIds(new Set());
+        setRowSelection({});
       })
       .catch((e) =>
         toast.error(e instanceof Error ? e.message : "Failed to load examinations")
@@ -224,62 +364,16 @@ export default function ExaminationPage() {
     setScreen({ name: "form", mode: "create" });
   }
 
-  function formFromRecord(record: Examination): FormState {
-    return {
-      ...emptyForm(),
-      patientId: record.patientId,
-      visitDate: record.visitDate,
-      status: record.status,
-      issueType: record.issueType,
-      oralFindings: record.oralFindings,
-      notes: record.notes ?? "",
-      softTissueNote: record.softTissueNote ?? "",
-      hardTissueNote: record.hardTissueNote ?? "",
-      allergies: record.allergies ?? "",
-      medicalConditions: record.medicalConditions ?? "",
-      previousSurgeries: record.previousSurgeries ?? "",
-      currentMedications: record.currentMedications ?? "",
-      patientHistory: record.patientHistory ?? "",
-      familyHistory: record.familyHistory ?? "",
-      habits: record.habits ?? "",
-      hpiPresentingComplaint: record.hpi?.presentingComplaint ?? "",
-      hpiOnset: record.hpi?.onset ?? "",
-      hpiDurationValue: record.hpi?.durationValue ?? "",
-      hpiDurationUnit: record.hpi?.durationUnit ?? "",
-      hpiProgression: record.hpi?.progression ?? "",
-      hpiSymptoms: record.hpi?.symptoms ?? "",
-      hpiAggravatingFactors: record.hpi?.aggravatingFactors ?? "",
-      hpiRelievingFactors: record.hpi?.relievingFactors ?? "",
-      hpiAssociatedSymptoms: record.hpi?.associatedSymptoms ?? "",
-      hpiPreviousTreatment: record.hpi?.previousTreatment ?? "",
-      hpiAdditionalNotes: record.hpi?.additionalNotes ?? "",
-      chiefComplaints:
-        record.chiefComplaints && record.chiefComplaints.length > 0
-          ? record.chiefComplaints.map((c) => ({
-              complaint: c.complaint ?? "",
-              duration: c.duration ?? "",
-              severity: c.severity ?? "",
-              notes: c.notes ?? "",
-            }))
-          : [{ complaint: "", duration: "", severity: "", notes: "" }],
-      bloodPressure: record.bloodPressure ?? "",
-      temperature: record.temperature ?? "",
-      pulse: record.pulse ?? "",
-      respiratoryRate: record.respiratoryRate ?? "",
-      spo2: record.spo2 ?? "",
-    };
-  }
-
-  function openEdit(record: Examination) {
+  const openEdit = useCallback((record: Examination) => {
     setForm(formFromRecord(record));
     setScreen({ name: "form", mode: "edit", record });
-  }
+  }, []);
 
-  function openView(record: Examination) {
+  const openView = useCallback((record: Examination) => {
     // Populate the form too so read-only rows render counts correctly.
     setForm(formFromRecord(record));
     setScreen({ name: "form", mode: "view", record });
-  }
+  }, []);
 
   async function handleSave() {
     if (screen.name !== "form" || screen.mode === "view") return;
@@ -388,19 +482,176 @@ export default function ExaminationPage() {
     }
   }
 
-  const toggleSelectRow = (examinationId: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(examinationId)) next.delete(examinationId);
-      else next.add(examinationId);
-      return next;
-    });
-  };
+  const columns = useMemo<ColumnDef<typeof TABLE_FEATURES, Examination>[]>(
+    () => [
+      {
+        id: "select",
+        enableSorting: false,
+        enableHiding: false,
+        header: ({ table }) => (
+          <Checkbox
+            checked={table.getIsAllPageRowsSelected()}
+            indeterminate={
+              table.getIsSomePageRowsSelected() &&
+              !table.getIsAllPageRowsSelected()
+            }
+            onCheckedChange={(checked) =>
+              table.toggleAllPageRowsSelected(checked === true)
+            }
+            aria-label="Select all examinations on this page"
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(checked) => row.toggleSelected(checked === true)}
+            aria-label={`Select examination for ${row.original.patientName}`}
+          />
+        ),
+      },
+      {
+        accessorKey: "patientName",
+        header: ({ column }) => (
+          <button
+            type="button"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="-mx-1 inline-flex items-center gap-1 rounded-md px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase transition-colors hover:text-foreground"
+          >
+            Patient
+            <SortIcon sorted={column.getIsSorted()} />
+          </button>
+        ),
+        cell: ({ row }) => {
+          const item = row.original;
+          return (
+            <div className="flex min-w-0 items-center gap-3">
+              <PersonAvatar
+                clinicId={clinicId}
+                ownerType="patient"
+                ownerId={item.patientId}
+                name={item.patientName}
+                size="sm"
+                className="border border-border"
+              />
+              <div className="min-w-0">
+                <p className="truncate text-sm leading-tight font-medium">
+                  {item.patientName}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {item.createdByName
+                    ? `Recorded by ${item.createdByName}`
+                    : "Examination"}
+                </p>
+              </div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "issueType",
+        enableSorting: false,
+        header: () => (
+          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Issues
+          </span>
+        ),
+        cell: ({ row }) => (
+          <Badge
+            variant={ISSUE_VARIANT[row.original.issueType]}
+            className="text-xs capitalize"
+          >
+            {row.original.issueType}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: "oralFindings",
+        enableSorting: false,
+        header: () => (
+          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Oral findings
+          </span>
+        ),
+        cell: ({ row }) => (
+          <p className="max-w-[22rem] truncate text-xs text-muted-foreground">
+            {row.original.oralFindings || "—"}
+          </p>
+        ),
+      },
+      {
+        accessorKey: "status",
+        enableSorting: false,
+        header: () => (
+          <span className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Status
+          </span>
+        ),
+        cell: ({ row }) => (
+          <Badge
+            variant={STATUS_VARIANT[row.original.status]}
+            className={cn(
+              "text-xs",
+              row.original.status === "cancelled" && "text-muted-foreground"
+            )}
+          >
+            {STATUS_LABEL[row.original.status]}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: "visitDate",
+        sortFn: "datetime",
+        header: ({ column }) => (
+          <button
+            type="button"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="-mx-1 ml-auto inline-flex items-center gap-1 rounded-md px-1 text-xs font-medium tracking-wide text-muted-foreground uppercase transition-colors hover:text-foreground"
+          >
+            Date
+            <SortIcon sorted={column.getIsSorted()} />
+          </button>
+        ),
+        cell: ({ row }) => (
+          <span className="block text-right text-xs text-muted-foreground tabular-nums">
+            {formatDate(row.original.visitDate)}
+          </span>
+        ),
+      },
+      {
+        id: "actions",
+        enableSorting: false,
+        enableHiding: false,
+        header: () => <span className="sr-only">Actions</span>,
+        cell: ({ row }) => (
+          <div className="flex justify-end">
+            <RowActions
+              onView={() => openView(row.original)}
+              onEdit={canManage ? () => openEdit(row.original) : undefined}
+              onDelete={
+                canDelete ? () => setDeleteTarget(row.original) : undefined
+              }
+            />
+          </div>
+        ),
+      },
+    ],
+    [canDelete, canManage, clinicId, openEdit, openView]
+  );
 
-  const toggleSelectAll = () => {
-    if (selectedIds.size === filteredItems.length) setSelectedIds(new Set());
-    else setSelectedIds(new Set(filteredItems.map((item) => item.examinationId)));
-  };
+  const table = useTable({
+    features: TABLE_FEATURES,
+    data: filteredItems,
+    columns,
+    getRowId: (row) => row.examinationId,
+    state: { sorting, columnVisibility, rowSelection },
+    onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    initialState: { pagination: { pageIndex: 0, pageSize: 10 } },
+  });
+
+  const totalCount = table.getFilteredRowModel().rows.length;
+  const pageCount = table.getPageCount();
 
   const handleBulkDelete = async () => {
     try {
@@ -408,7 +659,7 @@ export default function ExaminationPage() {
         Array.from(selectedIds).map((id) => deleteExamination(clinicId, id))
       );
       toast.success(`Deleted ${selectedIds.size} examinations`);
-      setSelectedIds(new Set());
+      setRowSelection({});
       load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to delete selected examinations");
@@ -703,186 +954,297 @@ export default function ExaminationPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Examinations</h1>
-          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
-            Clinical examinations with oral findings
-            {total > 0 ? ` — ${total} total` : ""}.
-          </p>
-        </div>
-        {canManage && (
-          <Button onClick={openCreate} className="w-full justify-center sm:w-auto">
-            <Plus className="size-4" />
-            New Examination
-          </Button>
-        )}
-      </div>
-
-      <SectionCard title="1. Search & Filters">
-        <div className="flex flex-col gap-2.5 sm:flex-row sm:gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              placeholder="Search by patient, findings or notes…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex size-9 items-center justify-center rounded-md border border-border bg-card text-muted-foreground">
+            <Stethoscope className="size-4" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="font-heading text-lg leading-tight font-semibold tracking-tight">
+              Examinations
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {total > 0
+                ? `${total} examination${total === 1 ? "" : "s"} on record`
+                : "Clinical examinations with oral findings"}
+            </p>
           </div>
         </div>
-      </SectionCard>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative w-full sm:w-56">
+            <Search
+              className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
+            <Input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search examinations..."
+              className="h-7 w-full pl-8 text-sm"
+              aria-label="Search examinations by patient, findings or notes"
+            />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="outline" size="sm" aria-label="Toggle columns">
+                  <Columns className="size-3.5" aria-hidden="true" />
+                  View
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(checked) =>
+                        column.toggleVisibility(checked === true)
+                      }
+                      closeOnClick={false}
+                    >
+                      {COLUMN_LABELS[column.id] ?? column.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {canManage && (
+            <Button size="sm" onClick={openCreate}>
+              <Plus className="mr-1 size-3.5" aria-hidden="true" />
+              New Examination
+            </Button>
+          )}
+        </div>
+      </div>
 
       {selectedIds.size > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 shadow-sm transition-all animate-in fade-in slide-in-from-top-2">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/40 px-4 py-2.5">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-primary tabular-nums">
-              {selectedIds.size} selected
+            <span className="text-sm font-medium text-foreground tabular-nums">
+              {selectedIds.size} Selected
             </span>
             <Button
               variant="ghost"
-              size="sm"
-              className="h-7 text-muted-foreground hover:text-foreground text-xs"
-              onClick={() => setSelectedIds(new Set())}
+              size="xs"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => table.resetRowSelection()}
             >
-              Clear selection
+              Clear
             </Button>
           </div>
           {canDelete && (
             <Button
-              variant="destructive"
+              variant="outline"
               size="sm"
+              className="text-destructive hover:text-destructive"
               onClick={() => setBulkDeleteOpen(true)}
-              className="h-8 gap-1.5 shadow-sm"
             >
-              <Trash className="size-3.5" />
-              Delete Selected
+              <Trash className="size-3.5" aria-hidden="true" />
+              Delete
             </Button>
           )}
         </div>
       )}
 
-      <SectionCard title="2. Examinations">
-          {loading ? (
-            <div className="space-y-2 p-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
-          ) : filteredItems.length === 0 ? (
-            <div className="flex flex-col items-center gap-2 px-4 py-12 text-center">
-              <Stethoscope className="size-8 text-muted-foreground" />
-              <p className="font-medium">No examinations found</p>
-              <p className="text-sm text-muted-foreground">
-                {canManage
+      <div className="overflow-hidden rounded-none border border-border bg-card">
+        {loading ? (
+          <div className="space-y-2 p-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
+            <Stethoscope className="size-8 text-muted-foreground" />
+            <p className="font-medium">No examinations found</p>
+            <p className="text-sm text-muted-foreground">
+              {searchTerm.trim()
+                ? "No examinations match your search."
+                : canManage
                   ? "Click “New Examination” to record the first one."
                   : "Examinations created for you will appear here."}
-              </p>
-            </div>
-          ) : (
-            <>
+            </p>
+          </div>
+        ) : (
+          <>
             {/* Desktop table — hidden on mobile */}
-            <div className="hidden overflow-x-auto md:block">
+            <div className="hidden md:block">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12 pl-4">
-                      <Checkbox
-                        checked={selectedIds.size === filteredItems.length && filteredItems.length > 0}
-                        onCheckedChange={toggleSelectAll}
-                        aria-label="Select all"
-                      />
-                    </TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Patient</TableHead>
-                    <TableHead>Issues</TableHead>
-                    <TableHead>Oral findings</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredItems.map((item) => (
-                    <TableRow key={item.examinationId}>
-                      <TableCell className="pl-4">
-                        <Checkbox
-                          checked={selectedIds.has(item.examinationId)}
-                          onCheckedChange={() => toggleSelectRow(item.examinationId)}
-                          aria-label={`Select examination for ${item.patientName}`}
-                        />
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        {formatDate(item.visitDate)}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {item.patientName}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={ISSUE_BADGE[item.issueType]}>
-                          {item.issueType}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-56 truncate">
-                        {item.oralFindings}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={STATUS_BADGE[item.status]}>
-                          {item.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end">
-                          <RowActions
-                            onView={() => openView(item)}
-                            onEdit={canManage ? () => openEdit(item) : undefined}
-                            onDelete={canDelete ? () => setDeleteTarget(item) : undefined}
-                          />
-                        </div>
-                      </TableCell>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow
+                      key={headerGroup.id}
+                      className="border-b border-border bg-muted/40 hover:bg-muted/40"
+                    >
+                      {headerGroup.headers.map((header) => (
+                        <TableHead
+                          key={header.id}
+                          className={cn(
+                            "h-9",
+                            header.column.id === "select" && "w-10 pl-4",
+                            header.column.id === "patientName" && "pl-1",
+                            header.column.id === "visitDate" && "text-right",
+                            header.column.id === "actions" && "w-10 pr-4"
+                          )}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      ))}
                     </TableRow>
                   ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow
+                        key={row.id}
+                        data-state={row.getIsSelected() ? "selected" : undefined}
+                        className="border-b border-border transition-colors duration-100 last:border-b-0 hover:bg-muted/30"
+                      >
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell
+                            key={cell.id}
+                            className={cn(
+                              "py-3",
+                              cell.column.id === "select" && "pl-4",
+                              cell.column.id === "patientName" && "pl-1",
+                              cell.column.id === "actions" && "pr-4"
+                            )}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell
+                        colSpan={table.getVisibleLeafColumns().length}
+                        className="h-24 text-center text-sm text-muted-foreground"
+                      >
+                        No examinations match your search.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
+
             {/* Mobile card list — visible only on small screens */}
             <div className="space-y-2.5 bg-muted/40 p-3 md:hidden">
-              {filteredItems.map((item) => (
-                <div key={item.examinationId} className="rounded-xl border border-border bg-card p-3 shadow-2xs">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={selectedIds.has(item.examinationId)}
-                      onCheckedChange={() => toggleSelectRow(item.examinationId)}
-                      aria-label={`Select examination for ${item.patientName}`}
-                    />
-                    <p className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">
-                      {item.patientName}
-                    </p>
-                    <Badge className={`${ISSUE_BADGE[item.issueType]} shrink-0 text-[10px]`}>
-                      {item.issueType}
-                    </Badge>
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{item.oralFindings}</p>
-                  <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
-                    {formatDate(item.visitDate)}
-                  </p>
-                  <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/60 pt-2">
-                    <Badge className={`${STATUS_BADGE[item.status]} text-[11px]`}>
-                      {item.status}
-                    </Badge>
-                    <div className="flex items-center gap-1.5">
-                      <RowActions
-                        onView={() => openView(item)}
-                        onEdit={canManage ? () => openEdit(item) : undefined}
-                        onDelete={canDelete ? () => setDeleteTarget(item) : undefined}
+              {table.getRowModel().rows.map((row) => {
+                const item = row.original;
+                return (
+                  <div
+                    key={row.id}
+                    className="rounded-xl border border-border bg-card p-3 shadow-2xs"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={row.getIsSelected()}
+                        onCheckedChange={(checked) =>
+                          row.toggleSelected(checked === true)
+                        }
+                        aria-label={`Select examination for ${item.patientName}`}
                       />
+                      <PersonAvatar
+                        clinicId={clinicId}
+                        ownerType="patient"
+                        ownerId={item.patientId}
+                        name={item.patientName}
+                        size="sm"
+                        className="border border-border"
+                      />
+                      <p className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">
+                        {item.patientName}
+                      </p>
+                      <Badge
+                        variant={ISSUE_VARIANT[item.issueType]}
+                        className="shrink-0 text-[10px] capitalize"
+                      >
+                        {item.issueType}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                      {item.oralFindings}
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground tabular-nums">
+                      {formatDate(item.visitDate)}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between gap-2 border-t border-border/60 pt-2">
+                      <Badge
+                        variant={STATUS_VARIANT[item.status]}
+                        className={cn(
+                          "text-[11px]",
+                          item.status === "cancelled" && "text-muted-foreground"
+                        )}
+                      >
+                        {STATUS_LABEL[item.status]}
+                      </Badge>
+                      <div className="flex items-center gap-1.5">
+                        <RowActions
+                          onView={() => openView(item)}
+                          onEdit={canManage ? () => openEdit(item) : undefined}
+                          onDelete={canDelete ? () => setDeleteTarget(item) : undefined}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-            </>
-          )}
-        </SectionCard>
+
+            <div className="flex items-center justify-between gap-4 border-t border-border bg-muted/20 px-4 py-2.5">
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">{totalCount}</span>{" "}
+                {totalCount === 1 ? "Result" : "Results"}
+              </p>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-7"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="size-3.5" aria-hidden="true" />
+                </Button>
+                <span className="px-1 text-xs text-muted-foreground tabular-nums">
+                  Page {table.state.pagination.pageIndex + 1} of{" "}
+                  {Math.max(pageCount, 1)}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="size-7"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="size-3.5" aria-hidden="true" />
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
 
       <ConfirmDeleteDialog
         open={deleteTarget !== null}
