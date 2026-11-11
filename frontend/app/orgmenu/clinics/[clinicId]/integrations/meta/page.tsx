@@ -107,7 +107,18 @@ export default function MetaIntegrationPage() {
     })();
   }, [session.session, load]);
 
-  // After returning from Meta OAuth, the URL carries ?meta=connected.
+  // After returning from Meta OAuth, the URL carries ?meta=connected or posts a message from popup.
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type === "META_AUTH_SUCCESS" || e.data?.type === "META_CONNECTED") {
+        toast.success("Meta Business connected");
+        void load();
+      }
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [load]);
+
   useEffect(() => {
     if (search.get("meta") === "connected") {
       toast.success("Meta Business connected");

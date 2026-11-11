@@ -2899,6 +2899,7 @@ export interface ConnectMetaInput {
   appId?: string;
   appSecret?: string;
   redirectUri?: string;
+  returnUrl?: string;
 }
 
 export function connectMeta(
@@ -2976,6 +2977,25 @@ export function getPlatformMetaOverview(): Promise<{
 
 // ── CRM (Contacts, Companies, Deals) ────────────────────────────────────
 
+export interface MetaLeadAttribution {
+  attributionId?: string;
+  metaLeadId?: string | null;
+  businessId?: string | null;
+  pageId?: string | null;
+  instagramAccountId?: string | null;
+  adAccountId?: string | null;
+  campaignId?: string | null;
+  campaignName?: string | null;
+  adsetId?: string | null;
+  adsetName?: string | null;
+  adId?: string | null;
+  adName?: string | null;
+  formId?: string | null;
+  formName?: string | null;
+  platform?: "facebook" | "instagram" | "unknown" | string;
+  submittedAt?: string | null;
+}
+
 export interface Contact {
   contactId: string;
   firstName: string;
@@ -2998,6 +3018,7 @@ export interface Contact {
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  metaAttribution?: MetaLeadAttribution | null;
 }
 
 export interface ListContactsInput {
@@ -3147,6 +3168,26 @@ export function bulkUpdateContactCompany(
 }
 
 // ── Labs ─────────────────────────────────────────────────────────────────
+export interface Lab {
+  labId: string;
+  labName: string;
+  contactPerson: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  pincode: string | null;
+  licenseNo: string | null;
+  labType: string | null;
+  userId: string | null;
+  status: "active" | "inactive" | "deleted";
+  createdBy: string;
+  clinicId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export function listLabs(clinicId:string):Promise<PageResult<Lab>>{ return request(tenantPath(clinicId,"/labs?limit=100")); }
 export function createLab(clinicId:string,input:Record<string,unknown>):Promise<Lab>{ return request(tenantPath(clinicId,"/labs"),{method:"POST",body:JSON.stringify(input)}); }
 export function getLab(clinicId:string,labId:string):Promise<Lab>{ return request(tenantPath(clinicId,`/labs/${labId}`)); }

@@ -115,7 +115,25 @@ export function registerPublicMetaRoutes(app: FastifyInstance): void {
     const ctx = request as FastifyRequest;
     const query = ctx.query as { code?: string; state?: string; error?: string };
     if (query.error) {
-      return reply.send(`<html><body><h3>Meta authorization failed: ${query.error}</h3><script>window.close();</script></body></html>`);
+      return reply.type("text/html").send(`<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Meta authorization failed</title></head>
+<body style="font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f8fafc;color:#1e293b;">
+  <div style="text-align:center;padding:2rem;background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);max-width:400px;">
+    <h3 style="color:#ef4444;margin:0 0 0.5rem;">Meta Authorization Failed</h3>
+    <p style="color:#64748b;font-size:14px;margin:0 0 1rem;">${query.error}</p>
+    <p style="color:#94a3b8;font-size:12px;margin:0;">Closing window...</p>
+  </div>
+  <script>
+    try {
+      if (window.opener) {
+        window.opener.postMessage({ type: "META_AUTH_ERROR", error: ${JSON.stringify(query.error)} }, "*");
+        setTimeout(function() { window.close(); }, 1500);
+      }
+    } catch (e) {}
+  </script>
+</body>
+</html>`);
     }
     if (!query.code || !query.state) {
       return reply.code(400).send({ error: "Missing code or state" });
@@ -124,9 +142,34 @@ export function registerPublicMetaRoutes(app: FastifyInstance): void {
     const auth = new MetaAuthService(db);
     const result = await auth.handleCallback(query.code, query.state);
     const frontend = process.env.FRONTEND_URL?.replace(/\/$/, "") || "http://localhost:3456";
-    return reply.redirect(
-      `${frontend}/orgmenu/clinics/${result.clinicId}?meta=connected`
-    );
+    const targetUrl = result.returnUrl
+      ? (result.returnUrl.startsWith("http") ? result.returnUrl : `${frontend}${result.returnUrl.startsWith("/") ? "" : "/"}${result.returnUrl}`)
+      : `${frontend}/clinic/crm/contacts?meta=connected`;
+
+    return reply.type("text/html").send(`<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Meta Business Connected</title></head>
+<body style="font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#f8fafc;color:#1e293b;">
+  <div style="text-align:center;padding:2rem;background:#fff;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);max-width:400px;">
+    <div style="width:40px;height:40px;border-radius:50%;background:#dcfce7;color:#16a34a;display:inline-flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:20px;font-weight:bold;">✓</div>
+    <h3 style="color:#0f172a;margin:0 0 0.5rem;font-size:18px;">Meta Business Connected!</h3>
+    <p style="color:#64748b;font-size:14px;margin:0 0 1rem;">Closing window and returning to MyClinics...</p>
+  </div>
+  <script>
+    try {
+      if (window.opener) {
+        window.opener.postMessage({ type: "META_AUTH_SUCCESS", clinicId: ${JSON.stringify(result.clinicId)} }, "*");
+        window.opener.postMessage({ type: "META_CONNECTED", clinicId: ${JSON.stringify(result.clinicId)} }, "*");
+        setTimeout(function() { window.close(); }, 800);
+      } else {
+        window.location.href = ${JSON.stringify(targetUrl)};
+      }
+    } catch (e) {
+      window.location.href = ${JSON.stringify(targetUrl)};
+    }
+  </script>
+</body>
+</html>`);
   });
 
   // Webhook needs the RAW body bytes for X-Hub-Signature-256 verification, but

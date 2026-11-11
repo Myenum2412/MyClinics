@@ -73,11 +73,13 @@ export class MetaController {
       appId?: unknown;
       appSecret?: unknown;
       redirectUri?: unknown;
+      returnUrl?: unknown;
     };
     const { authUrl, state } = await this.auth(db).beginConnect(clinicId, {
       appId: typeof body.appId === "string" && body.appId ? body.appId : undefined,
       appSecret: typeof body.appSecret === "string" && body.appSecret ? body.appSecret : undefined,
       redirectUri: typeof body.redirectUri === "string" ? body.redirectUri : undefined,
+      returnUrl: typeof body.returnUrl === "string" ? body.returnUrl : undefined,
     });
     return reply.send({ authUrl, state });
   }

@@ -38,6 +38,8 @@ export interface MetaConnectInput {
   appSecret?: string;
   /** Optional custom OAuth redirect URI registered on the clinic's app. */
   redirectUri?: string;
+  /** Optional return URL after OAuth completion. */
+  returnUrl?: string;
 }
 
 /**
@@ -112,6 +114,7 @@ export class MetaAuthService {
     await this.db.collection(CLINIC_COLLECTIONS.metaOauthStates).insertOne({
       state,
       clinicId,
+      returnUrl: input.returnUrl ?? null,
       expiresAt: new Date(Date.now() + 10 * 60 * 1000),
       createdAt: nowFn(),
     });
@@ -127,12 +130,14 @@ export class MetaAuthService {
   async handleCallback(
     code: string,
     state: string
-  ): Promise<{ clinicId: string; metaBusinessId: string; metaBusinessName: string | null }> {
+  ): Promise<{ clinicId: string; returnUrl: string | null; metaBusinessId: string; metaBusinessName: string | null }> {
     const oauth = await this.db
       .collection(CLINIC_COLLECTIONS.metaOauthStates)
       .findOneAndDelete({ state });
     if (!oauth) throw new BadRequestError("Invalid or expired OAuth state");
-    const clinicId = (oauth as unknown as { clinicId: string }).clinicId;
+    const doc = oauth as unknown as { clinicId: string; returnUrl?: string | null };
+    const clinicId = doc.clinicId;
+    const returnUrl = doc.returnUrl ?? null;
 
     // Build the client from the clinic's stored/own app config.
     const config = await getClinicMetaAppConfig(this.db, clinicId);
@@ -171,6 +176,7 @@ export class MetaAuthService {
 
     return {
       clinicId,
+      returnUrl,
       metaBusinessId: info?.metaBusinessId ?? "",
       metaBusinessName: info?.metaBusinessName ?? null,
     };

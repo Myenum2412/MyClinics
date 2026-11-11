@@ -204,11 +204,44 @@ export default function ContactDetailPage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Meta Attribution</CardTitle></CardHeader>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <svg className="size-4 text-[#0866FF]" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16.98 5.09c-1.89 0-3.56.96-4.98 2.62-1.42-1.66-3.09-2.62-4.98-2.62-4.14 0-7.02 3.38-7.02 7.74 0 4.42 2.92 7.84 7.08 7.84 2.25 0 4.12-1.07 5.02-2.5 1.01 1.46 2.83 2.5 4.88 2.5 4.16 0 7.02-3.42 7.02-7.84 0-4.36-2.88-7.74-7.02-7.74zm-9.98 13.06c-2.84 0-4.78-2.38-4.78-5.32 0-2.91 1.91-5.26 4.74-5.26 1.76 0 3.24 1.02 4.47 3.09-1.29 2.2-2.73 7.49-4.43 7.49zm9.98 0c-1.74 0-3.15-5.29-4.44-7.49 1.23-2.07 2.71-3.09 4.47-3.09 2.83 0 4.74 2.35 4.74 5.26 0 2.94-1.94 5.32-4.77 5.32z" />
+              </svg>
+              Meta Lead Attribution
+            </CardTitle>
+            {contact.source === "META" && (
+              <Badge className="bg-[#0866FF]/10 text-[#0866FF] border-[#0866FF]/20">
+                Meta Lead
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Meta attribution data will appear here for contacts captured from Meta Lead Ads.
-          </p>
+          {contact.metaAttribution ? (
+            <dl className="grid gap-2 text-sm sm:grid-cols-2">
+              <Row label="Platform" value={contact.metaAttribution.platform ?? "Meta"} />
+              <Row label="Campaign" value={contact.metaAttribution.campaignName || contact.metaAttribution.campaignId} />
+              <Row label="Ad Set" value={contact.metaAttribution.adsetName || contact.metaAttribution.adsetId} />
+              <Row label="Ad Name" value={contact.metaAttribution.adName || contact.metaAttribution.adId} />
+              <Row label="Form" value={contact.metaAttribution.formName || contact.metaAttribution.formId} />
+              <Row label="Meta Lead ID" value={contact.metaAttribution.metaLeadId} />
+              <Row label="Submitted" value={format(contact.metaAttribution.submittedAt)} />
+            </dl>
+          ) : contact.source === "META" ? (
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm">
+              <p className="font-medium text-foreground">Ingested via Meta Integration</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                This contact was generated from Meta (Facebook / Instagram). Detailed ad attribution will populate when synced with campaign mapping.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Meta attribution data will appear here for contacts captured from Meta Lead Ads.
+            </p>
+          )}
         </CardContent>
       </Card>
     </div>

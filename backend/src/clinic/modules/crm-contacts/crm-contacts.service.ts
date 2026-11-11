@@ -5,6 +5,7 @@ import { BadRequestError, NotFoundError } from "@/clinic/core/errors";
 import { generateContactId } from "@/clinic/core/ids";
 import { ContactRepository, type CreateContactInput, type UpdateContactInput } from "@/clinic/modules/crm-contacts/crm-contacts.repository";
 import { contactToPublic, type ContactDocument } from "@/clinic/modules/crm-contacts/crm-contacts.schema";
+import { MetaRepository } from "@/clinic/modules/meta/meta.repository";
 
 export interface ListContactsInput {
   archived?: boolean;
@@ -45,10 +46,39 @@ export class ContactService {
     return contactToPublic(doc);
   }
 
-  async getContact(ctx: ClinicContext, contactId: string): Promise<ReturnType<typeof contactToPublic>> {
+  async getContact(ctx: ClinicContext, contactId: string): Promise<ReturnType<typeof contactToPublic> & { metaAttribution?: Record<string, unknown> | null }> {
     const doc = await this.repo(ctx).findById(contactId);
     if (!doc) throw new NotFoundError("Contact not found");
-    return contactToPublic(doc);
+    const pub = contactToPublic(doc);
+    let metaAttribution: Record<string, unknown> | null = null;
+    if (doc.source === "META") {
+      try {
+        const repo = new MetaRepository(this.db);
+        const clinicId = requireClinicOf(ctx);
+        const attr = await repo.getAttributionByLead(clinicId, contactId);
+        if (attr) {
+          metaAttribution = {
+            attributionId: attr.attributionId,
+            metaLeadId: attr.metaLeadId,
+            businessId: attr.businessId,
+            pageId: attr.pageId,
+            platform: attr.platform,
+            campaignId: attr.campaignId,
+            campaignName: attr.campaignName,
+            adsetId: attr.adsetId,
+            adsetName: attr.adsetName,
+            adId: attr.adId,
+            adName: attr.adName,
+            formId: attr.formId,
+            formName: attr.formName,
+            submittedAt: attr.submittedAt ? attr.submittedAt.toISOString() : null,
+          };
+        }
+      } catch {
+        // non-blocking
+      }
+    }
+    return { ...pub, metaAttribution };
   }
 
   async listContacts(ctx: ClinicContext, input: ListContactsInput = {}): Promise<ListContactsOutput> {
