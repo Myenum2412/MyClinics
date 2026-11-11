@@ -641,7 +641,7 @@ export default function AccountPage() {
             </li>
           </ul>
 
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
             <WhatsAppConnectCard clinicId={clinicId} canManage={canManage} />
             <GoogleBusinessConnectCard
               clinicId={clinicId}

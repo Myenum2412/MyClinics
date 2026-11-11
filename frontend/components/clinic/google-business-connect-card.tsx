@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,7 @@ import {
   Phone,
   RefreshCw,
   Search,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import {
@@ -78,41 +80,40 @@ export function GoogleBusinessConnectCard({
   onDisconnect,
 }: GoogleBusinessConnectCardProps) {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"gmail" | "url">("gmail");
-  const [emailInput, setEmailInput] = useState(clinicEmail ?? "");
+  const [tab, setTab] = useState<"auth" | "url">("auth");
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState(connectedUrl ?? "");
   const [loading, setLoading] = useState(false);
-  const [checkedEmail, setCheckedEmail] = useState<string | null>(null);
+  const [authenticating, setAuthenticating] = useState(false);
   const [businesses, setBusinesses] = useState<GoogleBusinessResolvedData[]>([]);
   const [selectedBiz, setSelectedBiz] = useState<GoogleBusinessResolvedData | null>(null);
 
-  const isConnected = Boolean(connectedUrl);
-  const effectiveEmail = emailInput.trim() || clinicEmail?.trim() || "";
+  const connected = Boolean(connectedUrl);
 
-  useEffect(() => {
-    if (clinicEmail && !emailInput) {
-      setEmailInput(clinicEmail);
-    }
-  }, [clinicEmail, emailInput]);
-
-  // Listen for Google OAuth popup callback messages
+  // Listen for Google OAuth callback postMessage
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       if (e.data?.type === "GOOGLE_BUSINESS_AUTH_SUCCESS") {
+        setAuthenticating(false);
         const { email, businesses: bizList } = e.data as {
           email: string;
           businesses?: GoogleBusinessResolvedData[];
         };
-        setEmailInput(email);
-        setCheckedEmail(email);
+
+        if (!email) {
+          toast.error("Google authentication failed. Please try again.");
+          return;
+        }
+
+        setVerifiedEmail(email);
         const list = bizList || [];
         setBusinesses(list);
         setSelectedBiz(list[0] || null);
-        setOpen(true);
+
         if (list.length > 0) {
-          toast.success(`Google Account verified: ${email}. Found ${list.length} business profile(s).`);
+          toast.success(`Verified Google Account: ${email}. Found ${list.length} connected business profile(s).`);
         } else {
-          toast.info(`Signed in as ${email}. No Google Business locations are managed under this account.`);
+          toast.info(`Signed in with verified email ${email}. No Google Business listings found under this account.`);
         }
       }
     };
@@ -120,51 +121,47 @@ export function GoogleBusinessConnectCard({
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  // Launch Google OAuth popup for that Gmail ID
-  const handleSignInWithGmail = (emailToUse?: string) => {
-    const targetEmail = emailToUse || effectiveEmail;
+  // Launch Google OAuth popup for verified email login only (no fake emails allowed)
+  const handleLaunchGoogleAuth = () => {
+    setAuthenticating(true);
     const authUrl = `/api/clinics/auth/google?from=google_business${
-      targetEmail ? `&email=${encodeURIComponent(targetEmail)}` : ""
+      clinicEmail ? `&email=${encodeURIComponent(clinicEmail)}` : ""
     }`;
-    window.open(authUrl, "googleOAuth", "width=600,height=720");
+    const popup = window.open(authUrl, "googleOAuth", "width=600,height=720");
+    if (!popup) {
+      setAuthenticating(false);
+      toast.error("Please allow popups to sign in with your verified Google account.");
+    }
   };
 
-  const handleCheckGmail = async () => {
-    if (tab === "gmail") {
-      if (!effectiveEmail) {
-        toast.error("Please enter your Gmail address");
-        return;
-      }
-      // Open Google OAuth for verification of that Gmail ID
-      handleSignInWithGmail(effectiveEmail);
+  const handleFetchFromUrl = async () => {
+    if (!urlInput.trim()) {
+      toast.error("Please enter your Google Maps or Google Business link");
       return;
     }
 
-    if (tab === "url") {
-      if (!urlInput.trim()) {
-        toast.error("Please enter your Google Maps or Google Business link");
-        return;
-      }
+    if (!urlInput.includes("google.com/maps") && !urlInput.includes("maps.app.goo.gl") && !urlInput.includes("business.google.com")) {
+      toast.error("Please enter a valid Google Maps or Google Business link");
+      return;
+    }
 
-      setLoading(true);
-      setBusinesses([]);
-      setSelectedBiz(null);
-      try {
-        const data = await resolveGoogleBusinessProfile(clinicId, {
-          url: urlInput.trim(),
-          name: clinicName,
-        });
+    setLoading(true);
+    setBusinesses([]);
+    setSelectedBiz(null);
+    try {
+      const data = await resolveGoogleBusinessProfile(clinicId, {
+        url: urlInput.trim(),
+        name: clinicName,
+      });
 
-        const list = data.businesses && data.businesses.length > 0 ? data.businesses : [data];
-        setBusinesses(list);
-        setSelectedBiz(list[0] || null);
-        setCheckedEmail(null);
-        toast.success("Business profile retrieved from link!");
-      } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to load link details");
-      } finally {
-        setLoading(false);
-      }
+      const list = data.businesses && data.businesses.length > 0 ? data.businesses : [data];
+      setBusinesses(list);
+      setSelectedBiz(list[0] || null);
+      toast.success("Business profile retrieved from link!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to load link details");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -175,148 +172,128 @@ export function GoogleBusinessConnectCard({
     setOpen(false);
   };
 
+  const statusText = connected
+    ? verifiedEmail
+      ? `Connected as ${verifiedEmail}`
+      : "Connected — clinic details and hours are synced"
+    : verifiedEmail
+      ? `Verified as ${verifiedEmail} — click to view profiles`
+      : clinicEmail
+        ? `Connect with verified ${clinicEmail} to sync clinic details`
+        : "Connect your clinic's Google Business Profile to sync details and hours";
+
   return (
-    <div className="rounded-xl border border-[#E3F2FD] bg-card p-4 transition-colors">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-[#E3F2FD] bg-white shadow-xs">
-            <GoogleIcon className="size-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-semibold text-foreground">Google Business Profile</h3>
-              {isConnected ? (
-                <Badge
-                  variant="outline"
-                  className="border-emerald-300 bg-emerald-50 text-emerald-700 text-[11px] dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
-                >
-                  <span className="mr-1 size-1.5 rounded-full bg-emerald-500" />
-                  Connected
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-muted-foreground text-[11px]">
-                  Not Connected
-                </Badge>
-              )}
-            </div>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {isConnected
-                ? "Connected with Google. Auto-completes clinic address, phone, working hours and details."
-                : effectiveEmail
-                ? `Connect with ${effectiveEmail} to check and view your connected Google Business Profile.`
-                : "Connect with your Gmail ID to view only your connected Google Business profiles."}
-            </p>
-          </div>
+    <div className="flex h-full flex-col justify-between gap-3 rounded-xl border border-[#E3F2FD] bg-[#E3F2FD]/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-start gap-3">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#4285F4]/15">
+          <GoogleIcon className="size-5" />
         </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          {isConnected && connectedUrl && (
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground"
-            >
-              <a href={connectedUrl} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="size-3.5" />
-                View on Google
-              </a>
-            </Button>
-          )}
-
-          {canManage && (
-            <>
-              <Button
-                size="sm"
-                className="h-8 gap-1.5 text-xs font-medium bg-[#4285F4] hover:bg-[#3367D6] text-white"
-                onClick={() => {
-                  setOpen(true);
-                  if (effectiveEmail) {
-                    handleSignInWithGmail(effectiveEmail);
-                  }
-                }}
-              >
-                <GoogleIcon className="size-3.5" />
-                {isConnected ? "Check Connected Profiles" : `Connect with Gmail`}
-              </Button>
-
-              <Button
+        <div>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold text-foreground">Google Business Profile</p>
+            {connected && (
+              <Badge
                 variant="outline"
-                size="sm"
-                className="h-8 text-xs"
-                onClick={() => setOpen(true)}
+                className="border-[#4285F4]/40 bg-[#4285F4]/10 text-[#1a73e8]"
               >
-                Settings
-              </Button>
-
-              {isConnected && onDisconnect && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-xs text-destructive hover:bg-destructive/10"
-                  onClick={onDisconnect}
-                >
-                  Disconnect
-                </Button>
-              )}
-            </>
-          )}
+                <span className="mr-1.5 size-1.5 rounded-full bg-[#4285F4]" />
+                Connected
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">{statusText}</p>
         </div>
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger
+          render={
+            <Button disabled={!canManage} className="w-full sm:w-auto shrink-0">
+              {connected ? "Google settings" : "Connect Google"}
+            </Button>
+          }
+        />
         <DialogContent className="max-w-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-2">
               <div className="flex size-7 items-center justify-center rounded-md border bg-white shadow-xs">
                 <GoogleIcon className="size-4" />
               </div>
-              <DialogTitle>Google Business Profile Connection</DialogTitle>
+              <DialogTitle>Connect Google Business Profile</DialogTitle>
             </div>
             <DialogDescription>
-              Verify your Gmail ID to display only the Google Business profiles connected to that account.
+              Verify your clinic&apos;s Google account to view and auto-fill your verified Google Business profile.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <Tabs value={tab} onValueChange={(v) => setTab(v as "gmail" | "url")}>
+            <Tabs value={tab} onValueChange={(v) => setTab(v as "auth" | "url")}>
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="gmail" className="text-xs">
-                  Check with Gmail ID
+                <TabsTrigger value="auth" className="text-xs">
+                  Verified Google Account
                 </TabsTrigger>
                 <TabsTrigger value="url" className="text-xs">
-                  Maps / Business Link
+                  Google Maps Link
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="gmail" className="space-y-3 pt-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="google-email" className="text-xs font-medium">
-                    Google / Gmail ID
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="google-email"
-                      type="email"
-                      placeholder="e.g. doctor@gmail.com"
-                      value={emailInput}
-                      onChange={(e) => setEmailInput(e.target.value)}
-                      className="text-xs"
-                    />
+              <TabsContent value="auth" className="space-y-3 pt-2">
+                {verifiedEmail ? (
+                  <div className="rounded-lg border border-emerald-300 bg-emerald-50/70 p-3.5 space-y-2 text-xs dark:border-emerald-800 dark:bg-emerald-950/30">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                        <ShieldCheck className="size-4 text-emerald-600" />
+                        Verified Google Account
+                      </span>
+                      <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-[10px]">
+                        Google Verified
+                      </Badge>
+                    </div>
+                    <p className="font-mono text-xs text-emerald-900 dark:text-emerald-200">
+                      {verifiedEmail}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Only verified business profiles belonging to this authenticated Google account are shown below.
+                    </p>
                     <Button
-                      type="button"
                       size="sm"
-                      onClick={() => handleSignInWithGmail(emailInput)}
-                      className="shrink-0 gap-1.5 text-xs bg-[#4285F4] hover:bg-[#3367D6] text-white"
+                      variant="outline"
+                      className="h-7 text-xs bg-white text-foreground mt-1"
+                      onClick={handleLaunchGoogleAuth}
+                      disabled={authenticating}
                     >
-                      <GoogleIcon className="size-3.5" />
-                      Sign in & Check
+                      {authenticating ? <Loader2 className="size-3 animate-spin mr-1" /> : null}
+                      Switch Google Account
                     </Button>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Verifies your Gmail ID via Google to retrieve only the business profiles you manage.
-                  </p>
-                </div>
+                ) : (
+                  <div className="rounded-lg border border-[#E3F2FD] bg-muted/30 p-4 text-center space-y-3">
+                    <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-white shadow-xs">
+                      <GoogleIcon className="size-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-semibold text-foreground">Sign in with Google to Verify</h4>
+                      <p className="mt-1 text-[11px] text-muted-foreground max-w-md mx-auto">
+                        To prevent fake emails, Google authentication is required to verify ownership of your clinic&apos;s
+                        Google Business Profile.
+                      </p>
+                    </div>
+
+                    <Button
+                      type="button"
+                      className="bg-[#4285F4] hover:bg-[#3367D6] text-white gap-2 text-xs font-medium"
+                      onClick={handleLaunchGoogleAuth}
+                      disabled={authenticating}
+                    >
+                      {authenticating ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <GoogleIcon className="size-3.5" />
+                      )}
+                      {authenticating ? "Verifying with Google..." : "Sign in with Google to Verify"}
+                    </Button>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="url" className="space-y-3 pt-2">
@@ -335,7 +312,7 @@ export function GoogleBusinessConnectCard({
                     <Button
                       type="button"
                       size="sm"
-                      onClick={() => void handleCheckGmail()}
+                      onClick={() => void handleFetchFromUrl()}
                       disabled={loading}
                       className="shrink-0 gap-1.5 text-xs"
                     >
@@ -348,31 +325,32 @@ export function GoogleBusinessConnectCard({
                     </Button>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Paste the direct Google Maps link for your clinic to auto-fill its exact details.
+                    Only authentic Google Maps links for your clinic are accepted.
                   </p>
                 </div>
               </TabsContent>
             </Tabs>
 
-            {/* If Gmail was checked and NO connected profiles found */}
-            {checkedEmail && businesses.length === 0 && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3.5 text-xs space-y-2 dark:border-amber-900/50 dark:bg-amber-950/20">
+            {/* If verified via Google and NO connected business profiles found */}
+            {verifiedEmail && businesses.length === 0 && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3.5 text-xs space-y-2 dark:border-amber-900/50 dark:bg-amber-950/20">
                 <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-medium">
                   <AlertCircle className="size-4 shrink-0 text-amber-600" />
-                  No Business Profiles Found Under {checkedEmail}
+                  No Business Profiles Found Under {verifiedEmail}
                 </div>
                 <p className="text-amber-700/90 dark:text-amber-400 text-[11px] leading-relaxed">
-                  This Gmail ID does not currently manage any verified Google Business listings on{" "}
-                  <strong>Google Business Profile</strong> (business.google.com).
+                  This authenticated Gmail account does not manage any verified listings on{" "}
+                  <strong>Google Business Profile</strong> (business.google.com). Unrelated or fake businesses
+                  are never shown.
                 </p>
                 <div className="flex flex-wrap items-center gap-2 pt-1">
                   <Button
                     size="sm"
                     variant="outline"
                     className="h-7 text-xs bg-white text-foreground"
-                    onClick={() => handleSignInWithGmail()}
+                    onClick={handleLaunchGoogleAuth}
                   >
-                    Switch / Try Another Gmail
+                    Try Another Google Account
                   </Button>
                   <Button
                     size="sm"
@@ -389,7 +367,7 @@ export function GoogleBusinessConnectCard({
               </div>
             )}
 
-            {/* List of Connected Businesses ONLY */}
+            {/* List of Verified Connected Businesses ONLY */}
             {businesses.length > 0 && (
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between border-b pb-2">
@@ -398,7 +376,7 @@ export function GoogleBusinessConnectCard({
                     Connected Business Profiles ({businesses.length})
                   </span>
                   <span className="text-[11px] text-muted-foreground">
-                    {checkedEmail ? `Verified for ${checkedEmail}` : "Select your business"}
+                    {verifiedEmail ? `Verified for ${verifiedEmail}` : "Select your business"}
                   </span>
                 </div>
 
@@ -433,7 +411,7 @@ export function GoogleBusinessConnectCard({
 
                             <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                               <MapPin className="size-3 shrink-0 text-muted-foreground" />
-                              <span className="truncate">{fullAddress || "Address verified"}</span>
+                              <span className="truncate">{fullAddress || "Verified Location"}</span>
                             </p>
 
                             <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground pt-0.5">
@@ -500,9 +478,9 @@ export function GoogleBusinessConnectCard({
                       </div>
 
                       <div>
-                        <span className="text-[10px] text-muted-foreground">Connected Email</span>
+                        <span className="text-[10px] text-muted-foreground">Verified Email</span>
                         <p className="font-medium text-foreground truncate">
-                          {selectedBiz.email || effectiveEmail || "—"}
+                          {selectedBiz.email || verifiedEmail || clinicEmail || "—"}
                         </p>
                       </div>
 
@@ -533,9 +511,25 @@ export function GoogleBusinessConnectCard({
           </div>
 
           <DialogFooter className="flex items-center justify-between sm:justify-between pt-2">
-            <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
+                Close
+              </Button>
+              {connected && onDisconnect && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-destructive hover:bg-destructive/10"
+                  onClick={() => {
+                    onDisconnect();
+                    setOpen(false);
+                  }}
+                >
+                  Disconnect
+                </Button>
+              )}
+            </div>
+
             {selectedBiz ? (
               <Button
                 size="sm"
@@ -543,15 +537,16 @@ export function GoogleBusinessConnectCard({
                 className="gap-1.5 bg-[#4285F4] hover:bg-[#3367D6] text-white"
               >
                 <CheckCircle2 className="size-3.5" />
-                Auto-Fill Profile with Selected Business
+                Auto-Fill Profile Form
               </Button>
             ) : (
               <Button
                 size="sm"
-                onClick={() => handleSignInWithGmail()}
+                onClick={handleLaunchGoogleAuth}
+                disabled={authenticating}
                 className="gap-1.5 bg-[#4285F4] hover:bg-[#3367D6] text-white"
               >
-                <GoogleIcon className="size-3.5" />
+                {authenticating ? <Loader2 className="size-3.5 animate-spin" /> : <GoogleIcon className="size-3.5" />}
                 Sign in with Google
               </Button>
             )}

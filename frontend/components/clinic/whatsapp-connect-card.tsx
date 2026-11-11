@@ -145,7 +145,7 @@ export function WhatsAppConnectCard({
       : "Connect your clinic's WhatsApp Business number to send reminders and reports";
 
   return (
-    <div className="mt-5 flex flex-col gap-3 rounded-xl border border-[#E3F2FD] bg-[#E3F2FD]/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex h-full flex-col justify-between gap-3 rounded-xl border border-[#E3F2FD] bg-[#E3F2FD]/40 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#25D366]/15">
           <WhatsAppIcon className="size-5" />
