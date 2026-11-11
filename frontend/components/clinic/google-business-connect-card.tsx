@@ -208,7 +208,15 @@ export function GoogleBusinessConnectCard({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger
           render={
-            <Button disabled={!canManage} className="w-full sm:w-auto shrink-0">
+            <Button
+              disabled={!canManage}
+              className="w-full sm:w-auto shrink-0"
+              onClick={() => {
+                if (!connected && !verifiedEmail) {
+                  handleLaunchGoogleAuth();
+                }
+              }}
+            >
               {connected ? "Google settings" : "Connect Google"}
             </Button>
           }
@@ -266,31 +274,50 @@ export function GoogleBusinessConnectCard({
                       Switch Google Account
                     </Button>
                   </div>
+                ) : authenticating ? (
+                  <div className="rounded-lg border border-border bg-muted/20 p-6 text-center space-y-3">
+                    <div className="mx-auto flex size-11 items-center justify-center rounded-full bg-[#4285F4]/10">
+                      <Loader2 className="size-5 animate-spin text-[#4285F4]" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground">Connecting Google Account…</h4>
+                      <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
+                        Authorizing access to show the Google Business profile connected to your email.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="text-xs gap-1.5 h-8 mt-2"
+                      onClick={handleLaunchGoogleAuth}
+                    >
+                      <GoogleIcon className="size-3.5" />
+                      Re-open Google Window
+                    </Button>
+                  </div>
                 ) : (
-                  <div className="rounded-lg border border-[#E3F2FD] bg-muted/30 p-4 text-center space-y-3">
-                    <div className="mx-auto flex size-10 items-center justify-center rounded-full bg-white shadow-xs">
+                  <div className="rounded-lg border border-border bg-muted/20 p-5 text-center space-y-3">
+                    <div className="mx-auto flex size-11 items-center justify-center rounded-full bg-[#4285F4]/10">
                       <GoogleIcon className="size-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-semibold text-foreground">Sign in with Google to Verify</h4>
-                      <p className="mt-1 text-[11px] text-muted-foreground max-w-md mx-auto">
-                        To prevent fake emails, Google authentication is required to verify ownership of your clinic&apos;s
-                        Google Business Profile.
+                      <h4 className="text-sm font-semibold text-foreground">
+                        {clinicEmail ? `Connect with ${clinicEmail}` : "Connect Google Account"}
+                      </h4>
+                      <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
+                        Authorize Google access to load the business profiles connected to your account.
                       </p>
                     </div>
 
                     <Button
                       type="button"
-                      className="bg-[#4285F4] hover:bg-[#3367D6] text-white gap-2 text-xs font-medium"
+                      className="bg-[#4285F4] hover:bg-[#3367D6] text-white gap-2 text-xs font-medium h-9 px-4 shadow-xs"
                       onClick={handleLaunchGoogleAuth}
                       disabled={authenticating}
                     >
-                      {authenticating ? (
-                        <Loader2 className="size-3.5 animate-spin" />
-                      ) : (
-                        <GoogleIcon className="size-3.5" />
-                      )}
-                      {authenticating ? "Verifying with Google..." : "Sign in with Google to Verify"}
+                      <GoogleIcon className="size-3.5" />
+                      Connect with Google
                     </Button>
                   </div>
                 )}
@@ -547,7 +574,7 @@ export function GoogleBusinessConnectCard({
                 className="gap-1.5 bg-[#4285F4] hover:bg-[#3367D6] text-white"
               >
                 {authenticating ? <Loader2 className="size-3.5 animate-spin" /> : <GoogleIcon className="size-3.5" />}
-                Sign in with Google
+                Connect with Google
               </Button>
             )}
           </DialogFooter>

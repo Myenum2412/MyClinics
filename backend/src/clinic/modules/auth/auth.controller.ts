@@ -294,6 +294,16 @@ export class AuthController {
         }
       }
 
+      if (businesses.length === 0) {
+        businesses.push({
+          id: `gbp_${email}`,
+          name: googleName || "Clinic",
+          email,
+          url: "https://business.google.com/",
+          country: "India",
+        });
+      }
+
       return reply.type("text/html").send(`
         <!DOCTYPE html>
         <html>
