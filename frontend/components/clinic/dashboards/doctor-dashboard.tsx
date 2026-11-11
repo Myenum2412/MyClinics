@@ -282,14 +282,14 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const [leads, setLeads] = useState<Contact[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(true);
   const [leadsPage, setLeadsPage] = useState(1);
-  const leadsPageSize = 6;
+  const leadsPageSize = 7;
 
   // Pagination states for table bottoms
   const [apptPage, setApptPage] = useState(1);
-  const apptPageSize = 6;
+  const apptPageSize = 7;
 
   const [patientPage, setPatientPage] = useState(1);
-  const patientPageSize = 6;
+  const patientPageSize = 7;
 
   // Patient selection checkboxes
   const [selectedPatientIds, setSelectedPatientIds] = useState<Set<string>>(new Set());
@@ -656,7 +656,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
       {/* 1 row: Left side (Upcoming Appointments table) and Right side (Patients card with Create Patient) */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Left Side: Upcoming Appointments Table with Table Style & Bottom Pagination */}
-        <Card className="h-[480px] rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
+        <Card className="h-[520px] rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
           <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4 shrink-0">
             <div>
               <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
@@ -744,7 +744,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
         </Card>
 
         {/* Right Side: Patients Card with Checkboxes, Table Style, Bottom Pagination & Click-to-View Form */}
-        <Card className="h-[480px] rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
+        <Card className="h-[520px] rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
           <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4 shrink-0">
             <div>
               <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
@@ -885,7 +885,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
         <BillingChartsCard bills={bills} loading={loading} />
 
         {/* Right Side: Leads (Table only) */}
-        <Card className="h-[480px] rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
+        <Card className="h-[520px] rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
           <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4 shrink-0">
             <div>
               <h3 className="text-base font-semibold text-foreground flex items-center gap-2">

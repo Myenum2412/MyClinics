@@ -109,7 +109,7 @@ export function BillingChartsCard({
   }, [chartData]);
 
   return (
-    <Card className="h-[480px] rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
+    <Card className="h-[520px] rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
       <CardHeader className="border-b border-border bg-muted/20 px-6 py-4 shrink-0">
         <div>
           <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
@@ -164,10 +164,10 @@ export function BillingChartsCard({
               </span>
             </div>
 
-            <div className="flex-1 w-full min-h-[220px] pt-2">
+            <div className="flex-1 w-full min-h-[260px] pt-2">
               <ChartContainer
                 config={chartConfig}
-                className="h-full max-h-[260px] w-full [&_.recharts-surface:focus-visible]:outline-2 [&_.recharts-surface:focus-visible]:outline-offset-2 [&_.recharts-surface:focus-visible]:outline-ring [&_.recharts-surface:focus-visible]:outline-solid"
+                className="h-full max-h-[300px] w-full [&_.recharts-surface:focus-visible]:outline-2 [&_.recharts-surface:focus-visible]:outline-offset-2 [&_.recharts-surface:focus-visible]:outline-ring [&_.recharts-surface:focus-visible]:outline-solid"
               >
                 <BarChart
                   accessibilityLayer
