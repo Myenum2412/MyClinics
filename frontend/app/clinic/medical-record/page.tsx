@@ -1400,98 +1400,92 @@ export default function MedicalRecordPage() {
       onDrop={onPageDrop}
     >
       <div className="w-full">
-        <div className="flex flex-wrap items-center gap-2">
-          {selectedPatient ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSelectedPatient(null);
-                  setActiveFolderId(null);
-                  setSearch("");
-                }}
-              >
-                <ArrowLeft className="size-4" /> All Patients
-              </Button>
-              <ArrowRight className="size-4 text-black" />
-              <button
-                type="button"
-                className="text-sm font-semibold text-black hover:text-primary"
-                onClick={() => {
-                  setActiveFolderId(null);
-                  setSearch("");
-                }}
-              >
-                {selectedPatient.fullName}
-              </button>
-              {activeFolderId && (
-                <>
-                  <ArrowRight className="size-4 text-black" />
-                  <span className="text-sm font-medium text-black">{folderName(activeFolderId)}</span>
-                </>
-              )}
-              <div className="ml-auto flex w-full flex-wrap items-center gap-2 sm:w-auto">
-                {!canManage && <Badge variant="secondary">Upload-only access</Badge>}
-                {clipboard && canManage && (
-                  <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => handlePaste()}>
-                    <ClipboardCopy className="size-4" /> Paste
-                  </Button>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => uploadSystemRef.current?.openFilePicker()}
-                  disabled={!selectedPatient}
-                  className="h-9 flex-1 justify-center sm:flex-none"
-                >
-                  <UploadCloud className="size-4" /> Upload
+        {selectedPatient ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setSelectedPatient(null);
+                setActiveFolderId(null);
+                setSearch("");
+              }}
+            >
+              <ArrowLeft className="size-4" /> All Patients
+            </Button>
+            <ArrowRight className="size-4 text-foreground" />
+            <button
+              type="button"
+              className="text-sm font-semibold text-foreground hover:text-primary"
+              onClick={() => {
+                setActiveFolderId(null);
+                setSearch("");
+              }}
+            >
+              {selectedPatient.fullName}
+            </button>
+            {activeFolderId && (
+              <>
+                <ArrowRight className="size-4 text-foreground" />
+                <span className="text-sm font-medium text-foreground">{folderName(activeFolderId)}</span>
+              </>
+            )}
+            <div className="ml-auto flex w-full flex-wrap items-center gap-2 sm:w-auto">
+              {!canManage && <Badge variant="secondary">Upload-only access</Badge>}
+              {clipboard && canManage && (
+                <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => handlePaste()}>
+                  <ClipboardCopy className="size-4" /> Paste
                 </Button>
-                {canManage && selectedPatient && (
-                  <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => setNewFolderOpen(true)}>
-                    <FolderPlus className="size-4" /> New Folder
-                  </Button>
-                )}
-              </div>
-            </>
-          ) : (
-            <Card className="bg-white text-black">
-              <CardContent className="flex flex-col gap-3 p-4 sm:p-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Users className="size-5 shrink-0 text-primary" />
-                  <h1 className="text-lg font-bold text-black sm:text-xl">Medical Records</h1>
-                  {!canManage && <Badge variant="secondary">Upload-only access</Badge>}
-                  <div className="ml-auto flex flex-wrap items-center gap-2">
-                    {clipboard && canManage && (
-                      <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => handlePaste()}>
-                        <ClipboardCopy className="size-4" /> Paste
-                      </Button>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => uploadSystemRef.current?.openFilePicker()}
-                      disabled={!selectedPatient}
-                      className="h-9 flex-1 justify-center sm:flex-none"
-                    >
-                      <UploadCloud className="size-4" /> Upload
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => uploadSystemRef.current?.openFilePicker()}
+                disabled={!selectedPatient}
+                className="h-9 flex-1 justify-center sm:flex-none"
+              >
+                <UploadCloud className="size-4" /> Upload
+              </Button>
+              {canManage && selectedPatient && (
+                <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => setNewFolderOpen(true)}>
+                  <FolderPlus className="size-4" /> New Folder
+                </Button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <Card className="w-full bg-transparent border-0 shadow-none p-0">
+            <CardContent className="flex flex-col gap-3 p-0 sm:p-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Users className="size-5 shrink-0 text-primary" />
+                <h1 className="text-lg font-bold text-foreground sm:text-xl">Medical Records</h1>
+                {!canManage && <Badge variant="secondary">Upload-only access</Badge>}
+                <div className="ml-auto flex flex-wrap items-center gap-2">
+                  {clipboard && canManage && (
+                    <Button variant="outline" size="sm" className="h-9 flex-1 justify-center sm:flex-none" onClick={() => handlePaste()}>
+                      <ClipboardCopy className="size-4" /> Paste
                     </Button>
-                  </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => uploadSystemRef.current?.openFilePicker()}
+                    disabled={!selectedPatient}
+                    className="h-9 flex-1 justify-center sm:flex-none"
+                  >
+                    <UploadCloud className="size-4" /> Upload
+                  </Button>
                 </div>
-                <div className="w-full">
-                  <Card className="rounded-xl bg-white text-black shadow-sm">
-                    <CardContent className="p-2 sm:p-3">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-black" />
-                        <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search patients…" className="pl-9 h-9" />
-                      </div>
-                    </CardContent>
-                  </Card>
+              </div>
+              <div className="w-full">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search patients…" className="pl-9 h-10 w-full bg-transparent border border-border" />
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {selectedPatient && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -1516,14 +1510,14 @@ export default function MedicalRecordPage() {
         {!selectedPatient && (
           <>
             {filteredPatients.length === 0 ? (
-              <Card className="mt-6 bg-white text-black">
+              <Card className="mt-6 w-full bg-transparent border border-border shadow-none">
                 <CardContent className="flex flex-col items-center gap-2 p-10 text-center">
-                  <Users className="size-8 text-black" />
-                  <p className="text-sm text-black">No patients found</p>
+                  <Users className="size-8 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">No patients found</p>
                 </CardContent>
               </Card>
             ) : (
-              <Card className="mt-4 bg-white text-black">
+              <Card className="mt-4 w-full bg-transparent border border-border shadow-none">
                 <CardContent className="p-3 sm:p-4">
                   <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3">
                 {filteredPatients.map((p) => {
@@ -1537,21 +1531,21 @@ export default function MedicalRecordPage() {
                         setActiveFolderId(null);
                         setSearch("");
                       }}
-                      className="group flex items-center gap-2 rounded-xl border border-border bg-white p-3 text-left transition hover:border-primary/40 hover:shadow-sm sm:gap-3 sm:p-4"
+                      className="group flex items-center gap-2 rounded-xl border border-border bg-card/60 p-3 text-left transition hover:border-primary/40 hover:shadow-sm sm:gap-3 sm:p-4"
                     >
                       <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} className="size-9 shrink-0 text-xs sm:size-11 sm:text-sm" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-black group-hover:text-primary">
+                        <p className="truncate text-sm font-semibold text-foreground group-hover:text-primary">
                           {p.fullName}
                         </p>
-                        <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-black sm:text-xs">
+                        <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[11px] text-muted-foreground sm:text-xs">
                           <span className="tabular-nums">{calculateAge(p.dateOfBirth) ?? "—"} yrs</span>
                           <span>·</span>
                           <span className="capitalize">{p.gender ?? "—"}</span>
                           <span className="hidden sm:inline">·</span>
                           <span className="hidden items-center gap-1 sm:inline-flex"><Phone className="size-3" />{p.mobile}</span>
                         </p>
-                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-black sm:hidden">
+                        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground sm:hidden">
                           <Phone className="size-3 shrink-0" /><span className="truncate font-mono">{p.mobile}</span>
                         </p>
                         <p className="mt-1 truncate text-[11px] text-black sm:hidden">

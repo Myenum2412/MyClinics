@@ -335,7 +335,7 @@ const orphanFiles = files.filter(
       </Card>
 
       {/* Medical Records */}
-      <Card className="rounded-none">
+      <Card className="rounded-none w-full bg-transparent border border-border shadow-none">
         <CardHeader className="border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
             <span className="flex size-8 items-center justify-center rounded-full bg-muted text-primary">
@@ -346,7 +346,7 @@ const orphanFiles = files.filter(
         </CardHeader>
         <CardContent className="p-5">
           {records.length === 0 ? (
-            <div className="rounded-xl border border-border bg-background p-12 text-center">
+            <div className="rounded-xl border border-border bg-transparent p-12 text-center">
               <FileText className="size-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium text-foreground">No medical records yet</h3>
               <p className="text-muted-foreground mt-2">Your medical records will appear here.</p>
