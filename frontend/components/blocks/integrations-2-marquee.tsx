@@ -1,55 +1,50 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, Mail, MessageSquare } from "lucide-react"
+import Image from "next/image"
+import { ArrowRight } from "lucide-react"
 
-import { Google } from "@/components/ui/svgs/google"
-import { Paypal } from "@/components/ui/svgs/paypal"
-import { Telegram } from "@/components/ui/svgs/telegram"
-import { WhatsappIcon } from "@/components/ui/svgs/whatsappIcon"
-import { GoogleCalendar } from "@/components/ui/svgs/googleCalendar"
-import { Drive } from "@/components/ui/svgs/drive"
-import { Razorpay } from "@/components/ui/svgs/razorpay"
-import { Godaddy } from "@/components/ui/svgs/godaddy"
-
-type IconComponent = (props: React.ComponentProps<"svg">) => React.ReactNode
-
-const integrations: { name: string; Icon: IconComponent }[] = [
-  { name: "WhatsApp", Icon: WhatsappIcon },
-  { name: "Google Calendar", Icon: GoogleCalendar },
-  { name: "Razorpay", Icon: Razorpay },
-  { name: "Google Drive", Icon: Drive },
-  { name: "GoDaddy", Icon: Godaddy },
-  { name: "Google Workspace", Icon: Google },
-  { name: "PayPal", Icon: Paypal },
-  { name: "Telegram", Icon: Telegram },
-  {
-    name: "Email",
-    Icon: (props) => <Mail {...props} />,
-  },
-  {
-    name: "SMS Gateway",
-    Icon: (props) => <MessageSquare {...props} />,
-  },
+const integrations = [
+  { name: "WhatsApp", iconSrc: "/integrations/whatsapp.svg" },
+  { name: "Google Calendar", iconSrc: "/integrations/google-calendar.svg" },
+  { name: "Razorpay", iconSrc: "/integrations/razorpay.svg" },
+  { name: "Google Drive", iconSrc: "/integrations/google-drive.svg" },
+  { name: "Google Meet", iconSrc: "/integrations/google-meet.svg" },
+  { name: "Gmail", iconSrc: "/integrations/gmail.svg" },
+  { name: "Zoom", iconSrc: "/integrations/zoom.svg" },
+  { name: "Stripe", iconSrc: "/integrations/stripe.svg" },
+  { name: "PayPal", iconSrc: "/integrations/paypal.svg" },
+  { name: "Telegram", iconSrc: "/integrations/telegram.svg" },
+  { name: "Meta", iconSrc: "/integrations/meta.svg" },
+  { name: "GoDaddy", iconSrc: "/integrations/godaddy.svg" },
 ]
 
 const loop = [0, 1, 2, 3]
 
 function IntegrationTile({
   name,
-  Icon,
+  iconSrc,
   tabIndex,
-}: (typeof integrations)[number] & { tabIndex?: number }) {
+}: {
+  name: string
+  iconSrc: string
+  tabIndex?: number
+}) {
   return (
     <Link
       href="/integrations"
       tabIndex={tabIndex}
-      className="group/tile flex w-32 shrink-0 flex-col items-center gap-2.5 rounded-xl border border-blue-900/60 bg-blue-950/40 px-3 py-5 ring-1 ring-white/5 ring-inset backdrop-blur-sm transition-colors hover:border-blue-700 hover:bg-blue-900/40 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+      className="group/tile flex w-36 shrink-0 flex-col items-center justify-center gap-3 rounded-2xl bg-white px-4 py-6 border border-zinc-200/80 shadow-md transition-all duration-200 hover:shadow-xl hover:border-zinc-300 hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
     >
-      <div className="flex size-7 items-center justify-center">
-        <Icon className="max-h-7 max-w-7 w-auto h-auto" aria-hidden="true" />
+      <div className="flex size-10 items-center justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={iconSrc}
+          alt={name}
+          className="size-8 object-contain transition-transform duration-200 group-hover/tile:scale-110"
+        />
       </div>
-      <span className="w-full truncate text-center text-xs font-medium text-white/70 transition-colors group-hover/tile:text-white">
+      <span className="w-full truncate text-center text-xs font-semibold text-zinc-800 transition-colors group-hover/tile:text-zinc-950">
         {name}
       </span>
     </Link>
@@ -97,7 +92,7 @@ export default function IntegrationsMarquee() {
             <ul
               key={copy}
               aria-hidden={copy > 0}
-              className="flex shrink-0 gap-3 pr-3"
+              className="flex shrink-0 gap-4 pr-4"
             >
               {integrations.map((integration) => (
                 <li key={integration.name} className="flex">
