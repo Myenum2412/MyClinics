@@ -645,6 +645,8 @@ export default function AccountPage() {
             <WhatsAppConnectCard clinicId={clinicId} canManage={canManage} />
             <GoogleBusinessConnectCard
               clinicId={clinicId}
+              clinicName={clinic.name}
+              clinicEmail={clinic.email || session?.email}
               canManage={canManage}
               connectedUrl={form.profile.googleBusinessUrl || clinic.profile?.googleBusinessUrl}
               onAutoComplete={handleAutoCompleteFromGoogle}

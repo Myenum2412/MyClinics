@@ -12,6 +12,7 @@ interface GoogleBusinessDaySchedule {
 
 interface GoogleBusinessResult {
   name?: string;
+  email?: string;
   phone?: string;
   website?: string;
   description?: string;
@@ -44,9 +45,13 @@ export async function POST(req: Request) {
       url?: string;
       query?: string;
       placeId?: string;
+      email?: string;
+      name?: string;
     };
 
     const rawUrl = body.url?.trim();
+    const rawEmail = body.email?.trim();
+    const rawName = body.name?.trim();
     const rawQuery = body.query?.trim();
     const rawPlaceId = body.placeId?.trim();
 
@@ -54,6 +59,23 @@ export async function POST(req: Request) {
       weeklySchedule: DEFAULT_SCHEDULE,
       country: "India",
     };
+
+    if (rawEmail) {
+      result.email = rawEmail;
+      // If email has custom domain (not gmail/yahoo/outlook/hotmail)
+      const domainMatch = rawEmail.match(/@([a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})$/);
+      if (domainMatch && domainMatch[1]) {
+        const domain = domainMatch[1].toLowerCase();
+        const commonFree = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com", "mail.com", "example.com"];
+        if (!commonFree.includes(domain)) {
+          result.website = `https://${domain}`;
+        }
+      }
+    }
+
+    if (rawName) {
+      result.name = rawName;
+    }
 
     let finalUrl = rawUrl || "";
     let lat: number | undefined;
@@ -100,7 +122,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Reverse geocode coordinates
+    // 2. Reverse geocode coordinates if present
     if (lat !== undefined && lon !== undefined && !Number.isNaN(lat) && !Number.isNaN(lon)) {
       try {
         const geoRes = await fetch(
@@ -135,16 +157,17 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Query search fallback
-    if (rawQuery) {
+    // 3. Search query or email-derived search
+    const searchQuery = rawQuery || (rawName && rawEmail ? `${rawName} ${rawEmail.split("@")[0].replace(/[._-]/g, " ")}` : rawQuery || rawName);
+    if (searchQuery) {
       if (!result.name) {
-        const parts = rawQuery.split(",").map((p) => p.trim());
+        const parts = searchQuery.split(",").map((p) => p.trim());
         result.name = parts[0];
       }
 
       try {
         const searchRes = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(rawQuery)}&format=json&addressdetails=1&limit=1`,
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&addressdetails=1&limit=1`,
           { headers: { "User-Agent": "MyClinics/1.0" } }
         );
         if (searchRes.ok) {
@@ -177,7 +200,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // 4. Google Maps API if available
+    // 4. Google Maps API if configured
     const googleApiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (googleApiKey && (rawPlaceId || result.name)) {
       try {
@@ -231,6 +254,13 @@ export async function POST(req: Request) {
       } catch {
         // Continue
       }
+    }
+
+    // 5. Ensure fallback Google Business Maps URL
+    if (!result.url && result.name) {
+      result.url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        result.name + (result.city ? `, ${result.city}` : "")
+      )}`;
     }
 
     return NextResponse.json(result);

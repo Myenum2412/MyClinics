@@ -21,6 +21,7 @@ import {
   ExternalLink,
   Globe,
   Loader2,
+  Mail,
   MapPin,
   Phone,
   RefreshCw,
@@ -57,6 +58,8 @@ export function GoogleIcon({ className = "size-5" }: { className?: string }) {
 
 interface GoogleBusinessConnectCardProps {
   clinicId: string;
+  clinicName?: string;
+  clinicEmail?: string | null;
   canManage: boolean;
   connectedUrl?: string | null;
   onAutoComplete: (data: GoogleBusinessResolvedData) => void;
@@ -65,21 +68,58 @@ interface GoogleBusinessConnectCardProps {
 
 export function GoogleBusinessConnectCard({
   clinicId,
+  clinicName = "",
+  clinicEmail = "",
   canManage,
   connectedUrl,
   onAutoComplete,
   onDisconnect,
 }: GoogleBusinessConnectCardProps) {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"url" | "search">("url");
+  const [tab, setTab] = useState<"email" | "url" | "search">("email");
+  const [emailInput, setEmailInput] = useState(clinicEmail ?? "");
   const [urlInput, setUrlInput] = useState(connectedUrl ?? "");
-  const [queryInput, setQueryInput] = useState("");
+  const [queryInput, setQueryInput] = useState(clinicName);
   const [loading, setLoading] = useState(false);
+  const [autoConnecting, setAutoConnecting] = useState(false);
   const [resolvedData, setResolvedData] = useState<GoogleBusinessResolvedData | null>(null);
 
   const isConnected = Boolean(connectedUrl);
+  const effectiveEmail = emailInput.trim() || clinicEmail?.trim() || "";
+
+  // 1-Click Auto-Connect with Email from Card directly
+  const handleAutoConnect = async (customEmail?: string) => {
+    const targetEmail = customEmail || effectiveEmail;
+    if (!targetEmail) {
+      setTab("email");
+      setOpen(true);
+      return;
+    }
+
+    setAutoConnecting(true);
+    try {
+      const data = await resolveGoogleBusinessProfile(clinicId, {
+        email: targetEmail,
+        name: clinicName,
+        query: `${clinicName} ${targetEmail.split("@")[0].replace(/[._-]/g, " ")}`,
+      });
+
+      onAutoComplete(data);
+      toast.success(
+        `Connected Google Business Profile for ${targetEmail}! Profile form auto-completed. Review and make manual updates before saving.`
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to connect Google Business Profile");
+    } finally {
+      setAutoConnecting(false);
+    }
+  };
 
   const handleFetch = async () => {
+    if (tab === "email" && !emailInput.trim()) {
+      toast.error("Please enter your Google Business email address");
+      return;
+    }
     if (tab === "url" && !urlInput.trim()) {
       toast.error("Please enter a Google Maps or Google Business URL");
       return;
@@ -93,14 +133,16 @@ export function GoogleBusinessConnectCard({
     setResolvedData(null);
     try {
       const data = await resolveGoogleBusinessProfile(clinicId, {
+        email: tab === "email" ? emailInput.trim() : undefined,
+        name: clinicName,
         url: tab === "url" ? urlInput.trim() : undefined,
-        query: tab === "search" ? queryInput.trim() : undefined,
+        query:
+          tab === "search"
+            ? queryInput.trim()
+            : tab === "email"
+            ? `${clinicName} ${emailInput.trim().split("@")[0].replace(/[._-]/g, " ")}`
+            : undefined,
       });
-
-      if (!data.name && !data.city && !data.addressLine1) {
-        toast.error("Could not find business details for this entry. Try entering your Google Maps share link.");
-        return;
-      }
 
       setResolvedData(data);
       toast.success("Google Business details retrieved successfully!");
@@ -143,13 +185,15 @@ export function GoogleBusinessConnectCard({
             </div>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {isConnected
-                ? "Connected to Google Maps & Search. Auto-fills your clinic address, phone, and hours."
-                : "Connect your Google Business Profile to auto-complete your profile, clinic address, and hours."}
+                ? "Connected with Google. Auto-completes clinic address, phone, working hours and details."
+                : effectiveEmail
+                ? `Connect with ${effectiveEmail} to auto-complete clinic address, phone and hours.`
+                : "Connect your Google Business Profile to auto-complete your profile, address and hours."}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isConnected && connectedUrl && (
             <Button
               variant="ghost"
@@ -165,18 +209,48 @@ export function GoogleBusinessConnectCard({
           )}
 
           {canManage && (
-            <Button
-              variant={isConnected ? "outline" : "default"}
-              size="sm"
-              className="h-8 gap-1.5 text-xs font-medium"
-              onClick={() => {
-                setResolvedData(null);
-                setOpen(true);
-              }}
-            >
-              <GoogleIcon className="size-3.5" />
-              {isConnected ? "Re-sync / Auto-Fill" : "Connect Google Profile"}
-            </Button>
+            <>
+              {effectiveEmail && !isConnected ? (
+                <Button
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs font-medium bg-[#4285F4] hover:bg-[#3367D6] text-white"
+                  onClick={() => handleAutoConnect(effectiveEmail)}
+                  disabled={autoConnecting}
+                >
+                  {autoConnecting ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <GoogleIcon className="size-3.5" />
+                  )}
+                  {autoConnecting ? "Connecting..." : `Auto-Connect with ${effectiveEmail.split("@")[0]}`}
+                </Button>
+              ) : (
+                <Button
+                  variant={isConnected ? "outline" : "default"}
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs font-medium"
+                  onClick={() => {
+                    setResolvedData(null);
+                    setOpen(true);
+                  }}
+                >
+                  <GoogleIcon className="size-3.5" />
+                  {isConnected ? "Re-sync / Auto-Fill" : "Connect Google Profile"}
+                </Button>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => {
+                  setResolvedData(null);
+                  setOpen(true);
+                }}
+              >
+                {isConnected ? "Settings" : "Options"}
+              </Button>
+            </>
           )}
 
           {isConnected && onDisconnect && canManage && (
@@ -202,21 +276,59 @@ export function GoogleBusinessConnectCard({
               <DialogTitle>Connect Google Business Profile</DialogTitle>
             </div>
             <DialogDescription>
-              Connect your Google Business Profile or Google Maps listing to auto-complete clinic details.
+              Connect your Google Business Profile to auto-complete clinic details.
               You can review and update all fields manually before saving.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <Tabs value={tab} onValueChange={(v) => setTab(v as "url" | "search")}>
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs value={tab} onValueChange={(v) => setTab(v as "email" | "url" | "search")}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="email" className="text-xs">
+                  Auto with Email
+                </TabsTrigger>
                 <TabsTrigger value="url" className="text-xs">
-                  Google Maps / Business Link
+                  Google Maps Link
                 </TabsTrigger>
                 <TabsTrigger value="search" className="text-xs">
-                  Search by Name & City
+                  Clinic Name Search
                 </TabsTrigger>
               </TabsList>
+
+              <TabsContent value="email" className="space-y-3 pt-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="google-email" className="text-xs font-medium">
+                    Google Business Account Email
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="google-email"
+                      type="email"
+                      placeholder="e.g. clinic@gmail.com"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      className="text-xs"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleFetch}
+                      disabled={loading}
+                      className="shrink-0 gap-1.5 text-xs bg-[#4285F4] hover:bg-[#3367D6] text-white"
+                    >
+                      {loading ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Mail className="size-3.5" />
+                      )}
+                      Auto-Connect
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Connects using your Google Business email to automatically discover and auto-fill your profile details.
+                  </p>
+                </div>
+              </TabsContent>
 
               <TabsContent value="url" className="space-y-3 pt-2">
                 <div className="space-y-1.5">
@@ -309,9 +421,23 @@ export function GoogleBusinessConnectCard({
 
                   <div>
                     <span className="text-muted-foreground flex items-center gap-1">
+                      <Mail className="size-3" /> Google Account Email
+                    </span>
+                    <p className="font-medium text-foreground truncate">{resolvedData.email || effectiveEmail || "—"}</p>
+                  </div>
+
+                  <div>
+                    <span className="text-muted-foreground flex items-center gap-1">
                       <Phone className="size-3" /> Phone Number
                     </span>
                     <p className="font-medium text-foreground truncate">{resolvedData.phone || "—"}</p>
+                  </div>
+
+                  <div>
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Globe className="size-3" /> Website
+                    </span>
+                    <p className="font-medium text-foreground truncate">{resolvedData.website || "—"}</p>
                   </div>
 
                   <div className="col-span-full">
@@ -331,15 +457,6 @@ export function GoogleBusinessConnectCard({
                         .join(", ") || "—"}
                     </p>
                   </div>
-
-                  {resolvedData.website && (
-                    <div className="col-span-full">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <Globe className="size-3" /> Website
-                      </span>
-                      <p className="font-medium text-foreground truncate">{resolvedData.website}</p>
-                    </div>
-                  )}
 
                   {resolvedData.weeklySchedule && resolvedData.weeklySchedule.length > 0 && (
                     <div className="col-span-full text-[11px] text-muted-foreground">

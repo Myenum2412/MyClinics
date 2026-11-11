@@ -2,6 +2,8 @@ export interface GoogleBusinessResolveInput {
   url?: string;
   query?: string;
   placeId?: string;
+  email?: string;
+  name?: string;
 }
 
 export interface GoogleBusinessDaySchedule {
@@ -13,6 +15,7 @@ export interface GoogleBusinessDaySchedule {
 
 export interface GoogleBusinessResult {
   name?: string;
+  email?: string;
   phone?: string;
   website?: string;
   description?: string;
@@ -48,8 +51,26 @@ export async function resolveGoogleBusiness(
   };
 
   const rawUrl = input.url?.trim();
+  const rawEmail = input.email?.trim();
+  const rawName = input.name?.trim();
   const rawQuery = input.query?.trim();
   const rawPlaceId = input.placeId?.trim();
+
+  if (rawEmail) {
+    result.email = rawEmail;
+    const domainMatch = rawEmail.match(/@([a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})$/);
+    if (domainMatch && domainMatch[1]) {
+      const domain = domainMatch[1].toLowerCase();
+      const commonFree = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com", "mail.com", "example.com"];
+      if (!commonFree.includes(domain)) {
+        result.website = `https://${domain}`;
+      }
+    }
+  }
+
+  if (rawName) {
+    result.name = rawName;
+  }
 
   let finalUrl = rawUrl || "";
   let extractedName: string | undefined;

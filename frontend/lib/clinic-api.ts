@@ -949,16 +949,31 @@ export interface GoogleBusinessResolvedData {
   country?: string;
   url?: string;
   placeId?: string;
+  email?: string;
   rating?: number;
   userRatingsTotal?: number;
   weeklySchedule?: WeeklyScheduleDay[];
 }
 
-export function resolveGoogleBusinessProfile(
+export async function resolveGoogleBusinessProfile(
   clinicId: string,
-  input: { url?: string; query?: string; placeId?: string }
+  input: { url?: string; query?: string; placeId?: string; email?: string; name?: string }
 ): Promise<GoogleBusinessResolvedData> {
   void clinicId;
+  // Always call same-origin Next.js API route first so it works reliably in production
+  try {
+    const res = await fetch("/api/clinics/google-business/resolve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    if (res.ok) {
+      return (await res.json()) as GoogleBusinessResolvedData;
+    }
+  } catch {
+    // Continue to request fallback
+  }
+
   return request("/api/clinics/google-business/resolve", {
     method: "POST",
     body: JSON.stringify(input),
