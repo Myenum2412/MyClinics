@@ -937,6 +937,7 @@ export function updateOwnClinic(
 }
 
 export interface GoogleBusinessResolvedData {
+  id?: string;
   name?: string;
   phone?: string;
   website?: string;
@@ -953,6 +954,7 @@ export interface GoogleBusinessResolvedData {
   rating?: number;
   userRatingsTotal?: number;
   weeklySchedule?: WeeklyScheduleDay[];
+  businesses?: GoogleBusinessResolvedData[];
 }
 
 export async function resolveGoogleBusinessProfile(

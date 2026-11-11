@@ -3,15 +3,16 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-interface GoogleBusinessDaySchedule {
+export interface GoogleBusinessDaySchedule {
   day: string;
   open: string;
   close: string;
   closed: boolean;
 }
 
-interface GoogleBusinessResult {
-  name?: string;
+export interface GoogleBusinessItem {
+  id?: string;
+  name: string;
   email?: string;
   phone?: string;
   website?: string;
@@ -27,6 +28,10 @@ interface GoogleBusinessResult {
   rating?: number;
   userRatingsTotal?: number;
   weeklySchedule?: GoogleBusinessDaySchedule[];
+}
+
+export interface GoogleBusinessResult extends GoogleBusinessItem {
+  businesses?: GoogleBusinessItem[];
 }
 
 const DEFAULT_SCHEDULE: GoogleBusinessDaySchedule[] = [
@@ -55,35 +60,24 @@ export async function POST(req: Request) {
     const rawQuery = body.query?.trim();
     const rawPlaceId = body.placeId?.trim();
 
-    const result: GoogleBusinessResult = {
-      weeklySchedule: DEFAULT_SCHEDULE,
-      country: "India",
-    };
+    const businesses: GoogleBusinessItem[] = [];
 
+    // Infer website from domain if custom
+    let inferredWebsite: string | undefined;
     if (rawEmail) {
-      result.email = rawEmail;
-      // If email has custom domain (not gmail/yahoo/outlook/hotmail)
       const domainMatch = rawEmail.match(/@([a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})$/);
       if (domainMatch && domainMatch[1]) {
         const domain = domainMatch[1].toLowerCase();
         const commonFree = ["gmail.com", "yahoo.com", "hotmail.com", "outlook.com", "icloud.com", "mail.com", "example.com"];
         if (!commonFree.includes(domain)) {
-          result.website = `https://${domain}`;
+          inferredWebsite = `https://${domain}`;
         }
       }
     }
 
-    if (rawName) {
-      result.name = rawName;
-    }
-
-    let finalUrl = rawUrl || "";
-    let lat: number | undefined;
-    let lon: number | undefined;
-
-    // 1. Follow redirects for URL & parse
+    // 1. If URL was provided, follow redirect and parse
     if (rawUrl) {
-      result.url = rawUrl;
+      let finalUrl = rawUrl;
       try {
         const headRes = await fetch(rawUrl, {
           method: "GET",
@@ -94,16 +88,18 @@ export async function POST(req: Request) {
           redirect: "follow",
         });
         finalUrl = headRes.url || rawUrl;
-        result.url = finalUrl;
       } catch {
         finalUrl = rawUrl;
       }
 
+      let parsedName = rawName || "Clinic";
       const placeMatch = finalUrl.match(/\/maps\/place\/([^/@?#]+)/);
       if (placeMatch && placeMatch[1]) {
-        result.name = decodeURIComponent(placeMatch[1].replace(/\+/g, " ")).trim();
+        parsedName = decodeURIComponent(placeMatch[1].replace(/\+/g, " ")).trim();
       }
 
+      let lat: number | undefined;
+      let lon: number | undefined;
       const atCoordMatch = finalUrl.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
       if (atCoordMatch) {
         lat = parseFloat(atCoordMatch[1]);
@@ -117,137 +113,147 @@ export async function POST(req: Request) {
       }
 
       const pidMatch = finalUrl.match(/[?&](?:place_id|ftid)=([^&]+)/);
-      if (pidMatch && pidMatch[1]) {
-        result.placeId = pidMatch[1];
-      }
-    }
+      const placeId = pidMatch?.[1] || rawPlaceId;
 
-    // 2. Reverse geocode coordinates if present
-    if (lat !== undefined && lon !== undefined && !Number.isNaN(lat) && !Number.isNaN(lon)) {
-      try {
-        const geoRes = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`,
-          { headers: { "User-Agent": "MyClinics/1.0" } }
-        );
-        if (geoRes.ok) {
-          const geoData = (await geoRes.json()) as {
-            name?: string;
-            display_name?: string;
-            address?: Record<string, string>;
-          };
-          if (!result.name && geoData.name) {
-            result.name = geoData.name;
+      const urlBiz: GoogleBusinessItem = {
+        id: "url-1",
+        name: parsedName,
+        email: rawEmail,
+        website: inferredWebsite,
+        url: finalUrl,
+        placeId,
+        country: "India",
+        weeklySchedule: DEFAULT_SCHEDULE,
+      };
+
+      if (lat !== undefined && lon !== undefined && !Number.isNaN(lat) && !Number.isNaN(lon)) {
+        try {
+          const geoRes = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1`,
+            { headers: { "User-Agent": "MyClinics/1.0" } }
+          );
+          if (geoRes.ok) {
+            const geoData = (await geoRes.json()) as {
+              name?: string;
+              address?: Record<string, string>;
+            };
+            if (geoData.name && !placeMatch) urlBiz.name = geoData.name;
+            const addr = geoData.address;
+            if (addr) {
+              const road = addr.road || addr.street || "";
+              const house = addr.house_number || "";
+              urlBiz.addressLine1 = [house, road].filter(Boolean).join(" ") || undefined;
+              urlBiz.addressLine2 = addr.suburb || addr.neighbourhood || addr.quarter || addr.locality || undefined;
+              urlBiz.city = addr.city || addr.town || addr.village || addr.city_district || addr.county || undefined;
+              urlBiz.state = addr.state || undefined;
+              urlBiz.pincode = addr.postcode || undefined;
+              urlBiz.country = addr.country || "India";
+            }
           }
-          const addr = geoData.address;
-          if (addr) {
-            const road = addr.road || addr.street || "";
-            const house = addr.house_number || "";
-            result.addressLine1 = [house, road].filter(Boolean).join(" ") || undefined;
-            result.addressLine2 =
-              addr.suburb || addr.neighbourhood || addr.quarter || addr.locality || undefined;
-            result.city =
-              addr.city || addr.town || addr.village || addr.city_district || addr.county || undefined;
-            result.state = addr.state || undefined;
-            result.pincode = addr.postcode || undefined;
-            result.country = addr.country || "India";
-          }
+        } catch {
+          // Continue
         }
-      } catch {
-        // Continue
       }
+      businesses.push(urlBiz);
     }
 
-    // 3. Search query or email-derived search
-    const searchQuery = rawQuery || (rawName && rawEmail ? `${rawName} ${rawEmail.split("@")[0].replace(/[._-]/g, " ")}` : rawQuery || rawName);
-    if (searchQuery) {
-      if (!result.name) {
-        const parts = searchQuery.split(",").map((p) => p.trim());
-        result.name = parts[0];
-      }
+    // 2. Search candidates via queries
+    const searchTerms: string[] = [];
+    if (rawQuery) searchTerms.push(rawQuery);
+    if (rawName) searchTerms.push(rawName);
+    if (rawName && rawEmail) {
+      const emailUser = rawEmail.split("@")[0].replace(/[._-]/g, " ");
+      searchTerms.push(`${rawName} ${emailUser}`);
+    }
 
+    // Run Nominatim search for the terms
+    for (const term of searchTerms) {
       try {
         const searchRes = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&addressdetails=1&limit=1`,
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(term)}&format=json&addressdetails=1&limit=6`,
           { headers: { "User-Agent": "MyClinics/1.0" } }
         );
         if (searchRes.ok) {
           const searchList = (await searchRes.json()) as Array<{
             name?: string;
+            display_name: string;
+            lat: string;
+            lon: string;
             address?: Record<string, string>;
           }>;
-          if (searchList && searchList.length > 0 && searchList[0].address) {
-            const addr = searchList[0].address;
+
+          for (let i = 0; i < searchList.length; i++) {
+            const item = searchList[i];
+            const addr = item.address || {};
             const road = addr.road || addr.street || "";
             const house = addr.house_number || "";
-            if (!result.addressLine1) {
-              result.addressLine1 = [house, road].filter(Boolean).join(" ") || undefined;
-            }
-            if (!result.addressLine2) {
-              result.addressLine2 =
-                addr.suburb || addr.neighbourhood || addr.quarter || addr.locality || undefined;
-            }
-            if (!result.city) {
-              result.city =
-                addr.city || addr.town || addr.village || addr.city_district || addr.county || undefined;
-            }
-            if (!result.state) result.state = addr.state || undefined;
-            if (!result.pincode) result.pincode = addr.postcode || undefined;
-            if (!result.country) result.country = addr.country || "India";
+            const addrLine1 = [house, road].filter(Boolean).join(" ") || undefined;
+            const addrLine2 = addr.suburb || addr.neighbourhood || addr.quarter || addr.locality || undefined;
+            const city = addr.city || addr.town || addr.village || addr.city_district || addr.county || undefined;
+            const state = addr.state || undefined;
+            const pincode = addr.postcode || undefined;
+            const displayNameParts = item.display_name.split(",");
+            const bizName = item.name || displayNameParts[0]?.trim() || rawName || "Clinic";
+
+            businesses.push({
+              id: `nom-${term}-${i}`,
+              name: bizName,
+              email: rawEmail,
+              website: inferredWebsite,
+              addressLine1: addrLine1,
+              addressLine2: addrLine2,
+              city,
+              state,
+              pincode,
+              country: addr.country || "India",
+              url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                `${bizName} ${addrLine2 || city || ""}`
+              )}`,
+              weeklySchedule: DEFAULT_SCHEDULE,
+            });
           }
         }
       } catch {
         // Continue
       }
+
+      if (businesses.length >= 5) break;
     }
 
-    // 4. Google Maps API if configured
+    // 3. Google Places API if key available
     const googleApiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (googleApiKey && (rawPlaceId || result.name)) {
+    if (googleApiKey && (rawPlaceId || rawName || rawQuery)) {
       try {
-        let placeId = rawPlaceId;
-        if (!placeId && result.name) {
-          const findUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(
-            result.name + (result.city ? ` ${result.city}` : "")
-          )}&inputtype=textquery&fields=place_id&key=${googleApiKey}`;
-          const findRes = await fetch(findUrl);
-          if (findRes.ok) {
-            const findData = (await findRes.json()) as { candidates?: Array<{ place_id?: string }> };
-            placeId = findData.candidates?.[0]?.place_id;
-          }
-        }
-
-        if (placeId) {
-          result.placeId = placeId;
-          const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=name,formatted_phone_number,international_phone_number,formatted_address,address_components,website,opening_hours,rating,user_ratings_total,url&key=${googleApiKey}`;
-          const detailsRes = await fetch(detailsUrl);
-          if (detailsRes.ok) {
-            const detailsData = (await detailsRes.json()) as {
-              result?: {
-                name?: string;
-                formatted_phone_number?: string;
-                international_phone_number?: string;
-                formatted_address?: string;
-                address_components?: Array<{
-                  long_name: string;
-                  short_name: string;
-                  types: string[];
-                }>;
-                website?: string;
-                url?: string;
-                rating?: number;
-                user_ratings_total?: number;
-              };
-            };
-            const p = detailsData.result;
-            if (p) {
-              if (p.name) result.name = p.name;
-              if (p.formatted_phone_number || p.international_phone_number) {
-                result.phone = p.formatted_phone_number || p.international_phone_number;
-              }
-              if (p.website) result.website = p.website;
-              if (p.url && !result.url) result.url = p.url;
-              if (p.rating) result.rating = p.rating;
-              if (p.user_ratings_total) result.userRatingsTotal = p.user_ratings_total;
+        const q = rawQuery || rawName || "";
+        const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
+          q
+        )}&key=${googleApiKey}`;
+        const searchRes = await fetch(searchUrl);
+        if (searchRes.ok) {
+          const sData = (await searchRes.json()) as {
+            results?: Array<{
+              place_id: string;
+              name: string;
+              formatted_address?: string;
+              rating?: number;
+              user_ratings_total?: number;
+            }>;
+          };
+          if (sData.results) {
+            for (const r of sData.results.slice(0, 5)) {
+              businesses.push({
+                id: r.place_id,
+                name: r.name,
+                email: rawEmail,
+                website: inferredWebsite,
+                addressLine1: r.formatted_address,
+                placeId: r.place_id,
+                rating: r.rating,
+                userRatingsTotal: r.user_ratings_total,
+                url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name)}&query_place_id=${r.place_id}`,
+                country: "India",
+                weeklySchedule: DEFAULT_SCHEDULE,
+              });
             }
           }
         }
@@ -256,14 +262,51 @@ export async function POST(req: Request) {
       }
     }
 
-    // 5. Ensure fallback Google Business Maps URL
-    if (!result.url && result.name) {
-      result.url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        result.name + (result.city ? `, ${result.city}` : "")
-      )}`;
+    // 4. If no businesses found or to ensure direct email profile is listed:
+    if (businesses.length === 0 || rawEmail) {
+      const emailUser = rawEmail ? rawEmail.split("@")[0].replace(/[._-]/g, " ") : "";
+      const baseName = rawName || (emailUser ? `${emailUser.charAt(0).toUpperCase() + emailUser.slice(1)} Clinic` : "My Clinic");
+      const defaultPrimary: GoogleBusinessItem = {
+        id: "biz-primary",
+        name: baseName,
+        email: rawEmail,
+        website: inferredWebsite,
+        url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(baseName)}`,
+        country: "India",
+        weeklySchedule: DEFAULT_SCHEDULE,
+      };
+
+      // Put primary at the beginning if not already present
+      const alreadyHasExact = businesses.some((b) => b.name.toLowerCase() === baseName.toLowerCase());
+      if (!alreadyHasExact) {
+        businesses.unshift(defaultPrimary);
+      }
     }
 
-    return NextResponse.json(result);
+    // Deduplicate by name + addressLine1
+    const seen = new Set<string>();
+    const uniqueBusinesses: GoogleBusinessItem[] = [];
+    for (const b of businesses) {
+      const key = `${(b.name || "").toLowerCase()}|${(b.addressLine1 || "").toLowerCase()}|${(b.city || "").toLowerCase()}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueBusinesses.push(b);
+      }
+    }
+
+    const primary = uniqueBusinesses[0] || {
+      name: rawName || "My Clinic",
+      email: rawEmail,
+      country: "India",
+      weeklySchedule: DEFAULT_SCHEDULE,
+    };
+
+    const finalResult: GoogleBusinessResult = {
+      ...primary,
+      businesses: uniqueBusinesses,
+    };
+
+    return NextResponse.json(finalResult);
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Failed to resolve Google Business details" },

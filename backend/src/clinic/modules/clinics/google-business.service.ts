@@ -30,6 +30,7 @@ export interface GoogleBusinessResult {
   rating?: number;
   userRatingsTotal?: number;
   weeklySchedule?: GoogleBusinessDaySchedule[];
+  businesses?: GoogleBusinessResult[];
 }
 
 const DEFAULT_SCHEDULE: GoogleBusinessDaySchedule[] = [
@@ -355,6 +356,10 @@ export async function resolveGoogleBusiness(
     } catch {
       // Non-critical
     }
+  }
+
+  if (!result.businesses) {
+    result.businesses = [{ ...result }];
   }
 
   return result;

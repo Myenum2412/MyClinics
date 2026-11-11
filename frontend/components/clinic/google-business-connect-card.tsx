@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Building2,
   CheckCircle2,
+  ChevronRight,
   ExternalLink,
   Globe,
   Loader2,
@@ -32,6 +33,7 @@ import {
   resolveGoogleBusinessProfile,
   type GoogleBusinessResolvedData,
 } from "@/lib/clinic-api";
+import { cn } from "@/lib/utils";
 
 export function GoogleIcon({ className = "size-5" }: { className?: string }) {
   return (
@@ -81,71 +83,61 @@ export function GoogleBusinessConnectCard({
   const [urlInput, setUrlInput] = useState(connectedUrl ?? "");
   const [queryInput, setQueryInput] = useState(clinicName);
   const [loading, setLoading] = useState(false);
-  const [autoConnecting, setAutoConnecting] = useState(false);
-  const [resolvedData, setResolvedData] = useState<GoogleBusinessResolvedData | null>(null);
+  const [businesses, setBusinesses] = useState<GoogleBusinessResolvedData[]>([]);
+  const [selectedBiz, setSelectedBiz] = useState<GoogleBusinessResolvedData | null>(null);
 
   const isConnected = Boolean(connectedUrl);
   const effectiveEmail = emailInput.trim() || clinicEmail?.trim() || "";
 
-  // 1-Click Auto-Connect with Email from Card directly
-  const handleAutoConnect = async (customEmail?: string) => {
-    const targetEmail = customEmail || effectiveEmail;
-    if (!targetEmail) {
-      setTab("email");
-      setOpen(true);
+  useEffect(() => {
+    if (clinicEmail && !emailInput) {
+      setEmailInput(clinicEmail);
+    }
+  }, [clinicEmail, emailInput]);
+
+  const handleFetchBusinesses = async (overrideEmail?: string) => {
+    const targetEmail = overrideEmail !== undefined ? overrideEmail : (tab === "email" ? emailInput.trim() : undefined);
+    const targetUrl = tab === "url" ? urlInput.trim() : undefined;
+    const targetQuery =
+      tab === "search"
+        ? queryInput.trim()
+        : tab === "email" && targetEmail
+        ? `${clinicName} ${targetEmail.split("@")[0].replace(/[._-]/g, " ")}`
+        : undefined;
+
+    if (tab === "email" && !targetEmail) {
+      toast.error("Please enter your Google Business email");
       return;
     }
-
-    setAutoConnecting(true);
-    try {
-      const data = await resolveGoogleBusinessProfile(clinicId, {
-        email: targetEmail,
-        name: clinicName,
-        query: `${clinicName} ${targetEmail.split("@")[0].replace(/[._-]/g, " ")}`,
-      });
-
-      onAutoComplete(data);
-      toast.success(
-        `Connected Google Business Profile for ${targetEmail}! Profile form auto-completed. Review and make manual updates before saving.`
-      );
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to connect Google Business Profile");
-    } finally {
-      setAutoConnecting(false);
-    }
-  };
-
-  const handleFetch = async () => {
-    if (tab === "email" && !emailInput.trim()) {
-      toast.error("Please enter your Google Business email address");
+    if (tab === "url" && !targetUrl) {
+      toast.error("Please enter a Google Maps or Google Business link");
       return;
     }
-    if (tab === "url" && !urlInput.trim()) {
-      toast.error("Please enter a Google Maps or Google Business URL");
-      return;
-    }
-    if (tab === "search" && !queryInput.trim()) {
-      toast.error("Please enter clinic name and city to search");
+    if (tab === "search" && !targetQuery) {
+      toast.error("Please enter clinic name or location to search");
       return;
     }
 
     setLoading(true);
-    setResolvedData(null);
+    setBusinesses([]);
+    setSelectedBiz(null);
     try {
       const data = await resolveGoogleBusinessProfile(clinicId, {
-        email: tab === "email" ? emailInput.trim() : undefined,
+        email: targetEmail,
         name: clinicName,
-        url: tab === "url" ? urlInput.trim() : undefined,
-        query:
-          tab === "search"
-            ? queryInput.trim()
-            : tab === "email"
-            ? `${clinicName} ${emailInput.trim().split("@")[0].replace(/[._-]/g, " ")}`
-            : undefined,
+        url: targetUrl,
+        query: targetQuery,
       });
 
-      setResolvedData(data);
-      toast.success("Google Business details retrieved successfully!");
+      const list = data.businesses && data.businesses.length > 0 ? data.businesses : [data];
+      setBusinesses(list);
+      setSelectedBiz(list[0] || null);
+
+      toast.success(
+        list.length > 1
+          ? `Found ${list.length} businesses for this account! Select your location below.`
+          : "Business details retrieved successfully!"
+      );
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to fetch Google Business details");
     } finally {
@@ -153,10 +145,19 @@ export function GoogleBusinessConnectCard({
     }
   };
 
-  const handleApply = () => {
-    if (!resolvedData) return;
-    onAutoComplete(resolvedData);
+  const handleApply = (bizToApply?: GoogleBusinessResolvedData) => {
+    const target = bizToApply || selectedBiz;
+    if (!target) return;
+    onAutoComplete(target);
     setOpen(false);
+  };
+
+  const handleOpenModal = (preferredTab: "email" | "url" | "search" = "email") => {
+    setTab(preferredTab);
+    setOpen(true);
+    if (preferredTab === "email" && effectiveEmail && businesses.length === 0) {
+      void handleFetchBusinesses(effectiveEmail);
+    }
   };
 
   return (
@@ -187,8 +188,8 @@ export function GoogleBusinessConnectCard({
               {isConnected
                 ? "Connected with Google. Auto-completes clinic address, phone, working hours and details."
                 : effectiveEmail
-                ? `Connect with ${effectiveEmail} to auto-complete clinic address, phone and hours.`
-                : "Connect your Google Business Profile to auto-complete your profile, address and hours."}
+                ? `Connect with ${effectiveEmail} to view and auto-fill your connected businesses.`
+                : "Connect your Google Business Profile to view connected businesses and auto-fill your profile."}
             </p>
           </div>
         </div>
@@ -210,74 +211,42 @@ export function GoogleBusinessConnectCard({
 
           {canManage && (
             <>
-              {effectiveEmail && !isConnected ? (
+              <Button
+                size="sm"
+                className="h-8 gap-1.5 text-xs font-medium bg-[#4285F4] hover:bg-[#3367D6] text-white"
+                onClick={() => handleOpenModal("email")}
+              >
+                <GoogleIcon className="size-3.5" />
+                {isConnected ? "View Connected Businesses" : "Connect with Google"}
+              </Button>
+
+              {isConnected && onDisconnect && (
                 <Button
+                  variant="ghost"
                   size="sm"
-                  className="h-8 gap-1.5 text-xs font-medium bg-[#4285F4] hover:bg-[#3367D6] text-white"
-                  onClick={() => handleAutoConnect(effectiveEmail)}
-                  disabled={autoConnecting}
+                  className="h-8 text-xs text-destructive hover:bg-destructive/10"
+                  onClick={onDisconnect}
                 >
-                  {autoConnecting ? (
-                    <Loader2 className="size-3.5 animate-spin" />
-                  ) : (
-                    <GoogleIcon className="size-3.5" />
-                  )}
-                  {autoConnecting ? "Connecting..." : `Auto-Connect with ${effectiveEmail.split("@")[0]}`}
-                </Button>
-              ) : (
-                <Button
-                  variant={isConnected ? "outline" : "default"}
-                  size="sm"
-                  className="h-8 gap-1.5 text-xs font-medium"
-                  onClick={() => {
-                    setResolvedData(null);
-                    setOpen(true);
-                  }}
-                >
-                  <GoogleIcon className="size-3.5" />
-                  {isConnected ? "Re-sync / Auto-Fill" : "Connect Google Profile"}
+                  Disconnect
                 </Button>
               )}
-
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs"
-                onClick={() => {
-                  setResolvedData(null);
-                  setOpen(true);
-                }}
-              >
-                {isConnected ? "Settings" : "Options"}
-              </Button>
             </>
-          )}
-
-          {isConnected && onDisconnect && canManage && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 text-xs text-destructive hover:bg-destructive/10"
-              onClick={onDisconnect}
-            >
-              Disconnect
-            </Button>
           )}
         </div>
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg sm:max-w-xl">
+        <DialogContent className="max-w-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-2">
               <div className="flex size-7 items-center justify-center rounded-md border bg-white shadow-xs">
                 <GoogleIcon className="size-4" />
               </div>
-              <DialogTitle>Connect Google Business Profile</DialogTitle>
+              <DialogTitle>Google Business Profile Connection</DialogTitle>
             </div>
             <DialogDescription>
-              Connect your Google Business Profile to auto-complete clinic details.
-              You can review and update all fields manually before saving.
+              View the list of businesses connected to your Google account and select your location to auto-complete
+              the clinic profile.
             </DialogDescription>
           </DialogHeader>
 
@@ -285,13 +254,13 @@ export function GoogleBusinessConnectCard({
             <Tabs value={tab} onValueChange={(v) => setTab(v as "email" | "url" | "search")}>
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="email" className="text-xs">
-                  Auto with Email
-                </TabsTrigger>
-                <TabsTrigger value="url" className="text-xs">
-                  Google Maps Link
+                  Connected Email
                 </TabsTrigger>
                 <TabsTrigger value="search" className="text-xs">
-                  Clinic Name Search
+                  Search Clinic
+                </TabsTrigger>
+                <TabsTrigger value="url" className="text-xs">
+                  Maps Link
                 </TabsTrigger>
               </TabsList>
 
@@ -312,7 +281,7 @@ export function GoogleBusinessConnectCard({
                     <Button
                       type="button"
                       size="sm"
-                      onClick={handleFetch}
+                      onClick={() => void handleFetchBusinesses()}
                       disabled={loading}
                       className="shrink-0 gap-1.5 text-xs bg-[#4285F4] hover:bg-[#3367D6] text-white"
                     >
@@ -321,45 +290,11 @@ export function GoogleBusinessConnectCard({
                       ) : (
                         <Mail className="size-3.5" />
                       )}
-                      Auto-Connect
+                      Show Businesses
                     </Button>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Connects using your Google Business email to automatically discover and auto-fill your profile details.
-                  </p>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="url" className="space-y-3 pt-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="google-maps-url" className="text-xs font-medium">
-                    Google Maps / Business URL
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="google-maps-url"
-                      placeholder="e.g. https://maps.app.goo.gl/... or https://google.com/maps/place/..."
-                      value={urlInput}
-                      onChange={(e) => setUrlInput(e.target.value)}
-                      className="text-xs"
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleFetch}
-                      disabled={loading}
-                      className="shrink-0 gap-1.5 text-xs"
-                    >
-                      {loading ? (
-                        <Loader2 className="size-3.5 animate-spin" />
-                      ) : (
-                        <Search className="size-3.5" />
-                      )}
-                      Fetch
-                    </Button>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Tip: Open Google Maps, search your clinic, click <strong>Share</strong>, and copy the link.
+                    Fetches all business profiles and branches connected with this email address.
                   </p>
                 </div>
               </TabsContent>
@@ -380,7 +315,7 @@ export function GoogleBusinessConnectCard({
                     <Button
                       type="button"
                       size="sm"
-                      onClick={handleFetch}
+                      onClick={() => void handleFetchBusinesses()}
                       disabled={loading}
                       className="shrink-0 gap-1.5 text-xs"
                     >
@@ -393,82 +328,185 @@ export function GoogleBusinessConnectCard({
                     </Button>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Include both your clinic name and locality or city for best matching.
+                    Search by clinic name and city to find matching Google Business profiles.
+                  </p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="url" className="space-y-3 pt-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="google-maps-url" className="text-xs font-medium">
+                    Google Maps / Business Share Link
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="google-maps-url"
+                      placeholder="e.g. https://maps.app.goo.gl/... or https://google.com/maps/place/..."
+                      value={urlInput}
+                      onChange={(e) => setUrlInput(e.target.value)}
+                      className="text-xs"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => void handleFetchBusinesses()}
+                      disabled={loading}
+                      className="shrink-0 gap-1.5 text-xs"
+                    >
+                      {loading ? (
+                        <Loader2 className="size-3.5 animate-spin" />
+                      ) : (
+                        <Search className="size-3.5" />
+                      )}
+                      Fetch
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Tip: Open Google Maps, search your clinic, click <strong>Share</strong>, and copy the link.
                   </p>
                 </div>
               </TabsContent>
             </Tabs>
 
-            {resolvedData && (
-              <div className="rounded-lg border border-[#E3F2FD] bg-muted/30 p-3.5 space-y-3 animate-in fade-in-50 duration-200">
+            {/* List of Connected Businesses */}
+            {businesses.length > 0 && (
+              <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between border-b pb-2">
                   <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                    <Sparkles className="size-3.5 text-amber-500" />
-                    Detected Profile Data
+                    <Building2 className="size-4 text-primary" />
+                    Businesses Connected to this Account ({businesses.length})
                   </span>
-                  <Badge variant="outline" className="border-emerald-300 text-emerald-700 text-[10px]">
-                    Ready to Auto-Complete
-                  </Badge>
+                  <span className="text-[11px] text-muted-foreground">
+                    Click to select your business
+                  </span>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-                  <div>
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Building2 className="size-3" /> Clinic Name
-                    </span>
-                    <p className="font-medium text-foreground truncate">{resolvedData.name || "—"}</p>
-                  </div>
+                <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                  {businesses.map((biz, idx) => {
+                    const isSelected = selectedBiz === biz;
+                    const fullAddress = [biz.addressLine1, biz.addressLine2, biz.city, biz.state, biz.pincode]
+                      .filter(Boolean)
+                      .join(", ");
 
-                  <div>
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Mail className="size-3" /> Google Account Email
-                    </span>
-                    <p className="font-medium text-foreground truncate">{resolvedData.email || effectiveEmail || "—"}</p>
-                  </div>
+                    return (
+                      <div
+                        key={biz.id || idx}
+                        onClick={() => setSelectedBiz(biz)}
+                        className={cn(
+                          "cursor-pointer rounded-lg border p-3 transition-all text-left",
+                          isSelected
+                            ? "border-[#4285F4] bg-[#4285F4]/5 ring-1 ring-[#4285F4] shadow-xs"
+                            : "border-border bg-card hover:border-[#4285F4]/50 hover:bg-muted/40"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-xs font-bold text-foreground truncate">{biz.name}</h4>
+                              {isSelected ? (
+                                <Badge className="h-4 bg-[#4285F4] px-1.5 text-[9px] text-white">
+                                  Selected
+                                </Badge>
+                              ) : null}
+                            </div>
 
-                  <div>
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Phone className="size-3" /> Phone Number
-                    </span>
-                    <p className="font-medium text-foreground truncate">{resolvedData.phone || "—"}</p>
-                  </div>
+                            <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                              <MapPin className="size-3 shrink-0 text-muted-foreground" />
+                              <span className="truncate">{fullAddress || "Address available upon selection"}</span>
+                            </p>
 
-                  <div>
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Globe className="size-3" /> Website
-                    </span>
-                    <p className="font-medium text-foreground truncate">{resolvedData.website || "—"}</p>
-                  </div>
+                            <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground pt-0.5">
+                              {biz.email && (
+                                <span className="flex items-center gap-1">
+                                  <Mail className="size-3" />
+                                  {biz.email}
+                                </span>
+                              )}
+                              {biz.phone && (
+                                <span className="flex items-center gap-1">
+                                  <Phone className="size-3" />
+                                  {biz.phone}
+                                </span>
+                              )}
+                              {biz.website && (
+                                <span className="flex items-center gap-1 truncate max-w-[200px]">
+                                  <Globe className="size-3" />
+                                  {biz.website}
+                                </span>
+                              )}
+                            </div>
+                          </div>
 
-                  <div className="col-span-full">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <MapPin className="size-3" /> Address & Location
-                    </span>
-                    <p className="font-medium text-foreground">
-                      {[
-                        resolvedData.addressLine1,
-                        resolvedData.addressLine2,
-                        resolvedData.city,
-                        resolvedData.state,
-                        resolvedData.pincode,
-                        resolvedData.country,
-                      ]
-                        .filter(Boolean)
-                        .join(", ") || "—"}
+                          <Button
+                            size="sm"
+                            type="button"
+                            variant={isSelected ? "default" : "outline"}
+                            className={cn(
+                              "h-7 text-xs shrink-0 gap-1",
+                              isSelected && "bg-[#4285F4] hover:bg-[#3367D6] text-white"
+                            )}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleApply(biz);
+                            }}
+                          >
+                            <CheckCircle2 className="size-3" />
+                            Select & Fill
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Selected Business Preview */}
+                {selectedBiz && (
+                  <div className="rounded-lg border border-[#E3F2FD] bg-muted/30 p-3 space-y-2 animate-in fade-in-50 duration-200">
+                    <div className="flex items-center justify-between border-b pb-1.5">
+                      <span className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                        <Sparkles className="size-3.5 text-amber-500" />
+                        Selected Profile to Auto-Fill
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        Ready to apply to form
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <span className="text-[10px] text-muted-foreground">Clinic Name</span>
+                        <p className="font-semibold text-foreground truncate">{selectedBiz.name}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-muted-foreground">Connected Email</span>
+                        <p className="font-medium text-foreground truncate">
+                          {selectedBiz.email || effectiveEmail || "—"}
+                        </p>
+                      </div>
+
+                      <div className="col-span-full">
+                        <span className="text-[10px] text-muted-foreground">Address</span>
+                        <p className="font-medium text-foreground">
+                          {[
+                            selectedBiz.addressLine1,
+                            selectedBiz.addressLine2,
+                            selectedBiz.city,
+                            selectedBiz.state,
+                            selectedBiz.pincode,
+                            selectedBiz.country,
+                          ]
+                            .filter(Boolean)
+                            .join(", ") || "—"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <p className="text-[10px] text-muted-foreground pt-1 border-t">
+                      Auto-completing will populate your profile form. You can review, update any fields manually, and click <strong>Save</strong>.
                     </p>
                   </div>
-
-                  {resolvedData.weeklySchedule && resolvedData.weeklySchedule.length > 0 && (
-                    <div className="col-span-full text-[11px] text-muted-foreground">
-                      <strong>Hours:</strong> Mon–Sat: 09:00 – 18:00 (Sun: Closed)
-                    </div>
-                  )}
-                </div>
-
-                <div className="rounded bg-background/80 p-2 text-[11px] text-muted-foreground border">
-                  Auto-completing will populate your clinic profile form fields. You will be able to review,
-                  edit any field manually, and click <strong>Save</strong>.
-                </div>
+                )}
               </div>
             )}
           </div>
@@ -477,15 +515,24 @@ export function GoogleBusinessConnectCard({
             <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            {resolvedData ? (
-              <Button size="sm" onClick={handleApply} className="gap-1.5 bg-[#4285F4] hover:bg-[#3367D6] text-white">
+            {selectedBiz ? (
+              <Button
+                size="sm"
+                onClick={() => handleApply(selectedBiz)}
+                className="gap-1.5 bg-[#4285F4] hover:bg-[#3367D6] text-white"
+              >
                 <CheckCircle2 className="size-3.5" />
-                Auto-Fill Profile Form
+                Auto-Fill Profile with Selected Business
               </Button>
             ) : (
-              <Button size="sm" onClick={handleFetch} disabled={loading} className="gap-1.5">
+              <Button
+                size="sm"
+                onClick={() => void handleFetchBusinesses()}
+                disabled={loading}
+                className="gap-1.5 bg-[#4285F4] hover:bg-[#3367D6] text-white"
+              >
                 {loading && <Loader2 className="size-3.5 animate-spin" />}
-                Fetch Details
+                Show Businesses
               </Button>
             )}
           </DialogFooter>
