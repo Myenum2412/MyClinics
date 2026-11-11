@@ -15,10 +15,6 @@ export const navLinks = [
 		href: "/#features",
 	},
 	{
-		label: "Pricing",
-		href: "/pricing",
-	},
-	{
 		label: "Integrations",
 		href: "/integrations",
 	},
