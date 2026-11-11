@@ -32,6 +32,8 @@ import { MetricStatGrid } from "@/components/metric-stat-cards";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Pagination } from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -271,6 +273,17 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const [bills, setBills] = useState<Bill[]>([]);
   const [counts, setCounts] = useState<{ appointments: number; patients: number; doctors: number; prescriptions: number; revenue: number; paidRevenue: number } | null>(null);
 
+  // Pagination states for table bottoms
+  const [apptPage, setApptPage] = useState(1);
+  const apptPageSize = 7;
+
+  const [patientPage, setPatientPage] = useState(1);
+  const patientPageSize = 6;
+
+  // Patient selection checkboxes
+  const [selectedPatientIds, setSelectedPatientIds] = useState<Set<string>>(new Set());
+
+  // Modal dialog states
   const [createPatientOpen, setCreatePatientOpen] = useState(false);
   const [savingPatient, setSavingPatient] = useState(false);
   const [viewingPatient, setViewingPatient] = useState<Patient | null>(null);
@@ -486,6 +499,41 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     return rows;
   }, [appointments, patientMap]);
 
+  // Paginated slices for table views
+  const pagedAppts = useMemo(() => {
+    return upcomingRows.slice((apptPage - 1) * apptPageSize, apptPage * apptPageSize);
+  }, [upcomingRows, apptPage, apptPageSize]);
+
+  const pagedPatients = useMemo(() => {
+    return patients.slice((patientPage - 1) * patientPageSize, patientPage * patientPageSize);
+  }, [patients, patientPage, patientPageSize]);
+
+  // Patient selection toggle helpers
+  const toggleSelectAllPatients = () => {
+    if (pagedPatients.length > 0 && pagedPatients.every((p) => selectedPatientIds.has(p.patientId))) {
+      setSelectedPatientIds((prev) => {
+        const next = new Set(prev);
+        pagedPatients.forEach((p) => next.delete(p.patientId));
+        return next;
+      });
+    } else {
+      setSelectedPatientIds((prev) => {
+        const next = new Set(prev);
+        pagedPatients.forEach((p) => next.add(p.patientId));
+        return next;
+      });
+    }
+  };
+
+  const toggleSelectPatient = (id: string) => {
+    setSelectedPatientIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const handleSavePatient = async (form: PatientFormState) => {
     setSavingPatient(true);
     try {
@@ -575,163 +623,218 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
 
       {/* 1 row: Left side (Upcoming Appointments table) and Right side (Patients card with Create Patient) */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-        {/* Left Side: Upcoming Appointments Table (Date and Patient Name only, without round border) */}
+        {/* Left Side: Upcoming Appointments Table with Table Style & Bottom Pagination */}
         <Card className="rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
-          <div>
-            <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
-              <div>
-                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-                  <CalendarDays className="size-4 text-primary" />
-                  Upcoming Appointments
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Appointments scheduled at this clinic.
-                </p>
-              </div>
-              <Link href="/clinic/appointments">
-                <Button variant="ghost" size="sm" className="h-8 text-xs gap-1">
-                  View all <ArrowRight className="size-3.5" />
-                </Button>
-              </Link>
-            </div>
-
-            <CardContent className="p-0">
-              {loading ? (
-                <div className="space-y-3 p-6">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
+          <div className="flex flex-col flex-1 justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
+                <div>
+                  <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                    <CalendarDays className="size-4 text-primary" />
+                    Upcoming Appointments
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Appointments scheduled at this clinic.
+                  </p>
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                        <TableHead className="font-semibold text-foreground">Date</TableHead>
-                        <TableHead className="font-semibold text-foreground">Patient Name</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {upcomingRows.slice(0, 8).map((row) => (
-                        <TableRow
-                          key={row.id}
-                          className={`transition-colors ${
-                            row.isToday
-                              ? "bg-amber-500/10 hover:bg-amber-500/15 dark:bg-amber-500/20 dark:hover:bg-amber-500/25 border-l-4 border-l-amber-500 font-semibold"
-                              : "hover:bg-muted/30"
-                          }`}
-                        >
-                          <TableCell className="text-xs font-medium text-foreground py-3.5">
-                            <div className="flex items-center gap-2">
-                              <span>{formatApptDate(row.date, row.time)}</span>
-                              {row.isToday && (
-                                <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
-                                  Today
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell className={`text-xs py-3.5 ${row.patientName === "—" ? "text-muted-foreground" : "font-semibold text-foreground"}`}>
-                            {row.patientName}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </div>
-        </Card>
-
-        {/* Right Side: Patients Card with Create Patient form trigger & click-row-to-view */}
-        <Card className="rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
-          <div>
-            <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
-              <div>
-                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-                  <Users className="size-4 text-primary" />
-                  Patients
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Click any patient to view details.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  className="h-8 text-xs gap-1.5 shadow-sm"
-                  onClick={() => setCreatePatientOpen(true)}
-                >
-                  <Plus className="size-3.5" />
-                  Create Patient
-                </Button>
-                <Link href="/clinic/patients">
+                <Link href="/clinic/appointments">
                   <Button variant="ghost" size="sm" className="h-8 text-xs gap-1">
                     View all <ArrowRight className="size-3.5" />
                   </Button>
                 </Link>
               </div>
+
+              <CardContent className="p-0">
+                {loading ? (
+                  <div className="space-y-3 p-6">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                          <TableHead className="font-semibold text-foreground px-6">Date</TableHead>
+                          <TableHead className="font-semibold text-foreground px-6">Patient Name</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pagedAppts.map((row) => (
+                          <TableRow
+                            key={row.id}
+                            className={`border-b border-border last:border-b-0 transition-colors ${
+                              row.isToday
+                                ? "bg-amber-500/10 hover:bg-amber-500/15 dark:bg-amber-500/20 dark:hover:bg-amber-500/25 border-l-4 border-l-amber-500 font-semibold"
+                                : "hover:bg-muted/30"
+                            }`}
+                          >
+                            <TableCell className="text-xs font-medium text-foreground py-3.5 px-6">
+                              <div className="flex items-center gap-2">
+                                <span>{formatApptDate(row.date, row.time)}</span>
+                                {row.isToday && (
+                                  <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                                    Today
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className={`text-xs py-3.5 px-6 ${row.patientName === "—" ? "text-muted-foreground" : "font-semibold text-foreground"}`}>
+                              {row.patientName}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
             </div>
 
-            <CardContent className="p-0">
-              {loading ? (
-                <div className="space-y-3 p-6">
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
+            {/* Bottom pagination bar */}
+            {!loading && upcomingRows.length > 0 && (
+              <Pagination
+                page={apptPage}
+                pageSize={apptPageSize}
+                totalItems={upcomingRows.length}
+                onPageChange={setApptPage}
+                itemLabel="entries"
+              />
+            )}
+          </div>
+        </Card>
+
+        {/* Right Side: Patients Card with Checkboxes, Table Style, Bottom Pagination & Click-to-View Form */}
+        <Card className="rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
+          <div className="flex flex-col flex-1 justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
+                <div>
+                  <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                    <Users className="size-4 text-primary" />
+                    Patients
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Click any patient to view details.
+                  </p>
                 </div>
-              ) : patients.length === 0 ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">
-                  No patients registered yet.
+                <div className="flex items-center gap-2">
+                  {selectedPatientIds.size > 0 && (
+                    <span className="text-xs font-semibold text-primary">
+                      {selectedPatientIds.size} selected
+                    </span>
+                  )}
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs gap-1.5 shadow-sm"
+                    onClick={() => setCreatePatientOpen(true)}
+                  >
+                    <Plus className="size-3.5" />
+                    Create Patient
+                  </Button>
+                  <Link href="/clinic/patients">
+                    <Button variant="ghost" size="sm" className="h-8 text-xs gap-1">
+                      View all <ArrowRight className="size-3.5" />
+                    </Button>
+                  </Link>
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                        <TableHead className="font-semibold text-foreground">Name</TableHead>
-                        <TableHead className="font-semibold text-foreground">Phone</TableHead>
-                        <TableHead className="font-semibold text-foreground">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {patients.slice(0, 8).map((p) => (
-                        <TableRow
-                          key={p.patientId}
-                          className="cursor-pointer hover:bg-muted/50 transition-colors"
-                          onClick={() => setViewingPatient(p)}
-                          title="Click to view patient details"
-                        >
-                          <TableCell className="py-3.5">
-                            <div className="flex items-center gap-2.5">
-                              <PersonAvatar
-                                clinicId={clinicId}
-                                ownerType="patient"
-                                ownerId={p.patientId}
-                                name={p.fullName}
-                                className="size-7 text-[10px]"
-                              />
-                              <span className="text-xs font-semibold text-foreground truncate max-w-[160px]">
-                                {p.fullName}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground py-3.5">
-                            {p.mobile || "—"}
-                          </TableCell>
-                          <TableCell className="py-3.5">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                              {p.status || "active"}
-                            </span>
-                          </TableCell>
+              </div>
+
+              <CardContent className="p-0">
+                {loading ? (
+                  <div className="space-y-3 p-6">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ) : patients.length === 0 ? (
+                  <div className="py-12 text-center text-sm text-muted-foreground">
+                    No patients registered yet.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                          <TableHead className="w-12 pl-6 pr-2">
+                            <Checkbox
+                              checked={
+                                pagedPatients.length > 0 &&
+                                pagedPatients.every((p) => selectedPatientIds.has(p.patientId))
+                              }
+                              onCheckedChange={toggleSelectAllPatients}
+                              aria-label="Select all patients"
+                            />
+                          </TableHead>
+                          <TableHead className="font-semibold text-foreground px-4">Name</TableHead>
+                          <TableHead className="font-semibold text-foreground px-4">Phone</TableHead>
+                          <TableHead className="font-semibold text-foreground px-4">Status</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
+                      </TableHeader>
+                      <TableBody>
+                        {pagedPatients.map((p) => (
+                          <TableRow
+                            key={p.patientId}
+                            className={`border-b border-border last:border-b-0 cursor-pointer transition-colors ${
+                              selectedPatientIds.has(p.patientId)
+                                ? "bg-muted/40 font-medium"
+                                : "hover:bg-muted/30"
+                            }`}
+                            onClick={() => setViewingPatient(p)}
+                            title="Click to view patient details"
+                          >
+                            <TableCell
+                              className="w-12 pl-6 pr-2 py-3.5"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Checkbox
+                                checked={selectedPatientIds.has(p.patientId)}
+                                onCheckedChange={() => toggleSelectPatient(p.patientId)}
+                                aria-label={`Select ${p.fullName}`}
+                              />
+                            </TableCell>
+                            <TableCell className="py-3.5 px-4">
+                              <div className="flex items-center gap-2.5">
+                                <PersonAvatar
+                                  clinicId={clinicId}
+                                  ownerType="patient"
+                                  ownerId={p.patientId}
+                                  name={p.fullName}
+                                  className="size-7 text-[10px]"
+                                />
+                                <span className="text-xs font-semibold text-foreground truncate max-w-[160px]">
+                                  {p.fullName}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground py-3.5 px-4">
+                              {p.mobile || "—"}
+                            </TableCell>
+                            <TableCell className="py-3.5 px-4">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                {p.status || "active"}
+                              </span>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </div>
+
+            {/* Bottom pagination bar */}
+            {!loading && patients.length > 0 && (
+              <Pagination
+                page={patientPage}
+                pageSize={patientPageSize}
+                totalItems={patients.length}
+                onPageChange={setPatientPage}
+                itemLabel="patients"
+              />
+            )}
           </div>
         </Card>
       </div>
