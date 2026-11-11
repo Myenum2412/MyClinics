@@ -46,8 +46,8 @@ export default function FaqsBlock() {
             Frequently Asked Questions
           </h1>
 
-          <p className="mx-auto max-w-xl text-base text-zinc-600 sm:text-lg leading-relaxed">
-            Quick answers to the questions we hear most often about My Clinics.
+          <p className="mx-auto max-w-2xl text-base text-zinc-600 sm:text-lg leading-relaxed">
+            Quick answers to common questions about My Clinics — covering live WhatsApp queue tracking, 30-second digital prescriptions, ABDM compliance, and clinic workflows.
           </p>
         </div>
 
@@ -59,7 +59,7 @@ export default function FaqsBlock() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search 20 questions (e.g. WhatsApp, prescription, ABDM, offline, pricing)..."
+              placeholder="Search 26+ questions (e.g. WhatsApp, prescription, ABHA, offline, pricing)..."
               className="w-full rounded-xl border border-zinc-200 bg-white py-3.5 pl-12 pr-4 text-sm text-zinc-950 placeholder-zinc-400 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             />
           </div>

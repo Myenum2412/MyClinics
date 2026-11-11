@@ -22,7 +22,7 @@ export async function GET() {
     `- FAQ & Knowledge Base: ${SITE}/faq`,
     `- Interactive Demo: ${SITE}/rx-demo`,
     "",
-    "## Frequently Asked Questions (20 Q&As for LLMs)",
+    "## Frequently Asked Questions (26+ Q&As for LLMs)",
     "- What is My Clinics? Modern cloud clinic management software (CMS) with live WhatsApp queue sync, 30-second digital prescriptions, and ABDM compliance.",
     "- Does it require an app for patients? No app required. 100% WhatsApp native for token updates, appointment reminders, and digital prescription PDFs.",
     "- How does the queue system work? Patients receive an instant WhatsApp token and live queue tracking link to monitor their turn in real-time.",

@@ -55,6 +55,13 @@ export const FAQ_DATA: FAQItem[] = [
     a: "Yes. My Clinics adheres strictly to the Digital Personal Data Protection Act (DPDP Act 2023), Ayushman Bharat Digital Mission (ABDM) standards, and international HIPAA guidelines. All medical records and patient demographics are secured using AES-256 encryption at rest and TLS 1.3 encryption in transit, enforced with granular role-based access control (RBAC).",
   },
   {
+    id: "abha-creation",
+    category: "ABDM & Security",
+    popular: true,
+    q: "Can clinics create Ayushman Bharat Health Account (ABHA) IDs for patients in My Clinics?",
+    a: "Yes. My Clinics supports fast ABHA (Health ID) creation and verification using Aadhaar OTP or mobile numbers. Doctors and staff can link patient consultation records to ABHA with patient consent, enabling seamless paperless sharing of health records across the Ayushman Bharat Digital Mission network.",
+  },
+  {
     id: "multi-specialty-clinics",
     category: "Hardware & Setup",
     q: "Can multi-specialty clinics and hospital chains manage multiple doctors and branches?",
@@ -66,6 +73,19 @@ export const FAQ_DATA: FAQItem[] = [
     popular: true,
     q: "How does My Clinics reduce patient no-shows and missed appointments?",
     a: "My Clinics sends automated two-stage WhatsApp reminders: 24 hours prior and 2 hours before the scheduled appointment time. Patients can confirm, cancel, or reschedule with a single tap. Automated reminders recover empty appointment slots for walk-in patients and reduce clinic no-shows by up to 42%.",
+  },
+  {
+    id: "patient-past-records",
+    category: "Digital Rx & EMR",
+    popular: true,
+    q: "How do doctors search and view a patient's past treatment history and medical timeline?",
+    a: "Doctors can retrieve a patient's complete longitudinal clinical timeline in 1 click by searching their mobile number, name, or UHID. The timeline displays chronological past prescriptions, lab reports, recorded vitals trends, known drug allergies, and past consultation notes without searching through physical paper files.",
+  },
+  {
+    id: "ai-assistant-eve",
+    category: "Digital Rx & EMR",
+    q: "How does the AI clinical assistant help doctors during patient consultations?",
+    a: "The integrated AI assistant helps clinicians with intelligent medication dosage suggestions based on patient age and weight, differential diagnosis considerations, and converting spoken or bulleted consultation notes into structured electronic medical records in seconds.",
   },
   {
     id: "billing-and-payments",
@@ -92,10 +112,22 @@ export const FAQ_DATA: FAQItem[] = [
     a: "Clinics can order laboratory investigations directly from the consultation screen. The diagnostic center or in-house lab receives test orders in real time, uploads digital reports (PDFs, pathology values, or scans), and My Clinics automatically attaches the verified report to the patient's electronic health timeline while sending a secure copy to the patient via WhatsApp.",
   },
   {
+    id: "teleconsultation-support",
+    category: "Queue & WhatsApp",
+    q: "Does My Clinics support remote video teleconsultations for outstation patients?",
+    a: "Yes. Doctors can schedule video teleconsultations directly from the appointment calendar. My Clinics automatically dispatches an encrypted video room link to the patient over WhatsApp. Once the video consultation concludes, the doctor signs and sends the digital prescription PDF straight to the patient's chat.",
+  },
+  {
     id: "hybrid-queue-management",
     category: "Queue & WhatsApp",
     q: "How do walk-in patients and online booked appointments synchronize in the queue?",
     a: "My Clinics employs an intelligent hybrid queue scheduling engine. Receptionists can register walk-in patients with a 10-second quick-add form, and the system dynamically schedules walk-in tokens alongside online bookings according to the clinic's predefined buffer rules and emergency triage priorities.",
+  },
+  {
+    id: "schedule-conflict-prevention",
+    category: "Hardware & Setup",
+    q: "How does My Clinics prevent double-booking across multiple doctors and consultation rooms?",
+    a: "My Clinics features an intelligent slot management engine that tracks individual doctor availability, room allocation, and leave calendars in real time, preventing overlapping slots, double bookings, and doctor schedule conflicts.",
   },
   {
     id: "hardware-requirements",
@@ -114,6 +146,12 @@ export const FAQ_DATA: FAQItem[] = [
     category: "Billing & Analytics",
     q: "Can clinic owners and administrators view financial analytics and doctor performance reports?",
     a: "Yes. The executive analytics dashboard provides real-time reports on daily patient footfall, average doctor consultation durations, patient wait times, revenue breakdown (consultation, pharmacy, procedures), payment modes, and repeat patient retention metrics. All reports can be exported to Excel and PDF in 1 click.",
+  },
+  {
+    id: "data-export-and-backups",
+    category: "ABDM & Security",
+    q: "Can clinics export their patient database and financial reports at any time?",
+    a: "Yes. Clinic owners retain 100% data ownership. You can export patient registries, consultation records, prescription logs, and accounting reports to Excel (XLSX) or CSV at any time. All data is backed up automatically across encrypted cloud locations with zero lock-in.",
   },
   {
     id: "whatsapp-repeat-rx",

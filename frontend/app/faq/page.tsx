@@ -7,13 +7,14 @@ import { FAQ_DATA } from "@/lib/faq-data";
 export const metadata: Metadata = {
   title: "Frequently Asked Questions (FAQ) | My Clinics Clinic Management Software",
   description:
-    "Explore 20 essential questions and verified answers about My Clinics: live WhatsApp token queues, 30-second digital prescriptions, ABDM compliance, offline mode, billing, and clinic operations.",
+    "Explore 26 essential questions and verified answers about My Clinics: live WhatsApp token queues, 30-second digital prescriptions, ABHA & ABDM compliance, offline mode, billing, and clinic operations.",
   keywords: [
     "My Clinics FAQ",
     "clinic management software FAQ",
     "WhatsApp clinic queue management",
     "digital prescription software India",
     "ABDM compliant clinic software",
+    "ABHA creation clinic software",
     "OPD token queue system",
     "EMR software for doctors",
     "clinic software questions",
@@ -26,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Frequently Asked Questions (FAQ) | My Clinics",
     description:
-      "Explore 20 essential questions and verified answers about My Clinics: live WhatsApp token queues, 30-second digital prescriptions, ABDM compliance, offline mode, billing, and clinic operations.",
+      "Explore 26 essential questions and verified answers about My Clinics: live WhatsApp token queues, 30-second digital prescriptions, ABHA & ABDM compliance, offline mode, billing, and clinic operations.",
     url: "/faq",
     siteName: "My Clinics",
     type: "website",
@@ -36,7 +37,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Frequently Asked Questions (FAQ) | My Clinics",
     description:
-      "Explore 20 essential questions and verified answers about My Clinics: live WhatsApp token queues, 30-second digital prescriptions, ABDM compliance, offline mode, billing, and clinic operations.",
+      "Explore 26 essential questions and verified answers about My Clinics: live WhatsApp token queues, 30-second digital prescriptions, ABHA & ABDM compliance, offline mode, billing, and clinic operations.",
   },
 };
 
