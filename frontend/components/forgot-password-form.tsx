@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { requestPasswordReset, resetPassword } from "@/lib/clinic-api";
 import { Button } from "@/components/ui/button";
@@ -20,10 +19,7 @@ type Step = "request" | "sent" | "done";
 const inputClass =
   "bg-white! text-black placeholder:text-gray-400 border-gray-300 focus-visible:ring-[#2196F3]";
 
-export function ForgotPasswordForm() {
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token")?.trim() ?? "";
-
+export function ForgotPasswordForm({ token = "" }: { token?: string }) {
   const [step, setStep] = useState<Step>("request");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -32,7 +28,7 @@ export function ForgotPasswordForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const isReset = Boolean(token);
+  const isReset = Boolean(token.trim());
 
   async function handleRequest(e: React.FormEvent) {
     e.preventDefault();
@@ -61,7 +57,7 @@ export function ForgotPasswordForm() {
     }
     setLoading(true);
     try {
-      await resetPassword({ token, password });
+      await resetPassword({ token: token.trim(), password });
       setStep("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not reset your password.");

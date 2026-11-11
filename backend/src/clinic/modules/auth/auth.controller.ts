@@ -91,7 +91,8 @@ export class AuthController {
     });
     return reply.send({
       ok: true,
-      message: "If an account exists for that email, we've sent a password reset link.",
+      message:
+        "If an account exists for those details, we've sent a password reset link to the email on file.",
     });
   }
 

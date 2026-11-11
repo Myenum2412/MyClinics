@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ForgotPasswordForm } from "@/components/forgot-password-form";
 
@@ -8,7 +7,12 @@ export const metadata: Metadata = {
     "Reset your My Clinics password. We'll email you a secure link to choose a new password.",
 };
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ token?: string }>;
+}) {
+  const { token } = await searchParams;
   return (
     <div className="relative flex min-h-svh flex-col items-center justify-center gap-6 overflow-hidden p-6 md:p-10 bg-slate-50">
       {/* Top 20% background color */}
@@ -35,9 +39,7 @@ export default function ForgotPasswordPage() {
       <div className="absolute inset-0 backdrop-blur-[100px] pointer-events-none" />
 
       <div className="relative z-10 w-full max-w-sm">
-        <Suspense>
-          <ForgotPasswordForm />
-        </Suspense>
+        <ForgotPasswordForm token={token} />
       </div>
     </div>
   );
