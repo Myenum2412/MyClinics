@@ -98,11 +98,14 @@ export interface ClinicProfile {
   emergencyContact: string | null;
   gstNumber: string | null;
   taxBusinessId: string | null;
+  googleBusinessUrl?: string | null;
+  googlePlaceId?: string | null;
   socialMedia: {
     facebook: string | null;
     instagram: string | null;
     twitter: string | null;
     linkedin: string | null;
+    googleBusiness?: string | null;
   };
 }
 
@@ -929,6 +932,35 @@ export function updateOwnClinic(
   void clinicId;
   return request("/api/clinics/me", {
     method: "PATCH",
+    body: JSON.stringify(input),
+  });
+}
+
+export interface GoogleBusinessResolvedData {
+  name?: string;
+  phone?: string;
+  website?: string;
+  description?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  country?: string;
+  url?: string;
+  placeId?: string;
+  rating?: number;
+  userRatingsTotal?: number;
+  weeklySchedule?: WeeklyScheduleDay[];
+}
+
+export function resolveGoogleBusinessProfile(
+  clinicId: string,
+  input: { url?: string; query?: string; placeId?: string }
+): Promise<GoogleBusinessResolvedData> {
+  void clinicId;
+  return request("/api/clinics/google-business/resolve", {
+    method: "POST",
     body: JSON.stringify(input),
   });
 }

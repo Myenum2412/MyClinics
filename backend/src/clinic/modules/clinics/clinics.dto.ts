@@ -57,12 +57,15 @@ export const clinicProfileSchema = z.object({
   emergencyContact: optionalString(PHONE_MAX),
   gstNumber: optionalString(30),
   taxBusinessId: optionalString(60),
+  googleBusinessUrl: optionalString(300),
+  googlePlaceId: optionalString(120),
   socialMedia: z
     .object({
       facebook: optionalString(200),
       instagram: optionalString(200),
       twitter: optionalString(200),
       linkedin: optionalString(200),
+      googleBusiness: optionalString(300),
     })
     .optional(),
 });

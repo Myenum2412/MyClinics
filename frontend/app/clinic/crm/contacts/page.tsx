@@ -126,9 +126,8 @@ export default function ContactsPage() {
   const [metaModalOpen, setMetaModalOpen] = useState(false);
   const [metaBusy, setMetaBusy] = useState(false);
   const [syncingMeta, setSyncingMeta] = useState(false);
-  const [metaAppId, setMetaAppId] = useState(process.env.NEXT_PUBLIC_META_APP_ID ?? "");
-  const [metaAppSecret, setMetaAppSecret] = useState(process.env.NEXT_PUBLIC_META_APP_SECRET ?? "");
-  const [metaRedirectUri, setMetaRedirectUri] = useState("https://api.myclinic.myenum.in/api/meta/oauth/callback");
+  const [metaAppId, setMetaAppId] = useState("");
+  const [metaAppSecret, setMetaAppSecret] = useState("");
 
   useEffect(() => {
     searchParamsRef.current = searchParams;
@@ -207,21 +206,20 @@ export default function ContactsPage() {
 
   const handleConnectMeta = async () => {
     if (!clinicId) return;
-    const effectiveAppId = metaAppId.trim() || process.env.NEXT_PUBLIC_META_APP_ID?.trim() || "";
-    const effectiveAppSecret = metaAppSecret.trim() || process.env.NEXT_PUBLIC_META_APP_SECRET?.trim() || "";
-    const effectiveRedirectUri = metaRedirectUri.trim() || "https://api.myclinic.myenum.in/api/meta/oauth/callback";
+    const trimmedAppId = metaAppId.trim();
+    const trimmedAppSecret = metaAppSecret.trim();
 
-    if ((effectiveAppId && !effectiveAppSecret) || (!effectiveAppId && effectiveAppSecret)) {
-      toast.error("Please provide both Meta App ID and App Secret.");
+    if (!trimmedAppId || !trimmedAppSecret) {
+      toast.error("Please enter both your Meta App ID and App Secret.");
       return;
     }
 
     setMetaBusy(true);
     try {
       const { authUrl } = await connectMeta(clinicId, {
-        appId: effectiveAppId || undefined,
-        appSecret: effectiveAppSecret || undefined,
-        redirectUri: effectiveRedirectUri,
+        appId: trimmedAppId,
+        appSecret: trimmedAppSecret,
+        redirectUri: "https://api.myclinic.myenum.in/api/meta/oauth/callback",
         returnUrl: "/clinic/crm/contacts?meta=connected",
       });
       window.open(authUrl, "metaOAuth", "width=600,height=800");
@@ -637,32 +635,6 @@ export default function ContactsPage() {
                     value={metaAppSecret}
                     onChange={(e) => setMetaAppSecret(e.target.value)}
                   />
-                </div>
-
-                <div className="space-y-1">
-                  <Label htmlFor="meta-redirect">OAuth Redirect URI</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="meta-redirect"
-                      value={metaRedirectUri}
-                      onChange={(e) => setMetaRedirectUri(e.target.value)}
-                      className="font-mono text-xs"
-                    />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      type="button"
-                      onClick={() => {
-                        void navigator.clipboard.writeText(metaRedirectUri);
-                        toast.success("Redirect URI copied to clipboard");
-                      }}
-                    >
-                      Copy
-                    </Button>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    In your Meta App Settings, ensure <strong>myenum.in</strong> is in <strong>App Domains</strong> and this URL is in <strong>Valid OAuth Redirect URIs</strong>.
-                  </p>
                 </div>
 
                 <Button

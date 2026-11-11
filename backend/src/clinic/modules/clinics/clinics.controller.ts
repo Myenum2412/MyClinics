@@ -10,6 +10,11 @@ import { parsePagination } from "@/clinic/core/pagination";
 import { createClinicSchema, updateClinicSchema } from "@/clinic/modules/clinics/clinics.dto";
 import { ClinicService } from "@/clinic/modules/clinics/clinics.service";
 
+import {
+  type GoogleBusinessResolveInput,
+  resolveGoogleBusiness,
+} from "@/clinic/modules/clinics/google-business.service";
+
 export class ClinicController {
   private service(db: Db): ClinicService {
     return new ClinicService(db);
@@ -127,5 +132,13 @@ export class ClinicController {
     const db = await getDb();
     const clinic = await this.service(db).updateOwnClinic(ctx, parsed.data);
     return reply.send(clinic);
+  }
+
+  async resolveGoogleBusiness(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const ctx = request.clinic;
+    if (!ctx) throw new UnauthorizedError();
+    const body = (request.body as GoogleBusinessResolveInput) ?? {};
+    const result = await resolveGoogleBusiness(body);
+    return reply.send(result);
   }
 }
