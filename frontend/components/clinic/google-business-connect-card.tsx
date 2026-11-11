@@ -64,6 +64,13 @@ interface GoogleBusinessConnectCardProps {
   clinicId: string;
   clinicName?: string;
   clinicEmail?: string | null;
+  clinicPhone?: string;
+  clinicWebsite?: string;
+  clinicAddress?: string | null;
+  clinicArea?: string | null;
+  clinicCity?: string | null;
+  clinicState?: string | null;
+  clinicPincode?: string | null;
   canManage: boolean;
   connectedUrl?: string | null;
   onAutoComplete: (data: GoogleBusinessResolvedData) => void;
@@ -74,6 +81,13 @@ export function GoogleBusinessConnectCard({
   clinicId,
   clinicName = "",
   clinicEmail = "",
+  clinicPhone,
+  clinicWebsite,
+  clinicAddress,
+  clinicArea,
+  clinicCity,
+  clinicState,
+  clinicPincode,
   canManage,
   connectedUrl,
   onAutoComplete,
@@ -83,10 +97,47 @@ export function GoogleBusinessConnectCard({
   const [tab, setTab] = useState<"auth" | "url">("auth");
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(clinicEmail || null);
   const [urlInput, setUrlInput] = useState(connectedUrl ?? "");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(false);
   const [authenticating, setAuthenticating] = useState(false);
-  const [businesses, setBusinesses] = useState<GoogleBusinessResolvedData[]>([]);
-  const [selectedBiz, setSelectedBiz] = useState<GoogleBusinessResolvedData | null>(null);
+
+  const buildClinicBusiness = (): GoogleBusinessResolvedData => {
+    const email = clinicEmail?.trim();
+    const city = clinicCity?.trim();
+    const address = clinicAddress?.trim();
+    return {
+      id: `gbp-${email || clinicId || "default"}`,
+      name: clinicName || "Clinic Profile",
+      email: email || undefined,
+      phone: clinicPhone || undefined,
+      website: clinicWebsite || undefined,
+      addressLine1: address || undefined,
+      addressLine2: clinicArea || undefined,
+      city: city || undefined,
+      state: clinicState || undefined,
+      pincode: clinicPincode || undefined,
+      country: "India",
+      url:
+        connectedUrl ||
+        (clinicName
+          ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([clinicName, city || address].filter(Boolean).join(" "))}`
+          : "https://business.google.com/"),
+      weeklySchedule: [
+        { day: "Monday", open: "09:00", close: "18:00", closed: false },
+        { day: "Tuesday", open: "09:00", close: "18:00", closed: false },
+        { day: "Wednesday", open: "09:00", close: "18:00", closed: false },
+        { day: "Thursday", open: "09:00", close: "18:00", closed: false },
+        { day: "Friday", open: "09:00", close: "18:00", closed: false },
+        { day: "Saturday", open: "09:00", close: "18:00", closed: false },
+        { day: "Sunday", open: "09:00", close: "13:00", closed: true },
+      ],
+    };
+  };
+
+  const initialBiz = buildClinicBusiness();
+  const [businesses, setBusinesses] = useState<GoogleBusinessResolvedData[]>([initialBiz]);
+  const [selectedBiz, setSelectedBiz] = useState<GoogleBusinessResolvedData | null>(initialBiz);
 
   const connected = Boolean(connectedUrl);
 
@@ -101,19 +152,20 @@ export function GoogleBusinessConnectCard({
     let cancelled = false;
     async function loadDefaultProfile() {
       const email = clinicEmail?.trim();
-      const fallbackBiz: GoogleBusinessResolvedData = {
-        id: `gbp-${email || "default"}`,
-        name: clinicName || "Clinic Profile",
-        email: email || undefined,
-        url: connectedUrl || "https://business.google.com/",
-        country: "India",
-      };
+      const fallbackBiz = buildClinicBusiness();
 
       try {
         setLoading(true);
         const data = await resolveGoogleBusinessProfile(clinicId, {
           email: email || undefined,
           name: clinicName || undefined,
+          phone: clinicPhone || undefined,
+          website: clinicWebsite || undefined,
+          addressLine1: clinicAddress || undefined,
+          addressLine2: clinicArea || undefined,
+          city: clinicCity || undefined,
+          state: clinicState || undefined,
+          pincode: clinicPincode || undefined,
           url: connectedUrl || undefined,
         });
         if (cancelled) return;
@@ -133,26 +185,28 @@ export function GoogleBusinessConnectCard({
     return () => {
       cancelled = true;
     };
-  }, [clinicId, clinicEmail, clinicName, connectedUrl]);
+  }, [clinicId, clinicEmail, clinicName, clinicPhone, clinicWebsite, clinicAddress, clinicArea, clinicCity, clinicState, clinicPincode, connectedUrl]);
 
   // Automatically connect with clinic email
   const handleConnectAuto = async () => {
     setLoading(true);
     try {
       const email = clinicEmail?.trim();
+      const fallbackBiz = buildClinicBusiness();
       const res = await resolveGoogleBusinessProfile(clinicId, {
         email: email || undefined,
         name: clinicName || undefined,
+        phone: clinicPhone || undefined,
+        website: clinicWebsite || undefined,
+        addressLine1: clinicAddress || undefined,
+        addressLine2: clinicArea || undefined,
+        city: clinicCity || undefined,
+        state: clinicState || undefined,
+        pincode: clinicPincode || undefined,
         url: connectedUrl || undefined,
       });
       const list = res.businesses && res.businesses.length > 0 ? res.businesses : [res];
-      const target = list[0] || {
-        id: `gbp-${email || "default"}`,
-        name: clinicName || "Clinic Profile",
-        email: email || undefined,
-        url: connectedUrl || "https://business.google.com/",
-        country: "India",
-      };
+      const target = list[0] || fallbackBiz;
       setBusinesses(list);
       setSelectedBiz(target);
       if (email) setVerifiedEmail(email);
@@ -165,13 +219,7 @@ export function GoogleBusinessConnectCard({
           : "Automatically connected Google Business Profile!"
       );
     } catch {
-      const fallbackBiz: GoogleBusinessResolvedData = {
-        id: `gbp-${clinicEmail || "default"}`,
-        name: clinicName || "Clinic Profile",
-        email: clinicEmail || undefined,
-        url: connectedUrl || "https://business.google.com/",
-        country: "India",
-      };
+      const fallbackBiz = buildClinicBusiness();
       setBusinesses([fallbackBiz]);
       setSelectedBiz(fallbackBiz);
       onAutoComplete(fallbackBiz);
@@ -262,6 +310,37 @@ export function GoogleBusinessConnectCard({
     }
   };
 
+  const handleSearch = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!searchQuery.trim()) return;
+    setSearching(true);
+    try {
+      const data = await resolveGoogleBusinessProfile(clinicId, {
+        query: searchQuery.trim(),
+        email: clinicEmail || undefined,
+        name: clinicName || undefined,
+        city: clinicCity || undefined,
+      });
+      const list = data.businesses && data.businesses.length > 0 ? data.businesses : [data];
+      setBusinesses((prev) => {
+        const merged = [...list, ...prev];
+        const seen = new Set<string>();
+        return merged.filter((b) => {
+          const k = `${(b.name || "").toLowerCase()}|${(b.addressLine1 || "").toLowerCase()}`;
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        });
+      });
+      if (list[0]) setSelectedBiz(list[0]);
+      toast.success(`Found ${list.length} listing(s) matching "${searchQuery}"`);
+    } catch {
+      toast.error("Could not find matching locations. Try another search or paste your Google Maps link.");
+    } finally {
+      setSearching(false);
+    }
+  };
+
   const handleApply = (bizToApply?: GoogleBusinessResolvedData) => {
     const target = bizToApply || selectedBiz;
     if (!target) return;
@@ -269,12 +348,15 @@ export function GoogleBusinessConnectCard({
     setOpen(false);
   };
 
+  const displayAddress = [selectedBiz?.addressLine1 || clinicAddress, selectedBiz?.city || clinicCity]
+    .filter(Boolean)
+    .join(", ");
   const statusText = connected
-    ? verifiedEmail || clinicEmail
-      ? `Connected as ${verifiedEmail || clinicEmail}`
-      : "Connected — clinic details and hours are synced"
+    ? displayAddress
+      ? `${displayAddress} • Connected with ${verifiedEmail || clinicEmail || "Google"}`
+      : `Connected with ${verifiedEmail || clinicEmail || "Google"}`
     : verifiedEmail || clinicEmail
-      ? `Connected with ${verifiedEmail || clinicEmail} — click to view profile`
+      ? `Connect with ${verifiedEmail || clinicEmail} to sync clinic listing`
       : "Connect your clinic's Google Business Profile to sync details and hours";
 
   return (
@@ -285,7 +367,9 @@ export function GoogleBusinessConnectCard({
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-foreground truncate">Google Business Profile</p>
+            <p className="text-sm font-semibold text-foreground truncate">
+              {selectedBiz?.name || clinicName || "Google Business Profile"}
+            </p>
             {connected && (
               <Badge
                 variant="outline"
@@ -351,27 +435,47 @@ export function GoogleBusinessConnectCard({
 
               <TabsContent value="auth" className="space-y-3 pt-2">
                 {verifiedEmail ? (
-                  <div className="rounded-lg border border-emerald-300 bg-emerald-50/70 p-3.5 space-y-2 text-xs dark:border-emerald-800 dark:bg-emerald-950/30">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
-                        <ShieldCheck className="size-4 text-emerald-600" />
-                        Verified Google Account
-                      </span>
-                      <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-[10px]">
-                        Google Verified
-                      </Badge>
-                    </div>
-                    <p className="font-mono text-xs text-emerald-900 dark:text-emerald-200">
-                      {verifiedEmail}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      Only verified business profiles belonging to this authenticated Google account are shown below.
-                    </p>
-                    {authenticating && (
-                      <p className="text-[11px] text-[#4285F4] flex items-center gap-1.5 pt-1">
-                        <Loader2 className="size-3 animate-spin" /> Verifying Google Account…
+                  <div className="space-y-3">
+                    <div className="rounded-lg border border-emerald-300 bg-emerald-50/70 p-3.5 space-y-2 text-xs dark:border-emerald-800 dark:bg-emerald-950/30">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                          <ShieldCheck className="size-4 text-emerald-600" />
+                          Verified Google Account
+                        </span>
+                        <Badge className="bg-emerald-600 hover:bg-emerald-600 text-white text-[10px]">
+                          Google Verified
+                        </Badge>
+                      </div>
+                      <p className="font-mono text-xs text-emerald-900 dark:text-emerald-200">
+                        {verifiedEmail}
                       </p>
-                    )}
+                      <p className="text-[11px] text-muted-foreground">
+                        Connected to this authenticated Google account. Select a listing below to auto-fill your clinic details.
+                      </p>
+                      {authenticating && (
+                        <p className="text-[11px] text-[#4285F4] flex items-center gap-1.5 pt-1">
+                          <Loader2 className="size-3 animate-spin" /> Verifying Google Account…
+                        </p>
+                      )}
+                    </div>
+
+                    <form onSubmit={handleSearch} className="flex gap-2">
+                      <Input
+                        placeholder="Search clinic or branch location on Google..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="text-xs"
+                      />
+                      <Button
+                        type="submit"
+                        size="sm"
+                        disabled={searching}
+                        className="shrink-0 gap-1.5 text-xs bg-[#4285F4] hover:bg-[#3367D6] text-white"
+                      >
+                        {searching ? <Loader2 className="size-3.5 animate-spin" /> : <Search className="size-3.5" />}
+                        Search
+                      </Button>
+                    </form>
                   </div>
                 ) : (
                   <div className="rounded-lg border border-border bg-muted/20 p-5 text-center space-y-3">
@@ -549,6 +653,19 @@ export function GoogleBusinessConnectCard({
                                 </span>
                               )}
                             </div>
+
+                            {biz.url && (
+                              <a
+                                href={biz.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-[11px] text-[#4285F4] hover:underline pt-1"
+                              >
+                                <ExternalLink className="size-3" />
+                                View on Google Maps / Profile
+                              </a>
+                            )}
                           </div>
 
                           <Button

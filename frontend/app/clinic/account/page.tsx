@@ -647,6 +647,13 @@ export default function AccountPage() {
               clinicId={clinicId}
               clinicName={clinic.name}
               clinicEmail={clinic.email || session?.email}
+              clinicPhone={form.phone || clinic.phone || undefined}
+              clinicWebsite={form.website || clinic.website || undefined}
+              clinicAddress={form.profile.addressLine1 || clinic.profile?.addressLine1 || undefined}
+              clinicArea={form.profile.addressLine2 || clinic.profile?.addressLine2 || undefined}
+              clinicCity={form.profile.city || clinic.profile?.city || undefined}
+              clinicState={form.profile.state || clinic.profile?.state || undefined}
+              clinicPincode={form.profile.pincode || clinic.profile?.pincode || undefined}
               canManage={canManage}
               connectedUrl={form.profile.googleBusinessUrl || clinic.profile?.googleBusinessUrl}
               onAutoComplete={handleAutoCompleteFromGoogle}

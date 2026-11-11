@@ -959,7 +959,22 @@ export interface GoogleBusinessResolvedData {
 
 export async function resolveGoogleBusinessProfile(
   clinicId: string,
-  input: { url?: string; query?: string; placeId?: string; email?: string; name?: string }
+  input: {
+    url?: string;
+    query?: string;
+    placeId?: string;
+    email?: string;
+    name?: string;
+    phone?: string;
+    website?: string;
+    addressLine1?: string;
+    addressLine2?: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    country?: string;
+    accessToken?: string;
+  }
 ): Promise<GoogleBusinessResolvedData> {
   void clinicId;
   // Always call same-origin Next.js API route first so it works reliably in production

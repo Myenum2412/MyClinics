@@ -53,12 +53,21 @@ export async function POST(req: Request) {
       placeId?: string;
       email?: string;
       name?: string;
+      phone?: string;
+      website?: string;
+      addressLine1?: string;
+      addressLine2?: string;
+      city?: string;
+      state?: string;
+      pincode?: string;
+      country?: string;
       accessToken?: string;
     };
 
     const rawUrl = body.url?.trim();
     const rawEmail = body.email?.trim();
     const rawName = body.name?.trim();
+    const rawQuery = body.query?.trim();
     const rawPlaceId = body.placeId?.trim();
     const accessToken = body.accessToken?.trim();
 
@@ -115,13 +124,14 @@ export async function POST(req: Request) {
                   id: loc.name,
                   name: loc.title || rawName || "Clinic",
                   email: rawEmail,
-                  phone: loc.phoneNumbers?.primaryPhone,
-                  website: loc.websiteUri || inferredWebsite,
-                  addressLine1: loc.storefrontAddress?.addressLines?.join(", "),
-                  city: loc.storefrontAddress?.locality,
-                  state: loc.storefrontAddress?.administrativeArea,
-                  pincode: loc.storefrontAddress?.postalCode,
-                  country: loc.storefrontAddress?.regionCode || "India",
+                  phone: loc.phoneNumbers?.primaryPhone || body.phone,
+                  website: loc.websiteUri || inferredWebsite || body.website,
+                  addressLine1: loc.storefrontAddress?.addressLines?.join(", ") || body.addressLine1,
+                  addressLine2: body.addressLine2,
+                  city: loc.storefrontAddress?.locality || body.city,
+                  state: loc.storefrontAddress?.administrativeArea || body.state,
+                  pincode: loc.storefrontAddress?.postalCode || body.pincode,
+                  country: loc.storefrontAddress?.regionCode || body.country || "India",
                   url: "https://business.google.com/",
                   weeklySchedule: DEFAULT_SCHEDULE,
                 });
@@ -137,18 +147,21 @@ export async function POST(req: Request) {
     // 2. If user supplied a specific Google Maps / Business Profile URL or Place ID
     if (rawUrl) {
       let finalUrl = rawUrl;
-      try {
-        const headRes = await fetch(rawUrl, {
-          method: "GET",
-          headers: {
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          },
-          redirect: "follow",
-        });
-        finalUrl = headRes.url || rawUrl;
-      } catch {
-        finalUrl = rawUrl;
+      const isBusinessDomain = rawUrl.includes("business.google.com");
+      if (!isBusinessDomain) {
+        try {
+          const headRes = await fetch(rawUrl, {
+            method: "GET",
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            },
+            redirect: "follow",
+          });
+          finalUrl = headRes.url || rawUrl;
+        } catch {
+          finalUrl = rawUrl;
+        }
       }
 
       let parsedName = rawName || "Clinic";
@@ -175,13 +188,19 @@ export async function POST(req: Request) {
       const placeId = pidMatch?.[1] || rawPlaceId;
 
       const urlBiz: GoogleBusinessItem = {
-        id: "url-1",
+        id: `url-${Date.now()}`,
         name: parsedName,
         email: rawEmail,
-        website: inferredWebsite,
+        phone: body.phone,
+        website: inferredWebsite || body.website,
+        addressLine1: body.addressLine1,
+        addressLine2: body.addressLine2,
+        city: body.city,
+        state: body.state,
+        pincode: body.pincode,
         url: finalUrl,
         placeId,
-        country: "India",
+        country: body.country || "India",
         weeklySchedule: DEFAULT_SCHEDULE,
       };
 
@@ -201,12 +220,12 @@ export async function POST(req: Request) {
             if (addr) {
               const road = addr.road || addr.street || "";
               const house = addr.house_number || "";
-              urlBiz.addressLine1 = [house, road].filter(Boolean).join(" ") || undefined;
-              urlBiz.addressLine2 = addr.suburb || addr.neighbourhood || addr.quarter || addr.locality || undefined;
-              urlBiz.city = addr.city || addr.town || addr.village || addr.city_district || addr.county || undefined;
-              urlBiz.state = addr.state || undefined;
-              urlBiz.pincode = addr.postcode || undefined;
-              urlBiz.country = addr.country || "India";
+              urlBiz.addressLine1 = [house, road].filter(Boolean).join(" ") || body.addressLine1 || undefined;
+              urlBiz.addressLine2 = addr.suburb || addr.neighbourhood || addr.quarter || addr.locality || body.addressLine2 || undefined;
+              urlBiz.city = addr.city || addr.town || addr.village || addr.city_district || addr.county || body.city || undefined;
+              urlBiz.state = addr.state || body.state || undefined;
+              urlBiz.pincode = addr.postcode || body.pincode || undefined;
+              urlBiz.country = addr.country || body.country || "India";
             }
           }
         } catch {
@@ -216,7 +235,54 @@ export async function POST(req: Request) {
       businesses.push(urlBiz);
     }
 
-    // 3. Deduplicate businesses
+    // 3. If explicit search query supplied
+    if (rawQuery) {
+      try {
+        const searchRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(rawQuery)}&format=json&addressdetails=1&limit=5`,
+          { headers: { "User-Agent": "MyClinics/1.0" } }
+        );
+        if (searchRes.ok) {
+          const searchList = (await searchRes.json()) as Array<{
+            name?: string;
+            display_name: string;
+            address?: Record<string, string>;
+          }>;
+          for (let i = 0; i < searchList.length; i++) {
+            const item = searchList[i];
+            const addr = item.address || {};
+            const road = addr.road || addr.street || "";
+            const house = addr.house_number || "";
+            const a1 = [house, road].filter(Boolean).join(" ") || undefined;
+            const a2 = addr.suburb || addr.neighbourhood || addr.quarter || addr.locality || undefined;
+            const city = addr.city || addr.town || addr.village || addr.city_district || undefined;
+            const state = addr.state || undefined;
+            const pincode = addr.postcode || undefined;
+            const bizName = item.name || item.display_name.split(",")[0]?.trim() || rawName || "Clinic";
+
+            businesses.push({
+              id: `search-${i}-${Date.now()}`,
+              name: bizName,
+              email: rawEmail,
+              phone: body.phone,
+              website: inferredWebsite || body.website,
+              addressLine1: a1,
+              addressLine2: a2,
+              city,
+              state,
+              pincode,
+              country: addr.country || body.country || "India",
+              url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([bizName, a2 || city].filter(Boolean).join(" "))}`,
+              weeklySchedule: DEFAULT_SCHEDULE,
+            });
+          }
+        }
+      } catch {
+        // Continue
+      }
+    }
+
+    // 4. Deduplicate businesses
     const seen = new Set<string>();
     const uniqueBusinesses: GoogleBusinessItem[] = [];
     for (const b of businesses) {
@@ -227,15 +293,28 @@ export async function POST(req: Request) {
       }
     }
 
-    // If no custom GBP API locations found, provide the connected business profile for this email by default
+    // 5. If no businesses found, construct the connected business profile for this clinic
     if (uniqueBusinesses.length === 0) {
+      const clinicCity = body.city?.trim();
+      const clinicAddress = body.addressLine1?.trim();
+      const mapsSearchUrl =
+        rawUrl && !rawUrl.includes("support.google.com")
+          ? rawUrl
+          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([rawName, clinicCity || clinicAddress].filter(Boolean).join(" "))}`;
+
       const defaultBiz: GoogleBusinessItem = {
         id: `gbp-${rawEmail || "clinic"}`,
-        name: rawName || "Clinic",
+        name: rawName || "Clinic Profile",
         email: rawEmail,
-        website: inferredWebsite,
-        url: rawUrl || "https://business.google.com/",
-        country: "India",
+        phone: body.phone?.trim() || undefined,
+        website: inferredWebsite || body.website?.trim() || undefined,
+        addressLine1: clinicAddress || undefined,
+        addressLine2: body.addressLine2?.trim() || undefined,
+        city: clinicCity || undefined,
+        state: body.state?.trim() || undefined,
+        pincode: body.pincode?.trim() || undefined,
+        country: body.country?.trim() || "India",
+        url: mapsSearchUrl,
         weeklySchedule: DEFAULT_SCHEDULE,
       };
       uniqueBusinesses.push(defaultBiz);
@@ -246,6 +325,8 @@ export async function POST(req: Request) {
       ...primary,
       businesses: uniqueBusinesses,
     };
+
+    return NextResponse.json(finalResult);
 
     return NextResponse.json(finalResult);
   } catch (err) {
