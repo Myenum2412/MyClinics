@@ -18,7 +18,7 @@ import type {
 } from "@/lib/clinic-api";
 import { DROPDOWN_OPTION_DEFS, useDropdownOptions } from "@/lib/dropdown-options";
 import { formatTimeOnly } from "@/lib/datetime";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -438,74 +438,72 @@ export default function SettingsPage() {
       {/* Tab content */}
       <div className="grid gap-4">
         {(activeTab === "integrations" || (activeTab as string) === "whatsapp") && (() => {
+          const isGoogleConnected = Boolean(settings?.googleBusinessUrl || (settings as any)?.profile?.googleBusinessUrl);
+
           const integrationsList = [
             {
               id: "whatsapp",
               name: "WhatsApp Business",
-              category: "Messaging & AI Bot",
+              category: "Messaging",
               description:
-                "Send appointment confirmations, reminders, prescriptions, and AI assistant replies straight to your patient's chat.",
+                "Send booking confirmations, reminders, prescriptions, and AI assistant replies straight to your patient's chat.",
               icon: <WhatsappIcon className="size-6" />,
               connected: connected,
               connectedLabel: waSession?.phone ? `+${waSession.phone}` : "Connected",
-              actions: (
-                <div className="flex items-center gap-2">
-                  {connected && (
-                    <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-1 text-xs">
-                      <span className="text-[11px] text-muted-foreground font-medium">AI Bot</span>
-                      <Switch
-                        checked={aiAgentEnabled}
-                        disabled={!canEdit || aiAgentSaving}
-                        onCheckedChange={async (v) => {
-                          if (!session?.clinicId) return;
-                          setAiAgentSaving(true);
-                          const prev = aiAgentEnabled;
-                          setAiAgentEnabled(v);
-                          try {
-                            const updated = await updateClinicSettings(session.clinicId, { aiAgentEnabled: v } as any);
-                            setSettings(updated);
-                            toast.success(v ? "AI Agent enabled" : "AI Agent disabled");
-                          } catch (e) {
-                            setAiAgentEnabled(prev);
-                            toast.error(e instanceof Error ? e.message : "Failed to update");
-                          } finally {
-                            setAiAgentSaving(false);
-                          }
-                        }}
-                      />
-                    </div>
-                  )}
-                  <Button
-                    size="sm"
-                    variant={connected ? "outline" : "default"}
-                    onClick={() => {
-                      setWaDialogOpen(true);
-                      if (!connected && !displayQr && canEdit) {
-                        void handleConnect();
-                      }
-                    }}
-                  >
-                    {connected ? "Manage WhatsApp" : "Connect WhatsApp"}
-                  </Button>
-                </div>
+              onToggle: (checked: boolean) => {
+                if (checked && !connected) {
+                  setWaDialogOpen(true);
+                  if (!displayQr && canEdit) void handleConnect();
+                } else if (!checked && connected) {
+                  setWaDialogOpen(true);
+                }
+              },
+              actionButton: connected ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => setWaDialogOpen(true)}
+                >
+                  Disconnect
+                </Button>
+              ) : (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    setWaDialogOpen(true);
+                    if (!displayQr && canEdit) void handleConnect();
+                  }}
+                >
+                  Connect
+                </Button>
               ),
             },
             {
               id: "google-business",
               name: "Google Business Profile",
-              category: "Local Presence & Maps",
+              category: "Local Presence",
               description:
                 "Sync verified clinic profile, address, operating hours, phone, and reviews directly from Google Maps.",
               icon: <GoogleIcon className="size-5" />,
-              connected: Boolean(settings?.googleBusinessUrl || (settings as any)?.profile?.googleBusinessUrl),
+              connected: isGoogleConnected,
               connectedLabel: "Connected",
-              actions: (
-                <Button size="sm" variant="outline" asChild>
-                  <Link href="/clinic/account">
-                    Manage in Account
-                    <ExternalLink className="size-3 ml-1" />
-                  </Link>
-                </Button>
+              onToggle: () => {},
+              actionButton: isGoogleConnected ? (
+                <Link
+                  href="/clinic/account"
+                  className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-muted-foreground")}
+                >
+                  Manage
+                </Link>
+              ) : (
+                <Link
+                  href="/clinic/account"
+                  className={buttonVariants({ variant: "default", size: "sm" })}
+                >
+                  Connect
+                </Link>
               ),
             },
             {
@@ -516,13 +514,14 @@ export default function SettingsPage() {
                 "Automatically ingest patient leads from Facebook and Instagram Lead Ads directly into clinic CRM contacts.",
               icon: <MetaIcon className="size-5" />,
               connected: false,
-              actions: (
-                <Button size="sm" variant="outline" asChild>
-                  <Link href="/clinic/crm/contacts">
-                    Connect Meta
-                    <ExternalLink className="size-3 ml-1" />
-                  </Link>
-                </Button>
+              onToggle: () => {},
+              actionButton: (
+                <Link
+                  href="/clinic/crm/contacts"
+                  className={buttonVariants({ variant: "default", size: "sm" })}
+                >
+                  Connect
+                </Link>
               ),
             },
             {
@@ -533,13 +532,25 @@ export default function SettingsPage() {
                 "Two-way sync so every booked appointment lands on the doctor's personal calendar in real-time.",
               icon: <GoogleCalendar className="size-6" />,
               connected: calendarSync,
-              connectedLabel: "Active",
-              actions: (
-                <Switch
-                  checked={calendarSync}
-                  onCheckedChange={setCalendarSync}
-                  aria-label="Toggle Google Calendar sync"
-                />
+              connectedLabel: "Connected",
+              onToggle: (v: boolean) => setCalendarSync(v),
+              actionButton: calendarSync ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => setCalendarSync(false)}
+                >
+                  Disconnect
+                </Button>
+              ) : (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setCalendarSync(true)}
+                >
+                  Connect
+                </Button>
               ),
             },
             {
@@ -550,13 +561,25 @@ export default function SettingsPage() {
                 "Encrypted automated cloud backups for dental charts, prescription records, and patient files.",
               icon: <Drive className="size-6" />,
               connected: driveSync,
-              connectedLabel: "Active",
-              actions: (
-                <Switch
-                  checked={driveSync}
-                  onCheckedChange={setDriveSync}
-                  aria-label="Toggle Google Drive sync"
-                />
+              connectedLabel: "Connected",
+              onToggle: (v: boolean) => setDriveSync(v),
+              actionButton: driveSync ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => setDriveSync(false)}
+                >
+                  Disconnect
+                </Button>
+              ) : (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => setDriveSync(true)}
+                >
+                  Connect
+                </Button>
               ),
             },
           ];
@@ -598,7 +621,7 @@ export default function SettingsPage() {
                       key={item.id}
                       className={cn(
                         "w-full gap-0 py-0 transition-colors shadow-xs",
-                        item.connected && "border-primary/40 bg-primary/[0.02]"
+                        item.connected && "border-primary/40 bg-primary/[0.03]"
                       )}
                     >
                       <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-6">
@@ -612,28 +635,34 @@ export default function SettingsPage() {
                             {item.icon}
                           </span>
                           <div className="min-w-0">
-                            <CardTitle className="truncate text-sm font-semibold">{item.name}</CardTitle>
+                            <CardTitle className="truncate text-base font-semibold">{item.name}</CardTitle>
                             <CardDescription className="mt-0.5 text-xs text-muted-foreground">{item.category}</CardDescription>
                           </div>
                         </div>
 
-                        <p className="min-w-0 flex-1 text-xs text-muted-foreground sm:text-sm">
+                        <p className="min-w-0 flex-1 text-sm text-muted-foreground">
                           {item.description}
                         </p>
 
                         <div className="flex shrink-0 flex-wrap items-center gap-2.5 sm:justify-end">
                           {item.connected ? (
-                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 border-primary/20 gap-1 text-xs font-normal">
-                              <Check className="size-3 text-primary" />
+                            <Badge className="bg-primary/10 text-primary hover:bg-primary/10 font-normal">
+                              <Check className="size-3.5 mr-1" />
                               {item.connectedLabel || "Connected"}
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-muted-foreground text-xs font-normal">
+                            <Badge variant="outline" className="text-muted-foreground font-normal">
                               Not connected
                             </Badge>
                           )}
 
-                          {item.actions}
+                          <Switch
+                            checked={item.connected}
+                            onCheckedChange={item.onToggle}
+                            aria-label={`Toggle ${item.name}`}
+                          />
+
+                          {item.actionButton}
                         </div>
                       </div>
                     </Card>
