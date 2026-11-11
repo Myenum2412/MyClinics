@@ -3,6 +3,7 @@ import Image from "next/image";
 import HeroSection6 from "@/components/hero-section-6";
 import FeaturesBlock from "@/components/blocks/features-1-7ovr";
 import IntegrationsMarquee from "@/components/blocks/integrations-2-marquee";
+import ContentSection from "@/components/content-1";
 import NewsletterHomeBlock from "@/components/blocks/newsletter-home";
 import { FooterSection } from "@/components/footer-section";
 
@@ -65,6 +66,7 @@ export default function Home() {
         <HeroSection6 />
         <FeaturesBlock />
         <IntegrationsMarquee />
+        <ContentSection />
         <NewsletterHomeBlock />
         <FooterSection />
       </div>
