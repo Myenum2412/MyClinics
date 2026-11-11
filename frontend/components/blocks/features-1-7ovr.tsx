@@ -10,6 +10,7 @@ import {
   ClipboardList,
   Pill,
   ReceiptIndianRupee,
+  Stethoscope,
 } from "lucide-react"
 
 type IconProps = { className?: string; size?: number | string }
@@ -28,6 +29,13 @@ const features = [
     ),
     title: "Patient records",
     copy: "Visit history, investigations and reports attached to a single patient file.",
+  },
+  {
+    icon: (p: IconProps) => (
+      <Stethoscope {...p} />
+    ),
+    title: "Treatment & care",
+    copy: "Document diagnosis, clinical procedures, progress notes and personalized treatment plans.",
   },
   {
     icon: (p: IconProps) => (
