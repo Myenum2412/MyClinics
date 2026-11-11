@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import {
@@ -11,15 +12,18 @@ import {
   type Patient,
   type Doctor,
   type Prescription,
+  type Contact,
   getDashboard,
   listAppointments,
   listBills,
   listDoctors,
   listPatients,
   listPrescriptions,
+  listContacts,
   createPatient,
   uploadAvatar,
 } from "@/lib/clinic-api";
+import { BillingChartsCard } from "@/components/clinic/billing-charts-card";
 import {
   KOLKATA_TZ,
   now,
@@ -264,6 +268,7 @@ function GreetingBanner({
 export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const clinicId = session.clinicId ?? "";
   const isDoctorRole = session.role === "doctor";
+  const router = useRouter();
 
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -272,6 +277,12 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [counts, setCounts] = useState<{ appointments: number; patients: number; doctors: number; prescriptions: number; revenue: number; paidRevenue: number } | null>(null);
+
+  // Leads state
+  const [leads, setLeads] = useState<Contact[]>([]);
+  const [loadingLeads, setLoadingLeads] = useState(true);
+  const [leadsPage, setLeadsPage] = useState(1);
+  const leadsPageSize = 6;
 
   // Pagination states for table bottoms
   const [apptPage, setApptPage] = useState(1);
@@ -292,6 +303,19 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     if (!clinicId) return;
     let active = true;
     setLoading(true);
+    setLoadingLeads(true);
+
+    listContacts(clinicId, { limit: 50, sort: "-createdAt" })
+      .then((res) => {
+        if (active) setLeads(res.items ?? []);
+      })
+      .catch(() => {
+        if (active) setLeads([]);
+      })
+      .finally(() => {
+        if (active) setLoadingLeads(false);
+      });
+
     async function load() {
       try {
         const data = await getDashboard(clinicId);
@@ -507,6 +531,10 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const pagedPatients = useMemo(() => {
     return patients.slice((patientPage - 1) * patientPageSize, patientPage * patientPageSize);
   }, [patients, patientPage, patientPageSize]);
+
+  const pagedLeads = useMemo(() => {
+    return leads.slice((leadsPage - 1) * leadsPageSize, leadsPage * leadsPageSize);
+  }, [leads, leadsPage, leadsPageSize]);
 
   // Patient selection toggle helpers
   const toggleSelectAllPatients = () => {
@@ -833,6 +861,105 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
                 totalItems={patients.length}
                 onPageChange={setPatientPage}
                 itemLabel="patients"
+              />
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* 2nd row: Left side (Billing with @7ovr/charts-1) and Right side (Leads table only) */}
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+        {/* Left Side: Billing (using @7ovr/charts-1) */}
+        <BillingChartsCard bills={bills} loading={loading} />
+
+        {/* Right Side: Leads (Table only) */}
+        <Card className="rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
+          <div className="flex flex-col flex-1 justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
+                <div>
+                  <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                    <Users className="size-4 text-primary" />
+                    Leads
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Recent CRM leads and inquiries.
+                  </p>
+                </div>
+                <Link href="/clinic/crm/contacts">
+                  <Button variant="ghost" size="sm" className="h-8 text-xs gap-1">
+                    View all <ArrowRight className="size-3.5" />
+                  </Button>
+                </Link>
+              </div>
+
+              <CardContent className="p-0">
+                {loadingLeads ? (
+                  <div className="space-y-3 p-6">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                  </div>
+                ) : leads.length === 0 ? (
+                  <div className="py-12 text-center text-sm text-muted-foreground">
+                    No leads recorded yet.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
+                          <TableHead className="font-semibold text-foreground px-6">Name</TableHead>
+                          <TableHead className="font-semibold text-foreground px-4">Contact</TableHead>
+                          <TableHead className="font-semibold text-foreground px-4">Source</TableHead>
+                          <TableHead className="font-semibold text-foreground px-6 text-right">Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pagedLeads.map((lead) => (
+                          <TableRow
+                            key={lead.contactId}
+                            className="border-b border-border last:border-b-0 cursor-pointer hover:bg-muted/30 transition-colors"
+                            onClick={() => router.push(`/clinic/crm/contacts/${lead.contactId}`)}
+                            title="Click to view lead details"
+                          >
+                            <TableCell className="py-3.5 px-6 font-semibold text-xs text-foreground">
+                              {lead.name}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground py-3.5 px-4">
+                              {lead.phone || lead.email || "—"}
+                            </TableCell>
+                            <TableCell className="py-3.5 px-4">
+                              {lead.source === "META" ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#0081FB]/10 text-[#0081FB] border border-[#0081FB]/20">
+                                  Meta
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted text-muted-foreground border border-border">
+                                  {lead.source || "Direct"}
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground py-3.5 px-6 text-right">
+                              {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "—"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </div>
+
+            {/* Bottom pagination bar */}
+            {!loadingLeads && leads.length > 0 && (
+              <Pagination
+                page={leadsPage}
+                pageSize={leadsPageSize}
+                totalItems={leads.length}
+                onPageChange={setLeadsPage}
+                itemLabel="leads"
               />
             )}
           </div>
