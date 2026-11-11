@@ -35,7 +35,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { WhatsappIcon } from "@/components/ui/svgs/whatsappIcon";
 import { GoogleCalendar } from "@/components/ui/svgs/googleCalendar";
-import { Razorpay } from "@/components/ui/svgs/razorpay";
 import { Drive } from "@/components/ui/svgs/drive";
 import { GoogleIcon } from "@/components/clinic/google-business-connect-card";
 import {
@@ -523,25 +522,6 @@ export default function SettingsPage() {
                     Connect Meta
                     <ExternalLink className="size-3 ml-1" />
                   </Link>
-                </Button>
-              ),
-            },
-            {
-              id: "upi-payments",
-              name: "Razorpay & UPI Payments",
-              category: "Billing & Payments",
-              description:
-                "Accept consultation fees and treatment payments with instant clinic UPI QR code and deep links.",
-              icon: <Razorpay className="size-6" />,
-              connected: Boolean(settings?.upiId),
-              connectedLabel: settings?.upiId ? settings.upiId : "Configured",
-              actions: (
-                <Button
-                  size="sm"
-                  variant={settings?.upiId ? "outline" : "default"}
-                  onClick={() => setActiveTab("billing")}
-                >
-                  {settings?.upiId ? "Edit UPI" : "Set up UPI"}
                 </Button>
               ),
             },
