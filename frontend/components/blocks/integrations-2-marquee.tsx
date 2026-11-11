@@ -1,49 +1,35 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight, Mail } from "lucide-react"
+import { ArrowRight, Mail, MessageSquare } from "lucide-react"
 
-import { Slack } from "@/components/ui/svgs/slack"
-import { GithubDark } from "@/components/ui/svgs/githubDark"
 import { Google } from "@/components/ui/svgs/google"
-import { Notion } from "@/components/ui/svgs/notion"
-import { Figma } from "@/components/ui/svgs/figma"
-import { Discord } from "@/components/ui/svgs/discord"
-import { Microsoft } from "@/components/ui/svgs/microsoft"
 import { Paypal } from "@/components/ui/svgs/paypal"
-import { Dropbox } from "@/components/ui/svgs/dropbox"
-import { Trello } from "@/components/ui/svgs/trello"
 import { Telegram } from "@/components/ui/svgs/telegram"
 import { WhatsappIcon } from "@/components/ui/svgs/whatsappIcon"
-import { SpotifyIcon } from "@/components/ui/svgs/spotifyIcon"
-import { AppleDark } from "@/components/ui/svgs/appleDark"
-import { Linkedin } from "@/components/ui/svgs/linkedin"
-import { InstagramIcon } from "@/components/ui/svgs/instagramIcon"
-import { XDark } from "@/components/ui/svgs/xDark"
+import { GoogleCalendar } from "@/components/ui/svgs/googleCalendar"
+import { Drive } from "@/components/ui/svgs/drive"
+import { Razorpay } from "@/components/ui/svgs/razorpay"
+import { Godaddy } from "@/components/ui/svgs/godaddy"
 
 type IconComponent = (props: React.ComponentProps<"svg">) => React.ReactNode
 
 const integrations: { name: string; Icon: IconComponent }[] = [
-  { name: "Slack", Icon: Slack },
-  { name: "GitHub", Icon: GithubDark },
-  { name: "Google", Icon: Google },
-  { name: "Notion", Icon: Notion },
-  { name: "Figma", Icon: Figma },
-  { name: "Discord", Icon: Discord },
-  { name: "Microsoft", Icon: Microsoft },
-  { name: "PayPal", Icon: Paypal },
-  { name: "Dropbox", Icon: Dropbox },
-  { name: "Trello", Icon: Trello },
-  { name: "Telegram", Icon: Telegram },
   { name: "WhatsApp", Icon: WhatsappIcon },
-  { name: "Spotify", Icon: SpotifyIcon },
-  { name: "Apple", Icon: AppleDark },
-  { name: "LinkedIn", Icon: Linkedin },
-  { name: "Instagram", Icon: InstagramIcon },
-  { name: "X (Twitter)", Icon: XDark },
+  { name: "Google Calendar", Icon: GoogleCalendar },
+  { name: "Razorpay", Icon: Razorpay },
+  { name: "Google Drive", Icon: Drive },
+  { name: "GoDaddy", Icon: Godaddy },
+  { name: "Google Workspace", Icon: Google },
+  { name: "PayPal", Icon: Paypal },
+  { name: "Telegram", Icon: Telegram },
   {
     name: "Email",
     Icon: (props) => <Mail {...props} />,
+  },
+  {
+    name: "SMS Gateway",
+    Icon: (props) => <MessageSquare {...props} />,
   },
 ]
 
@@ -58,9 +44,11 @@ function IntegrationTile({
     <Link
       href="/integrations"
       tabIndex={tabIndex}
-      className="group/tile flex w-28 shrink-0 flex-col items-center gap-2.5 rounded-xl border border-blue-900/60 bg-blue-950/40 px-3 py-5 ring-1 ring-white/5 ring-inset backdrop-blur-sm transition-colors hover:border-blue-700 hover:bg-blue-900/40 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
+      className="group/tile flex w-32 shrink-0 flex-col items-center gap-2.5 rounded-xl border border-blue-900/60 bg-blue-950/40 px-3 py-5 ring-1 ring-white/5 ring-inset backdrop-blur-sm transition-colors hover:border-blue-700 hover:bg-blue-900/40 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none"
     >
-      <Icon className="size-7" aria-hidden="true" />
+      <div className="flex size-7 items-center justify-center">
+        <Icon className="max-h-7 max-w-7 w-auto h-auto" aria-hidden="true" />
+      </div>
       <span className="w-full truncate text-center text-xs font-medium text-white/70 transition-colors group-hover/tile:text-white">
         {name}
       </span>
