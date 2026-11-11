@@ -363,22 +363,18 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     return new Map(patients.map((p) => [p.patientId, p.fullName]));
   }, [patients]);
 
+  const today = useMemo(() => todayISO(), []);
+
+  // Filter: strictly upcoming dates only (today onwards), sorted chronologically
   const upcomingAppointments = useMemo(() => {
-    const today = todayISO();
-    const active = appointments.filter(
-      (a) => a.status !== "cancelled" && a.status !== "no_show" && a.date >= today
-    );
-    if (active.length > 0) {
-      return active.sort((a, b) =>
+    return appointments
+      .filter(
+        (a) => a.status !== "cancelled" && a.status !== "no_show" && a.date >= today
+      )
+      .sort((a, b) =>
         a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date)
       );
-    }
-    return [...appointments]
-      .filter((a) => a.status !== "cancelled")
-      .sort((a, b) =>
-        a.date === b.date ? b.time.localeCompare(a.time) : b.date.localeCompare(a.date)
-      );
-  }, [appointments]);
+  }, [appointments, today]);
 
   const handleSavePatient = async (form: PatientFormState) => {
     setSavingPatient(true);
@@ -469,8 +465,8 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
 
       {/* 1 row: Left side (Upcoming Appointments table) and Right side (Patients card with Create Patient) */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-        {/* Left Side: Upcoming Appointments Table (Date and Patient Name only) */}
-        <Card className="rounded-2xl border border-border shadow-sm flex flex-col justify-between overflow-hidden">
+        {/* Left Side: Upcoming Appointments Table (Date and Patient Name only, without round border) */}
+        <Card className="rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
           <div>
             <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
               <div>
@@ -510,15 +506,30 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {upcomingAppointments.slice(0, 6).map((appt) => {
+                      {upcomingAppointments.slice(0, 8).map((appt) => {
                         const patientName =
                           patientMap.get(appt.patientId) ??
                           (appt as any).patientName ??
                           "Patient";
+                        const isToday = appt.date === today;
                         return (
-                          <TableRow key={appt.appointmentId} className="hover:bg-muted/30 transition-colors">
+                          <TableRow
+                            key={appt.appointmentId}
+                            className={`transition-colors ${
+                              isToday
+                                ? "bg-amber-500/10 hover:bg-amber-500/15 dark:bg-amber-500/20 dark:hover:bg-amber-500/25 border-l-4 border-l-amber-500 font-semibold"
+                                : "hover:bg-muted/30"
+                            }`}
+                          >
                             <TableCell className="text-xs font-medium text-foreground py-3.5">
-                              {formatApptDate(appt.date, appt.time)}
+                              <div className="flex items-center gap-2">
+                                <span>{formatApptDate(appt.date, appt.time)}</span>
+                                {isToday && (
+                                  <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                                    Today
+                                  </span>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell className="text-xs font-semibold text-foreground py-3.5">
                               {patientName}
@@ -534,8 +545,8 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           </div>
         </Card>
 
-        {/* Right Side: Patients Card with Create Patient form trigger */}
-        <Card className="rounded-2xl border border-border shadow-sm flex flex-col justify-between overflow-hidden">
+        {/* Right Side: Patients Card with Create Patient form trigger (without round border) */}
+        <Card className="rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
           <div>
             <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
               <div>
