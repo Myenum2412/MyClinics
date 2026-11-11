@@ -54,9 +54,6 @@ import { nowMs, todayISO } from "@/lib/datetime";
 const StatsBilling = dynamic(() => import("@/components/stats-billing"), {
   loading: () => <div className="h-[270px]" aria-hidden="true" />,
 });
-const BillingPayoutsChart = dynamic(() => import("@/components/clinic/billing-payouts-chart").then((m) => m.BillingPayoutsChart), {
-  loading: () => <div className="h-[360px]" aria-hidden="true" />,
-});
 import {
   ArrowUp,
   ArrowDown,
@@ -484,15 +481,6 @@ export default function BillingPage() {
             }
           />
         </div>
-      )}
-
-      {/* Chart below section card — real data only */}
-      {!initialLoading && (
-        <Card className="border-border shadow-sm overflow-hidden">
-          <CardContent className="p-0">
-            <BillingPayoutsChart bills={statsBills} />
-          </CardContent>
-        </Card>
       )}
 
       {/* Bulk actions bar if selected */}
