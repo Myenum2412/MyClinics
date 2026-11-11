@@ -363,7 +363,7 @@ export default function AccountPage() {
           state: data.state || prev.profile.state,
           pincode: data.pincode || prev.profile.pincode,
           country: data.country || prev.profile.country || "India",
-          googleBusinessUrl: data.url || prev.profile.googleBusinessUrl,
+          googleBusinessUrl: data.url || prev.profile.googleBusinessUrl || "https://business.google.com/",
           googlePlaceId: data.placeId || prev.profile.googlePlaceId,
         },
       };

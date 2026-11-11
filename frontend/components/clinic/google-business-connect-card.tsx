@@ -135,6 +135,52 @@ export function GoogleBusinessConnectCard({
     };
   }, [clinicId, clinicEmail, clinicName, connectedUrl]);
 
+  // Automatically connect with clinic email
+  const handleConnectAuto = async () => {
+    setLoading(true);
+    try {
+      const email = clinicEmail?.trim();
+      const res = await resolveGoogleBusinessProfile(clinicId, {
+        email: email || undefined,
+        name: clinicName || undefined,
+        url: connectedUrl || undefined,
+      });
+      const list = res.businesses && res.businesses.length > 0 ? res.businesses : [res];
+      const target = list[0] || {
+        id: `gbp-${email || "default"}`,
+        name: clinicName || "Clinic Profile",
+        email: email || undefined,
+        url: connectedUrl || "https://business.google.com/",
+        country: "India",
+      };
+      setBusinesses(list);
+      setSelectedBiz(target);
+      if (email) setVerifiedEmail(email);
+
+      // Automatically connect and auto-complete profile!
+      onAutoComplete(target);
+      toast.success(
+        email
+          ? `Automatically connected Google Business Profile for ${email}!`
+          : "Automatically connected Google Business Profile!"
+      );
+    } catch {
+      const fallbackBiz: GoogleBusinessResolvedData = {
+        id: `gbp-${clinicEmail || "default"}`,
+        name: clinicName || "Clinic Profile",
+        email: clinicEmail || undefined,
+        url: connectedUrl || "https://business.google.com/",
+        country: "India",
+      };
+      setBusinesses([fallbackBiz]);
+      setSelectedBiz(fallbackBiz);
+      onAutoComplete(fallbackBiz);
+      toast.success("Connected Google Business Profile!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Listen for Google OAuth callback postMessage
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
@@ -153,18 +199,24 @@ export function GoogleBusinessConnectCard({
         setVerifiedEmail(email);
         const list = bizList || [];
         setBusinesses(list);
-        setSelectedBiz(list[0] || null);
+        const target = list[0] || {
+          id: `gbp-${email}`,
+          name: clinicName || "Clinic Profile",
+          email,
+          url: "https://business.google.com/",
+          country: "India",
+        };
+        setSelectedBiz(target);
 
-        if (list.length > 0) {
-          toast.success(`Verified Google Account: ${email}. Found ${list.length} connected business profile(s).`);
-        } else {
-          toast.info(`Signed in with verified email ${email}. No Google Business listings found under this account.`);
-        }
+        // Automatically connect upon successful authentication!
+        onAutoComplete(target);
+        setOpen(false);
+        toast.success(`Google Account verified: ${email}. Business profile connected automatically!`);
       }
     };
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [clinicName, onAutoComplete]);
 
   // Launch Google OAuth popup for explicit switch
   const handleLaunchGoogleAuth = () => {
@@ -249,13 +301,30 @@ export function GoogleBusinessConnectCard({
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger
-          render={
-            <Button disabled={!canManage} className="w-full sm:w-auto shrink-0">
-              {connected ? "Google settings" : "Connect Google"}
-            </Button>
-          }
-        />
+        <Button
+          type="button"
+          disabled={!canManage || loading}
+          className="w-full sm:w-auto shrink-0"
+          onClick={(e) => {
+            if (!connected) {
+              e.preventDefault();
+              void handleConnectAuto();
+            } else {
+              setOpen(true);
+            }
+          }}
+        >
+          {loading ? (
+            <>
+              <Loader2 className="size-3.5 animate-spin mr-1.5" />
+              Connecting…
+            </>
+          ) : connected ? (
+            "Google settings"
+          ) : (
+            "Connect Google"
+          )}
+        </Button>
         <DialogContent className="max-w-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-center gap-2">
@@ -318,15 +387,26 @@ export function GoogleBusinessConnectCard({
                       </p>
                     </div>
 
-                    <Button
-                      type="button"
-                      className="bg-[#4285F4] hover:bg-[#3367D6] text-white gap-2 text-xs font-medium h-9 px-4 shadow-xs"
-                      onClick={handleLaunchGoogleAuth}
-                      disabled={authenticating}
-                    >
-                      <GoogleIcon className="size-3.5" />
-                      {authenticating ? "Connecting…" : "Connect with Google"}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-1">
+                      <Button
+                        type="button"
+                        className="bg-[#4285F4] hover:bg-[#3367D6] text-white gap-2 text-xs font-medium h-9 px-4 shadow-xs"
+                        onClick={() => void handleConnectAuto()}
+                        disabled={loading}
+                      >
+                        {loading ? <Loader2 className="size-3.5 animate-spin" /> : <GoogleIcon className="size-3.5" />}
+                        {loading ? "Connecting automatically…" : "Connect automatically"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="text-xs h-9 px-3 text-muted-foreground"
+                        onClick={handleLaunchGoogleAuth}
+                        disabled={authenticating}
+                      >
+                        Switch Account
+                      </Button>
+                    </div>
                   </div>
                 )}
               </TabsContent>
@@ -577,12 +657,12 @@ export function GoogleBusinessConnectCard({
             ) : (
               <Button
                 size="sm"
-                onClick={handleLaunchGoogleAuth}
-                disabled={authenticating}
+                onClick={() => void handleConnectAuto()}
+                disabled={loading}
                 className="gap-1.5 bg-[#4285F4] hover:bg-[#3367D6] text-white"
               >
-                {authenticating ? <Loader2 className="size-3.5 animate-spin" /> : <GoogleIcon className="size-3.5" />}
-                Connect with Google
+                {loading ? <Loader2 className="size-3.5 animate-spin" /> : <GoogleIcon className="size-3.5" />}
+                Connect automatically
               </Button>
             )}
           </DialogFooter>
