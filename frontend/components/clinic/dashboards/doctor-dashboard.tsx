@@ -26,6 +26,7 @@ import {
   toLocalDateISO,
   parseLocalDate,
   formatDate,
+  addDays,
 } from "@/lib/datetime";
 import { MetricStatGrid } from "@/components/metric-stat-cards";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,7 +62,6 @@ import {
   CalendarDays,
   IndianRupee,
   Stethoscope,
-  Eye,
 } from "lucide-react";
 
 import { type ClinicSession } from "@/lib/clinic-api";
@@ -80,6 +80,47 @@ function formatApptDate(dateStr: string, timeStr?: string): string {
   } catch {
     return timeStr ? `${dateStr} · ${timeStr}` : dateStr;
   }
+}
+
+function toPatientDetailViewFormState(p: Patient): Partial<PatientFormState> {
+  return {
+    fullName: p.fullName,
+    mobile: p.mobile,
+    whatsapp: p.whatsapp ?? "",
+    email: p.email ?? "",
+    gender: p.gender ?? "",
+    dateOfBirth: p.dateOfBirth ?? "",
+    bloodGroup: p.bloodGroup ?? "",
+    height: p.height ?? "",
+    weight: p.weight ?? "",
+    bloodPressure: p.bloodPressure ?? "",
+    temperature: p.temperature ?? "",
+    pulse: p.pulse ?? "",
+    respiratoryRate: p.respiratoryRate ?? "",
+    spo2: p.spo2 ?? "",
+    occupation: p.occupation ?? "",
+    maritalStatus: p.maritalStatus ?? "",
+    address: p.address ?? "",
+    city: p.city ?? "",
+    state: p.state ?? "",
+    pincode: p.pincode ?? "",
+    emergencyContactName: p.emergencyContactName ?? "",
+    emergencyContactRelationship: p.emergencyContactRelationship ?? "",
+    emergencyContactMobile: p.emergencyContactMobile ?? "",
+    allergies: (p.allergies ?? []).join(", "),
+    idType: p.idType ?? "",
+    idNumber: p.idNumber ?? "",
+    insuranceProvider: p.insuranceProvider ?? "",
+    insurancePolicyNumber: p.insurancePolicyNumber ?? "",
+    insurancePolicyHolderName: p.insurancePolicyHolderName ?? "",
+    insuranceValidTill: p.insuranceValidTill ?? "",
+    referredBy: p.referredBy ?? "",
+    howDidYouHear: p.howDidYouHear ?? "",
+    notes: p.notes ?? "",
+    doctorId: p.doctorId,
+    portalAccess: p.userId ? "enable" : "disable",
+    patientId: p.patientId,
+  };
 }
 
 interface Greeting {
@@ -232,6 +273,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
 
   const [createPatientOpen, setCreatePatientOpen] = useState(false);
   const [savingPatient, setSavingPatient] = useState(false);
+  const [viewingPatient, setViewingPatient] = useState<Patient | null>(null);
 
   useEffect(() => {
     if (!clinicId) return;
@@ -363,18 +405,86 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
     return new Map(patients.map((p) => [p.patientId, p.fullName]));
   }, [patients]);
 
-  const today = useMemo(() => todayISO(), []);
+  // Shows upcoming dates starting from today in rows. If no appointments on a date, displays "—" instead of empty state.
+  const upcomingRows = useMemo(() => {
+    const today = todayISO();
+    const rows: {
+      id: string;
+      date: string;
+      time?: string;
+      patientName: string;
+      isToday: boolean;
+    }[] = [];
 
-  // Filter: strictly upcoming dates only (today onwards), sorted chronologically
-  const upcomingAppointments = useMemo(() => {
-    return appointments
-      .filter(
-        (a) => a.status !== "cancelled" && a.status !== "no_show" && a.date >= today
-      )
-      .sort((a, b) =>
-        a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date)
-      );
-  }, [appointments, today]);
+    const apptsByDate = new Map<string, Appointment[]>();
+    for (const appt of appointments) {
+      if (appt.status === "cancelled" || appt.status === "no_show") continue;
+      if (appt.date < today) continue;
+      const list = apptsByDate.get(appt.date) ?? [];
+      list.push(appt);
+      apptsByDate.set(appt.date, list);
+    }
+
+    const baseDate = parseLocalDate(today);
+    const seenDates = new Set<string>();
+
+    // Generate upcoming 7 days starting from today
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(baseDate, i);
+      const iso = toLocalDateISO(d);
+      seenDates.add(iso);
+      const dayAppts = apptsByDate.get(iso);
+
+      if (dayAppts && dayAppts.length > 0) {
+        dayAppts.sort((a, b) => a.time.localeCompare(b.time));
+        for (const appt of dayAppts) {
+          const pName =
+            patientMap.get(appt.patientId) ??
+            (appt as any).patientName ??
+            "Patient";
+          rows.push({
+            id: appt.appointmentId,
+            date: appt.date,
+            time: appt.time,
+            patientName: pName,
+            isToday: iso === today,
+          });
+        }
+      } else {
+        rows.push({
+          id: `day-${iso}`,
+          date: iso,
+          patientName: "—",
+          isToday: iso === today,
+        });
+      }
+    }
+
+    // Append any upcoming appointments beyond the 7 days window
+    const remainingDates = Array.from(apptsByDate.keys())
+      .filter((d) => !seenDates.has(d))
+      .sort();
+
+    for (const iso of remainingDates) {
+      const dayAppts = apptsByDate.get(iso) ?? [];
+      dayAppts.sort((a, b) => a.time.localeCompare(b.time));
+      for (const appt of dayAppts) {
+        const pName =
+          patientMap.get(appt.patientId) ??
+          (appt as any).patientName ??
+          "Patient";
+        rows.push({
+          id: appt.appointmentId,
+          date: appt.date,
+          time: appt.time,
+          patientName: pName,
+          isToday: false,
+        });
+      }
+    }
+
+    return rows;
+  }, [appointments, patientMap]);
 
   const handleSavePatient = async (form: PatientFormState) => {
     setSavingPatient(true);
@@ -492,10 +602,6 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-10 w-full" />
                 </div>
-              ) : upcomingAppointments.length === 0 ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">
-                  No upcoming appointments scheduled.
-                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
@@ -506,37 +612,30 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {upcomingAppointments.slice(0, 8).map((appt) => {
-                        const patientName =
-                          patientMap.get(appt.patientId) ??
-                          (appt as any).patientName ??
-                          "Patient";
-                        const isToday = appt.date === today;
-                        return (
-                          <TableRow
-                            key={appt.appointmentId}
-                            className={`transition-colors ${
-                              isToday
-                                ? "bg-amber-500/10 hover:bg-amber-500/15 dark:bg-amber-500/20 dark:hover:bg-amber-500/25 border-l-4 border-l-amber-500 font-semibold"
-                                : "hover:bg-muted/30"
-                            }`}
-                          >
-                            <TableCell className="text-xs font-medium text-foreground py-3.5">
-                              <div className="flex items-center gap-2">
-                                <span>{formatApptDate(appt.date, appt.time)}</span>
-                                {isToday && (
-                                  <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
-                                    Today
-                                  </span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-xs font-semibold text-foreground py-3.5">
-                              {patientName}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                      {upcomingRows.slice(0, 8).map((row) => (
+                        <TableRow
+                          key={row.id}
+                          className={`transition-colors ${
+                            row.isToday
+                              ? "bg-amber-500/10 hover:bg-amber-500/15 dark:bg-amber-500/20 dark:hover:bg-amber-500/25 border-l-4 border-l-amber-500 font-semibold"
+                              : "hover:bg-muted/30"
+                          }`}
+                        >
+                          <TableCell className="text-xs font-medium text-foreground py-3.5">
+                            <div className="flex items-center gap-2">
+                              <span>{formatApptDate(row.date, row.time)}</span>
+                              {row.isToday && (
+                                <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400">
+                                  Today
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className={`text-xs py-3.5 ${row.patientName === "—" ? "text-muted-foreground" : "font-semibold text-foreground"}`}>
+                            {row.patientName}
+                          </TableCell>
+                        </TableRow>
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
@@ -545,7 +644,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           </div>
         </Card>
 
-        {/* Right Side: Patients Card with Create Patient form trigger (without round border) */}
+        {/* Right Side: Patients Card with Create Patient form trigger & click-row-to-view */}
         <Card className="rounded-none border border-border shadow-sm flex flex-col justify-between overflow-hidden">
           <div>
             <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
@@ -555,7 +654,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
                   Patients
                 </h3>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Patients registered at this clinic.
+                  Click any patient to view details.
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -594,13 +693,17 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
                         <TableHead className="font-semibold text-foreground">Name</TableHead>
                         <TableHead className="font-semibold text-foreground">Phone</TableHead>
                         <TableHead className="font-semibold text-foreground">Status</TableHead>
-                        <TableHead className="text-right font-semibold text-foreground">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {patients.slice(0, 6).map((p) => (
-                        <TableRow key={p.patientId} className="hover:bg-muted/30 transition-colors">
-                          <TableCell className="py-3">
+                      {patients.slice(0, 8).map((p) => (
+                        <TableRow
+                          key={p.patientId}
+                          className="cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => setViewingPatient(p)}
+                          title="Click to view patient details"
+                        >
+                          <TableCell className="py-3.5">
                             <div className="flex items-center gap-2.5">
                               <PersonAvatar
                                 clinicId={clinicId}
@@ -609,25 +712,18 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
                                 name={p.fullName}
                                 className="size-7 text-[10px]"
                               />
-                              <span className="text-xs font-semibold text-foreground truncate max-w-[140px]">
+                              <span className="text-xs font-semibold text-foreground truncate max-w-[160px]">
                                 {p.fullName}
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell className="text-xs text-muted-foreground py-3">
+                          <TableCell className="text-xs text-muted-foreground py-3.5">
                             {p.mobile || "—"}
                           </TableCell>
-                          <TableCell className="py-3">
+                          <TableCell className="py-3.5">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                               {p.status || "active"}
                             </span>
-                          </TableCell>
-                          <TableCell className="text-right py-3">
-                            <Link href={`/clinic/records?patientId=${p.patientId}`}>
-                              <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1">
-                                <Eye className="size-3" /> EHR File
-                              </Button>
-                            </Link>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -660,6 +756,34 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
               doctors={doctors}
             />
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Patient Details Dialog Form */}
+      <Dialog
+        open={viewingPatient !== null}
+        onOpenChange={(open) => {
+          if (!open) setViewingPatient(null);
+        }}
+      >
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+          <DialogHeader className="pb-3 border-b">
+            <DialogTitle className="text-lg font-bold">Patient Details</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              Registration and medical record details for {viewingPatient?.fullName}.
+            </DialogDescription>
+          </DialogHeader>
+          {viewingPatient && (
+            <div className="mt-4">
+              <PatientForm
+                clinicId={clinicId}
+                initialData={toPatientDetailViewFormState(viewingPatient)}
+                mode="view"
+                doctors={doctors}
+                onClose={() => setViewingPatient(null)}
+              />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
