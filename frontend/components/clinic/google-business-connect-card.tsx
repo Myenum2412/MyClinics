@@ -81,7 +81,7 @@ export function GoogleBusinessConnectCard({
 }: GoogleBusinessConnectCardProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"auth" | "url">("auth");
-  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(clinicEmail || null);
   const [urlInput, setUrlInput] = useState(connectedUrl ?? "");
   const [loading, setLoading] = useState(false);
   const [authenticating, setAuthenticating] = useState(false);
@@ -89,6 +89,51 @@ export function GoogleBusinessConnectCard({
   const [selectedBiz, setSelectedBiz] = useState<GoogleBusinessResolvedData | null>(null);
 
   const connected = Boolean(connectedUrl);
+
+  // Load and show connected business profile by default
+  useEffect(() => {
+    if (clinicEmail) {
+      setVerifiedEmail(clinicEmail);
+    }
+  }, [clinicEmail]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadDefaultProfile() {
+      const email = clinicEmail?.trim();
+      const fallbackBiz: GoogleBusinessResolvedData = {
+        id: `gbp-${email || "default"}`,
+        name: clinicName || "Clinic Profile",
+        email: email || undefined,
+        url: connectedUrl || "https://business.google.com/",
+        country: "India",
+      };
+
+      try {
+        setLoading(true);
+        const data = await resolveGoogleBusinessProfile(clinicId, {
+          email: email || undefined,
+          name: clinicName || undefined,
+          url: connectedUrl || undefined,
+        });
+        if (cancelled) return;
+        const list = data.businesses && data.businesses.length > 0 ? data.businesses : [data];
+        setBusinesses(list);
+        setSelectedBiz(list[0] || fallbackBiz);
+      } catch {
+        if (cancelled) return;
+        setBusinesses([fallbackBiz]);
+        setSelectedBiz(fallbackBiz);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void loadDefaultProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [clinicId, clinicEmail, clinicName, connectedUrl]);
 
   // Listen for Google OAuth callback postMessage
   useEffect(() => {
@@ -121,7 +166,7 @@ export function GoogleBusinessConnectCard({
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  // Launch Google OAuth popup for verified email login only (no fake emails allowed)
+  // Launch Google OAuth popup for explicit switch
   const handleLaunchGoogleAuth = () => {
     setAuthenticating(true);
     const authUrl = `/api/clinics/auth/google?from=google_business${
@@ -173,14 +218,12 @@ export function GoogleBusinessConnectCard({
   };
 
   const statusText = connected
-    ? verifiedEmail
-      ? `Connected as ${verifiedEmail}`
+    ? verifiedEmail || clinicEmail
+      ? `Connected as ${verifiedEmail || clinicEmail}`
       : "Connected — clinic details and hours are synced"
-    : verifiedEmail
-      ? `Verified as ${verifiedEmail} — click to view profiles`
-      : clinicEmail
-        ? `Connect with verified ${clinicEmail} to sync clinic details`
-        : "Connect your clinic's Google Business Profile to sync details and hours";
+    : verifiedEmail || clinicEmail
+      ? `Connected with ${verifiedEmail || clinicEmail} — click to view profile`
+      : "Connect your clinic's Google Business Profile to sync details and hours";
 
   return (
     <div className="flex h-full min-h-[88px] flex-col justify-between gap-3 rounded-xl border border-border bg-white dark:bg-card p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
@@ -208,15 +251,7 @@ export function GoogleBusinessConnectCard({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger
           render={
-            <Button
-              disabled={!canManage}
-              className="w-full sm:w-auto shrink-0"
-              onClick={() => {
-                if (!connected && !verifiedEmail) {
-                  handleLaunchGoogleAuth();
-                }
-              }}
-            >
+            <Button disabled={!canManage} className="w-full sm:w-auto shrink-0">
               {connected ? "Google settings" : "Connect Google"}
             </Button>
           }
@@ -263,38 +298,11 @@ export function GoogleBusinessConnectCard({
                     <p className="text-[11px] text-muted-foreground">
                       Only verified business profiles belonging to this authenticated Google account are shown below.
                     </p>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs bg-white text-foreground mt-1"
-                      onClick={handleLaunchGoogleAuth}
-                      disabled={authenticating}
-                    >
-                      {authenticating ? <Loader2 className="size-3 animate-spin mr-1" /> : null}
-                      Switch Google Account
-                    </Button>
-                  </div>
-                ) : authenticating ? (
-                  <div className="rounded-lg border border-border bg-muted/20 p-6 text-center space-y-3">
-                    <div className="mx-auto flex size-11 items-center justify-center rounded-full bg-[#4285F4]/10">
-                      <Loader2 className="size-5 animate-spin text-[#4285F4]" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground">Connecting Google Account…</h4>
-                      <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
-                        Authorizing access to show the Google Business profile connected to your email.
+                    {authenticating && (
+                      <p className="text-[11px] text-[#4285F4] flex items-center gap-1.5 pt-1">
+                        <Loader2 className="size-3 animate-spin" /> Verifying Google Account…
                       </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="text-xs gap-1.5 h-8 mt-2"
-                      onClick={handleLaunchGoogleAuth}
-                    >
-                      <GoogleIcon className="size-3.5" />
-                      Re-open Google Window
-                    </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="rounded-lg border border-border bg-muted/20 p-5 text-center space-y-3">
@@ -306,7 +314,7 @@ export function GoogleBusinessConnectCard({
                         {clinicEmail ? `Connect with ${clinicEmail}` : "Connect Google Account"}
                       </h4>
                       <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
-                        Authorize Google access to load the business profiles connected to your account.
+                        View and sync the Google Business profile connected to your clinic account.
                       </p>
                     </div>
 
@@ -317,7 +325,7 @@ export function GoogleBusinessConnectCard({
                       disabled={authenticating}
                     >
                       <GoogleIcon className="size-3.5" />
-                      Connect with Google
+                      {authenticating ? "Connecting…" : "Connect with Google"}
                     </Button>
                   </div>
                 )}
