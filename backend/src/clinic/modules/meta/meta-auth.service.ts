@@ -73,7 +73,13 @@ export class MetaAuthService {
       : null;
     if (supplied) return supplied;
     const stored = await getClinicMetaAppConfig(this.db, clinicId);
-    if (stored) return stored;
+    if (stored) {
+      return {
+        appId: stored.appId,
+        appSecret: stored.appSecret,
+        redirectUri: input.redirectUri?.trim() || stored.redirectUri,
+      };
+    }
     throw new BadRequestError(
       "Meta is not configured for this clinic and no server defaults exist. " +
         "Provide your Meta App ID and App Secret (from your own Meta Business app) to connect."
@@ -96,6 +102,10 @@ export class MetaAuthService {
         metaAppId: input.appId,
         metaAppSecretEnc: encrypted.ciphertext,
         metaRedirectUri: input.redirectUri?.trim() || null,
+      });
+    } else if (input.redirectUri) {
+      await new MetaRepository(this.db).upsertIntegration(clinicId, {
+        metaRedirectUri: input.redirectUri.trim(),
       });
     }
 

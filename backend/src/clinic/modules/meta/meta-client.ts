@@ -188,9 +188,7 @@ export function buildMetaClient(opts?: MetaClientOptions): MetaApiClient | null 
   const redirectUri =
     opts?.redirectUri?.trim() ||
     process.env.META_REDIRECT_URI?.trim() ||
-    (process.env.NODE_ENV === "production"
-      ? "https://api.myclinic.myenum.in/api/meta/oauth/callback"
-      : "http://localhost:3100/api/meta/oauth/callback");
+    "https://api.myclinic.myenum.in/api/meta/oauth/callback";
   if (!appId || !appSecret) return null;
   return new MetaApiClient({ appId, appSecret, redirectUri, fetchImpl: opts?.fetchImpl });
 }

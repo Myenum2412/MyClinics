@@ -48,17 +48,11 @@ import {
 import {
   Plus,
   Search,
-  Filter,
   ChevronDown,
   ChevronUp,
   Archive,
   RotateCcw,
   RefreshCw,
-  ExternalLink,
-  CheckCircle2,
-  AlertCircle,
-  ChevronRight,
-  Sliders,
 } from "lucide-react";
 import { Pagination } from "@/components/ui/pagination";
 import {
@@ -71,27 +65,42 @@ import { cn } from "@/lib/utils";
 
 function MetaLogo({ className = "size-4" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M16.98 5.09c-1.89 0-3.56.96-4.98 2.62-1.42-1.66-3.09-2.62-4.98-2.62-4.14 0-7.02 3.38-7.02 7.74 0 4.42 2.92 7.84 7.08 7.84 2.25 0 4.12-1.07 5.02-2.5 1.01 1.46 2.83 2.5 4.88 2.5 4.16 0 7.02-3.42 7.02-7.84 0-4.36-2.88-7.74-7.02-7.74zm-9.98 13.06c-2.84 0-4.78-2.38-4.78-5.32 0-2.91 1.91-5.26 4.74-5.26 1.76 0 3.24 1.02 4.47 3.09-1.29 2.2-2.73 7.49-4.43 7.49zm9.98 0c-1.74 0-3.15-5.29-4.44-7.49 1.23-2.07 2.71-3.09 4.47-3.09 2.83 0 4.74 2.35 4.74 5.26 0 2.94-1.94 5.32-4.77 5.32z" />
+    <svg preserveAspectRatio="xMidYMid" viewBox="0 0 256 171" className={className}>
+      <defs>
+        <linearGradient id="meta__a" x1="13.878%" x2="89.144%" y1="55.934%" y2="58.694%">
+          <stop offset="0%" stopColor="#0064E1" />
+          <stop offset="40%" stopColor="#0064E1" />
+          <stop offset="83%" stopColor="#0073EE" />
+          <stop offset="100%" stopColor="#0082FB" />
+        </linearGradient>
+        <linearGradient id="meta__b" x1="54.315%" x2="54.315%" y1="82.782%" y2="39.307%">
+          <stop offset="0%" stopColor="#0082FB" />
+          <stop offset="100%" stopColor="#0064E0" />
+        </linearGradient>
+      </defs>
+      <path
+        fill="#0081FB"
+        d="M27.651 112.136c0 9.775 2.146 17.28 4.95 21.82 3.677 5.947 9.16 8.466 14.751 8.466 7.211 0 13.808-1.79 26.52-19.372 10.185-14.092 22.186-33.874 30.26-46.275l13.675-21.01c9.499-14.591 20.493-30.811 33.1-41.806C161.196 4.985 172.298 0 183.47 0c18.758 0 36.625 10.87 50.3 31.257C248.735 53.584 256 81.707 256 110.729c0 17.253-3.4 29.93-9.187 39.946-5.591 9.686-16.488 19.363-34.818 19.363v-27.616c15.695 0 19.612-14.422 19.612-30.927 0-23.52-5.484-49.623-17.564-68.273-8.574-13.23-19.684-21.313-31.907-21.313-13.22 0-23.859 9.97-35.815 27.75-6.356 9.445-12.882 20.956-20.208 33.944l-8.066 14.289c-16.203 28.728-20.307 35.271-28.408 46.07-14.2 18.91-26.324 26.076-42.287 26.076-18.935 0-30.91-8.2-38.325-20.556C2.973 139.413 0 126.202 0 111.148l27.651.988Z"
+      />
+      <path
+        fill="url(#meta__a)"
+        d="M21.802 33.206C34.48 13.666 52.774 0 73.757 0 85.91 0 97.99 3.597 110.605 13.897c13.798 11.261 28.505 29.805 46.853 60.368l6.58 10.967c15.881 26.459 24.917 40.07 30.205 46.49 6.802 8.243 11.565 10.7 17.752 10.7 15.695 0 19.612-14.422 19.612-30.927l24.393-.766c0 17.253-3.4 29.93-9.187 39.946-5.591 9.686-16.488 19.363-34.818 19.363-11.395 0-21.49-2.475-32.654-13.007-8.582-8.083-18.615-22.443-26.334-35.352l-22.96-38.352C118.528 64.08 107.96 49.73 101.845 43.23c-6.578-6.988-15.036-15.428-28.532-15.428-10.923 0-20.2 7.666-27.963 19.39L21.802 33.206Z"
+      />
+      <path
+        fill="url(#meta__b)"
+        d="M73.312 27.802c-10.923 0-20.2 7.666-27.963 19.39-10.976 16.568-17.698 41.245-17.698 64.944 0 9.775 2.146 17.28 4.95 21.82L9.027 149.482C2.973 139.413 0 126.202 0 111.148 0 83.772 7.514 55.24 21.802 33.206 34.48 13.666 52.774 0 73.757 0l-.445 27.802Z"
+      />
     </svg>
   );
 }
-
-const SOURCES = [
-  "MANUAL",
-  "IMPORT",
-  "EMAIL",
-  "CALENDAR",
-  "TRACKING",
-  "WEBSITE",
-  "META",
-] as const;
 
 export default function ContactsPage() {
   const session = useClinicSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const clinicId = session.session?.clinicId;
+  const userRole = session.session?.role;
+  const canManageMeta = userRole === "clinic_admin" || userRole === "platform_admin";
 
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,7 +128,7 @@ export default function ContactsPage() {
   const [syncingMeta, setSyncingMeta] = useState(false);
   const [metaAppId, setMetaAppId] = useState(process.env.NEXT_PUBLIC_META_APP_ID ?? "");
   const [metaAppSecret, setMetaAppSecret] = useState(process.env.NEXT_PUBLIC_META_APP_SECRET ?? "");
-  const [showAdvancedMeta, setShowAdvancedMeta] = useState(false);
+  const [metaRedirectUri, setMetaRedirectUri] = useState("https://api.myclinic.myenum.in/api/meta/oauth/callback");
 
   useEffect(() => {
     searchParamsRef.current = searchParams;
@@ -153,7 +162,7 @@ export default function ContactsPage() {
   }, [clinicId, archived, search, sourceFilter, ownerFilter, companyFilter, page, sort]);
 
   const loadMeta = useCallback(async () => {
-    if (!clinicId) return;
+    if (!clinicId || !canManageMeta) return;
     try {
       const status = await getMetaStatus(clinicId).catch(() => ({ integration: null, health: null }));
       setMetaIntegration(status.integration ?? null);
@@ -162,19 +171,19 @@ export default function ContactsPage() {
       setMetaIntegration(null);
       setMetaHealth(null);
     }
-  }, [clinicId]);
+  }, [clinicId, canManageMeta]);
 
   useEffect(() => {
     if (!session.session) return;
     void load();
-    void loadMeta();
-  }, [session.session, load, loadMeta]);
+    if (canManageMeta) void loadMeta();
+  }, [session.session, load, loadMeta, canManageMeta]);
 
   // Listen for popup messages from Meta OAuth callback
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       if (e.data?.type === "META_AUTH_SUCCESS" || e.data?.type === "META_CONNECTED") {
-        toast.success("Meta Business account connected successfully!");
+        toast.success("Meta connected successfully");
         setMetaModalOpen(false);
         void loadMeta();
         void load();
@@ -189,7 +198,7 @@ export default function ContactsPage() {
   // Handle direct return with query param
   useEffect(() => {
     if (searchParams.get("meta") === "connected") {
-      toast.success("Meta Business connected");
+      toast.success("Meta connected");
       router.replace("/clinic/crm/contacts");
       void loadMeta();
       void load();
@@ -200,15 +209,19 @@ export default function ContactsPage() {
     if (!clinicId) return;
     const effectiveAppId = metaAppId.trim() || process.env.NEXT_PUBLIC_META_APP_ID?.trim() || "";
     const effectiveAppSecret = metaAppSecret.trim() || process.env.NEXT_PUBLIC_META_APP_SECRET?.trim() || "";
+    const effectiveRedirectUri = metaRedirectUri.trim() || "https://api.myclinic.myenum.in/api/meta/oauth/callback";
+
     if ((effectiveAppId && !effectiveAppSecret) || (!effectiveAppId && effectiveAppSecret)) {
-      toast.error("Provide both App ID and App Secret together.");
+      toast.error("Please provide both Meta App ID and App Secret.");
       return;
     }
+
     setMetaBusy(true);
     try {
       const { authUrl } = await connectMeta(clinicId, {
         appId: effectiveAppId || undefined,
         appSecret: effectiveAppSecret || undefined,
+        redirectUri: effectiveRedirectUri,
         returnUrl: "/clinic/crm/contacts?meta=connected",
       });
       window.open(authUrl, "metaOAuth", "width=600,height=800");
@@ -221,16 +234,16 @@ export default function ContactsPage() {
 
   const handleDisconnectMeta = async () => {
     if (!clinicId) return;
-    if (!confirm("Disconnect Meta Business? Ingestion of new leads from Facebook and Instagram will stop.")) return;
+    if (!confirm("Disconnect Meta? Ingestion of new leads will stop.")) return;
     setMetaBusy(true);
     try {
       await disconnectMeta(clinicId);
-      toast.success("Meta Business disconnected");
+      toast.success("Meta disconnected");
       await loadMeta();
       await load();
       setMetaModalOpen(false);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to disconnect Meta");
+      toast.error(err instanceof Error ? err.message : "Failed to disconnect");
     } finally {
       setMetaBusy(false);
     }
@@ -241,7 +254,7 @@ export default function ContactsPage() {
     setSyncingMeta(true);
     try {
       await syncMetaNow(clinicId);
-      toast.success("Meta leads sync initiated");
+      toast.success("Syncing leads from Meta");
       await load();
       await loadMeta();
     } catch (err) {
@@ -312,8 +325,8 @@ export default function ContactsPage() {
       {/* Top action & filter bar */}
       <Card className="border-dashed" variant="outline">
         <CardContent className="flex flex-wrap items-center justify-between gap-3 py-3">
-          {/* Left search & source filter */}
-          <div className="flex flex-1 flex-wrap items-center gap-2 min-w-[280px]">
+          {/* Search & source filter */}
+          <div className="flex flex-1 flex-wrap items-center gap-2 min-w-[260px]">
             <div className="relative w-full max-w-xs">
               <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
               <Input
@@ -331,14 +344,14 @@ export default function ContactsPage() {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="w-40 h-9">
+              <SelectTrigger className="w-36 h-9">
                 <SelectValue placeholder="All Sources" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All Sources</SelectItem>
                 <SelectItem value="META">
-                  <span className="flex items-center gap-1.5 font-medium text-[#0866FF]">
-                    <MetaLogo className="size-3.5" />
+                  <span className="flex items-center gap-1.5 font-medium text-[#0081FB]">
+                    <MetaLogo className="w-3.5 h-auto" />
                     Meta Leads
                   </span>
                 </SelectItem>
@@ -351,45 +364,45 @@ export default function ContactsPage() {
             </Select>
           </div>
 
-          {/* Right actions: Meta connect button, quick contact creation, archive toggle */}
+          {/* Right actions: Meta connect (admin only), Add contact, Archive toggle */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* Meta Business Quick Button */}
-            {isMetaConnected ? (
-              <div className="flex items-center gap-1">
+            {canManageMeta && (
+              isMetaConnected ? (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setMetaModalOpen(true)}
+                    className="h-9 border-emerald-200 bg-emerald-50/60 text-emerald-800 hover:bg-emerald-100/70 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300"
+                  >
+                    <span className="size-2 rounded-full bg-emerald-500 mr-2" />
+                    <MetaLogo className="w-3.5 h-auto mr-1.5" />
+                    <span className="max-w-[120px] truncate">
+                      {metaIntegration?.metaBusinessName || "Meta Connected"}
+                    </span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="size-9"
+                    onClick={handleSyncMeta}
+                    disabled={syncingMeta}
+                    title="Sync Meta leads"
+                  >
+                    <RefreshCw className={cn("size-3.5", syncingMeta && "animate-spin")} />
+                  </Button>
+                </div>
+              ) : (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setMetaModalOpen(true)}
-                  className="h-9 border-emerald-200 bg-emerald-50/60 text-emerald-800 hover:bg-emerald-100/70 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300"
-                  title="Meta Business Connected - Click to view or manage"
+                  className="h-9 border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-100/70 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300"
                 >
-                  <span className="size-2 rounded-full bg-emerald-500 mr-2 animate-pulse" />
-                  <MetaLogo className="size-3.5 mr-1.5 text-[#0866FF]" />
-                  <span className="max-w-[120px] truncate">
-                    {metaIntegration?.metaBusinessName || "Meta Connected"}
-                  </span>
+                  <MetaLogo className="w-3.5 h-auto mr-1.5" />
+                  Connect Meta
                 </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="size-9"
-                  onClick={handleSyncMeta}
-                  disabled={syncingMeta}
-                  title="Sync Meta leads now"
-                >
-                  <RefreshCw className={cn("size-3.5", syncingMeta && "animate-spin")} />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setMetaModalOpen(true)}
-                className="h-9 border-blue-200 bg-blue-50/50 text-blue-700 hover:bg-blue-100/70 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300"
-              >
-                <MetaLogo className="size-3.5 mr-1.5 text-[#0866FF]" />
-                Connect Meta
-              </Button>
+              )
             )}
 
             <div className="hidden sm:block h-6 w-px bg-border" />
@@ -426,7 +439,7 @@ export default function ContactsPage() {
               <CardTitle>Contacts</CardTitle>
               {sourceFilter && (
                 <Badge variant="outline" className="text-xs">
-                  Source: {sourceFilter}
+                  {sourceFilter}
                 </Badge>
               )}
             </div>
@@ -444,36 +457,19 @@ export default function ContactsPage() {
               </Button>
             </div>
           ) : contacts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-10 text-center px-4">
-              {sourceFilter === "META" ? (
-                <>
-                  <div className="flex size-12 items-center justify-center rounded-full bg-blue-50 text-[#0866FF] dark:bg-blue-950/50">
-                    <MetaLogo className="size-6" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">No Meta leads found</p>
-                    <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-                      {isMetaConnected
-                        ? "No leads received from Meta yet. Click 'Sync Meta' to check for recent submissions or launch an ad campaign on Meta Ads Manager."
-                        : "Connect your Meta Business Account to automatically sync leads from Facebook & Instagram lead ads."}
-                    </p>
-                  </div>
-                  {isMetaConnected ? (
-                    <Button variant="outline" size="sm" onClick={handleSyncMeta} disabled={syncingMeta}>
-                      <RefreshCw className={cn("size-3.5 mr-1.5", syncingMeta && "animate-spin")} />
-                      Sync Meta Leads Now
-                    </Button>
-                  ) : (
-                    <Button size="sm" onClick={() => setMetaModalOpen(true)}>
-                      <MetaLogo className="size-3.5 mr-1.5" />
-                      Connect Meta Business Account
-                    </Button>
-                  )}
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {archived ? "No archived contacts." : "No contacts yet. Add your first contact above."}
-                </p>
+            <div className="flex flex-col items-center justify-center gap-2 py-10 text-center px-4">
+              <p className="text-sm text-muted-foreground">
+                {sourceFilter === "META"
+                  ? "No Meta leads found."
+                  : archived
+                  ? "No archived contacts."
+                  : "No contacts yet."}
+              </p>
+              {sourceFilter === "META" && canManageMeta && !isMetaConnected && (
+                <Button size="sm" variant="outline" onClick={() => setMetaModalOpen(true)}>
+                  <MetaLogo className="w-3.5 h-auto mr-1.5" />
+                  Connect Meta
+                </Button>
               )}
             </div>
           ) : (
@@ -522,8 +518,8 @@ export default function ContactsPage() {
                       <TableCell className="font-medium">{c.name}</TableCell>
                       <TableCell>
                         {c.source === "META" ? (
-                          <Badge className="bg-[#0866FF]/10 text-[#0866FF] border-[#0866FF]/20 flex items-center gap-1 w-fit font-medium">
-                            <MetaLogo className="size-3" /> Meta
+                          <Badge className="bg-[#0081FB]/10 text-[#0081FB] border-[#0081FB]/20 flex items-center gap-1 w-fit font-medium">
+                            <MetaLogo className="w-3 h-auto" /> Meta
                           </Badge>
                         ) : (
                           <Badge variant="secondary">{c.source}</Badge>
@@ -563,197 +559,144 @@ export default function ContactsPage() {
         )}
       </Card>
 
-      {/* Meta Business Connection & Settings Dialog */}
-      <Dialog open={metaModalOpen} onOpenChange={setMetaModalOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[#0866FF] dark:bg-blue-950/60">
-                <MetaLogo className="size-5" />
-              </div>
-              <div>
-                <DialogTitle>Meta Business Account</DialogTitle>
-                <DialogDescription>
-                  {isMetaConnected
-                    ? "Manage your connected Meta Business Account."
-                    : "Connect Facebook & Instagram to sync leads directly to CRM Contacts."}
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          {isMetaConnected ? (
-            <div className="flex flex-col gap-4 py-2">
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 dark:border-emerald-900/60 dark:bg-emerald-950/20">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-emerald-500" />
-                    <span className="text-sm font-semibold text-emerald-900 dark:text-emerald-300">
-                      Connected
-                    </span>
-                  </div>
-                  <Badge variant="outline" className="border-emerald-300 text-emerald-700 dark:border-emerald-800 dark:text-emerald-300 text-xs">
-                    {metaHealth?.status || "Healthy"}
-                  </Badge>
+      {/* Meta Connection Dialog - Only shown to clinic admins */}
+      {canManageMeta && (
+        <Dialog open={metaModalOpen} onOpenChange={setMetaModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-3">
+                <MetaLogo className="w-7 h-auto shrink-0" />
+                <div>
+                  <DialogTitle>Connect Meta</DialogTitle>
+                  <DialogDescription>
+                    {isMetaConnected
+                      ? "Manage your connected Meta account."
+                      : "Connect Facebook and Instagram to import leads into your contacts."}
+                  </DialogDescription>
                 </div>
-                <div className="mt-3 space-y-1.5 text-xs text-muted-foreground">
-                  <div className="flex justify-between">
-                    <span>Business Name</span>
+              </div>
+            </DialogHeader>
+
+            {isMetaConnected ? (
+              <div className="space-y-4 py-2">
+                <div className="rounded-lg border bg-muted/30 p-3 space-y-1.5 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Status</span>
+                    <Badge variant="outline" className="border-emerald-300 text-emerald-700 dark:border-emerald-800 dark:text-emerald-300">
+                      Connected
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Account</span>
                     <span className="font-medium text-foreground">
-                      {metaIntegration?.metaBusinessName || "—"}
+                      {metaIntegration?.metaBusinessName || "Connected"}
                     </span>
                   </div>
-                  {metaIntegration?.metaBusinessId && (
-                    <div className="flex justify-between">
-                      <span>Business ID</span>
-                      <span className="font-mono text-foreground">
-                        {metaIntegration.metaBusinessId}
-                      </span>
+                  {metaIntegration?.lastSyncedAt && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Last synced</span>
+                      <span>{new Date(metaIntegration.lastSyncedAt).toLocaleString()}</span>
                     </div>
                   )}
-                  <div className="flex justify-between">
-                    <span>Last Synced</span>
-                    <span className="text-foreground">
-                      {metaIntegration?.lastSyncedAt
-                        ? new Date(metaIntegration.lastSyncedAt).toLocaleString()
-                        : "Never"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Webhook Status</span>
-                    <span className="capitalize text-foreground">
-                      {metaIntegration?.webhookStatus || "Active"}
-                    </span>
-                  </div>
                 </div>
-              </div>
 
-              <div className="flex flex-col gap-2">
-                <Button
-                  onClick={handleSyncMeta}
-                  disabled={syncingMeta}
-                  className="w-full"
-                >
-                  <RefreshCw className={cn("size-4 mr-2", syncingMeta && "animate-spin")} />
-                  {syncingMeta ? "Syncing Meta Leads…" : "Sync Meta Leads Now"}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    setSourceFilter("META");
-                    setMetaModalOpen(false);
-                  }}
-                >
-                  <Filter className="size-4 mr-2" />
-                  Show Meta Leads Only
-                </Button>
-
-                {clinicId && (
+                <div className="flex flex-col gap-2">
+                  <Button onClick={handleSyncMeta} disabled={syncingMeta}>
+                    <RefreshCw className={cn("size-4 mr-2", syncingMeta && "animate-spin")} />
+                    {syncingMeta ? "Syncing..." : "Sync Leads Now"}
+                  </Button>
                   <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs text-muted-foreground"
+                    variant="outline"
                     onClick={() => {
+                      setSourceFilter("META");
                       setMetaModalOpen(false);
-                      router.push(`/orgmenu/clinics/${clinicId}/integrations/meta`);
                     }}
                   >
-                    Campaign Mappings & Asset Settings
-                    <ExternalLink className="size-3 ml-1" />
+                    View Meta Leads
                   </Button>
-                )}
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-4 py-2">
-              <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-3.5 text-xs text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/20 dark:text-blue-200">
-                <p className="font-semibold text-sm mb-1">What you get:</p>
-                <ul className="list-disc pl-4 space-y-1">
-                  <li>Automatic real-time ingestion of leads from Facebook and Instagram Lead Ads.</li>
-                  <li>Attribution tracking (campaign, ad set, ad, and instant form).</li>
-                  <li>Direct pipeline access to doctor assignment and follow-up.</li>
-                </ul>
-              </div>
+            ) : (
+              <div className="space-y-3 py-2">
+                <div className="space-y-1">
+                  <Label htmlFor="meta-app-id">Meta App ID</Label>
+                  <Input
+                    id="meta-app-id"
+                    placeholder="Enter App ID"
+                    value={metaAppId}
+                    onChange={(e) => setMetaAppId(e.target.value)}
+                  />
+                </div>
 
-              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label htmlFor="meta-app-secret">Meta App Secret</Label>
+                  <Input
+                    id="meta-app-secret"
+                    type="password"
+                    placeholder="Enter App Secret"
+                    value={metaAppSecret}
+                    onChange={(e) => setMetaAppSecret(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="meta-redirect">OAuth Redirect URI</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="meta-redirect"
+                      value={metaRedirectUri}
+                      onChange={(e) => setMetaRedirectUri(e.target.value)}
+                      className="font-mono text-xs"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      onClick={() => {
+                        void navigator.clipboard.writeText(metaRedirectUri);
+                        toast.success("Redirect URI copied to clipboard");
+                      }}
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    In your Meta App Settings, ensure <strong>myenum.in</strong> is in <strong>App Domains</strong> and this URL is in <strong>Valid OAuth Redirect URIs</strong>.
+                  </p>
+                </div>
+
                 <Button
-                  className="w-full bg-[#0866FF] hover:bg-[#0866FF]/90 text-white font-medium"
+                  className="w-full bg-[#0081FB] hover:bg-[#0073EE] text-white mt-2"
                   onClick={handleConnectMeta}
                   disabled={metaBusy}
                 >
-                  <MetaLogo className="size-4 mr-2" />
-                  {metaBusy ? "Connecting…" : "Connect with Meta Business"}
+                  <MetaLogo className="w-4 h-auto mr-2" />
+                  {metaBusy ? "Connecting..." : "Connect with Meta"}
                 </Button>
-
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setShowAdvancedMeta((v) => !v)}
-                    className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-                  >
-                    <Sliders className="size-3" />
-                    {showAdvancedMeta ? "Hide custom app credentials" : "Use custom Meta App ID / Secret"}
-                  </button>
-                </div>
-
-                {showAdvancedMeta && (
-                  <div className="space-y-2.5 rounded-lg border p-3 bg-muted/30">
-                    <div className="space-y-1">
-                      <Label htmlFor="meta-app-id" className="text-xs">
-                        Meta App ID (Optional)
-                      </Label>
-                      <Input
-                        id="meta-app-id"
-                        placeholder="e.g. 1029384756"
-                        value={metaAppId}
-                        onChange={(e) => setMetaAppId(e.target.value)}
-                        className="h-8 text-xs font-mono"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="meta-app-secret" className="text-xs">
-                        Meta App Secret (Optional)
-                      </Label>
-                      <Input
-                        id="meta-app-secret"
-                        type="password"
-                        placeholder="••••••••••••"
-                        value={metaAppSecret}
-                        onChange={(e) => setMetaAppSecret(e.target.value)}
-                        className="h-8 text-xs font-mono"
-                      />
-                    </div>
-                    <p className="text-[11px] text-muted-foreground">
-                      Leave empty to use server default credentials.
-                    </p>
-                  </div>
-                )}
               </div>
-            </div>
-          )}
-
-          <DialogFooter className="flex items-center justify-between sm:justify-between pt-2">
-            {isMetaConnected ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-destructive hover:bg-destructive/10 text-xs"
-                onClick={handleDisconnectMeta}
-                disabled={metaBusy}
-              >
-                Disconnect Meta
-              </Button>
-            ) : (
-              <div />
             )}
-            <Button variant="outline" size="sm" onClick={() => setMetaModalOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+            <DialogFooter className="flex items-center justify-between sm:justify-between pt-2">
+              {isMetaConnected ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive hover:bg-destructive/10 text-xs"
+                  onClick={handleDisconnectMeta}
+                  disabled={metaBusy}
+                >
+                  Disconnect
+                </Button>
+              ) : (
+                <div />
+              )}
+              <Button variant="outline" size="sm" onClick={() => setMetaModalOpen(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
