@@ -18,119 +18,21 @@ import {
   listPatients,
   listPrescriptions,
 } from "@/lib/clinic-api";
-import { Card, CardContent } from "@/components/ui/card";
-import { KOLKATA_TZ, now, toLocalDateISO, parseLocalDate, addDays, formatDate, weekdayIndex } from "@/lib/datetime";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KOLKATA_TZ, now } from "@/lib/datetime";
 import { MetricStatGrid } from "@/components/metric-stat-cards";
-import { BillingOverviewCard } from "@/components/clinic/billing-overview-card";
-import { RecentAppointmentsCard } from "@/components/clinic/recent-appointments-card";
-import { DoctorsTableCard } from "@/components/clinic/dashboards/doctors-table-card";
-import { LabsTableCard } from "@/components/clinic/dashboards/labs-table-card";
-import { PersonAvatar } from "@/components/clinic/person-avatar";
-import { sessionCan } from "@/hooks/use-clinic-session";
 import {
   Folder,
   ArrowRight,
   Users,
-  Phone,
-  Eye,
   FileText,
   Plus,
   CalendarDays,
   IndianRupee,
   Stethoscope,
 } from "lucide-react";
-import {
-  type Week,
-  type AgendaDay,
-  type CalEvent,
-  type EventStatus,
-} from "@/components/blocks/calendar-2";
-
 import { type ClinicSession } from "@/lib/clinic-api";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function todayISO(): string {
-  return toLocalDateISO(now());
-}
-
-// ── Appointment → agenda week ─────────────────────────────────────────────────
-
-const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
-
-const APPOINTMENT_STATUS_TO_EVENT: Record<string, EventStatus> = {
-  confirmed: "confirmed",
-  completed: "confirmed",
-  scheduled: "tentative",
-  rescheduled: "tentative",
-  cancelled: "cancelled",
-  no_show: "cancelled",
-};
-
-/**
- * Groups appointments into a single Mon–Sun week containing today, ready to feed
- * the CalendarBlock agenda. Appointments outside the current week are ignored.
- */
-function buildAppointmentWeek(
-  appointments: Appointment[],
-  patientMap: Map<string, string>,
-  doctorMap: Map<string, string>,
-  isDoctorRole: boolean
-): Week {
-  const today = todayISO();
-  const monday = (() => {
-    const d = parseLocalDate(today);
-    const dow = weekdayIndex(today); // 0 Sun … 6 Sat (timezone-independent)
-    const diff = dow === 0 ? -6 : 1 - dow;
-    return addDays(d, diff);
-  })();
-
-  const days: AgendaDay[] = DAY_LABELS.map((label, i) => {
-    const dayDate = addDays(monday, i);
-    const iso = toLocalDateISO(dayDate);
-    return {
-      label,
-      date: Number(iso.slice(8, 10)),
-      isToday: iso === today,
-      events: [],
-    };
-  });
-  const dayByISO = new Map<string, AgendaDay>();
-  days.forEach((d, i) => dayByISO.set(toLocalDateISO(addDays(monday, i)), d));
-
-  const sorted = [...appointments].sort((a, b) =>
-    a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date)
-  );
-
-  for (const appt of sorted) {
-    const day = dayByISO.get(appt.date);
-    if (!day) continue;
-    const patientName = patientMap.get(appt.patientId) ?? "Patient";
-    const doctorName = doctorMap.get(appt.doctorId);
-    const title = isDoctorRole
-      ? patientName
-      : doctorName
-        ? `${patientName} · Dr. ${doctorName}`
-        : patientName;
-    const event: CalEvent = {
-      time: appt.time,
-      duration: appt.session ? `${appt.session[0].toUpperCase()}${appt.session.slice(1)}` : "Scheduled",
-      title,
-      reason: appt.reason ?? undefined,
-      status: APPOINTMENT_STATUS_TO_EVENT[appt.status] ?? "tentative",
-    };
-    day.events.push(event);
-  }
-
-  const sundayISO = toLocalDateISO(addDays(monday, 6));
-  const range = `${formatDate(parseLocalDate(toLocalDateISO(monday)))} – ${formatDate(
-    parseLocalDate(sundayISO)
-  )}`;
-
-  return { range, days };
-}
 
 interface Greeting {
   text: string;
@@ -266,84 +168,13 @@ function GreetingBanner({
   );
 }
 
-// ── Doctor Assigned Patients Card ──────────────────────────────────────────────
-
-function DoctorPatientsCard({
-  patients,
-  clinicId,
-  loading,
-}: {
-  patients: Patient[];
-  clinicId: string;
-  loading: boolean;
-}) {
-  return (
-    <Card className="border-border shadow-sm flex flex-col justify-between">
-      <div>
-        <div className="flex items-center justify-between border-b border-border bg-muted/20 px-6 py-4">
-          <div>
-            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <Users className="size-4 text-primary" />
-              My Assigned Patients
-            </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Patients currently assigned to your care.
-            </p>
-          </div>
-          <Link href="/clinic/patients">
-            <Button variant="ghost" size="sm" className="h-8 text-xs gap-1">
-              View all <ArrowRight className="size-3.5" />
-            </Button>
-          </Link>
-        </div>
-
-        <CardContent className="p-0">
-          {loading ? (
-            <div className="space-y-3 p-6">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : patients.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-              No patients assigned to you yet.
-            </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {patients.slice(0, 5).map((p) => (
-                <div key={p.patientId} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <PersonAvatar clinicId={clinicId} ownerType="patient" ownerId={p.patientId} name={p.fullName} />
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-foreground">{p.fullName}</span>
-                      <span className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
-                        <Phone className="size-3" /> {p.mobile || "No Contact"}
-                      </span>
-                    </div>
-                  </div>
-                  <Link href={`/clinic/records?patientId=${p.patientId}`}>
-                    <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1">
-                      <Eye className="size-3" /> EHR File
-                    </Button>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </div>
-    </Card>
-  );
-}
-
 // ── Main Dashboard ────────────────────────────────────────────────────────────
 
 export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const clinicId = session.clinicId ?? "";
   const isDoctorRole = session.role === "doctor";
-  const canManage = sessionCan(session, "clinic_admin");
 
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -362,13 +193,10 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
         setAppointments((data.appointments as Appointment[]) ?? []);
         setPatients((data.patients as Patient[]) ?? []);
         setDoctors((data.doctors as unknown as Doctor[]) ?? []);
-        // backend returns limited patients (5) but counts has true totals - keep both
         setCounts(data.counts);
-        // derive prescriptions length from counts (no list needed)
         setPrescriptions(Array(data.counts.prescriptions).fill(null as any));
         setBills((data.bills as Bill[]) ?? []);
       } catch (e: any) {
-        // fallback if backend not deployed yet (404) - use old 4-5 parallel calls
         const is404 = e?.status === 404;
         if (!is404) { toast.error("Failed to load dashboard"); }
         try {
@@ -480,40 +308,13 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
         },
       ];
 
-  const appointmentWeek = useMemo(() => {
-    const pMap = new Map(patients.map((p) => [p.patientId, p.fullName]));
-    const dMap = new Map(doctors.map((d) => [d.doctorId, d.name]));
-    return buildAppointmentWeek(appointments, pMap, dMap, isDoctorRole);
-  }, [appointments, patients, doctors, isDoctorRole]);
-
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
       {/* Greeting banner */}
       <GreetingBanner doctorName={session.name ?? "Doctor"} />
 
+      {/* Stats section cards */}
       <MetricStatGrid items={statsItems} />
-
-      {/* Recent Appointments + Doctor Patients / Billing row */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-        <RecentAppointmentsCard
-          loading={loading}
-          weekCalendar={appointmentWeek}
-        />
-
-        {isDoctorRole ? (
-          <DoctorPatientsCard patients={patients} clinicId={clinicId} loading={loading} />
-        ) : (
-          <BillingOverviewCard bills={bills} loading={loading} />
-        )}
-      </div>
-
-      {/* Doctors (left) + Labs (right) — same row */}
-      {clinicId && (
-        <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-          <DoctorsTableCard clinicId={clinicId} canManage={canManage} />
-          <LabsTableCard clinicId={clinicId} canManage={canManage} />
-        </div>
-      )}
     </div>
   );
 }
