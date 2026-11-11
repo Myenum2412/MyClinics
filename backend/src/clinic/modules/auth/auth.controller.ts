@@ -164,18 +164,10 @@ export class AuthController {
       return reply.redirect(`${frontendBaseUrl(request)}/login?error=google_unavailable`);
     }
     const query = request.query as { from?: string; login_hint?: string; email?: string };
-    const from =
-      query.from === "signup"
-        ? "signup"
-        : query.from === "google_business"
-        ? "google_business"
-        : "login";
+    const from = query.from === "signup" ? "signup" : "login";
     const redirectUri = `${frontendBaseUrl(request)}${GOOGLE_CALLBACK_PATH}`;
     const state = await issueStateToken(from);
-    const scope =
-      from === "google_business"
-        ? "openid email profile https://www.googleapis.com/auth/business.manage"
-        : "openid email profile";
+    const scope = "openid email profile";
     const loginHint = query.login_hint || query.email;
     const url = await buildAuthorizationUrl(config.clientId, redirectUri, state, {
       scope,
@@ -220,116 +212,6 @@ export class AuthController {
       googleName = info.name;
     } catch {
       return fail("google_exchange");
-    }
-
-    // Special flow: connecting Google Business Profile for clinic account
-    if (from === "google_business") {
-      const businesses: Array<{
-        id?: string;
-        name: string;
-        email: string;
-        phone?: string;
-        website?: string;
-        addressLine1?: string;
-        city?: string;
-        state?: string;
-        pincode?: string;
-        country?: string;
-        url?: string;
-      }> = [];
-
-      if (accessToken) {
-        try {
-          const accRes = await fetch("https://mybusinessaccountmanagement.googleapis.com/v1/accounts", {
-            headers: { Authorization: `Bearer ${accessToken}` },
-            signal: AbortSignal.timeout(6000),
-          });
-          if (accRes.ok) {
-            const accData = (await accRes.json()) as { accounts?: Array<{ name: string }> };
-            const accounts = accData.accounts || [];
-            for (const acc of accounts) {
-              const locRes = await fetch(
-                `https://mybusinessbusinessinformation.googleapis.com/v1/${acc.name}/locations?readMask=name,title,storefrontAddress,websiteUri,phoneNumbers,regularHours`,
-                {
-                  headers: { Authorization: `Bearer ${accessToken}` },
-                  signal: AbortSignal.timeout(6000),
-                }
-              );
-              if (locRes.ok) {
-                const locData = (await locRes.json()) as {
-                  locations?: Array<{
-                    name: string;
-                    title?: string;
-                    storefrontAddress?: {
-                      addressLines?: string[];
-                      locality?: string;
-                      administrativeArea?: string;
-                      postalCode?: string;
-                      regionCode?: string;
-                    };
-                    phoneNumbers?: { primaryPhone?: string };
-                    websiteUri?: string;
-                  }>;
-                };
-                for (const loc of locData.locations || []) {
-                  businesses.push({
-                    id: loc.name,
-                    name: loc.title || "Clinic",
-                    email,
-                    phone: loc.phoneNumbers?.primaryPhone,
-                    website: loc.websiteUri,
-                    addressLine1: loc.storefrontAddress?.addressLines?.join(", "),
-                    city: loc.storefrontAddress?.locality,
-                    state: loc.storefrontAddress?.administrativeArea,
-                    pincode: loc.storefrontAddress?.postalCode,
-                    country: loc.storefrontAddress?.regionCode || "India",
-                    url: "https://business.google.com/",
-                  });
-                }
-              }
-            }
-          }
-        } catch (err) {
-          request.log?.warn?.(err, "Failed querying Google Business Profile API");
-        }
-      }
-
-      if (businesses.length === 0) {
-        businesses.push({
-          id: `gbp_${email}`,
-          name: googleName || "Clinic",
-          email,
-          url: "https://business.google.com/",
-          country: "India",
-        });
-      }
-
-      return reply.type("text/html").send(`
-        <!DOCTYPE html>
-        <html>
-          <head><title>Google Account Connected</title></head>
-          <body style="font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #f8fafc;">
-            <div style="text-align: center; padding: 24px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); max-width: 400px;">
-              <h3 style="margin-top: 0; color: #1e293b;">Google Account Verified</h3>
-              <p style="color: #64748b; font-size: 14px;">Connected ${email}. Closing...</p>
-              <script>
-                const payload = {
-                  type: "GOOGLE_BUSINESS_AUTH_SUCCESS",
-                  email: ${JSON.stringify(email)},
-                  googleName: ${JSON.stringify(googleName || "")},
-                  businesses: ${JSON.stringify(businesses)},
-                };
-                if (window.opener) {
-                  window.opener.postMessage(payload, "*");
-                  setTimeout(() => window.close(), 500);
-                } else {
-                  window.location.href = "/clinic/account";
-                }
-              </script>
-            </div>
-          </body>
-        </html>
-      `);
     }
 
     try {

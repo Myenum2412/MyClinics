@@ -75,11 +75,5 @@ export function registerClinicRoutes(app: FastifyInstance): void {
     async (request, reply) => controller.updateOwn(request, reply)
   );
 
-  app.post(
-    "/api/clinics/google-business/resolve",
-    { preHandler: requireRoles("clinic_admin") },
-    async (request, reply) => controller.resolveGoogleBusiness(request, reply)
-  );
-
   registerClinicWelcomeDocumentsRoutes(app);
 }

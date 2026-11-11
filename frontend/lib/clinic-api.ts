@@ -936,67 +936,6 @@ export function updateOwnClinic(
   });
 }
 
-export interface GoogleBusinessResolvedData {
-  id?: string;
-  name?: string;
-  phone?: string;
-  website?: string;
-  description?: string;
-  addressLine1?: string;
-  addressLine2?: string;
-  city?: string;
-  state?: string;
-  pincode?: string;
-  country?: string;
-  url?: string;
-  placeId?: string;
-  email?: string;
-  rating?: number;
-  userRatingsTotal?: number;
-  weeklySchedule?: WeeklyScheduleDay[];
-  businesses?: GoogleBusinessResolvedData[];
-}
-
-export async function resolveGoogleBusinessProfile(
-  clinicId: string,
-  input: {
-    url?: string;
-    query?: string;
-    placeId?: string;
-    email?: string;
-    name?: string;
-    phone?: string;
-    website?: string;
-    addressLine1?: string;
-    addressLine2?: string;
-    city?: string;
-    state?: string;
-    pincode?: string;
-    country?: string;
-    accessToken?: string;
-  }
-): Promise<GoogleBusinessResolvedData> {
-  void clinicId;
-  // Always call same-origin Next.js API route first so it works reliably in production
-  try {
-    const res = await fetch("/api/clinics/google-business/resolve", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
-    });
-    if (res.ok) {
-      return (await res.json()) as GoogleBusinessResolvedData;
-    }
-  } catch {
-    // Continue to request fallback
-  }
-
-  return request("/api/clinics/google-business/resolve", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
 /** Publishes the clinic's Puck page to its public website. */
 export function publishClinicWebsitePage(
   clinicId: string,

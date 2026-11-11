@@ -36,7 +36,6 @@ import { Switch } from "@/components/ui/switch";
 import { WhatsappIcon } from "@/components/ui/svgs/whatsappIcon";
 import { GoogleCalendar } from "@/components/ui/svgs/googleCalendar";
 import { Drive } from "@/components/ui/svgs/drive";
-import { GoogleIcon } from "@/components/clinic/google-business-connect-card";
 import {
   ListPlus,
   Pencil,
@@ -438,8 +437,6 @@ export default function SettingsPage() {
       {/* Tab content */}
       <div className="grid gap-4">
         {(activeTab === "integrations" || (activeTab as string) === "whatsapp") && (() => {
-          const isGoogleConnected = Boolean(settings?.googleBusinessUrl || (settings as any)?.profile?.googleBusinessUrl);
-
           const integrationsList = [
             {
               id: "whatsapp",
@@ -478,32 +475,6 @@ export default function SettingsPage() {
                 >
                   Connect
                 </Button>
-              ),
-            },
-            {
-              id: "google-business",
-              name: "Google Business Profile",
-              category: "Local Presence",
-              description:
-                "Sync verified clinic profile, address, operating hours, phone, and reviews directly from Google Maps.",
-              icon: <GoogleIcon className="size-5" />,
-              connected: isGoogleConnected,
-              connectedLabel: "Connected",
-              onToggle: () => {},
-              actionButton: isGoogleConnected ? (
-                <Link
-                  href="/clinic/account"
-                  className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "text-muted-foreground")}
-                >
-                  Manage
-                </Link>
-              ) : (
-                <Link
-                  href="/clinic/account"
-                  className={buttonVariants({ variant: "default", size: "sm" })}
-                >
-                  Connect
-                </Link>
               ),
             },
             {

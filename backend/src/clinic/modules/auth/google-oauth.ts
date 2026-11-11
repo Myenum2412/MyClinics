@@ -57,7 +57,7 @@ export function frontendBaseUrl(request: {
 }
 
 // ── One-time state tokens (CSRF protection) ────────────────────────────────
-export type GoogleOAuthOrigin = "login" | "signup" | "google_business";
+export type GoogleOAuthOrigin = "login" | "signup";
 
 // SEC-014: persist to Mongo/Valkey for horizontal scale + PKCE. In-memory Map is fallback for tests.
 const pendingStates = new Map<string, { exp: number; from: GoogleOAuthOrigin; verifier?: string }>();
@@ -100,7 +100,7 @@ export async function issueStateToken(from: GoogleOAuthOrigin = "login"): Promis
   return state;
 }
 
-/** Returns the flow origin ("login" | "signup" | "google_business") the state was issued for, or null. */
+/** Returns the flow origin ("login" | "signup") the state was issued for, or null. */
 export async function consumeStateToken(state: string): Promise<GoogleOAuthOrigin | null> {
   // Prefer DB, fallback to memory
   const dbRes = await fetchAndDeleteState(state);

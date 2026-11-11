@@ -12,12 +12,10 @@ import {
   logout,
   updateOwnClinic,
   uploadAvatar,
-  type GoogleBusinessResolvedData,
 } from "@/lib/clinic-api";
 import { formatMonthYear } from "@/lib/datetime";
 import { bustAvatarCache } from "@/components/clinic/person-avatar";
 import { WhatsAppConnectCard } from "@/components/clinic/whatsapp-connect-card";
-import { GoogleBusinessConnectCard, GoogleIcon } from "@/components/clinic/google-business-connect-card";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -130,8 +128,6 @@ const EMPTY_PROFILE: ClinicProfile = {
   emergencyContact: null,
   gstNumber: null,
   taxBusinessId: null,
-  googleBusinessUrl: null,
-  googlePlaceId: null,
   socialMedia: { facebook: null, instagram: null, twitter: null, linkedin: null },
 };
 
@@ -336,50 +332,6 @@ export default function AccountPage() {
     setEditing(true);
   }
 
-  function handleAutoCompleteFromGoogle(data: GoogleBusinessResolvedData) {
-    setForm((prev) => {
-      if (!prev) return prev;
-      const nextSchedule =
-        data.weeklySchedule && data.weeklySchedule.length > 0
-          ? data.weeklySchedule
-          : prev.weeklySchedule;
-      const nextOpen = nextSchedule.find((d) => !d.closed)?.open ?? prev.openTime;
-      const nextClose = nextSchedule.find((d) => !d.closed)?.close ?? prev.closeTime;
-
-      return {
-        ...prev,
-        name: data.name || prev.name,
-        phone: data.phone || prev.phone,
-        website: data.website || prev.website,
-        description: data.description || prev.description,
-        openTime: nextOpen,
-        closeTime: nextClose,
-        weeklySchedule: nextSchedule,
-        profile: {
-          ...prev.profile,
-          addressLine1: data.addressLine1 || prev.profile.addressLine1,
-          addressLine2: data.addressLine2 || prev.profile.addressLine2,
-          city: data.city || prev.profile.city,
-          state: data.state || prev.profile.state,
-          pincode: data.pincode || prev.profile.pincode,
-          country: data.country || prev.profile.country || "India",
-          googleBusinessUrl: data.url || prev.profile.googleBusinessUrl || "https://business.google.com/",
-          googlePlaceId: data.placeId || prev.profile.googlePlaceId,
-        },
-      };
-    });
-    setEditing(true);
-    toast.success(
-      "Profile fields auto-completed from Google Business Profile! You can review and edit any details manually before saving."
-    );
-  }
-
-  function handleDisconnectGoogle() {
-    if (!confirm("Disconnect Google Business Profile?")) return;
-    setProfile({ googleBusinessUrl: null, googlePlaceId: null });
-    toast.success("Google Business Profile disconnected");
-  }
-
   async function handleLogoUpload(file: File) {
     if (!clinicId || !clinic) return;
     if (!["image/jpeg", "image/png"].includes(file.type)) {
@@ -442,8 +394,6 @@ export default function AccountPage() {
           emergencyContact: form.profile.emergencyContact || null,
           gstNumber: form.profile.gstNumber || null,
           taxBusinessId: form.profile.taxBusinessId || null,
-          googleBusinessUrl: form.profile.googleBusinessUrl || null,
-          googlePlaceId: form.profile.googlePlaceId || null,
           socialMedia: {
             facebook: form.profile.socialMedia.facebook || null,
             instagram: form.profile.socialMedia.instagram || null,
@@ -641,24 +591,8 @@ export default function AccountPage() {
             </li>
           </ul>
 
-          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+          <div className="mt-5">
             <WhatsAppConnectCard clinicId={clinicId} canManage={canManage} />
-            <GoogleBusinessConnectCard
-              clinicId={clinicId}
-              clinicName={clinic.name}
-              clinicEmail={clinic.email || session?.email}
-              clinicPhone={form.phone || clinic.phone || undefined}
-              clinicWebsite={form.website || clinic.website || undefined}
-              clinicAddress={form.profile.addressLine1 || clinic.profile?.addressLine1 || undefined}
-              clinicArea={form.profile.addressLine2 || clinic.profile?.addressLine2 || undefined}
-              clinicCity={form.profile.city || clinic.profile?.city || undefined}
-              clinicState={form.profile.state || clinic.profile?.state || undefined}
-              clinicPincode={form.profile.pincode || clinic.profile?.pincode || undefined}
-              canManage={canManage}
-              connectedUrl={form.profile.googleBusinessUrl || clinic.profile?.googleBusinessUrl}
-              onAutoComplete={handleAutoCompleteFromGoogle}
-              onDisconnect={handleDisconnectGoogle}
-            />
           </div>
 
           <Tabs defaultValue="overview" className="mt-6 gap-4">
@@ -1118,17 +1052,10 @@ export default function AccountPage() {
                           onChange={(e) => setSocial("linkedin", e.target.value)}
                           placeholder="LinkedIn URL"
                         />
-                        <Input
-                          value={form.profile.googleBusinessUrl ?? ""}
-                          onChange={(e) => setProfile({ googleBusinessUrl: e.target.value || null })}
-                          placeholder="Google Business Profile / Maps URL"
-                          className="sm:col-span-2"
-                        />
                       </div>
                     ) : (
                       <div className="flex flex-wrap gap-4">
                         {[
-                          { label: "Google Business", url: profile.googleBusinessUrl, Icon: GoogleIcon },
                           { label: "Facebook", url: profile.socialMedia.facebook, Icon: FacebookIcon },
                           { label: "Instagram", url: profile.socialMedia.instagram, Icon: InstagramIcon },
                           { label: "Twitter", url: profile.socialMedia.twitter, Icon: TwitterIcon },
