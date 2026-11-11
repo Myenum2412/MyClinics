@@ -58,6 +58,7 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
   const medicalRecordFiles = db.collection(CLINIC_COLLECTIONS.medicalRecordFiles);
   const medicalRecordFolders = db.collection(CLINIC_COLLECTIONS.medicalRecordFolders);
   const clinicWelcomeDocuments = db.collection(CLINIC_COLLECTIONS.clinicWelcomeDocuments);
+  const passwordResets = db.collection(CLINIC_COLLECTIONS.passwordResets);
 
   const indexSpecs = [
     // ── Clinics ──────────────────────────────────────────────────────────
@@ -425,6 +426,12 @@ export async function ensureClinicIndexes(db: Db): Promise<void> {
     // ── Clinic welcome documents ─────────────────────────────────────────
     clinicWelcomeDocuments.createIndex({ clinicId: 1, documentId: 1 }, { unique: true }),
     clinicWelcomeDocuments.createIndex({ clinicId: 1, createdAt: -1 }),
+
+    // ── Password resets (single-use email links) ────────────────────────
+    passwordResets.createIndex({ tokenHash: 1 }, { unique: true }),
+    passwordResets.createIndex({ userId: 1 }),
+    // Mongo removes expired links automatically.
+    passwordResets.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
   ];
 
   // A single failing index (e.g. a unique index hitting pre-existing

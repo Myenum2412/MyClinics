@@ -57,3 +57,24 @@ export const refreshSchema = z.object({
 });
 
 export type RefreshInput = z.infer<typeof refreshSchema>;
+
+export const forgotPasswordSchema = z
+  .object({
+    // Legacy email-only field (kept for backward compat).
+    email: emailSchema.optional(),
+    // Email OR mobile/WhatsApp number linked to the account (any role).
+    identifier: z.string().trim().min(1).max(150).optional(),
+  })
+  .refine((v) => Boolean(v.email || v.identifier), {
+    message: "Email or phone / WhatsApp number is required",
+    path: ["identifier"],
+  });
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().trim().min(20, "Reset link is invalid").max(300),
+  password: passwordSchema,
+});
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

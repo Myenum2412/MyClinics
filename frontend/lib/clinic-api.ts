@@ -861,6 +861,35 @@ export async function login(input: {
   return result;
 }
 
+// ── Password reset (email only) ────────────────────────────────────────────
+
+export async function requestPasswordReset(
+  identifier: string
+): Promise<{ ok: boolean; message?: string }> {
+  return request<{ ok: boolean; message?: string }>(
+    "/api/clinics/auth/forgot-password",
+    {
+      method: "POST",
+      body: JSON.stringify({ identifier: identifier.trim() }),
+      cache: "no-store",
+    }
+  );
+}
+
+export async function resetPassword(input: {
+  token: string;
+  password: string;
+}): Promise<{ ok: boolean; email?: string }> {
+  return request<{ ok: boolean; email?: string }>(
+    "/api/clinics/auth/reset-password",
+    {
+      method: "POST",
+      body: JSON.stringify(input),
+      cache: "no-store",
+    }
+  );
+}
+
 export async function logout(): Promise<void> {
   // Always hit backend to clear httpOnly cookies (Domain=.myenum.in); inMemoryToken may be null after reload
   try {

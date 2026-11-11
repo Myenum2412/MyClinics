@@ -14,7 +14,7 @@ import { CLINIC_TOKEN_KEY } from "@/lib/clinic-api";
  *   /clinic/*  – any clinic role (doctor, staff, clinic_admin, patient)
  *   /admin/*   – platform_admin only
  */
-const PUBLIC_PATHS = ["/login", "/signup", "/signup/clinic"];
+const PUBLIC_PATHS = ["/login", "/signup", "/signup/clinic", "/forgot-password"];
 
 async function verifySession(request: NextRequest): Promise<{
   role?: string;
@@ -121,6 +121,7 @@ export const config = {
     "/admin/:path*",
     "/orgmenu/:path*",
     "/login",
+    "/forgot-password",
     "/signup",
     "/signup/:path*",
     // Defence-in-depth: block source maps everywhere (they leak file paths).

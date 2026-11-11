@@ -1,9 +1,11 @@
 import { now as nowFn } from "@/clinic/core/datetime";
 import bcrypt from "bcryptjs";
+import { createHash } from "node:crypto";
 import type { Db } from "mongodb";
 import { writeAudit } from "@/clinic/core/audit";
 import {
   ConflictError,
+  BadRequestError,
   UnauthorizedError,
 } from "@/clinic/core/errors";
 import {
@@ -11,6 +13,7 @@ import {
   generateUserId,
   normalizeEmail,
   normalizePhone,
+  randomToken,
   slugify,
 } from "@/clinic/core/ids";
 import {
@@ -22,7 +25,26 @@ import {
 import { isClinicRole, type ClinicRole } from "@/clinic/core/roles";
 import type { LoginInput, SignupInput } from "@/clinic/modules/auth/auth.dto";
 import { AuthRepository } from "@/clinic/modules/auth/auth.repository";
+import { sendPasswordResetEmail } from "@/services/email/password-reset-email";
+import { sendSignupWelcomeEmail } from "@/services/email/welcome-email";
 import type { UserDoc } from "@/clinic/core/types";
+
+/** Reset links stay valid for 30 minutes and can be used only once. */
+const PASSWORD_RESET_TTL_MS = 30 * 60 * 1000;
+
+function hashResetToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+/**
+ * True only for real mailbox addresses. Patient portal accounts created
+ * without an email get a `<mobile>@patient.mc` placeholder that can never
+ * receive mail.
+ */
+function isDeliverableEmail(email: string): boolean {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email)) return false;
+  return !email.toLowerCase().endsWith("@patient.mc");
+}
 
 export class AuthService {
   private readonly repo: AuthRepository;
@@ -110,6 +132,13 @@ export class AuthService {
         metadata: { name: clinic.name },
       }
     );
+
+    // Welcome email with an inspirational quote — best-effort, never blocks signup.
+    void sendSignupWelcomeEmail({
+      to: email,
+      name: input.adminName,
+      clinicName: clinic.name,
+    }).catch(() => {});
 
     return {
       clinicId,
@@ -205,6 +234,13 @@ export class AuthService {
       }
     );
 
+    // Welcome email with an inspirational quote — best-effort, never blocks signup.
+    void sendSignupWelcomeEmail({
+      to: email,
+      name: input.adminName,
+      clinicName: clinic.name,
+    }).catch(() => {});
+
     return {
       clinicId,
       clinicName: clinic.name,
@@ -214,6 +250,146 @@ export class AuthService {
       token,
       tokenExpiresInSeconds: accessTokenTtlSeconds(),
     };
+  }
+
+  /**
+   * Starts a password reset for ANY role (clinic admin, doctor, staff,
+   * patient). Accepts an email or the account's mobile/WhatsApp number.
+   * Always resolves with the same generic result, so the endpoint cannot be
+   * used to discover which accounts exist. The reset link is delivered by
+   * EMAIL ONLY (never WhatsApp/SMS) — to the real email on file.
+   */
+  async requestPasswordReset(input: {
+    email?: string;
+    identifier?: string;
+    ip?: string | null;
+    userAgent?: string | null;
+  }): Promise<{ ok: true }> {
+    const raw = (input.identifier ?? input.email ?? "").trim();
+    if (!raw) return { ok: true };
+
+    const user = await this.resolveResetAccount(raw);
+    if (!user || user.status !== "active") return { ok: true };
+    // Google-only accounts have no password to reset.
+    if (user.authProvider === "google" || typeof user.passwordHash !== "string") {
+      return { ok: true };
+    }
+
+    const email = normalizeEmail(user.email);
+    // Patients without a real email (auto-derived @patient.mc placeholders)
+    // cannot receive the link — never send mail to a placeholder address.
+    if (!isDeliverableEmail(email)) {
+      void writeAudit(this.db, null, {
+        action: "update",
+        entity: "user",
+        entityId: user.userId,
+        metadata: { passwordResetSkipped: "no_email_on_file" },
+        ip: input.ip ?? null,
+        userAgent: input.userAgent ?? null,
+      }).catch(() => {});
+      return { ok: true };
+    }
+
+    // Only the newest link stays valid.
+    await this.repo.deletePasswordResetsForUser(user.userId);
+
+    const token = randomToken(32);
+    await this.repo.createPasswordReset({
+      userId: user.userId,
+      clinicId: user.clinicId,
+      email,
+      tokenHash: hashResetToken(token),
+      expiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MS),
+      usedAt: null,
+      createdAt: nowFn(),
+    });
+
+    // Email only — the reset link must never go out over WhatsApp/SMS.
+    void sendPasswordResetEmail({
+      to: email,
+      name: user.name ?? "there",
+      token,
+    }).catch(() => {});
+
+    void writeAudit(this.db, null, {
+      action: "update",
+      entity: "user",
+      entityId: user.userId,
+      metadata: { passwordResetRequested: true, role: user.role },
+      ip: input.ip ?? null,
+      userAgent: input.userAgent ?? null,
+    }).catch(() => {});
+
+    return { ok: true };
+  }
+
+  /**
+   * Resolves the account behind an email or a mobile/WhatsApp number.
+   * Phone lookups mirror login: exact last-10-digit match, active accounts
+   * only. Shared/family numbers with several accounts are ambiguous → null.
+   */
+  private async resolveResetAccount(identifier: string): Promise<UserDoc | null> {
+    if (identifier.includes("@")) {
+      return this.repo.findUserByEmail(normalizeEmail(identifier));
+    }
+
+    const phoneKey = normalizePhone(identifier);
+    if (!phoneKey) return null;
+
+    const candidates = await this.repo.findUserCandidatesByPhone(phoneKey);
+    const exact = candidates.filter(
+      (user) =>
+        normalizePhone(user.phone) === phoneKey &&
+        user.status === "active" &&
+        typeof user.passwordHash === "string"
+    );
+    if (exact.length === 1) return exact[0];
+
+    // Disambiguate a family number by picking the single account with a real
+    // (deliverable) email on file; otherwise ask the user to use their email.
+    const deliverable = exact.filter((user) => isDeliverableEmail(normalizeEmail(user.email)));
+    if (deliverable.length === 1) return deliverable[0];
+
+    return null;
+  }
+
+  /**
+   * Completes a password reset with a single-use token. Returns the account
+   * email so the client can prefill the login form.
+   */
+  async resetPassword(input: {
+    token: string;
+    password: string;
+  }): Promise<{ ok: true; email: string }> {
+    const invalid = () =>
+      new BadRequestError(
+        "This reset link is invalid or has expired. Please request a new one."
+      );
+
+    const tokenHash = hashResetToken(input.token.trim());
+    const reset = await this.repo.consumePasswordReset(tokenHash);
+    if (!reset) throw invalid();
+
+    const user = await this.repo.findUserById(reset.userId);
+    if (!user || user.status !== "active") throw invalid();
+    if (user.authProvider === "google" || typeof user.passwordHash !== "string") {
+      throw new BadRequestError(
+        "This account uses Google sign-in — reset it from your Google account."
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(input.password, 12);
+    await this.repo.updateUserPassword(user.userId, passwordHash);
+    await this.repo.deletePasswordResetsForUser(user.userId);
+
+    await writeAudit(this.db, userToCtx(user), {
+      action: "update",
+      entity: "user",
+      entityId: user.userId,
+      metadata: { passwordReset: true },
+    });
+
+    return { ok: true, email: user.email };
   }
 
   async login(input: LoginInput, meta: { ip: string | null; userAgent: string | null }) {

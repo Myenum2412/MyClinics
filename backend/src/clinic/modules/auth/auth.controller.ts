@@ -11,6 +11,8 @@ import {
   loginSchema,
   refreshSchema,
   signupSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "@/clinic/modules/auth/auth.dto";
 import { AuthService } from "@/clinic/modules/auth/auth.service";
 import {
@@ -66,6 +68,42 @@ export class AuthController {
     });
     setClinicAuthCookies(reply, result.token, result.tokenExpiresInSeconds);
     return reply.code(201).send(result);
+  }
+
+  /**
+   * POST /api/clinics/auth/forgot-password — emails a single-use reset link.
+   * The response is always generic so it can't reveal registered emails.
+   */
+  async forgotPassword(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const parsed = forgotPasswordSchema.safeParse(request.body);
+    if (!parsed.success) {
+      throw new BadRequestError(
+        parsed.error.issues[0]?.message ?? "Enter your email or phone / WhatsApp number"
+      );
+    }
+    const db = await getDb();
+    const { ip, userAgent } = requestMeta(request);
+    await new AuthService(db).requestPasswordReset({
+      email: parsed.data.email,
+      identifier: parsed.data.identifier,
+      ip,
+      userAgent,
+    });
+    return reply.send({
+      ok: true,
+      message: "If an account exists for that email, we've sent a password reset link.",
+    });
+  }
+
+  /** POST /api/clinics/auth/reset-password — sets a new password from the emailed token. */
+  async resetPassword(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {
+    const parsed = resetPasswordSchema.safeParse(request.body);
+    if (!parsed.success) {
+      throw new BadRequestError(parsed.error.issues[0]?.message ?? "Invalid reset data");
+    }
+    const db = await getDb();
+    const result = await new AuthService(db).resetPassword(parsed.data);
+    return reply.send(result);
   }
 
   async login(request: FastifyRequest, reply: FastifyReply): Promise<FastifyReply> {

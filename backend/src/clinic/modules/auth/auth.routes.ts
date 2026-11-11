@@ -7,6 +7,8 @@ import { limitAuth } from "@/clinic/core/scope";
  *
  *   POST /api/clinics/auth/signup   – create clinic + first clinic_admin
  *   POST /api/clinics/auth/login    – any role incl. platform_admin
+ *   POST /api/clinics/auth/forgot-password – email a single-use reset link
+ *   POST /api/clinics/auth/reset-password  – set a new password from that link
  *   POST /api/clinics/auth/refresh  – slide a still-valid session
  *
  * Protected routes (require a valid session):
@@ -32,6 +34,18 @@ export function registerPublicAuthRoutes(app: FastifyInstance): void {
     "/api/clinics/auth/login",
     { preHandler: limitAuth },
     async (request, reply) => controller.login(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/auth/forgot-password",
+    { preHandler: limitAuth },
+    async (request, reply) => controller.forgotPassword(request, reply)
+  );
+
+  app.post(
+    "/api/clinics/auth/reset-password",
+    { preHandler: limitAuth },
+    async (request, reply) => controller.resetPassword(request, reply)
   );
 
   app.post(

@@ -24,6 +24,7 @@ export const CLINIC_COLLECTIONS = {
   prescriptionNotifications: "clc_prescription_notifications",
   appointmentNotifications: "clc_appointment_notifications",
   clinicWelcomeDocuments: "clc_clinic_welcome_documents",
+  passwordResets: "clc_password_resets",
   // ── Leads ─────────────────────────────────────────────────────────────
   leads: "clc_leads",
   // ── Pharmacy Management (tenant-isolated) ────────────────────────────

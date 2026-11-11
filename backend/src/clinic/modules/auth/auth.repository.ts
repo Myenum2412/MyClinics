@@ -3,6 +3,17 @@ import type { Db } from "mongodb";
 import { CLINIC_COLLECTIONS } from "@/clinic/core/collections";
 import type { ClinicDoc, UserDoc } from "@/clinic/core/types";
 
+/** Single-use password reset token (only the SHA-256 hash is stored). */
+export interface PasswordResetDoc {
+  userId: string;
+  clinicId: string | null;
+  email: string;
+  tokenHash: string;
+  expiresAt: Date;
+  usedAt: Date | null;
+  createdAt: Date;
+}
+
 export class AuthRepository {
   constructor(private readonly db: Db) {}
 
@@ -71,6 +82,45 @@ export class AuthRepository {
     return this.db
       .collection(CLINIC_COLLECTIONS.users)
       .updateOne({ userId }, { $set: { lastLoginAt: nowFn() } })
+      .then(() => undefined);
+  }
+
+  updateUserPassword(userId: string, passwordHash: string): Promise<void> {
+    return this.db
+      .collection<UserDoc>(CLINIC_COLLECTIONS.users)
+      .updateOne({ userId }, { $set: { passwordHash, updatedAt: nowFn() } })
+      .then(() => undefined);
+  }
+
+  createPasswordReset(doc: PasswordResetDoc): Promise<void> {
+    return this.db
+      .collection<PasswordResetDoc>(CLINIC_COLLECTIONS.passwordResets)
+      .insertOne(doc)
+      .then(() => undefined);
+  }
+
+  /**
+   * Atomically consumes an unexpired token, returning the matching reset doc
+   * (or null when the token is unknown, already used, or expired).
+   */
+  async consumePasswordReset(tokenHash: string): Promise<PasswordResetDoc | null> {
+    return this.db
+      .collection<PasswordResetDoc>(CLINIC_COLLECTIONS.passwordResets)
+      .findOneAndUpdate(
+        { tokenHash, usedAt: null, expiresAt: { $gt: nowFn() } },
+        { $set: { usedAt: nowFn() } },
+        { returnDocument: "before" }
+      );
+  }
+
+  /** Drops every other pending reset for the user (only the newest link works). */
+  deletePasswordResetsForUser(userId: string, keepTokenHash?: string): Promise<void> {
+    const filter = keepTokenHash
+      ? { userId, tokenHash: { $ne: keepTokenHash } }
+      : { userId };
+    return this.db
+      .collection(CLINIC_COLLECTIONS.passwordResets)
+      .deleteMany(filter)
       .then(() => undefined);
   }
 }
