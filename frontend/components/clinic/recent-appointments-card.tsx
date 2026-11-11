@@ -10,21 +10,25 @@ interface RecentAppointmentsCardProps {
   /** Weekly agenda rendered in place of the old appointments table. */
   weekCalendar: Week;
   loading?: boolean;
+  title?: string;
+  description?: string;
 }
 
 export function RecentAppointmentsCard({
   weekCalendar,
   loading,
+  title = "Upcoming Appointments",
+  description = "Appointments grouped by day",
 }: RecentAppointmentsCardProps) {
   return (
     <Card className="rounded-[20px] border border-border bg-white shadow-sm overflow-hidden">
       <div className="flex items-start justify-between gap-4 px-6 pt-6 pb-4">
         <div>
           <h3 className="text-[15px] font-semibold tracking-tight text-[#0f172a]">
-            This Week&apos;s Appointments
+            {title}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Appointments grouped by day
+            {description}
           </p>
         </div>
         <Link

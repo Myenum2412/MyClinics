@@ -18,8 +18,18 @@ import {
   listPatients,
   listPrescriptions,
 } from "@/lib/clinic-api";
-import { KOLKATA_TZ, now } from "@/lib/datetime";
+import {
+  KOLKATA_TZ,
+  now,
+  toLocalDateISO,
+  parseLocalDate,
+  addDays,
+  formatDate,
+  weekdayIndex,
+} from "@/lib/datetime";
 import { MetricStatGrid } from "@/components/metric-stat-cards";
+import { RecentAppointmentsCard } from "@/components/clinic/recent-appointments-card";
+import { BillingOverviewCard } from "@/components/clinic/billing-overview-card";
 import {
   Folder,
   ArrowRight,
@@ -30,9 +40,94 @@ import {
   IndianRupee,
   Stethoscope,
 } from "lucide-react";
+import {
+  type Week,
+  type AgendaDay,
+  type CalEvent,
+  type EventStatus,
+} from "@/components/blocks/calendar-2";
+
 import { type ClinicSession } from "@/lib/clinic-api";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function todayISO(): string {
+  return toLocalDateISO(now());
+}
+
+const DAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+
+const APPOINTMENT_STATUS_TO_EVENT: Record<string, EventStatus> = {
+  confirmed: "confirmed",
+  completed: "confirmed",
+  scheduled: "tentative",
+  rescheduled: "tentative",
+  cancelled: "cancelled",
+  no_show: "cancelled",
+};
+
+/**
+ * Groups appointments into a single Mon–Sun week containing today, ready to feed
+ * the CalendarBlock agenda. Appointments outside the current week are ignored.
+ */
+function buildAppointmentWeek(
+  appointments: Appointment[],
+  patientMap: Map<string, string>,
+  doctorMap: Map<string, string>,
+  isDoctorRole: boolean
+): Week {
+  const today = todayISO();
+  const monday = (() => {
+    const d = parseLocalDate(today);
+    const dow = weekdayIndex(today); // 0 Sun … 6 Sat (timezone-independent)
+    const diff = dow === 0 ? -6 : 1 - dow;
+    return addDays(d, diff);
+  })();
+
+  const days: AgendaDay[] = DAY_LABELS.map((label, i) => {
+    const dayDate = addDays(monday, i);
+    const iso = toLocalDateISO(dayDate);
+    return {
+      label,
+      date: Number(iso.slice(8, 10)),
+      isToday: iso === today,
+      events: [],
+    };
+  });
+  const dayByISO = new Map<string, AgendaDay>();
+  days.forEach((d, i) => dayByISO.set(toLocalDateISO(addDays(monday, i)), d));
+
+  const sorted = [...appointments].sort((a, b) =>
+    a.date === b.date ? a.time.localeCompare(b.time) : a.date.localeCompare(b.date)
+  );
+
+  for (const appt of sorted) {
+    const day = dayByISO.get(appt.date);
+    if (!day) continue;
+    const patientName = patientMap.get(appt.patientId) ?? "Patient";
+    const doctorName = doctorMap.get(appt.doctorId);
+    const title = isDoctorRole
+      ? patientName
+      : doctorName
+        ? `${patientName} · Dr. ${doctorName}`
+        : patientName;
+    const event: CalEvent = {
+      time: appt.time,
+      duration: appt.session ? `${appt.session[0].toUpperCase()}${appt.session.slice(1)}` : "Scheduled",
+      title,
+      reason: appt.reason ?? undefined,
+      status: APPOINTMENT_STATUS_TO_EVENT[appt.status] ?? "tentative",
+    };
+    day.events.push(event);
+  }
+
+  const sundayISO = toLocalDateISO(addDays(monday, 6));
+  const range = `${formatDate(parseLocalDate(toLocalDateISO(monday)))} – ${formatDate(
+    parseLocalDate(sundayISO)
+  )}`;
+
+  return { range, days };
+}
 
 interface Greeting {
   text: string;
@@ -174,7 +269,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
   const clinicId = session.clinicId ?? "";
   const isDoctorRole = session.role === "doctor";
 
-  const [, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -205,8 +300,8 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
             listPatients(clinicId, { limit: 50 }),
             listDoctors(clinicId, { limit: 50 }),
             listPrescriptions(clinicId, { limit: 50 }),
+            listBills(clinicId, { limit: 50 }),
           ];
-          if (!isDoctorRole) promises.push(listBills(clinicId, { limit: 50 }));
           const [apptRes, patientRes, doctorRes, rxRes, billRes] = await Promise.allSettled(promises);
           if (!active) return;
           if (apptRes.status === "fulfilled") setAppointments((apptRes.value as any)?.items ?? []);
@@ -308,6 +403,12 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
         },
       ];
 
+  const appointmentWeek = useMemo(() => {
+    const pMap = new Map(patients.map((p) => [p.patientId, p.fullName]));
+    const dMap = new Map(doctors.map((d) => [d.doctorId, d.name]));
+    return buildAppointmentWeek(appointments, pMap, dMap, isDoctorRole);
+  }, [appointments, patients, doctors, isDoctorRole]);
+
   return (
     <div className="w-full flex flex-col gap-4 sm:gap-6">
       {/* Greeting banner */}
@@ -315,6 +416,17 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
 
       {/* Stats section cards */}
       <MetricStatGrid items={statsItems} />
+
+      {/* 1 row: Left side (Upcoming Appointment) and Right side (Bills) */}
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+        <RecentAppointmentsCard
+          title="Upcoming Appointments"
+          loading={loading}
+          weekCalendar={appointmentWeek}
+        />
+
+        <BillingOverviewCard bills={bills} loading={loading} />
+      </div>
     </div>
   );
 }
