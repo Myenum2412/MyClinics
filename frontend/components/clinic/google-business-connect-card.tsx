@@ -183,7 +183,7 @@ export function GoogleBusinessConnectCard({
         : "Connect your clinic's Google Business Profile to sync details and hours";
 
   return (
-    <div className="flex h-full min-h-[88px] flex-col justify-between gap-3 rounded-xl border border-[#E3F2FD] bg-[#E3F2FD]/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex h-full min-h-[88px] flex-col justify-between gap-3 rounded-xl border border-border bg-white dark:bg-card p-4 shadow-xs sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#4285F4]/15">
           <GoogleIcon className="size-5" />
