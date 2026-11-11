@@ -46,8 +46,8 @@ export default function FaqsBlock() {
             Frequently Asked Questions
           </h1>
 
-          <p className="mx-auto max-w-2xl text-base text-zinc-600 sm:text-lg leading-relaxed">
-            Everything doctors, practice owners, and clinic administrators ask about live WhatsApp queues, 30-second digital prescriptions, ABDM compliance, and clinic automation.
+          <p className="mx-auto max-w-xl text-base text-zinc-600 sm:text-lg leading-relaxed">
+            Quick answers to the questions we hear most often about My Clinics.
           </p>
         </div>
 
