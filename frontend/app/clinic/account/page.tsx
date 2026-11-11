@@ -15,6 +15,7 @@ import {
 } from "@/lib/clinic-api";
 import { formatMonthYear } from "@/lib/datetime";
 import { bustAvatarCache } from "@/components/clinic/person-avatar";
+import { WhatsAppConnectCard } from "@/components/clinic/whatsapp-connect-card";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -589,6 +590,8 @@ export default function AccountPage() {
               {orDash(clinic.phone)}
             </li>
           </ul>
+
+          <WhatsAppConnectCard clinicId={clinicId} canManage={canManage} />
 
           <Tabs defaultValue="overview" className="mt-6 gap-4">
             <TabsList className="w-full bg-[#E3F2FD]">

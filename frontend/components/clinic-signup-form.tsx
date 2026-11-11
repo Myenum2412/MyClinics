@@ -59,7 +59,7 @@ export function ClinicSignupForm({
         ? await signupClinicGoogle({ clinicName, adminName, gticket })
         : await signupClinic({ clinicName, adminName, email, password });
       if (gticket) {
-        router.replace("/clinic/settings");
+        router.replace("/clinic/account");
         router.refresh();
         return;
       }
@@ -85,7 +85,7 @@ export function ClinicSignupForm({
       setCountdown((c) => {
         if (c <= 1) {
           clearInterval(countdownRef.current!);
-          router.replace("/clinic/settings");
+          router.replace("/clinic/account");
           router.refresh();
           return 0;
         }
@@ -103,7 +103,7 @@ export function ClinicSignupForm({
         <div className="flex flex-col items-center gap-2 text-center">
           <h1 className="text-xl font-bold text-black">Clinic created! 🎉</h1>
           <p className="text-sm text-black">
-            Your clinic is live. Redirecting to clinic details in {countdown}s…
+            Your clinic is live. Taking you to your account in {countdown}s…
           </p>
         </div>
 
@@ -144,12 +144,12 @@ export function ClinicSignupForm({
         <Button
           onClick={() => {
             if (countdownRef.current) clearInterval(countdownRef.current);
-            router.replace("/clinic/settings");
+            router.replace("/clinic/account");
             router.refresh();
           }}
           className="w-full bg-[#2196F3] text-white hover:bg-[#1E88E5] border-none shadow-md font-medium"
         >
-          Go to Clinic Details now
+          Go to my account now
         </Button>
       </div>
     );
