@@ -88,7 +88,7 @@ export function LoginForm({
         callbackUrl && /^\/(?!\/)/.test(callbackUrl) ? callbackUrl : null;
       router.replace(safeCallback ?? destination);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid email, phone number or password.");
+      setError(err instanceof Error ? err.message : "Invalid email id or password.");
     } finally {
       setLoading(false);
     }
@@ -127,12 +127,12 @@ export function LoginForm({
 
           <Field>
             <FieldLabel htmlFor="email" className="text-black font-medium">
-              Email or Phone / WhatsApp number
+              Email id
             </FieldLabel>
             <Input
               id="email"
               type="text"
-              placeholder="m@example.com or 98765 43210"
+              placeholder="m@example.com"
               required
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}

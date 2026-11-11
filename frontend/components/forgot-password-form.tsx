@@ -74,8 +74,8 @@ export function ForgotPasswordForm({ token = "" }: { token?: string }) {
   const description = isReset
     ? "Choose a new password for your MyClinics account."
     : step === "sent"
-      ? "If an account matches those details, we've emailed a reset link to the address on file. The link expires in 30 minutes."
-      : "Enter the email or mobile number linked to your account — clinic, doctor, staff or patient.";
+      ? "If an account matches that email, we've emailed a reset link to the address on file. The link expires in 30 minutes."
+      : "Enter the email id linked to your account — clinic, doctor, staff or patient.";
 
   return (
     <div className="flex flex-col gap-6 text-black">
@@ -187,7 +187,7 @@ export function ForgotPasswordForm({ token = "" }: { token?: string }) {
               setError("");
             }}
           >
-            Use a different email or number
+            Use a different email
           </Button>
         </div>
       ) : (
@@ -195,12 +195,12 @@ export function ForgotPasswordForm({ token = "" }: { token?: string }) {
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="identifier" className="text-black font-medium">
-                Email or phone / WhatsApp number
+                Email id
               </FieldLabel>
               <Input
                 id="identifier"
                 type="text"
-                placeholder="m@example.com or 98765 43210"
+                placeholder="m@example.com"
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
