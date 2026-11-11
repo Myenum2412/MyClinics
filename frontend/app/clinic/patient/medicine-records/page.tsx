@@ -51,7 +51,7 @@ export default function PatientMedicineRecordsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">My Medicine Records</h2>
-          <p className="text-muted-foreground mt-1">Track your medicine intake and pharmacy records</p>
+          <p className="text-muted-foreground mt-1">Track your medicine intake and records</p>
         </div>
       </div>
 
@@ -59,7 +59,7 @@ export default function PatientMedicineRecordsPage() {
         <div className="rounded-xl border border-border bg-background p-12 text-center">
           <Pill className="size-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground">No medicine records yet</h3>
-          <p className="text-muted-foreground mt-2">Your pharmacy and medicine records will appear here.</p>
+          <p className="text-muted-foreground mt-2">Your medicine records will appear here.</p>
         </div>
       ) : (
         <div className="border border-border bg-background shadow-sm overflow-hidden">

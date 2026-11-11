@@ -179,7 +179,7 @@ export default function QuickAddPage(){
   const addRxMedicine=()=> setRxMeds(m=>[...m,{name:"", dosage:"", frequency:"", duration:"", instructions:""}]);
   const removeRxMedicine=(i:number)=> setRxMeds(m=> m.filter((_,idx)=> idx!==i));
   const setRxMedicine=(i:number,patch:Partial<typeof rxMeds[0]>)=> setRxMeds(m=> m.map((row,idx)=> idx===i? {...row,...patch}:row));
-  // 6. Medicine — simple /clinic/pharmacy/medicines form (details only)
+  // 6. Medicine options used by the prescription form
 
   const medInstructions=getOptions("medicine_instructions");
   const medicinesOpts=getOptions("medicines");

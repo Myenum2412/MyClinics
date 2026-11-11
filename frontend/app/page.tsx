@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     absolute: "Book Doctor Appointments Online | Clinic Management Software — My Clinics",
   },
   description:
-    "Book doctor appointments online in under a minute. My Clinics is all-in-one clinic management software for appointments, patient records, prescriptions, billing & pharmacy — with WhatsApp booking & AI assistant. Trusted by 500+ clinics.",
+    "Book doctor appointments online in under a minute. My Clinics is all-in-one clinic management software for appointments, patient records, prescriptions & billing — with WhatsApp booking & AI assistant. Trusted by 500+ clinics.",
   keywords: [
     "clinic management software",
     "clinic management system",
@@ -26,14 +26,13 @@ export const metadata: Metadata = {
     "patient record management",
     "EMR software",
     "clinic billing software",
-    "pharmacy management software",
     "hospital management system",
     "My Clinics",
   ],
   openGraph: {
     title: "Book Doctor Appointments Online | Clinic Management Software — My Clinics",
     description:
-      "Book doctor appointments online in under a minute. All-in-one clinic management software for appointments, records, billing, prescriptions & pharmacy with WhatsApp & AI booking.",
+      "Book doctor appointments online in under a minute. All-in-one clinic management software for appointments, records, billing & prescriptions with WhatsApp & AI booking.",
     type: "website",
   },
   twitter: {

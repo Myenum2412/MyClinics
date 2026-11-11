@@ -14,7 +14,7 @@ export default function HeroSection() {
                             <div className="md:w-1/2">
                                 <div>
                                     <h1 className="max-w-md text-balance text-5xl font-medium md:text-6xl">Your Health, Simplified</h1>
-                                    <p className="text-muted-foreground my-8 max-w-2xl text-balance text-xl">Book appointments in seconds, manage patient records, prescriptions, billing & pharmacy — one trusted platform for your family&apos;s healthcare.</p>
+                                    <p className="text-muted-foreground my-8 max-w-2xl text-balance text-xl">Book appointments in seconds, manage patient records, prescriptions & billing — one trusted platform for your family&apos;s healthcare.</p>
 
                                     <div className="flex items-center gap-3">
                                         <Button

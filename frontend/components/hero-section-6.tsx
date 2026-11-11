@@ -32,7 +32,7 @@ export default function HeroSection() {
                                 <div className="mt-8 grid items-end gap-4 md:grid-cols-2 md:gap-6">
                                     <h1 className="text-balance text-5xl font-medium tracking-tight text-white md:text-6xl xl:text-7xl">Run your whole clinic on one platform</h1>
                                     <div className="mx-auto flex max-w-md flex-col gap-6">
-                                        <p className="text-balance text-lg text-white/60">Appointments, live queues, EMR, prescriptions, billing and pharmacy — with WhatsApp booking and an AI assistant.</p>
+                                        <p className="text-balance text-lg text-white/60">Appointments, live queues, EMR, prescriptions and billing — with WhatsApp booking and an AI assistant.</p>
 
                                         <Button
                                             className="w-fit bg-blue-600 text-white hover:bg-blue-500 focus-visible:border-blue-500 focus-visible:ring-blue-500/60"

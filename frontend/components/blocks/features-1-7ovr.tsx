@@ -8,7 +8,6 @@ import {
   CalendarCheck,
   ChartColumn,
   ClipboardList,
-  Boxes,
   Pill,
   ReceiptIndianRupee,
 } from "lucide-react"
@@ -43,13 +42,6 @@ const features = [
     ),
     title: "Billing & payments",
     copy: "Invoices, collections and outstanding dues reconciled to the rupee.",
-  },
-  {
-    icon: (p: IconProps) => (
-      <Boxes {...p} />
-    ),
-    title: "Pharmacy & stock",
-    copy: "Medicines, batches and purchases that update inventory as you dispense.",
   },
   {
     icon: (p: IconProps) => (

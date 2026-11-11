@@ -39,7 +39,7 @@ import {
   ChevronRightIcon,
   MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
-import { Pill, HeartPulse } from "lucide-react";
+import { HeartPulse } from "lucide-react";
 import { FlaskConical } from "lucide-react";
 
 interface NavItem {
@@ -71,16 +71,6 @@ const NAV_GROUPS: NavGroup[] = [
       { title: "Prescriptions", url: "/clinic/prescriptions", icon: <PillIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
       { title: "Appointments", url: "/clinic/appointments", icon: <CalendarDaysIcon className="size-5" />, match: "prefix", roles: ["patient", "doctor", "staff", "clinic_admin"] },
       { title: "Medicine", url: "/clinic/records", icon: <RecordsIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
-      {
-        title: "Pharmacy", url: "/clinic/pharmacy", icon: <Pill className="size-5" />, match: "prefix", roles: ["clinic_admin", "pharmacy_manager", "pharmacist", "inventory_staff", "billing_staff"],
-        children: [
-          { title: "Inventory", url: "/clinic/pharmacy/inventory" },
-          { title: "Stock History", url: "/clinic/pharmacy/stock-history" },
-          { title: "Purchases", url: "/clinic/pharmacy/purchases" },
-          { title: "Sales", url: "/clinic/pharmacy/sales" },
-          { title: "Suppliers", url: "/clinic/pharmacy/suppliers" },
-        ],
-      },
     ],
   },
   {

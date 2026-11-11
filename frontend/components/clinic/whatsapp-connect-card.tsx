@@ -16,7 +16,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CheckCircle2, Loader2, MessageCircle } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/clinic/whatsapp-icon";
 
 /** The QR rotates every ~20-60s at WhatsApp's end; 4s keeps the popup fresh. */
 const POLL_MS = 4_000;
@@ -147,7 +148,7 @@ export function WhatsAppConnectCard({
     <div className="mt-5 flex flex-col gap-3 rounded-xl border border-[#E3F2FD] bg-[#E3F2FD]/40 p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#25D366]/15">
-          <MessageCircle className="size-5 text-[#128C7E]" aria-hidden="true" />
+          <WhatsAppIcon className="size-5" />
         </div>
         <div>
           <div className="flex items-center gap-2">

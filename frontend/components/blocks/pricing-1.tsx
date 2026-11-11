@@ -48,11 +48,10 @@ const tiers: Tier[] = [
     name: "Pro",
     monthly: 5_000,
     annual: 60_000,
-    description: "For growing clinics with a reception and pharmacy team.",
+    description: "For growing clinics with a reception team.",
     features: [
       "Up to 5 doctors",
       "Everything in Starter",
-      "Pharmacy & inventory management",
       "Patient timeline and visit history",
       "Appointment and revenue analytics",
       "AI assistant and smart follow-ups",
