@@ -16,9 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  AlertCircle,
   Building2,
   CheckCircle2,
-  ChevronRight,
   ExternalLink,
   Globe,
   Loader2,
@@ -78,11 +78,11 @@ export function GoogleBusinessConnectCard({
   onDisconnect,
 }: GoogleBusinessConnectCardProps) {
   const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<"email" | "url" | "search">("email");
+  const [tab, setTab] = useState<"gmail" | "url">("gmail");
   const [emailInput, setEmailInput] = useState(clinicEmail ?? "");
   const [urlInput, setUrlInput] = useState(connectedUrl ?? "");
-  const [queryInput, setQueryInput] = useState(clinicName);
   const [loading, setLoading] = useState(false);
+  const [checkedEmail, setCheckedEmail] = useState<string | null>(null);
   const [businesses, setBusinesses] = useState<GoogleBusinessResolvedData[]>([]);
   const [selectedBiz, setSelectedBiz] = useState<GoogleBusinessResolvedData | null>(null);
 
@@ -95,53 +95,76 @@ export function GoogleBusinessConnectCard({
     }
   }, [clinicEmail, emailInput]);
 
-  const handleFetchBusinesses = async (overrideEmail?: string) => {
-    const targetEmail = overrideEmail !== undefined ? overrideEmail : (tab === "email" ? emailInput.trim() : undefined);
-    const targetUrl = tab === "url" ? urlInput.trim() : undefined;
-    const targetQuery =
-      tab === "search"
-        ? queryInput.trim()
-        : tab === "email" && targetEmail
-        ? `${clinicName} ${targetEmail.split("@")[0].replace(/[._-]/g, " ")}`
-        : undefined;
+  // Listen for Google OAuth popup callback messages
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === "GOOGLE_BUSINESS_AUTH_SUCCESS") {
+        const { email, businesses: bizList } = e.data as {
+          email: string;
+          businesses?: GoogleBusinessResolvedData[];
+        };
+        setEmailInput(email);
+        setCheckedEmail(email);
+        const list = bizList || [];
+        setBusinesses(list);
+        setSelectedBiz(list[0] || null);
+        setOpen(true);
+        if (list.length > 0) {
+          toast.success(`Google Account verified: ${email}. Found ${list.length} business profile(s).`);
+        } else {
+          toast.info(`Signed in as ${email}. No Google Business locations are managed under this account.`);
+        }
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
 
-    if (tab === "email" && !targetEmail) {
-      toast.error("Please enter your Google Business email");
+  // Launch Google OAuth popup for that Gmail ID
+  const handleSignInWithGmail = (emailToUse?: string) => {
+    const targetEmail = emailToUse || effectiveEmail;
+    const authUrl = `/api/clinics/auth/google?from=google_business${
+      targetEmail ? `&email=${encodeURIComponent(targetEmail)}` : ""
+    }`;
+    window.open(authUrl, "googleOAuth", "width=600,height=720");
+  };
+
+  const handleCheckGmail = async () => {
+    if (tab === "gmail") {
+      if (!effectiveEmail) {
+        toast.error("Please enter your Gmail address");
+        return;
+      }
+      // Open Google OAuth for verification of that Gmail ID
+      handleSignInWithGmail(effectiveEmail);
       return;
     }
-    if (tab === "url" && !targetUrl) {
-      toast.error("Please enter a Google Maps or Google Business link");
-      return;
-    }
-    if (tab === "search" && !targetQuery) {
-      toast.error("Please enter clinic name or location to search");
-      return;
-    }
 
-    setLoading(true);
-    setBusinesses([]);
-    setSelectedBiz(null);
-    try {
-      const data = await resolveGoogleBusinessProfile(clinicId, {
-        email: targetEmail,
-        name: clinicName,
-        url: targetUrl,
-        query: targetQuery,
-      });
+    if (tab === "url") {
+      if (!urlInput.trim()) {
+        toast.error("Please enter your Google Maps or Google Business link");
+        return;
+      }
 
-      const list = data.businesses && data.businesses.length > 0 ? data.businesses : [data];
-      setBusinesses(list);
-      setSelectedBiz(list[0] || null);
+      setLoading(true);
+      setBusinesses([]);
+      setSelectedBiz(null);
+      try {
+        const data = await resolveGoogleBusinessProfile(clinicId, {
+          url: urlInput.trim(),
+          name: clinicName,
+        });
 
-      toast.success(
-        list.length > 1
-          ? `Found ${list.length} businesses for this account! Select your location below.`
-          : "Business details retrieved successfully!"
-      );
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to fetch Google Business details");
-    } finally {
-      setLoading(false);
+        const list = data.businesses && data.businesses.length > 0 ? data.businesses : [data];
+        setBusinesses(list);
+        setSelectedBiz(list[0] || null);
+        setCheckedEmail(null);
+        toast.success("Business profile retrieved from link!");
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to load link details");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -150,14 +173,6 @@ export function GoogleBusinessConnectCard({
     if (!target) return;
     onAutoComplete(target);
     setOpen(false);
-  };
-
-  const handleOpenModal = (preferredTab: "email" | "url" | "search" = "email") => {
-    setTab(preferredTab);
-    setOpen(true);
-    if (preferredTab === "email" && effectiveEmail && businesses.length === 0) {
-      void handleFetchBusinesses(effectiveEmail);
-    }
   };
 
   return (
@@ -188,8 +203,8 @@ export function GoogleBusinessConnectCard({
               {isConnected
                 ? "Connected with Google. Auto-completes clinic address, phone, working hours and details."
                 : effectiveEmail
-                ? `Connect with ${effectiveEmail} to view and auto-fill your connected businesses.`
-                : "Connect your Google Business Profile to view connected businesses and auto-fill your profile."}
+                ? `Connect with ${effectiveEmail} to check and view your connected Google Business Profile.`
+                : "Connect with your Gmail ID to view only your connected Google Business profiles."}
             </p>
           </div>
         </div>
@@ -214,10 +229,24 @@ export function GoogleBusinessConnectCard({
               <Button
                 size="sm"
                 className="h-8 gap-1.5 text-xs font-medium bg-[#4285F4] hover:bg-[#3367D6] text-white"
-                onClick={() => handleOpenModal("email")}
+                onClick={() => {
+                  setOpen(true);
+                  if (effectiveEmail) {
+                    handleSignInWithGmail(effectiveEmail);
+                  }
+                }}
               >
                 <GoogleIcon className="size-3.5" />
-                {isConnected ? "View Connected Businesses" : "Connect with Google"}
+                {isConnected ? "Check Connected Profiles" : `Connect with Gmail`}
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs"
+                onClick={() => setOpen(true)}
+              >
+                Settings
               </Button>
 
               {isConnected && onDisconnect && (
@@ -245,35 +274,31 @@ export function GoogleBusinessConnectCard({
               <DialogTitle>Google Business Profile Connection</DialogTitle>
             </div>
             <DialogDescription>
-              View the list of businesses connected to your Google account and select your location to auto-complete
-              the clinic profile.
+              Verify your Gmail ID to display only the Google Business profiles connected to that account.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <Tabs value={tab} onValueChange={(v) => setTab(v as "email" | "url" | "search")}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="email" className="text-xs">
-                  Connected Email
-                </TabsTrigger>
-                <TabsTrigger value="search" className="text-xs">
-                  Search Clinic
+            <Tabs value={tab} onValueChange={(v) => setTab(v as "gmail" | "url")}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="gmail" className="text-xs">
+                  Check with Gmail ID
                 </TabsTrigger>
                 <TabsTrigger value="url" className="text-xs">
-                  Maps Link
+                  Maps / Business Link
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="email" className="space-y-3 pt-2">
+              <TabsContent value="gmail" className="space-y-3 pt-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="google-email" className="text-xs font-medium">
-                    Google Business Account Email
+                    Google / Gmail ID
                   </Label>
                   <div className="flex gap-2">
                     <Input
                       id="google-email"
                       type="email"
-                      placeholder="e.g. clinic@gmail.com"
+                      placeholder="e.g. doctor@gmail.com"
                       value={emailInput}
                       onChange={(e) => setEmailInput(e.target.value)}
                       className="text-xs"
@@ -281,54 +306,15 @@ export function GoogleBusinessConnectCard({
                     <Button
                       type="button"
                       size="sm"
-                      onClick={() => void handleFetchBusinesses()}
-                      disabled={loading}
+                      onClick={() => handleSignInWithGmail(emailInput)}
                       className="shrink-0 gap-1.5 text-xs bg-[#4285F4] hover:bg-[#3367D6] text-white"
                     >
-                      {loading ? (
-                        <Loader2 className="size-3.5 animate-spin" />
-                      ) : (
-                        <Mail className="size-3.5" />
-                      )}
-                      Show Businesses
+                      <GoogleIcon className="size-3.5" />
+                      Sign in & Check
                     </Button>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Fetches all business profiles and branches connected with this email address.
-                  </p>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="search" className="space-y-3 pt-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="google-search-query" className="text-xs font-medium">
-                    Clinic Name and City
-                  </Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="google-search-query"
-                      placeholder="e.g. Apollo Clinic, Indiranagar, Bengaluru"
-                      value={queryInput}
-                      onChange={(e) => setQueryInput(e.target.value)}
-                      className="text-xs"
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => void handleFetchBusinesses()}
-                      disabled={loading}
-                      className="shrink-0 gap-1.5 text-xs"
-                    >
-                      {loading ? (
-                        <Loader2 className="size-3.5 animate-spin" />
-                      ) : (
-                        <Search className="size-3.5" />
-                      )}
-                      Search
-                    </Button>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">
-                    Search by clinic name and city to find matching Google Business profiles.
+                    Verifies your Gmail ID via Google to retrieve only the business profiles you manage.
                   </p>
                 </div>
               </TabsContent>
@@ -349,7 +335,7 @@ export function GoogleBusinessConnectCard({
                     <Button
                       type="button"
                       size="sm"
-                      onClick={() => void handleFetchBusinesses()}
+                      onClick={() => void handleCheckGmail()}
                       disabled={loading}
                       className="shrink-0 gap-1.5 text-xs"
                     >
@@ -362,22 +348,57 @@ export function GoogleBusinessConnectCard({
                     </Button>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    Tip: Open Google Maps, search your clinic, click <strong>Share</strong>, and copy the link.
+                    Paste the direct Google Maps link for your clinic to auto-fill its exact details.
                   </p>
                 </div>
               </TabsContent>
             </Tabs>
 
-            {/* List of Connected Businesses */}
+            {/* If Gmail was checked and NO connected profiles found */}
+            {checkedEmail && businesses.length === 0 && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3.5 text-xs space-y-2 dark:border-amber-900/50 dark:bg-amber-950/20">
+                <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-medium">
+                  <AlertCircle className="size-4 shrink-0 text-amber-600" />
+                  No Business Profiles Found Under {checkedEmail}
+                </div>
+                <p className="text-amber-700/90 dark:text-amber-400 text-[11px] leading-relaxed">
+                  This Gmail ID does not currently manage any verified Google Business listings on{" "}
+                  <strong>Google Business Profile</strong> (business.google.com).
+                </p>
+                <div className="flex flex-wrap items-center gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs bg-white text-foreground"
+                    onClick={() => handleSignInWithGmail()}
+                  >
+                    Switch / Try Another Gmail
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs text-primary"
+                    asChild
+                  >
+                    <a href="https://business.google.com" target="_blank" rel="noopener noreferrer">
+                      Open Google Business Manager
+                      <ExternalLink className="size-3 ml-1" />
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* List of Connected Businesses ONLY */}
             {businesses.length > 0 && (
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between border-b pb-2">
                   <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                     <Building2 className="size-4 text-primary" />
-                    Businesses Connected to this Account ({businesses.length})
+                    Connected Business Profiles ({businesses.length})
                   </span>
                   <span className="text-[11px] text-muted-foreground">
-                    Click to select your business
+                    {checkedEmail ? `Verified for ${checkedEmail}` : "Select your business"}
                   </span>
                 </div>
 
@@ -412,7 +433,7 @@ export function GoogleBusinessConnectCard({
 
                             <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                               <MapPin className="size-3 shrink-0 text-muted-foreground" />
-                              <span className="truncate">{fullAddress || "Address available upon selection"}</span>
+                              <span className="truncate">{fullAddress || "Address verified"}</span>
                             </p>
 
                             <div className="flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground pt-0.5">
@@ -527,12 +548,11 @@ export function GoogleBusinessConnectCard({
             ) : (
               <Button
                 size="sm"
-                onClick={() => void handleFetchBusinesses()}
-                disabled={loading}
+                onClick={() => handleSignInWithGmail()}
                 className="gap-1.5 bg-[#4285F4] hover:bg-[#3367D6] text-white"
               >
-                {loading && <Loader2 className="size-3.5 animate-spin" />}
-                Show Businesses
+                <GoogleIcon className="size-3.5" />
+                Sign in with Google
               </Button>
             )}
           </DialogFooter>

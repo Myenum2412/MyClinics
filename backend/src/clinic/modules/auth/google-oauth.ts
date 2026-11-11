@@ -57,11 +57,13 @@ export function frontendBaseUrl(request: {
 }
 
 // ── One-time state tokens (CSRF protection) ────────────────────────────────
+export type GoogleOAuthOrigin = "login" | "signup" | "google_business";
+
 // SEC-014: persist to Mongo/Valkey for horizontal scale + PKCE. In-memory Map is fallback for tests.
-const pendingStates = new Map<string, { exp: number; from: "login" | "signup"; verifier?: string }>();
+const pendingStates = new Map<string, { exp: number; from: GoogleOAuthOrigin; verifier?: string }>();
 const signupTickets = new Map<string, { exp: number; email: string }>();
 
-async function persistState(state: string, from: "login" | "signup", verifier?: string): Promise<void> {
+async function persistState(state: string, from: GoogleOAuthOrigin, verifier?: string): Promise<void> {
   try {
     const { getDb } = await import("@/lib/db-pools");
     const db = await getDb();
@@ -69,20 +71,20 @@ async function persistState(state: string, from: "login" | "signup", verifier?: 
     await db.collection("clc_google_oauth_states").insertOne({ state, from, verifier: verifier ?? null, expiresAt: new Date(nowMs() + STATE_TTL_MS), createdAt: new Date() });
   } catch {}
 }
-async function fetchAndDeleteState(state: string): Promise<{ from: "login" | "signup"; verifier?: string } | null> {
+async function fetchAndDeleteState(state: string): Promise<{ from: GoogleOAuthOrigin; verifier?: string } | null> {
   try {
     const { getDb } = await import("@/lib/db-pools");
     const db = await getDb();
     const doc = await db.collection("clc_google_oauth_states").findOneAndDelete({ state });
     if (doc) {
-      if ((doc.expiresAt as Date).getTime() >= nowMs()) return { from: doc.from, verifier: doc.verifier ?? undefined };
+      if ((doc.expiresAt as Date).getTime() >= nowMs()) return { from: doc.from as GoogleOAuthOrigin, verifier: doc.verifier ?? undefined };
       return null;
     }
   } catch {}
   return null;
 }
 
-export async function issueStateToken(from: "login" | "signup" = "login"): Promise<string> {
+export async function issueStateToken(from: GoogleOAuthOrigin = "login"): Promise<string> {
   const state = randomBytes(24).toString("hex");
   // PKCE verifier
   const verifier = randomBytes(32).toString("hex");
@@ -98,8 +100,8 @@ export async function issueStateToken(from: "login" | "signup" = "login"): Promi
   return state;
 }
 
-/** Returns the flow origin ("login" | "signup") the state was issued for, or null. */
-export async function consumeStateToken(state: string): Promise<"login" | "signup" | null> {
+/** Returns the flow origin ("login" | "signup" | "google_business") the state was issued for, or null. */
+export async function consumeStateToken(state: string): Promise<GoogleOAuthOrigin | null> {
   // Prefer DB, fallback to memory
   const dbRes = await fetchAndDeleteState(state);
   if (dbRes) return dbRes.from;
@@ -109,7 +111,7 @@ export async function consumeStateToken(state: string): Promise<"login" | "signu
   return entry.exp >= nowMs() ? entry.from : null;
 }
 
-export async function consumeStateWithVerifier(state: string): Promise<{ from: "login" | "signup"; verifier?: string } | null> {
+export async function consumeStateWithVerifier(state: string): Promise<{ from: GoogleOAuthOrigin; verifier?: string } | null> {
   const dbRes = await fetchAndDeleteState(state);
   if (dbRes) return dbRes;
   const entry = pendingStates.get(state);
@@ -155,12 +157,12 @@ export async function consumeGoogleSignupTicket(ticket: string): Promise<string 
 }
 
 // Backward-compat sync wrappers for tests (do not persist)
-export function issueStateTokenSync(from: "login" | "signup" = "login"): string {
+export function issueStateTokenSync(from: GoogleOAuthOrigin = "login"): string {
   const state = randomBytes(24).toString("hex");
   pendingStates.set(state, { exp: nowMs() + STATE_TTL_MS, from });
   return state;
 }
-export function consumeStateTokenSync(state: string): "login" | "signup" | null {
+export function consumeStateTokenSync(state: string): GoogleOAuthOrigin | null {
   const entry = pendingStates.get(state);
   if (!entry) return null;
   pendingStates.delete(state);
@@ -176,7 +178,8 @@ function base64url(buf: Buffer): string {
 export async function buildAuthorizationUrl(
   clientId: string,
   redirectUri: string,
-  state: string
+  state: string,
+  options?: { scope?: string; loginHint?: string }
 ): Promise<string> {
   // Try to retrieve PKCE verifier for this state
   let verifier: string | undefined;
@@ -194,10 +197,13 @@ export async function buildAuthorizationUrl(
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: "openid email profile",
+    scope: options?.scope || "openid email profile",
     state,
     prompt: "select_account",
   });
+  if (options?.loginHint) {
+    params.set("login_hint", options.loginHint);
+  }
   if (verifier) {
     const challenge = base64url(createHash("sha256").update(verifier).digest());
     params.set("code_challenge", challenge);
