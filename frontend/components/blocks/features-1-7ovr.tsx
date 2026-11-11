@@ -6,8 +6,8 @@ import {
 } from "@/components/ui/card"
 import {
   CalendarCheck,
-  ChartColumn,
   ClipboardList,
+  Folder,
   Pill,
   ReceiptIndianRupee,
   Stethoscope,
@@ -53,10 +53,10 @@ const features = [
   },
   {
     icon: (p: IconProps) => (
-      <ChartColumn {...p} />
+      <Folder {...p} />
     ),
-    title: "Reports & insights",
-    copy: "Revenue, footfall and doctor-wise performance on one dashboard.",
+    title: "Medical Record",
+    copy: "Centralized medical files, clinical histories, lab attachments, and diagnostic timelines.",
   },
 ]
 
@@ -83,16 +83,16 @@ export default function FeaturesBlock() {
           {features.map(({ icon: Icon, title, copy }) => (
             <Card
               key={title}
-              className="bg-blue-950/40 p-6 text-white ring-1 ring-blue-900 backdrop-blur-sm transition-colors hover:ring-blue-700"
+              className="bg-white p-6 text-zinc-900 border border-zinc-200/80 shadow-md transition-all duration-200 hover:shadow-xl hover:border-zinc-300"
             >
               <CardHeader className="p-0">
-                <span className="flex size-11 items-center justify-center rounded-lg border border-blue-800 bg-blue-900/40 text-blue-300">
+                <span className="flex size-11 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 text-blue-600">
                   <Icon className="size-5" aria-hidden="true" />
                 </span>
-                <CardTitle className="mt-4 text-base font-semibold text-white">
+                <CardTitle className="mt-4 text-base font-semibold text-zinc-900">
                   {title}
                 </CardTitle>
-                <CardDescription className="mt-2 text-sm text-white/60">
+                <CardDescription className="mt-2 text-sm text-zinc-600 leading-relaxed">
                   {copy}
                 </CardDescription>
               </CardHeader>
