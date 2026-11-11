@@ -145,32 +145,32 @@ export function WhatsAppConnectCard({
       : "Connect your clinic's WhatsApp Business number to send reminders and reports";
 
   return (
-    <div className="flex h-full flex-col justify-between gap-3 rounded-xl border border-[#E3F2FD] bg-[#E3F2FD]/40 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-start gap-3">
+    <div className="flex h-full min-h-[88px] flex-col justify-between gap-3 rounded-xl border border-[#E3F2FD] bg-[#E3F2FD]/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#25D366]/15">
           <WhatsAppIcon className="size-5" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-foreground">WhatsApp</p>
+            <p className="text-sm font-semibold text-foreground truncate">WhatsApp</p>
             {connected && (
               <Badge
                 variant="outline"
-                className="border-[#25D366]/40 bg-[#25D366]/10 text-[#075E54]"
+                className="border-[#25D366]/40 bg-[#25D366]/10 text-[#075E54] shrink-0"
               >
                 <span className="mr-1.5 size-1.5 rounded-full bg-[#25D366]" />
                 Connected
               </Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">{statusText}</p>
+          <p className="text-xs text-muted-foreground line-clamp-2">{statusText}</p>
         </div>
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger
           render={
-            <Button disabled={!canManage} className="w-full sm:w-auto">
+            <Button disabled={!canManage} className="w-full sm:w-auto shrink-0">
               {connected ? "WhatsApp settings" : "Connect WhatsApp"}
             </Button>
           }

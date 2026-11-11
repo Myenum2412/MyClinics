@@ -183,25 +183,25 @@ export function GoogleBusinessConnectCard({
         : "Connect your clinic's Google Business Profile to sync details and hours";
 
   return (
-    <div className="flex h-full flex-col justify-between gap-3 rounded-xl border border-[#E3F2FD] bg-[#E3F2FD]/40 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex items-start gap-3">
+    <div className="flex h-full min-h-[88px] flex-col justify-between gap-3 rounded-xl border border-[#E3F2FD] bg-[#E3F2FD]/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#4285F4]/15">
           <GoogleIcon className="size-5" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold text-foreground">Google Business Profile</p>
+            <p className="text-sm font-semibold text-foreground truncate">Google Business Profile</p>
             {connected && (
               <Badge
                 variant="outline"
-                className="border-[#4285F4]/40 bg-[#4285F4]/10 text-[#1a73e8]"
+                className="border-[#4285F4]/40 bg-[#4285F4]/10 text-[#1a73e8] shrink-0"
               >
                 <span className="mr-1.5 size-1.5 rounded-full bg-[#4285F4]" />
                 Connected
               </Badge>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">{statusText}</p>
+          <p className="text-xs text-muted-foreground line-clamp-2">{statusText}</p>
         </div>
       </div>
 
