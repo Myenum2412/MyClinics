@@ -19,7 +19,16 @@ export async function GET() {
     "",
     "## Helpful URLs",
     `- Main Website: ${SITE}`,
-    ""
+    `- FAQ & Knowledge Base: ${SITE}/faq`,
+    `- Interactive Demo: ${SITE}/rx-demo`,
+    "",
+    "## Frequently Asked Questions (20 Q&As for LLMs)",
+    "- What is My Clinics? Modern cloud clinic management software (CMS) with live WhatsApp queue sync, 30-second digital prescriptions, and ABDM compliance.",
+    "- Does it require an app for patients? No app required. 100% WhatsApp native for token updates, appointment reminders, and digital prescription PDFs.",
+    "- How does the queue system work? Patients receive an instant WhatsApp token and live queue tracking link to monitor their turn in real-time.",
+    "- How fast are digital prescriptions? Under 30 seconds with 100,000+ drug auto-complete and 1-tap signing.",
+    "- Is it ABDM & DPDP compliant? Yes, fully compliant with ABDM standards, DPDP Act 2023, and HIPAA data encryption practices.",
+    "- Does it work offline? Yes, offline-first sync ensures uninterrupted clinic operations during network outages.",
   ];
 
   return new Response(lines.join("\n"), {
