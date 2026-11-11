@@ -450,6 +450,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
       date: string;
       time?: string;
       patientName: string;
+      reason: string;
       isToday: boolean;
     }[] = [];
 
@@ -484,6 +485,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
             date: appt.date,
             time: appt.time,
             patientName: pName,
+            reason: appt.reason?.trim() || (appt as any).notes?.trim() || "—",
             isToday: iso === today,
           });
         }
@@ -492,6 +494,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           id: `day-${iso}`,
           date: iso,
           patientName: "—",
+          reason: "—",
           isToday: iso === today,
         });
       }
@@ -515,6 +518,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
           date: appt.date,
           time: appt.time,
           patientName: pName,
+          reason: appt.reason?.trim() || (appt as any).notes?.trim() || "—",
           isToday: false,
         });
       }
@@ -685,7 +689,8 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
                       <TableHeader>
                         <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
                           <TableHead className="font-semibold text-foreground px-6">Date</TableHead>
-                          <TableHead className="font-semibold text-foreground px-6">Patient Name</TableHead>
+                          <TableHead className="font-semibold text-foreground px-4">Patient Name</TableHead>
+                          <TableHead className="font-semibold text-foreground px-6">Reason</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -708,8 +713,11 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
                                 )}
                               </div>
                             </TableCell>
-                            <TableCell className={`text-xs py-3.5 px-6 ${row.patientName === "—" ? "text-muted-foreground" : "font-semibold text-foreground"}`}>
+                            <TableCell className={`text-xs py-3.5 px-4 ${row.patientName === "—" ? "text-muted-foreground" : "font-semibold text-foreground"}`}>
                               {row.patientName}
+                            </TableCell>
+                            <TableCell className={`text-xs py-3.5 px-6 ${row.reason === "—" ? "text-muted-foreground" : "text-muted-foreground truncate max-w-[140px]"}`}>
+                              {row.reason}
                             </TableCell>
                           </TableRow>
                         ))}
