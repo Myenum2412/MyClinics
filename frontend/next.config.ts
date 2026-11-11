@@ -98,6 +98,22 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      // Leads were replaced by the CRM contacts module. Keep old links and
+      // bookmarks working instead of showing the clinic 404 page.
+      {
+        source: "/clinic/leads",
+        destination: "/clinic/crm/contacts",
+        permanent: false,
+      },
+      {
+        source: "/clinic/leads/:path*",
+        destination: "/clinic/crm/contacts",
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     if (process.env.SKIP_API_PROXY === "1") return [];
     // On Vercel / Cloudflare edge workers, external rewrites cause target errors
