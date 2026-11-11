@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import Image from "next/image";
 import HeroSection6 from "@/components/hero-section-6";
 import FeaturesBlock from "@/components/blocks/features-1-7ovr";
+import Features4 from "@/components/blocks/features-4";
 import IntegrationsMarquee from "@/components/blocks/integrations-2-marquee";
 import NewsletterHomeBlock from "@/components/blocks/newsletter-home";
 import { FooterSection } from "@/components/footer-section";
@@ -64,6 +65,7 @@ export default function Home() {
       <div className="relative z-10">
         <HeroSection6 />
         <FeaturesBlock />
+        <Features4 />
         <IntegrationsMarquee />
         <NewsletterHomeBlock />
         <FooterSection />
