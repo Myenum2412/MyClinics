@@ -66,10 +66,11 @@ export function OrgSidebar({
       title: "Communication",
       url: "#",
       icon: <ChatBubbleIcon className="size-4" />,
-      isActive: pathname.startsWith("/orgmenu/whatsapp") || pathname.startsWith("/orgmenu/soul"),
+      isActive: pathname.startsWith("/orgmenu/whatsapp") || pathname.startsWith("/orgmenu/soul") || pathname.startsWith("/orgmenu/faq"),
       items: [
         { title: "WhatsApp Messages", url: "/orgmenu/whatsapp" },
         { title: "Assistant Soul", url: "/orgmenu/soul" },
+        { title: "F&Q Inquiries", url: "/orgmenu/faq" },
       ],
     },
     {
@@ -92,6 +93,7 @@ export function OrgSidebar({
   ]
 
   const projects = [
+    { name: "F&Q Inquiries", url: "/orgmenu/faq", icon: <ClipboardList className="size-4" /> },
     { name: "WhatsApp", url: "/orgmenu/whatsapp", icon: <ChatBubbleIcon className="size-4" /> },
     { name: "Soul", url: "/orgmenu/soul", icon: <FileText className="size-4" /> },
     { name: "Traceway", url: "/orgmenu/traceway", icon: <RadioIcon className="size-4" /> },

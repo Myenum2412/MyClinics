@@ -32,11 +32,13 @@ import { useRouter } from "next/navigation";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import StatsGeneric from "@/components/stats-generic";
 import { formatDate } from "@/lib/datetime";
+import { FAQSubscribersTable } from "@/components/org/faq-subscribers-table";
 
 export default function OrgMenuDashboardPage() {
   const session = useClinicSession();
   const router = useRouter();
   const [items, setItems] = useState<Clinic[]>([]);
+  const [activeTab, setActiveTab] = useState<"clinics" | "faq">("clinics");
   const [loading, setLoading] = useState(true);
   // Dropdown status filter was removed; stays pinned to "all".
   const [statusFilter] = useState("all");
@@ -199,34 +201,77 @@ export default function OrgMenuDashboardPage() {
         </div>
       )}
 
-      {selectedIds.size > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 shadow-sm animate-in fade-in slide-in-from-top-2">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-primary tabular-nums">
-              {selectedIds.size} selected
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => setSelectedIds(new Set())}
-            >
-              Clear selection
-            </Button>
-          </div>
-          <Button
-            variant="destructive"
-            size="sm"
-            className="h-8 gap-1.5 shadow-sm"
-            onClick={() => setBulkDeleteOpen(true)}
+      {/* Tab Switcher: All Clinics vs F&Q Table */}
+      <div className="flex items-center gap-2 border-b border-border pb-3">
+        <button
+          type="button"
+          onClick={() => setActiveTab("clinics")}
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+            activeTab === "clinics"
+              ? "bg-primary text-primary-foreground shadow-xs"
+              : "border border-border bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+          }`}
+        >
+          <span>All Clinics</span>
+          <Badge
+            variant={activeTab === "clinics" ? "secondary" : "outline"}
+            className="text-xs"
           >
-            <Trash2 className="size-3.5" />
-            Delete selected
-          </Button>
-        </div>
-      )}
+            {items.length}
+          </Badge>
+        </button>
 
-      <Card className="gap-0 rounded-none border py-0 ring-0 shadow-sm transition-shadow duration-200 hover:shadow-md">
+        <button
+          type="button"
+          onClick={() => setActiveTab("faq")}
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
+            activeTab === "faq"
+              ? "bg-primary text-primary-foreground shadow-xs"
+              : "border border-border bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+          }`}
+        >
+          <span>F&Q Inquiries & Subscribers</span>
+          <Badge
+            variant={activeTab === "faq" ? "secondary" : "outline"}
+            className="text-xs"
+          >
+            F&Q Table
+          </Badge>
+        </button>
+      </div>
+
+      {activeTab === "faq" ? (
+        <FAQSubscribersTable />
+      ) : (
+        <>
+          {selectedIds.size > 0 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 shadow-sm animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-primary tabular-nums">
+                  {selectedIds.size} selected
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => setSelectedIds(new Set())}
+                >
+                  Clear selection
+                </Button>
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="h-8 gap-1.5 shadow-sm"
+                onClick={() => setBulkDeleteOpen(true)}
+              >
+                <Trash2 className="size-3.5" />
+                Delete selected
+              </Button>
+            </div>
+          )}
+
+          <Card className="gap-0 rounded-none border py-0 ring-0 shadow-sm transition-shadow duration-200 hover:shadow-md">
         <CardHeader className="py-4">
           <CardTitle>All clinics</CardTitle>
         </CardHeader>
@@ -348,6 +393,8 @@ export default function OrgMenuDashboardPage() {
           />
         )}
       </Card>
+      </>
+      )}
 
       <ConfirmDeleteDialog
         open={deleteTarget !== null}

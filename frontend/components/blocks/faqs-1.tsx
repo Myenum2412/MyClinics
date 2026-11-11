@@ -8,8 +8,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Search, HelpCircle, MessageSquare, Play, Sparkles } from "lucide-react";
+import { Search, HelpCircle, Play, Sparkles } from "lucide-react";
 import { FAQ_DATA, FAQ_CATEGORIES } from "@/lib/faq-data";
+import NewsletterBlock from "@/components/blocks/newsletter-2";
 
 export default function FaqsBlock() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -146,30 +147,16 @@ export default function FaqsBlock() {
           )}
         </div>
 
-        {/* Bottom CTA Box */}
-        <div className="mt-12 rounded-2xl border border-blue-200/80 bg-gradient-to-br from-blue-50/80 via-white to-blue-50/40 p-6 sm:p-10 text-center shadow-sm">
-          <h2 className="text-xl sm:text-2xl font-bold text-zinc-950">
-            Have a question about your clinic workflow?
-          </h2>
-          <p className="mx-auto mt-2 max-w-xl text-sm sm:text-base text-zinc-600 leading-relaxed">
-            Our clinic specialists are available to answer queries, demonstrate live prescription writing, and assist with free data migration.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-            <Link
-              href="/#contact"
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-blue-700"
-            >
-              <MessageSquare className="size-4" />
-              <span>Contact Clinic Support</span>
-            </Link>
-            <Link
-              href="/rx-demo"
-              className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-900 shadow-xs transition-all hover:bg-zinc-50 hover:border-zinc-400"
-            >
-              <Play className="size-4 fill-zinc-900" />
-              <span>Test Live Demo</span>
-            </Link>
-          </div>
+        {/* Newsletter Section (@7ovr/newsletter-2) */}
+        <div className="mt-14">
+          <NewsletterBlock
+            badge="Clinic Newsletter"
+            title="Clinic growth & workflow insights, delivered monthly"
+            description="Product updates, live queue best practices, and digital prescription playbooks from the My Clinics team, landing in your inbox every month."
+            source="FAQ Page"
+            className="flex w-full items-center justify-center p-0"
+            cardClassName="w-full rounded-2xl border border-zinc-200 bg-white px-6 py-8 sm:px-10 sm:py-10 shadow-sm text-zinc-950"
+          />
         </div>
       </div>
     </section>
