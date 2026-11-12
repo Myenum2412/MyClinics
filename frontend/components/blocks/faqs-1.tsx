@@ -8,7 +8,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Search, HelpCircle, Play, Sparkles } from "lucide-react";
+import { Search, HelpCircle, Play } from "lucide-react";
 import { FAQ_DATA, FAQ_CATEGORIES } from "@/lib/faq-data";
 import NewsletterBlock from "@/components/blocks/newsletter-2";
 
@@ -38,17 +38,12 @@ export default function FaqsBlock() {
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
         {/* Header Section */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1 text-xs font-semibold text-blue-700 shadow-xs">
-            <Sparkles className="size-3.5 text-blue-600" />
-            <span>Search & Knowledge Hub</span>
-          </div>
-
           <h1 className="font-heading text-3xl font-extrabold tracking-tight text-zinc-950 sm:text-4xl md:text-5xl">
             Frequently Asked Questions
           </h1>
 
-          <p className="mx-auto max-w-2xl text-base text-zinc-600 sm:text-lg leading-relaxed">
-            Quick answers to common questions about My Clinics — covering live WhatsApp queue tracking, 30-second digital prescriptions, ABDM compliance, and clinic workflows.
+          <p className="mx-auto max-w-xl text-base text-zinc-600 sm:text-lg leading-relaxed">
+            Common questions about My Clinics, WhatsApp queues, and prescriptions.
           </p>
         </div>
 
