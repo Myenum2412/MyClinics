@@ -31,7 +31,7 @@ import {
   IdentificationIcon as StethoscopeIcon,
   UsersIcon,
   ClipboardDocumentListIcon as ClipboardListIcon,
-  BellIcon,
+  MegaphoneIcon,
   InboxIcon,
   ClipboardDocumentCheckIcon as RecordsIcon,
   FolderOpenIcon,
@@ -88,7 +88,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Communication",
     items: [
-      { title: "Announcement", url: "/clinic/notifications", icon: <BellIcon className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
+      { title: "Announcement", url: "/clinic/notifications", icon: <MegaphoneIcon className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
       { title: "AI Assistant", url: "/clinic/ai-assistant", icon: <Image src="/aidps.png" alt="AI" width={20} height={20} className="size-5 rounded-full object-cover" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
     ],
   },

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/sidebar"
 import {
   ArrowLeftStartOnRectangleIcon as LogOutIcon,
-  BellIcon as NotificationsActiveIcon,
+  MegaphoneIcon,
   UserCircleIcon as BadgeCheckIcon,
 } from "@heroicons/react/24/outline";
 import { logout } from "@/lib/clinic-api";
@@ -118,7 +118,7 @@ export function NavUser({
                 Account
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => go("/clinic/notifications")}>
-                <NotificationsActiveIcon />
+                <MegaphoneIcon />
                 Announcement
               </DropdownMenuItem>
             </DropdownMenuGroup>

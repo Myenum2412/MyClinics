@@ -24,7 +24,7 @@ import {
   BeakerIcon as PillIcon,
   IdentificationIcon as StethoscopeIcon,
   UsersIcon,
-  BellIcon,
+  MegaphoneIcon,
   ClipboardDocumentCheckIcon as RecordsIcon,
   ClipboardDocumentListIcon as ExaminationIcon,
   FolderOpenIcon,
@@ -100,7 +100,7 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
   {
     title: "Announcement",
     url: "/clinic/notifications",
-    icon: <BellIcon className="size-6" />,
+    icon: <MegaphoneIcon className="size-6" />,
   },
   {
     title: "AI Assistant",
