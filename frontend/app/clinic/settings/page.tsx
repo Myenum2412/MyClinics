@@ -1064,30 +1064,34 @@ export default function SettingsPage() {
                             {values.length} option{values.length === 1 ? "" : "s"}
                           </span>
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-1.5">
-                          {values.map((value) => (
-                            <span
-                              key={value}
-                              className="inline-flex items-center gap-1 rounded-full border border-sky-100 bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-800"
-                            >
-                              {value}
-                              <button
-                                type="button"
-                                disabled={saving}
-                                onClick={() => handleRemoveOption(def.key, value)}
-                                aria-label={`Remove ${value}`}
-                                className="text-primary transition hover:text-destructive"
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {values.length === 0 ? (
+                            <p className="text-xs text-muted-foreground italic">No options added yet.</p>
+                          ) : (
+                            values.map((value) => (
+                              <div
+                                key={value}
+                                className="flex h-8 w-full sm:w-80 sm:max-w-xs items-center justify-between rounded-lg border border-input bg-background px-3 text-xs font-medium text-foreground shadow-2xs transition-colors hover:bg-muted/40"
                               >
-                                <X className="size-3" />
-                              </button>
-                            </span>
-                          ))}
+                                <span className="truncate" title={value}>{value}</span>
+                                <button
+                                  type="button"
+                                  disabled={saving}
+                                  onClick={() => handleRemoveOption(def.key, value)}
+                                  aria-label={`Remove ${value}`}
+                                  className="ml-2 inline-flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                  <X className="size-3.5" />
+                                </button>
+                              </div>
+                            ))
+                          )}
                         </div>
                         <div className="mt-3 flex gap-2">
                           <Input
                             value={dropdownDrafts[def.key] ?? ""}
                             placeholder={`Add a new option...`}
-                            className="h-8 min-w-0 flex-1 text-xs sm:max-w-xs sm:flex-none"
+                            className="h-8 min-w-0 flex-1 text-xs sm:w-80 sm:max-w-xs sm:flex-none"
                             disabled={saving}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {

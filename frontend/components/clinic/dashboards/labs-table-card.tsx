@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 const PREVIEW_LIMIT = 5;
 
 function labName(l: Lab): string {
-  return l.labName ?? l.name ?? "—";
+  return l.labName ?? (l as any).name ?? "—";
 }
 
 function LabsTableCard({ clinicId, canManage }: { clinicId: string; canManage: boolean }) {

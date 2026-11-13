@@ -29,8 +29,8 @@ export default function ClinicPublicSitePage() {
 
         if (isGrapesWebsiteData(data)) {
           setState({ status: "legacy", data, clinicName: site.clinic.name });
-          pageTitle = data.seoTitle || pageTitle;
-          pageDescription = data.seoDescription || pageDescription;
+          pageTitle = (data as any).seoTitle || pageTitle;
+          pageDescription = (data as any).seoDescription || pageDescription;
         } else {
           setState({ status: "missing" });
           return;

@@ -20,17 +20,8 @@ import {
   ChatBubbleLeftRightIcon as ChatBubbleIcon,
 } from "@heroicons/react/24/outline";
 import {
-  RadioIcon,
-  ListTodoIcon,
-  Activity,
   ClipboardList,
-  HeartPulseIcon,
-  SparklesIcon,
-  TrendingUpIcon,
-  ShieldAlertIcon,
-  NetworkIcon,
   FileText,
-  GalleryVerticalEndIcon,
 } from "lucide-react";
 
 export function OrgSidebar({
@@ -56,7 +47,7 @@ export function OrgSidebar({
       title: "Clinics",
       url: "#",
       icon: <BuildingOfficeIcon className="size-4" />,
-      isActive: pathname.startsWith("/orgmenu") && !pathname.startsWith("/orgmenu/traceway") && !pathname.startsWith("/orgmenu/whatsapp") && !pathname.startsWith("/orgmenu/soul"),
+      isActive: pathname.startsWith("/orgmenu") && !pathname.startsWith("/orgmenu/whatsapp") && !pathname.startsWith("/orgmenu/soul") && !pathname.startsWith("/orgmenu/faq"),
       items: [
         { title: "All Clinics", url: "/orgmenu" },
         { title: "Organization", url: "/orgmenu/organization" },
@@ -73,30 +64,12 @@ export function OrgSidebar({
         { title: "F&Q Inquiries", url: "/orgmenu/faq" },
       ],
     },
-    {
-      title: "Traceway",
-      url: "#",
-      icon: <RadioIcon className="size-4" />,
-      isActive: pathname.startsWith("/orgmenu/traceway"),
-      items: [
-        { title: "Dashboard", url: "/orgmenu/traceway" },
-        { title: "Traces", url: "/orgmenu/traceway/traces" },
-        { title: "Logs", url: "/orgmenu/traceway/logs" },
-        { title: "Metrics", url: "/orgmenu/traceway/metrics" },
-        { title: "Exceptions", url: "/orgmenu/traceway/exceptions" },
-        { title: "Session Replay", url: "/orgmenu/traceway/replay" },
-        { title: "AI Tracing", url: "/orgmenu/traceway/ai" },
-        { title: "Endpoints", url: "/orgmenu/traceway/endpoints" },
-        { title: "Alerts", url: "/orgmenu/traceway/alerts" },
-      ],
-    },
   ]
 
   const projects = [
     { name: "F&Q Inquiries", url: "/orgmenu/faq", icon: <ClipboardList className="size-4" /> },
     { name: "WhatsApp", url: "/orgmenu/whatsapp", icon: <ChatBubbleIcon className="size-4" /> },
     { name: "Soul", url: "/orgmenu/soul", icon: <FileText className="size-4" /> },
-    { name: "Traceway", url: "/orgmenu/traceway", icon: <RadioIcon className="size-4" /> },
   ]
 
   return (

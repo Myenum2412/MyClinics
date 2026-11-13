@@ -321,7 +321,7 @@ export default function ContactsPage() {
   return (
     <div className="flex flex-col gap-4">
       {/* Top action & filter bar */}
-      <Card className="border-dashed" variant="outline">
+      <Card className="border-dashed">
         <CardContent className="flex flex-wrap items-center justify-between gap-3 py-3">
           {/* Search & source filter */}
           <div className="flex flex-1 flex-wrap items-center gap-2 min-w-[260px]">
@@ -338,7 +338,7 @@ export default function ContactsPage() {
             <Select
               value={sourceFilter || "ALL"}
               onValueChange={(v) => {
-                setSourceFilter(v === "ALL" ? "" : v);
+                setSourceFilter((v === "ALL" ? "" : v) ?? "");
                 setPage(1);
               }}
             >

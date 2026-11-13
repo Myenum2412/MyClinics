@@ -270,7 +270,7 @@ export default function LabDashboardPage() {
               <div className="space-y-4 text-sm">
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate font-semibold text-foreground">
-                    {myLab.labName ?? myLab.name ?? "—"}
+                    {myLab.labName ?? (myLab as any).name ?? "—"}
                   </p>
                   <Badge variant="outline" className="shrink-0 capitalize">
                     {myLab.status}

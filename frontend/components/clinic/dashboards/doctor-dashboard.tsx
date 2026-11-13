@@ -307,7 +307,7 @@ export function DoctorDashboard({ session }: { session: ClinicSession }) {
 
     listContacts(clinicId, { limit: 50, sort: "-createdAt" })
       .then((res) => {
-        if (active) setLeads(res.items ?? []);
+        if (active) setLeads(res.rows ?? (res as any).items ?? []);
       })
       .catch(() => {
         if (active) setLeads([]);
