@@ -119,7 +119,7 @@ export function NavUser({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => go("/clinic/notifications")}>
                 <NotificationsActiveIcon />
-                Notifications
+                Announcement
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

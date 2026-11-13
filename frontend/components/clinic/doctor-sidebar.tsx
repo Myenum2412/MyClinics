@@ -98,7 +98,7 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     icon: <RecordsIcon className="size-6" />,
   },
   {
-    title: "Notifications",
+    title: "Announcement",
     url: "/clinic/notifications",
     icon: <BellIcon className="size-6" />,
   },

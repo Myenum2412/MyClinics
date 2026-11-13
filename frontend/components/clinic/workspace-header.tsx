@@ -20,7 +20,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/clinic/prescriptions": "Prescriptions",
   "/clinic/billing": "Billing",
   "/clinic/audit-logs": "Audit Logs",
-  "/clinic/notifications": "Notifications",
+  "/clinic/notifications": "Announcement",
   "/clinic/settings": "Settings",
   "/clinic/lab": "Lab Dashboard",
   "/clinic/lab/reports": "Lab Reports",

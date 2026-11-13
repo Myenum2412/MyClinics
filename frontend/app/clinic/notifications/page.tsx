@@ -66,7 +66,7 @@ export default function NotificationsPage() {
         setUnread(res.unread);
         setPageIndex(0);
       })
-      .catch(() => toast.error("Failed to load notifications"))
+      .catch(() => toast.error("Failed to load announcements"))
       .finally(() => setLoading(false));
   }, [clinicId]);
 
@@ -136,17 +136,17 @@ export default function NotificationsPage() {
       await markNotificationRead(clinicId, n.notificationId);
       load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to update notification");
+      toast.error(e instanceof Error ? e.message : "Failed to update announcement");
     }
   }
 
   async function handleReadAll() {
     try {
       await markAllNotificationsRead(clinicId);
-      toast.success("All notifications marked as read");
+      toast.success("All announcements marked as read");
       load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to update notifications");
+      toast.error(e instanceof Error ? e.message : "Failed to update announcements");
     }
   }
 
@@ -179,7 +179,7 @@ export default function NotificationsPage() {
       setCreating(false);
       load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to send notification");
+      toast.error(e instanceof Error ? e.message : "Failed to send announcement");
     } finally {
       setSaving(false);
     }
@@ -192,7 +192,7 @@ export default function NotificationsPage() {
       {!loading && (
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6">
           <StatsGeneric
-            title="Notification Analytics"
+            title="Announcement Analytics"
             description="WhatsApp alerts, automated reminders, and delivery log insights."
             items={notifStatsItems}
             searchTerm={searchTerm}
@@ -200,7 +200,7 @@ export default function NotificationsPage() {
               setSearchTerm(v);
               setPageIndex(0);
             }}
-            searchPlaceholder="Search notifications..."
+            searchPlaceholder="Search announcements..."
             action={
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Button variant="outline" size="sm" onClick={handleReadAll} className="h-9 w-full justify-center sm:w-auto">
@@ -208,12 +208,12 @@ export default function NotificationsPage() {
                 </Button>
                 {canCreate && (
                   <Dialog open={creating} onOpenChange={setCreating}>
-                    <DialogTrigger render={<Button size="sm" className="h-9 w-full justify-center sm:w-auto">Send notification</Button>} />
+                    <DialogTrigger render={<Button size="sm" className="h-9 w-full justify-center sm:w-auto">Send announcement</Button>} />
                     <DialogContent>
                       <DialogHeader>
-                        <DialogTitle>Send notification</DialogTitle>
+                        <DialogTitle>Send announcement</DialogTitle>
                         <DialogDescription>
-                          Send a WhatsApp notification to selected patients — or all patients — with optional attachments.
+                          Send a WhatsApp announcement to selected patients — or all patients — with optional attachments.
                         </DialogDescription>
                       </DialogHeader>
                       <NotificationForm clinicId={clinicId} saving={saving} onSave={handleSend} />
@@ -228,7 +228,7 @@ export default function NotificationsPage() {
 
       <Card>
         <CardHeader className="px-4 pt-4 sm:px-6 sm:pt-6">
-          <CardTitle className="text-base sm:text-lg">Notifications</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Announcement</CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
           {loading ? (
@@ -238,7 +238,7 @@ export default function NotificationsPage() {
             </div>
           ) : items.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No notifications.
+              No announcements.
             </p>
           ) : (
             <div className="space-y-2">
@@ -280,7 +280,7 @@ export default function NotificationsPage() {
                   setPageSize(size);
                   setPageIndex(0);
                 }}
-                itemLabel="notifications"
+                itemLabel="announcements"
               />
             </div>
           )}
@@ -482,7 +482,7 @@ function NotificationForm({
           </div>
           <div className="grid gap-2">
             <Label>Title *</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Notification title" />
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="Announcement title" />
           </div>
         </div>
 
