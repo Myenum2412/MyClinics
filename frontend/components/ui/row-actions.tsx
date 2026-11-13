@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { EllipsisVertical, Eye, Pencil, Trash2 } from "lucide-react";
+import { Crown, EllipsisVertical, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -80,7 +80,7 @@ export function RowActions({
         ))}
         {onView && (
           <DropdownMenuItem onClick={onView} className="text-xs">
-            <Eye className="mr-2 size-3.5 text-muted-foreground" />
+            <Crown className="mr-2 size-3.5 text-muted-foreground" />
             {viewLabel}
           </DropdownMenuItem>
         )}
