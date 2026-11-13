@@ -77,6 +77,7 @@ import {
   ChevronsUpDown,
   Columns,
   Loader2,
+  Pencil,
   Plus,
   Search,
   Stethoscope,
@@ -676,36 +677,62 @@ export default function ExaminationPage() {
     const readOnly = mode === "view";
     const patientName =
       mode === "create" ? "" : screen.record.patientName;
+    const viewText = (value: string) =>
+      value.trim() ? (
+        <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+          {value}
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground">—</p>
+      );
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setScreen({ name: "table" })}
-          >
-            <ArrowLeft className="size-4" />
-            Back to examinations
-          </Button>
-        </div>
-        <div>
-          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
-            {mode === "create"
-              ? "New Examination"
-              : mode === "edit"
-                ? "Edit Examination"
-                : "View Examination"}
-          </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
-            {mode === "view"
-              ? "Read-only examination record."
-              : "Select the patient and record the oral findings."}
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex min-w-0 items-start gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="mt-0.5 size-8 shrink-0"
+              onClick={() => setScreen({ name: "table" })}
+              aria-label="Back to examinations"
+            >
+              <ArrowLeft className="size-4" />
+            </Button>
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+                {mode === "create"
+                  ? "New Examination"
+                  : mode === "edit"
+                    ? "Edit Examination"
+                    : "View Examination"}
+              </h1>
+              <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1 sm:text-sm">
+                {mode === "view"
+                  ? "Read-only examination record."
+                  : "Select the patient and record the oral findings."}
+              </p>
+            </div>
+          </div>
+          {mode === "view" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => openEdit(screen.record)}
+            >
+              <Pencil className="size-4" />
+              Edit
+            </Button>
+          )}
         </div>
 
         <SectionCard
           title="1. Details"
-          description="Select the patient, visit date, status and issue type"
+          description={
+            readOnly
+              ? "Patient, visit date, status and issue type"
+              : "Select the patient, visit date, status and issue type"
+          }
         >
           <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
             <div className="space-y-2">
@@ -719,21 +746,30 @@ export default function ExaminationPage() {
                   }
                   required
                 />
+              ) : readOnly ? (
+                <p className="flex min-h-9 items-center text-sm font-medium text-foreground">
+                  {patientName || "—"}
+                </p>
               ) : (
                 <Input value={patientName} disabled />
               )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="exam-date">Visit date</Label>
-              <Input
-                id="exam-date"
-                type="date"
-                value={form.visitDate}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, visitDate: e.target.value }))
-                }
-                disabled={readOnly}
-              />
+              {readOnly ? (
+                <p className="flex min-h-9 items-center text-sm font-medium text-foreground">
+                  {form.visitDate ? formatDate(form.visitDate) : "—"}
+                </p>
+              ) : (
+                <Input
+                  id="exam-date"
+                  type="date"
+                  value={form.visitDate}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, visitDate: e.target.value }))
+                  }
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
@@ -803,31 +839,34 @@ export default function ExaminationPage() {
         <SectionCard title="2. Chief Complaint">
           <div className="space-y-2">
             <Label htmlFor="exam-chief-complaint">Chief Complaint</Label>
-            <Textarea
-              id="exam-chief-complaint"
-              value={form.chiefComplaints[0]?.complaint ?? ""}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  chiefComplaints:
-                    f.chiefComplaints.length > 0
-                      ? f.chiefComplaints.map((row, i) =>
-                          i === 0 ? { ...row, complaint: e.target.value } : row
-                        )
-                      : [
-                          {
-                            complaint: e.target.value,
-                            duration: "",
-                            severity: "",
-                            notes: "",
-                          },
-                        ],
-                }))
-              }
-              placeholder="Enter the patient's chief complaint…"
-              rows={3}
-              disabled={readOnly}
-            />
+            {readOnly ? (
+              viewText(form.chiefComplaints[0]?.complaint ?? "")
+            ) : (
+              <Textarea
+                id="exam-chief-complaint"
+                value={form.chiefComplaints[0]?.complaint ?? ""}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    chiefComplaints:
+                      f.chiefComplaints.length > 0
+                        ? f.chiefComplaints.map((row, i) =>
+                            i === 0 ? { ...row, complaint: e.target.value } : row
+                          )
+                        : [
+                            {
+                              complaint: e.target.value,
+                              duration: "",
+                              severity: "",
+                              notes: "",
+                            },
+                          ],
+                  }))
+                }
+                placeholder="Enter the patient's chief complaint…"
+                rows={3}
+              />
+            )}
           </div>
         </SectionCard>
 
@@ -836,19 +875,22 @@ export default function ExaminationPage() {
             <Label htmlFor="exam-hpi-complaint">
               History of Presenting Illness
             </Label>
-            <Textarea
-              id="exam-hpi-complaint"
-              value={form.hpiPresentingComplaint}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  hpiPresentingComplaint: e.target.value,
-                }))
-              }
-              placeholder="Describe the history of presenting illness…"
-              rows={4}
-              disabled={readOnly}
-            />
+            {readOnly ? (
+              viewText(form.hpiPresentingComplaint)
+            ) : (
+              <Textarea
+                id="exam-hpi-complaint"
+                value={form.hpiPresentingComplaint}
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    hpiPresentingComplaint: e.target.value,
+                  }))
+                }
+                placeholder="Describe the history of presenting illness…"
+                rows={4}
+              />
+            )}
           </div>
         </SectionCard>
 
@@ -856,42 +898,51 @@ export default function ExaminationPage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="exam-medical-info">Medical Information</Label>
-              <Textarea
-                id="exam-medical-info"
-                value={form.medicalConditions}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, medicalConditions: e.target.value }))
-                }
-                placeholder="Enter the patient's medical information…"
-                rows={3}
-                disabled={readOnly}
-              />
+              {readOnly ? (
+                viewText(form.medicalConditions)
+              ) : (
+                <Textarea
+                  id="exam-medical-info"
+                  value={form.medicalConditions}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, medicalConditions: e.target.value }))
+                  }
+                  placeholder="Enter the patient's medical information…"
+                  rows={3}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="exam-dental-history">Dental History</Label>
-              <Textarea
-                id="exam-dental-history"
-                value={form.patientHistory}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, patientHistory: e.target.value }))
-                }
-                placeholder="Past dental treatments, extractions, braces…"
-                rows={3}
-                disabled={readOnly}
-              />
+              {readOnly ? (
+                viewText(form.patientHistory)
+              ) : (
+                <Textarea
+                  id="exam-dental-history"
+                  value={form.patientHistory}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, patientHistory: e.target.value }))
+                  }
+                  placeholder="Past dental treatments, extractions, braces…"
+                  rows={3}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="exam-habits">Habits</Label>
-              <Textarea
-                id="exam-habits"
-                value={form.habits}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, habits: e.target.value }))
-                }
-                placeholder="Smoking, alcohol, tobacco, diet…"
-                rows={2}
-                disabled={readOnly}
-              />
+              {readOnly ? (
+                viewText(form.habits)
+              ) : (
+                <Textarea
+                  id="exam-habits"
+                  value={form.habits}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, habits: e.target.value }))
+                  }
+                  placeholder="Smoking, alcohol, tobacco, diet…"
+                  rows={2}
+                />
+              )}
             </div>
           </div>
         </SectionCard>
@@ -900,56 +951,81 @@ export default function ExaminationPage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="exam-oral">Extra Oral</Label>
-              <Textarea
-                id="exam-oral"
-                value={form.oralFindings}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, oralFindings: e.target.value }))
-                }
-                placeholder="Extra oral examination findings…"
-                rows={3}
-                disabled={readOnly}
-              />
+              {readOnly ? (
+                viewText(form.oralFindings)
+              ) : (
+                <Textarea
+                  id="exam-oral"
+                  value={form.oralFindings}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, oralFindings: e.target.value }))
+                  }
+                  placeholder="Extra oral examination findings…"
+                  rows={3}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="exam-intra-oral">Intra Oral</Label>
-              <Textarea
-                id="exam-intra-oral"
-                value={form.softTissueNote}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, softTissueNote: e.target.value }))
-                }
-                placeholder="Intra oral examination findings…"
-                rows={3}
-                disabled={readOnly}
-              />
+              {readOnly ? (
+                viewText(form.softTissueNote)
+              ) : (
+                <Textarea
+                  id="exam-intra-oral"
+                  value={form.softTissueNote}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, softTissueNote: e.target.value }))
+                  }
+                  placeholder="Intra oral examination findings…"
+                  rows={3}
+                />
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="exam-notes">Notes</Label>
-              <Textarea
-                id="exam-notes"
-                value={form.notes}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, notes: e.target.value }))
-                }
-                placeholder="Additional notes for this examination…"
-                rows={3}
-                disabled={readOnly}
-              />
+              {readOnly ? (
+                viewText(form.notes)
+              ) : (
+                <Textarea
+                  id="exam-notes"
+                  value={form.notes}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, notes: e.target.value }))
+                  }
+                  placeholder="Additional notes for this examination…"
+                  rows={3}
+                />
+              )}
             </div>
           </div>
         </SectionCard>
-        {mode !== "view" && (
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <Button variant="outline" className="w-full justify-center sm:w-auto" onClick={() => setScreen({ name: "table" })}>
-              Cancel
+        <div className="flex flex-col gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
+          <Button
+            variant="outline"
+            className="w-full justify-center sm:w-auto"
+            onClick={() => setScreen({ name: "table" })}
+          >
+            {mode === "view" ? "Back to examinations" : "Cancel"}
+          </Button>
+          {mode === "view" ? (
+            <Button
+              className="w-full justify-center gap-1.5 sm:w-auto"
+              onClick={() => openEdit(screen.record)}
+            >
+              <Pencil className="size-4" />
+              Edit examination
             </Button>
-            <Button className="w-full justify-center sm:w-auto" onClick={handleSave} disabled={saving}>
+          ) : (
+            <Button
+              className="w-full justify-center sm:w-auto"
+              onClick={handleSave}
+              disabled={saving}
+            >
               {saving && <Loader2 className="size-4 animate-spin" />}
               {mode === "create" ? "Save examination" : "Save changes"}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     );
   }
