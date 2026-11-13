@@ -4,7 +4,7 @@ import { getWhatsAppDb } from "@/lib/db-pools";
 import { logger } from "@/lib/logger";
 import { ensureDefaultOrganization } from "@/services/customer/customer-context.service";
 import { getGatewayConfig } from "@/services/whatsapp/gateway/config";
-import { drainNotificationsViaGateway } from "@/services/whatsapp/gateway/drain";
+import { drainNotificationsViaGateway, expireStaleNotifications } from "@/services/whatsapp/gateway/drain";
 import { processDueReminders, scanAndQueueReminders } from "@/services/reminder/reminder.service";
 
 /**
@@ -15,15 +15,19 @@ import { processDueReminders, scanAndQueueReminders } from "@/services/reminder/
  *  - every DRAIN_POLL_MS: hands queued `wa_notifications` (appointment events,
  *    reports, prescriptions, digests, ...) to the gateway;
  *  - every REMINDER_POLL_MS: scans for upcoming appointments and queues the
- *    platform-level reminders.
+ *    platform-level reminders;
+ *  - every EXPIRE_POLL_MS: expires notifications older than 24h so stale/dead
+ *    clinics don't accumulate unbounded queues.
  * Patient chat (the menu bot) is handled by the API's /api/whatsapp/inbound webhook.
  */
 
 const DRAIN_POLL_MS = 5_000;
 const REMINDER_POLL_MS = 30_000;
+const EXPIRE_POLL_MS = 10 * 60 * 1000;
 
 let drainTimer: ReturnType<typeof setInterval> | null = null;
 let reminderTimer: ReturnType<typeof setInterval> | null = null;
+let expireTimer: ReturnType<typeof setInterval> | null = null;
 let shuttingDown = false;
 
 /** Runs `task` on an interval, never overlapping with itself and never crashing the process. */
@@ -52,6 +56,9 @@ async function main(): Promise<void> {
   }
   const db = await getWhatsAppDb();
   await ensureDefaultOrganization(db);
+  await expireStaleNotifications(db).catch((err) => {
+    logger.warn("failed to expire stale notifications on startup", { error: err instanceof Error ? err.message : String(err) });
+  });
 
   drainTimer = every(DRAIN_POLL_MS, "notification drain", async () => {
     const dbh = await getWhatsAppDb();
@@ -67,12 +74,18 @@ async function main(): Promise<void> {
     await processDueReminders(dbh, org.id);
   });
 
+  expireTimer = every(EXPIRE_POLL_MS, "stale notification expiration", async () => {
+    const dbh = await getWhatsAppDb();
+    await expireStaleNotifications(dbh);
+  });
+
   const shutdown = () => {
     if (shuttingDown) return;
     shuttingDown = true;
     logger.info("whatsapp worker shutting down");
     if (drainTimer) clearInterval(drainTimer);
     if (reminderTimer) clearInterval(reminderTimer);
+    if (expireTimer) clearInterval(expireTimer);
     process.exit(0);
   };
   process.once("SIGINT", shutdown);

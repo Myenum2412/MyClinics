@@ -1,7 +1,7 @@
 import type { Db } from "mongodb";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFakeDb } from "./helpers/fake-db";
-import { drainNotificationsViaGateway, phoneFromRemoteId, type GatewayApi } from "@/services/whatsapp/gateway/drain";
+import { drainNotificationsViaGateway, expireStaleNotifications, phoneFromRemoteId, type GatewayApi } from "@/services/whatsapp/gateway/drain";
 import { gateway, GatewayError } from "@/services/whatsapp/gateway/client";
 import { signedHeaders, verifySignature } from "@/services/whatsapp/gateway/signature";
 import { processDueReminders } from "@/services/reminder/reminder.service";
@@ -138,6 +138,37 @@ describe("drainNotificationsViaGateway", () => {
     ready([CLINIC_A]);
     await drainNotificationsViaGateway(db, asApi());
     expect(api.sendText).not.toHaveBeenCalled();
+  });
+
+  it("prevents head-of-line blocking: disconnected clinic backlog does not block ready clinics", async () => {
+    // 70 notifications for CLINIC_B (offline), followed by 1 notification for CLINIC_A (ready)
+    const disconnectedDocs = Array.from({ length: 70 }, (_, i) =>
+      notif({ clinicId: CLINIC_B, organizationId: CLINIC_B, message: `B-${i}` })
+    );
+    const readyDoc = notif({ clinicId: CLINIC_A, organizationId: CLINIC_A, message: "A-ready" });
+    seed([...disconnectedDocs, readyDoc]);
+
+    ready([CLINIC_A]); // only CLINIC_A is connected
+    const r = await drainNotificationsViaGateway(db, asApi());
+
+    expect(r.sent).toBe(1);
+    expect(r.skipped).toBe(70);
+    expect(api.sendText).toHaveBeenCalledWith(CLINIC_A, "919876543210", "A-ready", expect.anything());
+    expect(dump("wa_notifications").find((d) => d.message === "A-ready")!.status).toBe("sent");
+    expect(dump("wa_notifications").find((d) => d.message === "B-0")!.status).toBe("queued");
+  });
+
+  it("expires stale notifications older than 24 hours", async () => {
+    const fixedNow = new Date("2026-11-13T12:00:00Z");
+    const fresh = notif({ message: "fresh", createdAt: new Date("2026-11-13T10:00:00Z") });
+    const stale = notif({ message: "stale", createdAt: new Date("2026-11-11T10:00:00Z") });
+    seed([fresh, stale]);
+
+    const count = await expireStaleNotifications(db, 24 * 60 * 60 * 1000, fixedNow);
+    expect(count).toBe(1);
+    expect(dump("wa_notifications").find((d) => d.message === "fresh")!.status).toBe("queued");
+    expect(dump("wa_notifications").find((d) => d.message === "stale")!.status).toBe("failed");
+    expect(dump("wa_notifications").find((d) => d.message === "stale")!.lastError).toContain("expired");
   });
 });
 

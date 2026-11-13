@@ -82,6 +82,15 @@ export const gateway = {
     }
   },
 
+  async listSessions(): Promise<GatewaySession[]> {
+    try {
+      const res = await call<{ sessions: GatewaySession[] }>("GET", "/sessions");
+      return Array.isArray(res?.sessions) ? res.sessions : [];
+    } catch {
+      return [];
+    }
+  },
+
   sendText: (clinicId: string, to: string, text: string, opts: { dedupeKey?: string; priority?: 0 | 1 } = {}) =>
     call<SendResult>("POST", `/sessions/${enc(clinicId)}/messages`, { to, text, ...opts }),
 

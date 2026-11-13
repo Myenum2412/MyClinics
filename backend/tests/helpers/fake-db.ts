@@ -318,6 +318,19 @@ export function createFakeDb(seed: Record<string, any[]> = {}): { db: Db; dump: 
         async findOne(filter: Filter = {}) {
           return docs.find((d) => matches(d, filter)) ?? null;
         },
+        async distinct(key: string, filter: Filter = {}) {
+          const matched = docs.filter((d) => matches(d, filter));
+          const set = new Set();
+          const result: any[] = [];
+          for (const doc of matched) {
+            const val = getPath(doc, key) ?? null;
+            if (!set.has(val)) {
+              set.add(val);
+              result.push(val);
+            }
+          }
+          return result;
+        },
         find(filter: Filter = {}, options: { projection?: Record<string, unknown> } = {}) {
           const matched = docs.filter((d) => matches(d, filter));
           return new FakeCursor(matched, options.projection);

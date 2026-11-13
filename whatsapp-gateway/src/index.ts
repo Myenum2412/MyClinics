@@ -318,6 +318,11 @@ app.use((req: Request, res: Response, next) => {
   next();
 });
 
+app.get("/sessions", (_req, res) => {
+  const list = Array.from(sessions.values()).map(publicSession);
+  res.json({ sessions: list });
+});
+
 app.get("/sessions/:id/status", (req, res) => {
   const s = sessions.get(req.params.id);
   if (!s) return res.status(404).json({ error: "unknown session" });
@@ -415,8 +420,29 @@ app.post("/sessions/:id/documents", async (req, res) => {
   res.status(r.status).json(r.payload);
 });
 
+async function restoreSavedSessions(): Promise<void> {
+  try {
+    const entries = await fs.readdir(SESSION_DIR, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        const credsPath = path.join(SESSION_DIR, entry.name, "creds.json");
+        const exists = await fs.access(credsPath).then(() => true).catch(() => false);
+        if (exists) {
+          console.log(`[gateway] auto-restoring saved session: ${entry.name}`);
+          void startSession(entry.name).catch((e) => {
+            console.warn(`[gateway] auto-restore failed for ${entry.name}`, e);
+          });
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[gateway] could not scan sessions directory for auto-restore", err);
+  }
+}
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`[gateway] listening on 0.0.0.0:${PORT}, backend=${BACKEND_URL}, sessions=${SESSION_DIR}`);
   // Best-effort fingerprint so logs prove which secret is loaded (without leaking it).
   console.log(`[gateway] secret sha256=${createHmac("sha256", "fingerprint").update(SECRET).digest("hex").slice(0, 12)}…`);
+  void restoreSavedSessions();
 });
