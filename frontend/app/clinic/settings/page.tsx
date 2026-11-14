@@ -576,6 +576,9 @@ export default function SettingsPage() {
                     teethChartEnabled: checked,
                   } as any);
                   setSettings(updated);
+                  if (typeof window !== "undefined") {
+                    window.dispatchEvent(new Event("clinic-settings-updated"));
+                  }
                   toast.success(
                     checked ? "Teeth Chart enabled" : "Teeth Chart disabled"
                   );

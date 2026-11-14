@@ -126,15 +126,21 @@ export function WorkspaceSidebar({
   React.useEffect(() => {
     if (!clinicId) return
     let active = true
-    getClinicSettings(clinicId)
-      .then((settings) => {
-        if (active) setTeethChartEnabled(settings.teethChartEnabled ?? false)
-      })
-      .catch(() => {
-        if (active) setTeethChartEnabled(false)
-      })
+    const load = () => {
+      getClinicSettings(clinicId)
+        .then((settings) => {
+          if (active) setTeethChartEnabled(settings.teethChartEnabled ?? false)
+        })
+        .catch(() => {
+          if (active) setTeethChartEnabled(false)
+        })
+    }
+    load()
+    const onUpdate = () => load()
+    window.addEventListener("clinic-settings-updated", onUpdate)
     return () => {
       active = false
+      window.removeEventListener("clinic-settings-updated", onUpdate)
     }
   }, [clinicId])
 
