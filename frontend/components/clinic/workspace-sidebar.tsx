@@ -4,7 +4,7 @@ import * as React from "react"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import type { ClinicRole } from "@/lib/clinic-api"
-import { getClinicSettings } from "@/lib/clinic-api"
+import { can } from "@/lib/clinic-api"
 
 import { NavUser } from "@/components/nav-user"
 import {
@@ -65,7 +65,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: "Patients", url: "/clinic/patients", icon: <UsersIcon className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
       { title: "Examination", url: "/clinic/examination", icon: <ClipboardListIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin", "lab_technician"] },
-      { title: "Teeth Chart", url: "/clinic/investigation", icon: <MagnifyingGlassIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin", "lab_technician"] },
+      { title: "Investigation", url: "/clinic/investigation", icon: <MagnifyingGlassIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin", "lab_technician"] },
       { title: "Medical Records", url: "/clinic/medical-record", icon: <FolderOpenIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
       { title: "Treatment", url: "/clinic/complaints", icon: <HeartPulse className="size-5" />, roles: ["doctor", "staff", "clinic_admin"] },
       { title: "Prescriptions", url: "/clinic/prescriptions", icon: <PillIcon className="size-5" />, roles: ["patient", "doctor", "staff", "clinic_admin"] },
@@ -121,28 +121,6 @@ export function WorkspaceSidebar({
 }) {
   const pathname = usePathname()
   const [openMap, setOpenMap] = React.useState<Record<string, boolean>>({})
-  const [teethChartEnabled, setTeethChartEnabled] = React.useState<boolean | null>(null)
-
-  React.useEffect(() => {
-    if (!clinicId) return
-    let active = true
-    const load = () => {
-      getClinicSettings(clinicId)
-        .then((settings) => {
-          if (active) setTeethChartEnabled(settings.teethChartEnabled ?? false)
-        })
-        .catch(() => {
-          if (active) setTeethChartEnabled(false)
-        })
-    }
-    load()
-    const onUpdate = () => load()
-    window.addEventListener("clinic-settings-updated", onUpdate)
-    return () => {
-      active = false
-      window.removeEventListener("clinic-settings-updated", onUpdate)
-    }
-  }, [clinicId])
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -171,11 +149,7 @@ export function WorkspaceSidebar({
       </SidebarHeader>
       <SidebarContent>
         {NAV_GROUPS.map((group) => {
-          const visible = group.items.filter((i) => {
-            if (!i.roles.includes(role)) return false
-            if (i.url === "/clinic/investigation" && teethChartEnabled !== true) return false
-            return true
-          })
+          const visible = group.items.filter((i) => i.roles.includes(role))
           if (visible.length === 0) return null
           return (
             <SidebarGroup key={group.label}>

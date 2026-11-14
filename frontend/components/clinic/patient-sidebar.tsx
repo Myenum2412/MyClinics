@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { getClinicSettings, logout } from "@/lib/clinic-api";
+import { logout } from "@/lib/clinic-api";
 import {
   CalendarDays,
   ChevronDown,
@@ -43,7 +43,7 @@ const NAV_ITEMS = [
   { title: "Appointments", url: "/clinic/patient/appointments", icon: <CalendarDays className="size-5" /> },
   { title: "Prescriptions", url: "/clinic/patient/prescriptions", icon: <FileText className="size-5" /> },
   { title: "Medical Records", url: "/clinic/patient/medical-records", icon: <Folder className="size-5" /> },
-  { title: "Teeth Chart", url: "/clinic/investigation", icon: <Microscope className="size-5" /> },
+  { title: "Investigation", url: "/clinic/investigation", icon: <Microscope className="size-5" /> },
   { title: "Examination", url: "/clinic/examination", icon: <ClipboardList className="size-5" /> },
   { title: "Bills & Invoices", url: "/clinic/patient/billing", icon: <ReceiptText className="size-5" /> },
   { title: "AI Assistant", url: "/clinic/ai-assistant", icon: <Image src="/aidps.png" alt="AI" width={20} height={20} className="size-5 rounded-full object-cover" /> },
@@ -67,33 +67,6 @@ export function PatientSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const { isMobile, setOpenMobile } = useSidebar();
-  const [teethChartEnabled, setTeethChartEnabled] = React.useState<boolean | null>(null);
-
-  React.useEffect(() => {
-    let active = true;
-    const load = async () => {
-      try {
-        // Prefer session's clinicId; fallback to tenant resolution.
-        const { getSession } = await import("@/lib/clinic-api");
-        const session = getSession();
-        if (!session?.clinicId) {
-          if (active) setTeethChartEnabled(false);
-          return;
-        }
-        const settings = await getClinicSettings(session.clinicId);
-        if (active) setTeethChartEnabled(settings.teethChartEnabled ?? false);
-      } catch {
-        if (active) setTeethChartEnabled(false);
-      }
-    };
-    load();
-    const onUpdate = () => void load();
-    window.addEventListener("clinic-settings-updated", onUpdate);
-    return () => {
-      active = false;
-      window.removeEventListener("clinic-settings-updated", onUpdate);
-    };
-  }, []);
 
   const go = (href: string) => {
     if (isMobile) setOpenMobile(false);
@@ -138,9 +111,7 @@ export function PatientSidebar({
 
       <SidebarContent>
         <SidebarMenu>
-          {NAV_ITEMS.filter(
-            (item) => item.url !== "/clinic/investigation" || teethChartEnabled === true
-          ).map((item) => {
+          {NAV_ITEMS.map((item) => {
             const active =
               item.match === "exact"
                 ? pathname === item.url

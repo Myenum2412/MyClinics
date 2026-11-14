@@ -5,7 +5,6 @@ import Image from "next/image"
 import { usePathname } from "next/navigation"
 
 import { NavUser } from "@/components/nav-user"
-import { getClinicSettings } from "@/lib/clinic-api"
 import {
   Sidebar,
   SidebarContent,
@@ -64,7 +63,7 @@ const DOCTOR_NAV_ITEMS: NavItem[] = [
     icon: <ExaminationIcon className="size-6" />,
   },
   {
-    title: "Teeth Chart",
+    title: "Investigation",
     url: "/clinic/investigation",
     icon: <MagnifyingGlassIcon className="size-6" />,
   },
@@ -124,36 +123,6 @@ export function DoctorSidebar({
   clinicId: string
 }) {
   const pathname = usePathname()
-  const [teethChartEnabled, setTeethChartEnabled] = React.useState<boolean | null>(null)
-
-  React.useEffect(() => {
-    if (!clinicId) return
-    let active = true
-    const load = () => {
-      getClinicSettings(clinicId)
-        .then((settings) => {
-          if (active) setTeethChartEnabled(settings.teethChartEnabled ?? false)
-        })
-        .catch(() => {
-          if (active) setTeethChartEnabled(false)
-        })
-    }
-    load()
-    const onUpdate = () => load()
-    window.addEventListener("clinic-settings-updated", onUpdate)
-    return () => {
-      active = false
-      window.removeEventListener("clinic-settings-updated", onUpdate)
-    }
-  }, [clinicId])
-
-  const navItems = React.useMemo(
-    () =>
-      DOCTOR_NAV_ITEMS.filter(
-        (item) => item.url !== "/clinic/investigation" || teethChartEnabled === true
-      ),
-    [teethChartEnabled]
-  )
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -184,7 +153,7 @@ export function DoctorSidebar({
             Navigation
           </SidebarGroupLabel>
           <SidebarMenu>
-            {navItems.map((item) => {
+            {DOCTOR_NAV_ITEMS.map((item) => {
               const active =
                 item.match === "exact"
                   ? pathname === item.url
