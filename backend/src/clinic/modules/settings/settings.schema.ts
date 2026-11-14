@@ -16,6 +16,7 @@ export interface ClinicSettingsDoc extends ClinicDocument {
   upiId?: string | null;
   qrCodeUrl?: string | null;
   aiAgentEnabled?: boolean;
+  teethChartEnabled?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +37,7 @@ export function settingsToPublic(doc: ClinicSettingsDoc) {
     upiId: doc.upiId ?? null,
     qrCodeUrl: doc.qrCodeUrl ?? null,
     aiAgentEnabled: doc.aiAgentEnabled ?? true,
+    teethChartEnabled: doc.teethChartEnabled ?? false,
     updatedAt: doc.updatedAt,
   };
 }

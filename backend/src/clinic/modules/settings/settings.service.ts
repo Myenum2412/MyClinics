@@ -34,6 +34,8 @@ export class SettingsService {
     if (input.termsAndConditions !== undefined) patch.termsAndConditions = input.termsAndConditions;
     if (input.upiId !== undefined) patch.upiId = input.upiId;
     if (input.qrCodeUrl !== undefined) patch.qrCodeUrl = input.qrCodeUrl;
+    if (input.aiAgentEnabled !== undefined) patch.aiAgentEnabled = input.aiAgentEnabled;
+    if (input.teethChartEnabled !== undefined) patch.teethChartEnabled = input.teethChartEnabled;
 
     const updated = await this.repo(ctx).update(patch);
     if (!updated) {

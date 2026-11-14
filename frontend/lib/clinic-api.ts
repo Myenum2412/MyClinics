@@ -483,6 +483,8 @@ export interface ClinicSettings {
   termsAndConditions?: string | null;
   upiId?: string | null;
   qrCodeUrl?: string | null;
+  aiAgentEnabled?: boolean;
+  teethChartEnabled?: boolean;
   updatedAt: string;
 }
 

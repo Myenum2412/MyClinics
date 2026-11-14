@@ -52,6 +52,7 @@ import {
   Search,
   ExternalLink,
   Sparkles,
+  Stethoscope,
 } from "lucide-react";
 
 function MetaIcon({ className }: { className?: string }) {
@@ -125,6 +126,8 @@ export default function SettingsPage() {
   const displayQr = waSession?.qr ?? lastQrRef.current;
   const [aiAgentEnabled, setAiAgentEnabled] = useState(true);
   const [aiAgentSaving, setAiAgentSaving] = useState(false);
+  const [teethChartEnabled, setTeethChartEnabled] = useState(false);
+  const [teethChartSaving, setTeethChartSaving] = useState(false);
 
   // General settings state
   const [settings, setSettings] = useState<ClinicSettings | null>(null);
@@ -157,6 +160,7 @@ export default function SettingsPage() {
           setQrCodeDraft(settingsRes.qrCodeUrl ?? "");
           setBillingEditing(false);
           setAiAgentEnabled((settingsRes as any).aiAgentEnabled ?? true);
+          setTeethChartEnabled((settingsRes as any).teethChartEnabled ?? false);
         } else {
           // Nothing saved yet — start straight in edit mode.
           setBillingEditing(true);
@@ -552,6 +556,39 @@ export default function SettingsPage() {
                   Connect
                 </Button>
               ),
+            },
+            {
+              id: "teeth-chart",
+              name: "Teeth Chart",
+              category: "Clinical",
+              description:
+                "Enable the interactive teeth chart for clinical documentation and link it with medical records.",
+              icon: <Stethoscope className="size-6" />,
+              connected: teethChartEnabled,
+              connectedLabel: teethChartEnabled ? "Enabled" : undefined,
+              onToggle: async (checked: boolean) => {
+                if (!session?.clinicId || !canEdit || teethChartSaving) return;
+                const prev = teethChartEnabled;
+                setTeethChartEnabled(checked);
+                setTeethChartSaving(true);
+                try {
+                  const updated = await updateClinicSettings(session.clinicId, {
+                    teethChartEnabled: checked,
+                  } as any);
+                  setSettings(updated);
+                  toast.success(
+                    checked ? "Teeth Chart enabled" : "Teeth Chart disabled"
+                  );
+                } catch (err) {
+                  setTeethChartEnabled(prev);
+                  toast.error(
+                    err instanceof Error ? err.message : "Failed to update Teeth Chart setting"
+                  );
+                } finally {
+                  setTeethChartSaving(false);
+                }
+              },
+              actionButton: null,
             },
           ];
 
